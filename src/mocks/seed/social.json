@@ -1,1 +1,1798 @@
-{ "version": "placeholder", "tenant": "social", "data": { "audit": {} } }
+{
+ "version": "extracted",
+ "tenant": "social",
+ "data": {
+  "people": {
+   "per_CP-1042": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_CP-1042",
+    "code": "CP-1042",
+    "name": "Amara Okafor",
+    "email": "amara.okafor@brightpath.org",
+    "jobProfile": "SW",
+    "employeeType": "shift",
+    "category": "Contracted",
+    "location": "WH",
+    "department": "CARE",
+    "manager": "Rachel Hussain",
+    "contractedHours": 37.5,
+    "maxHours": 45,
+    "state": "active",
+    "start": "14/02/2022",
+    "end": ""
+   },
+   "per_CP-1088": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_CP-1088",
+    "code": "CP-1088",
+    "name": "Marcus Reilly",
+    "email": "marcus.reilly@brightpath.org",
+    "jobProfile": "SW",
+    "employeeType": "shift",
+    "category": "Contracted",
+    "location": "WH",
+    "department": "CARE",
+    "manager": "Rachel Hussain",
+    "contractedHours": 30,
+    "maxHours": 37.5,
+    "state": "active",
+    "start": "03/09/2021",
+    "end": ""
+   },
+   "per_CP-1153": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_CP-1153",
+    "code": "CP-1153",
+    "name": "Jo Baptiste",
+    "email": "jo.baptiste@brightpath.org",
+    "jobProfile": "SSW",
+    "employeeType": "shift",
+    "category": "Contracted",
+    "location": "WH",
+    "department": "CARE",
+    "manager": "Rachel Hussain",
+    "contractedHours": 37.5,
+    "maxHours": 45,
+    "state": "active",
+    "start": "19/06/2019",
+    "end": ""
+   },
+   "per_CP-1201": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_CP-1201",
+    "code": "CP-1201",
+    "name": "Priya Shah",
+    "email": "priya.shah@brightpath.org",
+    "jobProfile": "SW",
+    "employeeType": "shift",
+    "category": "Contracted",
+    "location": "WH",
+    "department": "CARE",
+    "manager": "Rachel Hussain",
+    "contractedHours": 22.5,
+    "maxHours": 30,
+    "state": "active",
+    "start": "11/01/2024",
+    "end": ""
+   },
+   "per_CP-1266": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_CP-1266",
+    "code": "CP-1266",
+    "name": "Daniel Osei",
+    "email": "daniel.osei@brightpath.org",
+    "jobProfile": "NS",
+    "employeeType": "shift",
+    "category": "Contracted",
+    "location": "WH",
+    "department": "CARE",
+    "manager": "Rachel Hussain",
+    "contractedHours": 33,
+    "maxHours": 42,
+    "state": "active",
+    "start": "07/03/2020",
+    "end": ""
+   },
+   "per_CP-1402": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_CP-1402",
+    "code": "CP-1402",
+    "name": "Rosa Mendes",
+    "email": "rosa.mendes@brightpath.org",
+    "jobProfile": "SW",
+    "employeeType": "shift",
+    "category": "Contracted",
+    "location": "WH",
+    "department": "CARE",
+    "manager": "Rachel Hussain",
+    "contractedHours": 37.5,
+    "maxHours": 45,
+    "state": "active",
+    "start": "02/05/2023",
+    "end": ""
+   },
+   "per_CP-1310": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_CP-1310",
+    "code": "CP-1310",
+    "name": "Ellie Warren",
+    "email": "ellie.warren@brightpath.org",
+    "jobProfile": "SW",
+    "employeeType": "casual",
+    "category": "Bank",
+    "location": "WH",
+    "department": "CARE",
+    "manager": "Rachel Hussain",
+    "contractedHours": 0,
+    "maxHours": 37.5,
+    "state": "active",
+    "start": "06/06/2026",
+    "end": ""
+   },
+   "per_CP-1455": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_CP-1455",
+    "code": "CP-1455",
+    "name": "Sana Iqbal",
+    "email": "sana.iqbal@brightpath.org",
+    "jobProfile": "SW",
+    "employeeType": "casual",
+    "category": "Bank",
+    "location": "WH",
+    "department": "CARE",
+    "manager": "Rachel Hussain",
+    "contractedHours": 0,
+    "maxHours": 37.5,
+    "state": "active",
+    "start": "12/03/2026",
+    "end": ""
+   },
+   "per_CP-1377": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_CP-1377",
+    "code": "CP-1377",
+    "name": "Tomas Novak",
+    "email": "tomas.novak@brightpath.org",
+    "jobProfile": "SW",
+    "employeeType": "casual",
+    "category": "Bank",
+    "location": "WH",
+    "department": "CARE",
+    "manager": "Rachel Hussain",
+    "contractedHours": 0,
+    "maxHours": 37.5,
+    "state": "active",
+    "start": "21/05/2026",
+    "end": ""
+   },
+   "per_CP-1490": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_CP-1490",
+    "code": "CP-1490",
+    "name": "Kwame Boateng",
+    "email": "kwame.boateng@brightpath.org",
+    "jobProfile": "SW",
+    "employeeType": "casual",
+    "category": "Bank",
+    "location": "WH",
+    "department": "CARE",
+    "manager": "Rachel Hussain",
+    "contractedHours": 0,
+    "maxHours": 37.5,
+    "state": "active",
+    "start": "02/01/2026",
+    "end": ""
+   },
+   "per_CP-1001": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_CP-1001",
+    "code": "CP-1001",
+    "name": "Rachel Hussain",
+    "email": "rachel.hussain@brightpath.org",
+    "jobProfile": "SM",
+    "employeeType": "salaried",
+    "category": "Contracted",
+    "location": "WH",
+    "department": "CARE",
+    "manager": "Dee Fitzgerald",
+    "contractedHours": 37.5,
+    "maxHours": 45,
+    "state": "active",
+    "start": "08/08/2017",
+    "end": ""
+   },
+   "per_CP-1002": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_CP-1002",
+    "code": "CP-1002",
+    "name": "Dee Fitzgerald",
+    "email": "dee.fitzgerald@brightpath.org",
+    "jobProfile": "SM",
+    "employeeType": "salaried",
+    "category": "Contracted",
+    "location": "FS",
+    "department": "ADM",
+    "manager": "",
+    "contractedHours": 37.5,
+    "maxHours": 45,
+    "state": "active",
+    "start": "15/01/2016",
+    "end": ""
+   },
+   "per_CP-1288": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_CP-1288",
+    "code": "CP-1288",
+    "name": "Grace Whitmore",
+    "email": "grace.whitmore@brightpath.org",
+    "jobProfile": "SW",
+    "employeeType": "shift",
+    "category": "Contracted",
+    "location": "BC",
+    "department": "CARE",
+    "manager": "Rachel Hussain",
+    "contractedHours": 22.5,
+    "maxHours": 30,
+    "state": "leaver",
+    "start": "01/09/2023",
+    "end": "30/09/2026"
+   },
+   "per_EMP-2044": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_EMP-2044",
+    "code": "EMP-2044",
+    "name": "Adaeze Okafor",
+    "email": "adaeze.okafor@meridian.co.uk",
+    "jobProfile": "DRV",
+    "employeeType": "shift",
+    "category": "Contracted",
+    "location": "LGW",
+    "department": "OPS",
+    "manager": "Marcus Bennett",
+    "contractedHours": 40,
+    "maxHours": 48,
+    "state": "active",
+    "start": "04/04/2021",
+    "end": ""
+   },
+   "per_EMP-2062": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_EMP-2062",
+    "code": "EMP-2062",
+    "name": "Lucia Costa",
+    "email": "lucia.costa@meridian.co.uk",
+    "jobProfile": "SOP",
+    "employeeType": "shift",
+    "category": "Contracted",
+    "location": "LGW",
+    "department": "OPS",
+    "manager": "Marcus Bennett",
+    "contractedHours": 37.5,
+    "maxHours": 45,
+    "state": "active",
+    "start": "12/09/2022",
+    "end": ""
+   },
+   "per_EMP-2071": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_EMP-2071",
+    "code": "EMP-2071",
+    "name": "Tomas Reid",
+    "email": "tomas.reid@meridian.co.uk",
+    "jobProfile": "SOP",
+    "employeeType": "shift",
+    "category": "Contracted",
+    "location": "SLO",
+    "department": "OPS",
+    "manager": "Owen Clarke",
+    "contractedHours": 40,
+    "maxHours": 48,
+    "state": "active",
+    "start": "22/02/2023",
+    "end": ""
+   },
+   "per_EMP-2088": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_EMP-2088",
+    "code": "EMP-2088",
+    "name": "Aisha Khan",
+    "email": "aisha.khan@meridian.co.uk",
+    "jobProfile": "PRC",
+    "employeeType": "shift",
+    "category": "Contracted",
+    "location": "MAN",
+    "department": "PRJ",
+    "manager": "Owen Clarke",
+    "contractedHours": 37.5,
+    "maxHours": 45,
+    "state": "active",
+    "start": "06/06/2024",
+    "end": ""
+   },
+   "per_CP-1501": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_CP-1501",
+    "code": "CP-1501",
+    "name": "Priya Raman",
+    "email": "priya.raman@brightpath.org",
+    "jobProfile": "SW",
+    "employeeType": "shift",
+    "category": "Contracted",
+    "location": "WH",
+    "department": "CARE",
+    "manager": "Rachel Hussain",
+    "contractedHours": 37.5,
+    "maxHours": 45,
+    "state": "candidate",
+    "start": "28/09/2026",
+    "end": ""
+   },
+   "per_CP-1502": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_CP-1502",
+    "code": "CP-1502",
+    "name": "Tom Achterberg",
+    "email": "tom.achterberg@brightpath.org",
+    "jobProfile": "SW",
+    "employeeType": "shift",
+    "category": "Contracted",
+    "location": "WH",
+    "department": "CARE",
+    "manager": "Rachel Hussain",
+    "contractedHours": 30,
+    "maxHours": 45,
+    "state": "preboard",
+    "start": "14/09/2026",
+    "end": ""
+   }
+  },
+  "accounts": {
+   "acc_amara.okafor@brightpath.org": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_amara.okafor@brightpath.org",
+    "email": "amara.okafor@brightpath.org",
+    "personCode": "CP-1042",
+    "userType": "employee",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_marcus.reilly@brightpath.org": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_marcus.reilly@brightpath.org",
+    "email": "marcus.reilly@brightpath.org",
+    "personCode": "CP-1088",
+    "userType": "employee",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_jo.baptiste@brightpath.org": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_jo.baptiste@brightpath.org",
+    "email": "jo.baptiste@brightpath.org",
+    "personCode": "CP-1153",
+    "userType": "employee",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_priya.shah@brightpath.org": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_priya.shah@brightpath.org",
+    "email": "priya.shah@brightpath.org",
+    "personCode": "CP-1201",
+    "userType": "employee",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_daniel.osei@brightpath.org": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_daniel.osei@brightpath.org",
+    "email": "daniel.osei@brightpath.org",
+    "personCode": "CP-1266",
+    "userType": "employee",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_rosa.mendes@brightpath.org": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_rosa.mendes@brightpath.org",
+    "email": "rosa.mendes@brightpath.org",
+    "personCode": "CP-1402",
+    "userType": "employee",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_ellie.warren@brightpath.org": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_ellie.warren@brightpath.org",
+    "email": "ellie.warren@brightpath.org",
+    "personCode": "CP-1310",
+    "userType": "employee",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_sana.iqbal@brightpath.org": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_sana.iqbal@brightpath.org",
+    "email": "sana.iqbal@brightpath.org",
+    "personCode": "CP-1455",
+    "userType": "employee",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_tomas.novak@brightpath.org": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_tomas.novak@brightpath.org",
+    "email": "tomas.novak@brightpath.org",
+    "personCode": "CP-1377",
+    "userType": "employee",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_kwame.boateng@brightpath.org": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_kwame.boateng@brightpath.org",
+    "email": "kwame.boateng@brightpath.org",
+    "personCode": "CP-1490",
+    "userType": "employee",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_rachel.hussain@brightpath.org": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_rachel.hussain@brightpath.org",
+    "email": "rachel.hussain@brightpath.org",
+    "personCode": "CP-1001",
+    "userType": "manager",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_dee.fitzgerald@brightpath.org": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_dee.fitzgerald@brightpath.org",
+    "email": "dee.fitzgerald@brightpath.org",
+    "personCode": "CP-1002",
+    "userType": "admin",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_grace.whitmore@brightpath.org": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_grace.whitmore@brightpath.org",
+    "email": "grace.whitmore@brightpath.org",
+    "personCode": "CP-1288",
+    "userType": "employee",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_adaeze.okafor@meridian.co.uk": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_adaeze.okafor@meridian.co.uk",
+    "email": "adaeze.okafor@meridian.co.uk",
+    "personCode": "EMP-2044",
+    "userType": "employee",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_lucia.costa@meridian.co.uk": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_lucia.costa@meridian.co.uk",
+    "email": "lucia.costa@meridian.co.uk",
+    "personCode": "EMP-2062",
+    "userType": "employee",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_tomas.reid@meridian.co.uk": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_tomas.reid@meridian.co.uk",
+    "email": "tomas.reid@meridian.co.uk",
+    "personCode": "EMP-2071",
+    "userType": "employee",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_aisha.khan@meridian.co.uk": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_aisha.khan@meridian.co.uk",
+    "email": "aisha.khan@meridian.co.uk",
+    "personCode": "EMP-2088",
+    "userType": "employee",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_priya.raman@brightpath.org": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_priya.raman@brightpath.org",
+    "email": "priya.raman@brightpath.org",
+    "personCode": "CP-1501",
+    "userType": "employee",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_tom.achterberg@brightpath.org": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_tom.achterberg@brightpath.org",
+    "email": "tom.achterberg@brightpath.org",
+    "personCode": "CP-1502",
+    "userType": "employee",
+    "grants": [],
+    "revocations": []
+   }
+  },
+  "userTypes": {
+   "employee": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "employee",
+    "name": "Employee",
+    "description": "Their own work: timesheet, shifts and leave",
+    "capabilities": [
+     "own_home",
+     "own_notices",
+     "own_ts",
+     "own_shifts",
+     "own_leave",
+     "own_hours",
+     "claim",
+     "own_onb"
+    ]
+   },
+   "manager": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "manager",
+    "name": "Manager",
+    "description": "Everything an employee can do, plus their team",
+    "capabilities": [
+     "own_home",
+     "own_notices",
+     "own_ts",
+     "own_shifts",
+     "own_leave",
+     "own_hours",
+     "claim",
+     "team_ts",
+     "team_rota",
+     "team_cover",
+     "team_leave",
+     "team_sick",
+     "team_hours",
+     "profile_appr",
+     "team_people",
+     "notice_post",
+     "proxy",
+     "rota_pattern",
+     "own_onb",
+     "onb_track",
+     "onb_verify",
+     "emp_crud",
+     "rota_shift"
+    ]
+   },
+   "admin": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "admin",
+    "name": "Admin",
+    "description": "Configure how this workforce operates",
+    "capabilities": [
+     "notice_post",
+     "rota_pattern",
+     "own_onb",
+     "onb_track",
+     "onb_verify",
+     "onb_cfg",
+     "emp_crud",
+     "rota_shift",
+     "master_data",
+     "type_cfg",
+     "mod_cfg",
+     "framework",
+     "notice_org",
+     "perm_cfg",
+     "integration"
+    ]
+   }
+  },
+  "capabilities": {
+   "own_home": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "own_home",
+    "group": "own",
+    "label": "Own home, profile and documents",
+    "gate": "My work → Home, Profile, Documents",
+    "lockedFor": []
+   },
+   "own_notices": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "own_notices",
+    "group": "own",
+    "label": "Read and acknowledge notices",
+    "gate": "My work → Notices, and the Notices card on Home",
+    "lockedFor": []
+   },
+   "own_ts": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "own_ts",
+    "group": "own",
+    "label": "Own timesheet",
+    "gate": "My work → Timesheet",
+    "lockedFor": []
+   },
+   "own_shifts": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "own_shifts",
+    "group": "own",
+    "label": "Own shifts",
+    "gate": "My work → Shifts",
+    "lockedFor": []
+   },
+   "own_leave": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "own_leave",
+    "group": "own",
+    "label": "Own leave",
+    "gate": "My work → Leave, and requesting leave",
+    "lockedFor": []
+   },
+   "own_hours": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "own_hours",
+    "group": "own",
+    "label": "Own hours position",
+    "gate": "My work → Hours",
+    "lockedFor": []
+   },
+   "claim": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "claim",
+    "group": "own",
+    "label": "Claim open shifts",
+    "gate": "The Claim button on open cover requests",
+    "lockedFor": []
+   },
+   "team_ts": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "team_ts",
+    "group": "team",
+    "label": "Team timesheets and approvals",
+    "gate": "My team → Team timesheets",
+    "lockedFor": []
+   },
+   "team_rota": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "team_rota",
+    "group": "team",
+    "label": "Team rota and shift assignment",
+    "gate": "My team → Team rota",
+    "lockedFor": []
+   },
+   "team_cover": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "team_cover",
+    "group": "team",
+    "label": "Cover requests and fulfilment",
+    "gate": "My team → Cover requests",
+    "lockedFor": []
+   },
+   "team_leave": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "team_leave",
+    "group": "team",
+    "label": "Team leave approval",
+    "gate": "My team → Team leave",
+    "lockedFor": []
+   },
+   "team_sick": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "team_sick",
+    "group": "team",
+    "label": "Record team sickness",
+    "gate": "My team → Sickness",
+    "lockedFor": []
+   },
+   "team_hours": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "team_hours",
+    "group": "team",
+    "label": "Hours position and exceptions",
+    "gate": "My team → Hours position, Exceptions",
+    "lockedFor": []
+   },
+   "profile_appr": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "profile_appr",
+    "group": "team",
+    "label": "Approve profile changes",
+    "gate": "The profile change queue on My team → People",
+    "lockedFor": []
+   },
+   "team_people": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "team_people",
+    "group": "team",
+    "label": "Team people list",
+    "gate": "My team → People",
+    "lockedFor": []
+   },
+   "notice_post": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "notice_post",
+    "group": "team",
+    "label": "Post and manage notices",
+    "gate": "My team → Notices — post, edit, pin, withdraw, and who has acknowledged",
+    "lockedFor": []
+   },
+   "proxy": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "proxy",
+    "group": "team",
+    "label": "Enter time on behalf of someone",
+    "gate": "The proxy-entry button on a person",
+    "lockedFor": []
+   },
+   "rota_pattern": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "rota_pattern",
+    "group": "team",
+    "label": "Working patterns",
+    "gate": "Working patterns on My team → Team rota, and Qnipay setup → Rota",
+    "lockedFor": []
+   },
+   "own_onb": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "own_onb",
+    "group": "own",
+    "label": "Complete my own onboarding",
+    "gate": "The onboarding portal a candidate sees before their first day",
+    "lockedFor": []
+   },
+   "onb_track": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "onb_track",
+    "group": "team",
+    "label": "Track onboarding",
+    "gate": "My team → Onboarding — who is onboarding and what is outstanding",
+    "lockedFor": []
+   },
+   "onb_verify": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "onb_verify",
+    "group": "team",
+    "label": "Verify onboarding documents",
+    "gate": "The verification queue, and the decision on each document",
+    "lockedFor": []
+   },
+   "onb_cfg": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "onb_cfg",
+    "group": "cfg",
+    "label": "Configure onboarding",
+    "gate": "Qnipay setup → Onboarding — steps, documents, policies and who verifies",
+    "lockedFor": []
+   },
+   "emp_crud": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "emp_crud",
+    "group": "team",
+    "label": "Add and edit people",
+    "gate": "Add someone, and Edit on a person record",
+    "lockedFor": []
+   },
+   "rota_shift": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "rota_shift",
+    "group": "team",
+    "label": "Create shift types",
+    "gate": "New shift type on the rota palette, and Qnipay setup → Rota → Shift catalogue",
+    "lockedFor": []
+   },
+   "master_data": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "master_data",
+    "group": "cfg",
+    "label": "Workforce master data",
+    "gate": "Organisation, People, Job profiles, Locations, Departments, Cost centres, Contracts, Calendar",
+    "lockedFor": []
+   },
+   "type_cfg": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "type_cfg",
+    "group": "cfg",
+    "label": "Employee types and configuration",
+    "gate": "Qnipay setup → Employee types",
+    "lockedFor": []
+   },
+   "mod_cfg": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "mod_cfg",
+    "group": "cfg",
+    "label": "Module configuration",
+    "gate": "The whole Modules section",
+    "lockedFor": []
+   },
+   "framework": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "framework",
+    "group": "cfg",
+    "label": "Notification and approval framework",
+    "gate": "Qnipay setup → Notifications, Approvals",
+    "lockedFor": []
+   },
+   "notice_org": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "notice_org",
+    "group": "cfg",
+    "label": "Post notices to everyone",
+    "gate": "The Everyone scope on a notice, and any location or department",
+    "lockedFor": []
+   },
+   "perm_cfg": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "perm_cfg",
+    "group": "cfg",
+    "label": "Permissions and role configuration",
+    "gate": "Qnipay setup → Permissions (this page)",
+    "lockedFor": [
+     "admin"
+    ]
+   },
+   "integration": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "integration",
+    "group": "cfg",
+    "label": "Integrations and audit log",
+    "gate": "The whole Integrations section",
+    "lockedFor": []
+   }
+  },
+  "tenant": {
+   "tenant": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "tenant",
+    "name": "Brightpath Support Services",
+    "template": "social",
+    "modules": {
+     "CORE": true,
+     "A": true,
+     "B": true,
+     "C": true,
+     "TS": true,
+     "R": true,
+     "L": true,
+     "ON": true
+    },
+    "flags": {
+     "ONB_RTW": true,
+     "ONB_CONV": true,
+     "ONB_WTD": true,
+     "ONB_QUAL": true,
+     "ONB_POL": true,
+     "ONB_SIGN": true,
+     "ONB_VERIFY": true,
+     "ONB_PORTAL": true,
+     "AUTO_OT": true,
+     "LATE_FINISH": false,
+     "UNSOCIAL": true,
+     "EMAIL_APPROVAL": true,
+     "SHOW_PAY": false,
+     "VEHICLE": false,
+     "PROJECT": true,
+     "SHIFT": true,
+     "BREAKS": true,
+     "DOCS": true,
+     "NOTICES": true,
+     "SELF_EDIT": true,
+     "DAILY": true,
+     "WEEKLY": true,
+     "MULTIWEEK": false,
+     "GPS": false,
+     "GEOFENCE": false,
+     "PATTERNS": true,
+     "MINSTAFF": true,
+     "FULFIL": true,
+     "SAFEWORKER": true,
+     "FLEXMON": true,
+     "ITACCESS": true,
+     "RESTRULE": true,
+     "PREFS": true,
+     "LV_ENT": true,
+     "LV_PRORATA": true,
+     "LV_LEAVER": true,
+     "LV_SLA": true,
+     "LV_ROTA": true,
+     "LV_TOIL": true
+    }
+   }
+  },
+  "locations": {
+   "loc_WH": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "WH",
+    "name": "Willow House",
+    "area": "Camden",
+    "dept": "CARE",
+    "cc": "WH-CAM-01",
+    "level": "High",
+    "min": 4,
+    "source": "HRIS",
+    "active": true,
+    "manager": "Rachel Hussain",
+    "geofence": "150 m",
+    "address": "12 Willow Road, Camden, London NW3 1TH",
+    "coords": "51.556, -0.173",
+    "opened": "Mar 2018",
+    "live": true,
+    "pub": "31/12/2026",
+    "bank": 14,
+    "rate": "Rate card SR-11",
+    "id": "loc_WH"
+   },
+   "loc_BC": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "BC",
+    "name": "Beacon Court",
+    "area": "Islington",
+    "dept": "CARE",
+    "cc": "BC-ISL-02",
+    "level": "Medium",
+    "min": 3,
+    "source": "HRIS",
+    "active": true,
+    "manager": "Rachel Hussain",
+    "geofence": "120 m",
+    "address": "4 Beacon Court, Islington, London N1 9GU",
+    "coords": "51.538, -0.103",
+    "opened": "Jul 2020",
+    "pub": "31/12/2026",
+    "bank": 9,
+    "rate": "Rate card SR-08",
+    "cov": [
+     [
+      1,
+      1,
+      1
+     ],
+     [
+      1,
+      1,
+      1
+     ],
+     [
+      2,
+      1,
+      1
+     ],
+     [
+      1,
+      1,
+      1
+     ],
+     [
+      1,
+      1,
+      1
+     ],
+     [
+      1,
+      0,
+      1
+     ],
+     [
+      1,
+      1,
+      1
+     ]
+    ],
+    "rotad": 276,
+    "con": 292.5,
+    "id": "loc_BC"
+   },
+   "loc_RL": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "RL",
+    "name": "Rowan Lodge",
+    "area": "Hackney",
+    "dept": "CARE",
+    "cc": "RL-HAC-03",
+    "level": "Low",
+    "min": 2,
+    "source": "HRIS",
+    "active": true,
+    "manager": "Dee Fitzgerald",
+    "geofence": "100 m",
+    "address": "88 Rowan Lodge, Hackney, London E8 3PN",
+    "coords": "51.545, -0.056",
+    "opened": "Jan 2022",
+    "pub": "28/02/2027",
+    "bank": 0,
+    "rate": "Rate card SR-03",
+    "cov": [
+     [
+      1,
+      1,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ]
+    ],
+    "rotad": 150,
+    "con": 150,
+    "id": "loc_RL"
+   },
+   "loc_FS": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "FS",
+    "name": "Floating Support",
+    "area": "North",
+    "dept": "CARE",
+    "cc": "FS-NOR-04",
+    "level": "Floating",
+    "min": 1,
+    "source": "HRIS",
+    "active": true,
+    "manager": "Dee Fitzgerald",
+    "geofence": "—",
+    "address": "Mobile team · North London",
+    "coords": "—",
+    "opened": "Sep 2023",
+    "pub": "30/11/2026",
+    "bank": 100,
+    "rate": "Rate card SR-01",
+    "cov": [
+     [
+      1,
+      0,
+      0
+     ],
+     [
+      1,
+      0,
+      0
+     ],
+     [
+      1,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0
+     ],
+     [
+      1,
+      0,
+      0
+     ],
+     [
+      1,
+      0,
+      0
+     ],
+     [
+      1,
+      0,
+      0
+     ]
+    ],
+    "rotad": 37.5,
+    "con": 37.5,
+    "id": "loc_FS"
+   },
+   "loc_LGW": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "LGW",
+    "name": "London Gateway",
+    "area": "Essex",
+    "dept": "OPS",
+    "cc": "CC-104",
+    "level": "Low",
+    "min": 2,
+    "source": "HRIS",
+    "active": true,
+    "manager": "Marcus Bennett",
+    "geofence": "200 m",
+    "address": "Gateway Distribution Park, Stanford-le-Hope, Essex RM19 4YR",
+    "coords": "51.484, 0.283",
+    "opened": "Apr 2019",
+    "pub": "31/12/2026",
+    "bank": 6,
+    "rate": "Site rate card SR-04",
+    "cov": [
+     [
+      2,
+      1,
+      1
+     ],
+     [
+      2,
+      1,
+      1
+     ],
+     [
+      2,
+      1,
+      1
+     ],
+     [
+      2,
+      1,
+      1
+     ],
+     [
+      2,
+      1,
+      1
+     ],
+     [
+      1,
+      0,
+      1
+     ],
+     [
+      1,
+      0,
+      1
+     ]
+    ],
+    "rotad": 212,
+    "con": 220,
+    "id": "loc_LGW"
+   },
+   "loc_SLO": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "SLO",
+    "name": "Slough Depot",
+    "area": "Berkshire",
+    "dept": "OPS",
+    "cc": "CC-104",
+    "level": "Low",
+    "min": 2,
+    "source": "HRIS",
+    "active": true,
+    "manager": "Owen Clarke",
+    "geofence": "150 m",
+    "address": "Unit 7, Farnburn Avenue, Slough SL1 4XP",
+    "coords": "51.517, -0.594",
+    "opened": "Sep 2021",
+    "pub": "31/12/2026",
+    "bank": 4,
+    "rate": "Site rate card SR-02",
+    "cov": [
+     [
+      1,
+      1,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ],
+     [
+      1,
+      1,
+      0
+     ],
+     [
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0
+     ]
+    ],
+    "rotad": 112,
+    "con": 120,
+    "id": "loc_SLO"
+   },
+   "loc_MAN": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "MAN",
+    "name": "Manchester Hub",
+    "area": "Greater Manchester",
+    "dept": "OPS",
+    "cc": "CC-104",
+    "level": "Medium",
+    "min": 3,
+    "source": "HRIS",
+    "active": true,
+    "manager": "Marcus Bennett",
+    "geofence": "250 m",
+    "address": "Trafford Point, Twining Road, Manchester M17 1WA",
+    "coords": "53.463, -2.311",
+    "opened": "Jan 2024",
+    "pub": "31/12/2026",
+    "bank": 8,
+    "rate": "Site rate card SR-07",
+    "cov": [
+     [
+      2,
+      1,
+      1
+     ],
+     [
+      2,
+      1,
+      1
+     ],
+     [
+      1,
+      1,
+      1
+     ],
+     [
+      2,
+      1,
+      1
+     ],
+     [
+      2,
+      1,
+      1
+     ],
+     [
+      1,
+      1,
+      1
+     ],
+     [
+      1,
+      1,
+      0
+     ]
+    ],
+    "rotad": 268,
+    "con": 262.5,
+    "id": "loc_MAN"
+   }
+  },
+  "departments": {
+   "dep_CARE": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "CARE",
+    "name": "Care Services",
+    "manager": "Rachel Hussain",
+    "id": "dep_CARE"
+   },
+   "dep_OPS": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "OPS",
+    "name": "Operations",
+    "manager": "Marcus Bennett",
+    "id": "dep_OPS"
+   },
+   "dep_PRJ": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "PRJ",
+    "name": "Projects",
+    "manager": "Owen Clarke",
+    "id": "dep_PRJ"
+   },
+   "dep_ADM": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "ADM",
+    "name": "Administration",
+    "manager": "Dee Fitzgerald",
+    "id": "dep_ADM"
+   }
+  },
+  "costCentres": {
+   "cc_WH-CAM-01": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "WH-CAM-01",
+    "name": "Willow House · Camden",
+    "id": "cc_WH-CAM-01"
+   },
+   "cc_BC-ISL-02": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "BC-ISL-02",
+    "name": "Beacon Court · Islington",
+    "id": "cc_BC-ISL-02"
+   },
+   "cc_RL-HAC-03": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "RL-HAC-03",
+    "name": "Rowan Lodge · Hackney",
+    "id": "cc_RL-HAC-03"
+   },
+   "cc_FS-NOR-04": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "FS-NOR-04",
+    "name": "Floating Support · North",
+    "id": "cc_FS-NOR-04"
+   },
+   "cc_CC-104": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "CC-104",
+    "name": "Operations",
+    "id": "cc_CC-104"
+   },
+   "cc_CC-220": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "CC-220",
+    "name": "Projects",
+    "id": "cc_CC-220"
+   }
+  },
+  "jobProfiles": {
+   "job_SW": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "SW",
+    "name": "Support Worker",
+    "night": false,
+    "id": "job_SW"
+   },
+   "job_SSW": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "SSW",
+    "name": "Senior Support Worker",
+    "night": true,
+    "id": "job_SSW"
+   },
+   "job_NS": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "NS",
+    "name": "Night Support",
+    "night": true,
+    "id": "job_NS"
+   },
+   "job_SM": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "SM",
+    "name": "Service Manager",
+    "night": false,
+    "id": "job_SM"
+   },
+   "job_DRV": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "DRV",
+    "name": "Driver",
+    "night": true,
+    "id": "job_DRV"
+   },
+   "job_SOP": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "SOP",
+    "name": "Site Operative",
+    "night": false,
+    "id": "job_SOP"
+   },
+   "job_PRC": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "PRC",
+    "name": "Project Consultant",
+    "night": false,
+    "id": "job_PRC"
+   }
+  },
+  "projects": {
+   "prj_PRJ-114": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "PRJ-114",
+    "name": "Northgate Fit-out",
+    "status": "Active",
+    "cc": "CC-220",
+    "client": "Northgate Group",
+    "manager": "Owen Clarke",
+    "start": "06/04/2026",
+    "end": "18/12/2026",
+    "billable": true,
+    "budget": "1,240 h",
+    "logged": "812 h",
+    "loc": "LGW",
+    "tasks": [
+     {
+      "n": "Site survey",
+      "g": "Field",
+      "b": true
+     },
+     {
+      "n": "Installation",
+      "g": "Field",
+      "b": true
+     },
+     {
+      "n": "Snagging",
+      "g": "Field",
+      "b": true
+     },
+     {
+      "n": "Project admin",
+      "g": "Office",
+      "b": false
+     }
+    ],
+    "id": "prj_PRJ-114"
+   },
+   "prj_PRJ-121": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "PRJ-121",
+    "name": "GoFibre Rollout",
+    "status": "Active",
+    "cc": "CC-220",
+    "client": "GoFibre Networks",
+    "manager": "Marcus Bennett",
+    "start": "02/02/2026",
+    "end": "31/03/2027",
+    "billable": true,
+    "budget": "4,800 h",
+    "logged": "2,140 h",
+    "loc": "SLO",
+    "tasks": [
+     {
+      "n": "Cable pull",
+      "g": "Field",
+      "b": true
+     },
+     {
+      "n": "Splicing",
+      "g": "Field",
+      "b": true
+     },
+     {
+      "n": "Testing & handover",
+      "g": "Field",
+      "b": true
+     }
+    ],
+    "id": "prj_PRJ-121"
+   },
+   "prj_PRJ-204": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "PRJ-204",
+    "name": "Camden Supported Living",
+    "status": "Active",
+    "cc": "WH-CAM-01",
+    "client": "Camden Council",
+    "manager": "Rachel Hussain",
+    "start": "01/04/2026",
+    "end": "31/03/2027",
+    "billable": true,
+    "budget": "9,600 h",
+    "logged": "4,180 h",
+    "loc": "WH",
+    "tasks": [
+     {
+      "n": "One-to-one support",
+      "g": "Service",
+      "b": true
+     },
+     {
+      "n": "Group activity",
+      "g": "Service",
+      "b": true
+     },
+     {
+      "n": "Appointment escort",
+      "g": "Service",
+      "b": true
+     },
+     {
+      "n": "Handover & records",
+      "g": "Service",
+      "b": false
+     }
+    ],
+    "id": "prj_PRJ-204"
+   },
+   "prj_PRJ-009": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "PRJ-009",
+    "name": "Internal",
+    "status": "Always open",
+    "cc": "CC-104",
+    "client": "—",
+    "manager": "Dee Fitzgerald",
+    "start": "—",
+    "end": "—",
+    "billable": false,
+    "budget": "—",
+    "logged": "318 h",
+    "loc": "MAN",
+    "tasks": [
+     {
+      "n": "Goods receiving",
+      "g": "Warehouse",
+      "b": false
+     },
+     {
+      "n": "Pick & pack",
+      "g": "Warehouse",
+      "b": false
+     },
+     {
+      "n": "Training",
+      "g": "Office",
+      "b": false
+     },
+     {
+      "n": "Vehicle checks",
+      "g": "Yard",
+      "b": false
+     }
+    ],
+    "id": "prj_PRJ-009"
+   }
+  },
+  "notices": {
+   "NTC-0001": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "NTC-0001",
+    "ver": 2,
+    "title": "Updated lone working policy",
+    "body": "Lone working is allowed only where a check-in is booked every two hours. Night staff now check in by phone at 23:00, 01:00, 03:00 and 05:00.",
+    "scope": {
+     "kind": "all",
+     "code": "",
+     "loc": ""
+    },
+    "pinned": true,
+    "urgent": false,
+    "mustAck": true,
+    "from": "2026-08-03",
+    "until": "",
+    "state": "live",
+    "by": "Dee Fitzgerald",
+    "at": "03/08/2026 09:00",
+    "withdrawReason": "",
+    "acks": [
+     {
+      "eid": "CP-1042",
+      "ver": 2,
+      "at": "10/08/2026 10:00"
+     },
+     {
+      "eid": "CP-1088",
+      "ver": 2,
+      "at": "09/08/2026 10:01"
+     },
+     {
+      "eid": "CP-1153",
+      "ver": 1,
+      "at": "08/08/2026 10:02"
+     },
+     {
+      "eid": "CP-1201",
+      "ver": 1,
+      "at": "07/08/2026 10:03"
+     }
+    ],
+    "history": [
+     {
+      "ver": 1,
+      "title": "Lone working policy",
+      "body": "Lone working is allowed only where a check-in is booked every two hours.",
+      "by": "Dee Fitzgerald",
+      "at": "03/08/2026 09:00"
+     }
+    ]
+   },
+   "NTC-0002": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "NTC-0002",
+    "ver": 1,
+    "title": "Fire drill on Thursday at 10:00",
+    "body": "Leave by the nearest exit and meet at the front car park. Residents who cannot use the stairs stay with their named carer.",
+    "scope": {
+     "kind": "loc",
+     "code": "WH",
+     "loc": "WH"
+    },
+    "pinned": false,
+    "urgent": true,
+    "mustAck": true,
+    "from": "2026-08-12",
+    "until": "2026-08-20",
+    "state": "live",
+    "by": "Rachel Hussain",
+    "at": "12/08/2026 16:10",
+    "withdrawReason": "",
+    "acks": [
+     {
+      "eid": "CP-1088",
+      "ver": 1,
+      "at": "13/08/2026 08:40"
+     },
+     {
+      "eid": "CP-1153",
+      "ver": 1,
+      "at": "13/08/2026 08:40"
+     }
+    ],
+    "history": []
+   },
+   "NTC-0003": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "NTC-0003",
+    "ver": 1,
+    "title": "Summer social",
+    "body": "Thank you to everyone who came. Photos are with the office.",
+    "scope": {
+     "kind": "all",
+     "code": "",
+     "loc": ""
+    },
+    "pinned": false,
+    "urgent": false,
+    "mustAck": false,
+    "from": "2026-07-14",
+    "until": "2026-08-10",
+    "state": "live",
+    "by": "Dee Fitzgerald",
+    "at": "14/07/2026 12:00",
+    "withdrawReason": "",
+    "acks": [],
+    "history": []
+   },
+   "NTC-0004": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "NTC-0004",
+    "ver": 1,
+    "title": "Car park resurfacing",
+    "body": "The car park closes for two days. Dates to follow.",
+    "scope": {
+     "kind": "loc",
+     "code": "WH",
+     "loc": "WH"
+    },
+    "pinned": false,
+    "urgent": false,
+    "mustAck": false,
+    "from": "2026-08-13",
+    "until": "",
+    "state": "draft",
+    "by": "Rachel Hussain",
+    "at": "13/08/2026 08:00",
+    "withdrawReason": "",
+    "acks": [],
+    "history": []
+   }
+  },
+  "audit": {}
+ }
+}

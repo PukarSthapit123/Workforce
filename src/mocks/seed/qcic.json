@@ -1,1 +1,1778 @@
-{ "version": "placeholder", "tenant": "qcic", "data": { "audit": {} } }
+{
+ "version": "extracted",
+ "tenant": "qcic",
+ "data": {
+  "people": {
+   "per_EMP001": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_EMP001",
+    "code": "EMP001",
+    "name": "Pukar Sthapit",
+    "email": "pukar.sthapit@dogmagroup.co.uk",
+    "jobProfile": "PM",
+    "employeeType": "salaried",
+    "category": "Contracted",
+    "location": "MCR",
+    "department": "DEL",
+    "manager": "Manish Nepal",
+    "contractedHours": 37.5,
+    "maxHours": 48,
+    "state": "active",
+    "start": "",
+    "end": ""
+   },
+   "per_EMP002": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_EMP002",
+    "code": "EMP002",
+    "name": "Priya Raman",
+    "email": "priya.raman@dogmagroup.co.uk",
+    "jobProfile": "CONS",
+    "employeeType": "hourly",
+    "category": "Contracted",
+    "location": "MCR",
+    "department": "DEL",
+    "manager": "Eddie Harford",
+    "contractedHours": 37.5,
+    "maxHours": 48,
+    "state": "candidate",
+    "start": "28/09/2026",
+    "end": ""
+   },
+   "per_EMP003": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_EMP003",
+    "code": "EMP003",
+    "name": "Tom Achterberg",
+    "email": "tom.achterberg@dogmagroup.co.uk",
+    "jobProfile": "CONS",
+    "employeeType": "hourly",
+    "category": "Contracted",
+    "location": "MCR",
+    "department": "DEL",
+    "manager": "Eddie Harford",
+    "contractedHours": 40,
+    "maxHours": 48,
+    "state": "preboard",
+    "start": "14/09/2026",
+    "end": ""
+   },
+   "per_EMP004": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_EMP004",
+    "code": "EMP004",
+    "name": "Bigyan Poudel",
+    "email": "bigyan.poudel@dogmagroup.co.uk",
+    "jobProfile": "CONS",
+    "employeeType": "hourly",
+    "category": "Contracted",
+    "location": "MCR",
+    "department": "DEL",
+    "manager": "Manish Nepal",
+    "contractedHours": 40,
+    "maxHours": 48,
+    "state": "active",
+    "start": "",
+    "end": ""
+   },
+   "per_EMP005": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_EMP005",
+    "code": "EMP005",
+    "name": "Bijay Shrestha",
+    "email": "bijay.shrestha@qniverse.co.uk",
+    "jobProfile": "CONS",
+    "employeeType": "hourly",
+    "category": "Contracted",
+    "location": "MCR",
+    "department": "DEL",
+    "manager": "Manish Nepal",
+    "contractedHours": 37.5,
+    "maxHours": 48,
+    "state": "active",
+    "start": "",
+    "end": ""
+   },
+   "per_EMP006": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_EMP006",
+    "code": "EMP006",
+    "name": "Eddie Harford",
+    "email": "eddie.harford@dogmagroup.co.uk",
+    "jobProfile": "PM",
+    "employeeType": "salaried",
+    "category": "Contracted",
+    "location": "MCR",
+    "department": "DEL",
+    "manager": "",
+    "contractedHours": 37.5,
+    "maxHours": 48,
+    "state": "active",
+    "start": "",
+    "end": ""
+   },
+   "per_EMP007": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_EMP007",
+    "code": "EMP007",
+    "name": "Jamir Maharjan",
+    "email": "jamir.maharjan@dogmagroup.co.uk",
+    "jobProfile": "CONS",
+    "employeeType": "hourly",
+    "category": "Contracted",
+    "location": "MCR",
+    "department": "DEL",
+    "manager": "Manish Nepal",
+    "contractedHours": 37.5,
+    "maxHours": 48,
+    "state": "active",
+    "start": "",
+    "end": ""
+   },
+   "per_EMP008": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_EMP008",
+    "code": "EMP008",
+    "name": "Ankit Krishna Shrestha",
+    "email": "jwalan.chand@dogmagroup.co.uk",
+    "jobProfile": "CONS",
+    "employeeType": "hourly",
+    "category": "Contracted",
+    "location": "MCR",
+    "department": "DEL",
+    "manager": "Manish Nepal",
+    "contractedHours": 37.5,
+    "maxHours": 48,
+    "state": "archived",
+    "start": "",
+    "end": ""
+   },
+   "per_EMP009": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_EMP009",
+    "code": "EMP009",
+    "name": "KATHERINE HULL",
+    "email": "",
+    "jobProfile": "CONS",
+    "employeeType": "hourly",
+    "category": "Contracted",
+    "location": "MCR",
+    "department": "DEL",
+    "manager": "Manish Nepal",
+    "contractedHours": 37.5,
+    "maxHours": 48,
+    "state": "active",
+    "start": "",
+    "end": ""
+   },
+   "per_EMP010": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_EMP010",
+    "code": "EMP010",
+    "name": "Lina Townsend",
+    "email": "",
+    "jobProfile": "CONS",
+    "employeeType": "hourly",
+    "category": "Contracted",
+    "location": "MCR",
+    "department": "DEL",
+    "manager": "Manish Nepal",
+    "contractedHours": 37.5,
+    "maxHours": 48,
+    "state": "active",
+    "start": "",
+    "end": ""
+   },
+   "per_EMP011": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_EMP011",
+    "code": "EMP011",
+    "name": "Marty Horst",
+    "email": "sanjeev.thakuri@dogmagroup.co.uk",
+    "jobProfile": "CONS",
+    "employeeType": "hourly",
+    "category": "Contracted",
+    "location": "MCR",
+    "department": "DEL",
+    "manager": "Manish Nepal",
+    "contractedHours": 37.5,
+    "maxHours": 48,
+    "state": "active",
+    "start": "",
+    "end": ""
+   },
+   "per_EMP012": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_EMP012",
+    "code": "EMP012",
+    "name": "Nikita Shrestha",
+    "email": "nikita.shrestha@qniverse.co.uk",
+    "jobProfile": "CONS",
+    "employeeType": "hourly",
+    "category": "Contracted",
+    "location": "MCR",
+    "department": "DEL",
+    "manager": "Manish Nepal",
+    "contractedHours": 40,
+    "maxHours": 48,
+    "state": "active",
+    "start": "",
+    "end": ""
+   },
+   "per_EMP013": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_EMP013",
+    "code": "EMP013",
+    "name": "Prastav Pokhrel",
+    "email": "prastav.pokhrel@dogmagroup.co.uk",
+    "jobProfile": "CONS",
+    "employeeType": "hourly",
+    "category": "Contracted",
+    "location": "MCR",
+    "department": "DEL",
+    "manager": "Manish Nepal",
+    "contractedHours": 40,
+    "maxHours": 48,
+    "state": "active",
+    "start": "",
+    "end": ""
+   },
+   "per_EMP014": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_EMP014",
+    "code": "EMP014",
+    "name": "Manish Nepal",
+    "email": "manish.nepal@dogmagroup.co.uk",
+    "jobProfile": "CONS",
+    "employeeType": "salaried",
+    "category": "Contracted",
+    "location": "MCR",
+    "department": "DEL",
+    "manager": "Eddie Harford",
+    "contractedHours": 40,
+    "maxHours": 48,
+    "state": "active",
+    "start": "",
+    "end": ""
+   },
+   "per_EMP015": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_EMP015",
+    "code": "EMP015",
+    "name": "Prashesh",
+    "email": "manish.nepal@dogmagroup.co.uk",
+    "jobProfile": "CONS",
+    "employeeType": "hourly",
+    "category": "Contracted",
+    "location": "MCR",
+    "department": "DEL",
+    "manager": "Manish Nepal",
+    "contractedHours": 40,
+    "maxHours": 48,
+    "state": "archived",
+    "start": "",
+    "end": ""
+   },
+   "per_EMP016": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_EMP016",
+    "code": "EMP016",
+    "name": "Ruman Thapa",
+    "email": "ruman.thapa@dogmagroup.co.uk",
+    "jobProfile": "CONS",
+    "employeeType": "hourly",
+    "category": "Contracted",
+    "location": "MCR",
+    "department": "DEL",
+    "manager": "Manish Nepal",
+    "contractedHours": 40,
+    "maxHours": 48,
+    "state": "active",
+    "start": "",
+    "end": ""
+   },
+   "per_EMP017": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_EMP017",
+    "code": "EMP017",
+    "name": "Sajin",
+    "email": "",
+    "jobProfile": "CONS",
+    "employeeType": "hourly",
+    "category": "Contracted",
+    "location": "MCR",
+    "department": "DEL",
+    "manager": "Manish Nepal",
+    "contractedHours": 40,
+    "maxHours": 48,
+    "state": "active",
+    "start": "",
+    "end": ""
+   },
+   "per_EMP018": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_EMP018",
+    "code": "EMP018",
+    "name": "Sulav Raj Thapaliya",
+    "email": "sulav.thapaliya@dogmagroup.co.uk",
+    "jobProfile": "CONS",
+    "employeeType": "hourly",
+    "category": "Contracted",
+    "location": "MCR",
+    "department": "DEL",
+    "manager": "Manish Nepal",
+    "contractedHours": 37.5,
+    "maxHours": 48,
+    "state": "archived",
+    "start": "",
+    "end": ""
+   },
+   "per_EMP019": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_EMP019",
+    "code": "EMP019",
+    "name": "Terry Dodds",
+    "email": "",
+    "jobProfile": "CONS",
+    "employeeType": "hourly",
+    "category": "Contracted",
+    "location": "MCR",
+    "department": "DEL",
+    "manager": "Manish Nepal",
+    "contractedHours": 37.5,
+    "maxHours": 48,
+    "state": "active",
+    "start": "",
+    "end": ""
+   },
+   "per_EMP020": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "per_EMP020",
+    "code": "EMP020",
+    "name": "Yuran Shrestha",
+    "email": "yuran.shrestha@dogmagroup.co.uk",
+    "jobProfile": "CONS",
+    "employeeType": "hourly",
+    "category": "Contracted",
+    "location": "MCR",
+    "department": "DEL",
+    "manager": "Manish Nepal",
+    "contractedHours": 37.5,
+    "maxHours": 48,
+    "state": "archived",
+    "start": "",
+    "end": ""
+   }
+  },
+  "accounts": {
+   "acc_pukar.sthapit@dogmagroup.co.uk": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_pukar.sthapit@dogmagroup.co.uk",
+    "email": "pukar.sthapit@dogmagroup.co.uk",
+    "personCode": "EMP001",
+    "userType": "manager",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_priya.raman@dogmagroup.co.uk": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_priya.raman@dogmagroup.co.uk",
+    "email": "priya.raman@dogmagroup.co.uk",
+    "personCode": "EMP002",
+    "userType": "employee",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_tom.achterberg@dogmagroup.co.uk": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_tom.achterberg@dogmagroup.co.uk",
+    "email": "tom.achterberg@dogmagroup.co.uk",
+    "personCode": "EMP003",
+    "userType": "employee",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_bigyan.poudel@dogmagroup.co.uk": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_bigyan.poudel@dogmagroup.co.uk",
+    "email": "bigyan.poudel@dogmagroup.co.uk",
+    "personCode": "EMP004",
+    "userType": "employee",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_bijay.shrestha@qniverse.co.uk": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_bijay.shrestha@qniverse.co.uk",
+    "email": "bijay.shrestha@qniverse.co.uk",
+    "personCode": "EMP005",
+    "userType": "employee",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_eddie.harford@dogmagroup.co.uk": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_eddie.harford@dogmagroup.co.uk",
+    "email": "eddie.harford@dogmagroup.co.uk",
+    "personCode": "EMP006",
+    "userType": "admin",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_jamir.maharjan@dogmagroup.co.uk": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_jamir.maharjan@dogmagroup.co.uk",
+    "email": "jamir.maharjan@dogmagroup.co.uk",
+    "personCode": "EMP007",
+    "userType": "employee",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_jwalan.chand@dogmagroup.co.uk": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_jwalan.chand@dogmagroup.co.uk",
+    "email": "jwalan.chand@dogmagroup.co.uk",
+    "personCode": "EMP008",
+    "userType": "employee",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_sanjeev.thakuri@dogmagroup.co.uk": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_sanjeev.thakuri@dogmagroup.co.uk",
+    "email": "sanjeev.thakuri@dogmagroup.co.uk",
+    "personCode": "EMP011",
+    "userType": "employee",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_nikita.shrestha@qniverse.co.uk": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_nikita.shrestha@qniverse.co.uk",
+    "email": "nikita.shrestha@qniverse.co.uk",
+    "personCode": "EMP012",
+    "userType": "employee",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_prastav.pokhrel@dogmagroup.co.uk": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_prastav.pokhrel@dogmagroup.co.uk",
+    "email": "prastav.pokhrel@dogmagroup.co.uk",
+    "personCode": "EMP013",
+    "userType": "employee",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_manish.nepal@dogmagroup.co.uk": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_manish.nepal@dogmagroup.co.uk",
+    "email": "manish.nepal@dogmagroup.co.uk",
+    "personCode": "EMP014",
+    "userType": "admin",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_ruman.thapa@dogmagroup.co.uk": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_ruman.thapa@dogmagroup.co.uk",
+    "email": "ruman.thapa@dogmagroup.co.uk",
+    "personCode": "EMP016",
+    "userType": "employee",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_sulav.thapaliya@dogmagroup.co.uk": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_sulav.thapaliya@dogmagroup.co.uk",
+    "email": "sulav.thapaliya@dogmagroup.co.uk",
+    "personCode": "EMP018",
+    "userType": "employee",
+    "grants": [],
+    "revocations": []
+   },
+   "acc_yuran.shrestha@dogmagroup.co.uk": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "acc_yuran.shrestha@dogmagroup.co.uk",
+    "email": "yuran.shrestha@dogmagroup.co.uk",
+    "personCode": "EMP020",
+    "userType": "employee",
+    "grants": [],
+    "revocations": []
+   }
+  },
+  "userTypes": {
+   "employee": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "employee",
+    "name": "Employee",
+    "description": "Their own work: timesheet, shifts and leave",
+    "capabilities": [
+     "own_home",
+     "own_notices",
+     "own_ts",
+     "own_shifts",
+     "own_leave",
+     "own_hours",
+     "claim",
+     "own_onb"
+    ]
+   },
+   "manager": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "manager",
+    "name": "Manager",
+    "description": "Everything an employee can do, plus their team",
+    "capabilities": [
+     "own_home",
+     "own_notices",
+     "own_ts",
+     "own_shifts",
+     "own_leave",
+     "own_hours",
+     "claim",
+     "team_ts",
+     "team_rota",
+     "team_cover",
+     "team_leave",
+     "team_sick",
+     "team_hours",
+     "profile_appr",
+     "team_people",
+     "notice_post",
+     "proxy",
+     "rota_pattern",
+     "own_onb",
+     "onb_track",
+     "onb_verify",
+     "emp_crud",
+     "rota_shift"
+    ]
+   },
+   "admin": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "admin",
+    "name": "Admin",
+    "description": "Configure how this workforce operates",
+    "capabilities": [
+     "notice_post",
+     "rota_pattern",
+     "own_onb",
+     "onb_track",
+     "onb_verify",
+     "onb_cfg",
+     "emp_crud",
+     "rota_shift",
+     "master_data",
+     "type_cfg",
+     "mod_cfg",
+     "framework",
+     "notice_org",
+     "perm_cfg",
+     "integration"
+    ]
+   }
+  },
+  "capabilities": {
+   "own_home": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "own_home",
+    "group": "own",
+    "label": "Own home, profile and documents",
+    "gate": "My work → Home, Profile, Documents",
+    "lockedFor": []
+   },
+   "own_notices": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "own_notices",
+    "group": "own",
+    "label": "Read and acknowledge notices",
+    "gate": "My work → Notices, and the Notices card on Home",
+    "lockedFor": []
+   },
+   "own_ts": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "own_ts",
+    "group": "own",
+    "label": "Own timesheet",
+    "gate": "My work → Timesheet",
+    "lockedFor": []
+   },
+   "own_shifts": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "own_shifts",
+    "group": "own",
+    "label": "Own shifts",
+    "gate": "My work → Shifts",
+    "lockedFor": []
+   },
+   "own_leave": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "own_leave",
+    "group": "own",
+    "label": "Own leave",
+    "gate": "My work → Leave, and requesting leave",
+    "lockedFor": []
+   },
+   "own_hours": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "own_hours",
+    "group": "own",
+    "label": "Own hours position",
+    "gate": "My work → Hours",
+    "lockedFor": []
+   },
+   "claim": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "claim",
+    "group": "own",
+    "label": "Claim open shifts",
+    "gate": "The Claim button on open cover requests",
+    "lockedFor": []
+   },
+   "team_ts": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "team_ts",
+    "group": "team",
+    "label": "Team timesheets and approvals",
+    "gate": "My team → Team timesheets",
+    "lockedFor": []
+   },
+   "team_rota": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "team_rota",
+    "group": "team",
+    "label": "Team rota and shift assignment",
+    "gate": "My team → Team rota",
+    "lockedFor": []
+   },
+   "team_cover": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "team_cover",
+    "group": "team",
+    "label": "Cover requests and fulfilment",
+    "gate": "My team → Cover requests",
+    "lockedFor": []
+   },
+   "team_leave": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "team_leave",
+    "group": "team",
+    "label": "Team leave approval",
+    "gate": "My team → Team leave",
+    "lockedFor": []
+   },
+   "team_sick": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "team_sick",
+    "group": "team",
+    "label": "Record team sickness",
+    "gate": "My team → Sickness",
+    "lockedFor": []
+   },
+   "team_hours": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "team_hours",
+    "group": "team",
+    "label": "Hours position and exceptions",
+    "gate": "My team → Hours position, Exceptions",
+    "lockedFor": []
+   },
+   "profile_appr": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "profile_appr",
+    "group": "team",
+    "label": "Approve profile changes",
+    "gate": "The profile change queue on My team → People",
+    "lockedFor": []
+   },
+   "team_people": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "team_people",
+    "group": "team",
+    "label": "Team people list",
+    "gate": "My team → People",
+    "lockedFor": []
+   },
+   "notice_post": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "notice_post",
+    "group": "team",
+    "label": "Post and manage notices",
+    "gate": "My team → Notices — post, edit, pin, withdraw, and who has acknowledged",
+    "lockedFor": []
+   },
+   "proxy": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "proxy",
+    "group": "team",
+    "label": "Enter time on behalf of someone",
+    "gate": "The proxy-entry button on a person",
+    "lockedFor": []
+   },
+   "rota_pattern": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "rota_pattern",
+    "group": "team",
+    "label": "Working patterns",
+    "gate": "Working patterns on My team → Team rota, and Qnipay setup → Rota",
+    "lockedFor": []
+   },
+   "own_onb": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "own_onb",
+    "group": "own",
+    "label": "Complete my own onboarding",
+    "gate": "The onboarding portal a candidate sees before their first day",
+    "lockedFor": []
+   },
+   "onb_track": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "onb_track",
+    "group": "team",
+    "label": "Track onboarding",
+    "gate": "My team → Onboarding — who is onboarding and what is outstanding",
+    "lockedFor": []
+   },
+   "onb_verify": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "onb_verify",
+    "group": "team",
+    "label": "Verify onboarding documents",
+    "gate": "The verification queue, and the decision on each document",
+    "lockedFor": []
+   },
+   "onb_cfg": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "onb_cfg",
+    "group": "cfg",
+    "label": "Configure onboarding",
+    "gate": "Qnipay setup → Onboarding — steps, documents, policies and who verifies",
+    "lockedFor": []
+   },
+   "emp_crud": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "emp_crud",
+    "group": "team",
+    "label": "Add and edit people",
+    "gate": "Add someone, and Edit on a person record",
+    "lockedFor": []
+   },
+   "rota_shift": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "rota_shift",
+    "group": "team",
+    "label": "Create shift types",
+    "gate": "New shift type on the rota palette, and Qnipay setup → Rota → Shift catalogue",
+    "lockedFor": []
+   },
+   "master_data": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "master_data",
+    "group": "cfg",
+    "label": "Workforce master data",
+    "gate": "Organisation, People, Job profiles, Locations, Departments, Cost centres, Contracts, Calendar",
+    "lockedFor": []
+   },
+   "type_cfg": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "type_cfg",
+    "group": "cfg",
+    "label": "Employee types and configuration",
+    "gate": "Qnipay setup → Employee types",
+    "lockedFor": []
+   },
+   "mod_cfg": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "mod_cfg",
+    "group": "cfg",
+    "label": "Module configuration",
+    "gate": "The whole Modules section",
+    "lockedFor": []
+   },
+   "framework": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "framework",
+    "group": "cfg",
+    "label": "Notification and approval framework",
+    "gate": "Qnipay setup → Notifications, Approvals",
+    "lockedFor": []
+   },
+   "notice_org": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "notice_org",
+    "group": "cfg",
+    "label": "Post notices to everyone",
+    "gate": "The Everyone scope on a notice, and any location or department",
+    "lockedFor": []
+   },
+   "perm_cfg": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "perm_cfg",
+    "group": "cfg",
+    "label": "Permissions and role configuration",
+    "gate": "Qnipay setup → Permissions (this page)",
+    "lockedFor": [
+     "admin"
+    ]
+   },
+   "integration": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "integration",
+    "group": "cfg",
+    "label": "Integrations and audit log",
+    "gate": "The whole Integrations section",
+    "lockedFor": []
+   }
+  },
+  "tenant": {
+   "tenant": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "tenant",
+    "name": "Dogma Group",
+    "template": "qcic",
+    "modules": {
+     "CORE": true,
+     "A": true,
+     "B": false,
+     "C": true,
+     "TS": true,
+     "R": false,
+     "L": true,
+     "ON": true
+    },
+    "flags": {
+     "ONB_RTW": true,
+     "ONB_CONV": true,
+     "ONB_WTD": true,
+     "ONB_QUAL": true,
+     "ONB_POL": true,
+     "ONB_SIGN": true,
+     "ONB_VERIFY": true,
+     "ONB_PORTAL": true,
+     "AUTO_OT": false,
+     "LATE_FINISH": false,
+     "UNSOCIAL": false,
+     "EMAIL_APPROVAL": true,
+     "SHOW_PAY": false,
+     "VEHICLE": false,
+     "PROJECT": true,
+     "SHIFT": false,
+     "BREAKS": true,
+     "DOCS": true,
+     "NOTICES": true,
+     "SELF_EDIT": true,
+     "DAILY": true,
+     "WEEKLY": true,
+     "MULTIWEEK": true,
+     "GPS": false,
+     "GEOFENCE": false,
+     "PATTERNS": false,
+     "MINSTAFF": false,
+     "FULFIL": false,
+     "SAFEWORKER": false,
+     "FLEXMON": false,
+     "ITACCESS": false,
+     "RESTRULE": true,
+     "PREFS": false,
+     "LV_ENT": true,
+     "LV_PRORATA": true,
+     "LV_LEAVER": true,
+     "LV_SLA": true,
+     "LV_ROTA": false,
+     "LV_TOIL": true
+    }
+   }
+  },
+  "locations": {
+   "loc_MCR": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "MCR",
+    "name": "Manchester",
+    "area": "North West",
+    "dept": "DEL",
+    "cc": "CC-100",
+    "level": "Floating",
+    "min": 1,
+    "manager": "Manish Nepal",
+    "source": "Manual",
+    "active": true,
+    "address": "",
+    "id": "loc_MCR"
+   },
+   "loc_REM": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "REM",
+    "name": "Remote",
+    "area": "—",
+    "dept": "DEL",
+    "cc": "CC-100",
+    "level": "Floating",
+    "min": 1,
+    "manager": "Manish Nepal",
+    "source": "Manual",
+    "active": true,
+    "address": "",
+    "id": "loc_REM"
+   }
+  },
+  "departments": {
+   "dep_DEL": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "DEL",
+    "name": "Delivery",
+    "manager": "Manish Nepal",
+    "id": "dep_DEL"
+   },
+   "dep_ADM": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "ADM",
+    "name": "Administration",
+    "manager": "Manish Nepal",
+    "id": "dep_ADM"
+   }
+  },
+  "costCentres": {
+   "cc_CC-100": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "CC-100",
+    "name": "Delivery — Billable",
+    "id": "cc_CC-100"
+   },
+   "cc_CC-900": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "CC-900",
+    "name": "Internal — Overhead",
+    "id": "cc_CC-900"
+   }
+  },
+  "jobProfiles": {
+   "job_CONS": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "CONS",
+    "name": "Consultant",
+    "night": false,
+    "id": "job_CONS"
+   },
+   "job_SCONS": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "SCONS",
+    "name": "Senior Consultant",
+    "night": false,
+    "id": "job_SCONS"
+   },
+   "job_PM": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "PM",
+    "name": "Project Manager",
+    "night": false,
+    "id": "job_PM"
+   },
+   "job_ADM": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "ADM",
+    "name": "Administrator",
+    "night": false,
+    "id": "job_ADM"
+   }
+  },
+  "projects": {
+   "prj_J00010": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "J00010",
+    "name": "Go fibre BC implementation Project",
+    "client": "Go Fibre",
+    "cc": "CC-100",
+    "status": "Open",
+    "manager": "Manish Nepal",
+    "start": "01/01/2026",
+    "end": "",
+    "billable": true,
+    "budget": "—",
+    "logged": "—",
+    "loc": "MCR",
+    "tasks": [
+     {
+      "n": "PT-02-02-04 · AS-IS process flow diagrams",
+      "g": "Delivery",
+      "b": true
+     }
+    ],
+    "id": "prj_J00010"
+   },
+   "prj_J00020": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "J00020",
+    "name": "QCIC D365 Implementation",
+    "client": "QCIC",
+    "cc": "CC-100",
+    "status": "Open",
+    "manager": "Manish Nepal",
+    "start": "01/01/2026",
+    "end": "",
+    "billable": true,
+    "budget": "—",
+    "logged": "—",
+    "loc": "MCR",
+    "tasks": [
+     {
+      "n": "PT-01-03-08 · Workshop Preparation",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-01-03-27 · Workshop Preparation and Session",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-100 · Workshop 4 - BC - TO BE - Finance & Accounts",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-103 · Prepare Payroll BC Financial Core Data Template for Configuration/Development",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-114 · Workshop 7 - BC - TO BE - Cashflow Forecast",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-127 · Workshop 2 - BC - AS IS - Purchase & Payables",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-135 · HR/BC/Payroll Playback- Integration",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-140 · Workshop 1 - Payroll - Full Payroll Scoping",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-142 · Set up and Configure",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-151 · Configuration UK",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-183 · Prepare Payroll Blueprint Documentation",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-187 · D365 BC Core Configuration",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-188 · D365 BC Financial Modules Config",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-189 · D365 BC Project Management Config",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-202 · Sirius MDM Octopus Configuration",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-204 · Workflow Configuration",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-205 · Data Migration Planning",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-206 · Data Migration Execution",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-224 · End User Training - PM",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-237 · Configuration of Dependency Data - No Impact Testing",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-242 · Integration Mapping Document - System Wide",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-254 · Bug Fixing",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-268 · Workshop 3 - BC - AS IS - Sales & Receivables",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-279 · Configuration US",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-282 · BC UAT – With Integration and Customisation",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-318 · Reporting UAT- Power BI report",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-325 · Workshop 5 - BC - TO BE - Purchase & Payables",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-327 · Configuration Issue fixes",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-335 · Prepare Payroll BC Data for Production",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-344 · Playback Session - India Entity",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-352 · Workshop 4 - Project Management - TO BE - Workflows & System Integration",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-355 · Follow up Meeting to Discussion / Clarity on Data Templates",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-377 · Deployment to UAT Environment",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-91 · Workshop 6 - BC - TO BE - Sales & Receivables",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-94 · Workshop 1 - BC - AS IS - Finance & Accounts",
+      "g": "Delivery",
+      "b": true
+     }
+    ],
+    "id": "prj_J00020"
+   },
+   "prj_J00030": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "J00030",
+    "name": "Internal Project-Adhoc WorkLog",
+    "client": "Internal",
+    "cc": "CC-900",
+    "status": "Open",
+    "manager": "Manish Nepal",
+    "start": "01/01/2026",
+    "end": "",
+    "billable": false,
+    "budget": "—",
+    "logged": "—",
+    "loc": "MCR",
+    "tasks": [
+     {
+      "n": "PT-01-120 · HCPC: Deferred Income",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-01-131 · Invoiced status not updating back to Dynamics CRM",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-105-010 · Document Review for scoping session",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-105-08 · Deferral income automatic posting discussion",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-105-12 · Additional requirement discussion with client",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-105-13 · Version upgrade Review",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-105-14 · Additional requirement discussion with client continue",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-105-15 · Continuing the discussion with client",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-105-25 · Deferral Discussion",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-105-26 · Data validation sent by client",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-105-28 · Data validation review with client",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-105-31 · Further discussion of credit memo issue",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-105-38 · Duplicate invoice discussion",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-106-010 · Report changes Discussion",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-106-04 · new report customization CR discussion",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-117-03 · Dimension issue Discussion",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-117-07 · Additional currency setup",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-120-010 · CAS-16418-Q1Y6M4: Error from Year End Closing Journal",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-120-02 · Closing year end",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-120-04 · Company setup requirement gathering",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-120-05 · Support case discussion",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-120-07 · CR document review",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-62-02 · version 25.2 upgrade validation in UAT and Dev environment",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-62-06 · Payment not landing",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-63-01 · VAT return file investigation and discussion",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-63-02 · Continuing the VAT Discussion",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-64-03 · VAT Return",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-64-04 · New company setup",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-74-02 · Investigation of Consolidation Inconsistency",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-74-03 · Consolidation issue",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-74-04 · Training on year end process",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-77-01 · Allocating Journal to PO's",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-77-03 · VAT date on closed period",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-91-01 · Wireframes, iterations and prototype",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "PT-05-92-03 · Assistance required in VAT submission",
+      "g": "Internal",
+      "b": false
+     }
+    ],
+    "id": "prj_J00030"
+   },
+   "prj_J00040": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "J00040",
+    "name": "HCPC CR automated apply unapply and Reverse",
+    "client": "Go Fibre",
+    "cc": "CC-100",
+    "status": "Open",
+    "manager": "Manish Nepal",
+    "start": "01/01/2026",
+    "end": "",
+    "billable": true,
+    "budget": "—",
+    "logged": "—",
+    "loc": "MCR",
+    "tasks": [
+     {
+      "n": "PT-14 · Preparation for UAT",
+      "g": "Delivery",
+      "b": true
+     }
+    ],
+    "id": "prj_J00040"
+   },
+   "prj_JOB00010": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "JOB00010",
+    "name": "Ultima Dsiplays-Sales & Marketing",
+    "client": "Ultima Displays",
+    "cc": "CC-100",
+    "status": "Open",
+    "manager": "Manish Nepal",
+    "start": "01/01/2026",
+    "end": "",
+    "billable": true,
+    "budget": "—",
+    "logged": "—",
+    "loc": "MCR",
+    "tasks": [
+     {
+      "n": "PT-01-05-010 · Review & Align Pricing Structure – Client Requirements",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-01-05-14 · PIM Techincal Discussion and sales query discussion",
+      "g": "Delivery",
+      "b": true
+     }
+    ],
+    "id": "prj_JOB00010"
+   },
+   "prj_JOB00020": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "JOB00020",
+    "name": "QMS CRM Implementation",
+    "client": "Go Fibre",
+    "cc": "CC-100",
+    "status": "Open",
+    "manager": "Manish Nepal",
+    "start": "01/01/2026",
+    "end": "",
+    "billable": true,
+    "budget": "—",
+    "logged": "—",
+    "loc": "MCR",
+    "tasks": [
+     {
+      "n": "PT-01-16-01 · Year end closing discussion",
+      "g": "Delivery",
+      "b": true
+     }
+    ],
+    "id": "prj_JOB00020"
+   },
+   "prj_JOB00030": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "JOB00030",
+    "name": "Golden Charter BC Implementation and Integration Project",
+    "client": "QCIC",
+    "cc": "CC-100",
+    "status": "Open",
+    "manager": "Manish Nepal",
+    "start": "01/01/2026",
+    "end": "",
+    "billable": true,
+    "budget": "—",
+    "logged": "—",
+    "loc": "MCR",
+    "tasks": [
+     {
+      "n": "PT-01-010-22 · Receivables Fit Gap + Solution Design Documentation",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-01-010-23 · payable user stories review and update",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-01-010-27 · GC overall documentation review & update",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-01-010-31 · Preparation for To Be Session",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-01-010-32 · Bank Reconciliation To Be Session",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-01-010-35 · Fit Gap Finalization",
+      "g": "Delivery",
+      "b": true
+     },
+     {
+      "n": "PT-01-12-07 · Process Flow Diagrams",
+      "g": "Delivery",
+      "b": true
+     }
+    ],
+    "id": "prj_JOB00030"
+   },
+   "prj_LEAVE": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "code": "LEAVE",
+    "name": "Attendance",
+    "client": "Internal",
+    "cc": "CC-900",
+    "status": "Open",
+    "manager": "Manish Nepal",
+    "start": "01/01/2026",
+    "end": "",
+    "billable": false,
+    "budget": "—",
+    "logged": "—",
+    "loc": "MCR",
+    "tasks": [
+     {
+      "n": "ANNUAL LEAVE · Annual Leave",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "BANK HOLIDAY · Bank Holiday",
+      "g": "Internal",
+      "b": false
+     },
+     {
+      "n": "SICK LEAVE · Sick Leave",
+      "g": "Internal",
+      "b": false
+     }
+    ],
+    "id": "prj_LEAVE"
+   }
+  },
+  "notices": {
+   "NTC-0001": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "NTC-0001",
+    "ver": 2,
+    "title": "Updated lone working policy",
+    "body": "Lone working is allowed only where a check-in is booked every two hours. Night staff now check in by phone at 23:00, 01:00, 03:00 and 05:00.",
+    "scope": {
+     "kind": "all",
+     "code": "",
+     "loc": ""
+    },
+    "pinned": true,
+    "urgent": false,
+    "mustAck": true,
+    "from": "2026-08-03",
+    "until": "",
+    "state": "live",
+    "by": "Pukar Sthapit",
+    "at": "03/08/2026 09:00",
+    "withdrawReason": "",
+    "acks": [
+     {
+      "eid": "EMP001",
+      "ver": 2,
+      "at": "10/08/2026 10:00"
+     },
+     {
+      "eid": "EMP002",
+      "ver": 2,
+      "at": "09/08/2026 10:01"
+     },
+     {
+      "eid": "EMP003",
+      "ver": 1,
+      "at": "08/08/2026 10:02"
+     },
+     {
+      "eid": "EMP004",
+      "ver": 1,
+      "at": "07/08/2026 10:03"
+     }
+    ],
+    "history": [
+     {
+      "ver": 1,
+      "title": "Lone working policy",
+      "body": "Lone working is allowed only where a check-in is booked every two hours.",
+      "by": "Pukar Sthapit",
+      "at": "03/08/2026 09:00"
+     }
+    ]
+   },
+   "NTC-0002": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "NTC-0002",
+    "ver": 1,
+    "title": "Fire drill on Thursday at 10:00",
+    "body": "Leave by the nearest exit and meet at the front car park. Residents who cannot use the stairs stay with their named carer.",
+    "scope": {
+     "kind": "loc",
+     "code": "MCR",
+     "loc": "MCR"
+    },
+    "pinned": false,
+    "urgent": true,
+    "mustAck": true,
+    "from": "2026-08-12",
+    "until": "2026-08-20",
+    "state": "live",
+    "by": "Pukar Sthapit",
+    "at": "12/08/2026 16:10",
+    "withdrawReason": "",
+    "acks": [
+     {
+      "eid": "EMP002",
+      "ver": 1,
+      "at": "13/08/2026 08:40"
+     },
+     {
+      "eid": "EMP003",
+      "ver": 1,
+      "at": "13/08/2026 08:40"
+     }
+    ],
+    "history": []
+   },
+   "NTC-0003": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "NTC-0003",
+    "ver": 1,
+    "title": "Summer social",
+    "body": "Thank you to everyone who came. Photos are with the office.",
+    "scope": {
+     "kind": "all",
+     "code": "",
+     "loc": ""
+    },
+    "pinned": false,
+    "urgent": false,
+    "mustAck": false,
+    "from": "2026-07-14",
+    "until": "2026-08-10",
+    "state": "live",
+    "by": "Pukar Sthapit",
+    "at": "14/07/2026 12:00",
+    "withdrawReason": "",
+    "acks": [],
+    "history": []
+   },
+   "NTC-0004": {
+    "version": 1,
+    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "id": "NTC-0004",
+    "ver": 1,
+    "title": "Car park resurfacing",
+    "body": "The car park closes for two days. Dates to follow.",
+    "scope": {
+     "kind": "loc",
+     "code": "MCR",
+     "loc": "MCR"
+    },
+    "pinned": false,
+    "urgent": false,
+    "mustAck": false,
+    "from": "2026-08-13",
+    "until": "",
+    "state": "draft",
+    "by": "Pukar Sthapit",
+    "at": "13/08/2026 08:00",
+    "withdrawReason": "",
+    "acks": [],
+    "history": []
+   }
+  },
+  "audit": {}
+ }
+}

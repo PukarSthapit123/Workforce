@@ -1,0 +1,378 @@
+{
+ "flags": [
+  {
+   "code": "AUTO_OT",
+   "label": "Auto overtime split",
+   "mod": "TS",
+   "desc": "Split hours past the weekly threshold into an overtime pay code."
+  },
+  {
+   "code": "LATE_FINISH",
+   "label": "Late finish detection",
+   "mod": "TS",
+   "desc": "Flag shifts finishing after the configured cut-off."
+  },
+  {
+   "code": "UNSOCIAL",
+   "label": "Unsocial hours detection",
+   "mod": "TS",
+   "desc": "Flag hours worked inside the unsocial window."
+  },
+  {
+   "code": "EMAIL_APPROVAL",
+   "label": "Email approval",
+   "mod": "TS",
+   "desc": "Managers can approve a week from an email link."
+  },
+  {
+   "code": "SHOW_PAY",
+   "label": "Show indicative pay to employees",
+   "mod": "CORE",
+   "desc": "Off by default — rates stay in Business Central."
+  },
+  {
+   "code": "VEHICLE",
+   "label": "Vehicle & movement fields",
+   "mod": "TS",
+   "desc": "Offered to employee types with the vehicle capability."
+  },
+  {
+   "code": "PROJECT",
+   "label": "Project & costing fields",
+   "mod": "TS",
+   "desc": "Project, task, cost centre and billable flag."
+  },
+  {
+   "code": "SHIFT",
+   "label": "Shift & rota fields",
+   "mod": "TS",
+   "desc": "Rota line on the entry, and shift premium rules."
+  },
+  {
+   "code": "BREAKS",
+   "label": "Break tracking",
+   "mod": "TS",
+   "desc": "Employees record unpaid breaks; deducted from net hours."
+  },
+  {
+   "code": "ONB_RTW",
+   "label": "Right to work",
+   "mod": "ON",
+   "desc": "Collect proof of the right to work, with the document type declared."
+  },
+  {
+   "code": "ONB_CONV",
+   "label": "Convictions declaration",
+   "mod": "ON",
+   "desc": "Ask whether the person has unspent convictions, with detail where they do."
+  },
+  {
+   "code": "ONB_WTD",
+   "label": "Working time opt-out",
+   "mod": "ON",
+   "desc": "Record whether the person opts out of the 48-hour weekly limit."
+  },
+  {
+   "code": "ONB_QUAL",
+   "label": "Qualifications",
+   "mod": "ON",
+   "desc": "Collect qualifications and certificates, with expiry where relevant."
+  },
+  {
+   "code": "ONB_POL",
+   "label": "Policy acknowledgement",
+   "mod": "ON",
+   "desc": "Require each policy to be read and acknowledged before submission."
+  },
+  {
+   "code": "ONB_SIGN",
+   "label": "Signature on sign-off",
+   "mod": "ON",
+   "desc": "Capture a drawn signature rather than a tick alone."
+  },
+  {
+   "code": "ONB_VERIFY",
+   "label": "Document verification",
+   "mod": "ON",
+   "desc": "A named person checks each uploaded document before it counts."
+  },
+  {
+   "code": "ONB_PORTAL",
+   "label": "Employee portal",
+   "mod": "ON",
+   "desc": "Handbook, company information, vacancies and benefits for people already working."
+  },
+  {
+   "code": "DOCS",
+   "label": "Document centre",
+   "mod": "CORE",
+   "desc": "Shared documents in Employee Self-Service."
+  },
+  {
+   "code": "NOTICES",
+   "label": "Notice board",
+   "mod": "CORE",
+   "desc": "Managers post to their location, admins to everyone. Colleagues read, and acknowledge where asked."
+  },
+  {
+   "code": "SELF_EDIT",
+   "label": "Self-service profile changes",
+   "mod": "CORE",
+   "desc": "Colleagues propose changes to their own contact, emergency and bank details. Every change is approved before it takes effect."
+  },
+  {
+   "code": "DAILY",
+   "label": "Daily entry",
+   "mod": "A",
+   "desc": "The day form."
+  },
+  {
+   "code": "WEEKLY",
+   "label": "Weekly grid",
+   "mod": "A",
+   "desc": "Seven-day grid capture."
+  },
+  {
+   "code": "MULTIWEEK",
+   "label": "Multi-week submit",
+   "mod": "A",
+   "desc": "Catch up on earlier unsubmitted weeks in one action."
+  },
+  {
+   "code": "GPS",
+   "label": "Location check on clock",
+   "mod": "B",
+   "desc": "Capture coordinates when a shift starts."
+  },
+  {
+   "code": "GEOFENCE",
+   "label": "Geofence radius per site",
+   "mod": "C",
+   "desc": "Warn when a clock-in falls outside the site radius."
+  },
+  {
+   "code": "PATTERNS",
+   "label": "Working patterns",
+   "mod": "R",
+   "desc": "Generate the rota from repeating cycles up to the configured horizon."
+  },
+  {
+   "code": "MINSTAFF",
+   "label": "Minimum staffing",
+   "mod": "R",
+   "desc": "Coverage is checked against each location’s support level."
+  },
+  {
+   "code": "FULFIL",
+   "label": "Shift fulfilment workflow",
+   "mod": "R",
+   "desc": "Timed, staged cover requests with escalation."
+  },
+  {
+   "code": "SAFEWORKER",
+   "label": "Safe-worker filtering",
+   "mod": "R",
+   "desc": "Only advertise work to people who are cleared and eligible."
+  },
+  {
+   "code": "FLEXMON",
+   "label": "Flexible worker monitoring",
+   "mod": "R",
+   "desc": "Count bank weeks and notify HR at the configured milestones."
+  },
+  {
+   "code": "ITACCESS",
+   "label": "IT access request on fulfilment",
+   "mod": "R",
+   "desc": "Raise a site-access request when a shift is filled."
+  },
+  {
+   "code": "RESTRULE",
+   "label": "Minimum rest checking",
+   "mod": "R",
+   "desc": "Warn when two shifts leave less than the configured rest."
+  },
+  {
+   "code": "PREFS",
+   "label": "Worker shift preferences",
+   "mod": "R",
+   "desc": "Employees choose where and when they want to be offered work."
+  },
+  {
+   "code": "LV_ENT",
+   "label": "Automatic entitlement calculation",
+   "mod": "L",
+   "desc": "Derive annual leave from hours, pattern and service."
+  },
+  {
+   "code": "LV_PRORATA",
+   "label": "Pro-rata recalculation",
+   "mod": "L",
+   "desc": "Recalculate entitlement when working arrangements change."
+  },
+  {
+   "code": "LV_LEAVER",
+   "label": "Leaver reconciliation",
+   "mod": "L",
+   "desc": "Settle over- or under-taken leave at the leaving date."
+  },
+  {
+   "code": "LV_SLA",
+   "label": "Approval SLA & escalation",
+   "mod": "L",
+   "desc": "Escalate a request that is not decided within the SLA."
+  },
+  {
+   "code": "LV_ROTA",
+   "label": "Leave affects rota availability",
+   "mod": "L",
+   "desc": "Approved leave removes the person from rota allocation."
+  },
+  {
+   "code": "LV_TOIL",
+   "label": "Time off in lieu",
+   "mod": "L",
+   "desc": "Accrue and spend TOIL within the configured window."
+  }
+ ],
+ "modules": [
+  {
+   "code": "CORE",
+   "name": "Workforce core",
+   "ic": "users",
+   "desc": "People, employee types, approvals, notifications and the Business Central hand-off.",
+   "locked": true
+  },
+  {
+   "code": "TS",
+   "name": "Timesheet",
+   "ic": "clock",
+   "desc": "How time is captured, checked and sent for approval.",
+   "subs": [
+    "A",
+    "B",
+    "C"
+   ],
+   "liveBy": [
+    "A",
+    "B"
+   ],
+   "master": true,
+   "setup": "mts",
+   "setupLabel": "Timesheet setup"
+  },
+  {
+   "code": "R",
+   "name": "Rota",
+   "ic": "grid",
+   "desc": "Shift catalogue, working patterns, coverage and the shift fulfilment workflow.",
+   "setup": "mrota",
+   "setupLabel": "Rota setup"
+  },
+  {
+   "code": "L",
+   "name": "Leave & absence",
+   "ic": "calendar",
+   "desc": "Leave types, entitlement, booking workflow and leaver reconciliation.",
+   "setup": "mleave",
+   "setupLabel": "Leave setup"
+  },
+  {
+   "code": "ON",
+   "name": "Onboarding",
+   "ic": "clipboard",
+   "desc": "What a new starter completes before their first day, and what the business checks before they can work.",
+   "setup": "monb",
+   "setupLabel": "Onboarding setup"
+  }
+ ],
+ "permGroups": [
+  {
+   "k": "own",
+   "label": "Their own work",
+   "desc": "Every persona is an employee record first, so these apply to everyone."
+  },
+  {
+   "k": "team",
+   "label": "Their team",
+   "desc": "Scoped by department and location — never organisation-wide unless master data is granted."
+  },
+  {
+   "k": "cfg",
+   "label": "Configuration",
+   "desc": "How this workforce operates. Normally admin only."
+  }
+ ],
+ "empStates": {
+  "candidate": {
+   "label": "Candidate",
+   "pill": "neu",
+   "gly": "○",
+   "next": [
+    "preboard",
+    "archived"
+   ],
+   "note": "Offered a role, not yet set up. No access, no rota, no timesheet."
+  },
+  "preboard": {
+   "label": "Preboarding",
+   "pill": "info",
+   "gly": "◷",
+   "next": [
+    "active",
+    "archived"
+   ],
+   "note": "Being set up — compliance and access in progress. Not yet rota’d."
+  },
+  "active": {
+   "label": "Active",
+   "pill": "ok",
+   "gly": "✓",
+   "next": [
+    "suspended",
+    "onleave",
+    "leaver"
+   ],
+   "note": "Working. Appears on the rota, submits time, counts toward coverage."
+  },
+  "suspended": {
+   "label": "Suspended",
+   "pill": "err",
+   "gly": "✕",
+   "next": [
+    "active",
+    "leaver"
+   ],
+   "note": "Not to be offered shifts. Existing timesheets stand and still need approving."
+  },
+  "onleave": {
+   "label": "On long leave",
+   "pill": "warn",
+   "gly": "☀",
+   "next": [
+    "active",
+    "leaver"
+   ],
+   "note": "Away for an extended period — maternity, sabbatical, long-term sick."
+  },
+  "leaver": {
+   "label": "Leaver",
+   "pill": "warn",
+   "gly": "→",
+   "next": [
+    "archived",
+    "active"
+   ],
+   "note": "Leaving date set. Entitlement is reconciled and future shifts are released."
+  },
+  "archived": {
+   "label": "Archived",
+   "pill": "neu",
+   "gly": "—",
+   "next": [
+    "active"
+   ],
+   "note": "Kept for audit and payroll history. Hidden from every working list."
+  }
+ }
+}
