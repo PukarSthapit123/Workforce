@@ -1,0 +1,91 @@
+@import "tailwindcss";
+@import "./ui/tokens.css";
+
+/* the prototype switches theme with [data-theme="dark"], so shadcn's dark: does too */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* shadcn reads these names. Each is an alias of a Qnipay semantic token, never a value. */
+:root {
+  --background: var(--qp-color-surface-page);
+  --foreground: var(--qp-color-text-primary);
+  --card: var(--qp-color-surface-card);
+  --card-foreground: var(--qp-color-text-primary);
+  --popover: var(--qp-color-surface-card);
+  --popover-foreground: var(--qp-color-text-primary);
+  --primary: var(--qp-color-brand-primary);
+  --primary-foreground: var(--qp-color-text-on-brand);
+  --secondary: var(--qp-color-surface-tint);
+  --secondary-foreground: var(--qp-color-text-primary);
+  --muted: var(--qp-color-surface-sunken);
+  --muted-foreground: var(--qp-color-text-secondary);
+  --accent: var(--qp-color-brand-primary-subtle);
+  --accent-foreground: var(--qp-color-text-primary);
+  --destructive: var(--qp-color-status-error);
+  --border: var(--qp-color-border);
+  --input: var(--qp-color-border);
+  --ring: var(--qp-color-brand-primary);
+  --radius: var(--qp-radius-control);
+}
+
+@theme inline {
+  --font-sans: var(--qp-font-body);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  /* Qnipay names, for everything shadcn does not name */
+  --color-brand: var(--qp-color-brand-primary);
+  --color-brand-hover: var(--qp-color-brand-primary-hover);
+  --color-brand-accent: var(--qp-color-brand-accent);
+  --color-surface-page: var(--qp-color-surface-page);
+  --color-surface-card: var(--qp-color-surface-card);
+  --color-surface-sunken: var(--qp-color-surface-sunken);
+  --color-surface-inverse: var(--qp-color-surface-inverse);
+  --color-text-primary: var(--qp-color-text-primary);
+  --color-text-secondary: var(--qp-color-text-secondary);
+  --color-text-disabled: var(--qp-color-text-disabled);
+  --color-ok: var(--qp-color-status-success);
+  --color-ok-surface: var(--qp-color-status-success-surface);
+  --color-warn: var(--qp-color-status-warning);
+  --color-warn-surface: var(--qp-color-status-warning-surface);
+  --color-err: var(--qp-color-status-error);
+  --color-err-surface: var(--qp-color-status-error-surface);
+  --color-info: var(--qp-color-status-info);
+  --color-info-surface: var(--qp-color-status-info-surface);
+  --color-neu: var(--qp-color-status-neutral);
+  --color-neu-surface: var(--qp-color-status-neutral-surface);
+  --radius-xs: var(--qp-radius-xs);
+  --radius-sm: var(--qp-radius-sm);
+  --radius-md: var(--qp-radius-control);
+  --radius-control: var(--qp-radius-control);
+  --radius-card: var(--qp-radius-card);
+  --radius-overlay: var(--qp-radius-overlay);
+  --radius-pill: var(--qp-radius-pill);
+  --spacing-xs: var(--qp-space-xs);
+  --spacing-sm: var(--qp-space-sm);
+  --spacing-md: var(--qp-space-md);
+  --spacing-lg: var(--qp-space-lg);
+  --spacing-xl: var(--qp-space-xl);
+  --spacing-2xl: var(--qp-space-2xl);
+  --spacing-3xl: var(--qp-space-3xl);
+  --shadow-sm: var(--qp-shadow-sm);
+  --shadow-md: var(--qp-shadow-md);
+  --shadow-lg: var(--qp-shadow-lg);
+}
+
+body { background: var(--background); color: var(--foreground); font-family: var(--qp-font-body);
+  font-size: var(--qp-text-14); line-height: var(--qp-lh-14); }
