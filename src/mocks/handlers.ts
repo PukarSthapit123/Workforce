@@ -1,4 +1,5 @@
 import { faultsHandler } from './faults';
 import { devHandlers } from './dev';
+import { sessionHandlers } from './session';
 /* Order matters: faults first, so they can pre-empt any endpoint. */
-export const handlers = [faultsHandler, ...devHandlers /* feature handlers appended by later tasks */];
+export const handlers = [faultsHandler, ...devHandlers, ...sessionHandlers /* feature handlers appended by later tasks */];

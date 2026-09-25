@@ -152,6 +152,840 @@
           }
         }
       }
+    },
+    "/api/v1/session/accounts": {
+      "get": {
+        "summary": "Demo account shortcuts (stub: not in production)",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "email": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "userType": {
+                        "type": "string",
+                        "enum": [
+                          "employee",
+                          "manager",
+                          "admin"
+                        ]
+                      },
+                      "personCode": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "email",
+                      "name",
+                      "userType",
+                      "personCode"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Refusal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "next": {
+                      "type": "string"
+                    },
+                    "field": {
+                      "type": "string"
+                    },
+                    "usedBy": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string"
+                          },
+                          "count": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "examples": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "count",
+                          "examples"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "next"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/session/view-as": {
+      "delete": {
+        "summary": "Return to your own account",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string"
+                    },
+                    "account": {
+                      "type": "object",
+                      "properties": {
+                        "email": {
+                          "type": "string"
+                        },
+                        "userType": {
+                          "type": "string",
+                          "enum": [
+                            "employee",
+                            "manager",
+                            "admin"
+                          ]
+                        },
+                        "personCode": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "email",
+                        "userType",
+                        "personCode",
+                        "name"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "capabilities": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "viewingAs": {
+                      "type": "object",
+                      "properties": {
+                        "personCode": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "userType": {
+                          "type": "string",
+                          "enum": [
+                            "employee",
+                            "manager",
+                            "admin"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "personCode",
+                        "name",
+                        "userType"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "simulated": {
+                      "type": "boolean",
+                      "const": true
+                    }
+                  },
+                  "required": [
+                    "token",
+                    "account",
+                    "capabilities",
+                    "simulated"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Refusal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "next": {
+                      "type": "string"
+                    },
+                    "field": {
+                      "type": "string"
+                    },
+                    "usedBy": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string"
+                          },
+                          "count": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "examples": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "count",
+                          "examples"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "next"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Look at the app as another person; audited",
+        "x-capability": "integration",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string"
+                    },
+                    "account": {
+                      "type": "object",
+                      "properties": {
+                        "email": {
+                          "type": "string"
+                        },
+                        "userType": {
+                          "type": "string",
+                          "enum": [
+                            "employee",
+                            "manager",
+                            "admin"
+                          ]
+                        },
+                        "personCode": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "email",
+                        "userType",
+                        "personCode",
+                        "name"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "capabilities": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "viewingAs": {
+                      "type": "object",
+                      "properties": {
+                        "personCode": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "userType": {
+                          "type": "string",
+                          "enum": [
+                            "employee",
+                            "manager",
+                            "admin"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "personCode",
+                        "name",
+                        "userType"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "simulated": {
+                      "type": "boolean",
+                      "const": true
+                    }
+                  },
+                  "required": [
+                    "token",
+                    "account",
+                    "capabilities",
+                    "simulated"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Refusal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "next": {
+                      "type": "string"
+                    },
+                    "field": {
+                      "type": "string"
+                    },
+                    "usedBy": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string"
+                          },
+                          "count": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "examples": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "count",
+                          "examples"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "next"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "personCode": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "personCode"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/session": {
+      "delete": {
+        "summary": "Sign out",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "null"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Refusal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "next": {
+                      "type": "string"
+                    },
+                    "field": {
+                      "type": "string"
+                    },
+                    "usedBy": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string"
+                          },
+                          "count": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "examples": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "count",
+                          "examples"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "next"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "The current session",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string"
+                    },
+                    "account": {
+                      "type": "object",
+                      "properties": {
+                        "email": {
+                          "type": "string"
+                        },
+                        "userType": {
+                          "type": "string",
+                          "enum": [
+                            "employee",
+                            "manager",
+                            "admin"
+                          ]
+                        },
+                        "personCode": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "email",
+                        "userType",
+                        "personCode",
+                        "name"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "capabilities": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "viewingAs": {
+                      "type": "object",
+                      "properties": {
+                        "personCode": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "userType": {
+                          "type": "string",
+                          "enum": [
+                            "employee",
+                            "manager",
+                            "admin"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "personCode",
+                        "name",
+                        "userType"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "simulated": {
+                      "type": "boolean",
+                      "const": true
+                    }
+                  },
+                  "required": [
+                    "token",
+                    "account",
+                    "capabilities",
+                    "simulated"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Refusal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "next": {
+                      "type": "string"
+                    },
+                    "field": {
+                      "type": "string"
+                    },
+                    "usedBy": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string"
+                          },
+                          "count": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "examples": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "count",
+                          "examples"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "next"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Sign in (simulated; Entra ID in production)",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string"
+                    },
+                    "account": {
+                      "type": "object",
+                      "properties": {
+                        "email": {
+                          "type": "string"
+                        },
+                        "userType": {
+                          "type": "string",
+                          "enum": [
+                            "employee",
+                            "manager",
+                            "admin"
+                          ]
+                        },
+                        "personCode": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "email",
+                        "userType",
+                        "personCode",
+                        "name"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "capabilities": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "viewingAs": {
+                      "type": "object",
+                      "properties": {
+                        "personCode": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "userType": {
+                          "type": "string",
+                          "enum": [
+                            "employee",
+                            "manager",
+                            "admin"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "personCode",
+                        "name",
+                        "userType"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "simulated": {
+                      "type": "boolean",
+                      "const": true
+                    }
+                  },
+                  "required": [
+                    "token",
+                    "account",
+                    "capabilities",
+                    "simulated"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Refusal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "next": {
+                      "type": "string"
+                    },
+                    "field": {
+                      "type": "string"
+                    },
+                    "usedBy": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string"
+                          },
+                          "count": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "examples": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "count",
+                          "examples"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "next"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

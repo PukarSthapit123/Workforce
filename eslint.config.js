@@ -9,12 +9,18 @@ export default tseslint.config(
   ...tseslint.configs.strict,
   {
     languageOptions: { globals: { ...globals.browser, ...globals.node } },
-    plugins: { 'react-hooks': hooks },
     rules: {
-      ...hooks.configs.recommended.rules,
       /* raw colours and px belong in tokens.css, never in a component */
       'no-restricted-syntax': ['error',
         { selector: "Literal[value=/#[0-9a-fA-F]{3,8}\\b/]", message: 'Use a --qp colour token, not a hex literal.' }],
     },
+  },
+  {
+    /* react-hooks only makes sense for the React source tree. e2e/ fixtures
+       take a Playwright `use` callback, which is not a React hook, and the
+       plugin's name-based heuristic otherwise misreads it as one. */
+    files: ['src/**/*.{ts,tsx}'],
+    plugins: { 'react-hooks': hooks },
+    rules: { ...hooks.configs.recommended.rules },
   },
 );

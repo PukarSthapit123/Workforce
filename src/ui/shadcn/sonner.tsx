@@ -7,15 +7,22 @@ import {
   OctagonXIcon,
   TriangleAlertIcon,
 } from "lucide-react"
-import { useTheme } from "next-themes"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 
+/* The app has no next-themes provider: it themes with [data-theme="dark"] on
+   <html> (see src/index.css). Reading that attribute directly keeps the
+   toaster in step with the app's own theme instead of a provider that does
+   not exist. */
+function useAppTheme(): ToasterProps["theme"] {
+  return (document.documentElement.dataset.theme === "dark" ? "dark" : "light")
+}
+
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme()
+  const theme = useAppTheme()
 
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
+      theme={theme}
       className="toaster group"
       icons={{
         success: <CircleCheckIcon className="size-4" />,
