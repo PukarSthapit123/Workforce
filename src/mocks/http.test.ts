@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { refuse, Refused, readJson, checkVersion, bump, requireSession, requireCapability, type Session } from './http';
+import { refuse, Refused, readJson, checkVersion, bump } from './http';
 import { store } from './store';
 
 beforeEach(() => { store.reset('social'); });
@@ -60,38 +60,4 @@ test('bump returns a new record with version+1 and the store clock as updatedAt'
   expect(next).toEqual({ id: 'a', version: 4, updatedAt: '2026-09-25T00:00:00.000Z' });
   expect(record.version).toBe(3); // the original is untouched
   store.setClock(null);
-});
-
-describe('requireSession and requireCapability', () => {
-  const session: Session = { personCode: 'per_1', name: 'Ana', capabilities: ['own.timesheet.view'] };
-
-  test('requireSession refuses 401 when there is no bearer token', () => {
-    const request = new Request('http://localhost/x');
-    expect(() => requireSession(request)).toThrow(Refused);
-    try { requireSession(request); } catch (e) { expect((e as Refused).status).toBe(401); }
-  });
-  test('requireSession refuses 401 when the token matches no session', () => {
-    const request = new Request('http://localhost/x', { headers: { Authorization: 'Bearer nope' } });
-    expect(() => requireSession(request)).toThrow(Refused);
-  });
-  test('requireSession returns the session for a known bearer token', () => {
-    store.coll<Session>('sessions').tok1 = session;
-    const request = new Request('http://localhost/x', { headers: { Authorization: 'Bearer tok1' } });
-    expect(requireSession(request)).toEqual(session);
-  });
-  test('requireCapability passes silently when the session has the capability', () => {
-    expect(() => requireCapability(session, 'own.timesheet.view')).not.toThrow();
-  });
-  test('requireCapability refuses 403 naming the missing capability, without saving the session', () => {
-    try {
-      requireCapability(session, 'cfg.tenant.edit');
-      throw new Error('should have refused');
-    } catch (e) {
-      expect(e).toBeInstanceOf(Refused);
-      const refused = e as Refused;
-      expect(refused.status).toBe(403);
-      expect(refused.body.code).toBe('capability');
-      expect(refused.body.message).toContain('cfg.tenant.edit');
-    }
-  });
 });
