@@ -28,7 +28,7 @@ and the Workforce core that every module reads.
 - TypeScript in strict mode, Vite, React Router, TanStack Query for server state.
 - Zod schemas are the single contract, used by the client, the fake server and the OpenAPI output.
 - Vitest and Testing Library for unit, contract and component tests. Playwright on Chromium for end-to-end tests.
-- The app is its own repository, `DesktopQniverseqnipay-workforce-app`, a sibling of the prototype folder `Qnipay workforce cc`. The prototype stays there as the reference and is not modified by this work.
+- The app is its own repository, `C:\dev\qnipay-workforce-app`, outside OneDrive. The prototype folder `Qnipay workforce cc` stays in OneDrive and is reached as the sibling `../Qnipay workforce cc` through the junction `C:\dev\Qnipay workforce cc`. The prototype stays there as the reference and is not modified by this work.
 - npm as the package manager, Node 22 or later.
 - Sign-in is simulated: persona accounts behind a `session` endpoint shaped like an Entra ID session, so Entra can replace it.
 - The domain rules in CLAUDE.md carry over unchanged: no money, codes immutable, nothing in use deleted, every state change audited, no outcome claimed that was not observed, stubs labelled as stubs.

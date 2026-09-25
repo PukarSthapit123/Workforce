@@ -21,7 +21,7 @@
 
 ## Global Constraints
 
-- Repository root: `C:\Users\PukarSthapit\OneDrive - Dogma Group Ltd, GB, LONDON\Desktop\Qniverse\qnipay-workforce-app`. The prototype lives at `../Qnipay workforce cc/mockup/qnipay-workforce-v15.html`. Never modify the prototype.
+- Repository root: `C:\dev\qnipay-workforce-app`. The prototype lives at `../Qnipay workforce cc/mockup/qnipay-workforce-v15.html`, reached through the junction `C:\dev\Qnipay workforce cc`, which points at the prototype folder in OneDrive. Never modify the prototype.
 - Node 22 or later (the tests use `fs.globSync`), npm. Checked here: Node 24. TypeScript `strict: true`, `noUncheckedIndexedAccess: true`.
 - British English in every user-facing string. Plain sentences. No em-dash asides, and no "not X but Y".
 - A toast or refusal states the consequence and what to do next. The refusal shape is `{ code, message, next, usedBy?, field? }` (spec §7.2).
