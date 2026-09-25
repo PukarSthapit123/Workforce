@@ -9,5 +9,8 @@ export default mergeConfig(viteConfig, defineConfig({
     // this machine (OneDrive-synced working directory, sandboxed subprocess
     // spawning). 'threads' runs reliably here; see task-1-report.md.
     pool: 'threads',
+    // The fake server's tests call `fetch('/api/...')` with a relative URL;
+    // jsdom needs a base URL to resolve that against.
+    environmentOptions: { jsdom: { url: 'http://localhost/' } },
   },
 }));
