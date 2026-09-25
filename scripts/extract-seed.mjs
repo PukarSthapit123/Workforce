@@ -11,10 +11,31 @@ const here = dirname(fileURLToPath(import.meta.url));
 const SRC = process.env.PROTOTYPE_PATH || resolve(here, '../../Qnipay workforce cc/mockup/qnipay-workforce-v15.html');
 const html = readFileSync(SRC, 'utf8');
 const OUT = resolve(here, '../src/mocks/seed');
-const FROZEN = new Date(2026, 7, 13, 14, 30, 0);   // the date the sample data was authored around
+/* Built in UTC, not with local-time arguments: the latter makes FROZEN.getTime()
+   (and so STAMP, and so every record's updatedAt) shift with the host machine's
+   timezone offset, which means a re-run on a different machine rewrites every
+   record for no real change. Date.UTC pins the instant so STAMP is always
+   2026-08-13T14:30:00.000Z, matching the fixed clock used elsewhere (e.g.
+   src/mocks/store.test.ts) regardless of where this script runs. */
+const FROZEN = new Date(Date.UTC(2026, 7, 13, 14, 30, 0));   // the date the sample data was authored around
 const STAMP = FROZEN.toISOString();
 const KEY = 'qnipay.workforce.v1';
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+/* Polls localStorage rather than trusting a fixed delay: saveState() in the
+   prototype debounces its write by 400ms, so a fixed sleep is either a guess
+   or a race. This also doubles as the loud-failure guard for a no-op action —
+   if a selector stops matching, nothing re-saves, raw never changes, and this
+   throws instead of silently reading stale (or absent) data. */
+async function waitForStoreChange(w, prevRaw, label, timeoutMs = 3000, everyMs = 20) {
+  const start = Date.now();
+  for (;;) {
+    const raw = w.localStorage.getItem(KEY);
+    if (raw !== null && raw !== prevRaw) return raw;
+    if (Date.now() - start > timeoutMs)
+      throw new Error(`extractor: localStorage under ${KEY} did not change within ${timeoutMs}ms after ${label} — a selector likely stopped matching`);
+    await sleep(everyMs);
+  }
+}
 
 /* ---- constants from the source: the text of `const NAME=<literal>;`, evaluated alone ---- */
 function literal(name) {
@@ -45,23 +66,33 @@ function boot() {
       w.Date = Frozen; w.scrollTo = () => {};
     } });
   const w = dom.window, d = w.document;
-  const click = el => el && el.dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
+  /* Loud on purpose: `el && el.dispatchEvent(...)` would make a missing
+     selector a silent no-op — sign-in would leave the store empty, or
+     switchTemplate would leave it exactly as qcic left it, and both would
+     write plausible-looking JSON that is quietly wrong. Naming the selector
+     in the error is what makes step 4's "fix only the extractor" workable. */
+  const must = (label, el) => { if (!el) throw new Error('extractor: could not find ' + label); return el; };
+  const click = (label, el) => { must(label, el).dispatchEvent(new w.MouseEvent('click', { bubbles: true })); };
   const act = a => [...d.querySelectorAll('[data-act]')].find(b => b.getAttribute('data-act') === a);
   const signInAdmin = () => {
     const acc = d.querySelector('#lg-accounts');
-    if (acc && acc.classList.contains('hidden')) click(act('show-accounts'));
-    const row = [...d.querySelectorAll('#lg-accounts .acct')].find(b => /Configuration, modules/.test(b.textContent));
-    d.querySelector('#lg-em').value = row.getAttribute('data-em');
-    d.querySelector('#lg-pw').value = 'Qnipay@123';
-    click(act('signin'));
+    if (acc && acc.classList.contains('hidden')) click('"show-accounts" button', act('show-accounts'));
+    const row = must('an admin account row in #lg-accounts (text matching /Configuration, modules/)',
+      [...d.querySelectorAll('#lg-accounts .acct')].find(b => /Configuration, modules/.test(b.textContent)));
+    must('#lg-em input', d.querySelector('#lg-em')).value = row.getAttribute('data-em');
+    must('#lg-pw input', d.querySelector('#lg-pw')).value = 'Qnipay@123';
+    click('"signin" button', act('signin'));
   };
   /* named switchTemplate, not useTenant: an identifier starting with `use`
      trips react-hooks/rules-of-hooks (applied lint-wide, not just to JSX)
      when called at the top level of the module. */
   const switchTemplate = k => {
-    click([...d.querySelectorAll('[data-mod-k]')].find(b => b.getAttribute('data-mod-k') === 'setup'));
-    click([...d.querySelectorAll('[data-setupsec]')].find(b => b.getAttribute('data-setupsec') === 'org'));
-    click([...d.querySelectorAll('[data-tpl]')].find(b => b.getAttribute('data-tpl') === k));
+    click('setup nav button [data-mod-k="setup"]',
+      [...d.querySelectorAll('[data-mod-k]')].find(b => b.getAttribute('data-mod-k') === 'setup'));
+    click('organisation setup section [data-setupsec="org"]',
+      [...d.querySelectorAll('[data-setupsec]')].find(b => b.getAttribute('data-setupsec') === 'org'));
+    click(`template button [data-tpl="${k}"]`,
+      [...d.querySelectorAll('[data-tpl]')].find(b => b.getAttribute('data-tpl') === k));
   };
   return { w, signInAdmin, switchTemplate };
 }
@@ -96,15 +127,35 @@ function shape(tenantKey, data, PERMS_META) {
     notices: byId(notices), audit: {} } };
 }
 
+/* A missing PEOPLE roster, or a `social` snapshot indistinguishable from
+   `qcic`, means an action above no-opped without tripping a missing-selector
+   error (e.g. it clicked something, but not the thing that mattered). Both
+   are checked explicitly rather than trusted from a non-empty write. */
+function assertNonEmpty(data, label) {
+  if (!(data.PEOPLE || []).length) throw new Error(`extractor: ${label} produced a store with no PEOPLE`);
+}
+function assertTenantChanged(before, after, label) {
+  const beforeName = (before.TENANT || {}).name, afterName = (after.TENANT || {}).name;
+  const beforeIds = (before.PEOPLE || []).map(p => p.id).sort().join(',');
+  const afterIds = (after.PEOPLE || []).map(p => p.id).sort().join(',');
+  if (beforeName === afterName && beforeIds === afterIds)
+    throw new Error(`extractor: switching to '${label}' left the tenant name and roster identical to before — the template switch likely no-opped`);
+}
+
 const PERMS_META = literal('PERMS');
 const { w, signInAdmin, switchTemplate } = boot();
+
+const rawBeforeSignIn = w.localStorage.getItem(KEY);   // null: nothing saved yet
 signInAdmin();
-await sleep(500);
-const read = () => JSON.parse(w.localStorage.getItem(KEY)).data;
-const qcic = read();
+const rawQcic = await waitForStoreChange(w, rawBeforeSignIn, 'sign-in');
+const qcic = JSON.parse(rawQcic).data;
+assertNonEmpty(qcic, 'sign-in');
+
 switchTemplate('social');
-await sleep(500);
-const social = read();
+const rawSocial = await waitForStoreChange(w, rawQcic, "switching to 'social'");
+const social = JSON.parse(rawSocial).data;
+assertNonEmpty(social, "switching to 'social'");
+assertTenantChanged(qcic, social, 'social');
 
 writeFileSync(resolve(OUT, 'qcic.json'), JSON.stringify(shape('qcic', qcic, PERMS_META), null, 1) + '\n');
 writeFileSync(resolve(OUT, 'social.json'), JSON.stringify(shape('social', social, PERMS_META), null, 1) + '\n');

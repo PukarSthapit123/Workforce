@@ -5,7 +5,7 @@
   "people": {
    "per_EMP001": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "per_EMP001",
     "code": "EMP001",
     "name": "Pukar Sthapit",
@@ -24,7 +24,7 @@
    },
    "per_EMP002": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "per_EMP002",
     "code": "EMP002",
     "name": "Priya Raman",
@@ -43,7 +43,7 @@
    },
    "per_EMP003": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "per_EMP003",
     "code": "EMP003",
     "name": "Tom Achterberg",
@@ -62,7 +62,7 @@
    },
    "per_EMP004": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "per_EMP004",
     "code": "EMP004",
     "name": "Bigyan Poudel",
@@ -81,7 +81,7 @@
    },
    "per_EMP005": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "per_EMP005",
     "code": "EMP005",
     "name": "Bijay Shrestha",
@@ -100,7 +100,7 @@
    },
    "per_EMP006": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "per_EMP006",
     "code": "EMP006",
     "name": "Eddie Harford",
@@ -119,7 +119,7 @@
    },
    "per_EMP007": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "per_EMP007",
     "code": "EMP007",
     "name": "Jamir Maharjan",
@@ -138,7 +138,7 @@
    },
    "per_EMP008": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "per_EMP008",
     "code": "EMP008",
     "name": "Ankit Krishna Shrestha",
@@ -157,7 +157,7 @@
    },
    "per_EMP009": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "per_EMP009",
     "code": "EMP009",
     "name": "KATHERINE HULL",
@@ -176,7 +176,7 @@
    },
    "per_EMP010": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "per_EMP010",
     "code": "EMP010",
     "name": "Lina Townsend",
@@ -195,7 +195,7 @@
    },
    "per_EMP011": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "per_EMP011",
     "code": "EMP011",
     "name": "Marty Horst",
@@ -214,7 +214,7 @@
    },
    "per_EMP012": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "per_EMP012",
     "code": "EMP012",
     "name": "Nikita Shrestha",
@@ -233,7 +233,7 @@
    },
    "per_EMP013": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "per_EMP013",
     "code": "EMP013",
     "name": "Prastav Pokhrel",
@@ -252,7 +252,7 @@
    },
    "per_EMP014": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "per_EMP014",
     "code": "EMP014",
     "name": "Manish Nepal",
@@ -271,7 +271,7 @@
    },
    "per_EMP015": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "per_EMP015",
     "code": "EMP015",
     "name": "Prashesh",
@@ -290,7 +290,7 @@
    },
    "per_EMP016": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "per_EMP016",
     "code": "EMP016",
     "name": "Ruman Thapa",
@@ -309,7 +309,7 @@
    },
    "per_EMP017": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "per_EMP017",
     "code": "EMP017",
     "name": "Sajin",
@@ -328,7 +328,7 @@
    },
    "per_EMP018": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "per_EMP018",
     "code": "EMP018",
     "name": "Sulav Raj Thapaliya",
@@ -347,7 +347,7 @@
    },
    "per_EMP019": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "per_EMP019",
     "code": "EMP019",
     "name": "Terry Dodds",
@@ -366,7 +366,7 @@
    },
    "per_EMP020": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "per_EMP020",
     "code": "EMP020",
     "name": "Yuran Shrestha",
@@ -387,7 +387,7 @@
   "accounts": {
    "acc_pukar.sthapit@dogmagroup.co.uk": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "acc_pukar.sthapit@dogmagroup.co.uk",
     "email": "pukar.sthapit@dogmagroup.co.uk",
     "personCode": "EMP001",
@@ -397,7 +397,7 @@
    },
    "acc_priya.raman@dogmagroup.co.uk": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "acc_priya.raman@dogmagroup.co.uk",
     "email": "priya.raman@dogmagroup.co.uk",
     "personCode": "EMP002",
@@ -407,7 +407,7 @@
    },
    "acc_tom.achterberg@dogmagroup.co.uk": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "acc_tom.achterberg@dogmagroup.co.uk",
     "email": "tom.achterberg@dogmagroup.co.uk",
     "personCode": "EMP003",
@@ -417,7 +417,7 @@
    },
    "acc_bigyan.poudel@dogmagroup.co.uk": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "acc_bigyan.poudel@dogmagroup.co.uk",
     "email": "bigyan.poudel@dogmagroup.co.uk",
     "personCode": "EMP004",
@@ -427,7 +427,7 @@
    },
    "acc_bijay.shrestha@qniverse.co.uk": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "acc_bijay.shrestha@qniverse.co.uk",
     "email": "bijay.shrestha@qniverse.co.uk",
     "personCode": "EMP005",
@@ -437,7 +437,7 @@
    },
    "acc_eddie.harford@dogmagroup.co.uk": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "acc_eddie.harford@dogmagroup.co.uk",
     "email": "eddie.harford@dogmagroup.co.uk",
     "personCode": "EMP006",
@@ -447,7 +447,7 @@
    },
    "acc_jamir.maharjan@dogmagroup.co.uk": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "acc_jamir.maharjan@dogmagroup.co.uk",
     "email": "jamir.maharjan@dogmagroup.co.uk",
     "personCode": "EMP007",
@@ -457,7 +457,7 @@
    },
    "acc_jwalan.chand@dogmagroup.co.uk": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "acc_jwalan.chand@dogmagroup.co.uk",
     "email": "jwalan.chand@dogmagroup.co.uk",
     "personCode": "EMP008",
@@ -467,7 +467,7 @@
    },
    "acc_sanjeev.thakuri@dogmagroup.co.uk": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "acc_sanjeev.thakuri@dogmagroup.co.uk",
     "email": "sanjeev.thakuri@dogmagroup.co.uk",
     "personCode": "EMP011",
@@ -477,7 +477,7 @@
    },
    "acc_nikita.shrestha@qniverse.co.uk": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "acc_nikita.shrestha@qniverse.co.uk",
     "email": "nikita.shrestha@qniverse.co.uk",
     "personCode": "EMP012",
@@ -487,7 +487,7 @@
    },
    "acc_prastav.pokhrel@dogmagroup.co.uk": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "acc_prastav.pokhrel@dogmagroup.co.uk",
     "email": "prastav.pokhrel@dogmagroup.co.uk",
     "personCode": "EMP013",
@@ -497,7 +497,7 @@
    },
    "acc_manish.nepal@dogmagroup.co.uk": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "acc_manish.nepal@dogmagroup.co.uk",
     "email": "manish.nepal@dogmagroup.co.uk",
     "personCode": "EMP014",
@@ -507,7 +507,7 @@
    },
    "acc_ruman.thapa@dogmagroup.co.uk": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "acc_ruman.thapa@dogmagroup.co.uk",
     "email": "ruman.thapa@dogmagroup.co.uk",
     "personCode": "EMP016",
@@ -517,7 +517,7 @@
    },
    "acc_sulav.thapaliya@dogmagroup.co.uk": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "acc_sulav.thapaliya@dogmagroup.co.uk",
     "email": "sulav.thapaliya@dogmagroup.co.uk",
     "personCode": "EMP018",
@@ -527,7 +527,7 @@
    },
    "acc_yuran.shrestha@dogmagroup.co.uk": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "acc_yuran.shrestha@dogmagroup.co.uk",
     "email": "yuran.shrestha@dogmagroup.co.uk",
     "personCode": "EMP020",
@@ -539,7 +539,7 @@
   "userTypes": {
    "employee": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "employee",
     "name": "Employee",
     "description": "Their own work: timesheet, shifts and leave",
@@ -556,7 +556,7 @@
    },
    "manager": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "manager",
     "name": "Manager",
     "description": "Everything an employee can do, plus their team",
@@ -588,7 +588,7 @@
    },
    "admin": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "admin",
     "name": "Admin",
     "description": "Configure how this workforce operates",
@@ -614,7 +614,7 @@
   "capabilities": {
    "own_home": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "own_home",
     "group": "own",
     "label": "Own home, profile and documents",
@@ -623,7 +623,7 @@
    },
    "own_notices": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "own_notices",
     "group": "own",
     "label": "Read and acknowledge notices",
@@ -632,7 +632,7 @@
    },
    "own_ts": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "own_ts",
     "group": "own",
     "label": "Own timesheet",
@@ -641,7 +641,7 @@
    },
    "own_shifts": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "own_shifts",
     "group": "own",
     "label": "Own shifts",
@@ -650,7 +650,7 @@
    },
    "own_leave": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "own_leave",
     "group": "own",
     "label": "Own leave",
@@ -659,7 +659,7 @@
    },
    "own_hours": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "own_hours",
     "group": "own",
     "label": "Own hours position",
@@ -668,7 +668,7 @@
    },
    "claim": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "claim",
     "group": "own",
     "label": "Claim open shifts",
@@ -677,7 +677,7 @@
    },
    "team_ts": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "team_ts",
     "group": "team",
     "label": "Team timesheets and approvals",
@@ -686,7 +686,7 @@
    },
    "team_rota": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "team_rota",
     "group": "team",
     "label": "Team rota and shift assignment",
@@ -695,7 +695,7 @@
    },
    "team_cover": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "team_cover",
     "group": "team",
     "label": "Cover requests and fulfilment",
@@ -704,7 +704,7 @@
    },
    "team_leave": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "team_leave",
     "group": "team",
     "label": "Team leave approval",
@@ -713,7 +713,7 @@
    },
    "team_sick": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "team_sick",
     "group": "team",
     "label": "Record team sickness",
@@ -722,7 +722,7 @@
    },
    "team_hours": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "team_hours",
     "group": "team",
     "label": "Hours position and exceptions",
@@ -731,7 +731,7 @@
    },
    "profile_appr": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "profile_appr",
     "group": "team",
     "label": "Approve profile changes",
@@ -740,7 +740,7 @@
    },
    "team_people": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "team_people",
     "group": "team",
     "label": "Team people list",
@@ -749,7 +749,7 @@
    },
    "notice_post": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "notice_post",
     "group": "team",
     "label": "Post and manage notices",
@@ -758,7 +758,7 @@
    },
    "proxy": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "proxy",
     "group": "team",
     "label": "Enter time on behalf of someone",
@@ -767,7 +767,7 @@
    },
    "rota_pattern": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "rota_pattern",
     "group": "team",
     "label": "Working patterns",
@@ -776,7 +776,7 @@
    },
    "own_onb": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "own_onb",
     "group": "own",
     "label": "Complete my own onboarding",
@@ -785,7 +785,7 @@
    },
    "onb_track": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "onb_track",
     "group": "team",
     "label": "Track onboarding",
@@ -794,7 +794,7 @@
    },
    "onb_verify": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "onb_verify",
     "group": "team",
     "label": "Verify onboarding documents",
@@ -803,7 +803,7 @@
    },
    "onb_cfg": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "onb_cfg",
     "group": "cfg",
     "label": "Configure onboarding",
@@ -812,7 +812,7 @@
    },
    "emp_crud": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "emp_crud",
     "group": "team",
     "label": "Add and edit people",
@@ -821,7 +821,7 @@
    },
    "rota_shift": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "rota_shift",
     "group": "team",
     "label": "Create shift types",
@@ -830,7 +830,7 @@
    },
    "master_data": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "master_data",
     "group": "cfg",
     "label": "Workforce master data",
@@ -839,7 +839,7 @@
    },
    "type_cfg": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "type_cfg",
     "group": "cfg",
     "label": "Employee types and configuration",
@@ -848,7 +848,7 @@
    },
    "mod_cfg": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "mod_cfg",
     "group": "cfg",
     "label": "Module configuration",
@@ -857,7 +857,7 @@
    },
    "framework": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "framework",
     "group": "cfg",
     "label": "Notification and approval framework",
@@ -866,7 +866,7 @@
    },
    "notice_org": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "notice_org",
     "group": "cfg",
     "label": "Post notices to everyone",
@@ -875,7 +875,7 @@
    },
    "perm_cfg": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "perm_cfg",
     "group": "cfg",
     "label": "Permissions and role configuration",
@@ -886,7 +886,7 @@
    },
    "integration": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "integration",
     "group": "cfg",
     "label": "Integrations and audit log",
@@ -897,7 +897,7 @@
   "tenant": {
    "tenant": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "tenant",
     "name": "Dogma Group",
     "template": "qcic",
@@ -957,7 +957,7 @@
   "locations": {
    "loc_MCR": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "code": "MCR",
     "name": "Manchester",
     "area": "North West",
@@ -973,7 +973,7 @@
    },
    "loc_REM": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "code": "REM",
     "name": "Remote",
     "area": "—",
@@ -991,7 +991,7 @@
   "departments": {
    "dep_DEL": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "code": "DEL",
     "name": "Delivery",
     "manager": "Manish Nepal",
@@ -999,7 +999,7 @@
    },
    "dep_ADM": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "code": "ADM",
     "name": "Administration",
     "manager": "Manish Nepal",
@@ -1009,14 +1009,14 @@
   "costCentres": {
    "cc_CC-100": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "code": "CC-100",
     "name": "Delivery — Billable",
     "id": "cc_CC-100"
    },
    "cc_CC-900": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "code": "CC-900",
     "name": "Internal — Overhead",
     "id": "cc_CC-900"
@@ -1025,7 +1025,7 @@
   "jobProfiles": {
    "job_CONS": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "code": "CONS",
     "name": "Consultant",
     "night": false,
@@ -1033,7 +1033,7 @@
    },
    "job_SCONS": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "code": "SCONS",
     "name": "Senior Consultant",
     "night": false,
@@ -1041,7 +1041,7 @@
    },
    "job_PM": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "code": "PM",
     "name": "Project Manager",
     "night": false,
@@ -1049,7 +1049,7 @@
    },
    "job_ADM": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "code": "ADM",
     "name": "Administrator",
     "night": false,
@@ -1059,7 +1059,7 @@
   "projects": {
    "prj_J00010": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "code": "J00010",
     "name": "Go fibre BC implementation Project",
     "client": "Go Fibre",
@@ -1083,7 +1083,7 @@
    },
    "prj_J00020": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "code": "J00020",
     "name": "QCIC D365 Implementation",
     "client": "QCIC",
@@ -1277,7 +1277,7 @@
    },
    "prj_J00030": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "code": "J00030",
     "name": "Internal Project-Adhoc WorkLog",
     "client": "Internal",
@@ -1471,7 +1471,7 @@
    },
    "prj_J00040": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "code": "J00040",
     "name": "HCPC CR automated apply unapply and Reverse",
     "client": "Go Fibre",
@@ -1495,7 +1495,7 @@
    },
    "prj_JOB00010": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "code": "JOB00010",
     "name": "Ultima Dsiplays-Sales & Marketing",
     "client": "Ultima Displays",
@@ -1524,7 +1524,7 @@
    },
    "prj_JOB00020": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "code": "JOB00020",
     "name": "QMS CRM Implementation",
     "client": "Go Fibre",
@@ -1548,7 +1548,7 @@
    },
    "prj_JOB00030": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "code": "JOB00030",
     "name": "Golden Charter BC Implementation and Integration Project",
     "client": "QCIC",
@@ -1602,7 +1602,7 @@
    },
    "prj_LEAVE": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "code": "LEAVE",
     "name": "Attendance",
     "client": "Internal",
@@ -1638,7 +1638,7 @@
   "notices": {
    "NTC-0001": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "NTC-0001",
     "ver": 2,
     "title": "Updated lone working policy",
@@ -1691,7 +1691,7 @@
    },
    "NTC-0002": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "NTC-0002",
     "ver": 1,
     "title": "Fire drill on Thursday at 10:00",
@@ -1726,7 +1726,7 @@
    },
    "NTC-0003": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "NTC-0003",
     "ver": 1,
     "title": "Summer social",
@@ -1750,7 +1750,7 @@
    },
    "NTC-0004": {
     "version": 1,
-    "updatedAt": "2026-08-13T08:45:00.000Z",
+    "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "NTC-0004",
     "ver": 1,
     "title": "Car park resurfacing",
