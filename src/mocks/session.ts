@@ -21,6 +21,7 @@ export interface ServerSession { token: string; email: string; viewingAs?: strin
 const sessions = () => store.coll<ServerSession>('sessions');
 const accountBy = (email: string) => store.coll<Account>('accounts')[`acc_${email.toLowerCase()}`];
 const personBy = (code: string) => Object.values(store.coll<Person>('people')).find(p => p.code === code);
+const accountForPerson = (code: string) => Object.values(store.coll<Account>('accounts')).find(x => x.personCode === code);
 /* moved to domain/capabilities.ts in Task 8 */
 export const capsFor = (a: Account) => {
   const base = store.coll<UserType>('userTypes')[a.userType]?.capabilities ?? [];
@@ -33,11 +34,17 @@ function view(s: ServerSession): Session {
   if (!a) return refuse(401, { code: 'signed-out', message: 'You are signed out.', next: 'Sign in again to continue.' });
   const p = personBy(a.personCode);
   const vp = s.viewingAs ? personBy(s.viewingAs) : undefined;
-  const va = vp ? Object.values(store.coll<Account>('accounts')).find(x => x.personCode === vp.code) : undefined;
+  const va = vp ? accountForPerson(vp.code) : undefined;
+  /* The target's account can also vanish mid-view-as (removed or revoked after
+     it started). Without one there is nobody valid to view as, so this drops
+     back to the real signed-in account's own capabilities and omits
+     viewingAs entirely, rather than quietly keeping the real account's
+     capabilities under a stale, wrong-looking label. */
+  const viewingAs = vp && va ? { vp, va } : undefined;
   return { token: s.token, simulated: true,
     account: { email: a.email, userType: a.userType, personCode: a.personCode, name: p?.name ?? a.email },
-    capabilities: capsFor(va ?? a),
-    ...(vp ? { viewingAs: { personCode: vp.code, name: vp.name, userType: va?.userType ?? 'employee' } } : {}) };
+    capabilities: capsFor(viewingAs?.va ?? a),
+    ...(viewingAs ? { viewingAs: { personCode: viewingAs.vp.code, name: viewingAs.vp.name, userType: viewingAs.va.userType } } : {}) };
 }
 export function requireSession(request: Request): ServerSession & { account: Account; caps: string[] } {
   const token = request.headers.get('Authorization')?.replace(/^Bearer /, '') ?? '';
@@ -70,9 +77,12 @@ export const sessionHandlers = [
     const { personCode } = await readJson(request, ViewAsRequest);
     const p = personBy(personCode);
     if (!p) return refuse(422, { code: 'invalid', field: 'personCode', message: 'There is nobody with that employee ID.', next: 'Pick a person from the list.' });
+    if (!accountForPerson(personCode)) return refuse(422, { code: 'invalid', field: 'personCode', message: `${p.name} has no account, so there is nothing to view.`, next: 'Pick a person who has signed in before, or ask an administrator to create one first.' });
     const updated: ServerSession = { token: s.token, email: s.email, viewingAs: personCode };
     sessions()[s.token] = updated;
-    writeAudit({ who: who(s), act: 'View-as started', entity: 'session', entityId: s.account.email, before: null, after: { viewingAs: personCode } });
+    /* who names the real signed-in account, with viewingAs recording what
+       they were about to view as at the moment of this very action. */
+    writeAudit({ who: who({ ...s, viewingAs: personCode }), act: 'View-as started', entity: 'session', entityId: s.account.email, before: null, after: { viewingAs: personCode } });
     return HttpResponse.json(view(updated));
   })),
   http.delete('/api/v1/session/view-as', handle(({ request }: ResolverInfo) => {

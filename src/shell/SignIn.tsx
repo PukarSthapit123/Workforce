@@ -21,7 +21,7 @@ export function SignIn() {
     finally { setBusy(false); }
   }
   return (
-    <main data-testid={tid.page('sign-in')} className="mx-auto flex min-h-dvh max-w-[28rem] flex-col justify-center gap-lg p-lg">
+    <main data-testid={tid.page('sign-in')} className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-lg p-lg">
       <h1 className="text-[length:var(--qp-text-24)] font-semibold">Sign in to Qnipay Workforce</h1>
       <p className="text-text-secondary">Simulated sign-in. Production uses your Microsoft work account.</p>
       <form data-testid={tid.signIn.form} onSubmit={submit} className="flex flex-col gap-md" noValidate>

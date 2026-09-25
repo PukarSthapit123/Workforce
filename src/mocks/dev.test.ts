@@ -10,6 +10,11 @@ test('POST /api/_dev/clock sets the server clock', async () => {
   expect(r.status).toBe(204);
   expect(store.now()).toBe('2026-08-13T14:30:00.000Z');
 });
+test('GET /api/_dev/clock reads back what was set, so a test can confirm the clock survived a reload', async () => {
+  await fetch('/api/_dev/clock', { method: 'POST', body: JSON.stringify({ now: '2026-08-13T14:30:00.000Z' }) });
+  const r = await fetch('/api/_dev/clock');
+  expect(await r.json()).toEqual({ now: '2026-08-13T14:30:00.000Z' });
+});
 test('a fault makes the next call fail with the chosen status, then clears', async () => {
   /* a probe endpoint of the test's own, so this does not depend on a later task's handler */
   server.use(http.get('/api/v1/probe', () => HttpResponse.json({ ok: true })));

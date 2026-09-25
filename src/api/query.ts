@@ -1,6 +1,8 @@
 import { QueryClient } from '@tanstack/react-query';
-import { ApiError } from './client';
 export const queryClient = new QueryClient({ defaultOptions: {
-  queries: { retry: (n, e) => !(e instanceof ApiError && e.status < 500) && n < 1, staleTime: 5_000 },
+  /* A fault test sets a fault for exactly N requests (spec §10.2): a silent
+     retry on a 5xx would swallow it, so the UI never sees the failure it is
+     supposed to report and the test becomes unreliable. */
+  queries: { retry: false, staleTime: 5_000 },
   /* no optimistic updates anywhere: the UI changes only when the server has answered */
   mutations: { retry: false } } });

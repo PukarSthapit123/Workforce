@@ -24,3 +24,20 @@ test('the clock can be set and cleared', () => {
   s.setClock(null);
   expect(s.now()).not.toBe('2026-08-13T14:30:00.000Z');
 });
+test('the clock survives a reload: a fresh store boots up with what save persisted', () => {
+  const s = createStore(() => seed);
+  s.reset();
+  s.setClock('2026-08-13T14:30:00.000Z');
+  const rebooted = createStore(() => seed);
+  rebooted.boot();
+  expect(rebooted.now()).toBe('2026-08-13T14:30:00.000Z');
+});
+test('setClock(null) clears the persisted clock too, not just the in-memory one', () => {
+  const s = createStore(() => seed);
+  s.reset();
+  s.setClock('2026-08-13T14:30:00.000Z');
+  s.setClock(null);
+  const rebooted = createStore(() => seed);
+  rebooted.boot();
+  expect(rebooted.now()).not.toBe('2026-08-13T14:30:00.000Z');
+});

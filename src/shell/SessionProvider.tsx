@@ -3,6 +3,7 @@ import { api, ApiError } from '@/api/client';
 import { getToken, setToken } from '@/api/session-token';
 import { createSession, deleteSession, endViewAs, getSession, startViewAs, type Session } from '@/contract/session';
 import { queryClient } from '@/api/query';
+import { toastRefusal } from '@/ui';
 
 interface Ctx { session: Session | null; ready: boolean;
   signIn(email: string, password: string): Promise<void>; signOut(): Promise<void>;
@@ -19,8 +20,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const adopt = useCallback((s: Session | null) => { setToken(s?.token ?? null); setSession(s); queryClient.clear(); }, []);
   useEffect(() => {
     if (!getToken()) return;
-    /* a token for an account that has gone is a signed-out person, not an empty shell */
-    api(getSession).then(adopt, () => adopt(null)).finally(() => setReady(true));
+    api(getSession).then(adopt, (err: unknown) => {
+      /* Only a confirmed 401 (the token, or the account behind it, is gone)
+         should clear a cached token: that is a signed-out person, not an
+         empty shell. A 5xx or network failure (ApiError status 0) says
+         nothing about whether the session is still valid, so the token stays
+         and the person is told what happened instead of being silently
+         signed out from under an unrelated outage. */
+      if (err instanceof ApiError && err.status === 401) { adopt(null); return; }
+      if (err instanceof ApiError) toastRefusal(err.refusal);
+    }).finally(() => setReady(true));
   }, [adopt]);
   const value: Ctx = { session, ready,
     signIn: async (email, password) => adopt(await api(createSession, { body: { email, password } })),

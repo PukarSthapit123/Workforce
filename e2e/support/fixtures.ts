@@ -26,6 +26,14 @@ export const test = base.extend<{
       reset: async () => { await call(page, 'POST', '/api/_dev/reset'); await call(page, 'POST', '/api/_dev/clock', { now: FROZEN }); },
       seed: async (t: string) => { await call(page, 'POST', `/api/_dev/seed/${t}`); },
       setClock: async (iso: string | null) => { await call(page, 'POST', '/api/_dev/clock', { now: iso }); },
+      /* Faults live in a module-level array in mocks/faults.ts: real state for
+         the running page, but not persisted anywhere. signInAs (below) does a
+         full page reload to land back on the sign-in screen, which throws that
+         array away along with everything else in the JS context. So a fault
+         meant to fire after signing in must be registered with api.fault(...)
+         AFTER calling signInAs(...), never before it. The frozen clock does
+         not have this problem: it is persisted with the store (see store.ts),
+         which is what lets signInAs reload the page at all without losing it. */
       fault: async (method: string, path: string, status: number, times = 1) => { await call(page, 'POST', '/api/_dev/faults', { method, path, status, times }); },
       get: (path: string) => call(page, 'GET', path),
       send: (method: string, path: string, body?: unknown) => call(page, method, path, body),

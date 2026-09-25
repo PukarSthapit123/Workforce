@@ -98,6 +98,25 @@
   --spacing-xl: var(--qp-space-xl);
   --spacing-2xl: var(--qp-space-2xl);
   --spacing-3xl: var(--qp-space-3xl);
+  /* Tailwind resolves a named max-w-* utility against --max-width-*, then
+     --spacing-*, then --container-*, in that order. The named --spacing-*
+     keys just above (added for p-md, gap-lg, etc.) happen to share their
+     names (sm/md/lg/xl/2xl/3xl) with Tailwind's own built-in container scale,
+     so without this block max-w-md silently resolved to the small spacing
+     value above instead of Tailwind's 28rem container width: every max-w-*
+     (and Modal/Dialog's sm:max-w-lg) collapsed to a padding-sized box.
+     Aliasing --max-width-* to --container-* here, ahead of that spacing
+     lookup, restores max-w-* to mean container widths again. (Tailwind 4.3's
+     own theme has no generic --min-width-* scale to collide with the same
+     way, only the unrelated --max-width-prose keyword: min-w-* already draws
+     from --spacing-* by design, so it needs no alias here.) */
+  --max-width-xs: var(--container-xs);
+  --max-width-sm: var(--container-sm);
+  --max-width-md: var(--container-md);
+  --max-width-lg: var(--container-lg);
+  --max-width-xl: var(--container-xl);
+  --max-width-2xl: var(--container-2xl);
+  --max-width-3xl: var(--container-3xl);
   --shadow-sm: var(--qp-shadow-sm);
   --shadow-md: var(--qp-shadow-md);
   --shadow-lg: var(--qp-shadow-lg);

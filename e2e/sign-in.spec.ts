@@ -1,4 +1,4 @@
-import { test, expect } from './support/fixtures';
+import { test, expect, FROZEN } from './support/fixtures';
 import { tid } from '../src/testids';
 
 test.fixme('SI Signing in as each persona shows that persona', async ({ page, signInAs }) => {
@@ -26,4 +26,9 @@ test('SI A failed sign-in request leaves you on the sign-in screen with a reason
   await page.getByTestId(tid.signIn.submit).click();
   await expect(page.getByTestId(tid.signIn.error)).toContainText(/Nothing has been changed/);
   await expect(page.getByTestId(tid.signIn.form)).toBeVisible();
+});
+test('SI signInAs reloads the page but the frozen clock survives it', async ({ api, signInAs }) => {
+  await api.setClock(FROZEN);
+  await signInAs('employee');
+  expect(await api.get('/api/_dev/clock')).toMatchObject({ status: 200, body: { now: FROZEN } });
 });

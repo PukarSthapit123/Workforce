@@ -21,3 +21,17 @@ test('the dark theme block is declared after :root, so it wins the tie in specif
   expect(rootIndex).toBeGreaterThanOrEqual(0);
   expect(darkIndex).toBeGreaterThan(rootIndex);
 });
+
+test('the @theme block aliases --max-width-{xs..3xl} to the container scale, so max-w-* is not hijacked by the named --spacing-* scale', () => {
+  /* Tailwind resolves a named max-w-<key> utility against --max-width-<key>,
+     then --spacing-<key>, then --container-<key>. This file also defines
+     --spacing-xs/sm/md/lg/xl/2xl/3xl (for p-md, gap-lg, etc.), which share
+     their names with Tailwind's built-in container scale; without an explicit
+     --max-width-<key> alias, max-w-md (and Modal/Dialog's sm:max-w-lg) would
+     silently resolve to the small spacing value instead of a container width.
+     See src/index.css's @theme inline block for the fix and full explanation. */
+  for (const key of ['xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl']) {
+    const re = new RegExp(`--max-width-${key}:\\s*var\\(--container-${key}\\)`);
+    expect(css).toMatch(re);
+  }
+});
