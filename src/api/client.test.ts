@@ -27,3 +27,12 @@ test('a response that breaks its schema is an error, not data', async () => {
   server.use(http.get('/api/v1/things/:id', () => HttpResponse.json({ id: 1 })));
   await expect(api(getThing, { params: { id: 't1' } })).rejects.toBeInstanceOf(ApiError);
 });
+test('a network failure (offline, DNS, abort) surfaces as an ApiError, not a raw TypeError', async () => {
+  server.use(http.get('/api/v1/things/:id', () => HttpResponse.error()));
+  await expect(api(getThing, { params: { id: 't1' } }))
+    .rejects.toMatchObject({ status: 0, refusal: { code: 'network' } });
+});
+test('a non-JSON error body still surfaces as an ApiError, not a parse crash', async () => {
+  server.use(http.get('/api/v1/things/:id', () => new HttpResponse('<html>Internal Server Error</html>', { status: 500, headers: { 'Content-Type': 'text/html' } })));
+  await expect(api(getThing, { params: { id: 't1' } })).rejects.toBeInstanceOf(ApiError);
+});

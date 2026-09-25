@@ -11,6 +11,15 @@ const MONEY = /\b(amount|price|salary|wage|gross pay|net pay|rate value)\b/;
 const CURRENCY = /[£$€]/;
 const allow: Record<string, string> = JSON.parse(readFileSync(resolve(__dirname, '../../contract/money-lint.allow.json'), 'utf8'));
 
+/* A currency symbol can turn up as a `default`, a `const` (from z.literal), a member of an
+   `enum` (from z.enum) or an `examples` array — check every value a JSON Schema node can carry,
+   not just the property itself. */
+function hasCurrency(value: unknown): boolean {
+  if (typeof value === 'string') return CURRENCY.test(value);
+  if (Array.isArray(value)) return value.some(hasCurrency);
+  return false;
+}
+
 function walk(schema: unknown, path: string, out: string[]) {
   const js = z.toJSONSchema(schema as z.ZodType, { unrepresentable: 'any' }) as Record<string, unknown>;
   const visit = (node: unknown, p: string) => {
@@ -19,7 +28,11 @@ function walk(schema: unknown, path: string, out: string[]) {
     if (n.properties) for (const [key, v] of Object.entries(n.properties as object)) {
       const full = `${p}.${key}`;
       if (MONEY.test(words(key)) && !allow[full]) out.push(full);
-      if (typeof (v as { default?: unknown }).default === 'string' && CURRENCY.test((v as { default: string }).default)) out.push(full + ' (currency default)');
+      const vv = v as { default?: unknown; const?: unknown; enum?: unknown; examples?: unknown };
+      if (hasCurrency(vv.default)) out.push(full + ' (currency default)');
+      if (hasCurrency(vv.const)) out.push(full + ' (currency const)');
+      if (hasCurrency(vv.enum)) out.push(full + ' (currency enum)');
+      if (hasCurrency(vv.examples)) out.push(full + ' (currency examples)');
       visit(v, full);
     }
     for (const k of ['items', 'anyOf', 'oneOf', 'allOf']) {
@@ -33,6 +46,23 @@ test('the money lint reads camelCase as words', () => {
   expect(MONEY.test(words('budgetAmount'))).toBe(true);
   expect(MONEY.test(words('hourlyRateValue'))).toBe(true);
   expect(['payCode', 'netHours', 'rateType', 'costCentre'].some(k => MONEY.test(words(k)))).toBe(false);
+});
+test('the walker flags a currency symbol in const or enum, not just default', () => {
+  const constHits: string[] = [];
+  walk(z.object({ note: z.literal('£5') }), 'schema', constHits);
+  expect(constHits).toContain('schema.note (currency const)');
+
+  const enumHits: string[] = [];
+  walk(z.object({ symbol: z.enum(['$']) }), 'schema', enumHits);
+  expect(enumHits).toContain('schema.symbol (currency enum)');
+
+  const defaultHits: string[] = [];
+  walk(z.object({ label: z.string().default('€10') }), 'schema', defaultHits);
+  expect(defaultHits).toContain('schema.label (currency default)');
+
+  const clean: string[] = [];
+  walk(z.object({ payCode: z.string().default('A'), rateType: z.enum(['hourly', 'fixed']) }), 'schema', clean);
+  expect(clean).toEqual([]);
 });
 test('no schema carries money', () => {
   const hits: string[] = [];

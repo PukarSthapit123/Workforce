@@ -7,6 +7,7 @@ export class ApiError extends Error {
   constructor(public status: number, public refusal: Refusal) { super(refusal.message); }
 }
 const UNREADABLE: Refusal = { code: 'unreadable', message: 'The server sent something this screen cannot read. Nothing has been changed on screen.', next: 'Reload the page. If it happens again, report it.' };
+const NETWORK: Refusal = { code: 'network', message: 'The server could not be reached, so nothing was saved.', next: 'Check your connection and try again.' };
 
 export async function api<E extends Endpoint>(ep: E, opts: {
   params?: Record<string, string>; body?: unknown; ifMatch?: number; query?: Record<string, string | undefined>;
@@ -18,7 +19,15 @@ export async function api<E extends Endpoint>(ep: E, opts: {
   const token = getToken(); if (token) headers.Authorization = `Bearer ${token}`;
   if (opts.body !== undefined) headers['Content-Type'] = 'application/json';
   if (opts.ifMatch !== undefined) headers['If-Match'] = String(opts.ifMatch);
-  const res = await fetch(url, { method: ep.method, headers, body: opts.body === undefined ? undefined : JSON.stringify(opts.body) });
+  let res: Response;
+  try {
+    res = await fetch(url, { method: ep.method, headers, body: opts.body === undefined ? undefined : JSON.stringify(opts.body) });
+  } catch {
+    /* offline, DNS failure, an aborted request: fetch rejects rather than resolving with a
+       response, so there is no status or body to parse. status 0 marks "never reached the
+       server" for anything that inspects it. */
+    throw new ApiError(0, NETWORK);
+  }
   const data: unknown = res.status === 204 ? null : await res.json().catch(() => null);
   if (!res.ok) {
     const r = Refusal.safeParse(data);
