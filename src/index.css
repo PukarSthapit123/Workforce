@@ -27,6 +27,22 @@
   --radius: var(--qp-radius-control);
 }
 
+/* Dark theme re-points shadcn's primary alias to the lime accent, not to a
+   different value of qp-color-brand-primary: the prototype's dark-mode CTAs,
+   toggles and selected chips all swap to the accent (e.g. `[data-theme="dark"]
+   .btn.pri`, `.tog.on`, `.chipbtn.on`, `.chips button.on`, `.dayc button.on`
+   at lines 406, 527, 544, 739, 744). This block must follow :root so it wins
+   the tie in specificity between `:root` and `[data-theme="dark"]` on <html>. */
+[data-theme="dark"] {
+  /* the prototype pairs the lime accent with this dark ink on every one of
+     those surfaces (line 406: dark-mode `.btn.pri` sets color to #0A2410)
+     — a value no existing --qp token names, so it is named once, here. */
+  --qp-color-text-on-accent: #0A2410;
+  --primary: var(--qp-color-brand-accent);
+  --primary-foreground: var(--qp-color-text-on-accent);
+  --ring: var(--qp-color-brand-accent);
+}
+
 @theme inline {
   --font-sans: var(--qp-font-body);
   --color-background: var(--background);

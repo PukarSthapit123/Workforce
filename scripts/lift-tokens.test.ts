@@ -18,9 +18,18 @@ test('every var(--qp-*) used in src resolves', async () => {
   const { globSync } = await import('node:fs');
   const files = globSync('src/**/*.{ts,tsx,css}', { cwd: resolve(__dirname, '..') });
   const used = new Set<string>();
-  for (const f of files) for (const m of readFileSync(resolve(__dirname, '..', f), 'utf8').matchAll(/var\((--qp-[a-z0-9-]+)\)/g)) {
-    const token = m[1];
-    if (token) used.add(token);
+  // a --qp-* var can resolve against the lifted prototype tokens, or against
+  // one defined by hand in src (e.g. src/index.css naming a value the
+  // prototype's flat token set has no name for, such as dark-mode
+  // text-on-accent ink) — either is a real definition, not a typo.
+  const defined = new Set(defs(lifted));
+  for (const f of files) {
+    const content = readFileSync(resolve(__dirname, '..', f), 'utf8');
+    for (const t of defs(content)) defined.add(t);
+    for (const m of content.matchAll(/var\((--qp-[a-z0-9-]+)\)/g)) {
+      const token = m[1];
+      if (token) used.add(token);
+    }
   }
-  expect([...used].filter(u => !defs(lifted).has(u))).toEqual([]);
+  expect([...used].filter(u => !defined.has(u))).toEqual([]);
 });
