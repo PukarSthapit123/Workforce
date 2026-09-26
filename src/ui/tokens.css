@@ -130,6 +130,9 @@
   --qp-space-xs:4px; --qp-space-sm:8px; --qp-space-md:12px; --qp-space-lg:16px;
   --qp-space-xl:24px; --qp-space-2xl:32px; --qp-space-3xl:48px;
   --qp-space-4xl:64px; --qp-space-5xl:80px; --qp-space-6xl:120px;
+  /* minimum touch target, spec §10.3 / WCAG 2.5.5. Named apart from the space
+     scale above: it is a floor on a target's own box, not a gap between boxes. */
+  --qp-size-touch:44px;
   /* layout — desktop 1440, 12 columns, 80px margin, 24px gutter, centred */
   --qp-layout-max:1440px; --qp-layout-margin:80px; --qp-layout-gutter:24px;
   --qp-layout-margin-mobile:16px;

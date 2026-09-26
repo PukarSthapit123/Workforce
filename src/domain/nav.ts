@@ -1,7 +1,16 @@
 /* Ported from the prototype's NAV() (qnipay-workforce-v15.html, "function NAV()").
    Order is screen order; a run of tabs sharing `group` becomes one menu. */
 export interface NavInput { caps: Set<string>; modules: Record<string, boolean>; flags: Record<string, boolean>; onboarding: boolean }
-export interface NavTab { view: string; label: string; group?: string; path: string; built: boolean; subProject?: string }
+export interface NavTab {
+  view: string; label: string; path: string; built: boolean; subProject?: string;
+  /* team tabs: a run sharing `group` becomes one dropdown menu in the strip.
+     `groupKey` is the stable, copy-independent id behind that display label
+     (never derived from it: a copy change must not silently change a test id). */
+  group?: string; groupKey?: string;
+  /* setup tabs: which of the five setup sections a page belongs to. `section`
+     is the display label, `sectionKey` its stable id, same reasoning as above. */
+  section?: string; sectionKey?: string;
+}
 export interface NavGroup { key: 'work' | 'team' | 'setup'; label: string; tabs: NavTab[] }
 
 /* which sub-project brings each view; a view not listed here is built in plan 1a */
@@ -18,6 +27,48 @@ const LATER: Record<string, string> = {
 };
 const tab = (group: NavGroup['key'], view: string, label: string, extra: Partial<NavTab> = {}): NavTab =>
   ({ view, label, path: `/${group}/${view}`, built: !(view in LATER), ...(view in LATER ? { subProject: LATER[view] } : {}), ...extra });
+
+/* The prototype's SETUP_SECTIONS (qnipay-workforce-v15.html:3975-3991): the
+   fixed order and grouping an administrator sees setup in. Its "Modules"
+   section there only lists 'amods'; mts/mrota/mleave are reached one level
+   deeper, after choosing a specific module (its MODULE_SEC drill-down, e.g.
+   "Timesheet features" -> "Timesheet setup"). This plan does not build that
+   extra level, so they sit directly under Modules instead — still gated
+   exactly as the prototype's SETUP_NEED (html:4002-4011) gates them, still
+   reachable, still named correctly by a later sub-project when opened. */
+function setupSections(can: (c: string) => boolean, on: (m: string) => boolean, flag: (f: string) => boolean, ts: boolean) {
+  const sec = (key: string, label: string, pages: [boolean, NavTab][]) => ({ key, label, pages });
+  return [
+    sec('org', 'Organisation', [
+      [can('master_data'), tab('setup', 'aorg', 'Organisation')],
+      [can('master_data'), tab('setup', 'acal', 'Calendar')],
+    ]),
+    sec('mods', 'Modules', [
+      [can('mod_cfg'), tab('setup', 'amods', 'Modules & features')],
+      [can('mod_cfg') && ts, tab('setup', 'mts', 'Timesheet')],
+      [can('mod_cfg') && on('R'), tab('setup', 'mrota', 'Rota')],
+      [can('mod_cfg') && on('L'), tab('setup', 'mleave', 'Leave')],
+    ]),
+    sec('people', 'People', [
+      [can('master_data'), tab('setup', 'apeople', 'People')],
+      [can('type_cfg'), tab('setup', 'atypes', 'Employee types')],
+      [can('master_data'), tab('setup', 'acon', 'Contracts')],
+      [can('master_data'), tab('setup', 'aloc', 'Dimensions')],
+    ]),
+    sec('gov', 'Governance', [
+      [can('perm_cfg'), tab('setup', 'aperm', 'Permissions')],
+      [can('framework'), tab('setup', 'anotif', 'Notifications')],
+      [can('framework'), tab('setup', 'aappr', 'Approvals')],
+    ]),
+    sec('int', 'Integrations', [
+      [can('integration'), tab('setup', 'ipay', 'Payroll readiness')],
+      [can('mod_cfg'), tab('setup', 'mpay', 'Pay codes')],
+      [can('integration'), tab('setup', 'ibc', 'Business Central')],
+      [can('integration'), tab('setup', 'iaudit', 'Audit log')],
+      [can('integration') && flag('ITACCESS'), tab('setup', 'iit', 'IT service desk')],
+    ]),
+  ];
+}
 
 export function buildNav({ caps, modules, flags, onboarding }: NavInput): NavGroup[] {
   const can = (c: string) => caps.has(c), on = (m: string) => !!modules[m], flag = (f: string) => !!flags[f];
@@ -37,28 +88,23 @@ export function buildNav({ caps, modules, flags, onboarding }: NavInput): NavGro
   const team: [boolean, NavTab][] = [
     [teamHome, tab('team', 'thome', 'Team Home')],
     [can('team_ts') && ts, tab('team', 'tteam', 'Approvals')],
-    [can('team_hours') && ts, tab('team', 'thours', 'Hours position', { group: 'Scheduling' })],
-    [can('team_rota') && on('R'), tab('team', 'trota', 'Rota', { group: 'Scheduling' })],
-    [can('team_cover') && on('R') && flag('FULFIL'), tab('team', 'tcover', 'Cover requests', { group: 'Scheduling' })],
-    [can('rota_shift') && can('team_rota') && on('R'), tab('team', 'tshifts', 'Shift catalogue', { group: 'Scheduling' })],
-    [can('rota_pattern') && can('team_rota') && on('R'), tab('team', 'tpat', 'Working patterns', { group: 'Scheduling' })],
-    [can('team_leave') && on('L'), tab('team', 'tleave', 'Requests', { group: 'Requests' })],
-    [can('team_sick') && on('L'), tab('team', 'tsick', 'Sickness', { group: 'Requests' })],
-    [can('team_hours'), tab('team', 'texc', 'Exceptions', { group: 'Requests' })],
-    [can('team_people'), tab('team', 'tpeople', 'People', { group: 'People' })],
-    [can('onb_track') && on('ON'), tab('team', 'tonb', 'Onboarding', { group: 'People' })],
-    [can('notice_post') && flag('NOTICES'), tab('team', 'tnotices', 'Notices', { group: 'People' })],
-  ];
-  const setupPages: [boolean, NavTab][] = [
-    [can('master_data'), tab('setup', 'aorg', 'Organisation')], [can('master_data'), tab('setup', 'acal', 'Calendar')],
-    [can('mod_cfg'), tab('setup', 'amods', 'Modules & features')], [can('master_data'), tab('setup', 'apeople', 'People')],
-    [can('type_cfg'), tab('setup', 'atypes', 'Employee types')], [can('master_data'), tab('setup', 'acon', 'Contracts')],
-    [can('master_data'), tab('setup', 'aloc', 'Dimensions')], [can('perm_cfg'), tab('setup', 'aperm', 'Permissions')],
-    [can('framework'), tab('setup', 'anotif', 'Notifications')], [can('framework'), tab('setup', 'aappr', 'Approvals')],
-    [can('integration'), tab('setup', 'iaudit', 'Audit log')],
+    [can('team_hours') && ts, tab('team', 'thours', 'Hours position', { group: 'Scheduling', groupKey: 'scheduling' })],
+    [can('team_rota') && on('R'), tab('team', 'trota', 'Rota', { group: 'Scheduling', groupKey: 'scheduling' })],
+    [can('team_cover') && on('R') && flag('FULFIL'), tab('team', 'tcover', 'Cover requests', { group: 'Scheduling', groupKey: 'scheduling' })],
+    [can('rota_shift') && can('team_rota') && on('R'), tab('team', 'tshifts', 'Shift catalogue', { group: 'Scheduling', groupKey: 'scheduling' })],
+    [can('rota_pattern') && can('team_rota') && on('R'), tab('team', 'tpat', 'Working patterns', { group: 'Scheduling', groupKey: 'scheduling' })],
+    [can('team_leave') && on('L'), tab('team', 'tleave', 'Requests', { group: 'Requests', groupKey: 'requests' })],
+    [can('team_sick') && on('L'), tab('team', 'tsick', 'Sickness', { group: 'Requests', groupKey: 'requests' })],
+    [can('team_hours'), tab('team', 'texc', 'Exceptions', { group: 'Requests', groupKey: 'requests' })],
+    [can('team_people'), tab('team', 'tpeople', 'People', { group: 'People', groupKey: 'people' })],
+    [can('onb_track') && on('ON'), tab('team', 'tonb', 'Onboarding', { group: 'People', groupKey: 'people' })],
+    [can('notice_post') && flag('NOTICES'), tab('team', 'tnotices', 'Notices', { group: 'People', groupKey: 'people' })],
   ];
   const keep = (xs: [boolean, NavTab][]) => xs.filter(([ok]) => ok).map(([, t]) => t);
-  const setupTabs = keep(setupPages);
+  const sections = setupSections(can, on, flag, ts)
+    .map(s => ({ ...s, tabs: keep(s.pages).map(t => ({ ...t, section: s.label, sectionKey: s.key })) }))
+    .filter(s => s.tabs.length);
+  const setupTabs = sections.flatMap(s => s.tabs);
   const groups: NavGroup[] = [
     { key: 'work', label: 'My Work', tabs: keep(work) },
     { key: 'team', label: 'My Team', tabs: onboarding ? [] : keep(team) },

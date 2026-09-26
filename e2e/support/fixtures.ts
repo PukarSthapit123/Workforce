@@ -21,7 +21,10 @@ export const test = base.extend<{
 }>({
   api: async ({ page }, use) => {
     await page.goto('/');
-    await page.getByTestId(tid.signIn.form).or(page.getByTestId(tid.shell.rolePill)).waitFor();
+    /* Either landed on sign-in, or a session already persisted and the shell
+       is up. Not the role pill for that second case: spec §10.3 hides it
+       below the md breakpoint, so it is not a viewport-independent signal. */
+    await page.getByTestId(tid.signIn.form).or(page.getByTestId(tid.shell.account)).waitFor();
     const api = {
       reset: async () => { await call(page, 'POST', '/api/_dev/reset'); await call(page, 'POST', '/api/_dev/clock', { now: FROZEN }); },
       seed: async (t: string) => { await call(page, 'POST', `/api/_dev/seed/${t}`); },
@@ -51,7 +54,11 @@ export const test = base.extend<{
       await page.getByTestId(tid.signIn.email).fill(acc.email);
       await page.getByTestId(tid.signIn.password).fill('Qnipay@123');
       await page.getByTestId(tid.signIn.submit).click();
-      await expect(page.getByTestId(tid.shell.rolePill)).toBeVisible();
+      /* Not the role pill: spec §10.3 hides it (and the brand name) below the
+         md breakpoint to keep the phone header on one line, so it is not a
+         viewport-independent signal that sign-in landed on the shell. The
+         account menu trigger always renders. */
+      await expect(page.getByTestId(tid.shell.account)).toBeVisible();
     });
   },
 });

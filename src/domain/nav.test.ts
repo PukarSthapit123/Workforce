@@ -37,3 +37,55 @@ test('views outside plan 1a are marked not built and name their sub-project', ()
   const ts = must(must(g[0]).tabs.find(t => t.view === 'ts'));
   expect(ts).toMatchObject({ built: false, subProject: 'Timesheet' });
 });
+
+test('team tabs carry a stable groupKey distinct from their display label (never derived from it)', () => {
+  const g = buildNav({ caps: caps('own_home', 'team_rota', 'rota_pattern', 'rota_shift', 'team_leave', 'team_sick', 'team_hours'), modules: ALL_MODULES, flags, onboarding: false });
+  const team = must(g.find((x): x is NavGroup => x.key === 'team'));
+  const scheduling = team.tabs.filter(t => t.group === 'Scheduling');
+  const requests = team.tabs.filter(t => t.group === 'Requests');
+  expect(scheduling.length).toBeGreaterThan(0);
+  expect(scheduling.every(t => t.groupKey === 'scheduling')).toBe(true);
+  expect(requests.length).toBeGreaterThan(0);
+  expect(requests.every(t => t.groupKey === 'requests')).toBe(true);
+});
+
+test('setup pages are grouped into the prototype\'s five sections (SETUP_SECTIONS), in order', () => {
+  const g = buildNav({
+    caps: caps('perm_cfg', 'master_data', 'mod_cfg', 'type_cfg', 'framework', 'integration'),
+    modules: ALL_MODULES, flags: { ...flags, ITACCESS: true }, onboarding: false,
+  });
+  const setup = must(g.find((x): x is NavGroup => x.key === 'setup'));
+  const sectionKeys = [...new Set(setup.tabs.filter(t => t.sectionKey).map(t => t.sectionKey))];
+  expect(sectionKeys).toEqual(['org', 'mods', 'people', 'gov', 'int']);
+});
+
+test('the module setup and integration pages the prototype\'s SETUP_NEED lists are reachable, gated and named for their sub-project', () => {
+  const g = buildNav({ caps: caps('mod_cfg', 'integration'), modules: ALL_MODULES, flags: { ...flags, ITACCESS: true }, onboarding: false });
+  const setup = must(g.find((x): x is NavGroup => x.key === 'setup'));
+  const byView = (v: string) => must(setup.tabs.find(t => t.view === v), `no setup tab for view "${v}"`);
+  expect(byView('mts')).toMatchObject({ built: false, subProject: 'Timesheet', section: 'Modules' });
+  expect(byView('mrota')).toMatchObject({ built: false, subProject: 'Rota', section: 'Modules' });
+  expect(byView('mleave')).toMatchObject({ built: false, subProject: 'Leave', section: 'Modules' });
+  expect(byView('mpay')).toMatchObject({ built: false, subProject: 'Timesheet', section: 'Integrations' });
+  expect(byView('ipay')).toMatchObject({ built: false, subProject: 'Payroll and Business Central', section: 'Integrations' });
+  expect(byView('ibc')).toMatchObject({ built: false, subProject: 'Payroll and Business Central', section: 'Integrations' });
+  expect(byView('iit')).toMatchObject({ built: false, subProject: 'Rota', section: 'Integrations' });
+});
+
+test('mts, mrota and mleave each still need their own module switched on, not just mod_cfg', () => {
+  const g = buildNav({ caps: caps('mod_cfg'), modules: { ...ALL_MODULES, A: false, B: false, R: false, L: false }, flags, onboarding: false });
+  const setup = must(g.find((x): x is NavGroup => x.key === 'setup'));
+  const views = setup.tabs.map(t => t.view);
+  expect(views).not.toContain('mts');
+  expect(views).not.toContain('mrota');
+  expect(views).not.toContain('mleave');
+});
+
+test('iit additionally needs the ITACCESS flag', () => {
+  const withFlag = buildNav({ caps: caps('integration'), modules: ALL_MODULES, flags: { ...flags, ITACCESS: true }, onboarding: false });
+  const withoutFlag = buildNav({ caps: caps('integration'), modules: ALL_MODULES, flags: { ...flags, ITACCESS: false }, onboarding: false });
+  const setupWith = must(withFlag.find((x): x is NavGroup => x.key === 'setup'));
+  const setupWithout = must(withoutFlag.find((x): x is NavGroup => x.key === 'setup'));
+  expect(setupWith.tabs.map(t => t.view)).toContain('iit');
+  expect(setupWithout.tabs.map(t => t.view)).not.toContain('iit');
+});

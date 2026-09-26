@@ -2,9 +2,10 @@ import { test, expect, FROZEN } from './support/fixtures';
 import { tid } from '../src/testids';
 
 test('SI Signing in as each persona shows that persona', async ({ page, signInAs }) => {
+  const roleName = { employee: 'Employee', manager: 'Manager', admin: 'Admin' } as const;
   for (const p of ['employee', 'manager', 'admin'] as const) {
     await signInAs(p);
-    await expect(page.getByTestId(tid.shell.rolePill)).toHaveText(/Employee|Manager|Admin/);
+    await expect(page.getByTestId(tid.shell.rolePill)).toHaveText(roleName[p]);
     await page.getByTestId(tid.shell.account).click();
     await page.getByTestId(tid.shell.signOut).click();
     await expect(page.getByTestId(tid.signIn.form)).toBeVisible();

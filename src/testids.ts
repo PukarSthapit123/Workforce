@@ -22,8 +22,10 @@ export const tid = {
     rolePill: 'shell-role-pill', bell: 'shell-bell', bellCount: 'shell-bell-count', theme: 'shell-theme',
     account: 'shell-account', signOut: 'shell-sign-out', viewAsEnd: 'shell-view-as-end',
     viewAs: (personCode: string) => k('shell-view-as', personCode),
+    loading: 'shell-loading', error: 'shell-error', retry: 'shell-retry',
   },
   notBuilt: { root: 'not-built', subProject: 'not-built-sub-project' },
+  setup: { card: (view: string) => k('setup-card', view) },
   access: {
     table: 'access-table',
     cell: (cap: string, userType: string) => k('access-cell', cap, userType),

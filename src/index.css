@@ -98,6 +98,11 @@
   --spacing-xl: var(--qp-space-xl);
   --spacing-2xl: var(--qp-space-2xl);
   --spacing-3xl: var(--qp-space-3xl);
+  /* min-h-touch / min-w-touch: the 44px minimum touch target (spec §10.3,
+     WCAG 2.5.5). Resolves the same way max-w-* does below: a named utility
+     falls back to --spacing-<key> when there is no more specific
+     --{min-,}{height,width}-<key>, so this one alias covers all four. */
+  --spacing-touch: var(--qp-size-touch);
   /* Tailwind resolves a named max-w-* utility against --max-width-*, then
      --spacing-*, then --container-*, in that order. The named --spacing-*
      keys just above (added for p-md, gap-lg, etc.) happen to share their
