@@ -1,0 +1,10 @@
+import { tid } from '@/testids';
+
+/* Filled in by Task 9. */
+export function PermissionsPage() {
+  return (
+    <section data-testid={tid.page('aperm')} className="mx-auto max-w-xl rounded-card border border-border bg-surface-card p-xl">
+      <h1 className="text-[length:var(--qp-text-20)] font-semibold">Permissions</h1>
+      <p className="text-text-secondary">This screen is filled in by a later task in this plan.</p>
+    </section>);
+}

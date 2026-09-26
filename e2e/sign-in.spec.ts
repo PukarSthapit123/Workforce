@@ -1,8 +1,7 @@
 import { test, expect, FROZEN } from './support/fixtures';
 import { tid } from '../src/testids';
 
-test.fixme('SI Signing in as each persona shows that persona', async ({ page, signInAs }) => {
-  /* account menu arrives in Task 8 */
+test('SI Signing in as each persona shows that persona', async ({ page, signInAs }) => {
   for (const p of ['employee', 'manager', 'admin'] as const) {
     await signInAs(p);
     await expect(page.getByTestId(tid.shell.rolePill)).toHaveText(/Employee|Manager|Admin/);

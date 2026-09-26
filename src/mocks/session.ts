@@ -3,6 +3,7 @@ import { store } from './store';
 import { handle, readJson, refuse } from './http';
 import { writeAudit } from './audit';
 import { SignInRequest, ViewAsRequest, type Session } from '@/contract/session';
+import { resolveCapabilities } from '@/domain/capabilities';
 
 /* `handle`'s own generic (A extends unknown[]) cannot be inferred from an
    unannotated destructured parameter nested two calls deep (handle(...) inside
@@ -22,11 +23,7 @@ const sessions = () => store.coll<ServerSession>('sessions');
 const accountBy = (email: string) => store.coll<Account>('accounts')[`acc_${email.toLowerCase()}`];
 const personBy = (code: string) => Object.values(store.coll<Person>('people')).find(p => p.code === code);
 const accountForPerson = (code: string) => Object.values(store.coll<Account>('accounts')).find(x => x.personCode === code);
-/* moved to domain/capabilities.ts in Task 8 */
-export const capsFor = (a: Account) => {
-  const base = store.coll<UserType>('userTypes')[a.userType]?.capabilities ?? [];
-  return [...new Set([...base, ...a.grants])].filter(c => !a.revocations.includes(c)).sort();
-};
+export const capsFor = (a: Account) => resolveCapabilities(store.coll<UserType>('userTypes')[a.userType]?.capabilities ?? [], a.grants, a.revocations);
 function view(s: ServerSession): Session {
   const a = accountBy(s.email);
   /* An account can vanish (removed or revoked) while its session lingers. Treat
