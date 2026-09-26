@@ -3,6 +3,7 @@ import { Link, Navigate, Route, Routes, useLocation } from 'react-router';
 import type { NavGroup, NavTab } from '@/domain/nav';
 import { tid } from '@/testids';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/ui/shadcn/dropdown-menu';
+import { Modal } from '@/ui';
 import { AccountMenu } from './AccountMenu';
 import { useShellData, ShellLoading, ShellError } from './shellData';
 import { NotBuilt } from '@/features/not-built/NotBuilt';
@@ -68,7 +69,7 @@ export function ShellView({ nav, roleLabel, viewingAs, ownName, unread, onSignOu
           <Route path="*" element={first ? <Navigate to={first.path} replace /> : <NothingAvailable />} />
         </Routes>
       </main>
-      {current && <BottomBar tabs={current.tabs} pathname={pathname} />}
+      {stripTabs.length > 0 && <BottomBar tabs={stripTabs} pathname={pathname} />}
     </div>);
 }
 
@@ -143,17 +144,39 @@ function TabStrip({ tabs, pathname }: { tabs: NavTab[]; pathname: string }) {
     </nav>);
 }
 
-/* Prototype render() (html:10214-10230): at most five destinations, plus a
-   catch-all More. Shown below 768px, the same width the strip above hides at
-   (prototype .tabs{display:none}/.btabs{display:flex} pair, html:791-818). */
+/* Prototype render() (html:10214-10230, more-tabs handler html:12072-12081):
+   at most five destinations, plus More for the rest, painted from the same
+   array the strip uses (`tabs` here is Shell's `stripTabs`, so setup already
+   arrives section-scoped with its "back to setup" entry at index 0 — nothing
+   setup-specific needed here). Shown below 768px, the same width the strip
+   above hides at (prototype .tabs{display:none}/.btabs{display:flex} pair,
+   html:791-818). More opens a Dialog (Radix traps and restores focus, per
+   Modal.tsx) rather than a dropdown: closer to the prototype's own "Go to"
+   box than an anchored menu would be. Each destination there closes it on
+   selection (prototype: `data-tab data-close` on the same button), so it
+   never blocks reopening it for the next one. */
 function BottomBar({ tabs, pathname }: { tabs: NavTab[]; pathname: string }) {
+  const [moreOpen, setMoreOpen] = useState(false);
   const destinations = tabs.slice(0, 5);
+  const remaining = tabs.slice(5);
   if (!destinations.length) return null;
   return (
     <nav aria-label="Quick pages" className="flex border-t border-border bg-surface-card md:hidden">
       {destinations.map(t => <Link key={t.view} to={t.path} data-testid={tid.nav.bottom(t.view)}
         aria-current={pathname === t.path ? 'page' : undefined}
         className={`flex min-h-touch flex-1 flex-col items-center justify-center px-sm py-sm text-xs ${pathname === t.path ? 'font-semibold text-brand' : 'text-text-secondary'}`}>{t.label}</Link>)}
-      <button type="button" data-testid={tid.nav.more} className="flex min-h-touch flex-1 flex-col items-center justify-center px-sm py-sm text-xs text-text-secondary">More</button>
+      {remaining.length > 0 && <>
+        <button type="button" data-testid={tid.nav.more} aria-haspopup="dialog" onClick={() => setMoreOpen(true)}
+          className="flex min-h-touch flex-1 flex-col items-center justify-center px-sm py-sm text-xs text-text-secondary">More</button>
+        <Modal open={moreOpen} onOpenChange={setMoreOpen} title="More pages">
+          <ul className="flex flex-col gap-xs">
+            {remaining.map(t => <li key={t.view}>
+              <Link to={t.path} data-testid={tid.nav.bottom(t.view)} onClick={() => setMoreOpen(false)}
+                aria-current={pathname === t.path ? 'page' : undefined}
+                className={`flex min-h-touch items-center rounded-control px-md ${pathname === t.path ? 'font-semibold text-brand' : ''}`}>{t.label}</Link>
+            </li>)}
+          </ul>
+        </Modal>
+      </>}
     </nav>);
 }
