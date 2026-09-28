@@ -185,6 +185,26 @@ test('handing perm_cfg off to another holder is allowed, but draining the last o
   expect(accountByEmail(emp.email).grants).toContain('perm_cfg');
 });
 
+test('revoking the last holder of perm_cfg from a template is refused even when that template is not locked', async () => {
+  /* perm_cfg's lockedFor is only ["admin"] (see seed/social.json), so the
+     lockedFor guard alone would let this through for any other template. This
+     builds a state where "manager" (never locked) is the tenant's only
+     holder, to prove the separate holderExists guard on this endpoint
+     catches it too, not just the one on account-level exceptions covered
+     above. */
+  const userTypes = store.coll<{ id: string; version: number; capabilities: string[] }>('userTypes');
+  userTypes.admin = { ...userTypes.admin, capabilities: userTypes.admin.capabilities.filter(c => c !== 'perm_cfg') };
+  userTypes.manager = { ...userTypes.manager, capabilities: [...userTypes.manager.capabilities, 'perm_cfg'] };
+  await signIn(acc('manager').email); // manager now holds perm_cfg via template, so it can reach this endpoint at all
+  const before = structuredClone(ut('manager'));
+  const beforeStore = structuredClone(store.db);
+  const r = await req('PUT', '/api/v1/user-types/manager/capabilities/perm_cfg', { granted: false }, before.version);
+  expect(r.status).toBe(409);
+  expect(await r.json()).toMatchObject({ code: expect.any(String), message: expect.any(String), next: expect.any(String) });
+  expect(ut('manager')).toEqual(before);
+  expect(store.db).toEqual(beforeStore);
+});
+
 test('a manager is refused, naming the capability', async () => {
   await signIn(acc('manager').email);
   const r = await req('GET', '/api/v1/user-types');
