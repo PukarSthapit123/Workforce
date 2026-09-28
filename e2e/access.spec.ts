@@ -1,8 +1,7 @@
 import { test, expect } from './support/fixtures';
 import { tid } from '../src/testids';
 
-/* The audit endpoint arrives in Task 10, which removes this fixme. */
-test.fixme('Permissions: granting a capability to a template is saved and audited', async ({ page, api, signInAs }) => {
+test('Permissions: granting a capability to a template is saved and audited', async ({ page, api, signInAs }) => {
   await signInAs('admin');
   await page.goto('/setup/aperm');
   const cell = page.getByTestId(tid.access.cell('proxy', 'employee'));

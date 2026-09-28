@@ -43,6 +43,7 @@ export const tid = {
   audit: {
     table: 'audit-table', row: (id: string) => k('audit-row', id),
     filterEntity: 'audit-filter-entity', filterWho: 'audit-filter-who', filterText: 'audit-filter-text',
+    error: 'audit-error',
   },
   modal: { root: 'modal', title: 'modal-title', close: 'modal-close', confirm: 'modal-confirm', cancel: 'modal-cancel' },
   toast: { info: 'toast-info', error: 'toast-error', next: 'toast-next' },
