@@ -54,6 +54,16 @@ test('the matrix renders with full test id coverage', async () => {
   expectTestIdCoverage(container);
 });
 
+/* I7: the row groups come from the contract (GET /capability-groups), not
+   from an import of the seed, and keep the prototype's order. */
+test('the matrix groups its rows under the groups the server sends, in order', async () => {
+  mount();
+  await screen.findByTestId(tid.access.table);
+  const groups = screen.getAllByTestId(/^access-group-row-/).map(r => r.getAttribute('data-testid'));
+  expect(groups).toEqual([tid.access.groupRow('own'), tid.access.groupRow('team'), tid.access.groupRow('cfg')]);
+  expect(screen.getByTestId(tid.access.groupRow('cfg'))).toHaveTextContent('Configuration');
+});
+
 test('a failed save shows the refusal and leaves the cell as it was', async () => {
   mount();
   const cell = await screen.findByTestId(tid.access.cell('proxy', 'employee'));

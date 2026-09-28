@@ -101,7 +101,7 @@ const meta = (r, extra = {}) => ({ version: 1, updatedAt: STAMP, ...r, ...extra 
 const byId = arr => Object.fromEntries(arr.map(r => [r.id, r]));
 const dim = (prefix, list) => byId((list || []).map(x => meta({ ...x }, { id: `${prefix}_${x.code}` })));
 
-function shape(tenantKey, data, PERMS_META) {
+function shape(tenantKey, data, PERMS_META, PERM_GROUPS) {
   const ROLE_OF = { emp: 'employee', mgr: 'manager', adm: 'admin' };
   const people = (data.PEOPLE || []).map(p => meta({
     id: `per_${p.id}`, code: p.id, name: p.nm, email: (p.email || '').toLowerCase(),
@@ -117,12 +117,14 @@ function shape(tenantKey, data, PERMS_META) {
     capabilities: perms.filter(p => p[col]).map(p => p.c) }));
   const capabilities = perms.map(p => meta({ id: p.c, group: p.g, label: p.label, gate: p.gate,
     lockedFor: (p.lock || []).map(k => ROLE_OF[k]) }));
+  /* The matrix's row groups, served through the contract so no feature has to import the seed. */
+  const capabilityGroups = PERM_GROUPS.map((g, i) => meta({ id: g.k, label: g.label, description: g.desc, order: i }));
   const tenant = meta({ id: 'tenant', name: (data.TENANT || {}).name || tenantKey, template: (data.CFG || {}).template || tenantKey,
     modules: (data.CFG || {}).modules || {}, flags: (data.CFG || {}).flags || {} });
   const notices = (data.NOTICES || []).map(n => meta({ ...n }, { id: n.id }));
   return { version: 'extracted', tenant: tenantKey, data: {
     people: byId(people), accounts: byId(accounts), userTypes: byId(userTypes), capabilities: byId(capabilities),
-    tenant: { tenant }, locations: dim('loc', data.LOCATIONS), departments: dim('dep', data.DEPARTMENTS),
+    capabilityGroups: byId(capabilityGroups), tenant: { tenant }, locations: dim('loc', data.LOCATIONS), departments: dim('dep', data.DEPARTMENTS),
     costCentres: dim('cc', data.COST_CENTRES), jobProfiles: dim('job', data.JOB_PROFILES), projects: dim('prj', data.PROJECTS),
     notices: byId(notices), audit: {} } };
 }
@@ -143,6 +145,7 @@ function assertTenantChanged(before, after, label) {
 }
 
 const PERMS_META = literal('PERMS');
+const PERM_GROUPS = literal('PERM_GROUPS');
 const { w, signInAdmin, switchTemplate } = boot();
 
 const rawBeforeSignIn = w.localStorage.getItem(KEY);   // null: nothing saved yet
@@ -161,8 +164,8 @@ assertTenantChanged(qnipay, social, 'social');
    name). This app calls that tenant `qnipay`, so the rename is applied to the
    extracted JSON rather than by retyping any record. */
 const renameTenant = json => json.replace(/qcic/g, 'qnipay').replace(/QCIC/g, 'Qnipay');
-writeFileSync(resolve(OUT, 'qnipay.json'), renameTenant(JSON.stringify(shape('qnipay', qnipay, PERMS_META), null, 1)) + '\n');
-writeFileSync(resolve(OUT, 'social.json'), JSON.stringify(shape('social', social, PERMS_META), null, 1) + '\n');
+writeFileSync(resolve(OUT, 'qnipay.json'), renameTenant(JSON.stringify(shape('qnipay', qnipay, PERMS_META, PERM_GROUPS), null, 1)) + '\n');
+writeFileSync(resolve(OUT, 'social.json'), JSON.stringify(shape('social', social, PERMS_META, PERM_GROUPS), null, 1) + '\n');
 writeFileSync(resolve(OUT, 'meta.json'), JSON.stringify({
   flags: literal('FLAGS'), modules: literal('MODULES'), permGroups: literal('PERM_GROUPS'), empStates: literal('EMP_STATES') }, null, 1) + '\n');
 console.log('seed written: qnipay', (qnipay.PEOPLE || []).length, 'people; social', (social.PEOPLE || []).length, 'people');

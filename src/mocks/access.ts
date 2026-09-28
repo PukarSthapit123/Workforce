@@ -33,6 +33,10 @@ const holderExists = (capId: string, types: Record<string, UserType>, accounts: 
 
 export const accessHandlers = [
   http.get('/api/v1/capabilities', handle(({ request }: ResolverInfo) => { gate(request); return HttpResponse.json(Object.values(store.coll('capabilities'))); })),
+  http.get('/api/v1/capability-groups', handle(({ request }: ResolverInfo) => {
+    gate(request);
+    return HttpResponse.json(Object.values(store.coll<{ order: number }>('capabilityGroups')).sort((a, b) => a.order - b.order));
+  })),
   http.get('/api/v1/user-types', handle(({ request }: ResolverInfo) => { gate(request); return HttpResponse.json(Object.values(store.coll('userTypes'))); })),
   http.put('/api/v1/user-types/:id/capabilities/:cap', handle(async ({ request, params }: ResolverInfo) => {
     const s = gate(request);

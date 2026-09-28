@@ -2,12 +2,8 @@ import { useState } from 'react';
 import { tid } from '@/testids';
 import { Button } from '@/ui';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
-import { useCapabilities, useUserTypes, useUsers, useSetTemplateCapability, type Capability, type UserType } from '@/api/access';
+import { useCapabilities, useCapabilityGroups, useUserTypes, useUsers, useSetTemplateCapability, type Capability, type UserType } from '@/api/access';
 import { UserExceptions } from './UserExceptions';
-import permMeta from '@/mocks/seed/meta.json';
-
-interface PermGroup { k: string; label: string; desc: string }
-const PERM_GROUPS = (permMeta as { permGroups: PermGroup[] }).permGroups;
 
 function exceptionsSummary(typeName: string, grants: readonly string[], revocations: readonly string[]): string {
   const n = grants.length + revocations.length;
@@ -21,18 +17,19 @@ function exceptionsSummary(typeName: string, grants: readonly string[], revocati
    prototype only ever toggled the shared template. */
 export function PermissionsPage() {
   const capabilities = useCapabilities();
+  const groups = useCapabilityGroups();
   const userTypes = useUserTypes();
   const users = useUsers();
   const setCap = useSetTemplateCapability();
   const [exceptionsForEmail, setExceptionsForEmail] = useState<string | null>(null);
 
-  if (capabilities.isPending || userTypes.isPending || users.isPending) {
+  if (capabilities.isPending || groups.isPending || userTypes.isPending || users.isPending) {
     return (
       <section data-testid={tid.page('aperm')} className="mx-auto max-w-5xl p-xl">
         <p className="text-text-secondary">Loading permissions&hellip;</p>
       </section>);
   }
-  if (capabilities.isError || userTypes.isError || users.isError) {
+  if (capabilities.isError || groups.isError || userTypes.isError || users.isError) {
     return (
       <section data-testid={tid.page('aperm')} className="mx-auto max-w-5xl p-xl">
         <p className="text-err">Permissions could not be loaded. Nothing has changed.</p>
@@ -68,13 +65,13 @@ export function PermissionsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {PERM_GROUPS.flatMap(g => {
-              const capsInGroup = caps.filter(c => c.group === g.k);
+            {groups.data.flatMap(g => {
+              const capsInGroup = caps.filter(c => c.group === g.id);
               if (!capsInGroup.length) return [];
               return [
-                <TableRow key={`group-${g.k}`} data-testid={tid.access.groupRow(g.k)} className="bg-surface-sunken">
+                <TableRow key={`group-${g.id}`} data-testid={tid.access.groupRow(g.id)} className="bg-surface-sunken">
                   <TableCell colSpan={2 + types.length}>
-                    <strong>{g.label}</strong> <span className="text-xs text-text-secondary">{g.desc}</span>
+                    <strong>{g.label}</strong> <span className="text-xs text-text-secondary">{g.description}</span>
                   </TableCell>
                 </TableRow>,
                 ...capsInGroup.map(c => (

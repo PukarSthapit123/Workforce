@@ -915,6 +915,32 @@
     "lockedFor": []
    }
   },
+  "capabilityGroups": {
+   "own": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "own",
+    "label": "Their own work",
+    "description": "Every persona is an employee record first, so these apply to everyone.",
+    "order": 0
+   },
+   "team": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "team",
+    "label": "Their team",
+    "description": "Scoped by department and location — never organisation-wide unless master data is granted.",
+    "order": 1
+   },
+   "cfg": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "cfg",
+    "label": "Configuration",
+    "description": "How this workforce operates. Normally admin only.",
+    "order": 2
+   }
+  },
   "tenant": {
    "tenant": {
     "version": 1,

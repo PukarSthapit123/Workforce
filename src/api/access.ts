@@ -2,11 +2,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, ApiError } from './client';
 import { toastRefusal } from '@/ui';
 import {
-  listCapabilities, listUserTypes, listUsers, setTemplateCapability, addException, removeException,
-  type Capability, type UserType, type UserAccess,
+  listCapabilities, listCapabilityGroups, listUserTypes, listUsers, setTemplateCapability, addException, removeException,
+  type Capability, type CapabilityGroup, type UserType, type UserAccess,
 } from '@/contract/access';
 
 export const useCapabilities = () => useQuery({ queryKey: ['capabilities'], queryFn: () => api(listCapabilities) });
+export const useCapabilityGroups = () => useQuery({ queryKey: ['capability-groups'], queryFn: () => api(listCapabilityGroups) });
 export const useUserTypes = () => useQuery({ queryKey: ['user-types'], queryFn: () => api(listUserTypes) });
 export const useUsers = () => useQuery({ queryKey: ['users'], queryFn: () => api(listUsers) });
 
@@ -57,4 +58,4 @@ export function useRemoveException() {
   });
 }
 
-export type { Capability, UserType, UserAccess };
+export type { Capability, CapabilityGroup, UserType, UserAccess };
