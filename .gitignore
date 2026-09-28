@@ -8,3 +8,4 @@ e2e/.auth/
 .env*
 !.env.example
 .superpowers/
+*.tsbuildinfo
