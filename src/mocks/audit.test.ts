@@ -26,3 +26,9 @@ test('filters by entity and free text', async () => {
   expect((await get('?entity=userType')).items.every((i: { entity: string }) => i.entity === 'userType')).toBe(true);
   expect((await get('?q=view-as')).items.map((i: { act: string }) => i.act)).toEqual(['View-as started']);
 });
+test('filters by who, case-insensitively, to one person\'s rows only', async () => {
+  writeAudit({ who: { personCode: 'A', name: 'Dee Fitzgerald' }, act: 'Permission changed', entity: 'userType', entityId: 'employee' });
+  writeAudit({ who: { personCode: 'B', name: 'Sam Okafor' }, act: 'Access exception added', entity: 'account', entityId: 'sam@x.com' });
+  const r = await get('?who=FITZ');
+  expect(r.items.map((i: { who: { name: string } }) => i.who.name)).toEqual(['Dee Fitzgerald']);
+});
