@@ -88,3 +88,11 @@ test('pressing Enter in the password field submits the form', async () => {
 
   await waitFor(() => expect(getToken()).not.toBeNull());
 });
+
+/* SIGN IN / SIGN OUT: "It is plain that browser storage is not a security boundary". */
+test('the sign-in screen says where the demo keeps its data, and that it is not a security boundary', () => {
+  mount();
+  const note = screen.getByTestId(tid.signIn.storageNote);
+  expect(note).toHaveTextContent(/in this browser, on this device/);
+  expect(note).toHaveTextContent(/not a security boundary/);
+});

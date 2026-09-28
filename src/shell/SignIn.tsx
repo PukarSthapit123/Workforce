@@ -39,6 +39,10 @@ export function SignIn() {
     <main data-testid={tid.page('sign-in')} className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-lg p-lg">
       <h1 className="text-[length:var(--qp-text-24)] font-semibold">Sign in to Qnipay Workforce</h1>
       <p className="text-text-secondary">Simulated sign-in. Production uses your Microsoft work account.</p>
+      {/* Ported from the prototype's login note (v15:5111-5114). Only true, and
+          so only shown, while the fake server holds the data in this browser. */}
+      {FAKE_SERVER_ON && <p data-testid={tid.signIn.storageNote} className="text-xs text-text-secondary">
+        This demonstration keeps your work in this browser, on this device, and sends it nowhere else. Anything held in a browser can be read by whoever has the browser, so this is a demonstration, not a security boundary.</p>}
       <form data-testid={tid.signIn.form} onSubmit={submit} className="flex flex-col gap-md" noValidate>
         <Field label="Email address"><TextInput testId={tid.signIn.email} type="email" autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} /></Field>
         <Field label="Password"><TextInput testId={tid.signIn.password} type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} /></Field>

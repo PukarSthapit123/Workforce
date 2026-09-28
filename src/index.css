@@ -147,3 +147,13 @@
 
 body { background: var(--background); color: var(--foreground); font-family: var(--qp-font-body);
   font-size: var(--qp-text-14); line-height: var(--qp-lh-14); }
+
+/* Ported from the prototype's `select[multiple]{height:auto;min-height:96px}`
+   rule (CONTROLS LOOK LIKE THEIR NEIGHBOURS): a native multi-select gets room
+   for a few options and the same border and radius as every other control,
+   rather than the browser's cramped default. */
+select[multiple] {
+  height: auto; min-height: calc(var(--qp-size-touch) * 2);
+  border: thin solid var(--qp-color-border); border-radius: var(--qp-radius-control);
+  padding: var(--qp-space-xs);
+}

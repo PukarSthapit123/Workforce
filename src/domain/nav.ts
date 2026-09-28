@@ -10,6 +10,9 @@ export interface NavTab {
   /* setup tabs: which of the five setup sections a page belongs to. `section`
      is the display label, `sectionKey` its stable id, same reasoning as above. */
   section?: string; sectionKey?: string;
+  /* What the section configures, shown behind hover on its setup card
+     (prototype SETUP_SECTIONS desc, html:3975-3991). */
+  sectionDescription?: string;
 }
 export interface NavGroup { key: 'work' | 'team' | 'setup'; label: string; tabs: NavTab[] }
 
@@ -37,30 +40,30 @@ const tab = (group: NavGroup['key'], view: string, label: string, extra: Partial
    exactly as the prototype's SETUP_NEED (html:4002-4011) gates them, still
    reachable, still named correctly by a later sub-project when opened. */
 function setupSections(can: (c: string) => boolean, on: (m: string) => boolean, flag: (f: string) => boolean, ts: boolean) {
-  const sec = (key: string, label: string, pages: [boolean, NavTab][]) => ({ key, label, pages });
+  const sec = (key: string, label: string, description: string, pages: [boolean, NavTab][]) => ({ key, label, description, pages });
   return [
-    sec('org', 'Organisation', [
+    sec('org', 'Organisation', 'Who this organisation is, the template it runs on, the calendar, and how it looks', [
       [can('master_data'), tab('setup', 'aorg', 'Organisation')],
       [can('master_data'), tab('setup', 'acal', 'Calendar')],
     ]),
-    sec('mods', 'Modules', [
+    sec('mods', 'Modules', 'What this tenant runs, the features inside each module, and how each behaves', [
       [can('mod_cfg'), tab('setup', 'amods', 'Modules & features')],
       [can('mod_cfg') && ts, tab('setup', 'mts', 'Timesheet')],
       [can('mod_cfg') && on('R'), tab('setup', 'mrota', 'Rota')],
       [can('mod_cfg') && on('L'), tab('setup', 'mleave', 'Leave')],
     ]),
-    sec('people', 'People', [
+    sec('people', 'People', 'The canonical employee record, what each person is, and the structure work is costed to', [
       [can('master_data'), tab('setup', 'apeople', 'People')],
       [can('type_cfg'), tab('setup', 'atypes', 'Employee types')],
       [can('master_data'), tab('setup', 'acon', 'Contracts')],
       [can('master_data'), tab('setup', 'aloc', 'Dimensions')],
     ]),
-    sec('gov', 'Governance', [
+    sec('gov', 'Governance', 'Who may do what, who is told, and who signs it off', [
       [can('perm_cfg'), tab('setup', 'aperm', 'Permissions')],
       [can('framework'), tab('setup', 'anotif', 'Notifications')],
       [can('framework'), tab('setup', 'aappr', 'Approvals')],
     ]),
-    sec('int', 'Integrations', [
+    sec('int', 'Integrations', 'What crosses to payroll, what is recorded, and what is raised with IT', [
       [can('integration'), tab('setup', 'ipay', 'Payroll readiness')],
       [can('mod_cfg'), tab('setup', 'mpay', 'Pay codes')],
       [can('integration'), tab('setup', 'ibc', 'Business Central')],
@@ -102,7 +105,7 @@ export function buildNav({ caps, modules, flags, onboarding }: NavInput): NavGro
   ];
   const keep = (xs: [boolean, NavTab][]) => xs.filter(([ok]) => ok).map(([, t]) => t);
   const sections = setupSections(can, on, flag, ts)
-    .map(s => ({ ...s, tabs: keep(s.pages).map(t => ({ ...t, section: s.label, sectionKey: s.key })) }))
+    .map(s => ({ ...s, tabs: keep(s.pages).map(t => ({ ...t, section: s.label, sectionKey: s.key, sectionDescription: s.description })) }))
     .filter(s => s.tabs.length);
   const setupTabs = sections.flatMap(s => s.tabs);
   const groups: NavGroup[] = [

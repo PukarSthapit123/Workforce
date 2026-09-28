@@ -240,3 +240,12 @@ test('a double click on Remove sends one request', async () => {
   expect(sent).toHaveLength(1);
   server.events.removeAllListeners();
 });
+
+/* AFFORDANCE CONVENTION: "Permissions carries the security caveat as a caution". */
+test('the page carries its security caveat as a standing caution', async () => {
+  mount();
+  const caution = await screen.findByTestId(tid.access.caution);
+  expect(caution).toHaveAttribute('role', 'note');
+  expect(caution).toHaveTextContent(/apply to everyone at once/);
+  expect(caution).toHaveTextContent(/server enforces/);
+});

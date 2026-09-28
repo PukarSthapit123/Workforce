@@ -1,4 +1,5 @@
 import { useEffect, useState, type ComponentType } from 'react';
+import { Bell } from 'lucide-react';
 import { Navigate, Route, Routes, useLocation } from 'react-router';
 import type { NavGroup, NavTab } from '@/domain/nav';
 import { tid } from '@/testids';
@@ -52,7 +53,7 @@ export function ShellView({ nav, roleLabel, viewingAs, account, canViewAs = fals
           title={viewingAs ? `Looking at the app as ${viewingAs} · your account is ${account.name}` : undefined}>{roleLabel}</span>
         <button type="button" data-testid={tid.shell.bell} aria-label={`Notifications, ${unread} unread`}
           className="relative inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center">
-          <span aria-hidden="true">🔔</span>{unread > 0 && <span data-testid={tid.shell.bellCount} className="absolute -right-2 -top-2 rounded-pill bg-brand-accent px-xs text-xs text-text-on-accent">{unread}</span>}
+          <Bell aria-hidden="true" className="size-5" />{unread > 0 && <span data-testid={tid.shell.bellCount} className="absolute -right-2 -top-2 rounded-pill bg-brand-accent px-xs text-xs text-text-on-accent">{unread}</span>}
         </button>
         <button type="button" data-testid={tid.shell.theme} aria-label={`${theme === 'dark' ? 'Light' : 'Dark'} theme`}
           className="inline-flex min-h-touch shrink-0 items-center rounded-pill border px-sm py-xs text-xs" onClick={toggleTheme}>{theme === 'dark' ? 'Light' : 'Dark'}</button>

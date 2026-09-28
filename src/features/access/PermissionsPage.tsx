@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { tid } from '@/testids';
-import { Button, Row } from '@/ui';
+import { Button, Caution, Row } from '@/ui';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import { useCapabilities, useCapabilityGroups, useUserTypes, useUsers, useSetTemplateCapability, type Capability, type UserType } from '@/api/access';
 import { UserExceptions } from './UserExceptions';
@@ -53,6 +53,9 @@ export function PermissionsPage() {
       <div>
         <h1 className="text-[length:var(--qp-text-20)] font-semibold">Permissions</h1>
         <p className="text-text-secondary">Personas over one application. A manager is an employee record with extra capabilities.</p>
+        {/* Ported from the prototype's admPermissions caution (v15:8335). There
+            the checks ran in the browser; here the server enforces them. */}
+        <Caution testId={tid.access.caution} text="These switches are live and apply to everyone at once. The server enforces each one, so hiding a control is never the only thing refusing the request, and every change is recorded in the audit log." />
       </div>
 
       <div className="overflow-x-auto rounded-card border border-border bg-surface-card">

@@ -9,4 +9,8 @@ if (typeof Element !== 'undefined') {
   if (!Element.prototype.setPointerCapture) Element.prototype.setPointerCapture = () => {};
   if (!Element.prototype.releasePointerCapture) Element.prototype.releasePointerCapture = () => {};
   if (!Element.prototype.scrollIntoView) Element.prototype.scrollIntoView = () => {};
+  /* Radix Tooltip and Popper measure their content with ResizeObserver, which jsdom lacks. */
+  if (!('ResizeObserver' in globalThis)) {
+    globalThis.ResizeObserver = class { observe() {} unobserve() {} disconnect() {} };
+  }
 }

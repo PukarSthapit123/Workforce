@@ -9,7 +9,7 @@ export const tid = {
   page: (view: string) => k('page', view),
   signIn: {
     form: 'sign-in-form', email: 'sign-in-email', password: 'sign-in-password', submit: 'sign-in-submit',
-    error: 'sign-in-error', showAccounts: 'sign-in-show-accounts', account: (email: string) => k('sign-in-account', email),
+    error: 'sign-in-error', showAccounts: 'sign-in-show-accounts', storageNote: 'sign-in-storage-note', account: (email: string) => k('sign-in-account', email),
   },
   nav: {
     group: (key: string) => k('nav-group', key),
@@ -27,14 +27,14 @@ export const tid = {
     loading: 'shell-loading', error: 'shell-error', retry: 'shell-retry',
   },
   notBuilt: { root: 'not-built', subProject: 'not-built-sub-project' },
-  setup: { card: (view: string) => k('setup-card', view) },
+  setup: { card: (view: string) => k('setup-card', view), cardDescription: (view: string) => k('setup-card-description', view) },
   access: {
     table: 'access-table',
     cell: (cap: string, userType: string) => k('access-cell', cap, userType),
     userTypeName: (userType: string) => k('access-user-type-name', userType),
     groupRow: (group: string) => k('access-group-row', group),
     capRow: (cap: string) => k('access-cap-row', cap),
-    usersTable: 'access-users-table',
+    usersTable: 'access-users-table', caution: 'access-caution',
     userRow: (email: string) => k('access-user-row', email),
     exceptions: (email: string) => k('access-user-exceptions', email),
     exceptionAdd: (email: string) => k('access-exception-add', email),

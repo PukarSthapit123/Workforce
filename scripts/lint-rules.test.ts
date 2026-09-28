@@ -26,3 +26,11 @@ test.each([
 ])('%s is allowed in %s', async (code, filePath) => {
   expect(await restricted(code, filePath)).toBe(false);
 }, 30_000);
+
+/* AGAINST THE DESIGN SYSTEM: "Colour literals outside the token blocks are rare".
+   The hex rule refuses one in a component; tokens.css is where colours live. */
+test('a hex colour literal in a component is refused', async () => {
+  const hex = ['#', 'ff0000'].join(''); // assembled, so this file does not trip the rule it tests
+  const [r] = await eslint.lintText(`export const c = '${hex}';`, { filePath: resolve(__dirname, '..', 'src/features/access/Example.tsx') });
+  expect((r?.messages ?? []).some(m => m.ruleId === 'no-restricted-syntax' && /colour token/.test(m.message))).toBe(true);
+}, 30_000);

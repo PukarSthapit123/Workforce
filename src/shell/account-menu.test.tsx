@@ -49,6 +49,11 @@ test('the menu names the account you are on: name, email, role, location and ID,
   expect(screen.getByText('Your account')).toBeInTheDocument();
   expect(screen.getByTestId(tid.shell.menuRole)).toHaveTextContent('Admin');
   expect(screen.getByTestId(tid.shell.menuRole)).toHaveTextContent('Configure how this workforce operates');
+  /* IDENTITY AND SIGN-IN: "A role is not something you pick from a menu".
+     The role line states the account's role; it is not a control. */
+  expect(screen.getByTestId(tid.shell.menuRole)).not.toHaveAttribute('role');
+  expect(screen.queryAllByRole('menuitemradio')).toEqual([]);
+  expect(screen.queryAllByRole('menuitemcheckbox')).toEqual([]);
 });
 
 test('a holder of perm_cfg is offered at most five people, one per role, never themselves, with full test id coverage', async () => {

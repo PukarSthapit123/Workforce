@@ -1,3 +1,4 @@
+import { TriangleAlert } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/ui/shadcn/tooltip';
 /* i: explains the thing beside it, one or two sentences, never over ~170 characters.
    The trigger's own aria-label only ever says "More information": it names what
@@ -25,7 +26,9 @@ export function HelpButton({ testId, label, onOpen }: { testId: string; label: s
   return <button type="button" data-testid={testId} aria-label={label} onClick={onOpen}
     className="inline-grid size-7 place-items-center rounded-pill border border-border font-semibold">?</button>;
 }
-/* ⚠: a standing caution, always true of this area */
+/* A standing caution, always true of this area. Not a button: it opens
+   nothing. The warning sign comes from the shared icon set, not an emoji. */
 export function Caution({ testId, text }: { testId: string; text: string }) {
-  return <span data-testid={testId} role="note" className="inline-flex items-center gap-xs text-warn">⚠ {text}</span>;
+  return <span data-testid={testId} role="note" className="inline-flex items-start gap-xs text-warn">
+    <TriangleAlert aria-hidden="true" className="mt-xs size-4 shrink-0" />{text}</span>;
 }
