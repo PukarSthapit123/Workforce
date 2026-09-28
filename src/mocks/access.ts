@@ -1,28 +1,27 @@
-import { http, HttpResponse, type HttpResponseResolver } from 'msw';
 import { store } from './store';
-import { bump, checkVersion, handle, readJson, refuse } from './http';
-import { requireCapability, requireSession } from './session';
+import { bump, refuse } from './http';
+import { serve } from './serve';
+import { actor, personName, type Account } from './auth';
 import { writeAudit } from './audit';
 import { resolveCapabilities } from '@/domain/capabilities';
-import { AddException, SetTemplateCapability, type Capability, type UserType } from '@/contract/access';
+import {
+  listCapabilities, listCapabilityGroups, listUserTypes, setTemplateCapability, listUsers, addException, removeException,
+  type Capability, type CapabilityGroup, type UserType, type UserAccess,
+} from '@/contract/access';
 
-/* Same inference workaround as session.ts's and tenant.ts's ResolverInfo: `handle`'s
-   generic cannot be inferred from an unannotated destructured parameter nested inside
-   http.get/put/post/delete(...), so the real msw resolver-info type is named here once. */
-type ResolverInfo = Parameters<HttpResponseResolver>[0];
-
-interface Account { id: string; version: number; updatedAt: string; email: string; personCode: string; userType: string; grants: string[]; revocations: string[] }
-const LABEL = 'Permissions and role configuration';
-/* The one capability every endpoint here is gated on, and so the one capability
-   that must always keep at least one holder: lose the last one and nobody,
-   anywhere, can reach this page to put it back. */
+/* The one capability every endpoint here is gated on (in the contract), and
+   so the one capability that must always keep at least one holder: lose the
+   last one and nobody, anywhere, can reach this page to put it back. */
 const PERM_CAP = 'perm_cfg';
 const SELF_NEXT = 'Ask another administrator to make this change.';
-const gate = (request: Request) => { const s = requireSession(request); requireCapability(s, PERM_CAP, LABEL); return s; };
-const personName = (code: string) => Object.values(store.coll<{ code: string; name: string }>('people')).find(p => p.code === code)?.name ?? code;
-const who = (s: ReturnType<typeof requireSession>) => ({ personCode: s.account.personCode, name: personName(s.account.personCode), ...(s.viewingAs ? { viewingAs: s.viewingAs } : {}) });
 const capBy = (id: string) => store.coll<Capability>('capabilities')[id] ?? refuse(404, { code: 'not-found', message: `There is no capability "${id}".`, next: 'Reload the page.' });
-const userView = (a: Account) => ({
+const accountKey = (email: string) => `acc_${email.toLowerCase()}`;
+const accountAt = (email: string) => {
+  const accounts = store.coll<Account>('accounts'), key = accountKey(email);
+  return (Object.hasOwn(accounts, key) ? accounts[key] : undefined)
+    ?? refuse(404, { code: 'not-found', message: 'That account no longer exists.', next: 'Reload the page.' });
+};
+const userView = (a: Account): UserAccess => ({
   id: a.id, version: a.version, updatedAt: a.updatedAt, email: a.email, personCode: a.personCode,
   name: personName(a.personCode), userType: a.userType, grants: a.grants, revocations: a.revocations,
 });
@@ -33,24 +32,19 @@ const holderExists = (capId: string, types: Record<string, UserType>, accounts: 
   Object.values(accounts).some(a => resolveCapabilities(types[a.userType]?.capabilities ?? [], a.grants, a.revocations).includes(capId));
 
 export const accessHandlers = [
-  http.get('/api/v1/capabilities', handle(({ request }: ResolverInfo) => { gate(request); return HttpResponse.json(Object.values(store.coll('capabilities'))); })),
-  http.get('/api/v1/capability-groups', handle(({ request }: ResolverInfo) => {
-    gate(request);
-    return HttpResponse.json(Object.values(store.coll<{ order: number }>('capabilityGroups')).sort((a, b) => a.order - b.order));
-  })),
-  http.get('/api/v1/user-types', handle(({ request }: ResolverInfo) => { gate(request); return HttpResponse.json(Object.values(store.coll('userTypes'))); })),
-  http.put('/api/v1/user-types/:id/capabilities/:capability', handle(async ({ request, params }: ResolverInfo) => {
-    const s = gate(request);
+  serve(listCapabilities, () => Object.values(store.coll<Capability>('capabilities'))),
+  serve(listCapabilityGroups, () => Object.values(store.coll<CapabilityGroup>('capabilityGroups')).sort((a, b) => a.order - b.order)),
+  serve(listUserTypes, () => Object.values(store.coll<UserType>('userTypes'))),
+  serve(setTemplateCapability, ({ session, params, body: { granted }, checkVersion }) => {
     const types = store.coll<UserType>('userTypes');
-    const t = types[String(params.id)];
+    const t = Object.hasOwn(types, params.id) ? types[params.id] : undefined;
     if (!t) return refuse(404, { code: 'not-found', message: 'That user type no longer exists.', next: 'Reload the page.' });
-    const c = capBy(String(params.capability));
-    checkVersion(request, t);
-    const { granted } = await readJson(request, SetTemplateCapability);
+    const c = capBy(params.capability);
+    checkVersion(t);
     const had = t.capabilities.includes(c.id);
     /* M1: nobody removes their own way back to this page, whoever else
        still holds it. Another administrator has to make that change. */
-    if (!granted && c.id === PERM_CAP && t.id === s.account.userType)
+    if (!granted && c.id === PERM_CAP && t.id === session.account.userType)
       return refuse(409, { code: 'locked', message: `You cannot remove "${c.label}" from ${t.name}, your own user type. It is your way back to this page.`, next: SELF_NEXT });
     if (!granted && c.lockedFor.includes(t.id))
       return refuse(409, { code: 'locked', message: `"${c.label}" cannot be removed from ${t.name}. It is the only way back to this page.`, next: 'Give another user type this capability first, if you need to change who holds it.' });
@@ -59,21 +53,17 @@ export const accessHandlers = [
       if (!holderExists(PERM_CAP, simulatedTypes, store.coll<Account>('accounts')))
         return refuse(409, { code: 'locked', message: `Removing "${c.label}" from ${t.name} would leave nobody able to configure permissions.`, next: 'Grant it to another user type or account first, if you need to change who holds it.' });
     }
-    if (had === granted) return HttpResponse.json({ record: t, auditId: '' });
+    if (had === granted) return { record: t, auditId: null };
     const next = bump(t, { capabilities: granted ? [...t.capabilities, c.id].sort() : t.capabilities.filter(x => x !== c.id) });
     types[t.id] = next;
-    const auditId = writeAudit({ who: who(s), act: 'Permission changed', entity: 'userType', entityId: t.id, before: { [c.id]: had }, after: { [c.id]: granted } });
-    return HttpResponse.json({ record: next, auditId });
-  })),
-  http.get('/api/v1/users', handle(({ request }: ResolverInfo) => { gate(request); return HttpResponse.json(Object.values(store.coll<Account>('accounts')).map(userView)); })),
-  http.post('/api/v1/users/:email/exceptions', handle(async ({ request, params }: ResolverInfo) => {
-    const s = gate(request);
+    const auditId = writeAudit({ who: actor(session), act: 'Permission changed', entity: 'userType', entityId: t.id, before: { [c.id]: had }, after: { [c.id]: granted } });
+    return { record: next, auditId };
+  }),
+  serve(listUsers, () => Object.values(store.coll<Account>('accounts')).map(userView)),
+  serve(addException, ({ session, params, body: { capability, mode, reason }, checkVersion }) => {
     const accounts = store.coll<Account>('accounts');
-    const key = `acc_${String(params.email).toLowerCase()}`;
-    const a = accounts[key];
-    if (!a) return refuse(404, { code: 'not-found', message: 'That account no longer exists.', next: 'Reload the page.' });
-    checkVersion(request, a);
-    const { capability, mode, reason } = await readJson(request, AddException);
+    const a = accountAt(params.email), key = accountKey(params.email);
+    checkVersion(a);
     const c = capBy(capability);
     const types = store.coll<UserType>('userTypes');
     const template = types[a.userType];
@@ -86,39 +76,35 @@ export const accessHandlers = [
       return refuse(422, { code: 'invalid', field: 'capability', message: `${templateName} already includes "${c.label}", so there is nothing to grant.`, next: 'Choose a capability their template does not already include.' });
     if (mode === 'revoke' && !templateHas)
       return refuse(422, { code: 'invalid', field: 'capability', message: `${templateName} does not include "${c.label}", so there is nothing to revoke.`, next: 'Choose a capability their template already includes.' });
-    if (mode === 'revoke' && c.id === PERM_CAP && a.email === s.account.email)
+    if (mode === 'revoke' && c.id === PERM_CAP && a.email === session.account.email)
       return refuse(409, { code: 'locked', message: `You cannot revoke "${c.label}" from yourself. It is your way back to this page.`, next: SELF_NEXT });
     if (mode === 'revoke' && c.id === PERM_CAP) {
       const simulated: Account = { ...a, grants: a.grants.filter(x => x !== c.id), revocations: [...new Set([...a.revocations, c.id])] };
-      if (!holderExists(PERM_CAP, types, { ...accounts, [key]: simulated })) {
+      if (!holderExists(PERM_CAP, types, { ...accounts, [key]: simulated }))
         return refuse(409, { code: 'locked', message: `Revoking "${c.label}" from ${a.email} would leave nobody able to configure permissions.`, next: 'Grant it to another account first, if you need to change who holds it.' });
-      }
     }
     const alreadyGranted = mode === 'grant' && a.grants.includes(c.id);
     const alreadyRevoked = mode === 'revoke' && a.revocations.includes(c.id);
-    if (alreadyGranted || alreadyRevoked) return HttpResponse.json({ record: userView(a), auditId: '' });
+    if (alreadyGranted || alreadyRevoked) return { record: userView(a), auditId: null };
     const grants = mode === 'grant' ? [...new Set([...a.grants, c.id])] : a.grants.filter(x => x !== c.id);
     const revocations = mode === 'revoke' ? [...new Set([...a.revocations, c.id])] : a.revocations.filter(x => x !== c.id);
     const next = bump(a, { grants, revocations });
     accounts[key] = next;
     const auditId = writeAudit({
-      who: who(s), act: 'Access exception added', entity: 'account', entityId: a.email,
+      who: actor(session), act: 'Access exception added', entity: 'account', entityId: a.email,
       before: { grants: a.grants, revocations: a.revocations }, after: { grants, revocations }, reason,
     });
-    return HttpResponse.json({ record: userView(next), auditId });
-  })),
-  http.delete('/api/v1/users/:email/exceptions/:capability', handle(({ request, params }: ResolverInfo) => {
-    const s = gate(request);
+    return { record: userView(next), auditId };
+  }),
+  serve(removeException, ({ session, params, checkVersion }) => {
     const accounts = store.coll<Account>('accounts');
-    const key = `acc_${String(params.email).toLowerCase()}`;
-    const a = accounts[key];
-    if (!a) return refuse(404, { code: 'not-found', message: 'That account no longer exists.', next: 'Reload the page.' });
-    checkVersion(request, a);
-    const c = capBy(String(params.capability));
+    const a = accountAt(params.email), key = accountKey(params.email);
+    checkVersion(a);
+    const c = capBy(params.capability);
     if (!a.grants.includes(c.id) && !a.revocations.includes(c.id))
       return refuse(422, { code: 'invalid', field: 'capability', message: `"${c.label}" is not an exception for ${a.email}.`, next: 'Choose one of their current exceptions.' });
     /* Removing your own perm_cfg grant takes away your own way back, just as a revoke would. */
-    if (c.id === PERM_CAP && a.email === s.account.email && a.grants.includes(c.id))
+    if (c.id === PERM_CAP && a.email === session.account.email && a.grants.includes(c.id))
       return refuse(409, { code: 'locked', message: `You cannot remove "${c.label}" from yourself. It is your way back to this page.`, next: SELF_NEXT });
     const simulated: Account = { ...a, grants: a.grants.filter(x => x !== c.id), revocations: a.revocations.filter(x => x !== c.id) };
     if (c.id === PERM_CAP && !holderExists(PERM_CAP, store.coll<UserType>('userTypes'), { ...accounts, [key]: simulated }))
@@ -126,9 +112,9 @@ export const accessHandlers = [
     const next = bump(a, { grants: simulated.grants, revocations: simulated.revocations });
     accounts[key] = next;
     const auditId = writeAudit({
-      who: who(s), act: 'Access exception removed', entity: 'account', entityId: a.email,
+      who: actor(session), act: 'Access exception removed', entity: 'account', entityId: a.email,
       before: { grants: a.grants, revocations: a.revocations }, after: { grants: next.grants, revocations: next.revocations },
     });
-    return HttpResponse.json({ record: userView(next), auditId });
-  })),
+    return { record: userView(next), auditId };
+  }),
 ];

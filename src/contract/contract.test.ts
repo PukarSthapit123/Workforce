@@ -124,7 +124,7 @@ describe('the OpenAPI document is structurally valid 3.1', () => {
     expect(problems).toEqual([]);
   });
   test('versioned writes declare If-Match and answer 412 and 428; capability endpoints answer 403', () => {
-    for (const e of ENDPOINTS) {
+    for (const e of ENDPOINTS.filter(x => !x.devOnly)) {
       const op = doc.paths[e.path.replace(/:([A-Za-z]+)/g, '{$1}')]?.[e.method.toLowerCase()];
       if (!op) throw new Error(`${e.method} ${e.path} is missing from the document`);
       if (e.versioned) {
@@ -134,6 +134,17 @@ describe('the OpenAPI document is structurally valid 3.1', () => {
       if (e.capability) expect(Object.keys(op.responses), `${e.method} ${e.path}`).toContain('403');
       if (!e.public) expect(op.security).toEqual([{ bearer: [] }]);
     }
+  });
+  /* M9: the demo account list is the fake server's own, so it is not part
+     of the production contract. */
+  test('a devOnly endpoint, the demo account list among them, is left out of the document', () => {
+    const devOnly = ENDPOINTS.filter(e => e.devOnly);
+    expect(devOnly.map(e => `${e.method} ${e.path}`)).toContain('GET /api/v1/session/accounts');
+    for (const e of devOnly) expect(doc.paths[e.path.replace(/:([A-Za-z]+)/g, '{$1}')]?.[e.method.toLowerCase()], `${e.method} ${e.path}`).toBeUndefined();
+  });
+  test('If-Match is documented as a bare whole number', () => {
+    const op = doc.paths['/api/v1/user-types/{id}/capabilities/{capability}']?.put;
+    expect(op?.parameters?.find(p => p.name === 'If-Match')).toMatchObject({ in: 'header', required: true, schema: { type: 'string', pattern: '^[0-9]+$' } });
   });
   test('the audit query is described, limit included', () => {
     const op = doc.paths['/api/v1/audit']?.get;

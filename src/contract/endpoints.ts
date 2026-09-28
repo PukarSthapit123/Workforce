@@ -7,8 +7,13 @@ export type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
      contract tests check the two agree, and the client refuses to send a
      request with one missing.
    - query: the query string, as a zod object the handler validates too.
-   - versioned: the write must carry If-Match (428 without it, 412 when stale).
+   - versioned: the write must carry If-Match: the version of the record it
+     was based on, as a bare whole number such as 3 (no quotes, no W/). 428
+     when it is missing or empty, 412 when it is stale or not a whole number.
    - public: no session is needed (sign-in itself, the demo account list).
+   - devOnly: served by the fake server for development and tests only (the
+     demo account list). Left out of the OpenAPI document, so it is not part
+     of the production contract.
    - allowedWhileViewing: one of the few writes a session viewing as someone
      else may still make (ending the view, signing out).
    - errors: refusal statuses this endpoint can answer beyond the ones the
@@ -16,7 +21,7 @@ export type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 export interface Endpoint {
   method: Method; path: `/api/v1/${string}`; summary: string;
   request?: z.ZodType; response: z.ZodType; capability?: string;
-  params?: z.ZodObject; query?: z.ZodObject; versioned?: true; public?: true; allowedWhileViewing?: true;
+  params?: z.ZodObject; query?: z.ZodObject; versioned?: true; public?: true; allowedWhileViewing?: true; devOnly?: true;
   errors?: readonly number[];
 }
 export const ENDPOINTS: Endpoint[] = [];

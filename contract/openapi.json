@@ -444,64 +444,6 @@
         }
       }
     },
-    "/api/v1/session/accounts": {
-      "get": {
-        "summary": "Demo account shortcuts (stub: not in production)",
-        "security": [],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$schema": "https://json-schema.org/draft/2020-12/schema",
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "email": {
-                        "type": "string"
-                      },
-                      "name": {
-                        "type": "string"
-                      },
-                      "userType": {
-                        "type": "string",
-                        "enum": [
-                          "employee",
-                          "manager",
-                          "admin"
-                        ]
-                      },
-                      "personCode": {
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "email",
-                      "name",
-                      "userType",
-                      "personCode"
-                    ],
-                    "additionalProperties": false
-                  }
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Any other refusal or failure",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Refusal"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/session/view-as/people": {
       "get": {
         "summary": "Who the account menu offers to view as: at most five, one per role",
@@ -1304,6 +1246,16 @@
               }
             }
           },
+          "404": {
+            "description": "The record does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
           "default": {
             "description": "Any other refusal or failure",
             "content": {
@@ -1351,7 +1303,7 @@
             "name": "If-Match",
             "in": "header",
             "required": true,
-            "description": "The version the change is based on",
+            "description": "The version of the record the change is based on, as a bare whole number such as 3 (no quotes, no W/ prefix)",
             "schema": {
               "type": "string",
               "pattern": "^[0-9]+$"
@@ -1426,7 +1378,10 @@
                       "additionalProperties": false
                     },
                     "auditId": {
-                      "type": "string"
+                      "type": [
+                        "string",
+                        "null"
+                      ]
                     }
                   },
                   "required": [
@@ -1648,7 +1603,7 @@
             "name": "If-Match",
             "in": "header",
             "required": true,
-            "description": "The version the change is based on",
+            "description": "The version of the record the change is based on, as a bare whole number such as 3 (no quotes, no W/ prefix)",
             "schema": {
               "type": "string",
               "pattern": "^[0-9]+$"
@@ -1719,7 +1674,10 @@
                       "additionalProperties": false
                     },
                     "auditId": {
-                      "type": "string"
+                      "type": [
+                        "string",
+                        "null"
+                      ]
                     }
                   },
                   "required": [
@@ -1838,7 +1796,7 @@
             "name": "If-Match",
             "in": "header",
             "required": true,
-            "description": "The version the change is based on",
+            "description": "The version of the record the change is based on, as a bare whole number such as 3 (no quotes, no W/ prefix)",
             "schema": {
               "type": "string",
               "pattern": "^[0-9]+$"
@@ -1941,7 +1899,10 @@
                       "additionalProperties": false
                     },
                     "auditId": {
-                      "type": "string"
+                      "type": [
+                        "string",
+                        "null"
+                      ]
                     }
                   },
                   "required": [

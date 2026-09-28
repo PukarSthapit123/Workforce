@@ -33,13 +33,14 @@ function parameters(e: Endpoint) {
   const out: Record<string, unknown>[] = names.map(name => ({ name, in: 'path', required: true, schema: json(e.params?.shape[name] as z.ZodType) }));
   for (const [name, schema] of Object.entries(e.query?.shape ?? {}))
     out.push({ name, in: 'query', required: !(schema as z.ZodType).safeParse(undefined).success, schema: json(schema as z.ZodType) });
-  if (e.versioned) out.push({ name: 'If-Match', in: 'header', required: true, description: 'The version the change is based on', schema: { type: 'string', pattern: '^[0-9]+$' } });
+  if (e.versioned) out.push({ name: 'If-Match', in: 'header', required: true, description: 'The version of the record the change is based on, as a bare whole number such as 3 (no quotes, no W/ prefix)', schema: { type: 'string', pattern: '^[0-9]+$' } });
   return out;
 }
 
 export function buildOpenApi() {
   const paths: Record<string, Record<string, unknown>> = {};
-  for (const e of [...ENDPOINTS].sort((a, b) => (a.path + a.method).localeCompare(b.path + b.method))) {
+  /* A devOnly endpoint is the fake server's own, not part of the production contract. */
+  for (const e of ENDPOINTS.filter(x => !x.devOnly).sort((a, b) => (a.path + a.method).localeCompare(b.path + b.method))) {
     const p = e.path.replace(/:([A-Za-z]+)/g, '{$1}');
     const params = parameters(e);
     const responses: Record<string, unknown> = {
@@ -70,5 +71,5 @@ export function buildOpenApi() {
 if (process.argv[1]?.endsWith('openapi.ts')) {
   mkdirSync(resolve(import.meta.dirname, '../contract'), { recursive: true });
   writeFileSync(resolve(import.meta.dirname, '../contract/openapi.json'), JSON.stringify(buildOpenApi(), null, 2) + '\n');
-  console.log('contract/openapi.json written:', ENDPOINTS.length, 'endpoints');
+  console.log('contract/openapi.json written:', ENDPOINTS.filter(e => !e.devOnly).length, 'endpoints');
 }

@@ -10,5 +10,7 @@ export const Refusal = z.object({
 });
 export type Refusal = z.infer<typeof Refusal>;
 
-export const mutation = <T extends z.ZodType>(record: T) => z.object({ record, auditId: z.string() });
-export type Mutation<T> = { record: T; auditId: string };
+/* auditId is null when the write changed nothing (a no-op, such as granting
+   what is already granted), so no audit row was written. */
+export const mutation = <T extends z.ZodType>(record: T) => z.object({ record, auditId: z.string().nullable() });
+export type Mutation<T> = { record: T; auditId: string | null };

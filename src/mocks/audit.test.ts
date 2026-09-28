@@ -47,3 +47,20 @@ test('a valid limit caps the page', async () => {
   expect(r.items).toHaveLength(2);
   expect(r.total).toBeGreaterThanOrEqual(3);
 });
+
+/* M12: a non-numeric limit is refused in plain words, not Zod's own text. */
+test('a limit that is not a number is refused in plain words', async () => {
+  const r = await fetch('/api/v1/audit?limit=lots', { headers: { Authorization: `Bearer ${token}` } });
+  const body = (await r.json()) as { message: string };
+  expect(body.message).toBe('The limit must be a number.');
+  expect(body.message).not.toMatch(/expected|received|NaN/);
+});
+/* M12: with the clock frozen, many rows share a timestamp. Their ids come from
+   a zero-padded counter, so they still come back newest first, every time. */
+test('rows written in the same instant still sort newest first, by a zero-padded id', async () => {
+  const ids = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'].map(act => writeAudit({ who: { personCode: 'X', name: 'X' }, act, entity: 'e', entityId: '1' }));
+  expect(ids.every(id => /^aud_\d{12}$/.test(id))).toBe(true);
+  expect([...ids].sort()).toEqual(ids);
+  const r = await get('?entity=e');
+  expect(r.items.map((i: { act: string }) => i.act)).toEqual(['L', 'K', 'J', 'I', 'H', 'G', 'F', 'E', 'D', 'C', 'B', 'A']);
+});

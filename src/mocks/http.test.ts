@@ -39,6 +39,13 @@ describe('checkVersion', () => {
     expect(() => checkVersion(request, record)).toThrow(Refused);
     try { checkVersion(request, record); } catch (e) { expect((e as Refused).status).toBe(428); }
   });
+  /* M6: If-Match is a bare whole number. Number('') is 0 and Number('"3"') is
+     NaN, so a loose read could match the wrong version or fail obscurely. */
+  test.each([['', 428], ['  ', 428], ['"3"', 412], ['W/"3"', 412], ['3.0', 412], ['-3', 412]])('an If-Match of %j is refused with %i', (value, status) => {
+    const request = new Request('http://localhost/x', { headers: { 'If-Match': value } });
+    try { checkVersion(request, record); throw new Error('should have refused'); }
+    catch (e) { expect(e).toBeInstanceOf(Refused); expect((e as Refused).status).toBe(status); expect((e as Refused).body.message).toMatch(/not been saved/); }
+  });
   test('refuses 412 with a reload-and-reapply next when the version is stale', () => {
     const request = new Request('http://localhost/x', { headers: { 'If-Match': '2' } });
     try {

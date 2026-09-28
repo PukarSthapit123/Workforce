@@ -1,79 +1,20 @@
-import { http, HttpResponse, type HttpResponseResolver } from 'msw';
 import { store } from './store';
-import { handle, readJson, refuse } from './http';
+import { refuse } from './http';
+import { serve } from './serve';
 import { writeAudit } from './audit';
-import { SignInRequest, ViewAsRequest, endViewAs, deleteSession, type Session, type ViewAsPerson } from '@/contract/session';
-import { resolveCapabilities } from '@/domain/capabilities';
-
-/* `handle`'s own generic (A extends unknown[]) cannot be inferred from an
-   unannotated destructured parameter nested two calls deep (handle(...) inside
-   http.post(...)), so TypeScript falls back to a bare `{ request: any }` that
-   is missing msw's other resolver-info fields (params, cookies, requestId).
-   Naming the real parameter type here, once, fixes every handler below without
-   touching the shared `handle` helper in http.ts. */
-type ResolverInfo = Parameters<HttpResponseResolver>[0];
+import { accountBy, accountForPerson, actor, locationNameOf, personBy, roleNameOf, sessionView, sessions, type Account, type Person, type ServerSession } from './auth';
+import { createSession, getSession, deleteSession, startViewAs, listViewAsPeople, endViewAs, listAccounts, type ViewAsPerson } from '@/contract/session';
 
 export const DEMO_PASSWORD = 'Qnipay@123';   // stub: shared demo password, replaced by Entra ID
-interface Account { email: string; userType: Session['account']['userType']; personCode: string; grants: string[]; revocations: string[] }
-interface Person { code: string; name: string; state?: string; employeeType?: string; location?: string }
-interface UserType { id: string; name?: string; description?: string; capabilities: string[] }
-export interface ServerSession { token: string; email: string; viewingAs?: string }
-
-const sessions = () => store.coll<ServerSession>('sessions');
-const accountBy = (email: string) => store.coll<Account>('accounts')[`acc_${email.toLowerCase()}`];
-const personBy = (code: string) => Object.values(store.coll<Person>('people')).find(p => p.code === code);
-const accountForPerson = (code: string) => Object.values(store.coll<Account>('accounts')).find(x => x.personCode === code);
-const userTypeOf = (a: Account) => store.coll<UserType>('userTypes')[a.userType];
-const roleNameOf = (a: Account) => userTypeOf(a)?.name ?? a.userType.charAt(0).toUpperCase() + a.userType.slice(1);
-const locationNameOf = (p: Person | undefined) => Object.values(store.coll<{ code: string; name: string }>('locations')).find(l => l.code === p?.location)?.name ?? p?.location ?? '';
 const ONBOARDING = new Set(['candidate', 'preboard']);
 const GONE = new Set(['leaver', 'archived']);
-export const capsFor = (a: Account) => resolveCapabilities(store.coll<UserType>('userTypes')[a.userType]?.capabilities ?? [], a.grants, a.revocations);
-function view(s: ServerSession): Session {
-  const a = accountBy(s.email);
-  /* An account can vanish (removed or revoked) while its session lingers. Treat
-     that exactly like an invalid token: signed out, never an empty shell. */
-  if (!a) return refuse(401, { code: 'signed-out', message: 'You are signed out.', next: 'Sign in again to continue.' });
-  const p = personBy(a.personCode);
-  const vp = s.viewingAs ? personBy(s.viewingAs) : undefined;
-  const va = vp ? accountForPerson(vp.code) : undefined;
-  /* The target's account can also vanish mid-view-as (removed or revoked after
-     it started). Without one there is nobody valid to view as, so this drops
-     back to the real signed-in account's own capabilities and omits
-     viewingAs entirely, rather than quietly keeping the real account's
-     capabilities under a stale, wrong-looking label. */
-  const viewingAs = vp && va ? { vp, va } : undefined;
-  return { token: s.token, simulated: true,
-    account: { email: a.email, userType: a.userType, personCode: a.personCode, name: p?.name ?? a.email,
-      roleName: roleNameOf(a), roleDescription: userTypeOf(a)?.description ?? '', locationName: locationNameOf(p) },
-    capabilities: capsFor(viewingAs?.va ?? a),
-    ...(viewingAs ? { viewingAs: { personCode: viewingAs.vp.code, name: viewingAs.vp.name, userType: viewingAs.va.userType } } : {}) };
-}
-/* View-as is a preview. While a session is viewing as someone, the only
-   changes it may make are ending the view (returning to its own account) and
-   signing out; every other write is refused here, once, for every handler
-   that calls requireSession, rather than each handler remembering to. */
-const ALLOWED_WHILE_VIEWING = new Set([endViewAs, deleteSession].map(e => `${e.method} ${e.path}`));
-export function requireSession(request: Request): ServerSession & { account: Account; caps: string[] } {
-  const token = request.headers.get('Authorization')?.replace(/^Bearer /, '') ?? '';
-  const s = sessions()[token];
-  const a = s && accountBy(s.email);
-  if (!s || !a) return refuse(401, { code: 'signed-out', message: 'You are signed out.', next: 'Sign in again to continue.' });
-  const v = view(s);
-  if (v.viewingAs && request.method !== 'GET' && !ALLOWED_WHILE_VIEWING.has(`${request.method} ${new URL(request.url).pathname}`))
-    refuse(403, { code: 'viewing-as', message: `You are viewing the app as ${v.viewingAs.name}, so changes are off. Nothing has been saved.`, next: 'Return to your own account first, then make the change.' });
-  return { ...s, account: a, caps: v.capabilities };
-}
-export function requireCapability(s: { caps: string[] }, cap: string, label: string) {
-  if (!s.caps.includes(cap)) refuse(403, { code: 'capability', message: `This needs "${label}", which your access does not include.`, next: 'Ask an administrator to grant it on Qnipay setup → Permissions.' });
-}
-const who = (s: ServerSession & { account: Account }) => ({ personCode: s.account.personCode, name: personBy(s.account.personCode)?.name ?? s.email, ...(s.viewingAs ? { viewingAs: s.viewingAs } : {}) });
 
 export const sessionHandlers = [
-  http.get('/api/v1/session/accounts', () => HttpResponse.json(Object.values(store.coll<Account>('accounts'))
-    .map(a => ({ email: a.email, userType: a.userType, personCode: a.personCode, name: personBy(a.personCode)?.name ?? a.email })))),
-  http.post('/api/v1/session', handle(async ({ request }: ResolverInfo) => {
-    const { email, password } = await readJson(request, SignInRequest);
+  /* Dev-only (the endpoint is marked devOnly, so it is not in the OpenAPI
+     document): the sign-in screen's demo shortcuts. */
+  serve(listAccounts, () => Object.values(store.coll<Account>('accounts'))
+    .map(a => ({ email: a.email, userType: a.userType, personCode: a.personCode, name: personBy(a.personCode)?.name ?? a.email }))),
+  serve(createSession, ({ body: { email, password } }) => {
     const a = accountBy(email);
     if (!a || password !== DEMO_PASSWORD) return refuse(401, { code: 'credentials', message: 'That address and password do not match an account.', next: 'Check the address and password, or pick an account from the list.' });
     const token = crypto.randomUUID();
@@ -82,53 +23,52 @@ export const sessionHandlers = [
     /* A failed sign-in above is not a change to anything, so only this
        successful one is audited. The token itself is never recorded. */
     writeAudit({ who: { personCode: a.personCode, name: personBy(a.personCode)?.name ?? a.email }, act: 'Signed in', entity: 'session', entityId: a.email, before: null, after: { signedIn: true } });
-    return HttpResponse.json(view(created));
-  })),
-  http.get('/api/v1/session', handle(({ request }: ResolverInfo) => HttpResponse.json(view(requireSession(request))))),
-  http.delete('/api/v1/session', handle(({ request }: ResolverInfo) => {
-    const s = requireSession(request);
-    Reflect.deleteProperty(sessions(), s.token);
-    writeAudit({ who: who(s), act: 'Signed out', entity: 'session', entityId: s.account.email, before: { signedIn: true }, after: null });
-    return HttpResponse.json(null);
-  })),
-  http.post('/api/v1/session/view-as', handle(async ({ request }: ResolverInfo) => {
-    /* Gated as the prototype gates it (v15:10773, can('perm_cfg')): looking at
-       the app as someone else is part of configuring access. */
-    const s = requireSession(request); requireCapability(s, 'perm_cfg', 'Permissions and role configuration');
-    const { personCode } = await readJson(request, ViewAsRequest);
+    return sessionView(created);
+  }),
+  serve(getSession, ({ session }) => sessionView(session)),
+  serve(deleteSession, ({ session }) => {
+    Reflect.deleteProperty(sessions(), session.token);
+    writeAudit({ who: actor(session), act: 'Signed out', entity: 'session', entityId: session.account.email, before: { signedIn: true }, after: null });
+    return null;
+  }),
+  /* Gated on perm_cfg in the contract, as the prototype gates it
+     (v15:10773, can('perm_cfg')): looking at the app as someone else is part
+     of configuring access. */
+  serve(startViewAs, ({ session, body: { personCode } }) => {
     const p = personBy(personCode);
     if (!p) return refuse(422, { code: 'invalid', field: 'personCode', message: 'There is nobody with that employee ID.', next: 'Pick a person from the list.' });
+    if (personCode === session.account.personCode)
+      return refuse(422, { code: 'invalid', field: 'personCode', message: 'You cannot view the app as yourself. You are already seeing it as you.', next: 'Pick someone else from the list.' });
     if (!accountForPerson(personCode)) return refuse(422, { code: 'invalid', field: 'personCode', message: `${p.name} has no account, so there is nothing to view.`, next: 'Pick a person who has signed in before, or ask an administrator to create one first.' });
-    const updated: ServerSession = { token: s.token, email: s.email, viewingAs: personCode };
-    sessions()[s.token] = updated;
+    const updated: ServerSession = { token: session.token, email: session.email, viewingAs: personCode };
+    sessions()[session.token] = updated;
     /* who names the real signed-in account, with viewingAs recording what
        they were about to view as at the moment of this very action. */
-    writeAudit({ who: who({ ...s, viewingAs: personCode }), act: 'View-as started', entity: 'session', entityId: s.account.email, before: null, after: { viewingAs: personCode } });
-    return HttpResponse.json(view(updated));
-  })),
+    writeAudit({ who: actor({ ...session, viewingAs: personCode }), act: 'View-as started', entity: 'session', entityId: session.account.email, before: null, after: { viewingAs: personCode } });
+    return sessionView(updated);
+  }),
   /* Ported from the prototype's drawMenu (v15:10776-10789): one person per
      role, and one per employee type among employees, never yourself, at
      most five, so the list shows how the app differs. People who have left
      are not offered, and neither is anyone without an account. */
-  http.get('/api/v1/session/view-as/people', handle(({ request }: ResolverInfo) => {
-    const s = requireSession(request); requireCapability(s, 'perm_cfg', 'Permissions and role configuration');
+  serve(listViewAsPeople, ({ session }) => {
     const seen = new Set<string>(); const out: ViewAsPerson[] = [];
     for (const p of Object.values(store.coll<Person>('people'))) {
       const a = accountForPerson(p.code);
-      if (!a || p.code === s.account.personCode || GONE.has(p.state ?? '')) continue;
+      if (!a || p.code === session.account.personCode || GONE.has(p.state ?? '')) continue;
       const onboarding = a.userType === 'employee' && ONBOARDING.has(p.state ?? '');
       const rank = a.userType !== 'employee' ? a.userType : onboarding ? 'candidate' : `employee:${p.employeeType ?? ''}`;
       if (seen.has(rank)) continue;
       seen.add(rank);
       out.push({ personCode: p.code, name: p.name, userType: a.userType, roleName: roleNameOf(a), locationName: locationNameOf(p), onboarding });
     }
-    return HttpResponse.json(out.slice(0, 5));
-  })),
-  http.delete('/api/v1/session/view-as', handle(({ request }: ResolverInfo) => {
-    const s = requireSession(request); const was = s.viewingAs;
-    const updated: ServerSession = { token: s.token, email: s.email };
-    sessions()[s.token] = updated;
-    if (was) writeAudit({ who: who({ ...s, viewingAs: undefined }), act: 'View-as ended', entity: 'session', entityId: s.account.email, before: { viewingAs: was }, after: null });
-    return HttpResponse.json(view(updated));
-  })),
+    return out.slice(0, 5);
+  }),
+  serve(endViewAs, ({ session }) => {
+    const was = session.viewingAs;
+    const updated: ServerSession = { token: session.token, email: session.email };
+    sessions()[session.token] = updated;
+    if (was) writeAudit({ who: actor({ ...session, viewingAs: undefined }), act: 'View-as ended', entity: 'session', entityId: session.account.email, before: { viewingAs: was }, after: null });
+    return sessionView(updated);
+  }),
 ];

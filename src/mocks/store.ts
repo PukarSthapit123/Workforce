@@ -23,7 +23,7 @@ export const isTenant = (t: unknown): t is string => typeof t === 'string' && Ob
 
 /* Bump only when the persisted shape changes in a way the seed files do not
    show (for example a new top-level field in PersistedState). */
-const STORE_FORMAT = 2;
+const STORE_FORMAT = 3; // 3: audit ids became a zero-padded counter (aud_000000000001)
 /* FNV-1a, run twice with different offsets for 64 bits. Not cryptographic:
    it only has to change whenever a seed file's content changes. */
 export function contentHash(text: string): string {

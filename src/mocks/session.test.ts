@@ -212,3 +212,14 @@ test('the session names the account\'s role, what it is for and where they work'
   expect(s.account).toMatchObject({ roleName: 'Manager', roleDescription: expect.stringContaining('team'), locationName: expect.any(String) });
   expect(s.account.locationName.length).toBeGreaterThan(0);
 });
+
+/* 1a minor: view-as of yourself is refused, not quietly started. */
+test('view-as of yourself is refused with 422 in plain words, and nothing is recorded', async () => {
+  const admin = anyAccount('admin');
+  const { token } = await (await post('/api/v1/session', { email: admin.email, password: 'Qnipay@123' })).json();
+  const r = await post('/api/v1/session/view-as', { personCode: admin.personCode }, token);
+  expect(r.status).toBe(422);
+  expect(await r.json()).toMatchObject({ code: 'invalid', field: 'personCode', message: expect.stringContaining('yourself'), next: expect.any(String) });
+  expect(auditRows().some(x => x.act === 'View-as started')).toBe(false);
+  expect((await (await fetch('/api/v1/session', { headers: { Authorization: `Bearer ${token as string}` } })).json()).viewingAs).toBeUndefined();
+});

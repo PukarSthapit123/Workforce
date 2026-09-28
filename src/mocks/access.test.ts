@@ -228,3 +228,13 @@ test('a manager is refused, naming the capability', async () => {
   const body = (await r.json()) as { message: string };
   expect(body.message).toMatch(/Permissions and role configuration/);
 });
+
+/* M11: a write that changes nothing writes no audit row, and says so with a null auditId. */
+test('a no-op write answers auditId null, typed, because nothing was written', async () => {
+  const had = ut('employee').capabilities.includes('own_ts');
+  const rowsBefore = audits().length;
+  const r = await req('PUT', '/api/v1/user-types/employee/capabilities/own_ts', { granted: had }, ut('employee').version);
+  expect(r.status).toBe(200);
+  expect(((await r.json()) as { auditId: unknown }).auditId).toBeNull();
+  expect(audits()).toHaveLength(rowsBefore);
+});
