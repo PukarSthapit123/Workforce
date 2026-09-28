@@ -5,6 +5,7 @@ import { listAccounts } from '@/contract/session';
 import { tid } from '@/testids';
 import { Button, Field, TextInput } from '@/ui';
 import { useSession } from './SessionProvider';
+import { FAKE_SERVER_ON } from '@/lib/fake-server';
 
 const NOTE = { employee: 'Their own work: timesheet, shifts and leave', manager: 'Approvals and their team', admin: 'Configuration, modules and access' } as const;
 /* listAccounts is documented as "demo account shortcuts", but its handler
@@ -18,17 +19,16 @@ function demoShortcut<T extends { userType: 'employee' | 'manager' | 'admin' }>(
   return DEMO_ORDER.map(t => accounts.find(a => a.userType === t)).filter((a): a is T => a !== undefined);
 }
 /* Demo sign-in only exists while the fake server runs. Gating the whole
-   affordance (not just the fake server import in main.tsx) on the same flag
-   keeps the demo password out of a VITE_MOCKS=off production bundle too:
-   see scripts/trace.mjs's build-proof grep, task-11. */
-const MOCKS_ENABLED = import.meta.env.VITE_MOCKS !== 'off';
+   affordance on the same flag as main.tsx's fake server import keeps the
+   demo password out of a production bundle too; npm run build:check fails
+   the build if it ever appears there. */
 
 export function SignIn() {
   const { signIn } = useSession();
   const [email, setEmail] = useState(''); const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null); const [busy, setBusy] = useState(false);
   const [showAccounts, setShowAccounts] = useState(false);
-  const accounts = useQuery({ queryKey: ['demo-accounts'], queryFn: () => api(listAccounts), enabled: showAccounts && MOCKS_ENABLED });
+  const accounts = useQuery({ queryKey: ['demo-accounts'], queryFn: () => api(listAccounts), enabled: showAccounts && FAKE_SERVER_ON });
   async function submit(e: FormEvent) {
     e.preventDefault(); setBusy(true); setError(null);
     try { await signIn(email, password); }
@@ -45,7 +45,7 @@ export function SignIn() {
         {error && <p data-testid={tid.signIn.error} role="alert" className="text-err">{error}</p>}
         <Button testId={tid.signIn.submit} kind="primary" type="submit" disabled={busy}>Sign in</Button>
       </form>
-      {MOCKS_ENABLED && <>
+      {FAKE_SERVER_ON && <>
         <Button testId={tid.signIn.showAccounts} kind="ghost" onClick={() => setShowAccounts(s => !s)}>{showAccounts ? 'Hide demo accounts' : 'Show demo accounts'}</Button>
         {showAccounts && <ul className="flex flex-col gap-xs" aria-label="Demo accounts. A shortcut, not the whole list.">
           {demoShortcut(accounts.data ?? []).map(a => <li key={a.email}>
