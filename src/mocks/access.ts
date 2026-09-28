@@ -17,6 +17,7 @@ const LABEL = 'Permissions and role configuration';
    that must always keep at least one holder: lose the last one and nobody,
    anywhere, can reach this page to put it back. */
 const PERM_CAP = 'perm_cfg';
+const SELF_NEXT = 'Ask another administrator to make this change.';
 const gate = (request: Request) => { const s = requireSession(request); requireCapability(s, PERM_CAP, LABEL); return s; };
 const personName = (code: string) => Object.values(store.coll<{ code: string; name: string }>('people')).find(p => p.code === code)?.name ?? code;
 const who = (s: ReturnType<typeof requireSession>) => ({ personCode: s.account.personCode, name: personName(s.account.personCode), ...(s.viewingAs ? { viewingAs: s.viewingAs } : {}) });
@@ -38,15 +39,19 @@ export const accessHandlers = [
     return HttpResponse.json(Object.values(store.coll<{ order: number }>('capabilityGroups')).sort((a, b) => a.order - b.order));
   })),
   http.get('/api/v1/user-types', handle(({ request }: ResolverInfo) => { gate(request); return HttpResponse.json(Object.values(store.coll('userTypes'))); })),
-  http.put('/api/v1/user-types/:id/capabilities/:cap', handle(async ({ request, params }: ResolverInfo) => {
+  http.put('/api/v1/user-types/:id/capabilities/:capability', handle(async ({ request, params }: ResolverInfo) => {
     const s = gate(request);
     const types = store.coll<UserType>('userTypes');
     const t = types[String(params.id)];
     if (!t) return refuse(404, { code: 'not-found', message: 'That user type no longer exists.', next: 'Reload the page.' });
-    const c = capBy(String(params.cap));
+    const c = capBy(String(params.capability));
     checkVersion(request, t);
     const { granted } = await readJson(request, SetTemplateCapability);
     const had = t.capabilities.includes(c.id);
+    /* M1: nobody removes their own way back to this page, whoever else
+       still holds it. Another administrator has to make that change. */
+    if (!granted && c.id === PERM_CAP && t.id === s.account.userType)
+      return refuse(409, { code: 'locked', message: `You cannot remove "${c.label}" from ${t.name}, your own user type. It is your way back to this page.`, next: SELF_NEXT });
     if (!granted && c.lockedFor.includes(t.id))
       return refuse(409, { code: 'locked', message: `"${c.label}" cannot be removed from ${t.name}. It is the only way back to this page.`, next: 'Give another user type this capability first, if you need to change who holds it.' });
     if (!granted && c.id === PERM_CAP) {
@@ -78,14 +83,14 @@ export const accessHandlers = [
        grant the template already covers, or a revoke of something it never
        had, changes nothing about what this person can do. */
     if (mode === 'grant' && templateHas)
-      return refuse(422, { code: 'invalid', field: 'cap', message: `${templateName} already includes "${c.label}", so there is nothing to grant.`, next: 'Choose a capability their template does not already include.' });
+      return refuse(422, { code: 'invalid', field: 'capability', message: `${templateName} already includes "${c.label}", so there is nothing to grant.`, next: 'Choose a capability their template does not already include.' });
     if (mode === 'revoke' && !templateHas)
-      return refuse(422, { code: 'invalid', field: 'cap', message: `${templateName} does not include "${c.label}", so there is nothing to revoke.`, next: 'Choose a capability their template already includes.' });
+      return refuse(422, { code: 'invalid', field: 'capability', message: `${templateName} does not include "${c.label}", so there is nothing to revoke.`, next: 'Choose a capability their template already includes.' });
+    if (mode === 'revoke' && c.id === PERM_CAP && a.email === s.account.email)
+      return refuse(409, { code: 'locked', message: `You cannot revoke "${c.label}" from yourself. It is your way back to this page.`, next: SELF_NEXT });
     if (mode === 'revoke' && c.id === PERM_CAP) {
       const simulated: Account = { ...a, grants: a.grants.filter(x => x !== c.id), revocations: [...new Set([...a.revocations, c.id])] };
       if (!holderExists(PERM_CAP, types, { ...accounts, [key]: simulated })) {
-        if (a.email === s.account.email)
-          return refuse(409, { code: 'locked', message: `You cannot revoke "${c.label}" from yourself. It is your way back to this page.`, next: 'Ask another administrator to make this change.' });
         return refuse(409, { code: 'locked', message: `Revoking "${c.label}" from ${a.email} would leave nobody able to configure permissions.`, next: 'Grant it to another account first, if you need to change who holds it.' });
       }
     }
@@ -102,16 +107,19 @@ export const accessHandlers = [
     });
     return HttpResponse.json({ record: userView(next), auditId });
   })),
-  http.delete('/api/v1/users/:email/exceptions/:cap', handle(({ request, params }: ResolverInfo) => {
+  http.delete('/api/v1/users/:email/exceptions/:capability', handle(({ request, params }: ResolverInfo) => {
     const s = gate(request);
     const accounts = store.coll<Account>('accounts');
     const key = `acc_${String(params.email).toLowerCase()}`;
     const a = accounts[key];
     if (!a) return refuse(404, { code: 'not-found', message: 'That account no longer exists.', next: 'Reload the page.' });
     checkVersion(request, a);
-    const c = capBy(String(params.cap));
+    const c = capBy(String(params.capability));
     if (!a.grants.includes(c.id) && !a.revocations.includes(c.id))
-      return refuse(422, { code: 'invalid', field: 'cap', message: `"${c.label}" is not an exception for ${a.email}.`, next: 'Choose one of their current exceptions.' });
+      return refuse(422, { code: 'invalid', field: 'capability', message: `"${c.label}" is not an exception for ${a.email}.`, next: 'Choose one of their current exceptions.' });
+    /* Removing your own perm_cfg grant takes away your own way back, just as a revoke would. */
+    if (c.id === PERM_CAP && a.email === s.account.email && a.grants.includes(c.id))
+      return refuse(409, { code: 'locked', message: `You cannot remove "${c.label}" from yourself. It is your way back to this page.`, next: SELF_NEXT });
     const simulated: Account = { ...a, grants: a.grants.filter(x => x !== c.id), revocations: a.revocations.filter(x => x !== c.id) };
     if (c.id === PERM_CAP && !holderExists(PERM_CAP, store.coll<UserType>('userTypes'), { ...accounts, [key]: simulated }))
       return refuse(409, { code: 'locked', message: `Removing "${c.label}" from ${a.email} would leave nobody able to configure permissions.`, next: 'Grant it to another account first, if you need to change who holds it.' });

@@ -45,6 +45,9 @@ export function UserExceptions({ user, capabilities, typeName, templateCapabilit
     removeException.mutate({ email: user.email, cap, ifMatch: user.version });
   }
 
+  /* M3: one write at a time for this person. Save and every Remove send the
+     same If-Match, so while one is in flight the others wait. */
+  const busy = addException.isPending || removeException.isPending;
   const existing: ExceptionRow[] = user
     ? [...user.grants.map(cap => ({ cap, mode: 'grant' as const })), ...user.revocations.map(cap => ({ cap, mode: 'revoke' as const }))]
     : [];
@@ -54,7 +57,7 @@ export function UserExceptions({ user, capabilities, typeName, templateCapabilit
     <Modal open={user !== null} onOpenChange={o => { if (!o) close(); }}
       title={user ? `Exceptions for ${user.name}` : 'Exceptions'}
       description={user ? `${typeName}. These changes affect this person only.` : undefined}
-      footer={<Button testId={tid.access.exceptionSave} kind="primary" disabled={!capId || addException.isPending} onClick={save}>Save exception</Button>}>
+      footer={<Button testId={tid.access.exceptionSave} kind="primary" disabled={!capId || busy} onClick={save}>Save exception</Button>}>
       {user && <div className="flex flex-col gap-md">
         <Field testId="access-exception-mode-field" label="Grant or revoke">
           <SelectBox testId={tid.access.exceptionMode} value={mode} onValueChange={v => changeMode(v === 'revoke' ? 'revoke' : 'grant')}
@@ -77,7 +80,7 @@ export function UserExceptions({ user, capabilities, typeName, templateCapabilit
             {existing.map(x => (
               <li key={x.cap} className="flex items-center justify-between gap-sm rounded-control border border-border p-sm">
                 <span>{capLabel(x.cap)}: {x.mode === 'grant' ? 'granted' : 'revoked'}</span>
-                <Button testId={tid.access.exceptionRemove(user.email, x.cap)} kind="ghost" small onClick={() => remove(x.cap)}>Remove</Button>
+                <Button testId={tid.access.exceptionRemove(user.email, x.cap)} kind="ghost" small disabled={busy} onClick={() => remove(x.cap)}>Remove</Button>
               </li>))}
           </ul>
         </div>}

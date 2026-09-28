@@ -68,7 +68,7 @@ test('a failed save shows the refusal and leaves the cell as it was', async () =
   mount();
   const cell = await screen.findByTestId(tid.access.cell('proxy', 'employee'));
   const was = cell.getAttribute('aria-pressed');
-  server.use(http.put('/api/v1/user-types/:id/capabilities/:cap', () => HttpResponse.json(FAULT_BODY, { status: 500 })));
+  server.use(http.put('/api/v1/user-types/:id/capabilities/:capability', () => HttpResponse.json(FAULT_BODY, { status: 500 })));
   await userEvent.click(cell);
   expect(await screen.findByTestId(tid.toast.error)).toHaveTextContent('Nothing has been changed');
   expect(screen.getByTestId(tid.access.cell('proxy', 'employee'))).toHaveAttribute('aria-pressed', was ?? 'false');
@@ -129,7 +129,7 @@ test('a failed exception removal shows the refusal and leaves the account unchan
   mount();
   const before = structuredClone(accountRecord(emp.email));
   await userEvent.click(await screen.findByTestId(tid.access.exceptionAdd(emp.email)));
-  server.use(http.delete('/api/v1/users/:email/exceptions/:cap', () => HttpResponse.json(FAULT_BODY, { status: 500 })));
+  server.use(http.delete('/api/v1/users/:email/exceptions/:capability', () => HttpResponse.json(FAULT_BODY, { status: 500 })));
   await userEvent.click(await screen.findByTestId(tid.access.exceptionRemove(emp.email, 'proxy')));
   expect(await screen.findByTestId(tid.toast.error)).toHaveTextContent('Nothing has been changed');
   expect(accountRecord(emp.email)).toEqual(before);
@@ -171,4 +171,60 @@ test('the required Capability picker carries its hint and required state to assi
   const describedBy = trigger.getAttribute('aria-describedby');
   expect(describedBy).toBeTruthy();
   expect(document.getElementById(describedBy ?? '')).toHaveTextContent(/template/i);
+});
+
+/* M2: a matrix cell names what it controls, for whom, and its state. */
+test('each matrix cell is named by capability, user type and state', async () => {
+  mount();
+  const cell = await screen.findByTestId(tid.access.cell('proxy', 'employee'));
+  expect(cell).toHaveAccessibleName('Enter time on behalf of someone, Employee: not granted');
+  expect(screen.getByTestId(tid.access.cell('perm_cfg', 'admin'))).toHaveAccessibleName('Permissions and role configuration, Admin: granted, locked');
+});
+
+/* M3: a second click while the first save is in flight sends nothing, so the
+   same If-Match can never go twice. */
+const slow = (method: string, path: string) =>
+  fetch('/api/_dev/faults', { method: 'POST', body: JSON.stringify({ method, path, latencyMs: 300, times: 1 }) });
+function countRequests(method: string, fragment: string) {
+  const seen: string[] = [];
+  server.events.on('request:start', ({ request }) => { if (request.method === method && request.url.includes(fragment)) seen.push(request.url); });
+  return seen;
+}
+
+test('a double click on a matrix cell sends one save, and the column waits until it lands', async () => {
+  mount();
+  const cell = await screen.findByTestId(tid.access.cell('proxy', 'employee'));
+  await slow('PUT', '/api/v1/user-types/employee/capabilities/proxy');
+  const sent = countRequests('PUT', '/user-types/employee/');
+  await userEvent.click(cell);
+  await waitFor(() => expect(cell).toBeDisabled());
+  expect(screen.getByTestId(tid.access.cell('own_ts', 'employee'))).toBeDisabled();
+  await userEvent.click(cell);
+  await waitFor(() => expect(cell).toHaveAttribute('aria-pressed', 'true'));
+  expect(cell).toBeEnabled();
+  expect(sent).toHaveLength(1);
+  server.events.removeAllListeners();
+});
+
+test('a double click on Remove sends one request', async () => {
+  const emp = anyAccount('employee');
+  const token = getToken();
+  if (!token) throw new Error('no token set by beforeEach');
+  const granted = await fetch(`/api/v1/users/${encodeURIComponent(emp.email)}/exceptions`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'If-Match': String(emp.version) },
+    body: JSON.stringify({ capability: 'proxy', mode: 'grant', reason: 'Covers the rota lead on Fridays' }),
+  });
+  expect(granted.status).toBe(200);
+  mount();
+  await userEvent.click(await screen.findByTestId(tid.access.exceptionAdd(emp.email)));
+  const remove = await screen.findByTestId(tid.access.exceptionRemove(emp.email, 'proxy'));
+  await slow('DELETE', `/api/v1/users/${encodeURIComponent(emp.email)}/exceptions/proxy`);
+  const sent = countRequests('DELETE', '/exceptions/proxy');
+  await userEvent.click(remove);
+  await waitFor(() => expect(remove).toBeDisabled());
+  expect(screen.getByTestId(tid.access.exceptionSave)).toBeDisabled();
+  await userEvent.click(remove);
+  await waitFor(() => expect(screen.queryByTestId(tid.access.exceptionRemove(emp.email, 'proxy'))).not.toBeInTheDocument());
+  expect(sent).toHaveLength(1);
+  server.events.removeAllListeners();
 });

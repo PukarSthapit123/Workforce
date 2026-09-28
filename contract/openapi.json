@@ -1317,7 +1317,7 @@
         }
       }
     },
-    "/api/v1/user-types/{id}/capabilities/{cap}": {
+    "/api/v1/user-types/{id}/capabilities/{capability}": {
       "put": {
         "summary": "Grant or remove a capability on a template",
         "security": [
@@ -1338,7 +1338,7 @@
             }
           },
           {
-            "name": "cap",
+            "name": "capability",
             "in": "path",
             "required": true,
             "schema": {
@@ -1614,7 +1614,7 @@
         }
       }
     },
-    "/api/v1/users/{email}/exceptions/{cap}": {
+    "/api/v1/users/{email}/exceptions/{capability}": {
       "delete": {
         "summary": "Remove an exception",
         "security": [
@@ -1635,7 +1635,7 @@
             }
           },
           {
-            "name": "cap",
+            "name": "capability",
             "in": "path",
             "required": true,
             "schema": {

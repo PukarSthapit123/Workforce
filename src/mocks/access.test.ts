@@ -100,7 +100,7 @@ test('granting a capability the template already has is refused, and the count s
   const account = accountByEmail(emp.email);
   const r = await req('POST', `/api/v1/users/${encodeURIComponent(emp.email)}/exceptions`, { capability: 'own_ts', mode: 'grant', reason: 'Trying to add what they already have' }, account.version);
   expect(r.status).toBe(422);
-  expect(await r.json()).toMatchObject({ code: 'invalid', field: 'cap' });
+  expect(await r.json()).toMatchObject({ code: 'invalid', field: 'capability' });
   const after = accountByEmail(emp.email);
   expect(after.grants).toEqual(account.grants);
   expect(after.version).toBe(account.version);
@@ -111,7 +111,7 @@ test('revoking a capability the template lacks is refused, and the count stays c
   const account = accountByEmail(emp.email);
   const r = await req('POST', `/api/v1/users/${encodeURIComponent(emp.email)}/exceptions`, { capability: 'proxy', mode: 'revoke', reason: 'Trying to take away what they never had' }, account.version);
   expect(r.status).toBe(422);
-  expect(await r.json()).toMatchObject({ code: 'invalid', field: 'cap' });
+  expect(await r.json()).toMatchObject({ code: 'invalid', field: 'capability' });
   const after = accountByEmail(emp.email);
   expect(after.revocations).toEqual(account.revocations);
   expect(after.version).toBe(account.version);
@@ -150,7 +150,7 @@ test('removing a capability that is not an exception is refused', async () => {
   const account = accountByEmail(emp.email);
   const r = await req('DELETE', `/api/v1/users/${encodeURIComponent(emp.email)}/exceptions/proxy`, undefined, account.version);
   expect(r.status).toBe(422);
-  expect(await r.json()).toMatchObject({ code: 'invalid', field: 'cap' });
+  expect(await r.json()).toMatchObject({ code: 'invalid', field: 'capability' });
   expect(accountByEmail(emp.email)).toEqual(account);
 });
 
@@ -165,45 +165,60 @@ test('a stale version on removing an exception is refused with 412 and nothing c
   expect(accountByEmail(emp.email)).toEqual(before);
 });
 
-test('handing perm_cfg off to another holder is allowed, but draining the last one is refused', async () => {
+/* M1: revoking perm_cfg from yourself is refused unconditionally, whoever
+   else still holds it, on every path that could do it. Another administrator
+   has to make the change. */
+const SELF_NEXT = 'Ask another administrator to make this change.';
+async function grantPermCfgTo(email: string): Promise<void> {
+  const r = await req('POST', `/api/v1/users/${encodeURIComponent(email)}/exceptions`, { capability: 'perm_cfg', mode: 'grant', reason: 'Covering setup while the admin is away' }, accountByEmail(email).version);
+  expect(r.status).toBe(200);
+}
+
+test('revoking perm_cfg from yourself is refused even when someone else still holds it', async () => {
   const emp = acc('employee');
-  const empAccount = accountByEmail(emp.email);
-  const grantToEmp = await req('POST', `/api/v1/users/${encodeURIComponent(emp.email)}/exceptions`, { capability: 'perm_cfg', mode: 'grant', reason: 'Covering setup while the admin is away' }, empAccount.version);
-  expect(grantToEmp.status).toBe(200);
-
-  const admin = acc('admin');
-  const adminAccount = accountByEmail(admin.email);
-  const selfHandOff = await req('POST', `/api/v1/users/${encodeURIComponent(admin.email)}/exceptions`, { capability: 'perm_cfg', mode: 'revoke', reason: 'Handing off to the covering employee' }, adminAccount.version);
-  /* The employee still holds it at this point, so this does not strand the tenant. */
-  expect(selfHandOff.status).toBe(200);
-
-  await signIn(emp.email); // the admin can no longer reach this page at all, once perm_cfg is gone
-  const empNow = accountByEmail(emp.email);
-  const drainLastHolder = await req('DELETE', `/api/v1/users/${encodeURIComponent(emp.email)}/exceptions/perm_cfg`, undefined, empNow.version);
-  expect(drainLastHolder.status).toBe(409);
-  expect(await drainLastHolder.json()).toMatchObject({ code: 'locked' });
-  expect(accountByEmail(emp.email).grants).toContain('perm_cfg');
+  await grantPermCfgTo(emp.email);
+  const admin = accountByEmail(acc('admin').email);
+  const r = await req('POST', `/api/v1/users/${encodeURIComponent(admin.email)}/exceptions`, { capability: 'perm_cfg', mode: 'revoke', reason: 'Handing off to the covering employee' }, admin.version);
+  expect(r.status).toBe(409);
+  expect(await r.json()).toMatchObject({ code: 'locked', next: SELF_NEXT });
+  expect(accountByEmail(admin.email)).toEqual(admin);
 });
 
-test('revoking the last holder of perm_cfg from a template is refused even when that template is not locked', async () => {
+test('removing your own perm_cfg grant is refused even when someone else still holds it', async () => {
+  const emp = acc('employee');
+  await grantPermCfgTo(emp.email);
+  await signIn(emp.email);
+  const before = accountByEmail(emp.email);
+  const r = await req('DELETE', `/api/v1/users/${encodeURIComponent(emp.email)}/exceptions/perm_cfg`, undefined, before.version);
+  expect(r.status).toBe(409);
+  expect(await r.json()).toMatchObject({ code: 'locked', next: SELF_NEXT });
+  expect(accountByEmail(emp.email)).toEqual(before);
+});
+
+test('removing perm_cfg from your own user type is refused, even a template that is not locked', async () => {
   /* perm_cfg's lockedFor is only ["admin"] (see seed/social.json), so the
-     lockedFor guard alone would let this through for any other template. This
-     builds a state where "manager" (never locked) is the tenant's only
-     holder, to prove the separate holderExists guard on this endpoint
-     catches it too, not just the one on account-level exceptions covered
-     above. */
+     lockedFor guard alone would let this through for "manager". */
   const types = userTypes();
-  const admin = ut('admin'), manager = ut('manager');
-  types.admin = { ...admin, capabilities: admin.capabilities.filter(c => c !== 'perm_cfg') };
+  const manager = ut('manager');
   types.manager = { ...manager, capabilities: [...manager.capabilities, 'perm_cfg'] };
-  await signIn(acc('manager').email); // manager now holds perm_cfg via template, so it can reach this endpoint at all
+  await signIn(acc('manager').email);
   const before = structuredClone(ut('manager'));
   const beforeStore = structuredClone(store.db);
   const r = await req('PUT', '/api/v1/user-types/manager/capabilities/perm_cfg', { granted: false }, before.version);
   expect(r.status).toBe(409);
-  expect(await r.json()).toMatchObject({ code: expect.any(String), message: expect.any(String), next: expect.any(String) });
+  expect(await r.json()).toMatchObject({ code: 'locked', message: expect.stringContaining('your own user type'), next: SELF_NEXT });
   expect(ut('manager')).toEqual(before);
   expect(store.db).toEqual(beforeStore);
+});
+
+test('another administrator can take perm_cfg away, since the one making the change still holds it', async () => {
+  const emp = acc('employee');
+  await grantPermCfgTo(emp.email);
+  const admin = acc('admin');
+  const r = await req('DELETE', `/api/v1/users/${encodeURIComponent(emp.email)}/exceptions/perm_cfg`, undefined, accountByEmail(emp.email).version);
+  expect(r.status).toBe(200);
+  expect(accountByEmail(emp.email).grants).not.toContain('perm_cfg');
+  expect(accountByEmail(admin.email).revocations).not.toContain('perm_cfg');
 });
 
 test('a manager is refused, naming the capability', async () => {

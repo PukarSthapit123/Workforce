@@ -81,9 +81,14 @@ export function PermissionsPage() {
                     {types.map(t => {
                       const on = t.capabilities.includes(c.id);
                       const locked = c.lockedFor.includes(t.id);
+                      /* M3: while a change to this template is in flight, its
+                         cells wait. Every cell in the column sends the same
+                         If-Match, so a second click would only earn a 412. */
+                      const saving = setCap.isPending && setCap.variables?.id === t.id;
                       return (
                         <TableCell key={t.id} className="text-center">
-                          <button type="button" data-testid={tid.access.cell(c.id, t.id)} aria-pressed={on} disabled={locked}
+                          <button type="button" data-testid={tid.access.cell(c.id, t.id)} aria-pressed={on} disabled={locked || saving}
+                            aria-label={`${c.label}, ${t.name}: ${on ? 'granted' : 'not granted'}${locked ? ', locked' : ''}`} aria-busy={saving || undefined}
                             title={locked ? 'Locked. An administrator cannot remove their own access to this page.' : undefined}
                             onClick={() => toggle(c, t)}
                             className={`inline-flex min-h-touch min-w-touch items-center justify-center rounded-control border ${on ? 'border-brand bg-brand-accent' : 'border-border'} disabled:cursor-not-allowed disabled:opacity-60`}>

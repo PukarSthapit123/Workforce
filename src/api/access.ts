@@ -26,7 +26,7 @@ export function useSetTemplateCapability() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (vars: { id: string; cap: string; granted: boolean; ifMatch: number }) =>
-      api(setTemplateCapability, { params: { id: vars.id, cap: vars.cap }, body: { granted: vars.granted }, ifMatch: vars.ifMatch }),
+      api(setTemplateCapability, { params: { id: vars.id, capability: vars.cap }, body: { granted: vars.granted }, ifMatch: vars.ifMatch }),
     onSuccess: data => {
       qc.setQueryData<UserType[]>(['user-types'], old => old?.map(t => (t.id === data.record.id ? data.record : t)));
     },
@@ -50,7 +50,7 @@ export function useRemoveException() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (vars: { email: string; cap: string; ifMatch: number }) =>
-      api(removeException, { params: { email: vars.email, cap: vars.cap }, ifMatch: vars.ifMatch }),
+      api(removeException, { params: { email: vars.email, capability: vars.cap }, ifMatch: vars.ifMatch }),
     onSuccess: data => {
       qc.setQueryData<UserAccess[]>(['users'], old => old?.map(u => (u.email === data.record.email ? data.record : u)));
     },
