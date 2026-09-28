@@ -67,3 +67,14 @@ test('POST /api/_dev/seed loads a known tenant', async () => {
   expect(store.tenant).toBe('qnipay');
   await fetch('/api/_dev/seed/social', { method: 'POST' });
 });
+/* M7: the client encodes path parameters (an email's @ becomes %40), so a
+   fault is matched on the decoded path, whichever way the test wrote it. */
+test.each([
+  ['/api/v1/probe-users/a@b.org/x', '/api/v1/probe-users/a%40b.org/x'],
+  ['/api/v1/probe-users/a%40b.org/x', '/api/v1/probe-users/a@b.org/x'],
+])('a fault set on %s fires for a request to %s', async (faultPath, requestPath) => {
+  server.use(http.get('/api/v1/probe-users/:email/x', () => HttpResponse.json({ ok: true })));
+  await fetch('/api/_dev/faults', { method: 'POST', body: JSON.stringify({ method: 'GET', path: faultPath, status: 503, times: 1 }) });
+  expect((await fetch(requestPath)).status).toBe(503);
+  expect((await fetch(requestPath)).status).toBe(200);
+});

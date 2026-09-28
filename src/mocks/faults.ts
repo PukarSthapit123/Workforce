@@ -5,9 +5,15 @@ export const faults: Fault[] = [];
 
 const FAULT_BODY = { code: 'fault', message: 'The server could not complete that. Nothing has been changed.', next: 'Try again. If it keeps failing, report it.' };
 
+/* Both sides are compared decoded, so a fault set on /api/v1/users/a@b.org
+   matches the request the client actually sends, /api/v1/users/a%40b.org,
+   and the other way round. A path that will not decode is compared as it is. */
+const decoded = (path: string) => { try { return decodeURIComponent(path); } catch { return path; } };
+
 /* Finds and consumes a matching, still-live fault, applying its latency. */
 async function takeFault(method: string, pathname: string): Promise<Response | undefined> {
-  const f = faults.find(x => x.method === method && x.path === pathname && x.times > 0);
+  const path = decoded(pathname);
+  const f = faults.find(x => x.method === method && decoded(x.path) === path && x.times > 0);
   if (!f) return undefined;
   f.times--;
   if (f.latencyMs) await delay(f.latencyMs);
