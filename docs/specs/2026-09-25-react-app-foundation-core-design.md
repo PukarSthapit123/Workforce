@@ -175,7 +175,7 @@ states the consequence and what to do next.
 
 - An in-memory store, persisted to `localStorage` under a seed version. A store with
   an older seed version is set aside, never half-loaded.
-- Seeded from the prototype's own data, both the `qcic` and `social` tenants, by a
+- Seeded from the prototype's own data, both the `qnipay` (the prototype's `qcic` template) and `social` tenants, by a
   one-off extraction script. No sample data is retyped.
 - Handlers call `domain/` for every rule.
 - Development and test endpoints under `/api/_dev`, excluded from production

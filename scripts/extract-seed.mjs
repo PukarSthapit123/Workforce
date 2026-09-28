@@ -68,7 +68,7 @@ function boot() {
   const w = dom.window, d = w.document;
   /* Loud on purpose: `el && el.dispatchEvent(...)` would make a missing
      selector a silent no-op — sign-in would leave the store empty, or
-     switchTemplate would leave it exactly as qcic left it, and both would
+     switchTemplate would leave it exactly as qnipay left it, and both would
      write plausible-looking JSON that is quietly wrong. Naming the selector
      in the error is what makes step 4's "fix only the extractor" workable. */
   const must = (label, el) => { if (!el) throw new Error('extractor: could not find ' + label); return el; };
@@ -128,7 +128,7 @@ function shape(tenantKey, data, PERMS_META) {
 }
 
 /* A missing PEOPLE roster, or a `social` snapshot indistinguishable from
-   `qcic`, means an action above no-opped without tripping a missing-selector
+   `qnipay`, means an action above no-opped without tripping a missing-selector
    error (e.g. it clicked something, but not the thing that mattered). Both
    are checked explicitly rather than trusted from a non-empty write. */
 function assertNonEmpty(data, label) {
@@ -147,19 +147,23 @@ const { w, signInAdmin, switchTemplate } = boot();
 
 const rawBeforeSignIn = w.localStorage.getItem(KEY);   // null: nothing saved yet
 signInAdmin();
-const rawQcic = await waitForStoreChange(w, rawBeforeSignIn, 'sign-in');
-const qcic = JSON.parse(rawQcic).data;
-assertNonEmpty(qcic, 'sign-in');
+const rawQnipay = await waitForStoreChange(w, rawBeforeSignIn, 'sign-in');
+const qnipay = JSON.parse(rawQnipay).data;
+assertNonEmpty(qnipay, 'sign-in');
 
 switchTemplate('social');
-const rawSocial = await waitForStoreChange(w, rawQcic, "switching to 'social'");
+const rawSocial = await waitForStoreChange(w, rawQnipay, "switching to 'social'");
 const social = JSON.parse(rawSocial).data;
 assertNonEmpty(social, "switching to 'social'");
-assertTenantChanged(qcic, social, 'social');
+assertTenantChanged(qnipay, social, 'social');
 
-writeFileSync(resolve(OUT, 'qcic.json'), JSON.stringify(shape('qcic', qcic, PERMS_META), null, 1) + '\n');
+/* The prototype names its default tenant `qcic` (template key and client
+   name). This app calls that tenant `qnipay`, so the rename is applied to the
+   extracted JSON rather than by retyping any record. */
+const renameTenant = json => json.replace(/qcic/g, 'qnipay').replace(/QCIC/g, 'Qnipay');
+writeFileSync(resolve(OUT, 'qnipay.json'), renameTenant(JSON.stringify(shape('qnipay', qnipay, PERMS_META), null, 1)) + '\n');
 writeFileSync(resolve(OUT, 'social.json'), JSON.stringify(shape('social', social, PERMS_META), null, 1) + '\n');
 writeFileSync(resolve(OUT, 'meta.json'), JSON.stringify({
   flags: literal('FLAGS'), modules: literal('MODULES'), permGroups: literal('PERM_GROUPS'), empStates: literal('EMP_STATES') }, null, 1) + '\n');
-console.log('seed written: qcic', (qcic.PEOPLE || []).length, 'people; social', (social.PEOPLE || []).length, 'people');
+console.log('seed written: qnipay', (qnipay.PEOPLE || []).length, 'people; social', (social.PEOPLE || []).length, 'people');
 w.close();

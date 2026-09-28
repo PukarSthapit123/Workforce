@@ -1,6 +1,6 @@
 {
  "version": "extracted",
- "tenant": "qcic",
+ "tenant": "qnipay",
  "data": {
   "people": {
    "per_EMP001": {
@@ -900,7 +900,7 @@
     "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "tenant",
     "name": "Dogma Group",
-    "template": "qcic",
+    "template": "qnipay",
     "modules": {
      "CORE": true,
      "A": true,
@@ -1085,8 +1085,8 @@
     "version": 1,
     "updatedAt": "2026-08-13T14:30:00.000Z",
     "code": "J00020",
-    "name": "QCIC D365 Implementation",
-    "client": "QCIC",
+    "name": "Qnipay D365 Implementation",
+    "client": "Qnipay",
     "cc": "CC-100",
     "status": "Open",
     "manager": "Manish Nepal",
@@ -1551,7 +1551,7 @@
     "updatedAt": "2026-08-13T14:30:00.000Z",
     "code": "JOB00030",
     "name": "Golden Charter BC Implementation and Integration Project",
-    "client": "QCIC",
+    "client": "Qnipay",
     "cc": "CC-100",
     "status": "Open",
     "manager": "Manish Nepal",

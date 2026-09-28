@@ -1146,14 +1146,14 @@ Expected: FAIL, modules not found.
 /* The fake server's database. In memory, persisted to localStorage so a reload
    keeps what the person did, and set aside wholesale when the seed changes. */
 import socialSeed from './seed/social.json';
-import qcicSeed from './seed/qcic.json';
+import qnipaySeed from './seed/qnipay.json';
 
 export const STORE_KEY = 'qnipay.app.store';
 export const SEED_VERSION = '2026-09-25.1a';
 export type Collections = Record<string, Record<string, Record<string, unknown>>>;
 export interface Seed { version: string; tenant: string; data: Collections }
 
-const SEEDS: Record<string, unknown> = { social: socialSeed, qcic: qcicSeed };
+const SEEDS: Record<string, unknown> = { social: socialSeed, qnipay: qnipaySeed };
 const defaultSeed = (tenant = 'social') => ({ version: SEED_VERSION, tenant, data: structuredClone((SEEDS[tenant] as { data: Collections }).data) });
 
 export function createStore(seedFor: (tenant?: string) => Seed = defaultSeed) {
@@ -1184,11 +1184,11 @@ export function createStore(seedFor: (tenant?: string) => Seed = defaultSeed) {
 export const store = createStore();
 ```
 Task 6 produces the seed JSON files. Until then, create placeholders so the import resolves:
-`src/mocks/seed/social.json` and `src/mocks/seed/qcic.json`, each containing:
+`src/mocks/seed/social.json` and `src/mocks/seed/qnipay.json`, each containing:
 ```json
 { "version": "placeholder", "tenant": "social", "data": { "audit": {} } }
 ```
-Use `"tenant": "qcic"` in the second file.
+Use `"tenant": "qnipay"` in the second file.
 
 - [ ] **Step 4: HTTP helpers, audit and faults**
 
@@ -1359,7 +1359,7 @@ Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>"
 ### Task 6: Extract the seed from the prototype
 
 **Files:**
-- Create: `scripts/extract-seed.mjs`, `src/mocks/seed/social.json`, `src/mocks/seed/qcic.json`, `src/mocks/seed/meta.json` (all generated)
+- Create: `scripts/extract-seed.mjs`, `src/mocks/seed/social.json`, `src/mocks/seed/qnipay.json`, `src/mocks/seed/meta.json` (all generated)
 - Test: `src/mocks/seed/seed.test.ts`
 
 **Interfaces:**
@@ -1379,13 +1379,13 @@ Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>"
 `src/mocks/seed/seed.test.ts`:
 ```ts
 import social from './social.json';
-import qcic from './qcic.json';
+import qnipay from './qnipay.json';
 import meta from './meta.json';
 
 type Rec = Record<string, unknown> & { id: string; code?: string };
 const vals = (s: { data: Record<string, Record<string, Rec>> }, c: string) => Object.values(s.data[c] ?? {});
 
-for (const [name, seed] of Object.entries({ social, qcic }) as [string, { tenant: string; data: Record<string, Record<string, Rec>> }][]) {
+for (const [name, seed] of Object.entries({ social, qnipay }) as [string, { tenant: string; data: Record<string, Record<string, Rec>> }][]) {
   describe(`seed ${name}`, () => {
     test('has people, accounts, user types, capabilities and a tenant', () => {
       for (const c of ['people', 'accounts', 'userTypes', 'capabilities', 'locations', 'departments'])
@@ -1530,23 +1530,23 @@ const { w, signInAdmin, useTenant } = boot();
 signInAdmin();
 await sleep(500);
 const read = () => JSON.parse(w.localStorage.getItem(KEY)).data;
-const qcic = read();
+const qnipay = read();
 useTenant('social');
 await sleep(500);
 const social = read();
 
-writeFileSync(resolve(OUT, 'qcic.json'), JSON.stringify(shape('qcic', qcic, PERMS_META), null, 1) + '\n');
+writeFileSync(resolve(OUT, 'qnipay.json'), JSON.stringify(shape('qnipay', qnipay, PERMS_META), null, 1) + '\n');
 writeFileSync(resolve(OUT, 'social.json'), JSON.stringify(shape('social', social, PERMS_META), null, 1) + '\n');
 writeFileSync(resolve(OUT, 'meta.json'), JSON.stringify({
   flags: literal('FLAGS'), modules: literal('MODULES'), permGroups: literal('PERM_GROUPS'), empStates: literal('EMP_STATES') }, null, 1) + '\n');
-console.log('seed written: qcic', (qcic.PEOPLE || []).length, 'people; social', (social.PEOPLE || []).length, 'people');
+console.log('seed written: qnipay', (qnipay.PEOPLE || []).length, 'people; social', (social.PEOPLE || []).length, 'people');
 w.close();
 ```
 
 - [ ] **Step 4: Run it**
 
 Run: `npm run seed`
-Expected: `seed written: qcic N people; social M people`, with both N and M greater than 0.
+Expected: `seed written: qnipay N people; social M people`, with both N and M greater than 0.
 - If the store is empty, the sign-in did not happen: the account list's selector or text has changed.
 - To fix it, open the prototype, compare against `goSignIn` and `signInWith` in `../Qnipay workforce cc/mockup/qnipay-regression-suite.js:37-85`, and match those.
 - Change only the extractor.
@@ -1562,7 +1562,7 @@ Expected: all seed tests pass, and the Task 5 tests still pass.
 
 ```bash
 git add -A
-git commit -m "feat(mocks): seed extracted from the prototype for qcic and social, with meta
+git commit -m "feat(mocks): seed extracted from the prototype for qnipay and social, with meta
 
 Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>"
 ```
@@ -1930,7 +1930,7 @@ const call = (page: Page, method: string, path: string, body?: unknown) =>
 export const FROZEN = '2026-08-13T14:30:00.000Z';
 type Persona = 'employee' | 'manager' | 'admin';
 export const test = base.extend<{
-  api: { reset(): Promise<void>; seed(t: 'social' | 'qcic'): Promise<void>; setClock(iso: string | null): Promise<void>;
+  api: { reset(): Promise<void>; seed(t: 'social' | 'qnipay'): Promise<void>; setClock(iso: string | null): Promise<void>;
     fault(method: string, path: string, status: number, times?: number): Promise<void>; get(path: string): Promise<{ status: number; body: unknown }>;
     send(method: string, path: string, body?: unknown): Promise<{ status: number; body: unknown }> };
   signInAs(p: Persona): Promise<void>;

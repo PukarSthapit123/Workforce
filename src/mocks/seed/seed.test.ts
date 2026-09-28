@@ -1,11 +1,11 @@
 import social from './social.json';
-import qcic from './qcic.json';
+import qnipay from './qnipay.json';
 import meta from './meta.json';
 
 type Rec = Record<string, unknown> & { id: string; code?: string };
 const vals = (s: { data: Record<string, Record<string, Rec>> }, c: string) => Object.values(s.data[c] ?? {});
 
-for (const [name, seed] of Object.entries({ social, qcic }) as [string, { tenant: string; data: Record<string, Record<string, Rec>> }][]) {
+for (const [name, seed] of Object.entries({ social, qnipay }) as [string, { tenant: string; data: Record<string, Record<string, Rec>> }][]) {
   describe(`seed ${name}`, () => {
     test('has people, accounts, user types, capabilities and a tenant', () => {
       for (const c of ['people', 'accounts', 'userTypes', 'capabilities', 'locations', 'departments'])

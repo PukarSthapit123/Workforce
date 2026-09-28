@@ -14,7 +14,7 @@ const call = (page: Page, method: string, path: string, body?: unknown) =>
 export const FROZEN = '2026-08-13T14:30:00.000Z';
 type Persona = 'employee' | 'manager' | 'admin';
 export const test = base.extend<{
-  api: { reset(): Promise<void>; seed(t: 'social' | 'qcic'): Promise<void>; setClock(iso: string | null): Promise<void>;
+  api: { reset(): Promise<void>; seed(t: 'social' | 'qnipay'): Promise<void>; setClock(iso: string | null): Promise<void>;
     fault(method: string, path: string, status: number, times?: number): Promise<void>; get(path: string): Promise<{ status: number; body: unknown }>;
     send(method: string, path: string, body?: unknown): Promise<{ status: number; body: unknown }> };
   signInAs(p: Persona): Promise<void>;

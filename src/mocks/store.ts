@@ -1,7 +1,7 @@
 /* The fake server's database. In memory, persisted to localStorage so a reload
    keeps what the person did, and set aside wholesale when the seed changes. */
 import socialSeed from './seed/social.json';
-import qcicSeed from './seed/qcic.json';
+import qnipaySeed from './seed/qnipay.json';
 
 export const STORE_KEY = 'qnipay.app.store';
 export const SEED_VERSION = '2026-09-25.1a';
@@ -13,7 +13,7 @@ export interface Seed { version: string; tenant: string; data: Collections }
    had set, not the wall clock. */
 interface PersistedState extends Seed { clock: string | null }
 
-const SEEDS: Record<string, unknown> = { social: socialSeed, qcic: qcicSeed };
+const SEEDS: Record<string, unknown> = { social: socialSeed, qnipay: qnipaySeed };
 const defaultSeed = (tenant = 'social') => ({ version: SEED_VERSION, tenant, data: structuredClone((SEEDS[tenant] as { data: Collections }).data) });
 
 export function createStore(seedFor: (tenant?: string) => Seed = defaultSeed) {
