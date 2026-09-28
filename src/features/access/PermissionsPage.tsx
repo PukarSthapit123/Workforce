@@ -49,6 +49,7 @@ export function PermissionsPage() {
   }
 
   const exceptionsUser = users.data.find(u => u.email === exceptionsForEmail) ?? null;
+  const exceptionsUserTemplate = exceptionsUser ? types.find(t => t.id === exceptionsUser.userType) : undefined;
 
   return (
     <section data-testid={tid.page('aperm')} className="mx-auto flex max-w-5xl flex-col gap-lg p-xl">
@@ -129,6 +130,6 @@ export function PermissionsPage() {
       </div>
 
       <UserExceptions user={exceptionsUser} capabilities={caps} typeName={exceptionsUser ? typeName(exceptionsUser.userType) : ''}
-        onClose={() => setExceptionsForEmail(null)} />
+        templateCapabilities={exceptionsUserTemplate?.capabilities ?? []} onClose={() => setExceptionsForEmail(null)} />
     </section>);
 }

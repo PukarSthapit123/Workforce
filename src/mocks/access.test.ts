@@ -95,6 +95,96 @@ test('a per-user exception needs a reason, is audited, and changes that user\'s 
   expect(audits().some(x => x.act === 'Access exception added')).toBe(true);
 });
 
+test('granting a capability the template already has is refused, and the count stays correct', async () => {
+  const emp = acc('employee');
+  const account = accountByEmail(emp.email);
+  const r = await req('POST', `/api/v1/users/${encodeURIComponent(emp.email)}/exceptions`, { capability: 'own_ts', mode: 'grant', reason: 'Trying to add what they already have' }, account.version);
+  expect(r.status).toBe(422);
+  expect(await r.json()).toMatchObject({ code: 'invalid', field: 'cap' });
+  const after = accountByEmail(emp.email);
+  expect(after.grants).toEqual(account.grants);
+  expect(after.version).toBe(account.version);
+});
+
+test('revoking a capability the template lacks is refused, and the count stays correct', async () => {
+  const emp = acc('employee');
+  const account = accountByEmail(emp.email);
+  const r = await req('POST', `/api/v1/users/${encodeURIComponent(emp.email)}/exceptions`, { capability: 'proxy', mode: 'revoke', reason: 'Trying to take away what they never had' }, account.version);
+  expect(r.status).toBe(422);
+  expect(await r.json()).toMatchObject({ code: 'invalid', field: 'cap' });
+  const after = accountByEmail(emp.email);
+  expect(after.revocations).toEqual(account.revocations);
+  expect(after.version).toBe(account.version);
+});
+
+test('granting the same exception twice is a no-op the second time: no version bump, no second audit row', async () => {
+  const emp = acc('employee');
+  const account = accountByEmail(emp.email);
+  const first = await req('POST', `/api/v1/users/${encodeURIComponent(emp.email)}/exceptions`, { capability: 'proxy', mode: 'grant', reason: 'Covers the rota lead on Fridays' }, account.version);
+  expect(first.status).toBe(200);
+  const afterFirst = accountByEmail(emp.email);
+  const second = await req('POST', `/api/v1/users/${encodeURIComponent(emp.email)}/exceptions`, { capability: 'proxy', mode: 'grant', reason: 'Same again' }, afterFirst.version);
+  expect(second.status).toBe(200);
+  const afterSecond = accountByEmail(emp.email);
+  expect(afterSecond.version).toBe(afterFirst.version);
+  expect(afterSecond.grants).toEqual(afterFirst.grants);
+  expect(audits().filter(x => x.act === 'Access exception added').length).toBe(1);
+});
+
+test('removing an exception restores the template default, bumps the version, and is audited', async () => {
+  const emp = acc('employee');
+  const account = accountByEmail(emp.email);
+  const granted = await req('POST', `/api/v1/users/${encodeURIComponent(emp.email)}/exceptions`, { capability: 'proxy', mode: 'grant', reason: 'Covers the rota lead on Fridays' }, account.version);
+  expect(granted.status).toBe(200);
+  const withGrant = accountByEmail(emp.email);
+  const removed = await req('DELETE', `/api/v1/users/${encodeURIComponent(emp.email)}/exceptions/proxy`, undefined, withGrant.version);
+  expect(removed.status).toBe(200);
+  const after = accountByEmail(emp.email);
+  expect(after.grants).not.toContain('proxy');
+  expect(after.version).toBe(withGrant.version + 1);
+  expect(audits().some(x => x.act === 'Access exception removed')).toBe(true);
+});
+
+test('removing a capability that is not an exception is refused', async () => {
+  const emp = acc('employee');
+  const account = accountByEmail(emp.email);
+  const r = await req('DELETE', `/api/v1/users/${encodeURIComponent(emp.email)}/exceptions/proxy`, undefined, account.version);
+  expect(r.status).toBe(422);
+  expect(await r.json()).toMatchObject({ code: 'invalid', field: 'cap' });
+  expect(accountByEmail(emp.email)).toEqual(account);
+});
+
+test('a stale version on removing an exception is refused with 412 and nothing changes', async () => {
+  const emp = acc('employee');
+  const account = accountByEmail(emp.email);
+  const granted = await req('POST', `/api/v1/users/${encodeURIComponent(emp.email)}/exceptions`, { capability: 'proxy', mode: 'grant', reason: 'Covers the rota lead on Fridays' }, account.version);
+  expect(granted.status).toBe(200);
+  const before = structuredClone(accountByEmail(emp.email));
+  const r = await req('DELETE', `/api/v1/users/${encodeURIComponent(emp.email)}/exceptions/proxy`, undefined, before.version - 1);
+  expect(r.status).toBe(412);
+  expect(accountByEmail(emp.email)).toEqual(before);
+});
+
+test('handing perm_cfg off to another holder is allowed, but draining the last one is refused', async () => {
+  const emp = acc('employee');
+  const empAccount = accountByEmail(emp.email);
+  const grantToEmp = await req('POST', `/api/v1/users/${encodeURIComponent(emp.email)}/exceptions`, { capability: 'perm_cfg', mode: 'grant', reason: 'Covering setup while the admin is away' }, empAccount.version);
+  expect(grantToEmp.status).toBe(200);
+
+  const admin = acc('admin');
+  const adminAccount = accountByEmail(admin.email);
+  const selfHandOff = await req('POST', `/api/v1/users/${encodeURIComponent(admin.email)}/exceptions`, { capability: 'perm_cfg', mode: 'revoke', reason: 'Handing off to the covering employee' }, adminAccount.version);
+  /* The employee still holds it at this point, so this does not strand the tenant. */
+  expect(selfHandOff.status).toBe(200);
+
+  await signIn(emp.email); // the admin can no longer reach this page at all, once perm_cfg is gone
+  const empNow = accountByEmail(emp.email);
+  const drainLastHolder = await req('DELETE', `/api/v1/users/${encodeURIComponent(emp.email)}/exceptions/perm_cfg`, undefined, empNow.version);
+  expect(drainLastHolder.status).toBe(409);
+  expect(await drainLastHolder.json()).toMatchObject({ code: 'locked' });
+  expect(accountByEmail(emp.email).grants).toContain('perm_cfg');
+});
+
 test('a manager is refused, naming the capability', async () => {
   await signIn(acc('manager').email);
   const r = await req('GET', '/api/v1/user-types');

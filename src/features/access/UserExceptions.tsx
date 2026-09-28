@@ -7,8 +7,8 @@ import { useAddException, useRemoveException, type Capability, type UserAccess }
    kinds of exception show in the order they were added. */
 interface ExceptionRow { cap: string; mode: 'grant' | 'revoke' }
 
-export function UserExceptions({ user, capabilities, typeName, onClose }: {
-  user: UserAccess | null; capabilities: Capability[]; typeName: string; onClose: () => void;
+export function UserExceptions({ user, capabilities, typeName, templateCapabilities, onClose }: {
+  user: UserAccess | null; capabilities: Capability[]; typeName: string; templateCapabilities: readonly string[]; onClose: () => void;
 }) {
   const addException = useAddException();
   const removeException = useRemoveException();
@@ -22,6 +22,19 @@ export function UserExceptions({ user, capabilities, typeName, onClose }: {
 
   function reset() { setCapId(''); setMode('grant'); setReason(''); }
   function close() { reset(); onClose(); }
+
+  /* An exception only means something as a difference from the template
+     (the server refuses anything else with a 422), so the option list only
+     ever offers a capability that mode could actually change: something to
+     add on grant, something to take away on revoke. */
+  const templateSet = new Set(templateCapabilities);
+  const capOptions = capabilities.filter(c => (mode === 'grant' ? !templateSet.has(c.id) : templateSet.has(c.id)));
+
+  function changeMode(next: 'grant' | 'revoke') {
+    setMode(next);
+    const stillOffered = next === 'grant' ? !templateSet.has(capId) : templateSet.has(capId);
+    if (!capId || !stillOffered) setCapId('');
+  }
 
   function save() {
     if (!user || !capId) return;
@@ -43,16 +56,17 @@ export function UserExceptions({ user, capabilities, typeName, onClose }: {
       description={user ? `${typeName}. These changes affect this person only.` : undefined}
       footer={<Button testId={tid.access.exceptionSave} kind="primary" disabled={!capId || addException.isPending} onClick={save}>Save exception</Button>}>
       {user && <div className="flex flex-col gap-md">
-        <Field testId="access-exception-cap-field" label="Capability" required>
-          <SelectBox testId={tid.access.exceptionCap} value={capId} onValueChange={setCapId} placeholder="Choose a capability"
-            options={capabilities.map(c => ({ value: c.id, label: c.label }))} />
-        </Field>
         <Field testId="access-exception-mode-field" label="Grant or revoke">
-          <SelectBox testId={tid.access.exceptionMode} value={mode} onValueChange={v => setMode(v === 'revoke' ? 'revoke' : 'grant')}
+          <SelectBox testId={tid.access.exceptionMode} value={mode} onValueChange={v => changeMode(v === 'revoke' ? 'revoke' : 'grant')}
             options={[
               { value: 'grant', label: 'Grant: give it, on top of their template' },
               { value: 'revoke', label: 'Revoke: take it away, even though their template has it' },
             ]} />
+        </Field>
+        <Field testId="access-exception-cap-field" label="Capability" required
+          hint={mode === 'grant' ? 'Only capabilities their template does not already include.' : 'Only capabilities their template already includes.'}>
+          <SelectBox testId={tid.access.exceptionCap} value={capId} onValueChange={setCapId} placeholder="Choose a capability"
+            options={capOptions.map(c => ({ value: c.id, label: c.label }))} />
         </Field>
         <Field testId="access-exception-reason-field" label="Reason" required hint="Exceptions are reviewed, so say why.">
           <TextInput testId={tid.access.exceptionReason} value={reason} onChange={e => setReason(e.target.value)} />
