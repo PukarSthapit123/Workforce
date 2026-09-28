@@ -34,7 +34,7 @@ export const tid = {
     userTypeName: (userType: string) => k('access-user-type-name', userType),
     groupRow: (group: string) => k('access-group-row', group),
     capRow: (cap: string) => k('access-cap-row', cap),
-    users: 'access-users',
+    usersTable: 'access-users-table',
     userRow: (email: string) => k('access-user-row', email),
     exceptions: (email: string) => k('access-user-exceptions', email),
     exceptionAdd: (email: string) => k('access-exception-add', email),
@@ -47,6 +47,8 @@ export const tid = {
     filterEntity: 'audit-filter-entity', filterWho: 'audit-filter-who', filterText: 'audit-filter-text',
     error: 'audit-error',
   },
+  /* A Field's own ids come from the control it wraps, so a form never types one by hand. */
+  field: { root: (controlTestId: string) => `${controlTestId}-field`, tip: (controlTestId: string) => `${controlTestId}-field-tip` },
   modal: { root: 'modal', title: 'modal-title', close: 'modal-close', confirm: 'modal-confirm', cancel: 'modal-cancel' },
   toast: { info: 'toast-info', error: 'toast-error', next: 'toast-next' },
 } as const;

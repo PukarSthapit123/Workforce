@@ -11,6 +11,14 @@ const call = (page: Page, method: string, path: string, body?: unknown) =>
     return { status: r.status, body: text ? JSON.parse(text) : null };
   }, [method, path, body] as const);
 
+/* A _dev control call must succeed: a reset, seed, clock or fault that fails
+   would otherwise leave the test running against the wrong state and fail
+   later, somewhere unrelated, or pass for the wrong reason. */
+async function control(page: Page, method: string, path: string, body?: unknown): Promise<void> {
+  const r = await call(page, method, path, body);
+  if (r.status < 200 || r.status >= 300) throw new Error(`${method} ${path} answered ${r.status}: ${JSON.stringify(r.body)}`);
+}
+
 export const FROZEN = '2026-08-13T14:30:00.000Z';
 type Persona = 'employee' | 'manager' | 'admin';
 export const test = base.extend<{
@@ -26,9 +34,9 @@ export const test = base.extend<{
        below the md breakpoint, so it is not a viewport-independent signal. */
     await page.getByTestId(tid.signIn.form).or(page.getByTestId(tid.shell.account)).waitFor();
     const api = {
-      reset: async () => { await call(page, 'POST', '/api/_dev/reset'); await call(page, 'POST', '/api/_dev/clock', { now: FROZEN }); },
-      seed: async (t: string) => { await call(page, 'POST', `/api/_dev/seed/${t}`); },
-      setClock: async (iso: string | null) => { await call(page, 'POST', '/api/_dev/clock', { now: iso }); },
+      reset: async () => { await control(page, 'POST', '/api/_dev/reset'); await control(page, 'POST', '/api/_dev/clock', { now: FROZEN }); },
+      seed: async (t: string) => { await control(page, 'POST', `/api/_dev/seed/${t}`); },
+      setClock: async (iso: string | null) => { await control(page, 'POST', '/api/_dev/clock', { now: iso }); },
       /* Faults live in a module-level array in mocks/faults.ts: real state for
          the running page, but not persisted anywhere. signInAs (below) does a
          full page reload to land back on the sign-in screen, which throws that
@@ -37,7 +45,7 @@ export const test = base.extend<{
          AFTER calling signInAs(...), never before it. The frozen clock does
          not have this problem: it is persisted with the store (see store.ts),
          which is what lets signInAs reload the page at all without losing it. */
-      fault: async (method: string, path: string, status: number, times = 1) => { await call(page, 'POST', '/api/_dev/faults', { method, path, status, times }); },
+      fault: async (method: string, path: string, status: number, times = 1) => { await control(page, 'POST', '/api/_dev/faults', { method, path, status, times }); },
       get: (path: string) => call(page, 'GET', path),
       send: (method: string, path: string, body?: unknown) => call(page, method, path, body),
     };

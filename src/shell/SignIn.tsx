@@ -40,8 +40,8 @@ export function SignIn() {
       <h1 className="text-[length:var(--qp-text-24)] font-semibold">Sign in to Qnipay Workforce</h1>
       <p className="text-text-secondary">Simulated sign-in. Production uses your Microsoft work account.</p>
       <form data-testid={tid.signIn.form} onSubmit={submit} className="flex flex-col gap-md" noValidate>
-        <Field testId="sign-in-email-field" label="Email address"><TextInput testId={tid.signIn.email} type="email" autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} /></Field>
-        <Field testId="sign-in-password-field" label="Password"><TextInput testId={tid.signIn.password} type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} /></Field>
+        <Field label="Email address"><TextInput testId={tid.signIn.email} type="email" autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} /></Field>
+        <Field label="Password"><TextInput testId={tid.signIn.password} type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} /></Field>
         {error && <p data-testid={tid.signIn.error} role="alert" className="text-err">{error}</p>}
         <Button testId={tid.signIn.submit} kind="primary" type="submit" disabled={busy}>Sign in</Button>
       </form>

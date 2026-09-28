@@ -1,23 +1,31 @@
-import { cloneElement, isValidElement, useId, type InputHTMLAttributes, type ReactElement, type ReactNode } from 'react';
+import { cloneElement, useId, type InputHTMLAttributes, type ReactElement } from 'react';
 import { Label } from '@/ui/shadcn/label';
 import { Input } from '@/ui/shadcn/input';
+import { tid } from '@/testids';
 import { Tip } from './Affordances';
 
-export function Field({ testId, label, hint, error, required, tip, children }: {
-  testId: string; label: string; hint?: string; error?: string; required?: boolean; tip?: string; children: ReactNode;
+/* The wrapped control is one element carrying its own testId (TextInput,
+   SelectBox, CheckboxField and so on). The Field's test id, and its tip's,
+   are derived from that one, so they can never drift or be typed by hand. */
+export function Field({ label, hint, error, required, tip, children }: {
+  label: string; hint?: string; error?: string; required?: boolean; tip?: string;
+  children: ReactElement<{ testId: string }>;
 }) {
   const id = useId(), descId = `${id}-desc`;
-  const control = isValidElement(children)
-    ? cloneElement(children as ReactElement<Record<string, unknown>>, {
-        id, 'aria-describedby': hint || error ? descId : undefined, 'aria-invalid': error ? 'true' : undefined,
-        'aria-required': required ? 'true' : undefined })
-    : children;
+  const controlTestId = children.props.testId;
+  const control = cloneElement(children as ReactElement<Record<string, unknown>>, {
+    id, 'aria-describedby': hint || error ? descId : undefined, 'aria-invalid': error ? 'true' : undefined,
+    'aria-required': required ? 'true' : undefined });
   return (
-    <div data-testid={testId} className="flex flex-col gap-xs">
-      <Label htmlFor={id} className="flex min-h-5 items-center gap-xs text-text-secondary">
-        {label}{required && <span aria-hidden="true" className="text-err">*</span>}
-        {tip && <Tip testId={`${testId}-tip`} text={tip} />}
-      </Label>
+    <div data-testid={tid.field.root(controlTestId)} className="flex flex-col gap-xs">
+      {/* The tip sits beside the label, not inside it, so its text never
+          becomes part of the control's accessible name. */}
+      <div className="flex min-h-5 items-center gap-xs">
+        <Label htmlFor={id} className="text-text-secondary">
+          {label}{required && <span aria-hidden="true" className="text-err">*</span>}
+        </Label>
+        {tip && <Tip testId={tid.field.tip(controlTestId)} text={tip} />}
+      </div>
       {control}
       {(error || hint) && <p id={descId} className={error ? 'text-err text-xs' : 'text-text-secondary text-xs'}>{error ?? hint}</p>}
     </div>);

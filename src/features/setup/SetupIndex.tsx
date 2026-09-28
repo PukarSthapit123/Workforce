@@ -1,6 +1,6 @@
-import { Link } from 'react-router';
 import type { NavTab } from '@/domain/nav';
 import { tid } from '@/testids';
+import { NavLink } from '@/ui';
 import { useShellData, ShellLoading, ShellError } from '@/shell/shellData';
 
 interface Section { key: string; label: string; pages: NavTab[] }
@@ -34,11 +34,11 @@ export function SetupIndex() {
           const first = s.pages[0];
           if (!first) return null;
           return (
-            <Link key={s.key} to={first.path} data-testid={tid.setup.card(s.key)}
+            <NavLink key={s.key} to={first.path} testId={tid.setup.card(s.key)}
               className="rounded-card border border-border bg-surface-card p-lg hover:border-brand">
               <h2 className="font-semibold">{s.label}</h2>
               <p className="text-text-secondary">{s.pages.length} page{s.pages.length === 1 ? '' : 's'}</p>
-            </Link>);
+            </NavLink>);
         })}
       </div>
     </section>);

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { tid } from '@/testids';
-import { Button } from '@/ui';
+import { Button, Row } from '@/ui';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import { useCapabilities, useCapabilityGroups, useUserTypes, useUsers, useSetTemplateCapability, type Capability, type UserType } from '@/api/access';
 import { UserExceptions } from './UserExceptions';
@@ -69,13 +69,13 @@ export function PermissionsPage() {
               const capsInGroup = caps.filter(c => c.group === g.id);
               if (!capsInGroup.length) return [];
               return [
-                <TableRow key={`group-${g.id}`} data-testid={tid.access.groupRow(g.id)} className="bg-surface-sunken">
+                <Row key={`group-${g.id}`} testId={tid.access.groupRow(g.id)} className="bg-surface-sunken">
                   <TableCell colSpan={2 + types.length}>
                     <strong>{g.label}</strong> <span className="text-xs text-text-secondary">{g.description}</span>
                   </TableCell>
-                </TableRow>,
+                </Row>,
                 ...capsInGroup.map(c => (
-                  <TableRow key={c.id} data-testid={tid.access.capRow(c.id)}>
+                  <Row key={c.id} testId={tid.access.capRow(c.id)}>
                     <TableCell className="sticky left-0 bg-surface-card">{c.label}</TableCell>
                     <TableCell className="text-xs text-text-secondary">{c.gate}</TableCell>
                     {types.map(t => {
@@ -96,7 +96,7 @@ export function PermissionsPage() {
                           </button>
                         </TableCell>);
                     })}
-                  </TableRow>
+                  </Row>
                 )),
               ];
             })}
@@ -109,7 +109,7 @@ export function PermissionsPage() {
         <p className="text-text-secondary">Their template, plus any exceptions for that person only.</p>
       </div>
       <div className="overflow-x-auto rounded-card border border-border">
-        <Table data-testid={tid.access.users}>
+        <Table data-testid={tid.access.usersTable}>
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead><TableHead>Email</TableHead><TableHead>Persona</TableHead>
@@ -118,7 +118,7 @@ export function PermissionsPage() {
           </TableHeader>
           <TableBody>
             {users.data.map(u => (
-              <TableRow key={u.email} data-testid={tid.access.userRow(u.email)}>
+              <Row key={u.email} testId={tid.access.userRow(u.email)}>
                 <TableCell><strong>{u.name}</strong></TableCell>
                 <TableCell className="text-text-secondary">{u.email}</TableCell>
                 <TableCell>{typeName(u.userType)}</TableCell>
@@ -126,7 +126,7 @@ export function PermissionsPage() {
                 <TableCell className="text-right">
                   <Button testId={tid.access.exceptionAdd(u.email)} kind="ghost" small onClick={() => setExceptionsForEmail(u.email)}>Add exception</Button>
                 </TableCell>
-              </TableRow>))}
+              </Row>))}
           </TableBody>
         </Table>
       </div>

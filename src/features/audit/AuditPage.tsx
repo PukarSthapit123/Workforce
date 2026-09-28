@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { tid } from '@/testids';
-import { Field, TextInput, SelectBox } from '@/ui';
+import { Field, TextInput, SelectBox, Row } from '@/ui';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import { useAudit, type AuditEntry } from '@/api/audit';
 import { formatDateTime, describeChange } from '@/lib/format';
@@ -38,13 +38,13 @@ export function AuditPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-sm md:grid-cols-3">
-        <Field testId="audit-filter-entity-field" label="Record type">
+        <Field label="Record type">
           <SelectBox testId={tid.audit.filterEntity} value={entity} onValueChange={setEntity} options={ENTITY_OPTIONS} />
         </Field>
-        <Field testId="audit-filter-who-field" label="Who">
+        <Field label="Who">
           <TextInput testId={tid.audit.filterWho} value={who} onChange={e => setWho(e.target.value)} placeholder="Name" />
         </Field>
-        <Field testId="audit-filter-text-field" label="Search">
+        <Field label="Search">
           <TextInput testId={tid.audit.filterText} value={q} onChange={e => setQ(e.target.value)} placeholder="Action, record or reason" />
         </Field>
       </div>
@@ -76,7 +76,7 @@ export function AuditPage() {
             </TableHeader>
             <TableBody className="block md:table-row-group">
               {audit.data.items.map(entry => (
-                <TableRow key={entry.id} data-testid={tid.audit.row(entry.id)}
+                <Row key={entry.id} testId={tid.audit.row(entry.id)}
                   className="mb-sm block rounded-card border border-border p-sm md:mb-0 md:table-row md:rounded-none md:border-0 md:border-b md:p-0">
                   <TableCell className="flex items-baseline justify-between gap-sm md:table-cell">
                     <span className="text-xs font-semibold text-text-secondary md:hidden">When</span>
@@ -102,7 +102,7 @@ export function AuditPage() {
                     <span className="text-xs font-semibold text-text-secondary md:hidden">Reason</span>
                     <span>{entry.reason ?? '—'}</span>
                   </TableCell>
-                </TableRow>
+                </Row>
               ))}
             </TableBody>
           </Table>

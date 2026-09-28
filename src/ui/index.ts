@@ -7,6 +7,8 @@ export { CheckboxField } from './Checkbox';
 export { SwitchField } from './Switch';
 export { Modal, ConfirmModal } from './Modal';
 export { Pill } from './Pill';
+export { Row } from './Row';
+export { NavLink } from './NavLink';
 export type { Tone } from './Pill';
 export { Tip, HelpButton, Caution } from './Affordances';
 export { toastInfo, toastRefusal } from './toast';

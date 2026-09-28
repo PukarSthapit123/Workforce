@@ -49,9 +49,21 @@ afterEach(() => { setToken(null); server.resetHandlers(); toast.dismiss(); });
 const mount = () => render(<QueryClientProvider client={queryClient}><PermissionsPage /><Toaster /></QueryClientProvider>);
 
 test('the matrix renders with full test id coverage', async () => {
-  const { container } = mount();
+  mount();
   await screen.findByTestId(tid.access.table);
-  expectTestIdCoverage(container);
+  expectTestIdCoverage();
+});
+
+/* Row/NavLink ruling (reviewer M8): the coverage check scans document.body,
+   so it sees the dialog Radix portals outside the page, and its open select. */
+test('the exceptions dialog, open with its capability list showing, has full test id coverage', async () => {
+  const emp = anyAccount('employee');
+  mount();
+  await userEvent.click(await screen.findByTestId(tid.access.exceptionAdd(emp.email)));
+  await screen.findByTestId(tid.modal.root);
+  await userEvent.click(screen.getByTestId(tid.access.exceptionCap));
+  await screen.findByTestId(`${tid.access.exceptionCap}-option-proxy`);
+  expectTestIdCoverage();
 });
 
 /* I7: the row groups come from the contract (GET /capability-groups), not
@@ -152,7 +164,7 @@ test('a user row reads "Employee + 1 exception" after a grant', async () => {
   expect(granted.status).toBe(200);
 
   mount();
-  const users = await screen.findByTestId(tid.access.users);
+  const users = await screen.findByTestId(tid.access.usersTable);
   const row = within(users).getByTestId(tid.access.userRow(emp.email));
   expect(within(row).getByTestId(tid.access.exceptions(emp.email))).toHaveTextContent('Employee + 1 exception');
 });

@@ -59,19 +59,19 @@ export function UserExceptions({ user, capabilities, typeName, templateCapabilit
       description={user ? `${typeName}. These changes affect this person only.` : undefined}
       footer={<Button testId={tid.access.exceptionSave} kind="primary" disabled={!capId || busy} onClick={save}>Save exception</Button>}>
       {user && <div className="flex flex-col gap-md">
-        <Field testId="access-exception-mode-field" label="Grant or revoke">
+        <Field label="Grant or revoke">
           <SelectBox testId={tid.access.exceptionMode} value={mode} onValueChange={v => changeMode(v === 'revoke' ? 'revoke' : 'grant')}
             options={[
               { value: 'grant', label: 'Grant: give it, on top of their template' },
               { value: 'revoke', label: 'Revoke: take it away, even though their template has it' },
             ]} />
         </Field>
-        <Field testId="access-exception-cap-field" label="Capability" required
+        <Field label="Capability" required
           hint={mode === 'grant' ? 'Only capabilities their template does not already include.' : 'Only capabilities their template already includes.'}>
           <SelectBox testId={tid.access.exceptionCap} value={capId} onValueChange={setCapId} placeholder="Choose a capability"
             options={capOptions.map(c => ({ value: c.id, label: c.label }))} />
         </Field>
-        <Field testId="access-exception-reason-field" label="Reason" required hint="Exceptions are reviewed, so say why.">
+        <Field label="Reason" required hint="Exceptions are reviewed, so say why.">
           <TextInput testId={tid.access.exceptionReason} value={reason} onChange={e => setReason(e.target.value)} />
         </Field>
         {existing.length > 0 && <div className="flex flex-col gap-xs">
