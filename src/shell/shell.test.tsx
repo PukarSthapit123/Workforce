@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/api/query';
@@ -77,4 +77,31 @@ test('at the setup index there is nothing for the strip to show (SetupIndex itse
   const setup = nav.find(g => g.key === 'setup');
   if (!setup) throw new Error('expected a setup group to exist for this capability set');
   expect(stripTabsFor(setup, '/setup/asetup')).toEqual([]);
+});
+
+/* MANAGER NAV GROUPED BY MODULE: "The secondary strip stays scannable"
+   (prototype: `#tabs>button,#tabs>.tabgrp).length<=7`, "the strip carries
+   five items, not twelve: two pages and three headings"). Consecutive tabs
+   sharing a `group` collapse into one dropdown trigger (TabStrip's `runs`),
+   so a manager holding every scheduling/requests/people capability still
+   sees a handful of top-level items, not one per page. */
+test('the manager strip stays scannable: a handful of top-level items, not one per page', () => {
+  const nav = buildNav({
+    caps: new Set(['own_home', 'team_ts', 'team_hours', 'team_rota', 'rota_pattern', 'rota_shift', 'team_leave', 'team_sick', 'team_people', 'onb_track', 'notice_post']),
+    modules: { CORE: true, TS: true, A: true, R: true, L: true, ON: true }, flags: { NOTICES: true }, onboarding: false,
+  });
+  render(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={['/team/thome']}>
+    <ShellView nav={nav} roleLabel="Manager" viewingAs={null} ownName="Rachel Hussain" unread={0} onSignOut={() => {}} onEndViewAs={() => {}} /></MemoryRouter></QueryClientProvider>);
+  const strip = screen.getByRole('navigation', { name: 'Pages' });
+  const topLevel = within(strip).getAllByTestId(/^nav-(tab|menu)-/);
+  expect(topLevel.length).toBeLessThanOrEqual(7);
+});
+
+/* MANAGER NAV GROUPED BY MODULE: "A page inside a menu still marks its
+   heading as current". */
+test('a page inside a menu still marks its heading as current', () => {
+  const nav = buildNav({ caps: new Set(['own_home', 'team_rota', 'rota_pattern', 'rota_shift']), modules: { CORE: true, R: true }, flags: {}, onboarding: false });
+  render(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={['/team/trota']}>
+    <ShellView nav={nav} roleLabel="Manager" viewingAs={null} ownName="Rachel Hussain" unread={0} onSignOut={() => {}} onEndViewAs={() => {}} /></MemoryRouter></QueryClientProvider>);
+  expect(screen.getByTestId(tid.nav.menu('scheduling')).className).toMatch(/font-semibold/);
 });

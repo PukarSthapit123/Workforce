@@ -146,3 +146,19 @@ test('a user row reads "Employee + 1 exception" after a grant', async () => {
   const row = within(users).getByTestId(tid.access.userRow(emp.email));
   expect(within(row).getByTestId(tid.access.exceptions(emp.email))).toHaveTextContent('Employee + 1 exception');
 });
+
+/* Field.tsx clones an injected id/aria-describedby/aria-required/aria-invalid
+   onto its child, assuming a plain input; SelectBox must forward all of them
+   to the real trigger button (src/ui/Select.tsx) or a required field's hint
+   and required state never reach assistive tech. The exceptions modal's
+   Capability picker is Field's one required SelectBox in the running app. */
+test('the required Capability picker carries its hint and required state to assistive tech', async () => {
+  const emp = anyAccount('employee');
+  mount();
+  await userEvent.click(await screen.findByTestId(tid.access.exceptionAdd(emp.email)));
+  const trigger = await screen.findByTestId(tid.access.exceptionCap);
+  expect(trigger).toHaveAttribute('aria-required', 'true');
+  const describedBy = trigger.getAttribute('aria-describedby');
+  expect(describedBy).toBeTruthy();
+  expect(document.getElementById(describedBy ?? '')).toHaveTextContent(/template/i);
+});

@@ -1826,7 +1826,7 @@
    "text": "T Trigger exposes its text to assistive tech",
    "area": "ui",
    "status": "ported",
-   "test": "src/ui/ui.test.tsx › Tip, HelpButton and Caution render with their test ids"
+   "test": "src/ui/ui.test.tsx › Tip exposes its own text to assistive tech via aria-describedby, not just a generic label"
   },
   {
    "id": "TOOLTIPS-escape-their-container-and-stay-on-screen#7",
@@ -3037,24 +3037,24 @@
    "section": "MANAGER NAV GROUPED BY MODULE",
    "text": "NV The secondary strip stays scannable",
    "area": "1a",
-   "status": "n/a",
-   "reason": "not tested in 1a: no test asserts a numeric ceiling on the strip’s top-level item count"
+   "status": "ported",
+   "test": "src/shell/shell.test.tsx › the manager strip stays scannable: a handful of top-level items, not one per page"
   },
   {
    "id": "MANAGER-NAV-GROUPED-BY-MODULE#6",
    "section": "MANAGER NAV GROUPED BY MODULE",
    "text": "NV A page inside a menu still marks its heading as current",
    "area": "1a",
-   "status": "n/a",
-   "reason": "not tested in 1a: no test asserts the dropdown menu trigger itself is marked current when one of its items is active"
+   "status": "ported",
+   "test": "src/shell/shell.test.tsx › a page inside a menu still marks its heading as current"
   },
   {
    "id": "MANAGER-NAV-GROUPED-BY-MODULE#7",
    "section": "MANAGER NAV GROUPED BY MODULE",
    "text": "NV The manager keeps their own employee surface",
    "area": "1a",
-   "status": "n/a",
-   "reason": "not tested in 1a: nav.test.ts’s manager scenario checks the team group only, not a tab-count assertion on the work group"
+   "status": "ported",
+   "test": "src/domain/nav.test.ts › a manager keeps their own employee surface: the work group still has more than a handful of tabs"
   },
   {
    "id": "MANAGER-NAV-GROUPED-BY-MODULE#8",
@@ -3069,16 +3069,16 @@
    "section": "MANAGER NAV GROUPED BY MODULE",
    "text": "NV Turning it back on restores them",
    "area": "1a",
-   "status": "n/a",
-   "reason": "not tested in 1a: no test re-enables a module and checks its tabs return (buildNav is a pure function of modules, so this holds by construction, but nothing exercises it)"
+   "status": "ported",
+   "test": "src/domain/nav.test.ts › re-enabling a module brings its tabs back"
   },
   {
    "id": "MANAGER-NAV-GROUPED-BY-MODULE#10",
    "section": "MANAGER NAV GROUPED BY MODULE",
    "text": "NV Admin has no duplicate Rota group — it uses Qnipay setup",
    "area": "1a",
-   "status": "n/a",
-   "reason": "not tested in 1a: no test asserts an admin capability set produces no duplicate rota nav group; true by construction (groups are capability-driven) but unexercised"
+   "status": "ported",
+   "test": "src/domain/nav.test.ts › an admin capability set produces no team rota group; rota setup lives under Qnipay setup instead"
   },
   {
    "id": "MOBILE-FOUNDATION#1",
@@ -3364,7 +3364,7 @@
    "text": "SI Each account is one pressable row, not a three-column table",
    "area": "1a",
    "status": "ported",
-   "test": "src/shell/SignIn.test.tsx › the demo accounts list names each account’s name, role and email as one pressable row"
+   "test": "src/shell/SignIn.test.tsx › the demo accounts list names each shown account’s name, role and email as one pressable row"
   },
   {
    "id": "SIGN-IN-SIGN-OUT#7",
@@ -3372,15 +3372,15 @@
    "text": "SI ... showing the name, the role, the address and what it is for",
    "area": "1a",
    "status": "ported",
-   "test": "src/shell/SignIn.test.tsx › the demo accounts list names each account’s name, role and email as one pressable row"
+   "test": "src/shell/SignIn.test.tsx › the demo accounts list names each shown account’s name, role and email as one pressable row"
   },
   {
    "id": "SIGN-IN-SIGN-OUT#8",
    "section": "SIGN IN / SIGN OUT",
    "text": "SI It can list which accounts exist, without listing the workforce",
    "area": "1a",
-   "status": "n/a",
-   "reason": "not tested in 1a: no test asserts a bound on how many demo accounts are listed (the social seed currently has three: employee, manager, admin)"
+   "status": "ported",
+   "test": "src/shell/SignIn.test.tsx › the demo accounts list is bounded: a shortcut, not the whole workforce"
   },
   {
    "id": "SIGN-IN-SIGN-OUT#9",
@@ -3388,7 +3388,7 @@
    "text": "SI ... covering employees, a manager and an admin",
    "area": "1a",
    "status": "ported",
-   "test": "src/shell/SignIn.test.tsx › the demo accounts list names each account’s name, role and email as one pressable row"
+   "test": "src/shell/SignIn.test.tsx › the demo accounts list names each shown account’s name, role and email as one pressable row"
   },
   {
    "id": "SIGN-IN-SIGN-OUT#10",
@@ -3404,7 +3404,7 @@
    "text": "SI The password is checked, not decorative",
    "area": "1a",
    "status": "ported",
-   "test": "e2e/sign-in.spec.ts › SI A wrong password says what to do and signs nobody in"
+   "test": "src/mocks/session.test.ts › a wrong password is refused with a next step, and nothing is issued"
   },
   {
    "id": "SIGN-IN-SIGN-OUT#12",
@@ -3412,7 +3412,7 @@
    "text": "SI A failed attempt does not reveal which half was wrong",
    "area": "1a",
    "status": "ported",
-   "test": "e2e/sign-in.spec.ts › SI A wrong password says what to do and signs nobody in"
+   "test": "src/mocks/session.test.ts › the same message covers an unknown address and a wrong password, so neither leaks which half was wrong"
   },
   {
    "id": "SIGN-IN-SIGN-OUT#13",
@@ -5399,7 +5399,7 @@
    "text": "PS The account list names the role of each account",
    "area": "1a",
    "status": "ported",
-   "test": "src/shell/SignIn.test.tsx › the demo accounts list names each account’s name, role and email as one pressable row"
+   "test": "src/shell/SignIn.test.tsx › the demo accounts list names each shown account’s name, role and email as one pressable row"
   },
   {
    "id": "PERSISTENCE-AND-ACCOUNTS#3",
@@ -5407,7 +5407,7 @@
    "text": "PS A wrong password is refused",
    "area": "1a",
    "status": "ported",
-   "test": "e2e/sign-in.spec.ts › SI A wrong password says what to do and signs nobody in"
+   "test": "src/mocks/session.test.ts › a wrong password is refused with a next step, and nothing is issued"
   },
   {
    "id": "PERSISTENCE-AND-ACCOUNTS#4",
@@ -5415,7 +5415,7 @@
    "text": "PS ... with a message that does not say which half was wrong",
    "area": "1a",
    "status": "ported",
-   "test": "e2e/sign-in.spec.ts › SI A wrong password says what to do and signs nobody in"
+   "test": "src/mocks/session.test.ts › the same message covers an unknown address and a wrong password, so neither leaks which half was wrong"
   },
   {
    "id": "PERSISTENCE-AND-ACCOUNTS#5",
@@ -5650,7 +5650,7 @@
    "text": "AD One place called setup, not two top-level groups",
    "area": "1a",
    "status": "ported",
-   "test": "e2e/nav.spec.ts › NV Every page an admin can reach has full test id coverage"
+   "test": "src/domain/nav.test.ts › an admin capability set produces exactly one top-level group: setup, not two"
   },
   {
    "id": "ADMIN-LAYOUT#2",
@@ -5994,7 +5994,7 @@
    "text": "CN The role pill shows what the account holds, not what is being viewed",
    "area": "ui",
    "status": "n/a",
-   "reason": "prototype-only: matches a specific code comment string in the prototype’s own source, not an observable behaviour"
+   "reason": "diverges by plan, not inert: Shell.tsx (`session.viewingAs?.userType ?? session.account.userType`) shows the VIEWED person’s role while viewing as them, matching the plan’s own reference Shell() implementation (docs/plans/2026-09-25-plan-1a-foundation-and-access.md ~line 2248), because view-as adopts that person’s capabilities, not just a label. The prototype’s row is itself a source-comment match (`/the pill is the account’s role/.test(src)`) against the prototype’s OWN code, not a DOM assertion, so there is nothing here to test our behaviour against either way."
   },
   {
    "id": "CONSISTENCY#4",
@@ -6156,8 +6156,8 @@
    "section": "AGAINST THE DESIGN SYSTEM",
    "text": "DS Semantic colour resolves to the palette, not to literals",
    "area": "ui",
-   "status": "n/a",
-   "reason": "the lift (scripts/lift-tokens.mjs) copies the prototype’s own already-token-resolved block verbatim; scripts/lift-tokens.test.ts proves nothing is missing, but nothing separately re-checks that each semantic var resolves through another var rather than a literal"
+   "status": "ported",
+   "test": "scripts/lift-tokens.test.ts › every --qp-color-* semantic token resolves via var() or color-mix(), never a literal"
   },
   {
    "id": "AGAINST-THE-DESIGN-SYSTEM#3",
@@ -6180,8 +6180,8 @@
    "section": "AGAINST THE DESIGN SYSTEM",
    "text": "DS White goes through the on-brand token",
    "area": "ui",
-   "status": "n/a",
-   "reason": "the lift copies --qp-color-text-on-brand verbatim from the prototype (scripts/lift-tokens.test.ts proves completeness); nothing separately re-checks how it resolves"
+   "status": "ported",
+   "test": "scripts/lift-tokens.test.ts › white goes through the on-brand token, not a literal"
   },
   {
    "id": "NO-MARKUP-WITHOUT-STYLING#1",

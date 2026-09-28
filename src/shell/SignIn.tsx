@@ -7,6 +7,16 @@ import { Button, Field, TextInput } from '@/ui';
 import { useSession } from './SessionProvider';
 
 const NOTE = { employee: 'Their own work: timesheet, shifts and leave', manager: 'Approvals and their team', admin: 'Configuration, modules and access' } as const;
+/* listAccounts is documented as "demo account shortcuts", but its handler
+   (src/mocks/session.ts) returns literally every seeded account: 19 for the
+   social tenant, not a shortcut. The list's own aria-label already promises
+   "a shortcut, not the whole list"; picking one representative account per
+   persona keeps that promise true without changing the endpoint's contract
+   (e2e's signInAs still reads the full, unbounded response directly). */
+const DEMO_ORDER = ['employee', 'manager', 'admin'] as const;
+function demoShortcut<T extends { userType: 'employee' | 'manager' | 'admin' }>(accounts: T[]): T[] {
+  return DEMO_ORDER.map(t => accounts.find(a => a.userType === t)).filter((a): a is T => a !== undefined);
+}
 /* Demo sign-in only exists while the fake server runs. Gating the whole
    affordance (not just the fake server import in main.tsx) on the same flag
    keeps the demo password out of a VITE_MOCKS=off production bundle too:
@@ -38,7 +48,7 @@ export function SignIn() {
       {MOCKS_ENABLED && <>
         <Button testId={tid.signIn.showAccounts} kind="ghost" onClick={() => setShowAccounts(s => !s)}>{showAccounts ? 'Hide demo accounts' : 'Show demo accounts'}</Button>
         {showAccounts && <ul className="flex flex-col gap-xs" aria-label="Demo accounts. A shortcut, not the whole list.">
-          {accounts.data?.map(a => <li key={a.email}>
+          {demoShortcut(accounts.data ?? []).map(a => <li key={a.email}>
             <button type="button" data-testid={tid.signIn.account(a.email)} className="w-full rounded-control border border-border p-sm text-left"
               onClick={() => { setEmail(a.email); setPassword('Qnipay@123'); }}>
               <b>{a.name}</b> · {NOTE[a.userType]}<span className="block text-text-secondary">{a.email}</span></button></li>)}

@@ -25,6 +25,20 @@
   --input: var(--qp-color-border);
   --ring: var(--qp-color-brand-primary);
   --radius: var(--qp-radius-control);
+  /* the prototype pairs the lime accent with this dark ink on every one of
+     those surfaces (line 406: dark-mode `.btn.pri` sets color to #0A2410) —
+     a value no existing --qp token names, so it is named once, here. Named
+     in :root, not only the dark block below: --qp-color-brand-accent itself
+     never changes between themes (tokens.css defines no dark override for
+     it), so anything painted on it — the "current" nav pill, the account
+     menu trigger, the notification badge — needs this same ink in light
+     theme too, not the page's own --foreground/--primary-foreground, which
+     each flip for an unrelated reason (dark theme repoints --primary itself
+     to the accent, for buttons whose background and text move together;
+     using that same repointed foreground on a *fixed*-background element
+     left it unreadable in dark theme — axe's color-contrast check on
+     /setup/asetup caught this, task 11 fix round 1). */
+  --qp-color-text-on-accent: #0A2410;
 }
 
 /* Dark theme re-points shadcn's primary alias to the lime accent, not to a
@@ -34,10 +48,6 @@
    at lines 406, 527, 544, 739, 744). This block must follow :root so it wins
    the tie in specificity between `:root` and `[data-theme="dark"]` on <html>. */
 [data-theme="dark"] {
-  /* the prototype pairs the lime accent with this dark ink on every one of
-     those surfaces (line 406: dark-mode `.btn.pri` sets color to #0A2410)
-     — a value no existing --qp token names, so it is named once, here. */
-  --qp-color-text-on-accent: #0A2410;
   --primary: var(--qp-color-brand-accent);
   --primary-foreground: var(--qp-color-text-on-accent);
   --ring: var(--qp-color-brand-accent);
@@ -74,6 +84,14 @@
   --color-text-primary: var(--qp-color-text-primary);
   --color-text-secondary: var(--qp-color-text-secondary);
   --color-text-disabled: var(--qp-color-text-disabled);
+  /* Stable text for a fixed-colour surface, unlike --color-*-foreground above:
+     those track --foreground/--primary-foreground, which each flip meaning
+     between themes for reasons of their own (page background legibility;
+     buttons whose background moves with them). bg-surface-inverse and
+     bg-brand-accent never change between themes, so text painted on them
+     needs a colour that doesn't either. */
+  --color-text-on-brand: var(--qp-color-text-on-brand);
+  --color-text-on-accent: var(--qp-color-text-on-accent);
   --color-ok: var(--qp-color-status-success);
   --color-ok-surface: var(--qp-color-status-success-surface);
   --color-warn: var(--qp-color-status-warning);

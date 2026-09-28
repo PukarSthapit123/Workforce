@@ -89,3 +89,57 @@ test('iit additionally needs the ITACCESS flag', () => {
   expect(setupWith.tabs.map(t => t.view)).toContain('iit');
   expect(setupWithout.tabs.map(t => t.view)).not.toContain('iit');
 });
+
+/* MANAGER NAV GROUPED BY MODULE: "The manager keeps their own employee
+   surface" (prototype: tabsIn('work').length>4). A manager's capability set
+   always includes the employee-level caps too ("everything an employee can
+   do, plus their team" — seed/social.json), so the work group is never
+   trimmed down to nothing just because team caps were added. */
+test('a manager keeps their own employee surface: the work group still has more than a handful of tabs', () => {
+  const g = buildNav({
+    caps: caps('own_home', 'own_ts', 'own_shifts', 'own_leave', 'own_hours', 'own_notices', 'team_ts', 'team_rota', 'team_people'),
+    modules: ALL_MODULES, flags, onboarding: false,
+  });
+  const work = must(g.find((x): x is NavGroup => x.key === 'work'));
+  expect(work.tabs.length).toBeGreaterThan(4);
+});
+
+/* MANAGER NAV GROUPED BY MODULE: "Turning it back on restores them". buildNav
+   is a pure function of `modules`, so re-enabling one is just calling it
+   again with that flag true; this proves the round trip rather than only
+   half of it (a module switched off removes its tabs, tested above). */
+test('re-enabling a module brings its tabs back', () => {
+  const caps_ = caps('own_home', 'team_leave', 'team_sick');
+  const off = buildNav({ caps: caps_, modules: { ...ALL_MODULES, L: false }, flags, onboarding: false });
+  const on = buildNav({ caps: caps_, modules: ALL_MODULES, flags, onboarding: false });
+  const teamOff = must(off.find((x): x is NavGroup => x.key === 'team'));
+  const teamOn = must(on.find((x): x is NavGroup => x.key === 'team'));
+  expect(teamOff.tabs.map(t => t.label)).not.toContain('Requests');
+  expect(teamOn.tabs.map(t => t.label)).toContain('Requests');
+});
+
+/* MANAGER NAV GROUPED BY MODULE: "Admin has no duplicate Rota group — it uses
+   Qnipay setup". An admin's capability set holds no team_* capability at all
+   (seed/social.json), so buildNav never produces a 'team' group for one; rota
+   configuration is reached through the setup group's Modules section instead. */
+test('an admin capability set produces no team rota group; rota setup lives under Qnipay setup instead', () => {
+  const g = buildNav({
+    caps: caps('perm_cfg', 'master_data', 'mod_cfg', 'type_cfg', 'framework', 'integration'),
+    modules: ALL_MODULES, flags: { ...flags, ITACCESS: true }, onboarding: false,
+  });
+  expect(g.some(x => x.key === 'team')).toBe(false);
+  const setup = must(g.find((x): x is NavGroup => x.key === 'setup'));
+  expect(setup.tabs.map(t => t.view)).toContain('mrota');
+});
+
+/* ADMIN LAYOUT: "One place called setup, not two top-level groups". The same
+   admin capability set above produces exactly one top-level group, 'setup':
+   no second admin-only group duplicating it, and (per the row above) no
+   'team' group either. */
+test('an admin capability set produces exactly one top-level group: setup, not two', () => {
+  const g = buildNav({
+    caps: caps('perm_cfg', 'master_data', 'mod_cfg', 'type_cfg', 'framework', 'integration'),
+    modules: ALL_MODULES, flags: { ...flags, ITACCESS: true }, onboarding: false,
+  });
+  expect(g.map(x => x.key)).toEqual(['setup']);
+});

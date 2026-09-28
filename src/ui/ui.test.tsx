@@ -51,3 +51,16 @@ test('Tip, HelpButton and Caution render with their test ids', () => {
   expect(screen.getByTestId('page-help')).toHaveAttribute('aria-label', 'Open the guide');
   expect(screen.getByTestId('area-caution')).toHaveTextContent('Changes here affect everyone.');
 });
+/* TOOLTIPS: "Trigger exposes its text to assistive tech". The aria-label only
+   ever says "More information" (what the control is), never the tip's own
+   text (what it says); Radix only puts the tooltip bubble itself in the
+   accessibility tree while it is open. This checks the tip's text is
+   reachable via aria-describedby regardless of open state, not merely that a
+   generic label exists. */
+test('Tip exposes its own text to assistive tech via aria-describedby, not just a generic label', () => {
+  render(<Tip testId="field-tip" text="Used to sign in." />);
+  const trigger = screen.getByTestId('field-tip');
+  const describedBy = trigger.getAttribute('aria-describedby');
+  expect(describedBy).toBeTruthy();
+  expect(document.getElementById(describedBy ?? '')).toHaveTextContent('Used to sign in.');
+});

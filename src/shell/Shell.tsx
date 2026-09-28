@@ -38,19 +38,19 @@ export function ShellView({ nav, roleLabel, viewingAs, ownName, unread, onSignOu
   const stripTabs = stripTabsFor(current, pathname);
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="flex items-center gap-sm bg-surface-inverse px-md py-sm text-primary-foreground md:gap-md md:px-lg">
+      <header className="flex items-center gap-sm bg-surface-inverse px-md py-sm text-text-on-brand md:gap-md md:px-lg">
         <span className="hidden font-semibold md:inline">Qnipay</span>
         <nav aria-label="Areas" className="flex min-w-0 flex-1 gap-xs overflow-x-auto">
           {nav.map(g => <Link key={g.key} to={firstTabPath(g)} data-testid={tid.nav.group(g.key)}
             aria-current={g === current ? 'true' : undefined}
-            className={`inline-flex min-h-touch shrink-0 items-center whitespace-nowrap rounded-pill px-md py-xs ${g === current ? 'bg-brand-accent text-foreground' : ''}`}>{g.label}</Link>)}
+            className={`inline-flex min-h-touch shrink-0 items-center whitespace-nowrap rounded-pill px-md py-xs ${g === current ? 'bg-brand-accent text-text-on-accent' : ''}`}>{g.label}</Link>)}
         </nav>
         <span data-testid={tid.shell.rolePill}
           className={`hidden shrink-0 items-center rounded-pill border px-sm py-xs text-xs font-semibold md:inline-flex ${viewingAs ? 'border-dashed opacity-85' : ''}`}
           title={viewingAs ? `Looking at the app as ${viewingAs} · your account is ${ownName}` : undefined}>{roleLabel}</span>
         <button type="button" data-testid={tid.shell.bell} aria-label={`Notifications, ${unread} unread`}
           className="relative inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center">
-          <span aria-hidden="true">🔔</span>{unread > 0 && <span data-testid={tid.shell.bellCount} className="absolute -right-2 -top-2 rounded-pill bg-brand-accent px-xs text-xs text-foreground">{unread}</span>}
+          <span aria-hidden="true">🔔</span>{unread > 0 && <span data-testid={tid.shell.bellCount} className="absolute -right-2 -top-2 rounded-pill bg-brand-accent px-xs text-xs text-text-on-accent">{unread}</span>}
         </button>
         <button type="button" data-testid={tid.shell.theme} aria-label={`${theme === 'dark' ? 'Light' : 'Dark'} theme`}
           className="inline-flex min-h-touch shrink-0 items-center rounded-pill border px-sm py-xs text-xs" onClick={toggleTheme}>{theme === 'dark' ? 'Light' : 'Dark'}</button>

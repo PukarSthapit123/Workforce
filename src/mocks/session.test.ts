@@ -25,6 +25,19 @@ test('a wrong password is refused with a next step, and nothing is issued', asyn
   expect(r.status).toBe(401);
   expect(await r.json()).toMatchObject({ code: 'credentials', next: expect.any(String) });
 });
+/* PERSISTENCE AND ACCOUNTS / SIGN IN: "A failed attempt does not reveal which
+   half was wrong". A single branch in session.ts's handler refuses both an
+   unknown address and a known address with the wrong password identically;
+   this proves the two responses actually match, not just that each one's
+   text happens to mention "do not match". */
+test('the same message covers an unknown address and a wrong password, so neither leaks which half was wrong', async () => {
+  const unknownAddress = await post('/api/v1/session', { email: 'nobody@example.org', password: 'Qnipay@123' });
+  const wrongPassword = await post('/api/v1/session', { email: anyAccount('manager').email, password: 'nope' });
+  expect(unknownAddress.status).toBe(401);
+  expect(wrongPassword.status).toBe(401);
+  const [unknownBody, wrongBody] = await Promise.all([unknownAddress.json(), wrongPassword.json()]);
+  expect(unknownBody.message).toBe(wrongBody.message);
+});
 test('a session whose account has gone is refused, so the client signs out', async () => {
   const acc = anyAccount('employee');
   const { token } = await (await post('/api/v1/session', { email: acc.email, password: 'Qnipay@123' })).json();

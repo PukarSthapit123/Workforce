@@ -29,24 +29,48 @@ test('the sign-in screen asks for an email address and a password', () => {
 /* SIGN IN / SIGN OUT: "Each account is one pressable row... showing the
    name, the role, the address and what it is for" / "...covering employees,
    a manager and an admin". PERSISTENCE AND ACCOUNTS: "The account list names
-   the role of each account". */
-test('the demo accounts list names each account\'s name, role and email as one pressable row', async () => {
+   the role of each account". listAccounts itself returns every seeded
+   account (19 for the social tenant, not a "shortcut"); SignIn.tsx picks one
+   representative account per persona before rendering, so this checks the
+   rendered shortcut, not the raw API response. */
+test('the demo accounts list names each shown account\'s name, role and email as one pressable row', async () => {
   const accounts = (await (await fetch('/api/v1/session/accounts')).json()) as
     { email: string; name: string; userType: 'employee' | 'manager' | 'admin' }[];
   const roleNote = { employee: 'Their own work: timesheet, shifts and leave', manager: 'Approvals and their team', admin: 'Configuration, modules and access' } as const;
+  const shortcut = (['employee', 'manager', 'admin'] as const)
+    .map(t => accounts.find(a => a.userType === t))
+    .filter((a): a is (typeof accounts)[number] => a !== undefined);
+  expect(shortcut).toHaveLength(3); // the social seed has at least one of each
 
   mount();
   await userEvent.click(screen.getByTestId(tid.signIn.showAccounts));
-  for (const a of accounts) {
+  for (const a of shortcut) {
     const row = await screen.findByTestId(tid.signIn.account(a.email));
     expect(row.tagName).toBe('BUTTON');
     expect(row).toHaveTextContent(a.name);
     expect(row).toHaveTextContent(roleNote[a.userType]);
     expect(row).toHaveTextContent(a.email);
   }
-  expect(accounts.some(a => a.userType === 'employee')).toBe(true);
-  expect(accounts.some(a => a.userType === 'manager')).toBe(true);
-  expect(accounts.some(a => a.userType === 'admin')).toBe(true);
+});
+
+/* SIGN IN / SIGN OUT: "It can list which accounts exist, without listing the
+   workforce" (prototype: `siRows.length<=7&&siRows.length>=3`). listAccounts
+   answers with the whole roster (19 accounts for the social seed, found
+   while writing this test — not itself a bounded "shortcut" list); the
+   rendered list stays bounded regardless, one row per persona rather than
+   one row per account. */
+test('the demo accounts list is bounded: a shortcut, not the whole workforce', async () => {
+  const accounts = (await (await fetch('/api/v1/session/accounts')).json()) as { email: string; userType: string }[];
+  expect(accounts.length).toBeGreaterThan(7); // the endpoint's own response is not what bounds the rendered list
+
+  mount();
+  await userEvent.click(screen.getByTestId(tid.signIn.showAccounts));
+  const admin = accounts.find(a => a.userType === 'admin');
+  if (!admin) throw new Error('no seeded admin account');
+  await screen.findByTestId(tid.signIn.account(admin.email));
+  const rows = screen.getAllByTestId(/^sign-in-account-/);
+  expect(rows.length).toBeGreaterThanOrEqual(3);
+  expect(rows.length).toBeLessThanOrEqual(7);
 });
 
 /* IDENTITY AND SIGN-IN: "Enter submits the sign-in form rather than doing
