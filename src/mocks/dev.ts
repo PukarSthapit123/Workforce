@@ -1,11 +1,17 @@
 import { http, HttpResponse } from 'msw';
-import { store } from './store';
+import { isTenant, store, TENANTS } from './store';
 import { faults } from './faults';
+import type { Refusal } from '@/contract/common';
 
 /* Test and development control. Not part of the product API, and never in a production build. */
 export const devHandlers = [
   http.post('/api/_dev/reset', () => { faults.length = 0; store.reset(); return new HttpResponse(null, { status: 204 }); }),
-  http.post('/api/_dev/seed/:tenant', ({ params }) => { store.reset(String(params.tenant)); return new HttpResponse(null, { status: 204 }); }),
+  http.post('/api/_dev/seed/:tenant', ({ params }) => {
+    const tenant = String(params.tenant);
+    if (!isTenant(tenant)) return HttpResponse.json({ code: 'invalid', field: 'tenant',
+      message: `There is no seed for "${tenant}", so nothing was loaded.`,
+      next: `Use one of: ${TENANTS.join(', ')}.` } satisfies Refusal, { status: 422 });
+    store.reset(tenant); return new HttpResponse(null, { status: 204 }); }),
   http.post('/api/_dev/clock', async ({ request }) => {
     const { now } = (await request.json()) as { now: string | null };
     store.setClock(now); return new HttpResponse(null, { status: 204 }); }),

@@ -52,3 +52,18 @@ test('POST /api/_dev/reset restores the seed and clears faults', async () => {
   const afterReset = await fetch('/api/v1/probe-reset');
   expect(afterReset.status).toBe(200);
 });
+test('POST /api/_dev/seed refuses a tenant this build has no seed for, and changes nothing', async () => {
+  await fetch('/api/_dev/reset', { method: 'POST' });
+  const before = structuredClone(store.db);
+  const r = await fetch('/api/_dev/seed/qcic', { method: 'POST' });
+  expect(r.status).toBe(422);
+  expect(await r.json()).toMatchObject({ code: 'invalid', field: 'tenant', message: expect.any(String), next: expect.stringContaining('social') });
+  expect(store.db).toEqual(before);
+  expect(store.tenant).toBe('social');
+});
+test('POST /api/_dev/seed loads a known tenant', async () => {
+  const r = await fetch('/api/_dev/seed/qnipay', { method: 'POST' });
+  expect(r.status).toBe(204);
+  expect(store.tenant).toBe('qnipay');
+  await fetch('/api/_dev/seed/social', { method: 'POST' });
+});
