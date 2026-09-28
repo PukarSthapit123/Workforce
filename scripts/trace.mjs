@@ -1,5 +1,5 @@
 /* One row per assertion in the prototype suite, so nothing it proved is silently
-   dropped. Re-running keeps each row's status, test and reason. */
+   dropped. Re-running keeps each row's status, test, reason and deferredTo. */
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -18,9 +18,15 @@ src.forEach(line => {
     const text = m[2].replace(/\\u2019/g, '’').replace(/\\u2192/g, '→').replace(/\\'/g, "'");
     const n = (perSection[section] = (perSection[section] || 0) + 1);
     const id = `${section.replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '')}#${n}`;
-    const area = map.sections[section] || (defaulted.add(section), map.defaultArea);
     const old = prev[id] && prev[id].text === text ? prev[id] : null;
-    rows.push({ id, section, text, area, status: old ? old.status : 'pending', ...(old?.test ? { test: old.test } : {}), ...(old?.reason ? { reason: old.reason } : {}) });
+    /* A row can belong to a later area than its section (a 1a section holding
+       one assertion about the rota, say). deferredTo records that per row, is
+       kept across re-runs like status, test and reason, and becomes the row's
+       effective area, so the row waits in the area that will build it rather
+       than being written off as n/a. */
+    const sectionArea = map.sections[section] || (defaulted.add(section), map.defaultArea);
+    const area = old?.deferredTo || sectionArea;
+    rows.push({ id, section, text, area, ...(old?.deferredTo ? { deferredTo: old.deferredTo } : {}), status: old ? old.status : 'pending', ...(old?.test ? { test: old.test } : {}), ...(old?.reason ? { reason: old.reason } : {}) });
   }
 });
 writeFileSync(OUT, JSON.stringify({ generatedFrom: 'qnipay-regression-suite.js', rows }, null, 1) + '\n');

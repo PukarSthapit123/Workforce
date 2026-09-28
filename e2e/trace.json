@@ -37,33 +37,33 @@
    "id": "BOOT#5",
    "section": "BOOT",
    "text": "It boots on the tenant’s own data",
-   "area": "1a",
-   "status": "n/a",
-   "reason": "not built in 1a: the Organisation admin page (identity fields) is plan 1c"
+   "area": "1c",
+   "deferredTo": "1c",
+   "status": "pending"
   },
   {
    "id": "BOOT#6",
    "section": "BOOT",
    "text": "Its projects are the real ones",
-   "area": "1a",
-   "status": "n/a",
-   "reason": "not built in 1a: the dimensions/projects admin page is plan 1b"
+   "area": "1b",
+   "deferredTo": "1b",
+   "status": "pending"
   },
   {
    "id": "BOOT#7",
    "section": "BOOT",
    "text": "Its roster is the real resource list",
-   "area": "1a",
-   "status": "n/a",
-   "reason": "not built in 1a: the people/roster admin page is plan 1b"
+   "area": "1b",
+   "deferredTo": "1b",
+   "status": "pending"
   },
   {
    "id": "BOOT#8",
    "section": "BOOT",
    "text": "Rota is off for this tenant, so the calendar carries no shifts",
-   "area": "1a",
-   "status": "n/a",
-   "reason": "not built in 1a: the rota calendar is the rota sub-project"
+   "area": "rota",
+   "deferredTo": "rota",
+   "status": "pending"
   },
   {
    "id": "IMP-001-A1-approval-QUEUES-rather-than-posts#1",
@@ -1546,57 +1546,57 @@
    "id": "GUIDE-AFFORDANCE-opens-i-only-hovers#1",
    "section": "GUIDE AFFORDANCE — ? opens, i only hovers",
    "text": "G The ? button is present on a page that has a guide",
-   "area": "ui",
-   "status": "n/a",
-   "reason": "not built in 1a: no built page (sign-in, permissions, audit, setup index) registers a guide; Affordances.tsx’s HelpButton/Tip exist as primitives (tested standalone in src/ui/ui.test.tsx) but nothing wires one in yet"
+   "area": "1c",
+   "deferredTo": "1c",
+   "status": "pending"
   },
   {
    "id": "GUIDE-AFFORDANCE-opens-i-only-hovers#2",
    "section": "GUIDE AFFORDANCE — ? opens, i only hovers",
    "text": "G It carries an accessible label",
-   "area": "ui",
-   "status": "n/a",
-   "reason": "not built in 1a: no built page (sign-in, permissions, audit, setup index) registers a guide; Affordances.tsx’s HelpButton/Tip exist as primitives (tested standalone in src/ui/ui.test.tsx) but nothing wires one in yet"
+   "area": "1c",
+   "deferredTo": "1c",
+   "status": "pending"
   },
   {
    "id": "GUIDE-AFFORDANCE-opens-i-only-hovers#3",
    "section": "GUIDE AFFORDANCE — ? opens, i only hovers",
    "text": "G It uses the helpbtn class, not the tip class",
-   "area": "ui",
-   "status": "n/a",
-   "reason": "not built in 1a: no built page (sign-in, permissions, audit, setup index) registers a guide; Affordances.tsx’s HelpButton/Tip exist as primitives (tested standalone in src/ui/ui.test.tsx) but nothing wires one in yet"
+   "area": "1c",
+   "deferredTo": "1c",
+   "status": "pending"
   },
   {
    "id": "GUIDE-AFFORDANCE-opens-i-only-hovers#4",
    "section": "GUIDE AFFORDANCE — ? opens, i only hovers",
    "text": "G Clicking it opens the guide",
-   "area": "ui",
-   "status": "n/a",
-   "reason": "not built in 1a: no built page (sign-in, permissions, audit, setup index) registers a guide; Affordances.tsx’s HelpButton/Tip exist as primitives (tested standalone in src/ui/ui.test.tsx) but nothing wires one in yet"
+   "area": "1c",
+   "deferredTo": "1c",
+   "status": "pending"
   },
   {
    "id": "GUIDE-AFFORDANCE-opens-i-only-hovers#5",
    "section": "GUIDE AFFORDANCE — ? opens, i only hovers",
    "text": "G No ? appears where no guide is registered",
    "area": "ui",
-   "status": "n/a",
-   "reason": "not built in 1a: no built page (sign-in, permissions, audit, setup index) registers a guide; Affordances.tsx’s HelpButton/Tip exist as primitives (tested standalone in src/ui/ui.test.tsx) but nothing wires one in yet"
+   "status": "ported",
+   "test": "e2e/ui-rules.spec.ts › G No built page shows a ? guide button, since none registers a guide"
   },
   {
    "id": "GUIDE-AFFORDANCE-opens-i-only-hovers#6",
    "section": "GUIDE AFFORDANCE — ? opens, i only hovers",
    "text": "G Admin pages without a guide show no ?",
    "area": "ui",
-   "status": "n/a",
-   "reason": "not built in 1a: no built page (sign-in, permissions, audit, setup index) registers a guide; Affordances.tsx’s HelpButton/Tip exist as primitives (tested standalone in src/ui/ui.test.tsx) but nothing wires one in yet"
+   "status": "ported",
+   "test": "e2e/ui-rules.spec.ts › G No built page shows a ? guide button, since none registers a guide"
   },
   {
    "id": "GUIDE-AFFORDANCE-opens-i-only-hovers#7",
    "section": "GUIDE AFFORDANCE — ? opens, i only hovers",
    "text": "G Tip icons still exist and open nothing",
-   "area": "ui",
-   "status": "n/a",
-   "reason": "not built in 1a: no built page (sign-in, permissions, audit, setup index) registers a guide; Affordances.tsx’s HelpButton/Tip exist as primitives (tested standalone in src/ui/ui.test.tsx) but nothing wires one in yet"
+   "area": "1c",
+   "deferredTo": "1c",
+   "status": "pending"
   },
   {
    "id": "MODAL-SIZING-STRUCTURE#1",
@@ -1618,41 +1618,41 @@
    "id": "MODAL-SIZING-STRUCTURE#3",
    "section": "MODAL SIZING + STRUCTURE",
    "text": "M An exception dialog can be opened",
-   "area": "ui",
-   "status": "n/a",
-   "reason": "not built in 1a: the exception dialog is the timesheet exception centre (IMP-015), not built yet"
+   "area": "timesheet",
+   "deferredTo": "timesheet",
+   "status": "pending"
   },
   {
    "id": "MODAL-SIZING-STRUCTURE#4",
    "section": "MODAL SIZING + STRUCTURE",
    "text": "M Exception dialog uses the real modal structure",
-   "area": "ui",
-   "status": "n/a",
-   "reason": "not built in 1a: the exception dialog is the timesheet exception centre (IMP-015), not built yet"
+   "area": "timesheet",
+   "deferredTo": "timesheet",
+   "status": "pending"
   },
   {
    "id": "MODAL-SIZING-STRUCTURE#5",
    "section": "MODAL SIZING + STRUCTURE",
    "text": "M Its close control sits in the header",
-   "area": "ui",
-   "status": "n/a",
-   "reason": "not built in 1a: the exception dialog is the timesheet exception centre (IMP-015), not built yet"
+   "area": "timesheet",
+   "deferredTo": "timesheet",
+   "status": "pending"
   },
   {
    "id": "MODAL-SIZING-STRUCTURE#6",
    "section": "MODAL SIZING + STRUCTURE",
    "text": "M The patterns table is a page, not a cramped modal",
-   "area": "ui",
-   "status": "n/a",
-   "reason": "not built in 1a: the working-patterns table and pattern editor are rota"
+   "area": "rota",
+   "deferredTo": "rota",
+   "status": "pending"
   },
   {
    "id": "MODAL-SIZING-STRUCTURE#7",
    "section": "MODAL SIZING + STRUCTURE",
    "text": "M The pattern editor is still wide after the openBox change",
-   "area": "ui",
-   "status": "n/a",
-   "reason": "not built in 1a: the working-patterns table and pattern editor are rota"
+   "area": "rota",
+   "deferredTo": "rota",
+   "status": "pending"
   },
   {
    "id": "MULTI-PERSON-ADD-STAGGER#1",
@@ -1786,7 +1786,7 @@
    "text": "T A single body-level bubble exists",
    "area": "ui",
    "status": "n/a",
-   "reason": "not built in 1a: no page currently renders a Tip; Radix’s Portal (shadcn/tooltip.tsx) would be the single body-level layer regardless of usage"
+   "reason": "replaced by Radix: TooltipContent renders through a Portal to document.body, which is the single body-level layer every tooltip shares"
   },
   {
    "id": "TOOLTIPS-escape-their-container-and-stay-on-screen#2",
@@ -1872,9 +1872,9 @@
    "id": "TOOLTIPS-escape-their-container-and-stay-on-screen#12",
    "section": "TOOLTIPS — escape their container and stay on screen",
    "text": "T A tooltip inside a modal exists (the reported case)",
-   "area": "ui",
-   "status": "n/a",
-   "reason": "not built in 1a: no Tip is currently rendered inside any Modal"
+   "area": "1b",
+   "deferredTo": "1b",
+   "status": "pending"
   },
   {
    "id": "TOOLTIPS-escape-their-container-and-stay-on-screen#13",
@@ -1904,9 +1904,9 @@
    "id": "TOOLTIPS-escape-their-container-and-stay-on-screen#16",
    "section": "TOOLTIPS — escape their container and stay on screen",
    "text": "T Bubble is open before navigating",
-   "area": "ui",
-   "status": "n/a",
-   "reason": "not built in 1a: no scenario combines an open tooltip with navigation"
+   "area": "1b",
+   "deferredTo": "1b",
+   "status": "pending"
   },
   {
    "id": "TOOLTIPS-escape-their-container-and-stay-on-screen#17",
@@ -1920,9 +1920,9 @@
    "id": "TOOLTIPS-escape-their-container-and-stay-on-screen#18",
    "section": "TOOLTIPS — escape their container and stay on screen",
    "text": "T Table-wrapper tooltips exist and now use the same bubble",
-   "area": "ui",
-   "status": "n/a",
-   "reason": "not built in 1a: no table-embedded tooltip exists yet"
+   "area": "1b",
+   "deferredTo": "1b",
+   "status": "pending"
   },
   {
    "id": "TOOLTIPS-escape-their-container-and-stay-on-screen#19",
@@ -2672,27 +2672,31 @@
    "section": "ICONS, CRUMBS AND REDUNDANT COUNTS",
    "text": "IC Every module has its own icon",
    "area": "1c",
+   "deferredTo": "1c",
    "status": "pending"
   },
   {
    "id": "ICONS-CRUMBS-AND-REDUNDANT-COUNTS#2",
    "section": "ICONS, CRUMBS AND REDUNDANT COUNTS",
    "text": "IC They come from the shared icon set, not emoji",
-   "area": "1c",
-   "status": "pending"
+   "area": "1a",
+   "status": "ported",
+   "test": "e2e/ui-rules.spec.ts › IC Icons come from the shared icon set, and no built page renders an emoji"
   },
   {
    "id": "ICONS-CRUMBS-AND-REDUNDANT-COUNTS#3",
    "section": "ICONS, CRUMBS AND REDUNDANT COUNTS",
    "text": "IC Every card in the system uses the icon set — no emoji left",
-   "area": "1c",
-   "status": "pending"
+   "area": "1a",
+   "status": "ported",
+   "test": "e2e/ui-rules.spec.ts › IC Icons come from the shared icon set, and no built page renders an emoji"
   },
   {
    "id": "ICONS-CRUMBS-AND-REDUNDANT-COUNTS#4",
    "section": "ICONS, CRUMBS AND REDUNDANT COUNTS",
    "text": "IC The count badge is gone — the card says it in words",
    "area": "1c",
+   "deferredTo": "1c",
    "status": "pending"
   },
   {
@@ -2700,6 +2704,7 @@
    "section": "ICONS, CRUMBS AND REDUNDANT COUNTS",
    "text": "CR The crumb no longer claims Modules sits under Qnipay setup",
    "area": "1c",
+   "deferredTo": "1c",
    "status": "pending"
   },
   {
@@ -2707,13 +2712,15 @@
    "section": "ICONS, CRUMBS AND REDUNDANT COUNTS",
    "text": "CR And is dropped where it would only repeat the title",
    "area": "1c",
+   "deferredTo": "1c",
    "status": "pending"
   },
   {
    "id": "ICONS-CRUMBS-AND-REDUNDANT-COUNTS#7",
    "section": "ICONS, CRUMBS AND REDUNDANT COUNTS",
    "text": "CR A crumb still appears where it names a real route",
-   "area": "1c",
+   "area": "1b",
+   "deferredTo": "1b",
    "status": "pending"
   },
   {
@@ -2721,6 +2728,7 @@
    "section": "ICONS, CRUMBS AND REDUNDANT COUNTS",
    "text": "CR Drilling into a module names the module in the crumb",
    "area": "1c",
+   "deferredTo": "1c",
    "status": "pending"
   },
   {
@@ -2728,16 +2736,16 @@
    "section": "TOOLTIP APPEARANCE",
    "text": "TT The bubble keeps the original inverse-surface styling",
    "area": "ui",
-   "status": "n/a",
-   "reason": "not built in 1a: no page renders a Tip yet, and TooltipContent uses shadcn’s default bg-foreground/text-background classes, not customised to the prototype’s inverse-surface tokens"
+   "status": "ported",
+   "test": "src/ui/ui.test.tsx › the tooltip bubble uses the inverse surface with light text"
   },
   {
    "id": "TOOLTIP-APPEARANCE#2",
    "section": "TOOLTIP APPEARANCE",
    "text": "TT With light text on it",
    "area": "ui",
-   "status": "n/a",
-   "reason": "not built in 1a: no page renders a Tip yet, and TooltipContent uses shadcn’s default bg-foreground/text-background classes, not customised to the prototype’s inverse-surface tokens"
+   "status": "ported",
+   "test": "src/ui/ui.test.tsx › the tooltip bubble uses the inverse surface with light text"
   },
   {
    "id": "AFFORDANCE-CONVENTION-i#1",
@@ -2752,64 +2760,64 @@
    "section": "AFFORDANCE CONVENTION: ⚠ / ? / i",
    "text": "AF No i tooltip is guide-length — long explanation belongs behind ?",
    "area": "ui",
-   "status": "n/a",
-   "reason": "not built in 1a: no Tip carries real content yet to check against the length guard (Affordances.tsx’s Tip warns in DEV via console.warn, but nothing invokes it)"
+   "status": "ported",
+   "test": "src/ui/ui.test.tsx › a guide-length tip is flagged in development, a short one is not"
   },
   {
    "id": "AFFORDANCE-CONVENTION-i#3",
    "section": "AFFORDANCE CONVENTION: ⚠ / ? / i",
    "text": "AF The three affordances never double up on one element",
-   "area": "ui",
-   "status": "n/a",
-   "reason": "not built in 1a: no page combines any of the three affordances on one element"
+   "area": "1c",
+   "deferredTo": "1c",
+   "status": "pending"
   },
   {
    "id": "AFFORDANCE-CONVENTION-i#4",
    "section": "AFFORDANCE CONVENTION: ⚠ / ? / i",
    "text": "AF ? is a button that opens a modal",
-   "area": "ui",
-   "status": "n/a",
-   "reason": "not built in 1a: no page wires HelpButton to an actual guide modal"
+   "area": "1c",
+   "deferredTo": "1c",
+   "status": "pending"
   },
   {
    "id": "AFFORDANCE-CONVENTION-i#5",
    "section": "AFFORDANCE CONVENTION: ⚠ / ? / i",
    "text": "AF ... and it opened one",
-   "area": "ui",
-   "status": "n/a",
-   "reason": "not built in 1a: no page wires HelpButton to an actual guide modal"
+   "area": "1c",
+   "deferredTo": "1c",
+   "status": "pending"
   },
   {
    "id": "AFFORDANCE-CONVENTION-i#6",
    "section": "AFFORDANCE CONVENTION: ⚠ / ? / i",
    "text": "AF warning is a standing caution, on hover, not a modal",
    "area": "ui",
-   "status": "n/a",
-   "reason": "not built in 1a: no page renders a Caution yet; the component itself is a <span>, structurally inert to clicks"
+   "status": "ported",
+   "test": "src/ui/ui.test.tsx › Caution is a standing note, not a button, and clicking it opens nothing"
   },
   {
    "id": "AFFORDANCE-CONVENTION-i#7",
    "section": "AFFORDANCE CONVENTION: ⚠ / ? / i",
    "text": "AF ... and clicking it opens nothing",
    "area": "ui",
-   "status": "n/a",
-   "reason": "not built in 1a: no page renders a Caution yet; the component itself is a <span>, structurally inert to clicks"
+   "status": "ported",
+   "test": "src/ui/ui.test.tsx › Caution is a standing note, not a button, and clicking it opens nothing"
   },
   {
    "id": "AFFORDANCE-CONVENTION-i#8",
    "section": "AFFORDANCE CONVENTION: ⚠ / ? / i",
    "text": "AF Permissions carries the security caveat as a caution",
    "area": "ui",
-   "status": "n/a",
-   "reason": "not built in 1a: PermissionsPage carries no on-page security caveat; task 9’s reviewed design has no Caution copy for this page"
+   "status": "ported",
+   "test": "src/features/access/permissions.test.tsx › the page carries its security caveat as a standing caution"
   },
   {
    "id": "AFFORDANCE-CONVENTION-i#9",
    "section": "AFFORDANCE CONVENTION: ⚠ / ? / i",
    "text": "AF Guides exist on the pages that need one, not on every page",
-   "area": "ui",
-   "status": "n/a",
-   "reason": "not built in 1a: no built page registers a guide yet, so there is no coverage ratio to check"
+   "area": "1c",
+   "deferredTo": "1c",
+   "status": "pending"
   },
   {
    "id": "LEGENDS-BECOME-LIVE-SUMMARIES#1",
@@ -3395,8 +3403,8 @@
    "section": "SIGN IN / SIGN OUT",
    "text": "SI It is plain that browser storage is not a security boundary",
    "area": "1a",
-   "status": "n/a",
-   "reason": "not built in 1a: SignIn.tsx’s copy names Entra ID as the production replacement; it does not carry the prototype’s separate \"browser storage is not a security boundary\" caveat"
+   "status": "ported",
+   "test": "src/shell/SignIn.test.tsx › the sign-in screen says where the demo keeps its data, and that it is not a security boundary"
   },
   {
    "id": "SIGN-IN-SIGN-OUT#11",
@@ -3443,8 +3451,8 @@
    "section": "SIGN IN / SIGN OUT",
    "text": "SI Sign in and sign out are audited",
    "area": "1a",
-   "status": "n/a",
-   "reason": "not built in 1a: writeAudit is called for permission changes, exceptions and view-as only (src/mocks/access.ts, src/mocks/session.ts); sign-in and sign-out are not audited events in this build"
+   "status": "ported",
+   "test": "e2e/audit.spec.ts › SI Sign in and sign out are audited"
   },
   {
    "id": "CONFIGURABLE-ROLE-NAMES#1",
@@ -5430,40 +5438,40 @@
    "section": "PERSISTENCE AND ACCOUNTS",
    "text": "PS The app says where the work is held",
    "area": "1a",
-   "status": "n/a",
-   "reason": "not built in 1a: the organisation/calendar admin pages (where this message appears) are plan 1c"
+   "status": "ported",
+   "test": "src/shell/SignIn.test.tsx › the sign-in screen says where the demo keeps its data, and that it is not a security boundary"
   },
   {
    "id": "PERSISTENCE-AND-ACCOUNTS#7",
    "section": "PERSISTENCE AND ACCOUNTS",
    "text": "PS ... and that it does not follow you to another machine",
    "area": "1a",
-   "status": "n/a",
-   "reason": "not built in 1a: the organisation/calendar admin pages (where this message appears) are plan 1c"
+   "status": "ported",
+   "test": "src/shell/SignIn.test.tsx › the sign-in screen says where the demo keeps its data, and that it is not a security boundary"
   },
   {
    "id": "PERSISTENCE-AND-ACCOUNTS#8",
    "section": "PERSISTENCE AND ACCOUNTS",
    "text": "PS It can be exported",
-   "area": "1a",
-   "status": "n/a",
-   "reason": "not built in 1a: there is no user-facing export control; only the dev-only /api/_dev/reset and /api/_dev/seed endpoints e2e fixtures use"
+   "area": "1c",
+   "deferredTo": "1c",
+   "status": "pending"
   },
   {
    "id": "PERSISTENCE-AND-ACCOUNTS#9",
    "section": "PERSISTENCE AND ACCOUNTS",
    "text": "PS ... and reset",
-   "area": "1a",
-   "status": "n/a",
-   "reason": "not built in 1a: there is no user-facing export control; only the dev-only /api/_dev/reset and /api/_dev/seed endpoints e2e fixtures use"
+   "area": "1c",
+   "deferredTo": "1c",
+   "status": "pending"
   },
   {
    "id": "PERSISTENCE-AND-ACCOUNTS#10",
    "section": "PERSISTENCE AND ACCOUNTS",
    "text": "PS Reset asks first and says it cannot be undone",
-   "area": "1a",
-   "status": "n/a",
-   "reason": "not built in 1a: there is no user-facing reset control or confirmation dialog"
+   "area": "1c",
+   "deferredTo": "1c",
+   "status": "pending"
   },
   {
    "id": "PERSISTENCE-AND-ACCOUNTS#11",
@@ -5471,23 +5479,23 @@
    "text": "PS Passwords are stored as a hash, not as text",
    "area": "1a",
    "status": "n/a",
-   "reason": "Entra ID replaces demo passwords in production: DEMO_PASSWORD (src/mocks/session.ts) is compared directly, with no hashing step to test"
+   "reason": "replaced by Entra ID: production signs in with a Microsoft work account and holds no password at all; the fake server compares the one shared demo password (DEMO_PASSWORD in src/mocks/session.ts) directly"
   },
   {
    "id": "PERSISTENCE-AND-ACCOUNTS#12",
    "section": "PERSISTENCE AND ACCOUNTS",
    "text": "PS Accounts follow the roster rather than being fixed",
-   "area": "1a",
-   "status": "n/a",
-   "reason": "not built in 1a: account/roster sync from the people admin page is plan 1b"
+   "area": "1b",
+   "deferredTo": "1b",
+   "status": "pending"
   },
   {
    "id": "PERSISTENCE-AND-ACCOUNTS#13",
    "section": "PERSISTENCE AND ACCOUNTS",
    "text": "PS Two resources sharing one email resolve to the stronger role",
-   "area": "1a",
-   "status": "n/a",
-   "reason": "not built in 1a: merging two resources sharing one email is plan 1b (people/roster)"
+   "area": "1b",
+   "deferredTo": "1b",
+   "status": "pending"
   },
   {
    "id": "PERSISTENCE-AND-ACCOUNTS#14",
@@ -5503,7 +5511,7 @@
    "text": "PS A full or blocked store says so rather than failing quietly",
    "area": "1a",
    "status": "n/a",
-   "reason": "not built in 1a: store.ts’s save() silently swallows a full or blocked localStorage write (by design, so the session still works) rather than showing a user-facing message"
+   "reason": "replaced by the API: in production nothing is kept in browser storage, and a write the server cannot store answers with a refusal the screen toasts; only the fake server's demo copy uses localStorage"
   },
   {
    "id": "SAVING-A-TENANT-AS-A-TEMPLATE#1",
@@ -5616,25 +5624,25 @@
    "id": "A-NEWER-BUILD-SUPERSEDES-A-SAVED-SESSION#3",
    "section": "A NEWER BUILD SUPERSEDES A SAVED SESSION",
    "text": "SV ... and the person is told why the app reset",
-   "area": "1a",
-   "status": "n/a",
-   "reason": "not built in 1a: no user-facing message is shown when an old build’s session is set aside; store.ts does it silently"
+   "area": "1c",
+   "deferredTo": "1c",
+   "status": "pending"
   },
   {
    "id": "A-NEWER-BUILD-SUPERSEDES-A-SAVED-SESSION#4",
    "section": "A NEWER BUILD SUPERSEDES A SAVED SESSION",
    "text": "SV What was set aside can be brought back",
-   "area": "1a",
-   "status": "n/a",
-   "reason": "not built in 1a: there is no restore-from-backup control or mechanism"
+   "area": "1c",
+   "deferredTo": "1c",
+   "status": "pending"
   },
   {
    "id": "A-NEWER-BUILD-SUPERSEDES-A-SAVED-SESSION#5",
    "section": "A NEWER BUILD SUPERSEDES A SAVED SESSION",
    "text": "SV Reset lives with the data it clears, not in the account menu",
-   "area": "1a",
-   "status": "n/a",
-   "reason": "not built in 1a: there is no user-facing reset control anywhere yet, in the account menu or elsewhere"
+   "area": "1c",
+   "deferredTo": "1c",
+   "status": "pending"
   },
   {
    "id": "A-NEWER-BUILD-SUPERSEDES-A-SAVED-SESSION#6",
@@ -5642,7 +5650,7 @@
    "text": "SV Looking at the app as somebody else is an administrator tool",
    "area": "1a",
    "status": "ported",
-   "test": "src/mocks/session.test.ts › a signed-in person without the integration capability is refused view-as with a plain 403"
+   "test": "src/mocks/session.test.ts › an account holding integration but not perm_cfg is refused view-as"
   },
   {
    "id": "ADMIN-LAYOUT#1",
@@ -5664,65 +5672,65 @@
    "id": "ADMIN-LAYOUT#3",
    "section": "ADMIN LAYOUT",
    "text": "AD A module still drills in from inside setup",
-   "area": "1a",
-   "status": "n/a",
-   "reason": "not built in 1a: module drill-in (Timesheet features/setup) is plan 1c"
+   "area": "1c",
+   "deferredTo": "1c",
+   "status": "pending"
   },
   {
    "id": "ADMIN-LAYOUT#4",
    "section": "ADMIN LAYOUT",
    "text": "AD Backing out returns to the module list, not the setup index",
-   "area": "1a",
-   "status": "n/a",
-   "reason": "not built in 1a: module drill-in (Timesheet features/setup) is plan 1c"
+   "area": "1c",
+   "deferredTo": "1c",
+   "status": "pending"
   },
   {
    "id": "ADMIN-LAYOUT#5",
    "section": "ADMIN LAYOUT",
    "text": "AD Capture fields moved to the module that owns them",
-   "area": "1a",
-   "status": "n/a",
-   "reason": "not built in 1a: capture-fields configuration lives on the Timesheet module setup page, plan 1c"
+   "area": "1c",
+   "deferredTo": "1c",
+   "status": "pending"
   },
   {
    "id": "ADMIN-LAYOUT#6",
    "section": "ADMIN LAYOUT",
    "text": "AD Employee types is no longer the densest page in the admin",
-   "area": "1a",
-   "status": "n/a",
-   "reason": "not built in 1a: the employee types admin page is plan 1b"
+   "area": "1b",
+   "deferredTo": "1b",
+   "status": "pending"
   },
   {
    "id": "ADMIN-LAYOUT#7",
    "section": "ADMIN LAYOUT",
    "text": "AD ... and it says where the fields went",
-   "area": "1a",
-   "status": "n/a",
-   "reason": "not built in 1a: the employee types admin page is plan 1b"
+   "area": "1b",
+   "deferredTo": "1b",
+   "status": "pending"
   },
   {
    "id": "ADMIN-LAYOUT#8",
    "section": "ADMIN LAYOUT",
    "text": "AD Organisation is identity and template, not everything",
-   "area": "1a",
-   "status": "n/a",
-   "reason": "not built in 1a: the Organisation admin page is plan 1c"
+   "area": "1c",
+   "deferredTo": "1c",
+   "status": "pending"
   },
   {
    "id": "ADMIN-LAYOUT#9",
    "section": "ADMIN LAYOUT",
    "text": "AD The calendar and the saved data have their own page",
-   "area": "1a",
-   "status": "n/a",
-   "reason": "not built in 1a: the calendar admin page is plan 1c"
+   "area": "1c",
+   "deferredTo": "1c",
+   "status": "pending"
   },
   {
    "id": "ADMIN-LAYOUT#10",
    "section": "ADMIN LAYOUT",
    "text": "AD Appearance is stated once, on Organisation",
-   "area": "1a",
-   "status": "n/a",
-   "reason": "not built in 1a: appearance configuration on Organisation/Calendar is plan 1c"
+   "area": "1c",
+   "deferredTo": "1c",
+   "status": "pending"
   },
   {
    "id": "ONBOARDING-STEPS-ARE-CONFIGURABLE#1",
@@ -5841,8 +5849,8 @@
    "section": "SECTION LABELS ARE NOT SHOUTED",
    "text": "SL Section labels are sentence case, not all capitals",
    "area": "ui",
-   "status": "n/a",
-   "reason": "prototype-only: checks the prototype’s own .wtsub CSS class and a raw uppercase-rule count in its stylesheet; our components use Tailwind utility classes with no such rule to match"
+   "status": "ported",
+   "test": "e2e/ui-rules.spec.ts › SL Nothing on a built page, its menu or its dialog, is set in capitals or wide tracking"
   },
   {
    "id": "SECTION-LABELS-ARE-NOT-SHOUTED#2",
@@ -5850,15 +5858,15 @@
    "text": "SL ... and carry a hairline rather than wide tracking",
    "area": "ui",
    "status": "n/a",
-   "reason": "prototype-only: checks the prototype’s own .wtsub CSS class and a raw uppercase-rule count in its stylesheet; our components use Tailwind utility classes with no such rule to match"
+   "reason": "prototype-only: the hairline under a section label is the prototype's own .wtsub styling; the behaviour half of this row, no wide tracking, is covered by SECTION-LABELS-ARE-NOT-SHOUTED#1's test"
   },
   {
    "id": "SECTION-LABELS-ARE-NOT-SHOUTED#3",
    "section": "SECTION LABELS ARE NOT SHOUTED",
    "text": "SL Form and menu labels follow",
    "area": "ui",
-   "status": "n/a",
-   "reason": "prototype-only: checks the prototype’s own .wtsub CSS class and a raw uppercase-rule count in its stylesheet; our components use Tailwind utility classes with no such rule to match"
+   "status": "ported",
+   "test": "e2e/ui-rules.spec.ts › SL Nothing on a built page, its menu or its dialog, is set in capitals or wide tracking"
   },
   {
    "id": "A-MODULE-THAT-IS-OFF-SAYS-NOTHING#1",
@@ -5976,9 +5984,9 @@
    "id": "CONSISTENCY#1",
    "section": "CONSISTENCY",
    "text": "CN Allocation selects share one rule across all three layouts",
-   "area": "ui",
-   "status": "n/a",
-   "reason": "not built in 1a: the weekly view’s allocation selects are timesheet layouts, not built yet"
+   "area": "timesheet",
+   "deferredTo": "timesheet",
+   "status": "pending"
   },
   {
    "id": "CONSISTENCY#2",
@@ -5994,15 +6002,15 @@
    "text": "CN The role pill shows what the account holds, not what is being viewed",
    "area": "ui",
    "status": "n/a",
-   "reason": "diverges by plan, not inert: Shell.tsx (`session.viewingAs?.userType ?? session.account.userType`) shows the VIEWED person’s role while viewing as them, matching the plan’s own reference Shell() implementation (docs/plans/2026-09-25-plan-1a-foundation-and-access.md ~line 2248), because view-as adopts that person’s capabilities, not just a label. The prototype’s row is itself a source-comment match (`/the pill is the account’s role/.test(src)`) against the prototype’s OWN code, not a DOM assertion, so there is nothing here to test our behaviour against either way."
+   "reason": "diverges by plan: Shell.tsx (`session.viewingAs?.userType ?? session.account.userType`) shows the VIEWED person’s role while viewing as them, matching the plan’s own reference Shell() implementation (docs/plans/2026-09-25-plan-1a-foundation-and-access.md ~line 2248), because view-as adopts that person’s capabilities, not just a label. The prototype’s row is itself a source-comment match (`/the pill is the account’s role/.test(src)`) against the prototype’s OWN code, not a DOM assertion, so there is nothing here to test our behaviour against either way."
   },
   {
    "id": "CONSISTENCY#4",
    "section": "CONSISTENCY",
    "text": "CN The menu states your account, separately from who you are looking at",
    "area": "ui",
-   "status": "n/a",
-   "reason": "not built in 1a: AccountMenu shows only Sign out; it has no \"Your account\" line or view-as picker to separate from it"
+   "status": "ported",
+   "test": "src/shell/account-menu.test.tsx › choosing a person starts view-as; the menu then names them and offers only the way back"
   },
   {
    "id": "IDENTITY-AND-SIGN-IN#1",
@@ -6025,24 +6033,24 @@
    "section": "IDENTITY AND SIGN-IN",
    "text": "ID The menu names the account you are on",
    "area": "1a",
-   "status": "n/a",
-   "reason": "not built in 1a: AccountMenu shows only Sign out; it does not print the signed-in account’s own name"
+   "status": "ported",
+   "test": "e2e/account-menu.spec.ts › ID The menu names the account you are on, and an admin can look at the app as a manager and come back"
   },
   {
    "id": "IDENTITY-AND-SIGN-IN#4",
    "section": "IDENTITY AND SIGN-IN",
    "text": "ID A role is not something you pick from a menu",
    "area": "1a",
-   "status": "n/a",
-   "reason": "prototype-only: checks the prototype source for a data-role picker; our AccountMenu has never had a role picker to select from"
+   "status": "ported",
+   "test": "src/shell/account-menu.test.tsx › the menu names the account you are on: name, email, role, location and ID, and a Your account line"
   },
   {
    "id": "IDENTITY-AND-SIGN-IN#5",
    "section": "IDENTITY AND SIGN-IN",
    "text": "ID A manager is not offered as somebody to view as",
    "area": "1a",
-   "status": "n/a",
-   "reason": "not built in 1a: there is no view-as picker listing people; only the backend capability gate exists (see \"A NEWER BUILD SUPERSEDES A SAVED SESSION\" row 6)"
+   "status": "ported",
+   "test": "src/shell/account-menu.test.tsx › an employee's menu offers nobody to view as, and never asks for the list"
   },
   {
    "id": "IDENTITY-AND-SIGN-IN#6",
@@ -6071,6 +6079,7 @@
    "section": "COPY IS NOT PADDED",
    "text": "CP The acknowledgement is stated once, not three times",
    "area": "onboarding",
+   "deferredTo": "onboarding",
    "status": "pending"
   },
   {
@@ -6172,8 +6181,8 @@
    "section": "AGAINST THE DESIGN SYSTEM",
    "text": "DS Colour literals outside the token blocks are rare",
    "area": "ui",
-   "status": "n/a",
-   "reason": "enforced by eslint’s no-restricted-syntax hex-literal rule (eslint.config.js) on component source, not a Vitest/Playwright test; tokens.css itself (the token block) is exempt from that rule by design"
+   "status": "ported",
+   "test": "scripts/lint-rules.test.ts › a hex colour literal in a component is refused"
   },
   {
    "id": "AGAINST-THE-DESIGN-SYSTEM#5",
@@ -6195,25 +6204,25 @@
    "id": "NO-MARKUP-WITHOUT-STYLING#2",
    "section": "NO MARKUP WITHOUT STYLING",
    "text": "MU Every dimension card renders as a card",
-   "area": "ui",
-   "status": "n/a",
-   "reason": "not built in 1a: dimension cards are the people/dimensions admin page, plan 1b"
+   "area": "1b",
+   "deferredTo": "1b",
+   "status": "pending"
   },
   {
    "id": "NO-MARKUP-WITHOUT-STYLING#3",
    "section": "NO MARKUP WITHOUT STYLING",
    "text": "MU Card descriptions are behind hover, not printed under every title",
-   "area": "ui",
-   "status": "n/a",
-   "reason": "not built in 1a: dimension cards are the people/dimensions admin page, plan 1b"
+   "area": "1b",
+   "deferredTo": "1b",
+   "status": "pending"
   },
   {
    "id": "NO-MARKUP-WITHOUT-STYLING#4",
    "section": "NO MARKUP WITHOUT STYLING",
    "text": "MU The setup index does the same",
    "area": "ui",
-   "status": "n/a",
-   "reason": "not built in 1a as a hover-only description: SetupIndex’s cards show a page count under the title outright, not the prototype’s hover-only blurb; no hover-only description pattern exists yet to test"
+   "status": "ported",
+   "test": "src/features/setup/setup-index.test.tsx › each setup card keeps what its section configures behind hover, and says its page count in words"
   },
   {
    "id": "NO-MARKUP-WITHOUT-STYLING#5",
@@ -6235,17 +6244,17 @@
    "id": "TODAY-IS-TODAY#2",
    "section": "TODAY IS TODAY",
    "text": "TD The sample data is moved onto the current week",
-   "area": "1a",
-   "status": "n/a",
-   "reason": "not built in 1a: seeded-shift date-shifting on boot is timesheet/rota data, not built yet"
+   "area": "timesheet",
+   "deferredTo": "timesheet",
+   "status": "pending"
   },
   {
    "id": "TODAY-IS-TODAY#3",
    "section": "TODAY IS TODAY",
    "text": "TD ... by whole weeks, so a Thursday stays a Thursday",
-   "area": "1a",
-   "status": "n/a",
-   "reason": "not built in 1a: seeded-shift date-shifting on boot is timesheet/rota data, not built yet"
+   "area": "timesheet",
+   "deferredTo": "timesheet",
+   "status": "pending"
   },
   {
    "id": "TODAY-IS-TODAY#4",
@@ -6259,30 +6268,32 @@
    "id": "TODAY-IS-TODAY#5",
    "section": "TODAY IS TODAY",
    "text": "TD Submission identifiers cannot collide",
-   "area": "1a",
-   "status": "n/a",
-   "reason": "not built in 1a: timesheet submission records and their id scheme don’t exist yet"
+   "area": "timesheet",
+   "deferredTo": "timesheet",
+   "status": "pending"
   },
   {
    "id": "TODAY-IS-TODAY#6",
    "section": "TODAY IS TODAY",
    "text": "TD A submission is stamped with today rather than a written-in date",
-   "area": "1a",
-   "status": "n/a",
-   "reason": "not built in 1a: timesheet submission records and their id scheme don’t exist yet"
+   "area": "timesheet",
+   "deferredTo": "timesheet",
+   "status": "pending"
   },
   {
    "id": "CONTROLS-LOOK-LIKE-THEIR-NEIGHBOURS#1",
    "section": "CONTROLS LOOK LIKE THEIR NEIGHBOURS",
    "text": "CT A multi-select is given room and the shared border",
-   "area": "rota",
-   "status": "pending"
+   "area": "ui",
+   "status": "ported",
+   "test": "e2e/ui-rules.spec.ts › CT A multi-select is given room and the shared border"
   },
   {
    "id": "CONTROLS-LOOK-LIKE-THEIR-NEIGHBOURS#2",
    "section": "CONTROLS LOOK LIKE THEIR NEIGHBOURS",
    "text": "CT ... and says how to choose more than one",
    "area": "rota",
+   "deferredTo": "rota",
    "status": "pending"
   },
   {
@@ -6290,6 +6301,7 @@
    "section": "CONTROLS LOOK LIKE THEIR NEIGHBOURS",
    "text": "CT A cycle start is a date control",
    "area": "rota",
+   "deferredTo": "rota",
    "status": "pending"
   },
   {
@@ -6297,14 +6309,16 @@
    "section": "CONTROLS LOOK LIKE THEIR NEIGHBOURS",
    "text": "CT ... defaulting to a Monday",
    "area": "rota",
+   "deferredTo": "rota",
    "status": "pending"
   },
   {
    "id": "CONTROLS-LOOK-LIKE-THEIR-NEIGHBOURS#5",
    "section": "CONTROLS LOOK LIKE THEIR NEIGHBOURS",
    "text": "CT A lone card keeps its column rather than stretching",
-   "area": "rota",
-   "status": "pending"
+   "area": "ui",
+   "status": "ported",
+   "test": "e2e/ui-rules.spec.ts › CT A lone setup card keeps its column rather than stretching"
   },
   {
    "id": "ONBOARDING-STARTS-WITH-A-PERSON#1",
