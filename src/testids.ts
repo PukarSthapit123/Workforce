@@ -30,6 +30,8 @@ export const tid = {
     table: 'access-table',
     cell: (cap: string, userType: string) => k('access-cell', cap, userType),
     userTypeName: (userType: string) => k('access-user-type-name', userType),
+    groupRow: (group: string) => k('access-group-row', group),
+    capRow: (cap: string) => k('access-cap-row', cap),
     users: 'access-users',
     userRow: (email: string) => k('access-user-row', email),
     exceptions: (email: string) => k('access-user-exceptions', email),
