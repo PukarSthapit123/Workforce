@@ -19,10 +19,18 @@ test('Permissions: granting a capability to a template is saved and audited', as
   expect(audit.items[0]?.act).toBe('Permission changed');
 });
 
+/* AFFORDANCE CONVENTION: "Native title is used only where hover cannot fire
+   (disabled controls)". A native title tooltip only ever fires on hover, so
+   the prototype's convention is to reserve it for a control that cannot be
+   hovered into focus any other way: a disabled one. Ours follows the same
+   rule: the title attribute appears only on the locked (disabled) cell. */
 test('Permissions: the locked cell cannot be changed', async ({ page, signInAs }) => {
   await signInAs('admin');
   await page.goto('/setup/aperm');
-  await expect(page.getByTestId(tid.access.cell('perm_cfg', 'admin'))).toBeDisabled();
+  const locked = page.getByTestId(tid.access.cell('perm_cfg', 'admin'));
+  await expect(locked).toBeDisabled();
+  await expect(locked).toHaveAttribute('title', /Locked/);
+  await expect(page.getByTestId(tid.access.cell('proxy', 'employee'))).not.toHaveAttribute('title');
 });
 
 test('Permissions: a fault leaves the matrix and the store unchanged', async ({ page, api, signInAs }) => {

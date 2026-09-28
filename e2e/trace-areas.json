@@ -1,0 +1,30 @@
+{
+  "completedAreas": ["1a", "ui"],
+  "sections": {
+    "BOOT": "1a", "SIGN IN / SIGN OUT": "1a", "IDENTITY AND SIGN-IN": "1a", "CONFIGURABLE ROLE NAMES": "1c",
+    "MANAGER NAV GROUPED BY MODULE": "1a", "ADMIN LAYOUT": "1a",
+    "PERSISTENCE AND ACCOUNTS": "1a", "A NEWER BUILD SUPERSEDES A SAVED SESSION": "1a", "TODAY IS TODAY": "1a",
+    "GUIDE AFFORDANCE — ? opens, i only hovers": "ui", "AFFORDANCE CONVENTION: ⚠ / ? / i": "ui",
+    "TOOLTIPS — escape their container and stay on screen": "ui", "TOOLTIP APPEARANCE": "ui",
+    "MODAL SIZING + STRUCTURE": "ui", "CONSISTENCY": "ui", "AGAINST THE DESIGN SYSTEM": "ui",
+    "NO MARKUP WITHOUT STYLING": "ui", "SECTION LABELS ARE NOT SHOUTED": "ui",
+    "MOBILE FOUNDATION": "1c", "REVIEW RUN: SYSTEM, MOBILE, DENSITY, AFFORDANCES": "1c",
+    "ICONS, CRUMBS AND REDUNDANT COUNTS": "1c",
+    "COPY IS NOT PADDED": "onboarding",
+    "CONTROLS LOOK LIKE THEIR NEIGHBOURS": "rota",
+    "EMPLOYEE CRUD + LIFECYCLE (IMP-013)": "1b", "DIMENSION CRUD (IMP-019)": "1b", "EMPLOYEE TYPE CRUD (pre-existing, now covered)": "1b",
+    "PEOPLE, CONTRACTS AND DIMENSIONS": "1b", "EMPLOYEE IDENTIFIERS": "1b", "TENANT DATA FROM THE BC EXPORT": "1b",
+    "MODULES — index, then drill in (mirrors Qnipay setup)": "1c", "TIMESHEET IS LICENSABLE, CORE IS THE BASE APP": "1c",
+    "FEATURE OWNERSHIP": "1c", "MODULE PAGES ARE THE SAME SHAPE": "1c", "ONE HOME PER PAGE": "1c", "GUIDES — explanation moved off the page": "1c",
+    "SAVING A TENANT AS A TEMPLATE": "1c", "FUSION3 CONFIGURED THROUGH THE TEMPLATE": "1c", "A MODULE THAT IS OFF SAYS NOTHING": "1c",
+    "SETUP CONTROLS DO ONE THING": "1c", "ITEM 4 — actionable notifications and deep links": "1c", "NOTICE BOARD (Workforce core)": "1c",
+    "ONBOARDING MODULE": "onboarding", "ONBOARDING STEPS ARE CONFIGURABLE": "onboarding", "ONBOARDING: DOCUMENTS, POLICIES AND LABELS": "onboarding",
+    "POLICIES ARE DOCUMENTS AN ADMIN UPLOADS": "onboarding", "ONBOARDING STARTS WITH A PERSON": "onboarding", "A NEW STARTER CAN SIGN IN": "onboarding",
+    "ROTA POLICY IS SETUP-DRIVEN": "rota", "SHIFT PALETTE + DRAG AND DROP": "rota", "CHUNK C — rota lifecycle and the week store": "rota",
+    "IMP-031 — pattern generation writes real shifts": "rota", "IMP-031 — manager scoping": "rota", "MULTI-PERSON ADD + STAGGER": "rota",
+    "WEEKLY REPEAT (IMP-032)": "rota", "ROTA OFF EMPTIES THE CALENDAR": "rota", "CLEAR WEEK": "rota",
+    "ITEM 3 — payroll readiness (IMP-016)": "payroll", "PAY CODE CRUD": "timesheet",
+    "REGRESSION (baseline register)": "prototype-only", "RESULT": "prototype-only"
+  },
+  "defaultArea": "timesheet"
+}

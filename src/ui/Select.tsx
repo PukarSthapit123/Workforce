@@ -10,11 +10,16 @@ export interface SelectBoxProps {
   placeholder?: string;
   disabled?: boolean;
   name?: string;
+  id?: string;
 }
-export function SelectBox({ testId, options, value, onValueChange, placeholder, disabled, name }: SelectBoxProps) {
+/* Field.tsx clones its child with an `id` (for the <label htmlFor>), assuming
+   a plain input; SelectBox must accept and forward that id to the real
+   trigger button, or the label never associates with anything and the
+   trigger is left with no accessible name at all. */
+export function SelectBox({ testId, options, value, onValueChange, placeholder, disabled, name, id }: SelectBoxProps) {
   return (
     <Select value={value} onValueChange={onValueChange} disabled={disabled} name={name}>
-      <SelectTrigger data-testid={testId}>
+      <SelectTrigger id={id} data-testid={testId}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>

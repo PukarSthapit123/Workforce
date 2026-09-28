@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "postbuild": "node -e \"if (process.env.VITE_MOCKS === 'off') require('fs').rmSync('dist/mockServiceWorker.js', { force: true })\"",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
     "lint": "eslint .",
@@ -18,7 +19,8 @@
     "seed": "node scripts/extract-seed.mjs",
     "openapi": "tsx scripts/openapi.ts",
     "trace": "node scripts/trace.mjs",
-    "verify": "npm run typecheck && npm run lint && npm test && npm run e2e"
+    "trace:check": "vitest run scripts/trace.test.ts",
+    "verify": "npm run typecheck && npm run lint && npm test && npm run e2e && npm run trace:check"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.103.2",

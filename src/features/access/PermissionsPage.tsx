@@ -58,11 +58,11 @@ export function PermissionsPage() {
         <p className="text-text-secondary">Personas over one application. A manager is an employee record with extra capabilities.</p>
       </div>
 
-      <div className="overflow-x-auto rounded-card border border-border">
+      <div className="overflow-x-auto rounded-card border border-border bg-surface-card">
         <Table data-testid={tid.access.table}>
           <TableHeader>
             <TableRow>
-              <TableHead>Capability</TableHead>
+              <TableHead className="sticky left-0 bg-surface-card">Capability</TableHead>
               <TableHead>What it controls</TableHead>
               {types.map(t => <TableHead key={t.id} data-testid={tid.access.userTypeName(t.id)} className="text-center">{t.name}</TableHead>)}
             </TableRow>
@@ -79,7 +79,7 @@ export function PermissionsPage() {
                 </TableRow>,
                 ...capsInGroup.map(c => (
                   <TableRow key={c.id} data-testid={tid.access.capRow(c.id)}>
-                    <TableCell>{c.label}</TableCell>
+                    <TableCell className="sticky left-0 bg-surface-card">{c.label}</TableCell>
                     <TableCell className="text-xs text-text-secondary">{c.gate}</TableCell>
                     {types.map(t => {
                       const on = t.capabilities.includes(c.id);

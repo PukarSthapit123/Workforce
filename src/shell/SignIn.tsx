@@ -7,13 +7,18 @@ import { Button, Field, TextInput } from '@/ui';
 import { useSession } from './SessionProvider';
 
 const NOTE = { employee: 'Their own work: timesheet, shifts and leave', manager: 'Approvals and their team', admin: 'Configuration, modules and access' } as const;
+/* Demo sign-in only exists while the fake server runs. Gating the whole
+   affordance (not just the fake server import in main.tsx) on the same flag
+   keeps the demo password out of a VITE_MOCKS=off production bundle too:
+   see scripts/trace.mjs's build-proof grep, task-11. */
+const MOCKS_ENABLED = import.meta.env.VITE_MOCKS !== 'off';
 
 export function SignIn() {
   const { signIn } = useSession();
   const [email, setEmail] = useState(''); const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null); const [busy, setBusy] = useState(false);
   const [showAccounts, setShowAccounts] = useState(false);
-  const accounts = useQuery({ queryKey: ['demo-accounts'], queryFn: () => api(listAccounts), enabled: showAccounts });
+  const accounts = useQuery({ queryKey: ['demo-accounts'], queryFn: () => api(listAccounts), enabled: showAccounts && MOCKS_ENABLED });
   async function submit(e: FormEvent) {
     e.preventDefault(); setBusy(true); setError(null);
     try { await signIn(email, password); }
@@ -30,12 +35,14 @@ export function SignIn() {
         {error && <p data-testid={tid.signIn.error} role="alert" className="text-err">{error}</p>}
         <Button testId={tid.signIn.submit} kind="primary" type="submit" disabled={busy}>Sign in</Button>
       </form>
-      <Button testId={tid.signIn.showAccounts} kind="ghost" onClick={() => setShowAccounts(s => !s)}>{showAccounts ? 'Hide demo accounts' : 'Show demo accounts'}</Button>
-      {showAccounts && <ul className="flex flex-col gap-xs" aria-label="Demo accounts. A shortcut, not the whole list.">
-        {accounts.data?.map(a => <li key={a.email}>
-          <button type="button" data-testid={tid.signIn.account(a.email)} className="w-full rounded-control border border-border p-sm text-left"
-            onClick={() => { setEmail(a.email); setPassword('Qnipay@123'); }}>
-            <b>{a.name}</b> · {NOTE[a.userType]}<span className="block text-text-secondary">{a.email}</span></button></li>)}
-      </ul>}
+      {MOCKS_ENABLED && <>
+        <Button testId={tid.signIn.showAccounts} kind="ghost" onClick={() => setShowAccounts(s => !s)}>{showAccounts ? 'Hide demo accounts' : 'Show demo accounts'}</Button>
+        {showAccounts && <ul className="flex flex-col gap-xs" aria-label="Demo accounts. A shortcut, not the whole list.">
+          {accounts.data?.map(a => <li key={a.email}>
+            <button type="button" data-testid={tid.signIn.account(a.email)} className="w-full rounded-control border border-border p-sm text-left"
+              onClick={() => { setEmail(a.email); setPassword('Qnipay@123'); }}>
+              <b>{a.name}</b> · {NOTE[a.userType]}<span className="block text-text-secondary">{a.email}</span></button></li>)}
+        </ul>}
+      </>}
     </main>);
 }
