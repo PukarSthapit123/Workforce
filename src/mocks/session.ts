@@ -2,7 +2,7 @@ import { http, HttpResponse, type HttpResponseResolver } from 'msw';
 import { store } from './store';
 import { handle, readJson, refuse } from './http';
 import { writeAudit } from './audit';
-import { SignInRequest, ViewAsRequest, type Session } from '@/contract/session';
+import { SignInRequest, ViewAsRequest, endViewAs, deleteSession, type Session } from '@/contract/session';
 import { resolveCapabilities } from '@/domain/capabilities';
 
 /* `handle`'s own generic (A extends unknown[]) cannot be inferred from an
@@ -43,12 +43,20 @@ function view(s: ServerSession): Session {
     capabilities: capsFor(viewingAs?.va ?? a),
     ...(viewingAs ? { viewingAs: { personCode: viewingAs.vp.code, name: viewingAs.vp.name, userType: viewingAs.va.userType } } : {}) };
 }
+/* View-as is a preview. While a session is viewing as someone, the only
+   changes it may make are ending the view (returning to its own account) and
+   signing out; every other write is refused here, once, for every handler
+   that calls requireSession, rather than each handler remembering to. */
+const ALLOWED_WHILE_VIEWING = new Set([endViewAs, deleteSession].map(e => `${e.method} ${e.path}`));
 export function requireSession(request: Request): ServerSession & { account: Account; caps: string[] } {
   const token = request.headers.get('Authorization')?.replace(/^Bearer /, '') ?? '';
   const s = sessions()[token];
   const a = s && accountBy(s.email);
   if (!s || !a) return refuse(401, { code: 'signed-out', message: 'You are signed out.', next: 'Sign in again to continue.' });
-  return { ...s, account: a, caps: view(s).capabilities };
+  const v = view(s);
+  if (v.viewingAs && request.method !== 'GET' && !ALLOWED_WHILE_VIEWING.has(`${request.method} ${new URL(request.url).pathname}`))
+    refuse(403, { code: 'viewing-as', message: `You are viewing the app as ${v.viewingAs.name}, so changes are off. Nothing has been saved.`, next: 'Return to your own account first, then make the change.' });
+  return { ...s, account: a, caps: v.capabilities };
 }
 export function requireCapability(s: { caps: string[] }, cap: string, label: string) {
   if (!s.caps.includes(cap)) refuse(403, { code: 'capability', message: `This needs "${label}", which your access does not include.`, next: 'Ask an administrator to grant it on Qnipay setup → Permissions.' });
@@ -65,12 +73,22 @@ export const sessionHandlers = [
     const token = crypto.randomUUID();
     const created: ServerSession = { token, email: a.email };
     sessions()[token] = created;
+    /* A failed sign-in above is not a change to anything, so only this
+       successful one is audited. The token itself is never recorded. */
+    writeAudit({ who: { personCode: a.personCode, name: personBy(a.personCode)?.name ?? a.email }, act: 'Signed in', entity: 'session', entityId: a.email, before: null, after: { signedIn: true } });
     return HttpResponse.json(view(created));
   })),
   http.get('/api/v1/session', handle(({ request }: ResolverInfo) => HttpResponse.json(view(requireSession(request))))),
-  http.delete('/api/v1/session', handle(({ request }: ResolverInfo) => { const s = requireSession(request); Reflect.deleteProperty(sessions(), s.token); return HttpResponse.json(null); })),
+  http.delete('/api/v1/session', handle(({ request }: ResolverInfo) => {
+    const s = requireSession(request);
+    Reflect.deleteProperty(sessions(), s.token);
+    writeAudit({ who: who(s), act: 'Signed out', entity: 'session', entityId: s.account.email, before: { signedIn: true }, after: null });
+    return HttpResponse.json(null);
+  })),
   http.post('/api/v1/session/view-as', handle(async ({ request }: ResolverInfo) => {
-    const s = requireSession(request); requireCapability(s, 'integration', 'Integrations and audit log');
+    /* Gated as the prototype gates it (v15:10773, can('perm_cfg')): looking at
+       the app as someone else is part of configuring access. */
+    const s = requireSession(request); requireCapability(s, 'perm_cfg', 'Permissions and role configuration');
     const { personCode } = await readJson(request, ViewAsRequest);
     const p = personBy(personCode);
     if (!p) return refuse(422, { code: 'invalid', field: 'personCode', message: 'There is nobody with that employee ID.', next: 'Pick a person from the list.' });

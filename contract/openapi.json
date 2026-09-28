@@ -4,11 +4,127 @@
     "title": "Qnipay Workforce API (draft, from the fake server)",
     "version": "0.1.0"
   },
+  "security": [
+    {
+      "bearer": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "The session token from POST /api/v1/session"
+      }
+    },
+    "schemas": {
+      "Refusal": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "next": {
+            "type": "string"
+          },
+          "field": {
+            "type": "string"
+          },
+          "usedBy": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "examples": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "kind",
+                "count",
+                "examples"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "next"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
   "paths": {
     "/api/v1/audit": {
       "get": {
-        "summary": "Audit log, newest first. Query: entity, who, q, limit.",
+        "summary": "Audit log, newest first, filtered by record type, who and free text",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "x-capability": "integration",
+        "parameters": [
+          {
+            "name": "entity",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "who",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -91,61 +207,42 @@
               }
             }
           },
-          "default": {
-            "description": "Refusal",
+          "401": {
+            "description": "Signed out, or the credentials do not match",
             "content": {
               "application/json": {
                 "schema": {
-                  "$schema": "https://json-schema.org/draft/2020-12/schema",
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "next": {
-                      "type": "string"
-                    },
-                    "field": {
-                      "type": "string"
-                    },
-                    "usedBy": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "kind": {
-                            "type": "string"
-                          },
-                          "count": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          "examples": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
-                          }
-                        },
-                        "required": [
-                          "kind",
-                          "count",
-                          "examples"
-                        ],
-                        "additionalProperties": false
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "message",
-                    "next"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid; field names the part to correct",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any other refusal or failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
                 }
               }
             }
@@ -156,6 +253,11 @@
     "/api/v1/capabilities": {
       "get": {
         "summary": "Every capability the matrix controls",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "x-capability": "perm_cfg",
         "responses": {
           "200": {
@@ -217,61 +319,32 @@
               }
             }
           },
-          "default": {
-            "description": "Refusal",
+          "401": {
+            "description": "Signed out, or the credentials do not match",
             "content": {
               "application/json": {
                 "schema": {
-                  "$schema": "https://json-schema.org/draft/2020-12/schema",
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "next": {
-                      "type": "string"
-                    },
-                    "field": {
-                      "type": "string"
-                    },
-                    "usedBy": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "kind": {
-                            "type": "string"
-                          },
-                          "count": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          "examples": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
-                          }
-                        },
-                        "required": [
-                          "kind",
-                          "count",
-                          "examples"
-                        ],
-                        "additionalProperties": false
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "message",
-                    "next"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any other refusal or failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
                 }
               }
             }
@@ -282,6 +355,7 @@
     "/api/v1/session/accounts": {
       "get": {
         "summary": "Demo account shortcuts (stub: not in production)",
+        "security": [],
         "responses": {
           "200": {
             "description": "OK",
@@ -324,60 +398,11 @@
             }
           },
           "default": {
-            "description": "Refusal",
+            "description": "Any other refusal or failure",
             "content": {
               "application/json": {
                 "schema": {
-                  "$schema": "https://json-schema.org/draft/2020-12/schema",
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "next": {
-                      "type": "string"
-                    },
-                    "field": {
-                      "type": "string"
-                    },
-                    "usedBy": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "kind": {
-                            "type": "string"
-                          },
-                          "count": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          "examples": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
-                          }
-                        },
-                        "required": [
-                          "kind",
-                          "count",
-                          "examples"
-                        ],
-                        "additionalProperties": false
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "message",
-                    "next"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "#/components/schemas/Refusal"
                 }
               }
             }
@@ -388,6 +413,11 @@
     "/api/v1/session/view-as": {
       "delete": {
         "summary": "Return to your own account",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -476,61 +506,22 @@
               }
             }
           },
-          "default": {
-            "description": "Refusal",
+          "401": {
+            "description": "Signed out, or the credentials do not match",
             "content": {
               "application/json": {
                 "schema": {
-                  "$schema": "https://json-schema.org/draft/2020-12/schema",
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "next": {
-                      "type": "string"
-                    },
-                    "field": {
-                      "type": "string"
-                    },
-                    "usedBy": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "kind": {
-                            "type": "string"
-                          },
-                          "count": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          "examples": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
-                          }
-                        },
-                        "required": [
-                          "kind",
-                          "count",
-                          "examples"
-                        ],
-                        "additionalProperties": false
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "message",
-                    "next"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any other refusal or failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
                 }
               }
             }
@@ -538,157 +529,15 @@
         }
       },
       "post": {
-        "summary": "Look at the app as another person; audited",
-        "x-capability": "integration",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$schema": "https://json-schema.org/draft/2020-12/schema",
-                  "type": "object",
-                  "properties": {
-                    "token": {
-                      "type": "string"
-                    },
-                    "account": {
-                      "type": "object",
-                      "properties": {
-                        "email": {
-                          "type": "string"
-                        },
-                        "userType": {
-                          "type": "string",
-                          "enum": [
-                            "employee",
-                            "manager",
-                            "admin"
-                          ]
-                        },
-                        "personCode": {
-                          "type": "string"
-                        },
-                        "name": {
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "email",
-                        "userType",
-                        "personCode",
-                        "name"
-                      ],
-                      "additionalProperties": false
-                    },
-                    "capabilities": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "viewingAs": {
-                      "type": "object",
-                      "properties": {
-                        "personCode": {
-                          "type": "string"
-                        },
-                        "name": {
-                          "type": "string"
-                        },
-                        "userType": {
-                          "type": "string",
-                          "enum": [
-                            "employee",
-                            "manager",
-                            "admin"
-                          ]
-                        }
-                      },
-                      "required": [
-                        "personCode",
-                        "name",
-                        "userType"
-                      ],
-                      "additionalProperties": false
-                    },
-                    "simulated": {
-                      "type": "boolean",
-                      "const": true
-                    }
-                  },
-                  "required": [
-                    "token",
-                    "account",
-                    "capabilities",
-                    "simulated"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Refusal",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$schema": "https://json-schema.org/draft/2020-12/schema",
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "next": {
-                      "type": "string"
-                    },
-                    "field": {
-                      "type": "string"
-                    },
-                    "usedBy": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "kind": {
-                            "type": "string"
-                          },
-                          "count": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          "examples": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
-                          }
-                        },
-                        "required": [
-                          "kind",
-                          "count",
-                          "examples"
-                        ],
-                        "additionalProperties": false
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "message",
-                    "next"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
+        "summary": "Look at the app as another person, as a preview in which changes are off; audited",
+        "security": [
+          {
+            "bearer": []
           }
-        },
+        ],
+        "x-capability": "perm_cfg",
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
@@ -701,8 +550,136 @@
                 },
                 "required": [
                   "personCode"
-                ],
-                "additionalProperties": false
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string"
+                    },
+                    "account": {
+                      "type": "object",
+                      "properties": {
+                        "email": {
+                          "type": "string"
+                        },
+                        "userType": {
+                          "type": "string",
+                          "enum": [
+                            "employee",
+                            "manager",
+                            "admin"
+                          ]
+                        },
+                        "personCode": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "email",
+                        "userType",
+                        "personCode",
+                        "name"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "capabilities": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "viewingAs": {
+                      "type": "object",
+                      "properties": {
+                        "personCode": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "userType": {
+                          "type": "string",
+                          "enum": [
+                            "employee",
+                            "manager",
+                            "admin"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "personCode",
+                        "name",
+                        "userType"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "simulated": {
+                      "type": "boolean",
+                      "const": true
+                    }
+                  },
+                  "required": [
+                    "token",
+                    "account",
+                    "capabilities",
+                    "simulated"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Signed out, or the credentials do not match",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid; field names the part to correct",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any other refusal or failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
               }
             }
           }
@@ -712,6 +689,11 @@
     "/api/v1/session": {
       "delete": {
         "summary": "Sign out",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -724,61 +706,22 @@
               }
             }
           },
-          "default": {
-            "description": "Refusal",
+          "401": {
+            "description": "Signed out, or the credentials do not match",
             "content": {
               "application/json": {
                 "schema": {
-                  "$schema": "https://json-schema.org/draft/2020-12/schema",
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "next": {
-                      "type": "string"
-                    },
-                    "field": {
-                      "type": "string"
-                    },
-                    "usedBy": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "kind": {
-                            "type": "string"
-                          },
-                          "count": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          "examples": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
-                          }
-                        },
-                        "required": [
-                          "kind",
-                          "count",
-                          "examples"
-                        ],
-                        "additionalProperties": false
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "message",
-                    "next"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any other refusal or failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
                 }
               }
             }
@@ -787,6 +730,11 @@
       },
       "get": {
         "summary": "The current session",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -875,61 +823,22 @@
               }
             }
           },
-          "default": {
-            "description": "Refusal",
+          "401": {
+            "description": "Signed out, or the credentials do not match",
             "content": {
               "application/json": {
                 "schema": {
-                  "$schema": "https://json-schema.org/draft/2020-12/schema",
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "next": {
-                      "type": "string"
-                    },
-                    "field": {
-                      "type": "string"
-                    },
-                    "usedBy": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "kind": {
-                            "type": "string"
-                          },
-                          "count": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          "examples": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
-                          }
-                        },
-                        "required": [
-                          "kind",
-                          "count",
-                          "examples"
-                        ],
-                        "additionalProperties": false
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "message",
-                    "next"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any other refusal or failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
                 }
               }
             }
@@ -938,155 +847,9 @@
       },
       "post": {
         "summary": "Sign in (simulated; Entra ID in production)",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$schema": "https://json-schema.org/draft/2020-12/schema",
-                  "type": "object",
-                  "properties": {
-                    "token": {
-                      "type": "string"
-                    },
-                    "account": {
-                      "type": "object",
-                      "properties": {
-                        "email": {
-                          "type": "string"
-                        },
-                        "userType": {
-                          "type": "string",
-                          "enum": [
-                            "employee",
-                            "manager",
-                            "admin"
-                          ]
-                        },
-                        "personCode": {
-                          "type": "string"
-                        },
-                        "name": {
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "email",
-                        "userType",
-                        "personCode",
-                        "name"
-                      ],
-                      "additionalProperties": false
-                    },
-                    "capabilities": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "viewingAs": {
-                      "type": "object",
-                      "properties": {
-                        "personCode": {
-                          "type": "string"
-                        },
-                        "name": {
-                          "type": "string"
-                        },
-                        "userType": {
-                          "type": "string",
-                          "enum": [
-                            "employee",
-                            "manager",
-                            "admin"
-                          ]
-                        }
-                      },
-                      "required": [
-                        "personCode",
-                        "name",
-                        "userType"
-                      ],
-                      "additionalProperties": false
-                    },
-                    "simulated": {
-                      "type": "boolean",
-                      "const": true
-                    }
-                  },
-                  "required": [
-                    "token",
-                    "account",
-                    "capabilities",
-                    "simulated"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "Refusal",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$schema": "https://json-schema.org/draft/2020-12/schema",
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "next": {
-                      "type": "string"
-                    },
-                    "field": {
-                      "type": "string"
-                    },
-                    "usedBy": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "kind": {
-                            "type": "string"
-                          },
-                          "count": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          "examples": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
-                          }
-                        },
-                        "required": [
-                          "kind",
-                          "count",
-                          "examples"
-                        ],
-                        "additionalProperties": false
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "message",
-                    "next"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            }
-          }
-        },
+        "security": [],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
@@ -1105,8 +868,126 @@
                 "required": [
                   "email",
                   "password"
-                ],
-                "additionalProperties": false
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string"
+                    },
+                    "account": {
+                      "type": "object",
+                      "properties": {
+                        "email": {
+                          "type": "string"
+                        },
+                        "userType": {
+                          "type": "string",
+                          "enum": [
+                            "employee",
+                            "manager",
+                            "admin"
+                          ]
+                        },
+                        "personCode": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "email",
+                        "userType",
+                        "personCode",
+                        "name"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "capabilities": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "viewingAs": {
+                      "type": "object",
+                      "properties": {
+                        "personCode": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "userType": {
+                          "type": "string",
+                          "enum": [
+                            "employee",
+                            "manager",
+                            "admin"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "personCode",
+                        "name",
+                        "userType"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "simulated": {
+                      "type": "boolean",
+                      "const": true
+                    }
+                  },
+                  "required": [
+                    "token",
+                    "account",
+                    "capabilities",
+                    "simulated"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Signed out, or the credentials do not match",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid; field names the part to correct",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any other refusal or failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
               }
             }
           }
@@ -1116,6 +997,11 @@
     "/api/v1/tenant": {
       "get": {
         "summary": "The tenant: name, template, modules and flags",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -1177,61 +1063,22 @@
               }
             }
           },
-          "default": {
-            "description": "Refusal",
+          "401": {
+            "description": "Signed out, or the credentials do not match",
             "content": {
               "application/json": {
                 "schema": {
-                  "$schema": "https://json-schema.org/draft/2020-12/schema",
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "next": {
-                      "type": "string"
-                    },
-                    "field": {
-                      "type": "string"
-                    },
-                    "usedBy": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "kind": {
-                            "type": "string"
-                          },
-                          "count": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          "examples": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
-                          }
-                        },
-                        "required": [
-                          "kind",
-                          "count",
-                          "examples"
-                        ],
-                        "additionalProperties": false
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "message",
-                    "next"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any other refusal or failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
                 }
               }
             }
@@ -1241,8 +1088,64 @@
     },
     "/api/v1/user-types/{id}/capabilities/{cap}": {
       "put": {
-        "summary": "Grant or remove a capability on a template (If-Match)",
+        "summary": "Grant or remove a capability on a template",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "x-capability": "perm_cfg",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "cap",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "description": "The version the change is based on",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "granted": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "granted"
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK",
@@ -1304,81 +1207,83 @@
               }
             }
           },
-          "default": {
-            "description": "Refusal",
+          "401": {
+            "description": "Signed out, or the credentials do not match",
             "content": {
               "application/json": {
                 "schema": {
-                  "$schema": "https://json-schema.org/draft/2020-12/schema",
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "next": {
-                      "type": "string"
-                    },
-                    "field": {
-                      "type": "string"
-                    },
-                    "usedBy": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "kind": {
-                            "type": "string"
-                          },
-                          "count": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          "examples": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
-                          }
-                        },
-                        "required": [
-                          "kind",
-                          "count",
-                          "examples"
-                        ],
-                        "additionalProperties": false
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "message",
-                    "next"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "#/components/schemas/Refusal"
                 }
               }
             }
-          }
-        },
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$schema": "https://json-schema.org/draft/2020-12/schema",
-                "type": "object",
-                "properties": {
-                  "granted": {
-                    "type": "boolean"
-                  }
-                },
-                "required": [
-                  "granted"
-                ],
-                "additionalProperties": false
+          },
+          "403": {
+            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The record does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The change is refused because of the state of the data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "The record changed since it was read (If-Match is stale)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid; field names the part to correct",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "If-Match is missing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any other refusal or failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
               }
             }
           }
@@ -1388,6 +1293,11 @@
     "/api/v1/user-types": {
       "get": {
         "summary": "User-type templates",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "x-capability": "perm_cfg",
         "responses": {
           "200": {
@@ -1440,61 +1350,32 @@
               }
             }
           },
-          "default": {
-            "description": "Refusal",
+          "401": {
+            "description": "Signed out, or the credentials do not match",
             "content": {
               "application/json": {
                 "schema": {
-                  "$schema": "https://json-schema.org/draft/2020-12/schema",
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "next": {
-                      "type": "string"
-                    },
-                    "field": {
-                      "type": "string"
-                    },
-                    "usedBy": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "kind": {
-                            "type": "string"
-                          },
-                          "count": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          "examples": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
-                          }
-                        },
-                        "required": [
-                          "kind",
-                          "count",
-                          "examples"
-                        ],
-                        "additionalProperties": false
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "message",
-                    "next"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any other refusal or failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
                 }
               }
             }
@@ -1504,8 +1385,45 @@
     },
     "/api/v1/users/{email}/exceptions/{cap}": {
       "delete": {
-        "summary": "Remove an exception (If-Match)",
+        "summary": "Remove an exception",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "x-capability": "perm_cfg",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "cap",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "description": "The version the change is based on",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]+$"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -1582,61 +1500,82 @@
               }
             }
           },
-          "default": {
-            "description": "Refusal",
+          "401": {
+            "description": "Signed out, or the credentials do not match",
             "content": {
               "application/json": {
                 "schema": {
-                  "$schema": "https://json-schema.org/draft/2020-12/schema",
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "next": {
-                      "type": "string"
-                    },
-                    "field": {
-                      "type": "string"
-                    },
-                    "usedBy": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "kind": {
-                            "type": "string"
-                          },
-                          "count": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          "examples": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
-                          }
-                        },
-                        "required": [
-                          "kind",
-                          "count",
-                          "examples"
-                        ],
-                        "additionalProperties": false
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "message",
-                    "next"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The record does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The change is refused because of the state of the data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "The record changed since it was read (If-Match is stale)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid; field names the part to correct",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "If-Match is missing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any other refusal or failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
                 }
               }
             }
@@ -1646,145 +1585,37 @@
     },
     "/api/v1/users/{email}/exceptions": {
       "post": {
-        "summary": "Grant or revoke one capability for one user, with a reason (If-Match)",
+        "summary": "Grant or revoke one capability for one user, with a reason",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "x-capability": "perm_cfg",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$schema": "https://json-schema.org/draft/2020-12/schema",
-                  "type": "object",
-                  "properties": {
-                    "record": {
-                      "type": "object",
-                      "properties": {
-                        "id": {
-                          "type": "string"
-                        },
-                        "version": {
-                          "type": "integer",
-                          "minimum": 0,
-                          "maximum": 9007199254740991
-                        },
-                        "updatedAt": {
-                          "type": "string",
-                          "format": "date-time",
-                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-                        },
-                        "email": {
-                          "type": "string"
-                        },
-                        "name": {
-                          "type": "string"
-                        },
-                        "personCode": {
-                          "type": "string"
-                        },
-                        "userType": {
-                          "type": "string"
-                        },
-                        "grants": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
-                        },
-                        "revocations": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
-                        }
-                      },
-                      "required": [
-                        "id",
-                        "version",
-                        "updatedAt",
-                        "email",
-                        "name",
-                        "personCode",
-                        "userType",
-                        "grants",
-                        "revocations"
-                      ],
-                      "additionalProperties": false
-                    },
-                    "auditId": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "record",
-                    "auditId"
-                  ],
-                  "additionalProperties": false
-                }
-              }
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string",
+              "minLength": 1
             }
           },
-          "default": {
-            "description": "Refusal",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$schema": "https://json-schema.org/draft/2020-12/schema",
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "next": {
-                      "type": "string"
-                    },
-                    "field": {
-                      "type": "string"
-                    },
-                    "usedBy": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "kind": {
-                            "type": "string"
-                          },
-                          "count": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          "examples": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
-                          }
-                        },
-                        "required": [
-                          "kind",
-                          "count",
-                          "examples"
-                        ],
-                        "additionalProperties": false
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "message",
-                    "next"
-                  ],
-                  "additionalProperties": false
-                }
-              }
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "description": "The version the change is based on",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]+$"
             }
           }
-        },
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
@@ -1810,8 +1641,164 @@
                   "capability",
                   "mode",
                   "reason"
-                ],
-                "additionalProperties": false
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "record": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "version": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "personCode": {
+                          "type": "string"
+                        },
+                        "userType": {
+                          "type": "string"
+                        },
+                        "grants": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "revocations": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "version",
+                        "updatedAt",
+                        "email",
+                        "name",
+                        "personCode",
+                        "userType",
+                        "grants",
+                        "revocations"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "auditId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "record",
+                    "auditId"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Signed out, or the credentials do not match",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The record does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The change is refused because of the state of the data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "The record changed since it was read (If-Match is stale)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid; field names the part to correct",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "If-Match is missing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any other refusal or failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
               }
             }
           }
@@ -1821,6 +1808,11 @@
     "/api/v1/users": {
       "get": {
         "summary": "Accounts with their template and exceptions",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "x-capability": "perm_cfg",
         "responses": {
           "200": {
@@ -1888,61 +1880,32 @@
               }
             }
           },
-          "default": {
-            "description": "Refusal",
+          "401": {
+            "description": "Signed out, or the credentials do not match",
             "content": {
               "application/json": {
                 "schema": {
-                  "$schema": "https://json-schema.org/draft/2020-12/schema",
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "next": {
-                      "type": "string"
-                    },
-                    "field": {
-                      "type": "string"
-                    },
-                    "usedBy": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "kind": {
-                            "type": "string"
-                          },
-                          "count": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          "examples": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
-                          }
-                        },
-                        "required": [
-                          "kind",
-                          "count",
-                          "examples"
-                        ],
-                        "additionalProperties": false
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "message",
-                    "next"
-                  ],
-                  "additionalProperties": false
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any other refusal or failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
                 }
               }
             }

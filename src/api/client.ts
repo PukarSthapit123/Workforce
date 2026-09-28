@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 import { Refusal } from '@/contract/common';
-import type { Endpoint } from '@/contract/endpoints';
+import { pathParamNames, type Endpoint } from '@/contract/endpoints';
 import { getToken } from './session-token';
 
 export class ApiError extends Error {
@@ -9,19 +9,43 @@ export class ApiError extends Error {
 const UNREADABLE: Refusal = { code: 'unreadable', message: 'The server sent something this screen cannot read. Nothing has been changed on screen.', next: 'Reload the page. If it happens again, report it.' };
 const NETWORK: Refusal = { code: 'network', message: 'The server could not be reached, so nothing was saved.', next: 'Check your connection and try again.' };
 
-export async function api<E extends Endpoint>(ep: E, opts: {
-  params?: Record<string, string>; body?: unknown; ifMatch?: number; query?: Record<string, string | undefined>;
-} = {}): Promise<z.infer<E['response']>> {
-  let url: string = ep.path.replace(/:([A-Za-z]+)/g, (_, k: string) => encodeURIComponent(opts.params?.[k] ?? ''));
-  const q = Object.entries(opts.query ?? {}).filter(([, v]) => v !== undefined && v !== '') as [string, string][];
+/* What a call to one endpoint must carry, worked out from its definition: the
+   path parameters it declares, a body shaped like its request schema, its
+   query, and If-Match when it is versioned. Anything the endpoint does not
+   declare cannot be passed. */
+type Opts<E extends Endpoint> =
+  (E extends { params: z.ZodType } ? { params: z.input<E['params']> } : { params?: never }) &
+  (E extends { request: z.ZodType } ? { body: z.input<E['request']> } : { body?: never }) &
+  (E extends { query: z.ZodType } ? { query?: z.input<E['query']> } : { query?: never }) &
+  (E extends { versioned: true } ? { ifMatch: number } : { ifMatch?: never });
+type Args<E extends Endpoint> = E extends { params: z.ZodType } | { request: z.ZodType } | { versioned: true } ? [opts: Opts<E>] : [opts?: Opts<E>];
+interface LooseOpts { params?: Record<string, unknown>; body?: unknown; query?: Record<string, unknown>; ifMatch?: number }
+
+/* Builds the URL, refusing (by throwing, before anything is sent) when a path
+   parameter the endpoint declares is missing or empty: an empty segment would
+   otherwise quietly address a different resource. */
+export function buildUrl(ep: Endpoint, opts: LooseOpts): string {
+  let url: string = ep.path;
+  for (const k of pathParamNames(ep.path)) {
+    const v = opts.params?.[k];
+    if (v === undefined || v === null || v === '') throw new Error(`${ep.method} ${ep.path} needs the path parameter "${k}".`);
+    url = url.replace(`:${k}`, encodeURIComponent(String(v)));
+  }
+  const q = Object.entries(opts.query ?? {}).filter(([, v]) => v !== undefined && v !== null && v !== '').map(([k, v]) => [k, String(v)] as [string, string]);
   if (q.length) url += '?' + new URLSearchParams(q).toString();
+  return url;
+}
+
+export async function api<E extends Endpoint>(ep: E, ...[opts]: Args<E>): Promise<z.infer<E['response']>> {
+  const o = (opts ?? {}) as LooseOpts;
+  const url = buildUrl(ep, o);
   const headers: Record<string, string> = { Accept: 'application/json' };
   const token = getToken(); if (token) headers.Authorization = `Bearer ${token}`;
-  if (opts.body !== undefined) headers['Content-Type'] = 'application/json';
-  if (opts.ifMatch !== undefined) headers['If-Match'] = String(opts.ifMatch);
+  if (o.body !== undefined) headers['Content-Type'] = 'application/json';
+  if (o.ifMatch !== undefined) headers['If-Match'] = String(o.ifMatch);
   let res: Response;
   try {
-    res = await fetch(url, { method: ep.method, headers, body: opts.body === undefined ? undefined : JSON.stringify(opts.body) });
+    res = await fetch(url, { method: ep.method, headers, body: o.body === undefined ? undefined : JSON.stringify(o.body) });
   } catch {
     /* offline, DNS failure, an aborted request: fetch rejects rather than resolving with a
        response, so there is no status or body to parse. status 0 marks "never reached the

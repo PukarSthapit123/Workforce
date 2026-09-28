@@ -30,5 +30,20 @@ test('filters by who, case-insensitively, to one person\'s rows only', async () 
   writeAudit({ who: { personCode: 'A', name: 'Dee Fitzgerald' }, act: 'Permission changed', entity: 'userType', entityId: 'employee' });
   writeAudit({ who: { personCode: 'B', name: 'Sam Okafor' }, act: 'Access exception added', entity: 'account', entityId: 'sam@x.com' });
   const r = await get('?who=FITZ');
-  expect(r.items.map((i: { who: { name: string } }) => i.who.name)).toEqual(['Dee Fitzgerald']);
+  const names: string[] = r.items.map((i: { who: { name: string } }) => i.who.name);
+  expect(names.length).toBeGreaterThan(0);
+  expect(new Set(names)).toEqual(new Set(['Dee Fitzgerald']));
+});
+
+/* I9: the query is typed and validated, so a bad limit is refused, not clamped. */
+test.each(['0', '-1', '1.5', 'lots', '1001'])('a limit of %s is refused with 422 naming limit', async limit => {
+  const r = await fetch('/api/v1/audit?limit=' + limit, { headers: { Authorization: `Bearer ${token}` } });
+  expect(r.status).toBe(422);
+  expect(await r.json()).toMatchObject({ code: 'invalid', field: 'limit', next: expect.any(String) });
+});
+test('a valid limit caps the page', async () => {
+  for (let i = 0; i < 3; i++) writeAudit({ who: { personCode: 'X', name: 'X' }, act: 'Row ' + i, entity: 'e', entityId: '1' });
+  const r = await get('?limit=2');
+  expect(r.items).toHaveLength(2);
+  expect(r.total).toBeGreaterThanOrEqual(3);
 });

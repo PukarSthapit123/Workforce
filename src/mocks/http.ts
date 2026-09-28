@@ -22,6 +22,17 @@ export async function readJson<T extends z.ZodType>(request: Request, schema: T)
   }
   return r.data;
 }
+/* The query string, validated against the endpoint's own query schema. A
+   bad value is refused with 422 naming the field, never quietly clamped. */
+export function readQuery<T extends z.ZodType>(request: Request, schema: T): z.infer<T> {
+  const raw = Object.fromEntries(new URL(request.url).searchParams);
+  const r = schema.safeParse(raw);
+  if (!r.success) {
+    const issue = r.error.issues[0];
+    return refuse(422, { code: 'invalid', field: issue?.path.join('.'), message: issue?.message ?? 'That request was not valid.', next: 'Correct the highlighted field and try again.' });
+  }
+  return r.data;
+}
 export function checkVersion(request: Request, record: RecordMeta) {
   const m = request.headers.get('If-Match');
   if (m === null) refuse(428, { code: 'version-required', message: 'This change was sent without the version it was based on.', next: 'Reload and apply your change again' });

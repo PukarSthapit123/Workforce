@@ -12,9 +12,12 @@ export type UserType = z.infer<typeof UserType>;
 export type UserAccess = z.infer<typeof UserAccess>;
 
 const cap = 'perm_cfg';
+const TemplateCapabilityParams = z.object({ id: z.string().min(1), cap: z.string().min(1) });
+const UserParams = z.object({ email: z.string().min(1) });
+const UserCapabilityParams = z.object({ email: z.string().min(1), cap: z.string().min(1) });
 export const listCapabilities = defineEndpoint({ method: 'GET', path: '/api/v1/capabilities', response: z.array(Capability), capability: cap, summary: 'Every capability the matrix controls' });
 export const listUserTypes = defineEndpoint({ method: 'GET', path: '/api/v1/user-types', response: z.array(UserType), capability: cap, summary: 'User-type templates' });
-export const setTemplateCapability = defineEndpoint({ method: 'PUT', path: '/api/v1/user-types/:id/capabilities/:cap', request: SetTemplateCapability, response: mutation(UserType), capability: cap, summary: 'Grant or remove a capability on a template (If-Match)' });
+export const setTemplateCapability = defineEndpoint({ method: 'PUT', path: '/api/v1/user-types/:id/capabilities/:cap', params: TemplateCapabilityParams, request: SetTemplateCapability, response: mutation(UserType), capability: cap, versioned: true, errors: [404, 409], summary: 'Grant or remove a capability on a template' });
 export const listUsers = defineEndpoint({ method: 'GET', path: '/api/v1/users', response: z.array(UserAccess), capability: cap, summary: 'Accounts with their template and exceptions' });
-export const addException = defineEndpoint({ method: 'POST', path: '/api/v1/users/:email/exceptions', request: AddException, response: mutation(UserAccess), capability: cap, summary: 'Grant or revoke one capability for one user, with a reason (If-Match)' });
-export const removeException = defineEndpoint({ method: 'DELETE', path: '/api/v1/users/:email/exceptions/:cap', response: mutation(UserAccess), capability: cap, summary: 'Remove an exception (If-Match)' });
+export const addException = defineEndpoint({ method: 'POST', path: '/api/v1/users/:email/exceptions', params: UserParams, request: AddException, response: mutation(UserAccess), capability: cap, versioned: true, errors: [404, 409], summary: 'Grant or revoke one capability for one user, with a reason' });
+export const removeException = defineEndpoint({ method: 'DELETE', path: '/api/v1/users/:email/exceptions/:cap', params: UserCapabilityParams, response: mutation(UserAccess), capability: cap, versioned: true, errors: [404, 409, 422], summary: 'Remove an exception' });

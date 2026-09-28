@@ -83,3 +83,60 @@ test('the committed OpenAPI file matches the contract', () => {
   const committed = JSON.parse(readFileSync(resolve(__dirname, '../../contract/openapi.json'), 'utf8'));
   expect(buildOpenApi()).toEqual(committed);
 });
+
+/* I9: the document must be structurally sound, not just match the snapshot. */
+describe('the OpenAPI document is structurally valid 3.1', () => {
+  const doc = buildOpenApi() as unknown as {
+    openapi: string; info: { title: string; version: string }; components: { securitySchemes: Record<string, unknown>; schemas: Record<string, unknown> };
+    paths: Record<string, Record<string, { summary: string; security: Record<string, unknown>[]; parameters?: { name: string; in: string; required?: boolean; schema?: unknown }[];
+      responses: Record<string, { description?: string; content?: Record<string, { schema?: { $ref?: string } }> }> }>>;
+  };
+  const ops = Object.entries(doc.paths).flatMap(([path, methods]) => Object.entries(methods).map(([method, op]) => ({ path, method, op })));
+
+  test('it declares its version, info and the bearer scheme', () => {
+    expect(doc.openapi).toBe('3.1.0');
+    expect(doc.info.title && doc.info.version).toBeTruthy();
+    expect(doc.components.securitySchemes.bearer).toMatchObject({ type: 'http', scheme: 'bearer' });
+  });
+  test('every {param} in a path is declared as a required path parameter, and nothing else is', () => {
+    const problems: string[] = [];
+    for (const { path, method, op } of ops) {
+      const inPath = [...path.matchAll(/\{([^}]+)\}/g)].map(m => m[1]);
+      const declared = (op.parameters ?? []).filter(p => p.in === 'path');
+      for (const name of inPath) if (!declared.some(p => p.name === name && p.required === true && p.schema)) problems.push(`${method} ${path}: {${name}} is not declared`);
+      for (const p of declared) if (!inPath.includes(p.name)) problems.push(`${method} ${path}: ${p.name} is declared but not in the path`);
+    }
+    expect(problems).toEqual([]);
+  });
+  test('every operation has a summary, a security requirement and described responses whose refs resolve', () => {
+    const problems: string[] = [];
+    for (const { path, method, op } of ops) {
+      if (!op.summary) problems.push(`${method} ${path}: no summary`);
+      if (!Array.isArray(op.security)) problems.push(`${method} ${path}: no security`);
+      for (const req of op.security ?? []) for (const k of Object.keys(req)) if (!doc.components.securitySchemes[k]) problems.push(`${method} ${path}: unknown scheme ${k}`);
+      if (!op.responses['200']) problems.push(`${method} ${path}: no 200`);
+      for (const [status, r] of Object.entries(op.responses)) {
+        if (!r.description) problems.push(`${method} ${path} ${status}: no description`);
+        const ref = r.content?.['application/json']?.schema?.$ref;
+        if (ref && !doc.components.schemas[ref.replace('#/components/schemas/', '')]) problems.push(`${method} ${path} ${status}: ${ref} does not resolve`);
+      }
+    }
+    expect(problems).toEqual([]);
+  });
+  test('versioned writes declare If-Match and answer 412 and 428; capability endpoints answer 403', () => {
+    for (const e of ENDPOINTS) {
+      const op = doc.paths[e.path.replace(/:([A-Za-z]+)/g, '{$1}')]?.[e.method.toLowerCase()];
+      if (!op) throw new Error(`${e.method} ${e.path} is missing from the document`);
+      if (e.versioned) {
+        expect(op.parameters?.some(p => p.name === 'If-Match' && p.in === 'header' && p.required), `${e.method} ${e.path}`).toBe(true);
+        expect(Object.keys(op.responses)).toEqual(expect.arrayContaining(['412', '428']));
+      }
+      if (e.capability) expect(Object.keys(op.responses), `${e.method} ${e.path}`).toContain('403');
+      if (!e.public) expect(op.security).toEqual([{ bearer: [] }]);
+    }
+  });
+  test('the audit query is described, limit included', () => {
+    const op = doc.paths['/api/v1/audit']?.get;
+    expect(op?.parameters?.filter(p => p.in === 'query').map(p => p.name)).toEqual(['entity', 'who', 'q', 'limit']);
+  });
+});

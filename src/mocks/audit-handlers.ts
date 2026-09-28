@@ -1,7 +1,7 @@
 import { http, HttpResponse, type HttpResponseResolver } from 'msw';
-import type { AuditEntry } from '@/contract/audit';
+import { AuditQuery, type AuditEntry } from '@/contract/audit';
 import { store } from './store';
-import { handle } from './http';
+import { handle, readQuery } from './http';
 import { requireCapability, requireSession } from './session';
 
 /* Same inference workaround as session.ts's and access.ts's ResolverInfo: `handle`'s
@@ -12,9 +12,9 @@ type ResolverInfo = Parameters<HttpResponseResolver>[0];
 export const auditHandlers = [
   http.get('/api/v1/audit', handle(({ request }: ResolverInfo) => {
     requireCapability(requireSession(request), 'integration', 'Integrations and audit log');
-    const u = new URL(request.url);
-    const entity = u.searchParams.get('entity'), who = u.searchParams.get('who')?.toLowerCase(), q = u.searchParams.get('q')?.toLowerCase();
-    const limit = Math.min(Number(u.searchParams.get('limit') ?? 200), 1000);
+    const query = readQuery(request, AuditQuery);
+    const entity = query.entity, who = query.who?.toLowerCase(), q = query.q?.toLowerCase();
+    const limit = query.limit ?? 200;
     let items = Object.values(store.coll<AuditEntry>('audit')).sort((x, y) => y.at.localeCompare(x.at) || y.id.localeCompare(x.id));
     if (entity) items = items.filter(i => i.entity === entity);
     if (who) items = items.filter(i => i.who.name.toLowerCase().includes(who));
