@@ -27,7 +27,7 @@ export const tid = {
     loading: 'shell-loading', error: 'shell-error', retry: 'shell-retry',
   },
   notBuilt: { root: 'not-built', subProject: 'not-built-sub-project' },
-  setup: { card: (view: string) => k('setup-card', view), cardDescription: (view: string) => k('setup-card-description', view) },
+  setup: { card: (view: string) => k('setup-card', view), cardDescription: (view: string) => k('setup-description', view) },
   access: {
     table: 'access-table',
     cell: (cap: string, userType: string) => k('access-cell', cap, userType),
