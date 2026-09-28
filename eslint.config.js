@@ -24,7 +24,7 @@ export default tseslint.config(
     ignores: ['src/mocks/**', 'src/**/*.test.{ts,tsx}', 'src/test/**', 'src/main.tsx'],
     rules: {
       'no-restricted-imports': ['error', { patterns: [{
-        regex: '^(@/mocks|(\.{1,2}/)+(.*/)?mocks)(/|$)',
+        regex: String.raw`^(@/mocks|(\.{1,2}/)+(.*/)?mocks)(/|$)`,
         message: 'Product code reaches the server through src/api only. Import the fake server or its seed from src/mocks/**, tests or main.tsx.',
       }] }],
     },
