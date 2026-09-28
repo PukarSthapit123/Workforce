@@ -192,9 +192,10 @@ test('revoking the last holder of perm_cfg from a template is refused even when 
      holder, to prove the separate holderExists guard on this endpoint
      catches it too, not just the one on account-level exceptions covered
      above. */
-  const userTypes = store.coll<{ id: string; version: number; capabilities: string[] }>('userTypes');
-  userTypes.admin = { ...userTypes.admin, capabilities: userTypes.admin.capabilities.filter(c => c !== 'perm_cfg') };
-  userTypes.manager = { ...userTypes.manager, capabilities: [...userTypes.manager.capabilities, 'perm_cfg'] };
+  const types = userTypes();
+  const admin = ut('admin'), manager = ut('manager');
+  types.admin = { ...admin, capabilities: admin.capabilities.filter(c => c !== 'perm_cfg') };
+  types.manager = { ...manager, capabilities: [...manager.capabilities, 'perm_cfg'] };
   await signIn(acc('manager').email); // manager now holds perm_cfg via template, so it can reach this endpoint at all
   const before = structuredClone(ut('manager'));
   const beforeStore = structuredClone(store.db);
