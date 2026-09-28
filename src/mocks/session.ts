@@ -2,7 +2,7 @@ import { http, HttpResponse, type HttpResponseResolver } from 'msw';
 import { store } from './store';
 import { handle, readJson, refuse } from './http';
 import { writeAudit } from './audit';
-import { SignInRequest, ViewAsRequest, endViewAs, deleteSession, type Session } from '@/contract/session';
+import { SignInRequest, ViewAsRequest, endViewAs, deleteSession, type Session, type ViewAsPerson } from '@/contract/session';
 import { resolveCapabilities } from '@/domain/capabilities';
 
 /* `handle`'s own generic (A extends unknown[]) cannot be inferred from an
@@ -15,14 +15,19 @@ type ResolverInfo = Parameters<HttpResponseResolver>[0];
 
 export const DEMO_PASSWORD = 'Qnipay@123';   // stub: shared demo password, replaced by Entra ID
 interface Account { email: string; userType: Session['account']['userType']; personCode: string; grants: string[]; revocations: string[] }
-interface Person { code: string; name: string }
-interface UserType { id: string; capabilities: string[] }
+interface Person { code: string; name: string; state?: string; employeeType?: string; location?: string }
+interface UserType { id: string; name?: string; description?: string; capabilities: string[] }
 export interface ServerSession { token: string; email: string; viewingAs?: string }
 
 const sessions = () => store.coll<ServerSession>('sessions');
 const accountBy = (email: string) => store.coll<Account>('accounts')[`acc_${email.toLowerCase()}`];
 const personBy = (code: string) => Object.values(store.coll<Person>('people')).find(p => p.code === code);
 const accountForPerson = (code: string) => Object.values(store.coll<Account>('accounts')).find(x => x.personCode === code);
+const userTypeOf = (a: Account) => store.coll<UserType>('userTypes')[a.userType];
+const roleNameOf = (a: Account) => userTypeOf(a)?.name ?? a.userType.charAt(0).toUpperCase() + a.userType.slice(1);
+const locationNameOf = (p: Person | undefined) => Object.values(store.coll<{ code: string; name: string }>('locations')).find(l => l.code === p?.location)?.name ?? p?.location ?? '';
+const ONBOARDING = new Set(['candidate', 'preboard']);
+const GONE = new Set(['leaver', 'archived']);
 export const capsFor = (a: Account) => resolveCapabilities(store.coll<UserType>('userTypes')[a.userType]?.capabilities ?? [], a.grants, a.revocations);
 function view(s: ServerSession): Session {
   const a = accountBy(s.email);
@@ -39,7 +44,8 @@ function view(s: ServerSession): Session {
      capabilities under a stale, wrong-looking label. */
   const viewingAs = vp && va ? { vp, va } : undefined;
   return { token: s.token, simulated: true,
-    account: { email: a.email, userType: a.userType, personCode: a.personCode, name: p?.name ?? a.email },
+    account: { email: a.email, userType: a.userType, personCode: a.personCode, name: p?.name ?? a.email,
+      roleName: roleNameOf(a), roleDescription: userTypeOf(a)?.description ?? '', locationName: locationNameOf(p) },
     capabilities: capsFor(viewingAs?.va ?? a),
     ...(viewingAs ? { viewingAs: { personCode: viewingAs.vp.code, name: viewingAs.vp.name, userType: viewingAs.va.userType } } : {}) };
 }
@@ -99,6 +105,24 @@ export const sessionHandlers = [
        they were about to view as at the moment of this very action. */
     writeAudit({ who: who({ ...s, viewingAs: personCode }), act: 'View-as started', entity: 'session', entityId: s.account.email, before: null, after: { viewingAs: personCode } });
     return HttpResponse.json(view(updated));
+  })),
+  /* Ported from the prototype's drawMenu (v15:10776-10789): one person per
+     role, and one per employee type among employees, never yourself, at
+     most five, so the list shows how the app differs. People who have left
+     are not offered, and neither is anyone without an account. */
+  http.get('/api/v1/session/view-as/people', handle(({ request }: ResolverInfo) => {
+    const s = requireSession(request); requireCapability(s, 'perm_cfg', 'Permissions and role configuration');
+    const seen = new Set<string>(); const out: ViewAsPerson[] = [];
+    for (const p of Object.values(store.coll<Person>('people'))) {
+      const a = accountForPerson(p.code);
+      if (!a || p.code === s.account.personCode || GONE.has(p.state ?? '')) continue;
+      const onboarding = a.userType === 'employee' && ONBOARDING.has(p.state ?? '');
+      const rank = a.userType !== 'employee' ? a.userType : onboarding ? 'candidate' : `employee:${p.employeeType ?? ''}`;
+      if (seen.has(rank)) continue;
+      seen.add(rank);
+      out.push({ personCode: p.code, name: p.name, userType: a.userType, roleName: roleNameOf(a), locationName: locationNameOf(p), onboarding });
+    }
+    return HttpResponse.json(out.slice(0, 5));
   })),
   http.delete('/api/v1/session/view-as', handle(({ request }: ResolverInfo) => {
     const s = requireSession(request); const was = s.viewingAs;

@@ -1,8 +1,11 @@
-/* Every interactive element on a page carries a unique, well-formed data-testid. */
+/* Every interactive element on a page carries a unique, well-formed data-testid.
+   Scans document.body by default, not just a render container, so content a
+   Radix Portal renders outside the container (dialogs, menus, select lists,
+   tooltips) is checked too. */
 const INTERACTIVE = 'button, a[href], input, select, textarea, [role="button"], [role="tab"], [role="menuitem"], [role="switch"], [role="checkbox"], tbody tr';
 const FORM = /^[a-z0-9]+(-[A-Za-z0-9]+)+$/;
 
-export function expectTestIdCoverage(root: HTMLElement): void {
+export function expectTestIdCoverage(root: HTMLElement = document.body): void {
   const problems: string[] = [];
   const seen = new Map<string, number>();
   root.querySelectorAll<HTMLElement>(INTERACTIVE).forEach(el => {

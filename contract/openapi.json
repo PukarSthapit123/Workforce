@@ -502,6 +502,97 @@
         }
       }
     },
+    "/api/v1/session/view-as/people": {
+      "get": {
+        "summary": "Who the account menu offers to view as: at most five, one per role",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-capability": "perm_cfg",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "personCode": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "userType": {
+                        "type": "string",
+                        "enum": [
+                          "employee",
+                          "manager",
+                          "admin"
+                        ]
+                      },
+                      "roleName": {
+                        "type": "string"
+                      },
+                      "locationName": {
+                        "type": "string"
+                      },
+                      "onboarding": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "personCode",
+                      "name",
+                      "userType",
+                      "roleName",
+                      "locationName",
+                      "onboarding"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Signed out, or the credentials do not match",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any other refusal or failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/session/view-as": {
       "delete": {
         "summary": "Return to your own account",
@@ -541,13 +632,25 @@
                         },
                         "name": {
                           "type": "string"
+                        },
+                        "roleName": {
+                          "type": "string"
+                        },
+                        "roleDescription": {
+                          "type": "string"
+                        },
+                        "locationName": {
+                          "type": "string"
                         }
                       },
                       "required": [
                         "email",
                         "userType",
                         "personCode",
-                        "name"
+                        "name",
+                        "roleName",
+                        "roleDescription",
+                        "locationName"
                       ],
                       "additionalProperties": false
                     },
@@ -678,13 +781,25 @@
                         },
                         "name": {
                           "type": "string"
+                        },
+                        "roleName": {
+                          "type": "string"
+                        },
+                        "roleDescription": {
+                          "type": "string"
+                        },
+                        "locationName": {
+                          "type": "string"
                         }
                       },
                       "required": [
                         "email",
                         "userType",
                         "personCode",
-                        "name"
+                        "name",
+                        "roleName",
+                        "roleDescription",
+                        "locationName"
                       ],
                       "additionalProperties": false
                     },
@@ -858,13 +973,25 @@
                         },
                         "name": {
                           "type": "string"
+                        },
+                        "roleName": {
+                          "type": "string"
+                        },
+                        "roleDescription": {
+                          "type": "string"
+                        },
+                        "locationName": {
+                          "type": "string"
                         }
                       },
                       "required": [
                         "email",
                         "userType",
                         "personCode",
-                        "name"
+                        "name",
+                        "roleName",
+                        "roleDescription",
+                        "locationName"
                       ],
                       "additionalProperties": false
                     },
@@ -996,13 +1123,25 @@
                         },
                         "name": {
                           "type": "string"
+                        },
+                        "roleName": {
+                          "type": "string"
+                        },
+                        "roleDescription": {
+                          "type": "string"
+                        },
+                        "locationName": {
+                          "type": "string"
                         }
                       },
                       "required": [
                         "email",
                         "userType",
                         "personCode",
-                        "name"
+                        "name",
+                        "roleName",
+                        "roleDescription",
+                        "locationName"
                       ],
                       "additionalProperties": false
                     },

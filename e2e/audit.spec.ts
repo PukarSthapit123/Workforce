@@ -28,3 +28,16 @@ test('Audit: a failed load says so and shows no stale rows as current', async ({
   await expect(page.getByTestId(tid.audit.error)).toContainText('The audit log could not be loaded');
   await expect(page.getByTestId(tid.audit.table)).toHaveCount(0);
 });
+
+/* I6: SIGN IN / SIGN OUT "Sign in and sign out are audited". */
+test('SI Sign in and sign out are audited', async ({ page, signInAs }) => {
+  await signInAs('admin');
+  await page.getByTestId(tid.shell.account).click();
+  await page.getByTestId(tid.shell.signOut).click();
+  await expect(page.getByTestId(tid.signIn.form)).toBeVisible();
+  await signInAs('admin');
+  await page.goto('/setup/iaudit');
+  const table = page.getByTestId(tid.audit.table);
+  await expect(table).toContainText('Signed in');
+  await expect(table).toContainText('Signed out');
+});

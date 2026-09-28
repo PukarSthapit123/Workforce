@@ -191,3 +191,24 @@ test('signing out writes one audit row naming who', async () => {
   expect(rows).toHaveLength(1);
   expect(rows[0]).toMatchObject({ entity: 'session', entityId: acc.email, who: { personCode: acc.personCode }, before: { signedIn: true }, after: null });
 });
+
+/* I5: who the account menu offers to view as. */
+test('the view-as list offers one person per role, never yourself, nobody who has left, at most five', async () => {
+  const admin = anyAccount('admin');
+  const { token } = await (await post('/api/v1/session', { email: admin.email, password: 'Qnipay@123' })).json();
+  const r = await fetch('/api/v1/session/view-as/people', { headers: { Authorization: `Bearer ${token}` } });
+  expect(r.status).toBe(200);
+  const people = (await r.json()) as { personCode: string; userType: string; roleName: string; locationName: string; onboarding: boolean }[];
+  expect(people.length).toBeGreaterThan(0);
+  expect(people.length).toBeLessThanOrEqual(5);
+  expect(people.map(p => p.personCode)).not.toContain(admin.personCode);
+  expect(people.filter(p => p.userType === 'manager')).toHaveLength(1);
+  const gone = Object.values(store.coll<{ code: string; state: string }>('people')).filter(p => p.state === 'leaver').map(p => p.code);
+  expect(people.some(p => gone.includes(p.personCode))).toBe(false);
+  expect(people.every(p => p.roleName && p.locationName)).toBe(true);
+});
+test('the session names the account\'s role, what it is for and where they work', async () => {
+  const s = await (await post('/api/v1/session', { email: anyAccount('manager').email, password: 'Qnipay@123' })).json();
+  expect(s.account).toMatchObject({ roleName: 'Manager', roleDescription: expect.stringContaining('team'), locationName: expect.any(String) });
+  expect(s.account.locationName.length).toBeGreaterThan(0);
+});

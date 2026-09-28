@@ -16,10 +16,10 @@ import { useSession } from './SessionProvider';
 export type ShellData =
   | { kind: 'loading' }
   | { kind: 'error'; onRetry(): void; onSignOut(): void }
-  | { kind: 'ready'; session: Session; nav: NavGroup[]; onSignOut(): void; onEndViewAs(): void };
+  | { kind: 'ready'; session: Session; nav: NavGroup[]; onSignOut(): void; onViewAs(personCode: string): void; onEndViewAs(): void };
 
 export function useShellData(): ShellData {
-  const { session, signOut, endViewAs } = useSession();
+  const { session, signOut, viewAs, endViewAs } = useSession();
   const tenant = useQuery({ queryKey: ['tenant'], queryFn: () => api(getTenant) });
   /* A ref, not a dependency: signOut is a fresh function identity every
      SessionProvider render, and this must fire once per failed attempt, not
@@ -38,7 +38,9 @@ export function useShellData(): ShellData {
     return { kind: 'error', onRetry: () => void tenant.refetch(), onSignOut: () => void signOut() };
   }
   const nav = buildNav({ caps: new Set(session.capabilities), modules: tenant.data.modules, flags: tenant.data.flags, onboarding: false });
-  return { kind: 'ready', session, nav, onSignOut: () => void signOut(), onEndViewAs: () => void endViewAs() };
+  /* viewAs and endViewAs toast their own failures and never reject on a
+     refusal (SessionProvider's switchView), so nothing here goes unhandled. */
+  return { kind: 'ready', session, nav, onSignOut: () => void signOut(), onViewAs: personCode => void viewAs(personCode), onEndViewAs: () => void endViewAs() };
 }
 
 export function ShellLoading() {

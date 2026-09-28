@@ -31,10 +31,25 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       if (err instanceof ApiError) toastRefusal(err.refusal);
     }).finally(() => setReady(true));
   }, [adopt]);
+  /* Starting or ending view-as changes the session only from a real
+     response. A refusal or fault is toasted and the session stays exactly as
+     it was, so a failed "Return to my account" is never silent. A 401 means
+     the session itself is gone, so that one signs out, as on boot above. */
+  const switchView = useCallback(async (call: () => Promise<Session>) => {
+    let next: Session;
+    try { next = await call(); }
+    catch (err) {
+      if (!(err instanceof ApiError)) throw err;
+      toastRefusal(err.refusal);
+      if (err.status === 401) adopt(null);
+      return;
+    }
+    adopt(next);
+  }, [adopt]);
   const value: Ctx = { session, ready,
     signIn: async (email, password) => adopt(await api(createSession, { body: { email, password } })),
     signOut: async () => { try { await api(deleteSession); } catch (e) { if (!(e instanceof ApiError)) throw e; } adopt(null); },
-    viewAs: async personCode => adopt(await api(startViewAs, { body: { personCode } })),
-    endViewAs: async () => adopt(await api(endViewAs)) };
+    viewAs: personCode => switchView(() => api(startViewAs, { body: { personCode } })),
+    endViewAs: () => switchView(() => api(endViewAs)) };
   return <SessionCtx.Provider value={value}>{children}</SessionCtx.Provider>;
 }

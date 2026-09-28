@@ -22,6 +22,8 @@ export const tid = {
     rolePill: 'shell-role-pill', bell: 'shell-bell', bellCount: 'shell-bell-count', theme: 'shell-theme',
     account: 'shell-account', signOut: 'shell-sign-out', viewAsEnd: 'shell-view-as-end',
     viewAs: (personCode: string) => k('shell-view-as', personCode),
+    menuAccount: 'shell-menu-account', menuRole: 'shell-menu-role', menuViewAsEnd: 'shell-menu-view-as-end',
+    menuViewAsLoading: 'shell-menu-view-as-loading', menuViewAsError: 'shell-menu-view-as-error',
     loading: 'shell-loading', error: 'shell-error', retry: 'shell-retry',
   },
   notBuilt: { root: 'not-built', subProject: 'not-built-sub-project' },

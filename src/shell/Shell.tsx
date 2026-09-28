@@ -4,7 +4,7 @@ import type { NavGroup, NavTab } from '@/domain/nav';
 import { tid } from '@/testids';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/ui/shadcn/dropdown-menu';
 import { Modal } from '@/ui';
-import { AccountMenu } from './AccountMenu';
+import { AccountMenu, type MenuAccount } from './AccountMenu';
 import { useShellData, ShellLoading, ShellError } from './shellData';
 import { NotBuilt } from '@/features/not-built/NotBuilt';
 import { SetupIndex } from '@/features/setup/SetupIndex';
@@ -25,11 +25,13 @@ export function Shell() {
   const { session } = data;
   const role = session.viewingAs?.userType ?? session.account.userType;
   return <ShellView nav={data.nav} roleLabel={capitalise(role)} viewingAs={session.viewingAs?.name ?? null}
-    ownName={session.account.name} unread={0} onSignOut={data.onSignOut} onEndViewAs={data.onEndViewAs} />;
+    account={session.account} canViewAs={session.capabilities.includes('perm_cfg')} unread={0}
+    onSignOut={data.onSignOut} onViewAs={data.onViewAs} onEndViewAs={data.onEndViewAs} />;
 }
 
-export function ShellView({ nav, roleLabel, viewingAs, ownName, unread, onSignOut, onEndViewAs }: {
-  nav: NavGroup[]; roleLabel: string; viewingAs: string | null; ownName: string; unread: number; onSignOut(): void; onEndViewAs(): void;
+export function ShellView({ nav, roleLabel, viewingAs, account, canViewAs = false, unread, onSignOut, onViewAs = () => {}, onEndViewAs }: {
+  nav: NavGroup[]; roleLabel: string; viewingAs: string | null; account: MenuAccount; canViewAs?: boolean; unread: number;
+  onSignOut(): void; onViewAs?(personCode: string): void; onEndViewAs(): void;
 }) {
   const { pathname } = useLocation();
   const [theme, toggleTheme] = useTheme();
@@ -47,14 +49,14 @@ export function ShellView({ nav, roleLabel, viewingAs, ownName, unread, onSignOu
         </nav>
         <span data-testid={tid.shell.rolePill}
           className={`hidden shrink-0 items-center rounded-pill border px-sm py-xs text-xs font-semibold md:inline-flex ${viewingAs ? 'border-dashed opacity-85' : ''}`}
-          title={viewingAs ? `Looking at the app as ${viewingAs} · your account is ${ownName}` : undefined}>{roleLabel}</span>
+          title={viewingAs ? `Looking at the app as ${viewingAs} · your account is ${account.name}` : undefined}>{roleLabel}</span>
         <button type="button" data-testid={tid.shell.bell} aria-label={`Notifications, ${unread} unread`}
           className="relative inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center">
           <span aria-hidden="true">🔔</span>{unread > 0 && <span data-testid={tid.shell.bellCount} className="absolute -right-2 -top-2 rounded-pill bg-brand-accent px-xs text-xs text-text-on-accent">{unread}</span>}
         </button>
         <button type="button" data-testid={tid.shell.theme} aria-label={`${theme === 'dark' ? 'Light' : 'Dark'} theme`}
           className="inline-flex min-h-touch shrink-0 items-center rounded-pill border px-sm py-xs text-xs" onClick={toggleTheme}>{theme === 'dark' ? 'Light' : 'Dark'}</button>
-        <AccountMenu onSignOut={onSignOut} />
+        <AccountMenu account={account} viewingAs={viewingAs} canViewAs={canViewAs} onSignOut={onSignOut} onViewAs={onViewAs} onEndViewAs={onEndViewAs} />
       </header>
       {viewingAs && <div role="status" className="flex flex-wrap items-center gap-md bg-warn-surface px-lg py-sm text-warn">
         Looking at the app as <b>{viewingAs}</b>. Your own account is unchanged.
