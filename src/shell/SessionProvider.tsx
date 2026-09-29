@@ -51,6 +51,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         if (err instanceof ApiError) toastRefusal(err.refusal);
       });
   }), [adopt]);
+  /* Global 401 handling: a query or a mutation anywhere in the app (not the
+     two direct reads above, which already sign out on their own 401) was
+     answered 401 by queryClient's QueryCache/MutationCache (src/api/query.ts).
+     The refusal it carries is toasted here, once, and the session is cleared,
+     so a request the person never sees directly still ends in a clear
+     "you are signed out", not a page that quietly stops working. */
+  useEffect(() => sessionEvents.on('signed-out', refusal => {
+    if (refusal) toastRefusal(refusal);
+    adopt(null);
+  }), [adopt]);
   /* Starting or ending view-as changes the session only from a real
      response. A refusal or fault is toasted and the session stays exactly as
      it was, so a failed "Return to my account" is never silent. A 401 means

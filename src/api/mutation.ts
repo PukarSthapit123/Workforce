@@ -45,6 +45,10 @@ export function useRecordMutation<TVars, TData>(opts: RecordMutationOptions<TVar
     },
     onError: async error => {
       if (!(error instanceof ApiError)) return;
+      /* A 401 is handled once, globally (src/api/query.ts's MutationCache
+         onError signs out and toasts the same refusal); toasting it again
+         here would just double it up. */
+      if (error.status === 401) return;
       toastRefusal(error.refusal);
       const field = error.refusal.field;
       if (field) setFieldErrors(f => ({ ...f, [field]: error.refusal.message }));
