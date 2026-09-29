@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { tid } from '@/testids';
 import { Button, Caution, Row } from '@/ui';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
-import { useCapabilities, useCapabilityGroups, useUserTypes, useUsers, useSetTemplateCapability, type Capability, type UserType } from '@/api/access';
+import { useCapabilities, useCapabilityGroups, useUserTypes, useUsers, useSetTemplateCapability, type Capability, type Self, type UserType } from '@/api/access';
+import { useCurrentSession } from '@/shell/SessionProvider';
 import { UserExceptions } from './UserExceptions';
 
 function exceptionsSummary(typeName: string, grants: readonly string[], revocations: readonly string[]): string {
@@ -20,7 +21,9 @@ export function PermissionsPage() {
   const groups = useCapabilityGroups();
   const userTypes = useUserTypes();
   const users = useUsers();
-  const setCap = useSetTemplateCapability();
+  const session = useCurrentSession();
+  const self: Self | null = session ? { userType: session.account.userType, email: session.account.email } : null;
+  const setCap = useSetTemplateCapability(self);
   const [exceptionsForEmail, setExceptionsForEmail] = useState<string | null>(null);
 
   if (capabilities.isPending || groups.isPending || userTypes.isPending || users.isPending) {
@@ -40,7 +43,10 @@ export function PermissionsPage() {
   const types = userTypes.data;
   const typeName = (id: string) => types.find(t => t.id === id)?.name ?? id;
 
+  /* The guard is here as well as in the hook: a pending cell keeps focus
+     (aria-disabled, not disabled), so a click or a key press still arrives. */
   function toggle(c: Capability, t: UserType) {
+    if (setCap.isPending(t.id) || c.lockedFor.includes(t.id)) return;
     const had = t.capabilities.includes(c.id);
     setCap.mutate({ id: t.id, cap: c.id, granted: !had, ifMatch: t.version });
   }
@@ -86,15 +92,17 @@ export function PermissionsPage() {
                       const locked = c.lockedFor.includes(t.id);
                       /* M3: while a change to this template is in flight, its
                          cells wait. Every cell in the column sends the same
-                         If-Match, so a second click would only earn a 412. */
-                      const saving = setCap.isPending && setCap.variables?.id === t.id;
+                         If-Match, so a second click would only earn a 412.
+                         Pending is tracked per template, so a save to another
+                         template's column stays guarded on its own. */
+                      const saving = setCap.isPending(t.id);
                       return (
                         <TableCell key={t.id} className="text-center">
-                          <button type="button" data-testid={tid.access.cell(c.id, t.id)} aria-pressed={on} disabled={locked || saving}
+                          <button type="button" data-testid={tid.access.cell(c.id, t.id)} aria-pressed={on} disabled={locked} aria-disabled={saving || undefined}
                             aria-label={`${c.label}, ${t.name}: ${on ? 'granted' : 'not granted'}${locked ? ', locked' : ''}`} aria-busy={saving || undefined}
                             title={locked ? 'Locked. An administrator cannot remove their own access to this page.' : undefined}
                             onClick={() => toggle(c, t)}
-                            className={`inline-flex min-h-touch min-w-touch items-center justify-center rounded-control border ${on ? 'border-brand bg-brand-accent' : 'border-border'} disabled:cursor-not-allowed disabled:opacity-60`}>
+                            className={`inline-flex min-h-touch min-w-touch items-center justify-center rounded-control border ${on ? 'border-brand bg-brand-accent' : 'border-border'} disabled:cursor-not-allowed disabled:opacity-60 aria-disabled:cursor-not-allowed aria-disabled:opacity-60`}>
                             {on ? '✓' : '—'}
                           </button>
                         </TableCell>);
@@ -135,6 +143,6 @@ export function PermissionsPage() {
       </div>
 
       <UserExceptions user={exceptionsUser} capabilities={caps} typeName={exceptionsUser ? typeName(exceptionsUser.userType) : ''}
-        templateCapabilities={exceptionsUserTemplate?.capabilities ?? []} onClose={() => setExceptionsForEmail(null)} />
+        templateCapabilities={exceptionsUserTemplate?.capabilities ?? []} self={self} onClose={() => setExceptionsForEmail(null)} />
     </section>);
 }

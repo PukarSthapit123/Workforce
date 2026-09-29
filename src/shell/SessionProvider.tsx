@@ -4,12 +4,17 @@ import { getToken, setToken } from '@/api/session-token';
 import { createSession, deleteSession, endViewAs, getSession, startViewAs, type Session } from '@/contract/session';
 import { queryClient } from '@/api/query';
 import { toastRefusal } from '@/ui';
+import { sessionEvents } from '@/api/session-events';
 
 interface Ctx { session: Session | null; ready: boolean;
   signIn(email: string, password: string): Promise<void>; signOut(): Promise<void>;
   viewAs(personCode: string): Promise<void>; endViewAs(): Promise<void>; }
 const SessionCtx = createContext<Ctx | null>(null);
 export const useSession = () => { const c = useContext(SessionCtx); if (!c) throw new Error('useSession outside provider'); return c; };
+/* The signed-in session, or null, without requiring a provider: for a page
+   that only needs to know who is making a change (a component test may mount
+   the page on its own). */
+export const useCurrentSession = (): Session | null => useContext(SessionCtx)?.session ?? null;
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -31,6 +36,21 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       if (err instanceof ApiError) toastRefusal(err.refusal);
     }).finally(() => setReady(true));
   }, [adopt]);
+  /* A write that can change this person's own capabilities (their own
+     template or exception) asks for the session to be read again. Only the
+     session and the tenant (which the nav is built from) are re-read; the
+     rest of the cache is the writer's business, and is kept. */
+  useEffect(() => sessionEvents.on('refresh', () => {
+    if (!getToken()) return;
+    api(getSession).then(s => { setSession(s); void queryClient.invalidateQueries({ queryKey: ['tenant'] }); },
+      (err: unknown) => {
+        /* Rare: the token stopped working between the write's own success and
+           this re-read. Signed out, as on boot, rather than left showing a
+           session that no longer holds. */
+        if (err instanceof ApiError && err.status === 401) { adopt(null); return; }
+        if (err instanceof ApiError) toastRefusal(err.refusal);
+      });
+  }), [adopt]);
   /* Starting or ending view-as changes the session only from a real
      response. A refusal or fault is toasted and the session stays exactly as
      it was, so a failed "Return to my account" is never silent. A 401 means
