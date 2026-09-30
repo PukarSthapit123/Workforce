@@ -120,3 +120,10 @@ describe('editing someone', () => {
     expect(screen.getByTestId(tid.personForm.root)).toHaveTextContent('Qnipay setup · Permissions');
   });
 });
+test('T A tooltip inside a modal exists (the reported case)', async () => {
+  await signInAs('admin');
+  await openAdd();
+  const tip = screen.getByTestId(tid.field.tip(tid.personForm.field('code')));
+  expect(screen.getByRole('dialog')).toContainElement(tip);
+  expect(tip).toHaveAccessibleDescription(/cannot change once the record exists/);
+});

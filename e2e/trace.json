@@ -45,17 +45,17 @@
    "id": "BOOT#6",
    "section": "BOOT",
    "text": "Its projects are the real ones",
-   "area": "1b",
-   "deferredTo": "1b",
-   "status": "pending"
+   "area": "1a",
+   "status": "ported",
+   "test": "e2e/admin-1b.spec.ts › EI Employee IDs are the tenant’s own, not Business Central keys; a Business Central resource number is a separate field; a new ID follows the scheme already in use; TD the roster is the real resource list, inactive resources are archived, and the projects and cost centres are the real ones"
   },
   {
    "id": "BOOT#7",
    "section": "BOOT",
    "text": "Its roster is the real resource list",
-   "area": "1b",
-   "deferredTo": "1b",
-   "status": "pending"
+   "area": "1a",
+   "status": "ported",
+   "test": "e2e/admin-1b.spec.ts › EI Employee IDs are the tenant’s own, not Business Central keys; a Business Central resource number is a separate field; a new ID follows the scheme already in use; TD the roster is the real resource list, inactive resources are archived, and the projects and cost centres are the real ones"
   },
   {
    "id": "BOOT#8",
@@ -1872,9 +1872,9 @@
    "id": "TOOLTIPS-escape-their-container-and-stay-on-screen#12",
    "section": "TOOLTIPS — escape their container and stay on screen",
    "text": "T A tooltip inside a modal exists (the reported case)",
-   "area": "1b",
-   "deferredTo": "1b",
-   "status": "pending"
+   "area": "ui",
+   "status": "ported",
+   "test": "src/features/people/person-form.test.tsx › T A tooltip inside a modal exists (the reported case)"
   },
   {
    "id": "TOOLTIPS-escape-their-container-and-stay-on-screen#13",
@@ -1904,9 +1904,9 @@
    "id": "TOOLTIPS-escape-their-container-and-stay-on-screen#16",
    "section": "TOOLTIPS — escape their container and stay on screen",
    "text": "T Bubble is open before navigating",
-   "area": "1b",
-   "deferredTo": "1b",
-   "status": "pending"
+   "area": "ui",
+   "status": "n/a",
+   "reason": "replaced by Radix: a tooltip’s open state lives in the Radix Tooltip and ends when its trigger unmounts on navigation, so there is no body-level bubble left open across a navigation"
   },
   {
    "id": "TOOLTIPS-escape-their-container-and-stay-on-screen#17",
@@ -1920,8 +1920,8 @@
    "id": "TOOLTIPS-escape-their-container-and-stay-on-screen#18",
    "section": "TOOLTIPS — escape their container and stay on screen",
    "text": "T Table-wrapper tooltips exist and now use the same bubble",
-   "area": "1b",
-   "deferredTo": "1b",
+   "area": "timesheet",
+   "deferredTo": "timesheet",
    "status": "pending"
   },
   {
@@ -2719,9 +2719,9 @@
    "id": "ICONS-CRUMBS-AND-REDUNDANT-COUNTS#7",
    "section": "ICONS, CRUMBS AND REDUNDANT COUNTS",
    "text": "CR A crumb still appears where it names a real route",
-   "area": "1b",
-   "deferredTo": "1b",
-   "status": "pending"
+   "area": "1a",
+   "status": "ported",
+   "test": "src/features/dimensions/contracts.test.tsx › CR A crumb still appears where it names a real route"
   },
   {
    "id": "ICONS-CRUMBS-AND-REDUNDANT-COUNTS#8",
@@ -3998,399 +3998,456 @@
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR An Add control replaces the old stub",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/people/people.test.tsx › CR An Add control replaces the old stub, and rows offer Edit"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#2",
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR Every row shows a lifecycle state",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/people/people.test.tsx › CR Every row shows a lifecycle state, and the page has full test id coverage"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#3",
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR A state filter is offered",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/people/people.test.tsx › CR A state filter is offered: a leaver drops out of the default list, but is reachable through the state filter"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#4",
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR Rows offer Edit",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/people/people.test.tsx › CR An Add control replaces the old stub, and rows offer Edit"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#5",
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR The form opens with an identity section",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/people/person-form.test.tsx › CR The form opens with an identity section, groups employment, contract and access, and has full test id coverage"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#6",
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR It proposes the next free employee ID, in the tenant’s own scheme",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/people/person-form.test.tsx › CR It proposes the next free employee ID, in the tenant’s own scheme"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#7",
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR It groups employment, contract and access",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/people/person-form.test.tsx › CR The form opens with an identity section, groups employment, contract and access, and has full test id coverage"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#8",
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR It uses the design system field pattern",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/people/person-form.test.tsx › CR It uses the design system field pattern"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#9",
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR A name is required",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/people/person-form.test.tsx › CR A name is required, and nothing is written"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#10",
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR The employee ID format is checked, with an example from this roster",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/people.test.ts › CR The employee ID format is checked, with an example from this roster"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#11",
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR A duplicate employee ID is refused, because payroll maps on it",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/people/person-form.test.tsx › CR A duplicate employee ID is refused, because payroll maps on it"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#12",
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR Contracted hours are bounded",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/people/person-form.test.tsx › CR Contracted hours are bounded, and cannot exceed the maximum"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#13",
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR Contracted hours cannot exceed the maximum",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/people/person-form.test.tsx › CR Contracted hours are bounded, and cannot exceed the maximum"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#14",
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR A valid record is created",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-1b.spec.ts › CR A valid record is created; the new person appears in the list; creation is audited with type, location and hours; the new record can be edited; the edit is audited as a before → after diff"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#15",
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR ... and says what it can do straight away",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/people/person-form.test.tsx › CR A valid record is created, and says what it can do straight away"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#16",
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR The new person appears in the list",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-1b.spec.ts › CR A valid record is created; the new person appears in the list; creation is audited with type, location and hours; the new record can be edited; the edit is audited as a before → after diff"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#17",
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR Creation is audited with type, location and hours",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-1b.spec.ts › CR A valid record is created; the new person appears in the list; creation is audited with type, location and hours; the new record can be edited; the edit is audited as a before → after diff"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#18",
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR The new record can be edited",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-1b.spec.ts › CR A valid record is created; the new person appears in the list; creation is audited with type, location and hours; the new record can be edited; the edit is audited as a before → after diff"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#19",
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR The employee ID cannot be changed once it exists",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/people/person-form.test.tsx › CR The employee ID cannot be changed once it exists"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#20",
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR An edit reports how many fields changed",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/people/person-form.test.tsx › CR An edit reports how many fields changed"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#21",
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR The edit is audited as a before → after diff",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-1b.spec.ts › CR A valid record is created; the new person appears in the list; creation is audited with type, location and hours; the new record can be edited; the edit is audited as a before → after diff"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#22",
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR A lifecycle dialog offers only the legal next states",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/people/lifecycle.test.tsx › CR A lifecycle dialog offers only the legal next states, with full test id coverage"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#23",
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR It warns that some moves release future shifts",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/people/lifecycle.test.tsx › CR It warns that some moves release future shifts, and says Rota has not released any"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#24",
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR A state must be chosen",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/people/lifecycle.test.tsx › CR A state must be chosen"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#25",
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR An active record can become a leaver",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/people/lifecycle.test.tsx › CR An active record can become a leaver: the transition is applied, with its reason in the audit"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#26",
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR A reason is required and kept on the record",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/people/lifecycle.test.tsx › CR A reason is required and kept on the record"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#27",
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR The transition is applied",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/people/lifecycle.test.tsx › CR An active record can become a leaver: the transition is applied, with its reason in the audit"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#28",
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR A leaver drops out of the default list",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-1b.spec.ts › CR A lifecycle dialog offers only the legal next states; the transition is audited with its reason; a leaver drops out of the default list, but is reachable through the state filter"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#29",
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR ... but is reachable through the state filter",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-1b.spec.ts › CR A lifecycle dialog offers only the legal next states; the transition is audited with its reason; a leaver drops out of the default list, but is reachable through the state filter"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#30",
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR The transition is audited with its reason",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-1b.spec.ts › CR A lifecycle dialog offers only the legal next states; the transition is audited with its reason; a leaver drops out of the default list, but is reachable through the state filter"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#31",
    "section": "EMPLOYEE CRUD + LIFECYCLE (IMP-013)",
    "text": "CR The capability appears in the matrix",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-1b.spec.ts › CR The capability appears in the matrix"
   },
   {
    "id": "DIMENSION-CRUD-IMP-019#1",
    "section": "DIMENSION CRUD (IMP-019)",
    "text": "DM Dimensions is an index of cards, not one long stacked page",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/dimensions/dimensions.test.tsx › DM Dimensions is an index of cards, not one long stacked page; every dimension card renders as a card, with full test id coverage"
   },
   {
    "id": "DIMENSION-CRUD-IMP-019#2",
    "section": "DIMENSION CRUD (IMP-019)",
    "text": "DM All five dimensions are here, including job profiles and projects",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/dimensions/dimensions.test.tsx › DM All five dimensions are here, including job profiles and projects, and each card says how many entries it holds"
   },
   {
    "id": "DIMENSION-CRUD-IMP-019#3",
    "section": "DIMENSION CRUD (IMP-019)",
    "text": "DM Each card says how many entries it holds",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/dimensions/dimensions.test.tsx › DM All five dimensions are here, including job profiles and projects, and each card says how many entries it holds"
   },
   {
    "id": "DIMENSION-CRUD-IMP-019#4",
    "section": "DIMENSION CRUD (IMP-019)",
    "text": "DM Job profiles no longer live on the Employee types page",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-1b.spec.ts › DM Job profiles no longer live on the Employee types page; ET A type is created, it appears in the type list, and it can be removed; a type people hold is refused, naming them; a contract is edited through the person record"
   },
   {
    "id": "DIMENSION-CRUD-IMP-019#5",
    "section": "DIMENSION CRUD (IMP-019)",
    "text": "DM Opening a dimension gives it its own page",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/dimensions/dimensions.test.tsx › DM Opening a dimension gives it its own page, with a way back, and full test id coverage"
   },
   {
    "id": "DIMENSION-CRUD-IMP-019#6",
    "section": "DIMENSION CRUD (IMP-019)",
    "text": "DM With a way back",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/dimensions/dimensions.test.tsx › DM Opening a dimension gives it its own page, with a way back, and full test id coverage"
   },
   {
    "id": "DIMENSION-CRUD-IMP-019#7",
    "section": "DIMENSION CRUD (IMP-019)",
    "text": "DM It shows how many things use each entry",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/dimensions/dimensions.test.tsx › DM It shows how many things use each entry, and says removal is blocked while in use; rows offer Edit"
   },
   {
    "id": "DIMENSION-CRUD-IMP-019#8",
    "section": "DIMENSION CRUD (IMP-019)",
    "text": "DM And says removal is blocked while in use",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/dimensions/dimensions.test.tsx › DM It shows how many things use each entry, and says removal is blocked while in use; rows offer Edit"
   },
   {
    "id": "DIMENSION-CRUD-IMP-019#9",
    "section": "DIMENSION CRUD (IMP-019)",
    "text": "DM Rows offer Edit",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/dimensions/dimensions.test.tsx › DM It shows how many things use each entry, and says removal is blocked while in use; rows offer Edit"
   },
   {
    "id": "DIMENSION-CRUD-IMP-019#10",
    "section": "DIMENSION CRUD (IMP-019)",
    "text": "DM The form is built from the spec, using the system field pattern",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/dimensions/dimensions.test.tsx › DM The form is built from the spec, using the system field pattern, with full test id coverage"
   },
   {
    "id": "DIMENSION-CRUD-IMP-019#11",
    "section": "DIMENSION CRUD (IMP-019)",
    "text": "DM A required field is enforced",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/dimensions/dimensions.test.tsx › DM A required field is enforced, and a duplicate code is refused, because rota lines reference it"
   },
   {
    "id": "DIMENSION-CRUD-IMP-019#12",
    "section": "DIMENSION CRUD (IMP-019)",
    "text": "DM A duplicate code is refused, because rota lines reference it",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/dimensions/dimensions.test.tsx › DM A required field is enforced, and a duplicate code is refused, because rota lines reference it"
   },
   {
    "id": "DIMENSION-CRUD-IMP-019#13",
    "section": "DIMENSION CRUD (IMP-019)",
    "text": "DM A valid entry is created",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-1b.spec.ts › DM A valid entry is created, it lands on that dimension’s page, and creation is audited; the edit is audited as a diff; an entry in use cannot be removed, and says what uses it; an unused entry can be removed, and it is gone from the list"
   },
   {
    "id": "DIMENSION-CRUD-IMP-019#14",
    "section": "DIMENSION CRUD (IMP-019)",
    "text": "DM ... and says where it becomes available",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/dimensions/dimensions.test.tsx › DM A valid entry is created, says where it becomes available, and the new entry can be edited"
   },
   {
    "id": "DIMENSION-CRUD-IMP-019#15",
    "section": "DIMENSION CRUD (IMP-019)",
    "text": "DM It lands on that dimension’s page",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-1b.spec.ts › DM A valid entry is created, it lands on that dimension’s page, and creation is audited; the edit is audited as a diff; an entry in use cannot be removed, and says what uses it; an unused entry can be removed, and it is gone from the list"
   },
   {
    "id": "DIMENSION-CRUD-IMP-019#16",
    "section": "DIMENSION CRUD (IMP-019)",
    "text": "DM Creation is audited",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-1b.spec.ts › DM A valid entry is created, it lands on that dimension’s page, and creation is audited; the edit is audited as a diff; an entry in use cannot be removed, and says what uses it; an unused entry can be removed, and it is gone from the list"
   },
   {
    "id": "DIMENSION-CRUD-IMP-019#17",
    "section": "DIMENSION CRUD (IMP-019)",
    "text": "DM The new entry can be edited",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/dimensions/dimensions.test.tsx › DM A valid entry is created, says where it becomes available, and the new entry can be edited"
   },
   {
    "id": "DIMENSION-CRUD-IMP-019#18",
    "section": "DIMENSION CRUD (IMP-019)",
    "text": "DM The code is locked once it exists",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/dimensions/dimensions.test.tsx › DM The code is locked once it exists, and says why"
   },
   {
    "id": "DIMENSION-CRUD-IMP-019#19",
    "section": "DIMENSION CRUD (IMP-019)",
    "text": "DM ... and says why",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/dimensions/dimensions.test.tsx › DM The code is locked once it exists, and says why"
   },
   {
    "id": "DIMENSION-CRUD-IMP-019#20",
    "section": "DIMENSION CRUD (IMP-019)",
    "text": "DM An edit reports how many fields changed",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/dimensions/dimensions.test.tsx › DM An edit reports how many fields changed"
   },
   {
    "id": "DIMENSION-CRUD-IMP-019#21",
    "section": "DIMENSION CRUD (IMP-019)",
    "text": "DM The edit is audited as a diff",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-1b.spec.ts › DM A valid entry is created, it lands on that dimension’s page, and creation is audited; the edit is audited as a diff; an entry in use cannot be removed, and says what uses it; an unused entry can be removed, and it is gone from the list"
   },
   {
    "id": "DIMENSION-CRUD-IMP-019#22",
    "section": "DIMENSION CRUD (IMP-019)",
    "text": "DM An entry in use cannot be removed, and says what uses it",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/dimensions/dimensions.test.tsx › DM An entry in use cannot be removed, and says what uses it"
   },
   {
    "id": "DIMENSION-CRUD-IMP-019#23",
    "section": "DIMENSION CRUD (IMP-019)",
    "text": "DM An unused entry can be removed",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/dimensions/dimensions.test.tsx › DM An unused entry can be removed, and it is gone from the list"
   },
   {
    "id": "DIMENSION-CRUD-IMP-019#24",
    "section": "DIMENSION CRUD (IMP-019)",
    "text": "DM ... and it is gone from the list",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/dimensions/dimensions.test.tsx › DM An unused entry can be removed, and it is gone from the list"
   },
   {
    "id": "DIMENSION-CRUD-IMP-019#25",
    "section": "DIMENSION CRUD (IMP-019)",
    "text": "DM One form serves ",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/dimensions/dimensions.test.tsx › DM One form serves every dimension"
   },
   {
    "id": "DIMENSION-CRUD-IMP-019#26",
    "section": "DIMENSION CRUD (IMP-019)",
    "text": "DM Boolean fields render as toggles, not text",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/dimensions/dimensions.test.tsx › DM Boolean fields render as toggles, not text"
   },
   {
    "id": "FUSION3-CONFIGURED-THROUGH-THE-TEMPLATE#1",
@@ -4831,56 +4888,64 @@
    "section": "EMPLOYEE TYPE CRUD (pre-existing, now covered)",
    "text": "ET A New employee type control exists",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/employee-types/types.test.tsx › ET A New employee type control exists, and the new-type form has full test id coverage"
   },
   {
    "id": "EMPLOYEE-TYPE-CRUD-pre-existing-now-covered#2",
    "section": "EMPLOYEE TYPE CRUD (pre-existing, now covered)",
    "text": "ET It can start blank, from a live type, or from an archetype",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/employee-types/types.test.tsx › ET It can start blank, from a live type, or from an archetype"
   },
   {
    "id": "EMPLOYEE-TYPE-CRUD-pre-existing-now-covered#3",
    "section": "EMPLOYEE TYPE CRUD (pre-existing, now covered)",
    "text": "ET It asks for entry mode and pay basis",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/employee-types/types.test.tsx › ET It asks for entry mode and pay basis"
   },
   {
    "id": "EMPLOYEE-TYPE-CRUD-pre-existing-now-covered#4",
    "section": "EMPLOYEE TYPE CRUD (pre-existing, now covered)",
    "text": "ET A name is required",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/employee-types/types.test.tsx › ET A name is required"
   },
   {
    "id": "EMPLOYEE-TYPE-CRUD-pre-existing-now-covered#5",
    "section": "EMPLOYEE TYPE CRUD (pre-existing, now covered)",
    "text": "ET A type is created",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/employee-types/types.test.tsx › ET A type is created, it appears in the type list, and it can be removed"
   },
   {
    "id": "EMPLOYEE-TYPE-CRUD-pre-existing-now-covered#6",
    "section": "EMPLOYEE TYPE CRUD (pre-existing, now covered)",
    "text": "ET It appears in the type list",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/employee-types/types.test.tsx › ET A type is created, it appears in the type list, and it can be removed"
   },
   {
    "id": "EMPLOYEE-TYPE-CRUD-pre-existing-now-covered#7",
    "section": "EMPLOYEE TYPE CRUD (pre-existing, now covered)",
    "text": "ET It can be removed",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/employee-types/types.test.tsx › ET A type is created, it appears in the type list, and it can be removed"
   },
   {
    "id": "EMPLOYEE-TYPE-CRUD-pre-existing-now-covered#8",
    "section": "EMPLOYEE TYPE CRUD (pre-existing, now covered)",
    "text": "ET Removing it moves its people to another type",
    "area": "1b",
-   "status": "pending"
+   "status": "n/a",
+   "reason": "diverges by plan: nothing in use is deleted (plan 1b decision D12), so removing a type people hold is refused and names them instead of moving them (src/features/employee-types/types.test.tsx › ET Removing a type people hold is refused, and names them)"
   },
   {
    "id": "ROTA-OFF-EMPTIES-THE-CALENDAR#1",
@@ -4928,7 +4993,8 @@
    "id": "TENANT-DATA-FROM-THE-BC-EXPORT#1",
    "section": "TENANT DATA FROM THE BC EXPORT",
    "text": "TD A professional-services template exists",
-   "area": "1b",
+   "area": "1c",
+   "deferredTo": "1c",
    "status": "pending"
   },
   {
@@ -4936,55 +5002,63 @@
    "section": "TENANT DATA FROM THE BC EXPORT",
    "text": "TD The real projects are loaded",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-1b.spec.ts › EI Employee IDs are the tenant’s own, not Business Central keys; a Business Central resource number is a separate field; a new ID follows the scheme already in use; TD the roster is the real resource list, inactive resources are archived, and the projects and cost centres are the real ones"
   },
   {
    "id": "TENANT-DATA-FROM-THE-BC-EXPORT#3",
    "section": "TENANT DATA FROM THE BC EXPORT",
    "text": "TD ... with their real descriptions",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-1b.spec.ts › EI Employee IDs are the tenant’s own, not Business Central keys; a Business Central resource number is a separate field; a new ID follows the scheme already in use; TD the roster is the real resource list, inactive resources are archived, and the projects and cost centres are the real ones"
   },
   {
    "id": "TENANT-DATA-FROM-THE-BC-EXPORT#4",
    "section": "TENANT DATA FROM THE BC EXPORT",
    "text": "TD Cost centres are the tenant’s own",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-1b.spec.ts › EI Employee IDs are the tenant’s own, not Business Central keys; a Business Central resource number is a separate field; a new ID follows the scheme already in use; TD the roster is the real resource list, inactive resources are archived, and the projects and cost centres are the real ones"
   },
   {
    "id": "TENANT-DATA-FROM-THE-BC-EXPORT#5",
    "section": "TENANT DATA FROM THE BC EXPORT",
    "text": "TD The roster is the real resource list",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-1b.spec.ts › EI Employee IDs are the tenant’s own, not Business Central keys; a Business Central resource number is a separate field; a new ID follows the scheme already in use; TD the roster is the real resource list, inactive resources are archived, and the projects and cost centres are the real ones"
   },
   {
    "id": "TENANT-DATA-FROM-THE-BC-EXPORT#6",
    "section": "TENANT DATA FROM THE BC EXPORT",
    "text": "TD The employee ID is the tenant’s own, not a Business Central key",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-1b.spec.ts › EI Employee IDs are the tenant’s own, not Business Central keys; a Business Central resource number is a separate field; a new ID follows the scheme already in use; TD the roster is the real resource list, inactive resources are archived, and the projects and cost centres are the real ones"
   },
   {
    "id": "TENANT-DATA-FROM-THE-BC-EXPORT#7",
    "section": "TENANT DATA FROM THE BC EXPORT",
    "text": "TD Inactive resources are archived, not deleted",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-1b.spec.ts › EI Employee IDs are the tenant’s own, not Business Central keys; a Business Central resource number is a separate field; a new ID follows the scheme already in use; TD the roster is the real resource list, inactive resources are archived, and the projects and cost centres are the real ones"
   },
   {
    "id": "TENANT-DATA-FROM-THE-BC-EXPORT#8",
    "section": "TENANT DATA FROM THE BC EXPORT",
    "text": "TD Project tasks are available on the entry line",
-   "area": "1b",
+   "area": "timesheet",
+   "deferredTo": "timesheet",
    "status": "pending"
   },
   {
    "id": "TENANT-DATA-FROM-THE-BC-EXPORT#9",
    "section": "TENANT DATA FROM THE BC EXPORT",
    "text": "TD Switching template back restores the care tenant",
-   "area": "1b",
+   "area": "1c",
+   "deferredTo": "1c",
    "status": "pending"
   },
   {
@@ -5485,17 +5559,17 @@
    "id": "PERSISTENCE-AND-ACCOUNTS#12",
    "section": "PERSISTENCE AND ACCOUNTS",
    "text": "PS Accounts follow the roster rather than being fixed",
-   "area": "1b",
-   "deferredTo": "1b",
-   "status": "pending"
+   "area": "1a",
+   "status": "ported",
+   "test": "e2e/admin-1b.spec.ts › CR A valid record is created; the new person appears in the list; creation is audited with type, location and hours; the new record can be edited; the edit is audited as a before → after diff"
   },
   {
    "id": "PERSISTENCE-AND-ACCOUNTS#13",
    "section": "PERSISTENCE AND ACCOUNTS",
    "text": "PS Two resources sharing one email resolve to the stronger role",
-   "area": "1b",
-   "deferredTo": "1b",
-   "status": "pending"
+   "area": "1a",
+   "status": "ported",
+   "test": "e2e/admin-1b.spec.ts › EI Employee IDs are the tenant’s own, not Business Central keys; a Business Central resource number is a separate field; a new ID follows the scheme already in use; TD the roster is the real resource list, inactive resources are archived, and the projects and cost centres are the real ones"
   },
   {
    "id": "PERSISTENCE-AND-ACCOUNTS#14",
@@ -5696,17 +5770,17 @@
    "id": "ADMIN-LAYOUT#6",
    "section": "ADMIN LAYOUT",
    "text": "AD Employee types is no longer the densest page in the admin",
-   "area": "1b",
-   "deferredTo": "1b",
-   "status": "pending"
+   "area": "1a",
+   "status": "ported",
+   "test": "src/features/employee-types/types.test.tsx › AD Employee types is no longer the densest page in the admin, and it says where the fields went, with full test id coverage"
   },
   {
    "id": "ADMIN-LAYOUT#7",
    "section": "ADMIN LAYOUT",
    "text": "AD ... and it says where the fields went",
-   "area": "1b",
-   "deferredTo": "1b",
-   "status": "pending"
+   "area": "1a",
+   "status": "ported",
+   "test": "src/features/employee-types/types.test.tsx › AD Employee types is no longer the densest page in the admin, and it says where the fields went, with full test id coverage"
   },
   {
    "id": "ADMIN-LAYOUT#8",
@@ -6087,70 +6161,80 @@
    "section": "PEOPLE, CONTRACTS AND DIMENSIONS",
    "text": "PC People lists who somebody is, not what they are contracted to",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/people/people.test.tsx › PC People lists who somebody is, not what they are contracted to, and does not repeat the employee type as a job profile"
   },
   {
    "id": "PEOPLE-CONTRACTS-AND-DIMENSIONS#2",
    "section": "PEOPLE, CONTRACTS AND DIMENSIONS",
    "text": "PC ... and does not repeat the employee type as a job profile",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/people/people.test.tsx › PC People lists who somebody is, not what they are contracted to, and does not repeat the employee type as a job profile"
   },
   {
    "id": "PEOPLE-CONTRACTS-AND-DIMENSIONS#3",
    "section": "PEOPLE, CONTRACTS AND DIMENSIONS",
    "text": "PC The contract is reached through the person",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/people/people.test.tsx › PC The contract is reached through the person, and their record carries the contract detail, with full test id coverage"
   },
   {
    "id": "PEOPLE-CONTRACTS-AND-DIMENSIONS#4",
    "section": "PEOPLE, CONTRACTS AND DIMENSIONS",
    "text": "PC ... and their record carries the contract detail",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/people/people.test.tsx › PC The contract is reached through the person, and their record carries the contract detail, with full test id coverage"
   },
   {
    "id": "PEOPLE-CONTRACTS-AND-DIMENSIONS#5",
    "section": "PEOPLE, CONTRACTS AND DIMENSIONS",
    "text": "DF Dimensions are grouped by the question they answer",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/dimensions/dimensions.test.tsx › DF Dimensions are grouped by the question they answer, in a readable order, and card descriptions are behind hover"
   },
   {
    "id": "PEOPLE-CONTRACTS-AND-DIMENSIONS#6",
    "section": "PEOPLE, CONTRACTS AND DIMENSIONS",
    "text": "DF ... in a readable order",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/dimensions/dimensions.test.tsx › DF Dimensions are grouped by the question they answer, in a readable order, and card descriptions are behind hover"
   },
   {
    "id": "PEOPLE-CONTRACTS-AND-DIMENSIONS#7",
    "section": "PEOPLE, CONTRACTS AND DIMENSIONS",
    "text": "DF Every dimension still has a card",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/dimensions/dimensions.test.tsx › DM All five dimensions are here, including job profiles and projects, and each card says how many entries it holds"
   },
   {
    "id": "EMPLOYEE-IDENTIFIERS#1",
    "section": "EMPLOYEE IDENTIFIERS",
    "text": "EI Employee IDs are the tenant’s own, not Business Central keys",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-1b.spec.ts › EI Employee IDs are the tenant’s own, not Business Central keys; a Business Central resource number is a separate field; a new ID follows the scheme already in use; TD the roster is the real resource list, inactive resources are archived, and the projects and cost centres are the real ones"
   },
   {
    "id": "EMPLOYEE-IDENTIFIERS#2",
    "section": "EMPLOYEE IDENTIFIERS",
    "text": "EI A Business Central resource number is a separate field",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-1b.spec.ts › EI Employee IDs are the tenant’s own, not Business Central keys; a Business Central resource number is a separate field; a new ID follows the scheme already in use; TD the roster is the real resource list, inactive resources are archived, and the projects and cost centres are the real ones"
   },
   {
    "id": "EMPLOYEE-IDENTIFIERS#3",
    "section": "EMPLOYEE IDENTIFIERS",
    "text": "EI A new ID follows the scheme already in use",
    "area": "1b",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-1b.spec.ts › EI Employee IDs are the tenant’s own, not Business Central keys; a Business Central resource number is a separate field; a new ID follows the scheme already in use; TD the roster is the real resource list, inactive resources are archived, and the projects and cost centres are the real ones"
   },
   {
    "id": "AGAINST-THE-DESIGN-SYSTEM#1",
@@ -6204,17 +6288,17 @@
    "id": "NO-MARKUP-WITHOUT-STYLING#2",
    "section": "NO MARKUP WITHOUT STYLING",
    "text": "MU Every dimension card renders as a card",
-   "area": "1b",
-   "deferredTo": "1b",
-   "status": "pending"
+   "area": "ui",
+   "status": "ported",
+   "test": "src/features/dimensions/dimensions.test.tsx › DM Dimensions is an index of cards, not one long stacked page; every dimension card renders as a card, with full test id coverage"
   },
   {
    "id": "NO-MARKUP-WITHOUT-STYLING#3",
    "section": "NO MARKUP WITHOUT STYLING",
    "text": "MU Card descriptions are behind hover, not printed under every title",
-   "area": "1b",
-   "deferredTo": "1b",
-   "status": "pending"
+   "area": "ui",
+   "status": "ported",
+   "test": "src/features/dimensions/dimensions.test.tsx › DF Dimensions are grouped by the question they answer, in a readable order, and card descriptions are behind hover"
   },
   {
    "id": "NO-MARKUP-WITHOUT-STYLING#4",

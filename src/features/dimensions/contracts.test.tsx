@@ -45,3 +45,8 @@ test('a failed save shows the refusal and leaves the record as it was', async ()
   expect(await screen.findByTestId(tid.toast.error)).toHaveTextContent('Nothing has been changed');
   expect(snapshot('people')).toEqual(before);
 });
+test('CR A crumb still appears where it names a real route', async () => {
+  renderPage(<ContractsPage />);
+  await screen.findByTestId(tid.contracts.table);
+  expect(screen.getByText('Qnipay setup · Contracts')).toBeInTheDocument();
+});
