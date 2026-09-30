@@ -5,4 +5,5 @@ export * from './session';
 export * from './tenant';
 export * from './access';
 export * from './people';
+export * from './dimensions';
 /* feature contracts register themselves on import; each later task adds one line */

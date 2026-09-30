@@ -6,5 +6,6 @@ import { accessHandlers } from './access';
 import { auditHandlers } from './audit-handlers';
 import { peopleHandlers } from './people';
 import { transitionHandlers } from './transitions';
+import { dimensionHandlers } from './dimensions';
 /* Order matters: faults first, so they can pre-empt any endpoint. */
-export const handlers = [faultsHandler, ...devHandlers, ...sessionHandlers, ...tenantHandlers, ...accessHandlers, ...auditHandlers, ...peopleHandlers, ...transitionHandlers /* feature handlers appended by later tasks */];
+export const handlers = [faultsHandler, ...devHandlers, ...sessionHandlers, ...tenantHandlers, ...accessHandlers, ...auditHandlers, ...peopleHandlers, ...transitionHandlers, ...dimensionHandlers /* feature handlers appended by later tasks */];
