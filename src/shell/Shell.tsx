@@ -18,10 +18,11 @@ import { TeamPeoplePage } from '@/features/people/TeamPeoplePage';
 import { ProfilePage } from '@/features/profile/ProfilePage';
 import { DimensionsPage } from '@/features/dimensions/DimensionsPage';
 import { ContractsPage } from '@/features/dimensions/ContractsPage';
+import { EmployeeTypesPage } from '@/features/employee-types/EmployeeTypesPage';
 
 const BUILT: Record<string, ComponentType> = { asetup: SetupIndex, aperm: PermissionsPage, iaudit: AuditPage,
   apeople: AdminPeoplePage, tpeople: TeamPeoplePage, profile: ProfilePage,
-  aloc: DimensionsPage, acon: ContractsPage };
+  aloc: DimensionsPage, acon: ContractsPage, atypes: EmployeeTypesPage };
 const THEME_KEY = 'qnipay.theme';
 
 /* Avoids a non-null assertion on role[0]: charAt(0) is always defined, even

@@ -96,6 +96,14 @@ export const tid = {
     hours: 'contracts-hours', max: 'contracts-max', save: 'contracts-save', cancel: 'contracts-cancel', warn: 'contracts-warn',
     state: (code: string) => k('contracts-state', code), error: 'contracts-error',
   },
+  /* plan 1b: Employee types (atypes) */
+  types: {
+    list: 'types-list', chip: (code: string) => k('types-chip', code), add: 'types-add', detail: 'types-detail',
+    field: (key: string) => k('types-form', key), cap: (code: string) => k('types-cap', code), save: 'types-save',
+    remove: 'types-remove', warn: 'types-warn', jobs: 'types-jobs', jobsLink: 'types-jobs-link', tip: 'types-tip',
+    newField: (key: string) => k('types-new', key), newSave: 'types-new-save', newCancel: 'types-new-cancel', newWarn: 'types-new-warn',
+    error: 'types-error', heldBy: 'types-held-by',
+  },
   /* A Field's own ids come from the control it wraps, so a form never types one by hand. */
   field: { root: (controlTestId: string) => `${controlTestId}-field`, tip: (controlTestId: string) => `${controlTestId}-field-tip` },
   modal: { root: 'modal', title: 'modal-title', close: 'modal-close', confirm: 'modal-confirm', cancel: 'modal-cancel' },
