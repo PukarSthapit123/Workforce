@@ -15,9 +15,10 @@ import { PermissionsPage } from '@/features/access/PermissionsPage';
 import { AuditPage } from '@/features/audit/AuditPage';
 import { AdminPeoplePage } from '@/features/people/AdminPeoplePage';
 import { TeamPeoplePage } from '@/features/people/TeamPeoplePage';
+import { ProfilePage } from '@/features/profile/ProfilePage';
 
 const BUILT: Record<string, ComponentType> = { asetup: SetupIndex, aperm: PermissionsPage, iaudit: AuditPage,
-  apeople: AdminPeoplePage, tpeople: TeamPeoplePage };
+  apeople: AdminPeoplePage, tpeople: TeamPeoplePage, profile: ProfilePage };
 const THEME_KEY = 'qnipay.theme';
 
 /* Avoids a non-null assertion on role[0]: charAt(0) is always defined, even
