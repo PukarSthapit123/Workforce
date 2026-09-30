@@ -13,8 +13,11 @@ import { NotBuilt } from '@/features/not-built/NotBuilt';
 import { SetupIndex } from '@/features/setup/SetupIndex';
 import { PermissionsPage } from '@/features/access/PermissionsPage';
 import { AuditPage } from '@/features/audit/AuditPage';
+import { AdminPeoplePage } from '@/features/people/AdminPeoplePage';
+import { TeamPeoplePage } from '@/features/people/TeamPeoplePage';
 
-const BUILT: Record<string, ComponentType> = { asetup: SetupIndex, aperm: PermissionsPage, iaudit: AuditPage };
+const BUILT: Record<string, ComponentType> = { asetup: SetupIndex, aperm: PermissionsPage, iaudit: AuditPage,
+  apeople: AdminPeoplePage, tpeople: TeamPeoplePage };
 const THEME_KEY = 'qnipay.theme';
 
 /* Avoids a non-null assertion on role[0]: charAt(0) is always defined, even

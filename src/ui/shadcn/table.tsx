@@ -19,7 +19,8 @@ import { cn } from "@/lib/utils"
 type Variant = "plain" | "matrix" | "records"
 const VariantContext = React.createContext<Variant>("plain")
 
-function Table({ className, variant = "plain", ...props }: React.ComponentProps<"table"> & { variant?: Variant }) {
+/* dense: table.dense (v15:478), 7px 9px cells for a long list of records */
+function Table({ className, variant = "plain", dense, ...props }: React.ComponentProps<"table"> & { variant?: Variant; dense?: boolean }) {
   return (
     <VariantContext.Provider value={variant}>
       <div
@@ -36,6 +37,7 @@ function Table({ className, variant = "plain", ...props }: React.ComponentProps<
             "w-full border-collapse text-sm",
             variant === "matrix" && "max-md:min-w-[560px]",
             variant === "records" && "max-md:block",
+            dense && "md:[&_td]:px-[9px] md:[&_td]:py-[7px] md:[&_th]:px-[9px] md:[&_th]:py-[7px]",
             className
           )}
           {...props}

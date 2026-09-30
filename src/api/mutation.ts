@@ -3,6 +3,7 @@ import { useMutation, useQueryClient, type QueryKey } from '@tanstack/react-quer
 import { ApiError } from './client';
 import { sessionEvents } from './session-events';
 import { toastRefusal } from '@/ui/toast';
+import type { Refusal } from '@/contract/common';
 
 export interface RecordMutationOptions<TVars, TData> {
   mutationFn: (vars: TVars) => Promise<TData>;
@@ -31,6 +32,10 @@ export function useRecordMutation<TVars, TData>(opts: RecordMutationOptions<TVar
   const inFlight = useRef(new Set<string>());
   const [pending, setPending] = useState<ReadonlySet<string>>(() => new Set());
   const [fieldErrors, setFieldErrors] = useState<Readonly<Record<string, string>>>({});
+  /* The last refusal, so a form can also say inline why it was not saved (a
+     409 names what uses a record and has no single field). Cleared when the
+     next call is sent. */
+  const [refusal, setRefusal] = useState<Refusal | null>(null);
   const refetch = (keys: readonly QueryKey[]) => Promise.all(keys.map(queryKey => qc.invalidateQueries({ queryKey })));
 
   const m = useMutation({
@@ -50,6 +55,7 @@ export function useRecordMutation<TVars, TData>(opts: RecordMutationOptions<TVar
          here would just double it up. */
       if (error.status === 401) return;
       toastRefusal(error.refusal);
+      setRefusal(error.refusal);
       const field = error.refusal.field;
       if (field) setFieldErrors(f => ({ ...f, [field]: error.refusal.message }));
       if (error.status === 412) await refetch(opts.invalidates);
@@ -70,6 +76,7 @@ export function useRecordMutation<TVars, TData>(opts: RecordMutationOptions<TVar
     inFlight.current.add(key);
     setPending(new Set(inFlight.current));
     setFieldErrors({});
+    setRefusal(null);
     mutateAsync(vars).then(data => callbacks?.onSuccess?.(data), () => { /* toasted in onError */ });
     return true;
   }, [mutateAsync, opts]);
@@ -79,6 +86,7 @@ export function useRecordMutation<TVars, TData>(opts: RecordMutationOptions<TVar
     isPending: (key: string) => pending.has(key),
     anyPending: pending.size > 0,
     fieldError: (field: string): string | undefined => fieldErrors[field],
-    clearFieldErrors: () => setFieldErrors({}),
+    clearFieldErrors: () => { setFieldErrors({}); setRefusal(null); },
+    refusal,
   };
 }

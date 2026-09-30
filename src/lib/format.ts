@@ -9,3 +9,9 @@ export function describeChange(before: unknown, after: unknown): string {
   return [...new Set([...Object.keys(b), ...Object.keys(a)])].filter(k => JSON.stringify(b[k]) !== JSON.stringify(a[k]))
     .map(k => `${k}: ${show(b[k])} → ${show(a[k])}`).join(' · ');
 }
+
+/* An ISO date (YYYY-MM-DD) the British way; a blank or malformed one reads as a dash. */
+export const formatDate = (iso: string) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  return m ? `${m[3] ?? ''}/${m[2] ?? ''}/${m[1] ?? ''}` : '—';
+};
