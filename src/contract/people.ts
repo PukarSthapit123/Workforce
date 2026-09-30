@@ -63,3 +63,9 @@ export const updatePerson = defineEndpoint({ method: 'PATCH', path: '/api/v1/peo
   summary: 'Edit a person (If-Match). The code is immutable and the state moves only by transition.' });
 export const listHistory = defineEndpoint({ method: 'GET', path: '/api/v1/people/:id/history', params: PersonParams, response: z.array(HistoryEntry), errors: [403, 404],
   summary: 'Field-level history of one person, newest first' });
+
+export const Transition = z.object({ to: z.string(), reason: z.string() });
+export type Transition = z.infer<typeof Transition>;
+export const transitionPerson = defineEndpoint({ method: 'POST', path: '/api/v1/people/:id/transitions', params: PersonParams, request: Transition,
+  response: mutation(Person), capability: 'emp_crud', versioned: true, errors: [404, 409],
+  summary: 'Move a person along the lifecycle, with a reason (If-Match). 409 names the states it can move to.' });
