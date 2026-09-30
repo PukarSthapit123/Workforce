@@ -5,16 +5,26 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useAudit, type AuditEntry } from '@/api/audit';
 import { formatDateTime, describeChange } from '@/lib/format';
 
-/* The entities the session, view-as and access handlers write today (see
-   mocks/session.ts and mocks/access.ts). A future handler adding a new kind of
+/* The entities the session, view-as, access and plan 1b handlers write (see
+   mocks/session.ts, access.ts, people.ts and the rest). A future handler adding a new kind of
    audited change should add its label here too. */
 const ENTITY_OPTIONS = [
   { value: 'all', label: 'All records' },
   { value: 'userType', label: 'Permission templates' },
   { value: 'account', label: 'User accounts' },
   { value: 'session', label: 'Sessions and view-as' },
+  { value: 'person', label: 'People' },
+  { value: 'profileChange', label: 'Profile changes' },
+  { value: 'employeeType', label: 'Employee types' },
+  { value: 'location', label: 'Locations' },
+  { value: 'department', label: 'Departments' },
+  { value: 'costCentre', label: 'Cost centres' },
+  { value: 'jobProfile', label: 'Job profiles' },
+  { value: 'project', label: 'Projects' },
 ];
-const ENTITY_LABEL: Record<string, string> = { userType: 'Permission template', account: 'User account', session: 'Session' };
+const ENTITY_LABEL: Record<string, string> = { userType: 'Permission template', account: 'User account', session: 'Session',
+  person: 'Person', profileChange: 'Profile change', employeeType: 'Employee type', location: 'Location', department: 'Department',
+  costCentre: 'Cost centre', jobProfile: 'Job profile', project: 'Project' };
 
 const whoLabel = (who: AuditEntry['who']) => (who.viewingAs ? `${who.name} (as ${who.viewingAs})` : who.name);
 const recordLabel = (e: AuditEntry) => `${ENTITY_LABEL[e.entity] ?? e.entity}: ${e.entityId}`;
