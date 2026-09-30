@@ -374,5 +374,148 @@
    ],
    "note": "Kept for audit and payroll history. Hidden from every working list."
   }
- }
+ },
+ "supportLevels": [
+  {
+   "code": "High",
+   "label": "High support",
+   "min": 4
+  },
+  {
+   "code": "Medium",
+   "label": "Medium support",
+   "min": 3
+  },
+  {
+   "code": "Low",
+   "label": "Low support",
+   "min": 2
+  },
+  {
+   "code": "Floating",
+   "label": "Floating support",
+   "min": 1
+  }
+ ],
+ "typeArchetypes": [
+  {
+   "key": "salaried",
+   "name": "Salaried Employee",
+   "mode": "grid",
+   "uom": "day",
+   "capabilities": []
+  },
+  {
+   "key": "hourly",
+   "name": "Hourly Operative",
+   "mode": "form",
+   "uom": "hour",
+   "capabilities": []
+  },
+  {
+   "key": "shift",
+   "name": "Shift Worker",
+   "mode": "form",
+   "uom": "hour",
+   "capabilities": [
+    "shift"
+   ]
+  },
+  {
+   "key": "site_op",
+   "name": "Site Operative",
+   "mode": "clock",
+   "uom": "hour",
+   "capabilities": [
+    "site"
+   ]
+  },
+  {
+   "key": "driver",
+   "name": "Driver",
+   "mode": "form",
+   "uom": "hour",
+   "capabilities": [
+    "vehicle"
+   ]
+  },
+  {
+   "key": "project_res",
+   "name": "Project Resource",
+   "mode": "grid",
+   "uom": "day",
+   "capabilities": [
+    "project"
+   ]
+  },
+  {
+   "key": "casual",
+   "name": "Casual / Bank Worker",
+   "mode": "clock",
+   "uom": "hour",
+   "capabilities": [
+    "shift"
+   ]
+  }
+ ],
+ "typeCapabilities": [
+  {
+   "code": "vehicle",
+   "label": "Vehicles & driving",
+   "desc": "Offers vehicle registrations, movements, drive time and co-driver."
+  },
+  {
+   "code": "site",
+   "label": "Site & location",
+   "desc": "Offers the location field and per-site rules. Needs the Sites module."
+  },
+  {
+   "code": "project",
+   "label": "Project & costing",
+   "desc": "Offers project, task, cost centre and the billable flag."
+  },
+  {
+   "code": "shift",
+   "label": "Shift & rota",
+   "desc": "Offers the rota-line field and shift-premium rules."
+  }
+ ],
+ "selfFields": [
+  {
+   "k": "phone",
+   "label": "Mobile number",
+   "type": "tel",
+   "hint": "Used for shift offers and urgent cover"
+  },
+  {
+   "k": "addr",
+   "label": "Home address",
+   "type": "text",
+   "hint": "Kept for payroll and statutory documents"
+  },
+  {
+   "k": "emgName",
+   "label": "Emergency contact",
+   "type": "text",
+   "hint": "Who we call if something happens on shift"
+  },
+  {
+   "k": "emgPhone",
+   "label": "Emergency number",
+   "type": "tel"
+  },
+  {
+   "k": "bankAcc",
+   "label": "Bank account number",
+   "type": "text",
+   "sens": true,
+   "hint": "Verified by payroll before it takes effect — never used by Workforce itself"
+  },
+  {
+   "k": "bankSort",
+   "label": "Sort code",
+   "type": "text",
+   "sens": true
+  }
+ ]
 }

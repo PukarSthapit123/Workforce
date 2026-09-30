@@ -10,6 +10,12 @@
     "code": "EMP001",
     "name": "Pukar Sthapit",
     "email": "pukar.sthapit@dogmagroup.co.uk",
+    "phone": "",
+    "address": "",
+    "emergencyName": "",
+    "emergencyPhone": "",
+    "bankAccount": "",
+    "bankSortCode": "",
     "jobProfile": "PM",
     "employeeType": "salaried",
     "category": "Contracted",
@@ -18,6 +24,9 @@
     "manager": "Manish Nepal",
     "contractedHours": 37.5,
     "maxHours": 48,
+    "night": false,
+    "resource": "PUKAR",
+    "cis": false,
     "state": "active",
     "start": "",
     "end": ""
@@ -29,6 +38,12 @@
     "code": "EMP002",
     "name": "Priya Raman",
     "email": "priya.raman@dogmagroup.co.uk",
+    "phone": "",
+    "address": "",
+    "emergencyName": "",
+    "emergencyPhone": "",
+    "bankAccount": "",
+    "bankSortCode": "",
     "jobProfile": "CONS",
     "employeeType": "hourly",
     "category": "Contracted",
@@ -37,8 +52,11 @@
     "manager": "Eddie Harford",
     "contractedHours": 37.5,
     "maxHours": 48,
+    "night": false,
+    "resource": "",
+    "cis": false,
     "state": "candidate",
-    "start": "28/09/2026",
+    "start": "2026-09-28",
     "end": ""
    },
    "per_EMP003": {
@@ -48,6 +66,12 @@
     "code": "EMP003",
     "name": "Tom Achterberg",
     "email": "tom.achterberg@dogmagroup.co.uk",
+    "phone": "",
+    "address": "",
+    "emergencyName": "",
+    "emergencyPhone": "",
+    "bankAccount": "",
+    "bankSortCode": "",
     "jobProfile": "CONS",
     "employeeType": "hourly",
     "category": "Contracted",
@@ -56,8 +80,11 @@
     "manager": "Eddie Harford",
     "contractedHours": 40,
     "maxHours": 48,
+    "night": false,
+    "resource": "",
+    "cis": false,
     "state": "preboard",
-    "start": "14/09/2026",
+    "start": "2026-09-14",
     "end": ""
    },
    "per_EMP004": {
@@ -67,6 +94,12 @@
     "code": "EMP004",
     "name": "Bigyan Poudel",
     "email": "bigyan.poudel@dogmagroup.co.uk",
+    "phone": "",
+    "address": "",
+    "emergencyName": "",
+    "emergencyPhone": "",
+    "bankAccount": "",
+    "bankSortCode": "",
     "jobProfile": "CONS",
     "employeeType": "hourly",
     "category": "Contracted",
@@ -75,6 +108,9 @@
     "manager": "Manish Nepal",
     "contractedHours": 40,
     "maxHours": 48,
+    "night": false,
+    "resource": "BIGYAN",
+    "cis": false,
     "state": "active",
     "start": "",
     "end": ""
@@ -86,6 +122,12 @@
     "code": "EMP005",
     "name": "Bijay Shrestha",
     "email": "bijay.shrestha@qniverse.co.uk",
+    "phone": "",
+    "address": "",
+    "emergencyName": "",
+    "emergencyPhone": "",
+    "bankAccount": "",
+    "bankSortCode": "",
     "jobProfile": "CONS",
     "employeeType": "hourly",
     "category": "Contracted",
@@ -94,6 +136,9 @@
     "manager": "Manish Nepal",
     "contractedHours": 37.5,
     "maxHours": 48,
+    "night": false,
+    "resource": "BIJAY",
+    "cis": false,
     "state": "active",
     "start": "",
     "end": ""
@@ -105,6 +150,12 @@
     "code": "EMP006",
     "name": "Eddie Harford",
     "email": "eddie.harford@dogmagroup.co.uk",
+    "phone": "",
+    "address": "",
+    "emergencyName": "",
+    "emergencyPhone": "",
+    "bankAccount": "",
+    "bankSortCode": "",
     "jobProfile": "PM",
     "employeeType": "salaried",
     "category": "Contracted",
@@ -113,6 +164,9 @@
     "manager": "",
     "contractedHours": 37.5,
     "maxHours": 48,
+    "night": false,
+    "resource": "EDDIE",
+    "cis": false,
     "state": "active",
     "start": "",
     "end": ""
@@ -124,6 +178,12 @@
     "code": "EMP007",
     "name": "Jamir Maharjan",
     "email": "jamir.maharjan@dogmagroup.co.uk",
+    "phone": "",
+    "address": "",
+    "emergencyName": "",
+    "emergencyPhone": "",
+    "bankAccount": "",
+    "bankSortCode": "",
     "jobProfile": "CONS",
     "employeeType": "hourly",
     "category": "Contracted",
@@ -132,6 +192,9 @@
     "manager": "Manish Nepal",
     "contractedHours": 37.5,
     "maxHours": 48,
+    "night": false,
+    "resource": "JAMIR",
+    "cis": false,
     "state": "active",
     "start": "",
     "end": ""
@@ -143,6 +206,12 @@
     "code": "EMP008",
     "name": "Ankit Krishna Shrestha",
     "email": "jwalan.chand@dogmagroup.co.uk",
+    "phone": "",
+    "address": "",
+    "emergencyName": "",
+    "emergencyPhone": "",
+    "bankAccount": "",
+    "bankSortCode": "",
     "jobProfile": "CONS",
     "employeeType": "hourly",
     "category": "Contracted",
@@ -151,6 +220,9 @@
     "manager": "Manish Nepal",
     "contractedHours": 37.5,
     "maxHours": 48,
+    "night": false,
+    "resource": "JWALAN",
+    "cis": false,
     "state": "archived",
     "start": "",
     "end": ""
@@ -162,6 +234,12 @@
     "code": "EMP009",
     "name": "KATHERINE HULL",
     "email": "",
+    "phone": "",
+    "address": "",
+    "emergencyName": "",
+    "emergencyPhone": "",
+    "bankAccount": "",
+    "bankSortCode": "",
     "jobProfile": "CONS",
     "employeeType": "hourly",
     "category": "Contracted",
@@ -170,6 +248,9 @@
     "manager": "Manish Nepal",
     "contractedHours": 37.5,
     "maxHours": 48,
+    "night": false,
+    "resource": "KATHERINE",
+    "cis": false,
     "state": "active",
     "start": "",
     "end": ""
@@ -181,6 +262,12 @@
     "code": "EMP010",
     "name": "Lina Townsend",
     "email": "",
+    "phone": "",
+    "address": "",
+    "emergencyName": "",
+    "emergencyPhone": "",
+    "bankAccount": "",
+    "bankSortCode": "",
     "jobProfile": "CONS",
     "employeeType": "hourly",
     "category": "Contracted",
@@ -189,6 +276,9 @@
     "manager": "Manish Nepal",
     "contractedHours": 37.5,
     "maxHours": 48,
+    "night": false,
+    "resource": "LINA",
+    "cis": false,
     "state": "active",
     "start": "",
     "end": ""
@@ -200,6 +290,12 @@
     "code": "EMP011",
     "name": "Marty Horst",
     "email": "sanjeev.thakuri@dogmagroup.co.uk",
+    "phone": "",
+    "address": "",
+    "emergencyName": "",
+    "emergencyPhone": "",
+    "bankAccount": "",
+    "bankSortCode": "",
     "jobProfile": "CONS",
     "employeeType": "hourly",
     "category": "Contracted",
@@ -208,6 +304,9 @@
     "manager": "Manish Nepal",
     "contractedHours": 37.5,
     "maxHours": 48,
+    "night": false,
+    "resource": "MARTY",
+    "cis": false,
     "state": "active",
     "start": "",
     "end": ""
@@ -219,6 +318,12 @@
     "code": "EMP012",
     "name": "Nikita Shrestha",
     "email": "nikita.shrestha@qniverse.co.uk",
+    "phone": "",
+    "address": "",
+    "emergencyName": "",
+    "emergencyPhone": "",
+    "bankAccount": "",
+    "bankSortCode": "",
     "jobProfile": "CONS",
     "employeeType": "hourly",
     "category": "Contracted",
@@ -227,6 +332,9 @@
     "manager": "Manish Nepal",
     "contractedHours": 40,
     "maxHours": 48,
+    "night": false,
+    "resource": "NIKITA",
+    "cis": false,
     "state": "active",
     "start": "",
     "end": ""
@@ -238,6 +346,12 @@
     "code": "EMP013",
     "name": "Prastav Pokhrel",
     "email": "prastav.pokhrel@dogmagroup.co.uk",
+    "phone": "",
+    "address": "",
+    "emergencyName": "",
+    "emergencyPhone": "",
+    "bankAccount": "",
+    "bankSortCode": "",
     "jobProfile": "CONS",
     "employeeType": "hourly",
     "category": "Contracted",
@@ -246,6 +360,9 @@
     "manager": "Manish Nepal",
     "contractedHours": 40,
     "maxHours": 48,
+    "night": false,
+    "resource": "PRASTAV",
+    "cis": false,
     "state": "active",
     "start": "",
     "end": ""
@@ -257,6 +374,12 @@
     "code": "EMP014",
     "name": "Manish Nepal",
     "email": "manish.nepal@dogmagroup.co.uk",
+    "phone": "",
+    "address": "",
+    "emergencyName": "",
+    "emergencyPhone": "",
+    "bankAccount": "",
+    "bankSortCode": "",
     "jobProfile": "CONS",
     "employeeType": "salaried",
     "category": "Contracted",
@@ -265,6 +388,9 @@
     "manager": "Eddie Harford",
     "contractedHours": 40,
     "maxHours": 48,
+    "night": false,
+    "resource": "R0001",
+    "cis": false,
     "state": "active",
     "start": "",
     "end": ""
@@ -276,6 +402,12 @@
     "code": "EMP015",
     "name": "Prashesh",
     "email": "manish.nepal@dogmagroup.co.uk",
+    "phone": "",
+    "address": "",
+    "emergencyName": "",
+    "emergencyPhone": "",
+    "bankAccount": "",
+    "bankSortCode": "",
     "jobProfile": "CONS",
     "employeeType": "hourly",
     "category": "Contracted",
@@ -284,6 +416,9 @@
     "manager": "Manish Nepal",
     "contractedHours": 40,
     "maxHours": 48,
+    "night": false,
+    "resource": "R0003",
+    "cis": false,
     "state": "archived",
     "start": "",
     "end": ""
@@ -295,6 +430,12 @@
     "code": "EMP016",
     "name": "Ruman Thapa",
     "email": "ruman.thapa@dogmagroup.co.uk",
+    "phone": "",
+    "address": "",
+    "emergencyName": "",
+    "emergencyPhone": "",
+    "bankAccount": "",
+    "bankSortCode": "",
     "jobProfile": "CONS",
     "employeeType": "hourly",
     "category": "Contracted",
@@ -303,6 +444,9 @@
     "manager": "Manish Nepal",
     "contractedHours": 40,
     "maxHours": 48,
+    "night": false,
+    "resource": "RUMAN",
+    "cis": false,
     "state": "active",
     "start": "",
     "end": ""
@@ -314,6 +458,12 @@
     "code": "EMP017",
     "name": "Sajin",
     "email": "",
+    "phone": "",
+    "address": "",
+    "emergencyName": "",
+    "emergencyPhone": "",
+    "bankAccount": "",
+    "bankSortCode": "",
     "jobProfile": "CONS",
     "employeeType": "hourly",
     "category": "Contracted",
@@ -322,6 +472,9 @@
     "manager": "Manish Nepal",
     "contractedHours": 40,
     "maxHours": 48,
+    "night": false,
+    "resource": "SAJIN",
+    "cis": false,
     "state": "active",
     "start": "",
     "end": ""
@@ -333,6 +486,12 @@
     "code": "EMP018",
     "name": "Sulav Raj Thapaliya",
     "email": "sulav.thapaliya@dogmagroup.co.uk",
+    "phone": "",
+    "address": "",
+    "emergencyName": "",
+    "emergencyPhone": "",
+    "bankAccount": "",
+    "bankSortCode": "",
     "jobProfile": "CONS",
     "employeeType": "hourly",
     "category": "Contracted",
@@ -341,6 +500,9 @@
     "manager": "Manish Nepal",
     "contractedHours": 37.5,
     "maxHours": 48,
+    "night": false,
+    "resource": "SULAV",
+    "cis": false,
     "state": "archived",
     "start": "",
     "end": ""
@@ -352,6 +514,12 @@
     "code": "EMP019",
     "name": "Terry Dodds",
     "email": "",
+    "phone": "",
+    "address": "",
+    "emergencyName": "",
+    "emergencyPhone": "",
+    "bankAccount": "",
+    "bankSortCode": "",
     "jobProfile": "CONS",
     "employeeType": "hourly",
     "category": "Contracted",
@@ -360,6 +528,9 @@
     "manager": "Manish Nepal",
     "contractedHours": 37.5,
     "maxHours": 48,
+    "night": false,
+    "resource": "TERRY",
+    "cis": false,
     "state": "active",
     "start": "",
     "end": ""
@@ -371,6 +542,12 @@
     "code": "EMP020",
     "name": "Yuran Shrestha",
     "email": "yuran.shrestha@dogmagroup.co.uk",
+    "phone": "",
+    "address": "",
+    "emergencyName": "",
+    "emergencyPhone": "",
+    "bankAccount": "",
+    "bankSortCode": "",
     "jobProfile": "CONS",
     "employeeType": "hourly",
     "category": "Contracted",
@@ -379,6 +556,9 @@
     "manager": "Manish Nepal",
     "contractedHours": 37.5,
     "maxHours": 48,
+    "night": false,
+    "resource": "YURAN",
+    "cis": false,
     "state": "archived",
     "start": "",
     "end": ""
@@ -607,7 +787,8 @@
      "framework",
      "notice_org",
      "perm_cfg",
-     "integration"
+     "integration",
+     "bank_verify"
     ]
    }
   },
@@ -892,6 +1073,15 @@
     "label": "Integrations and audit log",
     "gate": "The whole Integrations section",
     "lockedFor": []
+   },
+   "bank_verify": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "bank_verify",
+    "group": "team",
+    "label": "Verify bank detail changes",
+    "gate": "The bank detail queue on Qnipay setup → People",
+    "lockedFor": []
    }
   },
   "capabilityGroups": {
@@ -987,14 +1177,13 @@
     "code": "MCR",
     "name": "Manchester",
     "area": "North West",
-    "dept": "DEL",
-    "cc": "CC-100",
+    "department": "DEL",
+    "costCentre": "CC-100",
     "level": "Floating",
-    "min": 1,
+    "minPerShift": 1,
     "manager": "Manish Nepal",
-    "source": "Manual",
-    "active": true,
     "address": "",
+    "active": true,
     "id": "loc_MCR"
    },
    "loc_REM": {
@@ -1002,15 +1191,14 @@
     "updatedAt": "2026-08-13T14:30:00.000Z",
     "code": "REM",
     "name": "Remote",
-    "area": "—",
-    "dept": "DEL",
-    "cc": "CC-100",
+    "area": "",
+    "department": "DEL",
+    "costCentre": "CC-100",
     "level": "Floating",
-    "min": 1,
+    "minPerShift": 1,
     "manager": "Manish Nepal",
-    "source": "Manual",
-    "active": true,
     "address": "",
+    "active": true,
     "id": "loc_REM"
    }
   },
@@ -1089,22 +1277,14 @@
     "code": "J00010",
     "name": "Go fibre BC implementation Project",
     "client": "Go Fibre",
-    "cc": "CC-100",
-    "status": "Open",
+    "costCentre": "CC-100",
     "manager": "Manish Nepal",
-    "start": "01/01/2026",
+    "status": "Open",
+    "start": "2026-01-01",
     "end": "",
+    "budgetHours": "",
     "billable": true,
-    "budget": "—",
-    "logged": "—",
-    "loc": "MCR",
-    "tasks": [
-     {
-      "n": "PT-02-02-04 · AS-IS process flow diagrams",
-      "g": "Delivery",
-      "b": true
-     }
-    ],
+    "location": "MCR",
     "id": "prj_J00010"
    },
    "prj_J00020": {
@@ -1113,192 +1293,14 @@
     "code": "J00020",
     "name": "Qnipay D365 Implementation",
     "client": "Qnipay",
-    "cc": "CC-100",
-    "status": "Open",
+    "costCentre": "CC-100",
     "manager": "Manish Nepal",
-    "start": "01/01/2026",
+    "status": "Open",
+    "start": "2026-01-01",
     "end": "",
+    "budgetHours": "",
     "billable": true,
-    "budget": "—",
-    "logged": "—",
-    "loc": "MCR",
-    "tasks": [
-     {
-      "n": "PT-01-03-08 · Workshop Preparation",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-01-03-27 · Workshop Preparation and Session",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-100 · Workshop 4 - BC - TO BE - Finance & Accounts",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-103 · Prepare Payroll BC Financial Core Data Template for Configuration/Development",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-114 · Workshop 7 - BC - TO BE - Cashflow Forecast",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-127 · Workshop 2 - BC - AS IS - Purchase & Payables",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-135 · HR/BC/Payroll Playback- Integration",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-140 · Workshop 1 - Payroll - Full Payroll Scoping",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-142 · Set up and Configure",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-151 · Configuration UK",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-183 · Prepare Payroll Blueprint Documentation",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-187 · D365 BC Core Configuration",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-188 · D365 BC Financial Modules Config",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-189 · D365 BC Project Management Config",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-202 · Sirius MDM Octopus Configuration",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-204 · Workflow Configuration",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-205 · Data Migration Planning",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-206 · Data Migration Execution",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-224 · End User Training - PM",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-237 · Configuration of Dependency Data - No Impact Testing",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-242 · Integration Mapping Document - System Wide",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-254 · Bug Fixing",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-268 · Workshop 3 - BC - AS IS - Sales & Receivables",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-279 · Configuration US",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-282 · BC UAT – With Integration and Customisation",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-318 · Reporting UAT- Power BI report",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-325 · Workshop 5 - BC - TO BE - Purchase & Payables",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-327 · Configuration Issue fixes",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-335 · Prepare Payroll BC Data for Production",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-344 · Playback Session - India Entity",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-352 · Workshop 4 - Project Management - TO BE - Workflows & System Integration",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-355 · Follow up Meeting to Discussion / Clarity on Data Templates",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-377 · Deployment to UAT Environment",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-91 · Workshop 6 - BC - TO BE - Sales & Receivables",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-94 · Workshop 1 - BC - AS IS - Finance & Accounts",
-      "g": "Delivery",
-      "b": true
-     }
-    ],
+    "location": "MCR",
     "id": "prj_J00020"
    },
    "prj_J00030": {
@@ -1307,192 +1309,14 @@
     "code": "J00030",
     "name": "Internal Project-Adhoc WorkLog",
     "client": "Internal",
-    "cc": "CC-900",
-    "status": "Open",
+    "costCentre": "CC-900",
     "manager": "Manish Nepal",
-    "start": "01/01/2026",
+    "status": "Open",
+    "start": "2026-01-01",
     "end": "",
+    "budgetHours": "",
     "billable": false,
-    "budget": "—",
-    "logged": "—",
-    "loc": "MCR",
-    "tasks": [
-     {
-      "n": "PT-01-120 · HCPC: Deferred Income",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-01-131 · Invoiced status not updating back to Dynamics CRM",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-105-010 · Document Review for scoping session",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-105-08 · Deferral income automatic posting discussion",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-105-12 · Additional requirement discussion with client",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-105-13 · Version upgrade Review",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-105-14 · Additional requirement discussion with client continue",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-105-15 · Continuing the discussion with client",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-105-25 · Deferral Discussion",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-105-26 · Data validation sent by client",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-105-28 · Data validation review with client",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-105-31 · Further discussion of credit memo issue",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-105-38 · Duplicate invoice discussion",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-106-010 · Report changes Discussion",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-106-04 · new report customization CR discussion",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-117-03 · Dimension issue Discussion",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-117-07 · Additional currency setup",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-120-010 · CAS-16418-Q1Y6M4: Error from Year End Closing Journal",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-120-02 · Closing year end",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-120-04 · Company setup requirement gathering",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-120-05 · Support case discussion",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-120-07 · CR document review",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-62-02 · version 25.2 upgrade validation in UAT and Dev environment",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-62-06 · Payment not landing",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-63-01 · VAT return file investigation and discussion",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-63-02 · Continuing the VAT Discussion",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-64-03 · VAT Return",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-64-04 · New company setup",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-74-02 · Investigation of Consolidation Inconsistency",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-74-03 · Consolidation issue",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-74-04 · Training on year end process",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-77-01 · Allocating Journal to PO's",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-77-03 · VAT date on closed period",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-91-01 · Wireframes, iterations and prototype",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "PT-05-92-03 · Assistance required in VAT submission",
-      "g": "Internal",
-      "b": false
-     }
-    ],
+    "location": "MCR",
     "id": "prj_J00030"
    },
    "prj_J00040": {
@@ -1501,22 +1325,14 @@
     "code": "J00040",
     "name": "HCPC CR automated apply unapply and Reverse",
     "client": "Go Fibre",
-    "cc": "CC-100",
-    "status": "Open",
+    "costCentre": "CC-100",
     "manager": "Manish Nepal",
-    "start": "01/01/2026",
+    "status": "Open",
+    "start": "2026-01-01",
     "end": "",
+    "budgetHours": "",
     "billable": true,
-    "budget": "—",
-    "logged": "—",
-    "loc": "MCR",
-    "tasks": [
-     {
-      "n": "PT-14 · Preparation for UAT",
-      "g": "Delivery",
-      "b": true
-     }
-    ],
+    "location": "MCR",
     "id": "prj_J00040"
    },
    "prj_JOB00010": {
@@ -1525,27 +1341,14 @@
     "code": "JOB00010",
     "name": "Ultima Dsiplays-Sales & Marketing",
     "client": "Ultima Displays",
-    "cc": "CC-100",
-    "status": "Open",
+    "costCentre": "CC-100",
     "manager": "Manish Nepal",
-    "start": "01/01/2026",
+    "status": "Open",
+    "start": "2026-01-01",
     "end": "",
+    "budgetHours": "",
     "billable": true,
-    "budget": "—",
-    "logged": "—",
-    "loc": "MCR",
-    "tasks": [
-     {
-      "n": "PT-01-05-010 · Review & Align Pricing Structure – Client Requirements",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-01-05-14 · PIM Techincal Discussion and sales query discussion",
-      "g": "Delivery",
-      "b": true
-     }
-    ],
+    "location": "MCR",
     "id": "prj_JOB00010"
    },
    "prj_JOB00020": {
@@ -1554,22 +1357,14 @@
     "code": "JOB00020",
     "name": "QMS CRM Implementation",
     "client": "Go Fibre",
-    "cc": "CC-100",
-    "status": "Open",
+    "costCentre": "CC-100",
     "manager": "Manish Nepal",
-    "start": "01/01/2026",
+    "status": "Open",
+    "start": "2026-01-01",
     "end": "",
+    "budgetHours": "",
     "billable": true,
-    "budget": "—",
-    "logged": "—",
-    "loc": "MCR",
-    "tasks": [
-     {
-      "n": "PT-01-16-01 · Year end closing discussion",
-      "g": "Delivery",
-      "b": true
-     }
-    ],
+    "location": "MCR",
     "id": "prj_JOB00020"
    },
    "prj_JOB00030": {
@@ -1578,52 +1373,14 @@
     "code": "JOB00030",
     "name": "Golden Charter BC Implementation and Integration Project",
     "client": "Qnipay",
-    "cc": "CC-100",
-    "status": "Open",
+    "costCentre": "CC-100",
     "manager": "Manish Nepal",
-    "start": "01/01/2026",
+    "status": "Open",
+    "start": "2026-01-01",
     "end": "",
+    "budgetHours": "",
     "billable": true,
-    "budget": "—",
-    "logged": "—",
-    "loc": "MCR",
-    "tasks": [
-     {
-      "n": "PT-01-010-22 · Receivables Fit Gap + Solution Design Documentation",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-01-010-23 · payable user stories review and update",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-01-010-27 · GC overall documentation review & update",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-01-010-31 · Preparation for To Be Session",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-01-010-32 · Bank Reconciliation To Be Session",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-01-010-35 · Fit Gap Finalization",
-      "g": "Delivery",
-      "b": true
-     },
-     {
-      "n": "PT-01-12-07 · Process Flow Diagrams",
-      "g": "Delivery",
-      "b": true
-     }
-    ],
+    "location": "MCR",
     "id": "prj_JOB00030"
    },
    "prj_LEAVE": {
@@ -1632,35 +1389,47 @@
     "code": "LEAVE",
     "name": "Attendance",
     "client": "Internal",
-    "cc": "CC-900",
-    "status": "Open",
+    "costCentre": "CC-900",
     "manager": "Manish Nepal",
-    "start": "01/01/2026",
+    "status": "Open",
+    "start": "2026-01-01",
     "end": "",
+    "budgetHours": "",
     "billable": false,
-    "budget": "—",
-    "logged": "—",
-    "loc": "MCR",
-    "tasks": [
-     {
-      "n": "ANNUAL LEAVE · Annual Leave",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "BANK HOLIDAY · Bank Holiday",
-      "g": "Internal",
-      "b": false
-     },
-     {
-      "n": "SICK LEAVE · Sick Leave",
-      "g": "Internal",
-      "b": false
-     }
-    ],
+    "location": "MCR",
     "id": "prj_LEAVE"
    }
   },
+  "employeeTypes": {
+   "typ_salaried": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "typ_salaried",
+    "code": "salaried",
+    "name": "Project Manager",
+    "category": "Salaried",
+    "mode": "form",
+    "uom": "day",
+    "capabilities": [
+     "project"
+    ]
+   },
+   "typ_hourly": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "typ_hourly",
+    "code": "hourly",
+    "name": "Consultant",
+    "category": "Contracted",
+    "mode": "grid",
+    "uom": "hour",
+    "capabilities": [
+     "project"
+    ]
+   }
+  },
+  "profileChanges": {},
+  "personHistory": {},
   "notices": {
    "NTC-0001": {
     "version": 1,

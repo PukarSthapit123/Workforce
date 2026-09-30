@@ -38,7 +38,7 @@ async function waitForStoreChange(w, prevRaw, label, timeoutMs = 3000, everyMs =
 }
 
 /* ---- constants from the source: the text of `const NAME=<literal>;`, evaluated alone ---- */
-function literal(name) {
+function literal(name, context = { flagOn: () => true }) {
   const at = html.search(new RegExp(`(?:const|let) ${name}\\s*=`));
   if (at < 0) throw new Error('literal not found: ' + name);
   const open = html.slice(at).search(/[[{]/) + at;
@@ -50,7 +50,7 @@ function literal(name) {
     if (c === '[' || c === '{') depth++;
     else if ((c === ']' || c === '}') && --depth === 0) {
       /* functions inside (e.g. needs:()=>flagOn(...)) evaluate to functions and are dropped by JSON */
-      return JSON.parse(JSON.stringify(vm.runInNewContext('(' + html.slice(open, j + 1) + ')', { flagOn: () => true })));
+      return JSON.parse(JSON.stringify(vm.runInNewContext('(' + html.slice(open, j + 1) + ')', context)));
     }
   }
   throw new Error('unclosed literal: ' + name);
@@ -99,18 +99,32 @@ function boot() {
 
 const meta = (r, extra = {}) => ({ version: 1, updatedAt: STAMP, ...r, ...extra });
 const byId = arr => Object.fromEntries(arr.map(r => [r.id, r]));
-const dim = (prefix, list) => byId((list || []).map(x => meta({ ...x }, { id: `${prefix}_${x.code}` })));
 
-function shape(tenantKey, data, PERMS_META, PERM_GROUPS) {
+/* ---- plan 1b: the contract's field names, and the collections 1b reads ---- */
+const iso = s => { const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(s || '')); return m ? `${m[3]}-${m[2]}-${m[1]}` : ''; };
+const noDash = s => (s === '—' ? '' : (s ?? ''));
+/* D13: the worker category a type's people usually have; everything else is Contracted */
+const TYPE_CATEGORY = { casual: 'Bank', salaried: 'Salaried' };
+const SELF_KEY = { phone: 'phone', addr: 'address', emgName: 'emergencyName', emgPhone: 'emergencyPhone', bankAcc: 'bankAccount', bankSort: 'bankSortCode' };
+const SENSITIVE = new Set(['bankAcc', 'bankSort']);
+/* Not in the prototype (plan 1b decision D3): payroll's half of a bank detail change. */
+const BANK_VERIFY = { c: 'bank_verify', g: 'team', label: 'Verify bank detail changes',
+  gate: 'The bank detail queue on Qnipay setup → People', emp: 0, mgr: 0, adm: 1 };
+
+function shape(tenantKey, data, PERMS_META, PERM_GROUPS, PROFILE_CHANGES) {
   const ROLE_OF = { emp: 'employee', mgr: 'manager', adm: 'admin' };
   const people = (data.PEOPLE || []).map(p => meta({
     id: `per_${p.id}`, code: p.id, name: p.nm, email: (p.email || '').toLowerCase(),
-    jobProfile: p.job || '', employeeType: p.type || '', category: p.cat || '', location: p.loc || '',
+    phone: p.phone || '', address: p.addr || '', emergencyName: p.emgName || '', emergencyPhone: p.emgPhone || '',
+    bankAccount: p.bankAcc || '', bankSortCode: p.bankSort || '',
+    jobProfile: p.job || '', employeeType: p.type || '', category: p.cat || 'Contracted', location: p.loc || '',
     department: p.dept || '', manager: p.mgr && p.mgr !== '—' ? p.mgr : '', contractedHours: p.con ?? 0,
-    maxHours: p.max ?? 48, state: p.state || 'active', start: p.start || '', end: p.end || '' }));
+    maxHours: p.max ?? 48, night: !!p.night, resource: String(p.resource || '').toUpperCase(), cis: !!p.cis,
+    state: p.state || 'active', start: iso(p.start), end: iso(p.end) }));
   const accounts = Object.entries(data.USERS || {}).map(([email, u]) => meta({
     id: `acc_${email}`, email, personCode: u.eid, userType: u.role, grants: [], revocations: [] }));
-  const perms = data.PERMS || PERMS_META;
+  const base = data.PERMS || PERMS_META;
+  const perms = base.some(p => p.c === BANK_VERIFY.c) ? base : [...base, BANK_VERIFY];
   const userTypes = Object.entries(ROLE_OF).map(([col, role]) => meta({
     id: role, name: (data.ROLE_NAMES || {})[role] || role[0].toUpperCase() + role.slice(1),
     description: { employee: 'Their own work: timesheet, shifts and leave', manager: 'Everything an employee can do, plus their team', admin: 'Configure how this workforce operates' }[role],
@@ -122,11 +136,29 @@ function shape(tenantKey, data, PERMS_META, PERM_GROUPS) {
   const tenant = meta({ id: 'tenant', name: (data.TENANT || {}).name || tenantKey, template: (data.CFG || {}).template || tenantKey,
     modules: (data.CFG || {}).modules || {}, flags: (data.CFG || {}).flags || {} });
   const notices = (data.NOTICES || []).map(n => meta({ ...n }, { id: n.id }));
+  const rows = (prefix, list, fn) => byId((list || []).map(x => meta(fn(x), { id: `${prefix}_${x.code}` })));
+  const locations = rows('loc', data.LOCATIONS, x => ({ code: x.code, name: x.name, area: noDash(x.area), department: x.dept || '',
+    costCentre: x.cc || '', level: x.level || '', minPerShift: x.min ?? 1, manager: x.manager || '', address: x.address || '', active: x.active !== false }));
+  const departments = rows('dep', data.DEPARTMENTS, x => ({ code: x.code, name: x.name, manager: x.manager || '' }));
+  const costCentres = rows('cc', data.COST_CENTRES, x => ({ code: x.code, name: x.name }));
+  const jobProfiles = rows('job', data.JOB_PROFILES, x => ({ code: x.code, name: x.name, night: !!x.night }));
+  const projects = rows('prj', data.PROJECTS, x => ({ code: x.code, name: x.name, client: noDash(x.client), costCentre: x.cc || '',
+    manager: x.manager || '', status: x.status || 'Active', start: iso(x.start), end: iso(x.end),
+    budgetHours: noDash(x.budget), billable: !!x.billable, location: x.loc || '' }));
+  const employeeTypes = byId(Object.entries(data.TYPES || {}).map(([k, t]) => meta({
+    id: `typ_${k}`, code: k, name: t.name, category: TYPE_CATEGORY[k] || 'Contracted',
+    mode: t.mode || 'form', uom: t.uom || 'hour', capabilities: t.caps || [] })));
+  const codesHere = new Set(people.map(p => p.code));
+  const profileChanges = byId(PROFILE_CHANGES.filter(c => codesHere.has(c.eid)).map(c => meta({
+    id: `pfc_${c.id}`, personCode: c.eid, field: SELF_KEY[c.k],
+    /* D22: a proposal starts from the record's value; the prototype's literal 'from' does not match its own roster */
+    from: (people.find(p => p.code === c.eid) || {})[SELF_KEY[c.k]] ?? '', to: c.to, note: c.note || '',
+    raisedAt: `${iso(c.raised)}T00:00:00.000Z`, status: 'pending', stage: 'manager',
+    route: SENSITIVE.has(c.k) ? ['manager', 'payroll'] : ['manager'], decisions: [] })));
   return { version: 'extracted', tenant: tenantKey, data: {
     people: byId(people), accounts: byId(accounts), userTypes: byId(userTypes), capabilities: byId(capabilities),
-    capabilityGroups: byId(capabilityGroups), tenant: { tenant }, locations: dim('loc', data.LOCATIONS), departments: dim('dep', data.DEPARTMENTS),
-    costCentres: dim('cc', data.COST_CENTRES), jobProfiles: dim('job', data.JOB_PROFILES), projects: dim('prj', data.PROJECTS),
-    notices: byId(notices), audit: {} } };
+    capabilityGroups: byId(capabilityGroups), tenant: { tenant }, locations, departments, costCentres, jobProfiles, projects,
+    employeeTypes, profileChanges, personHistory: {}, notices: byId(notices), audit: {} } };
 }
 
 /* A missing PEOPLE roster, or a `social` snapshot indistinguishable from
@@ -146,7 +178,14 @@ function assertTenantChanged(before, after, label) {
 
 const PERMS_META = literal('PERMS');
 const PERM_GROUPS = literal('PERM_GROUPS');
+/* never persisted by the prototype, so read from its source */
+const PROFILE_CHANGES = literal('PROFILE_CHANGES');
 const { w, signInAdmin, switchTemplate } = boot();
+/* TYPE_LIB builds each type's field set with helper calls (mkFieldCfg over
+   the FLD_* lists). Only the fields below are read, so the helpers are stubbed. */
+const TYPE_LIB = literal('TYPE_LIB', new Proxy({}, { has: () => true, get: (_t, k) => (k === 'mkFieldCfg' ? () => ({}) : []) }));
+const typeArchetypes = Object.entries(TYPE_LIB).map(([key, t]) =>
+  ({ key, name: t.name, mode: t.mode || 'form', uom: t.uom || 'hour', capabilities: t.caps || [] }));
 
 const rawBeforeSignIn = w.localStorage.getItem(KEY);   // null: nothing saved yet
 signInAdmin();
@@ -164,9 +203,12 @@ assertTenantChanged(qnipay, social, 'social');
    name). This app calls that tenant `qnipay`, so the rename is applied to the
    extracted JSON rather than by retyping any record. */
 const renameTenant = json => json.replace(/qcic/g, 'qnipay').replace(/QCIC/g, 'Qnipay');
-writeFileSync(resolve(OUT, 'qnipay.json'), renameTenant(JSON.stringify(shape('qnipay', qnipay, PERMS_META, PERM_GROUPS), null, 1)) + '\n');
-writeFileSync(resolve(OUT, 'social.json'), JSON.stringify(shape('social', social, PERMS_META, PERM_GROUPS), null, 1) + '\n');
+writeFileSync(resolve(OUT, 'qnipay.json'), renameTenant(JSON.stringify(shape('qnipay', qnipay, PERMS_META, PERM_GROUPS, PROFILE_CHANGES), null, 1)) + '\n');
+writeFileSync(resolve(OUT, 'social.json'), JSON.stringify(shape('social', social, PERMS_META, PERM_GROUPS, PROFILE_CHANGES), null, 1) + '\n');
 writeFileSync(resolve(OUT, 'meta.json'), JSON.stringify({
-  flags: literal('FLAGS'), modules: literal('MODULES'), permGroups: literal('PERM_GROUPS'), empStates: literal('EMP_STATES') }, null, 1) + '\n');
-console.log('seed written: qnipay', (qnipay.PEOPLE || []).length, 'people; social', (social.PEOPLE || []).length, 'people');
+  flags: literal('FLAGS'), modules: literal('MODULES'), permGroups: literal('PERM_GROUPS'), empStates: literal('EMP_STATES'),
+  supportLevels: literal('SUPPORT_LEVELS'), typeArchetypes, typeCapabilities: literal('CAPS'), selfFields: literal('SELF_FIELDS'),
+}, null, 1) + '\n');
+console.log('seed written: qnipay', (qnipay.PEOPLE || []).length, 'people,', Object.keys(qnipay.TYPES || {}).length, 'types; social',
+  (social.PEOPLE || []).length, 'people,', Object.keys(social.TYPES || {}).length, 'types');
 w.close();

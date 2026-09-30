@@ -10,6 +10,12 @@
     "code": "CP-1042",
     "name": "Amara Okafor",
     "email": "amara.okafor@brightpath.org",
+    "phone": "07700 900777",
+    "address": "19 Barrow Road, London N6 7QA",
+    "emergencyName": "Kit Shah",
+    "emergencyPhone": "07700 900879",
+    "bankAccount": "****8715",
+    "bankSortCode": "47-29-18",
     "jobProfile": "SW",
     "employeeType": "shift",
     "category": "Contracted",
@@ -18,8 +24,11 @@
     "manager": "Rachel Hussain",
     "contractedHours": 37.5,
     "maxHours": 45,
+    "night": true,
+    "resource": "",
+    "cis": false,
     "state": "active",
-    "start": "14/02/2022",
+    "start": "2022-02-14",
     "end": ""
    },
    "per_CP-1088": {
@@ -29,6 +38,12 @@
     "code": "CP-1088",
     "name": "Marcus Reilly",
     "email": "marcus.reilly@brightpath.org",
+    "phone": "07700 900287",
+    "address": "9 Chalk Road, London N4 7QA",
+    "emergencyName": "Jean Reilly",
+    "emergencyPhone": "07700 900879",
+    "bankAccount": "****1445",
+    "bankSortCode": "37-29-39",
     "jobProfile": "SW",
     "employeeType": "shift",
     "category": "Contracted",
@@ -37,8 +52,11 @@
     "manager": "Rachel Hussain",
     "contractedHours": 30,
     "maxHours": 37.5,
+    "night": false,
+    "resource": "",
+    "cis": false,
     "state": "active",
-    "start": "03/09/2021",
+    "start": "2021-09-03",
     "end": ""
    },
    "per_CP-1153": {
@@ -48,6 +66,12 @@
     "code": "CP-1153",
     "name": "Jo Baptiste",
     "email": "jo.baptiste@brightpath.org",
+    "phone": "07700 900114",
+    "address": "36 Ilex Road, London N7 7QA",
+    "emergencyName": "Tom Warren",
+    "emergencyPhone": "07700 900879",
+    "bankAccount": "****6941",
+    "bankSortCode": "24-29-59",
     "jobProfile": "SSW",
     "employeeType": "shift",
     "category": "Contracted",
@@ -56,8 +80,11 @@
     "manager": "Rachel Hussain",
     "contractedHours": 37.5,
     "maxHours": 45,
+    "night": true,
+    "resource": "",
+    "cis": false,
     "state": "active",
-    "start": "19/06/2019",
+    "start": "2019-06-19",
     "end": ""
    },
    "per_CP-1201": {
@@ -67,6 +94,12 @@
     "code": "CP-1201",
     "name": "Priya Shah",
     "email": "priya.shah@brightpath.org",
+    "phone": "07700 900138",
+    "address": "60 Ilex Road, London N7 7QA",
+    "emergencyName": "Tom Warren",
+    "emergencyPhone": "07700 900879",
+    "bankAccount": "****3115",
+    "bankSortCode": "48-29-77",
     "jobProfile": "SW",
     "employeeType": "shift",
     "category": "Contracted",
@@ -75,8 +108,11 @@
     "manager": "Rachel Hussain",
     "contractedHours": 22.5,
     "maxHours": 30,
+    "night": false,
+    "resource": "",
+    "cis": false,
     "state": "active",
-    "start": "11/01/2024",
+    "start": "2024-01-11",
     "end": ""
    },
    "per_CP-1266": {
@@ -86,6 +122,12 @@
     "code": "CP-1266",
     "name": "Daniel Osei",
     "email": "daniel.osei@brightpath.org",
+    "phone": "07700 900569",
+    "address": "31 Barrow Road, London N6 7QA",
+    "emergencyName": "Kit Shah",
+    "emergencyPhone": "07700 900879",
+    "bankAccount": "****3163",
+    "bankSortCode": "79-29-22",
     "jobProfile": "NS",
     "employeeType": "shift",
     "category": "Contracted",
@@ -94,8 +136,11 @@
     "manager": "Rachel Hussain",
     "contractedHours": 33,
     "maxHours": 42,
+    "night": true,
+    "resource": "",
+    "cis": false,
     "state": "active",
-    "start": "07/03/2020",
+    "start": "2020-03-07",
     "end": ""
    },
    "per_CP-1402": {
@@ -105,6 +150,12 @@
     "code": "CP-1402",
     "name": "Rosa Mendes",
     "email": "rosa.mendes@brightpath.org",
+    "phone": "07700 900170",
+    "address": "52 Morden Road, London N7 7QA",
+    "emergencyName": "Sam Baptiste",
+    "emergencyPhone": "07700 900879",
+    "bankAccount": "****3249",
+    "bankSortCode": "80-29-66",
     "jobProfile": "SW",
     "employeeType": "shift",
     "category": "Contracted",
@@ -113,8 +164,11 @@
     "manager": "Rachel Hussain",
     "contractedHours": 37.5,
     "maxHours": 45,
+    "night": false,
+    "resource": "",
+    "cis": false,
     "state": "active",
-    "start": "02/05/2023",
+    "start": "2023-05-02",
     "end": ""
    },
    "per_CP-1310": {
@@ -124,6 +178,12 @@
     "code": "CP-1310",
     "name": "Ellie Warren",
     "email": "ellie.warren@brightpath.org",
+    "phone": "07700 900437",
+    "address": "39 Chalk Road, London N2 7QA",
+    "emergencyName": "Jean Reilly",
+    "emergencyPhone": "07700 900879",
+    "bankAccount": "****7723",
+    "bankSortCode": "27-29-23",
     "jobProfile": "SW",
     "employeeType": "casual",
     "category": "Bank",
@@ -132,8 +192,11 @@
     "manager": "Rachel Hussain",
     "contractedHours": 0,
     "maxHours": 37.5,
+    "night": true,
+    "resource": "",
+    "cis": false,
     "state": "active",
-    "start": "06/06/2026",
+    "start": "2026-06-06",
     "end": ""
    },
    "per_CP-1455": {
@@ -143,6 +206,12 @@
     "code": "CP-1455",
     "name": "Sana Iqbal",
     "email": "sana.iqbal@brightpath.org",
+    "phone": "07700 900487",
+    "address": "29 Selby Road, London N4 7QA",
+    "emergencyName": "Nia Osei",
+    "emergencyPhone": "07700 900879",
+    "bankAccount": "****5886",
+    "bankSortCode": "77-29-64",
     "jobProfile": "SW",
     "employeeType": "casual",
     "category": "Bank",
@@ -151,8 +220,11 @@
     "manager": "Rachel Hussain",
     "contractedHours": 0,
     "maxHours": 37.5,
+    "night": true,
+    "resource": "",
+    "cis": false,
     "state": "active",
-    "start": "12/03/2026",
+    "start": "2026-03-12",
     "end": ""
    },
    "per_CP-1377": {
@@ -162,6 +234,12 @@
     "code": "CP-1377",
     "name": "Tomas Novak",
     "email": "tomas.novak@brightpath.org",
+    "phone": "07700 900290",
+    "address": "52 Morden Road, London N7 7QA",
+    "emergencyName": "Sam Baptiste",
+    "emergencyPhone": "07700 900879",
+    "bankAccount": "****4971",
+    "bankSortCode": "40-29-73",
     "jobProfile": "SW",
     "employeeType": "casual",
     "category": "Bank",
@@ -170,8 +248,11 @@
     "manager": "Rachel Hussain",
     "contractedHours": 0,
     "maxHours": 37.5,
+    "night": false,
+    "resource": "",
+    "cis": false,
     "state": "active",
-    "start": "21/05/2026",
+    "start": "2026-05-21",
     "end": ""
    },
    "per_CP-1490": {
@@ -181,6 +262,12 @@
     "code": "CP-1490",
     "name": "Kwame Boateng",
     "email": "kwame.boateng@brightpath.org",
+    "phone": "07700 900399",
+    "address": "21 Chalk Road, London N4 7QA",
+    "emergencyName": "Jean Reilly",
+    "emergencyPhone": "07700 900879",
+    "bankAccount": "****6691",
+    "bankSortCode": "69-29-74",
     "jobProfile": "SW",
     "employeeType": "casual",
     "category": "Bank",
@@ -189,8 +276,11 @@
     "manager": "Rachel Hussain",
     "contractedHours": 0,
     "maxHours": 37.5,
+    "night": true,
+    "resource": "",
+    "cis": false,
     "state": "active",
-    "start": "02/01/2026",
+    "start": "2026-01-02",
     "end": ""
    },
    "per_CP-1001": {
@@ -200,6 +290,12 @@
     "code": "CP-1001",
     "name": "Rachel Hussain",
     "email": "rachel.hussain@brightpath.org",
+    "phone": "07700 900562",
+    "address": "4 Morden Road, London N7 7QA",
+    "emergencyName": "Sam Baptiste",
+    "emergencyPhone": "07700 900879",
+    "bankAccount": "****9273",
+    "bankSortCode": "72-29-58",
     "jobProfile": "SM",
     "employeeType": "salaried",
     "category": "Contracted",
@@ -208,8 +304,11 @@
     "manager": "Dee Fitzgerald",
     "contractedHours": 37.5,
     "maxHours": 45,
+    "night": false,
+    "resource": "",
+    "cis": false,
     "state": "active",
-    "start": "08/08/2017",
+    "start": "2017-08-08",
     "end": ""
    },
    "per_CP-1002": {
@@ -219,6 +318,12 @@
     "code": "CP-1002",
     "name": "Dee Fitzgerald",
     "email": "dee.fitzgerald@brightpath.org",
+    "phone": "07700 900439",
+    "address": "21 Chalk Road, London N4 7QA",
+    "emergencyName": "Jean Reilly",
+    "emergencyPhone": "07700 900879",
+    "bankAccount": "****5040",
+    "bankSortCode": "29-29-49",
     "jobProfile": "SM",
     "employeeType": "salaried",
     "category": "Contracted",
@@ -227,8 +332,11 @@
     "manager": "",
     "contractedHours": 37.5,
     "maxHours": 45,
+    "night": false,
+    "resource": "",
+    "cis": false,
     "state": "active",
-    "start": "15/01/2016",
+    "start": "2016-01-15",
     "end": ""
    },
    "per_CP-1288": {
@@ -238,6 +346,12 @@
     "code": "CP-1288",
     "name": "Grace Whitmore",
     "email": "grace.whitmore@brightpath.org",
+    "phone": "07700 900360",
+    "address": "2 Fenner Road, London N5 7QA",
+    "emergencyName": "Ade Okafor",
+    "emergencyPhone": "07700 900879",
+    "bankAccount": "****6527",
+    "bankSortCode": "30-29-19",
     "jobProfile": "SW",
     "employeeType": "shift",
     "category": "Contracted",
@@ -246,9 +360,12 @@
     "manager": "Rachel Hussain",
     "contractedHours": 22.5,
     "maxHours": 30,
+    "night": false,
+    "resource": "",
+    "cis": false,
     "state": "leaver",
-    "start": "01/09/2023",
-    "end": "30/09/2026"
+    "start": "2023-09-01",
+    "end": "2026-09-30"
    },
    "per_EMP-2044": {
     "version": 1,
@@ -257,6 +374,12 @@
     "code": "EMP-2044",
     "name": "Adaeze Okafor",
     "email": "adaeze.okafor@meridian.co.uk",
+    "phone": "07700 900459",
+    "address": "21 Chalk Road, London N8 1QA",
+    "emergencyName": "Jean Reilly",
+    "emergencyPhone": "07700 900639",
+    "bankAccount": "****8901",
+    "bankSortCode": "49-49-89",
     "jobProfile": "DRV",
     "employeeType": "shift",
     "category": "Contracted",
@@ -265,8 +388,11 @@
     "manager": "Marcus Bennett",
     "contractedHours": 40,
     "maxHours": 48,
+    "night": true,
+    "resource": "",
+    "cis": false,
     "state": "active",
-    "start": "04/04/2021",
+    "start": "2021-04-04",
     "end": ""
    },
    "per_EMP-2062": {
@@ -276,6 +402,12 @@
     "code": "EMP-2062",
     "name": "Lucia Costa",
     "email": "lucia.costa@meridian.co.uk",
+    "phone": "07700 900293",
+    "address": "55 Barrow Road, London N2 1QA",
+    "emergencyName": "Kit Shah",
+    "emergencyPhone": "07700 900639",
+    "bankAccount": "****8291",
+    "bankSortCode": "43-49-19",
     "jobProfile": "SOP",
     "employeeType": "shift",
     "category": "Contracted",
@@ -284,8 +416,11 @@
     "manager": "Marcus Bennett",
     "contractedHours": 37.5,
     "maxHours": 45,
+    "night": true,
+    "resource": "",
+    "cis": false,
     "state": "active",
-    "start": "12/09/2022",
+    "start": "2022-09-12",
     "end": ""
    },
    "per_EMP-2071": {
@@ -295,6 +430,12 @@
     "code": "EMP-2071",
     "name": "Tomas Reid",
     "email": "tomas.reid@meridian.co.uk",
+    "phone": "07700 900170",
+    "address": "12 Ilex Road, London N7 1QA",
+    "emergencyName": "Tom Warren",
+    "emergencyPhone": "07700 900639",
+    "bankAccount": "****6887",
+    "bankSortCode": "80-49-59",
     "jobProfile": "SOP",
     "employeeType": "shift",
     "category": "Contracted",
@@ -303,8 +444,11 @@
     "manager": "Owen Clarke",
     "contractedHours": 40,
     "maxHours": 48,
+    "night": false,
+    "resource": "",
+    "cis": false,
     "state": "active",
-    "start": "22/02/2023",
+    "start": "2023-02-22",
     "end": ""
    },
    "per_EMP-2088": {
@@ -314,6 +458,12 @@
     "code": "EMP-2088",
     "name": "Aisha Khan",
     "email": "aisha.khan@meridian.co.uk",
+    "phone": "07700 900610",
+    "address": "32 Fenner Road, London N7 1QA",
+    "emergencyName": "Ade Okafor",
+    "emergencyPhone": "07700 900639",
+    "bankAccount": "****8480",
+    "bankSortCode": "40-49-74",
     "jobProfile": "PRC",
     "employeeType": "shift",
     "category": "Contracted",
@@ -322,8 +472,11 @@
     "manager": "Owen Clarke",
     "contractedHours": 37.5,
     "maxHours": 45,
+    "night": false,
+    "resource": "",
+    "cis": false,
     "state": "active",
-    "start": "06/06/2024",
+    "start": "2024-06-06",
     "end": ""
    },
    "per_CP-1501": {
@@ -333,6 +486,12 @@
     "code": "CP-1501",
     "name": "Priya Raman",
     "email": "priya.raman@brightpath.org",
+    "phone": "",
+    "address": "",
+    "emergencyName": "",
+    "emergencyPhone": "",
+    "bankAccount": "",
+    "bankSortCode": "",
     "jobProfile": "SW",
     "employeeType": "shift",
     "category": "Contracted",
@@ -341,8 +500,11 @@
     "manager": "Rachel Hussain",
     "contractedHours": 37.5,
     "maxHours": 45,
+    "night": false,
+    "resource": "",
+    "cis": false,
     "state": "candidate",
-    "start": "28/09/2026",
+    "start": "2026-09-28",
     "end": ""
    },
    "per_CP-1502": {
@@ -352,6 +514,12 @@
     "code": "CP-1502",
     "name": "Tom Achterberg",
     "email": "tom.achterberg@brightpath.org",
+    "phone": "",
+    "address": "",
+    "emergencyName": "",
+    "emergencyPhone": "",
+    "bankAccount": "",
+    "bankSortCode": "",
     "jobProfile": "SW",
     "employeeType": "shift",
     "category": "Contracted",
@@ -360,8 +528,11 @@
     "manager": "Rachel Hussain",
     "contractedHours": 30,
     "maxHours": 45,
+    "night": true,
+    "resource": "",
+    "cis": false,
     "state": "preboard",
-    "start": "14/09/2026",
+    "start": "2026-09-14",
     "end": ""
    }
   },
@@ -628,7 +799,8 @@
      "framework",
      "notice_org",
      "perm_cfg",
-     "integration"
+     "integration",
+     "bank_verify"
     ]
    }
   },
@@ -913,6 +1085,15 @@
     "label": "Integrations and audit log",
     "gate": "The whole Integrations section",
     "lockedFor": []
+   },
+   "bank_verify": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "bank_verify",
+    "group": "team",
+    "label": "Verify bank detail changes",
+    "gate": "The bank detail queue on Qnipay setup → People",
+    "lockedFor": []
    }
   },
   "capabilityGroups": {
@@ -1008,21 +1189,13 @@
     "code": "WH",
     "name": "Willow House",
     "area": "Camden",
-    "dept": "CARE",
-    "cc": "WH-CAM-01",
+    "department": "CARE",
+    "costCentre": "WH-CAM-01",
     "level": "High",
-    "min": 4,
-    "source": "HRIS",
-    "active": true,
+    "minPerShift": 4,
     "manager": "Rachel Hussain",
-    "geofence": "150 m",
     "address": "12 Willow Road, Camden, London NW3 1TH",
-    "coords": "51.556, -0.173",
-    "opened": "Mar 2018",
-    "live": true,
-    "pub": "31/12/2026",
-    "bank": 14,
-    "rate": "Rate card SR-11",
+    "active": true,
     "id": "loc_WH"
    },
    "loc_BC": {
@@ -1031,59 +1204,13 @@
     "code": "BC",
     "name": "Beacon Court",
     "area": "Islington",
-    "dept": "CARE",
-    "cc": "BC-ISL-02",
+    "department": "CARE",
+    "costCentre": "BC-ISL-02",
     "level": "Medium",
-    "min": 3,
-    "source": "HRIS",
-    "active": true,
+    "minPerShift": 3,
     "manager": "Rachel Hussain",
-    "geofence": "120 m",
     "address": "4 Beacon Court, Islington, London N1 9GU",
-    "coords": "51.538, -0.103",
-    "opened": "Jul 2020",
-    "pub": "31/12/2026",
-    "bank": 9,
-    "rate": "Rate card SR-08",
-    "cov": [
-     [
-      1,
-      1,
-      1
-     ],
-     [
-      1,
-      1,
-      1
-     ],
-     [
-      2,
-      1,
-      1
-     ],
-     [
-      1,
-      1,
-      1
-     ],
-     [
-      1,
-      1,
-      1
-     ],
-     [
-      1,
-      0,
-      1
-     ],
-     [
-      1,
-      1,
-      1
-     ]
-    ],
-    "rotad": 276,
-    "con": 292.5,
+    "active": true,
     "id": "loc_BC"
    },
    "loc_RL": {
@@ -1092,59 +1219,13 @@
     "code": "RL",
     "name": "Rowan Lodge",
     "area": "Hackney",
-    "dept": "CARE",
-    "cc": "RL-HAC-03",
+    "department": "CARE",
+    "costCentre": "RL-HAC-03",
     "level": "Low",
-    "min": 2,
-    "source": "HRIS",
-    "active": true,
+    "minPerShift": 2,
     "manager": "Dee Fitzgerald",
-    "geofence": "100 m",
     "address": "88 Rowan Lodge, Hackney, London E8 3PN",
-    "coords": "51.545, -0.056",
-    "opened": "Jan 2022",
-    "pub": "28/02/2027",
-    "bank": 0,
-    "rate": "Rate card SR-03",
-    "cov": [
-     [
-      1,
-      1,
-      0
-     ],
-     [
-      1,
-      1,
-      0
-     ],
-     [
-      1,
-      1,
-      0
-     ],
-     [
-      1,
-      1,
-      0
-     ],
-     [
-      1,
-      1,
-      0
-     ],
-     [
-      1,
-      1,
-      0
-     ],
-     [
-      1,
-      1,
-      0
-     ]
-    ],
-    "rotad": 150,
-    "con": 150,
+    "active": true,
     "id": "loc_RL"
    },
    "loc_FS": {
@@ -1153,59 +1234,13 @@
     "code": "FS",
     "name": "Floating Support",
     "area": "North",
-    "dept": "CARE",
-    "cc": "FS-NOR-04",
+    "department": "CARE",
+    "costCentre": "FS-NOR-04",
     "level": "Floating",
-    "min": 1,
-    "source": "HRIS",
-    "active": true,
+    "minPerShift": 1,
     "manager": "Dee Fitzgerald",
-    "geofence": "—",
     "address": "Mobile team · North London",
-    "coords": "—",
-    "opened": "Sep 2023",
-    "pub": "30/11/2026",
-    "bank": 100,
-    "rate": "Rate card SR-01",
-    "cov": [
-     [
-      1,
-      0,
-      0
-     ],
-     [
-      1,
-      0,
-      0
-     ],
-     [
-      1,
-      0,
-      0
-     ],
-     [
-      0,
-      0,
-      0
-     ],
-     [
-      1,
-      0,
-      0
-     ],
-     [
-      1,
-      0,
-      0
-     ],
-     [
-      1,
-      0,
-      0
-     ]
-    ],
-    "rotad": 37.5,
-    "con": 37.5,
+    "active": true,
     "id": "loc_FS"
    },
    "loc_LGW": {
@@ -1214,59 +1249,13 @@
     "code": "LGW",
     "name": "London Gateway",
     "area": "Essex",
-    "dept": "OPS",
-    "cc": "CC-104",
+    "department": "OPS",
+    "costCentre": "CC-104",
     "level": "Low",
-    "min": 2,
-    "source": "HRIS",
-    "active": true,
+    "minPerShift": 2,
     "manager": "Marcus Bennett",
-    "geofence": "200 m",
     "address": "Gateway Distribution Park, Stanford-le-Hope, Essex RM19 4YR",
-    "coords": "51.484, 0.283",
-    "opened": "Apr 2019",
-    "pub": "31/12/2026",
-    "bank": 6,
-    "rate": "Site rate card SR-04",
-    "cov": [
-     [
-      2,
-      1,
-      1
-     ],
-     [
-      2,
-      1,
-      1
-     ],
-     [
-      2,
-      1,
-      1
-     ],
-     [
-      2,
-      1,
-      1
-     ],
-     [
-      2,
-      1,
-      1
-     ],
-     [
-      1,
-      0,
-      1
-     ],
-     [
-      1,
-      0,
-      1
-     ]
-    ],
-    "rotad": 212,
-    "con": 220,
+    "active": true,
     "id": "loc_LGW"
    },
    "loc_SLO": {
@@ -1275,59 +1264,13 @@
     "code": "SLO",
     "name": "Slough Depot",
     "area": "Berkshire",
-    "dept": "OPS",
-    "cc": "CC-104",
+    "department": "OPS",
+    "costCentre": "CC-104",
     "level": "Low",
-    "min": 2,
-    "source": "HRIS",
-    "active": true,
+    "minPerShift": 2,
     "manager": "Owen Clarke",
-    "geofence": "150 m",
     "address": "Unit 7, Farnburn Avenue, Slough SL1 4XP",
-    "coords": "51.517, -0.594",
-    "opened": "Sep 2021",
-    "pub": "31/12/2026",
-    "bank": 4,
-    "rate": "Site rate card SR-02",
-    "cov": [
-     [
-      1,
-      1,
-      0
-     ],
-     [
-      1,
-      1,
-      0
-     ],
-     [
-      1,
-      1,
-      0
-     ],
-     [
-      1,
-      1,
-      0
-     ],
-     [
-      1,
-      1,
-      0
-     ],
-     [
-      0,
-      0,
-      0
-     ],
-     [
-      0,
-      0,
-      0
-     ]
-    ],
-    "rotad": 112,
-    "con": 120,
+    "active": true,
     "id": "loc_SLO"
    },
    "loc_MAN": {
@@ -1336,59 +1279,13 @@
     "code": "MAN",
     "name": "Manchester Hub",
     "area": "Greater Manchester",
-    "dept": "OPS",
-    "cc": "CC-104",
+    "department": "OPS",
+    "costCentre": "CC-104",
     "level": "Medium",
-    "min": 3,
-    "source": "HRIS",
-    "active": true,
+    "minPerShift": 3,
     "manager": "Marcus Bennett",
-    "geofence": "250 m",
     "address": "Trafford Point, Twining Road, Manchester M17 1WA",
-    "coords": "53.463, -2.311",
-    "opened": "Jan 2024",
-    "pub": "31/12/2026",
-    "bank": 8,
-    "rate": "Site rate card SR-07",
-    "cov": [
-     [
-      2,
-      1,
-      1
-     ],
-     [
-      2,
-      1,
-      1
-     ],
-     [
-      1,
-      1,
-      1
-     ],
-     [
-      2,
-      1,
-      1
-     ],
-     [
-      2,
-      1,
-      1
-     ],
-     [
-      1,
-      1,
-      1
-     ],
-     [
-      1,
-      1,
-      0
-     ]
-    ],
-    "rotad": 268,
-    "con": 262.5,
+    "active": true,
     "id": "loc_MAN"
    }
   },
@@ -1534,38 +1431,15 @@
     "updatedAt": "2026-08-13T14:30:00.000Z",
     "code": "PRJ-114",
     "name": "Northgate Fit-out",
-    "status": "Active",
-    "cc": "CC-220",
     "client": "Northgate Group",
+    "costCentre": "CC-220",
     "manager": "Owen Clarke",
-    "start": "06/04/2026",
-    "end": "18/12/2026",
+    "status": "Active",
+    "start": "2026-04-06",
+    "end": "2026-12-18",
+    "budgetHours": "1,240 h",
     "billable": true,
-    "budget": "1,240 h",
-    "logged": "812 h",
-    "loc": "LGW",
-    "tasks": [
-     {
-      "n": "Site survey",
-      "g": "Field",
-      "b": true
-     },
-     {
-      "n": "Installation",
-      "g": "Field",
-      "b": true
-     },
-     {
-      "n": "Snagging",
-      "g": "Field",
-      "b": true
-     },
-     {
-      "n": "Project admin",
-      "g": "Office",
-      "b": false
-     }
-    ],
+    "location": "LGW",
     "id": "prj_PRJ-114"
    },
    "prj_PRJ-121": {
@@ -1573,33 +1447,15 @@
     "updatedAt": "2026-08-13T14:30:00.000Z",
     "code": "PRJ-121",
     "name": "GoFibre Rollout",
-    "status": "Active",
-    "cc": "CC-220",
     "client": "GoFibre Networks",
+    "costCentre": "CC-220",
     "manager": "Marcus Bennett",
-    "start": "02/02/2026",
-    "end": "31/03/2027",
+    "status": "Active",
+    "start": "2026-02-02",
+    "end": "2027-03-31",
+    "budgetHours": "4,800 h",
     "billable": true,
-    "budget": "4,800 h",
-    "logged": "2,140 h",
-    "loc": "SLO",
-    "tasks": [
-     {
-      "n": "Cable pull",
-      "g": "Field",
-      "b": true
-     },
-     {
-      "n": "Splicing",
-      "g": "Field",
-      "b": true
-     },
-     {
-      "n": "Testing & handover",
-      "g": "Field",
-      "b": true
-     }
-    ],
+    "location": "SLO",
     "id": "prj_PRJ-121"
    },
    "prj_PRJ-204": {
@@ -1607,38 +1463,15 @@
     "updatedAt": "2026-08-13T14:30:00.000Z",
     "code": "PRJ-204",
     "name": "Camden Supported Living",
-    "status": "Active",
-    "cc": "WH-CAM-01",
     "client": "Camden Council",
+    "costCentre": "WH-CAM-01",
     "manager": "Rachel Hussain",
-    "start": "01/04/2026",
-    "end": "31/03/2027",
+    "status": "Active",
+    "start": "2026-04-01",
+    "end": "2027-03-31",
+    "budgetHours": "9,600 h",
     "billable": true,
-    "budget": "9,600 h",
-    "logged": "4,180 h",
-    "loc": "WH",
-    "tasks": [
-     {
-      "n": "One-to-one support",
-      "g": "Service",
-      "b": true
-     },
-     {
-      "n": "Group activity",
-      "g": "Service",
-      "b": true
-     },
-     {
-      "n": "Appointment escort",
-      "g": "Service",
-      "b": true
-     },
-     {
-      "n": "Handover & records",
-      "g": "Service",
-      "b": false
-     }
-    ],
+    "location": "WH",
     "id": "prj_PRJ-204"
    },
    "prj_PRJ-009": {
@@ -1646,41 +1479,99 @@
     "updatedAt": "2026-08-13T14:30:00.000Z",
     "code": "PRJ-009",
     "name": "Internal",
-    "status": "Always open",
-    "cc": "CC-104",
-    "client": "—",
+    "client": "",
+    "costCentre": "CC-104",
     "manager": "Dee Fitzgerald",
-    "start": "—",
-    "end": "—",
+    "status": "Always open",
+    "start": "",
+    "end": "",
+    "budgetHours": "",
     "billable": false,
-    "budget": "—",
-    "logged": "318 h",
-    "loc": "MAN",
-    "tasks": [
-     {
-      "n": "Goods receiving",
-      "g": "Warehouse",
-      "b": false
-     },
-     {
-      "n": "Pick & pack",
-      "g": "Warehouse",
-      "b": false
-     },
-     {
-      "n": "Training",
-      "g": "Office",
-      "b": false
-     },
-     {
-      "n": "Vehicle checks",
-      "g": "Yard",
-      "b": false
-     }
-    ],
+    "location": "MAN",
     "id": "prj_PRJ-009"
    }
   },
+  "employeeTypes": {
+   "typ_shift": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "typ_shift",
+    "code": "shift",
+    "name": "Support Worker",
+    "category": "Contracted",
+    "mode": "clock",
+    "uom": "hour",
+    "capabilities": [
+     "shift",
+     "site",
+     "project"
+    ]
+   },
+   "typ_casual": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "typ_casual",
+    "code": "casual",
+    "name": "Relief / Bank Worker",
+    "category": "Bank",
+    "mode": "clock",
+    "uom": "hour",
+    "capabilities": [
+     "shift",
+     "site"
+    ]
+   },
+   "typ_salaried": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "typ_salaried",
+    "code": "salaried",
+    "name": "Service Manager",
+    "category": "Salaried",
+    "mode": "grid",
+    "uom": "day",
+    "capabilities": [
+     "project"
+    ]
+   }
+  },
+  "profileChanges": {
+   "pfc_9001": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "pfc_9001",
+    "personCode": "CP-1088",
+    "field": "phone",
+    "from": "07700 900287",
+    "to": "07700 900461",
+    "note": "",
+    "raisedAt": "2026-08-11T00:00:00.000Z",
+    "status": "pending",
+    "stage": "manager",
+    "route": [
+     "manager"
+    ],
+    "decisions": []
+   },
+   "pfc_9002": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "pfc_9002",
+    "personCode": "CP-1201",
+    "field": "address",
+    "from": "60 Ilex Road, London N7 7QA",
+    "to": "8 Ashfield Court, London N7 9BB",
+    "note": "Moved on 1 August",
+    "raisedAt": "2026-08-10T00:00:00.000Z",
+    "status": "pending",
+    "stage": "manager",
+    "route": [
+     "manager"
+    ],
+    "decisions": []
+   }
+  },
+  "personHistory": {},
   "notices": {
    "NTC-0001": {
     "version": 1,
