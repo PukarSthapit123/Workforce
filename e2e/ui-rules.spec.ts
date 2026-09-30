@@ -4,8 +4,10 @@ import { tid } from '../src/testids';
 
 /* Generic interface rules from the prototype suite, checked on every page
    this build has actually built. Each test names the trace rows it ports. */
-const BUILT = ['/setup/asetup', '/setup/aperm', '/setup/iaudit'];
-const READY: Record<string, string> = { '/setup/asetup': tid.page('asetup'), '/setup/aperm': tid.access.table, '/setup/iaudit': tid.page('iaudit') };
+const BUILT = ['/setup/asetup', '/setup/aperm', '/setup/iaudit', '/setup/apeople', '/setup/aloc', '/setup/aloc?d=locations', '/setup/acon', '/setup/atypes'];
+const READY: Record<string, string> = { '/setup/asetup': tid.page('asetup'), '/setup/aperm': tid.access.table, '/setup/iaudit': tid.page('iaudit'),
+  '/setup/apeople': tid.people.table, '/setup/aloc': tid.dims.card('locations'), '/setup/aloc?d=locations': tid.dims.table,
+  '/setup/acon': tid.contracts.table, '/setup/atypes': tid.types.detail };
 
 async function eachBuiltPage(page: Page, check: (path: string) => Promise<void>) {
   await check('sign-in');

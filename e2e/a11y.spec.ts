@@ -57,3 +57,48 @@ test('phone: no horizontal overflow on built pages at 390px', async ({ page, sig
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), path).toBe(true);
   }
 });
+
+/* Plan 1b's pages, each read once its own data is on screen, for the
+   persona that reaches it; the person form and the proposal dialog too. */
+const PAGES_1B: Record<'admin' | 'manager' | 'employee', [string, string][]> = {
+  admin: [['/setup/apeople', tid.people.table], ['/setup/aloc', tid.dims.card('locations')], ['/setup/aloc?d=locations', tid.dims.table],
+    ['/setup/aloc?d=projects', tid.dims.table], ['/setup/acon', tid.contracts.table], ['/setup/atypes', tid.types.detail]],
+  manager: [['/team/tpeople', tid.people.table]],
+  employee: [['/work/profile', tid.profile.state]],
+};
+const DIALOGS_1B: Record<string, [string, string]> = { '/setup/apeople': [tid.people.add, tid.personForm.root], '/work/profile': [tid.profile.propose, tid.profile.send] };
+for (const theme of ['light', 'dark'] as const) {
+  for (const persona of ['admin', 'manager', 'employee'] as const) {
+    test(`axe: plan 1b pages for the ${persona} have no serious issues (${theme})`, async ({ page, signInAs }) => {
+      const check = async (where: string) => {
+        await page.evaluate(t => document.documentElement.setAttribute('data-theme', t), theme);
+        const r = await new AxeBuilder({ page }).analyze();
+        expect(r.violations.filter(v => ['serious', 'critical'].includes(v.impact ?? '')).map(v => `${where} ${v.id}: ${v.nodes.length}`)).toEqual([]);
+      };
+      await signInAs(persona);
+      for (const [path, ready] of PAGES_1B[persona]) {
+        await page.goto(path);
+        await page.getByTestId(ready).waitFor();
+        await check(path);
+        const dialog = DIALOGS_1B[path];
+        if (dialog) {
+          await page.getByTestId(dialog[0]).click();
+          await page.getByTestId(dialog[1]).waitFor();
+          await check(`${path} dialog`);
+          await page.keyboard.press('Escape');
+        }
+      }
+    });
+  }
+}
+test('phone: plan 1b pages have no horizontal overflow at 390px', async ({ page, signInAs }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const persona of ['admin', 'manager', 'employee'] as const) {
+    await signInAs(persona);
+    for (const [path, ready] of PAGES_1B[persona]) {
+      await page.goto(path);
+      await page.getByTestId(ready).waitFor();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), path).toBe(true);
+    }
+  }
+});

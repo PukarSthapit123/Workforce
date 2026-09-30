@@ -37,7 +37,7 @@ export function ProfileQueue({ stage }: { stage: 'manager' | 'payroll' }) {
             <div className="min-w-0">
               <strong className="text-sm font-semibold">{c.personName}</strong>
               <Small>{selfField(c.field).label} · raised {formatDate(c.raisedAt.slice(0, 10))}{c.note ? ` · ${c.note}` : ''}</Small>
-              <Small><span className="line-through opacity-60">{c.from || '—'}</span> → <strong className="text-text-primary">{c.to}</strong></Small>
+              <Small><span className="line-through">{c.from || '—'}</span> → <strong className="text-text-primary">{c.to}</strong></Small>
             </div>
           </div>
           <span className="ml-auto inline-flex flex-wrap items-center gap-xs">
