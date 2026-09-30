@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { tid } from '@/testids';
-import { Field, TextInput, SelectBox, Row } from '@/ui';
+import { Card, FilterBar, Page, PageHead, Row, SearchFilter, SelectFilter } from '@/ui';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import { useAudit, type AuditEntry } from '@/api/audit';
 import { formatDateTime, describeChange } from '@/lib/format';
@@ -18,12 +18,16 @@ const ENTITY_LABEL: Record<string, string> = { userType: 'Permission template', 
 
 const whoLabel = (who: AuditEntry['who']) => (who.viewingAs ? `${who.name} (as ${who.viewingAs})` : who.name);
 const recordLabel = (e: AuditEntry) => `${ENTITY_LABEL[e.entity] ?? e.entity}: ${e.entityId}`;
+/* The prototype's Detail column: everything about the change beyond who and
+   what, in one muted line. Here that is the record, the change and the reason. */
+const detail = (e: AuditEntry) => [recordLabel(e), describeChange(e.before, e.after), e.reason].filter(Boolean).join(' · ');
 
-/* Ported from the prototype's table.rec: below the md breakpoint the whole
-   table switches to `block` display, so its thead/tbody/tr/td can become a
-   stacked card per row (a labelled key next to each value) without the CSS
-   table layout algorithm fighting that. At md and up it reverts to a normal
-   table. One row, one data-testid, at every width. */
+/* Ported from the prototype's admAudit (qnipay-workforce-v15.html:9682-9688):
+   When (12px muted), Who, Action, Detail (12px muted). The filters the spec
+   asks for sit above it as the prototype's filter bar of 32px pills. On a
+   phone the log is a record list (table.rec): each entry a card titled with
+   its date and time, Who and Action labelled, the detail at its foot. One
+   row, one data-testid, at every width. */
 export function AuditPage() {
   const [entity, setEntity] = useState('all');
   const [who, setWho] = useState('');
@@ -31,23 +35,15 @@ export function AuditPage() {
   const audit = useAudit({ entity: entity === 'all' ? undefined : entity, who: who.trim() || undefined, q: q.trim() || undefined });
 
   return (
-    <section data-testid={tid.page('iaudit')} className="mx-auto flex max-w-5xl flex-col gap-lg p-xl">
-      <div>
-        <h1 className="text-[length:var(--qp-text-20)] font-semibold">Audit log</h1>
-        <p className="text-text-secondary">Every state change anyone makes, newest first.</p>
-      </div>
+    <Page testId={tid.page('iaudit')}>
+      <PageHead title="Audit log" crumb="Qnipay setup · Audit log" tip="Every state change anyone makes, newest first, with who acted and when."
+        tipTestId={tid.head.tip('iaudit')} />
 
-      <div className="grid grid-cols-1 gap-sm md:grid-cols-3">
-        <Field label="Record type">
-          <SelectBox testId={tid.audit.filterEntity} value={entity} onValueChange={setEntity} options={ENTITY_OPTIONS} />
-        </Field>
-        <Field label="Who">
-          <TextInput testId={tid.audit.filterWho} value={who} onChange={e => setWho(e.target.value)} placeholder="Name" />
-        </Field>
-        <Field label="Search">
-          <TextInput testId={tid.audit.filterText} value={q} onChange={e => setQ(e.target.value)} placeholder="Action, record or reason" />
-        </Field>
-      </div>
+      <FilterBar>
+        <SelectFilter testId={tid.audit.filterEntity} label="Record type" value={entity} onValueChange={setEntity} options={ENTITY_OPTIONS} />
+        <SearchFilter testId={tid.audit.filterWho} label="Who" value={who} onChange={e => setWho(e.target.value)} placeholder="Who" />
+        <SearchFilter testId={tid.audit.filterText} label="Search" value={q} onChange={e => setQ(e.target.value)} placeholder="Search the log" />
+      </FilterBar>
 
       {audit.isPending && <p className="text-text-secondary">Loading the audit log&hellip;</p>}
 
@@ -58,55 +54,30 @@ export function AuditPage() {
       )}
 
       {audit.isSuccess && audit.data.items.length === 0 && (
-        <p className="text-text-secondary">Nothing recorded yet. Every change anyone makes appears here.</p>
+        <Card><p className="px-lg py-2xl text-center text-text-muted">Nothing recorded yet. Every change anyone makes appears here.</p></Card>
       )}
 
       {audit.isSuccess && audit.data.items.length > 0 && (
-        <div className="rounded-card border border-border md:overflow-x-auto">
-          <Table data-testid={tid.audit.table} className="block md:table">
-            <TableHeader className="hidden md:table-header-group">
-              <TableRow>
-                <TableHead>When</TableHead>
-                <TableHead>Who</TableHead>
-                <TableHead>What</TableHead>
-                <TableHead>Record</TableHead>
-                <TableHead>Change</TableHead>
-                <TableHead>Reason</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody className="block md:table-row-group">
-              {audit.data.items.map(entry => (
-                <Row key={entry.id} testId={tid.audit.row(entry.id)}
-                  className="mb-sm block rounded-card border border-border p-sm md:mb-0 md:table-row md:rounded-none md:border-0 md:border-b md:p-0">
-                  <TableCell className="flex items-baseline justify-between gap-sm md:table-cell">
-                    <span className="text-xs font-semibold text-text-secondary md:hidden">When</span>
-                    <span>{formatDateTime(entry.at)}</span>
-                  </TableCell>
-                  <TableCell className="flex items-baseline justify-between gap-sm md:table-cell">
-                    <span className="text-xs font-semibold text-text-secondary md:hidden">Who</span>
-                    <span>{whoLabel(entry.who)}</span>
-                  </TableCell>
-                  <TableCell className="flex items-baseline justify-between gap-sm md:table-cell">
-                    <span className="text-xs font-semibold text-text-secondary md:hidden">What</span>
-                    <span>{entry.act}</span>
-                  </TableCell>
-                  <TableCell className="flex items-baseline justify-between gap-sm md:table-cell">
-                    <span className="text-xs font-semibold text-text-secondary md:hidden">Record</span>
-                    <span>{recordLabel(entry)}</span>
-                  </TableCell>
-                  <TableCell className="flex items-baseline justify-between gap-sm md:table-cell">
-                    <span className="text-xs font-semibold text-text-secondary md:hidden">Change</span>
-                    <span>{describeChange(entry.before, entry.after)}</span>
-                  </TableCell>
-                  <TableCell className="flex items-baseline justify-between gap-sm md:table-cell">
-                    <span className="text-xs font-semibold text-text-secondary md:hidden">Reason</span>
-                    <span>{entry.reason ?? '—'}</span>
-                  </TableCell>
-                </Row>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <Table data-testid={tid.audit.table} variant="records">
+          <TableHeader>
+            <TableRow>
+              <TableHead>When</TableHead>
+              <TableHead>Who</TableHead>
+              <TableHead>Action</TableHead>
+              <TableHead>Detail</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {audit.data.items.map(entry => (
+              <Row key={entry.id} testId={tid.audit.row(entry.id)}>
+                <TableCell kind="title" className="text-xs whitespace-nowrap text-text-muted tabular-nums max-md:text-sm max-md:text-text-primary">{formatDateTime(entry.at)}</TableCell>
+                <TableCell label="Who">{whoLabel(entry.who)}</TableCell>
+                <TableCell label="Action">{entry.act}</TableCell>
+                <TableCell kind="foot" empty={!detail(entry)} className="text-xs text-text-muted">{detail(entry)}</TableCell>
+              </Row>
+            ))}
+          </TableBody>
+        </Table>
       )}
-    </section>);
+    </Page>);
 }

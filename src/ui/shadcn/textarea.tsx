@@ -1,14 +1,14 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
+import { fieldControl } from "./input"
 
+/* The prototype's .fld textarea (qnipay-workforce-v15.html:500): the input's
+   look, auto height, 9px 11px, line-height 1.5, resizable vertically. */
 function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
   return (
     <textarea
       data-slot="textarea"
-      className={cn(
-        "flex field-sizing-content min-h-16 w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:aria-invalid:ring-destructive/40",
-        className
-      )}
+      className={cn(fieldControl, "field-sizing-content h-auto min-h-16 resize-y py-[9px] leading-normal", className)}
       {...props}
     />
   )

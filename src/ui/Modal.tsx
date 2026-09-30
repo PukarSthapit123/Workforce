@@ -1,18 +1,24 @@
 import type { ReactNode } from 'react';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/ui/shadcn/dialog';
+import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription, type DialogWidth } from '@/ui/shadcn/dialog';
 import { tid } from '@/testids';
 import { Button } from './Button';
 
-/* Radix traps focus and returns it on close, which the prototype never did. */
-export function Modal({ open, onOpenChange, title, description, children, footer }: {
+/* The prototype's .modal: .mh (title, close), .mb (the description, then the
+   content) and .mf (the buttons, primary last). Radix traps focus and returns
+   it on close, which the prototype never did. Without a description Radix
+   is told so explicitly, rather than warning that one is missing. */
+export function Modal({ open, onOpenChange, title, description, children, footer, width }: {
   open: boolean; onOpenChange: (o: boolean) => void; title: string; description?: string; children?: ReactNode; footer?: ReactNode;
+  width?: DialogWidth;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent data-testid={tid.modal.root}>
-        <DialogHeader><DialogTitle data-testid={tid.modal.title}>{title}</DialogTitle>
-          {description && <DialogDescription>{description}</DialogDescription>}</DialogHeader>
-        {children}
+      <DialogContent data-testid={tid.modal.root} width={width} {...(description ? {} : { 'aria-describedby': undefined })}>
+        <DialogHeader closeTestId={tid.modal.close}><DialogTitle data-testid={tid.modal.title}>{title}</DialogTitle></DialogHeader>
+        {(description || children) && <DialogBody>
+          {description && <DialogDescription className={children ? 'mb-lg text-sm text-text-secondary' : 'text-sm text-text-secondary'}>{description}</DialogDescription>}
+          {children}
+        </DialogBody>}
         {footer && <DialogFooter>{footer}</DialogFooter>}
       </DialogContent>
     </Dialog>);

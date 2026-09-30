@@ -25,6 +25,7 @@
     "verify": "npm run typecheck && npm run lint && npm test && npm run e2e && npm run trace:check && npm run build:check"
   },
   "dependencies": {
+    "@fontsource/inter": "^5.3.0",
     "@tanstack/react-query": "^5.103.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

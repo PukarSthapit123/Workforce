@@ -1,7 +1,41 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Button, Field, TextInput, Pill, SelectBox, CheckboxField, SwitchField, Modal, ConfirmModal, Tip, HelpButton, Caution } from '@/ui';
+import { Button, Field, TextInput, Pill, SelectBox, CheckboxField, SwitchField, Modal, ConfirmModal, Tip, HelpButton, Caution, Page, PageHead, FilterBar, SearchFilter, SelectFilter, Row } from '@/ui';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import { expectTestIdCoverage } from '@/test/testid-coverage';
+
+/* The page frame and head every screen shares (src/ui/Page.tsx): a crumb, one
+   h1 with its tip beside it, the actions slot, and no lede paragraph. */
+test('Page and PageHead render the crumb, one h1 with its tip, and the actions', () => {
+  render(<Page testId="page-demo"><PageHead title="Audit log" crumb="Qnipay setup · Audit log" tip="Who did what, and when." tipTestId="head-tip-demo"
+    actions={<Button testId="demo-action">Export</Button>} /></Page>);
+  const page = screen.getByTestId('page-demo');
+  expect(page).toHaveTextContent(/^Qnipay setup · Audit log/);
+  expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Audit log');
+  expect(screen.getByRole('heading', { level: 1 })).toContainElement(screen.getByTestId('head-tip-demo'));
+  expect(screen.getByTestId('demo-action')).toBeInTheDocument();
+  expect(page.querySelectorAll('p')).toHaveLength(0);
+  expectTestIdCoverage();
+});
+
+/* table.rec: on a phone each cell is labelled from its column, except the
+   title and the foot. The label rides on data-l, so a cell carries its own. */
+test('a records table labels each cell for its phone card, but not the title or the foot', () => {
+  render(<Table variant="records"><TableHeader><TableRow><TableHead>When</TableHead><TableHead>Who</TableHead><TableHead>Detail</TableHead></TableRow></TableHeader>
+    <TableBody><Row testId="audit-row-1"><TableCell kind="title">13/08/2026</TableCell><TableCell label="Who">Dee</TableCell><TableCell kind="foot" empty>{''}</TableCell></Row></TableBody></Table>);
+  const cells = screen.getByTestId('audit-row-1').querySelectorAll('td');
+  expect([...cells].map(c => c.getAttribute('data-l'))).toEqual([null, 'Who', null]);
+  expect(cells[2]).toHaveAttribute('data-empty');
+});
+
+/* The filter bar's pills have no visible label, so each names itself. */
+test('filter controls name themselves', () => {
+  render(<FilterBar><SelectFilter testId="audit-filter-entity" label="Record type" value="all" options={[{ value: 'all', label: 'All records' }]} />
+    <SearchFilter testId="audit-filter-text" label="Search" /></FilterBar>);
+  expect(screen.getByTestId('audit-filter-entity')).toHaveAccessibleName('Record type');
+  expect(screen.getByTestId('audit-filter-text')).toHaveAccessibleName('Search');
+  expect(screen.getByRole('group', { name: 'Filters' })).toBeInTheDocument();
+});
 
 test('Button renders its test id', () => {
   render(<Button testId="people-add">Add someone</Button>);
@@ -89,7 +123,8 @@ test('the tooltip bubble uses the inverse surface with light text', async () => 
   const bubble = document.querySelector('[data-slot="tooltip-content"]');
   expect(bubble).toHaveTextContent('Used to sign in.');
   expect(bubble?.className).toMatch(/\bbg-surface-inverse\b/);
-  expect(bubble?.className).toMatch(/\btext-text-on-brand\b/);
+  /* the prototype's #tipbubble ink, #EAF4E6 (v15:563), named --qp-color-text-on-inverse */
+  expect(bubble?.className).toMatch(/\btext-text-on-inverse\b/);
 });
 
 /* AFFORDANCE CONVENTION: "No i tooltip is guide-length". */

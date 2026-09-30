@@ -1,11 +1,13 @@
-import { useEffect, useState, type ComponentType } from 'react';
-import { Bell } from 'lucide-react';
+import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
+import { Bell, Sun, TriangleAlert } from 'lucide-react';
 import { Navigate, Route, Routes, useLocation } from 'react-router';
 import type { NavGroup, NavTab } from '@/domain/nav';
 import { tid } from '@/testids';
+import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/ui/shadcn/dropdown-menu';
-import { Modal, NavLink } from '@/ui';
+import { Modal, NavLink, Page, PageHead, Card } from '@/ui';
 import { AccountMenu, type MenuAccount } from './AccountMenu';
+import { TopBar } from './TopBar';
 import { useShellData, ShellLoading, ShellError } from './shellData';
 import { NotBuilt } from '@/features/not-built/NotBuilt';
 import { SetupIndex } from '@/features/setup/SetupIndex';
@@ -30,6 +32,9 @@ export function Shell() {
     onSignOut={data.onSignOut} onViewAs={data.onViewAs} onEndViewAs={data.onEndViewAs} />;
 }
 
+/* The shell chrome is shared: a module never restyles it. Top bar, then the
+   tab strip (desktop) or the bottom bar (phone), both painted from the same
+   array, then the routed page inside its own Page frame. */
 export function ShellView({ nav, roleLabel, viewingAs, account, canViewAs = false, unread, onSignOut, onViewAs = () => {}, onEndViewAs }: {
   nav: NavGroup[]; roleLabel: string; viewingAs: string | null; account: MenuAccount; canViewAs?: boolean; unread: number;
   onSignOut(): void; onViewAs?(personCode: string): void; onEndViewAs(): void;
@@ -41,39 +46,63 @@ export function ShellView({ nav, roleLabel, viewingAs, account, canViewAs = fals
   const stripTabs = stripTabsFor(current, pathname);
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="flex items-center gap-sm bg-surface-inverse px-md py-sm text-text-on-brand md:gap-md md:px-lg">
-        <span className="hidden font-semibold md:inline">Qnipay</span>
-        <nav aria-label="Areas" className="flex min-w-0 flex-1 gap-xs overflow-x-auto">
-          {nav.map(g => <NavLink key={g.key} to={firstTabPath(g)} testId={tid.nav.group(g.key)}
-            aria-current={g === current ? 'true' : undefined}
-            className={`inline-flex min-h-touch shrink-0 items-center whitespace-nowrap rounded-pill px-md py-xs ${g === current ? 'bg-brand-accent text-text-on-accent' : ''}`}>{g.label}</NavLink>)}
+      <TopBar>
+        <nav aria-label="Areas" className="flex min-w-0 gap-[2px] md:flex-wrap max-md:flex-1 max-md:flex-nowrap max-md:overflow-x-auto max-md:[scrollbar-width:none]">
+          {nav.map(g => <AreaLink key={g.key} group={g} current={g === current} />)}
         </nav>
-        <span data-testid={tid.shell.rolePill}
-          className={`hidden shrink-0 items-center rounded-pill border px-sm py-xs text-xs font-semibold md:inline-flex ${viewingAs ? 'border-dashed opacity-85' : ''}`}
-          title={viewingAs ? `Looking at the app as ${viewingAs} · your account is ${account.name}` : undefined}>{roleLabel}</span>
-        <button type="button" data-testid={tid.shell.bell} aria-label={`Notifications, ${unread} unread`}
-          className="relative inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center">
-          <Bell aria-hidden="true" className="size-5" />{unread > 0 && <span data-testid={tid.shell.bellCount} className="absolute -right-2 -top-2 rounded-pill bg-brand-accent px-xs text-xs text-text-on-accent">{unread}</span>}
-        </button>
-        <button type="button" data-testid={tid.shell.theme} aria-label={`${theme === 'dark' ? 'Light' : 'Dark'} theme`}
-          className="inline-flex min-h-touch shrink-0 items-center rounded-pill border px-sm py-xs text-xs" onClick={toggleTheme}>{theme === 'dark' ? 'Light' : 'Dark'}</button>
-        <AccountMenu account={account} viewingAs={viewingAs} canViewAs={canViewAs} onSignOut={onSignOut} onViewAs={onViewAs} onEndViewAs={onEndViewAs} />
-      </header>
-      {viewingAs && <div role="status" className="flex flex-wrap items-center gap-md bg-warn-surface px-lg py-sm text-warn">
-        Looking at the app as <b>{viewingAs}</b>. Your own account is unchanged.
-        <button type="button" data-testid={tid.shell.viewAsEnd} className="inline-flex min-h-touch items-center underline" onClick={onEndViewAs}>Return to my account</button></div>}
+        <div className="ml-auto flex shrink-0 items-center gap-md max-md:gap-[2px]">
+          {/* .rolepill (v15:303-306): the role on screen, in the accent, in
+              capitals. Dashed while looking at the app as someone else. */}
+          <span data-testid={tid.shell.rolePill} data-caps
+            className={cn('hidden shrink-0 items-center rounded-pill border border-accent-line px-[11px] py-xs text-xs font-bold tracking-[.05em] text-brand-accent uppercase md:inline-flex', viewingAs && 'border-dashed opacity-85')}
+            title={viewingAs ? `Looking at the app as ${viewingAs} · your account is ${account.name}` : undefined}>{roleLabel}</span>
+          <IconButton testId={tid.shell.theme} label={`${theme === 'dark' ? 'Light' : 'Dark'} theme`} onClick={toggleTheme}><Sun aria-hidden="true" /></IconButton>
+          <IconButton testId={tid.shell.bell} label={`Notifications, ${unread} unread`}>
+            <Bell aria-hidden="true" />
+            {unread > 0 && <span data-testid={tid.shell.bellCount} className="absolute top-px right-0 grid h-4 min-w-4 place-items-center rounded-pill bg-brand-accent px-xs text-xs leading-none font-bold text-text-on-accent max-md:top-[6px] max-md:right-[4px]">{unread}</span>}
+          </IconButton>
+          <AccountMenu account={account} viewingAs={viewingAs} canViewAs={canViewAs} onSignOut={onSignOut} onViewAs={onViewAs} onEndViewAs={onEndViewAs} />
+        </div>
+      </TopBar>
+      {viewingAs && <div role="status" className="flex flex-wrap items-center gap-md border-b border-warn bg-warn-surface px-xl py-sm text-sm text-warn max-lg:px-md">
+        <span>Looking at the app as <b>{viewingAs}</b>. Your own account is unchanged.</span>
+        <button type="button" data-testid={tid.shell.viewAsEnd} className="inline-flex min-h-touch items-center font-semibold underline" onClick={onEndViewAs}>Return to my account</button></div>}
       {stripTabs.length > 0 && <TabStrip tabs={stripTabs} pathname={pathname} />}
-      <main className="flex-1 p-lg">
+      {/* the page reserves what the bottom bar occupies, home indicator included (v15:815-816) */}
+      <main className={cn('flex-1 md:pb-10', stripTabs.length > 0 && 'max-md:pb-[calc(72px+env(safe-area-inset-bottom,0px))]')}>
         <Routes>
           {nav.flatMap(g => g.tabs).map(t => {
-            const Page = BUILT[t.view];
-            return <Route key={t.path} path={t.path} element={Page ? <Page /> : <NotBuilt tab={t} />} />;
+            const Built = BUILT[t.view];
+            return <Route key={t.path} path={t.path} element={Built ? <Built /> : <NotBuilt tab={t} />} />;
           })}
           <Route path="*" element={first ? <Navigate to={first.path} replace /> : <NothingAvailable />} />
         </Routes>
       </main>
       {stripTabs.length > 0 && <BottomBar tabs={stripTabs} pathname={pathname} />}
     </div>);
+}
+
+/* .modsw button (v15:287-301, 1527, 1560-1561): 14px/500 in the muted shell
+   green, 7px 14px, a white lift on hover; the current area in the accent at
+   600. The link itself is the 44px touch target; the pill is drawn inside
+   it, so the bar keeps the prototype's 34px pill. */
+function AreaLink({ group, current }: { group: NavGroup; current: boolean }) {
+  return (
+    <NavLink to={firstTabPath(group)} testId={tid.nav.group(group.key)} aria-current={current ? 'true' : undefined}
+      className="group inline-flex min-h-touch shrink-0 items-center rounded-pill focus-visible:shadow-none">
+      <span className={cn('rounded-pill px-[14px] py-[7px] text-sm whitespace-nowrap transition-colors duration-(--qp-duration-fast) ease-qp group-focus-visible:shadow-focus max-lg:px-[9px] max-lg:py-[6px] max-lg:text-xs max-md:px-[11px]',
+        current ? 'bg-brand-accent font-semibold text-text-on-accent' : 'font-medium text-shell-ink-muted group-hover:bg-shell-hover group-hover:text-text-on-brand')}>{group.label}</span>
+    </NavLink>);
+}
+
+/* .iconbtn (v15:307-315, 1549): a 34px round button in the pale shell ink
+   with an 18px stroked icon, 44px on a phone. */
+function IconButton({ testId, label, onClick, children }: { testId: string; label: string; onClick?: () => void; children: ReactNode }) {
+  return (
+    <button type="button" data-testid={testId} aria-label={label} onClick={onClick}
+      className="relative grid size-[34px] shrink-0 place-items-center rounded-pill text-shell-ink transition-colors duration-(--qp-duration-fast) hover:bg-shell-hover max-md:size-11 [&>svg]:size-[18px]">
+      {children}
+    </button>);
 }
 
 /* buildNav never returns a group with no tabs (it filters those out before
@@ -86,19 +115,19 @@ function firstTabPath(g: NavGroup): string {
   return t.path;
 }
 
-/* Setup is not one flat strip: at the index there is nothing to show below
-   the header (SetupIndex itself shows the section cards), and inside a
-   section the strip shows only that section's pages, plus a way back
-   (ported from the prototype's SETUP_SECTIONS drill and its "‹ All setup"
-   tab, qnipay-workforce-v15.html:4075). Work and My Team are unaffected:
-   their strip is just the group's tabs, as it always was. */
+/* Setup is not one flat strip. At the index the strip holds the index's own
+   tab alone, selected, as the prototype's does ("Qnipay setup"); inside a
+   section it shows only that section's pages, plus a way back (ported from
+   the prototype's SETUP_SECTIONS drill and its "‹ All setup" tab,
+   qnipay-workforce-v15.html:4075). Work and My Team are unaffected: their
+   strip is just the group's tabs, as it always was. */
 export function stripTabsFor(current: NavGroup | undefined, pathname: string): NavTab[] {
   if (!current) return [];
   if (current.key !== 'setup') return current.tabs;
   const index = current.tabs.find(t => t.view === 'asetup');
   const active = current.tabs.find(t => t.path === pathname);
   const section = active?.section;
-  if (!section) return [];
+  if (!section) return index && active === index ? [index] : [];
   const back: NavTab = { view: 'asetup', label: '‹ All setup', path: index?.path ?? '/setup/asetup', built: true };
   return [back, ...current.tabs.filter(t => t.section === section)];
 }
@@ -121,10 +150,10 @@ function useTheme(): ['light' | 'dark', () => void] {
    sees instead of a blank main area: a clear statement and what to do next. */
 function NothingAvailable() {
   return (
-    <section data-testid={tid.page('none')} className="mx-auto max-w-xl rounded-card border border-border bg-surface-card p-xl">
-      <h1 className="text-[length:var(--qp-text-20)] font-semibold">Nothing available</h1>
-      <p className="text-text-secondary">Your account has no access to open here. Ask an administrator to grant a capability on Qnipay setup &rarr; Permissions.</p>
-    </section>);
+    <Page testId={tid.page('none')} narrow>
+      <PageHead title="Nothing available" />
+      <Card><p className="text-text-secondary">Your account has no access to open here. Ask an administrator to grant a capability on Qnipay setup &rarr; Permissions.</p></Card>
+    </Page>);
 }
 
 function menuKey(r: { group?: string; groupKey?: string }): string {
@@ -132,51 +161,83 @@ function menuKey(r: { group?: string; groupKey?: string }): string {
   return r.groupKey;
 }
 
+/* .tabs (v15:338-351, 1523): the 44px card-surface strip, sticky under the
+   top bar, 24px side padding (16px below 1024px). A tab is 14px/500 in
+   secondary ink, 0 13px, 43px tall over a 2px rule; hover lifts it onto the
+   tint; selected is brand ink at 600 with the rule in brand (the accent in
+   dark). A heading's menu (.tabgrp, .tabmenu; v15:352-384) marks the page
+   you are on with a fill and an inset bar, never colour alone. */
+const TAB = 'relative inline-flex h-[43px] shrink-0 items-center border-b-2 border-transparent px-[13px] text-sm font-medium whitespace-nowrap text-text-secondary transition-colors duration-(--qp-duration-fast) hover:bg-surface-tint hover:text-text-primary';
+const TAB_ON = 'border-brand font-semibold text-brand hover:bg-transparent hover:text-brand dark:border-brand-accent dark:text-brand-accent dark:hover:text-brand-accent';
 function TabStrip({ tabs, pathname }: { tabs: NavTab[]; pathname: string }) {
   const runs: { group?: string; groupKey?: string; tabs: NavTab[] }[] = [];
   tabs.forEach(t => { const last = runs[runs.length - 1]; if (t.group && last?.group === t.group) last.tabs.push(t); else runs.push({ group: t.group, groupKey: t.groupKey, tabs: [t] }); });
   const link = (t: NavTab) => <NavLink key={t.view} to={t.path} testId={tid.nav.tab(t.view)} aria-current={pathname === t.path ? 'page' : undefined}
-    className={`inline-flex min-h-touch shrink-0 items-center whitespace-nowrap px-md py-sm ${pathname === t.path ? 'border-b-2 border-brand font-semibold' : ''}`}>{t.label}</NavLink>;
+    className={cn(TAB, pathname === t.path && TAB_ON)}>{t.label}</NavLink>;
   return (
-    <nav aria-label="Pages" className="hidden gap-xs overflow-x-auto border-b border-border bg-surface-card px-lg md:flex">
+    <nav aria-label="Pages" className="sticky top-14 z-[60] hidden min-h-11 flex-wrap items-stretch gap-y-[2px] border-b bg-surface-card px-xl max-lg:px-md md:flex">
       {runs.map(r => !r.group ? r.tabs.map(link) : (
         <DropdownMenu key={r.group}>
-          <DropdownMenuTrigger data-testid={tid.nav.menu(menuKey(r))} className={`inline-flex min-h-touch shrink-0 items-center whitespace-nowrap px-md py-sm ${r.tabs.some(t => t.path === pathname) ? 'font-semibold' : ''}`}>{r.group} <span aria-hidden="true">▾</span></DropdownMenuTrigger>
-          <DropdownMenuContent>{r.tabs.map(t => <DropdownMenuItem key={t.view} asChild>{link(t)}</DropdownMenuItem>)}</DropdownMenuContent>
+          <DropdownMenuTrigger data-testid={tid.nav.menu(menuKey(r))}
+            className={cn(TAB, 'data-[state=open]:bg-surface-tint data-[state=open]:text-text-primary', r.tabs.some(t => t.path === pathname) && TAB_ON)}>
+            {r.group}<span aria-hidden="true" className="ml-[5px] text-xs leading-none opacity-55">▾</span></DropdownMenuTrigger>
+          <DropdownMenuContent align="start" sideOffset={-1} className="min-w-[212px] p-[5px] shadow-md">
+            {r.tabs.map(t => <DropdownMenuItem key={t.view} asChild
+              className={cn('h-9 px-[10px] py-0 font-medium whitespace-nowrap text-text-secondary focus:text-text-primary',
+                pathname === t.path && 'bg-brand-subtle font-semibold text-brand shadow-[inset_2px_0_0_var(--qp-color-brand-primary)] focus:bg-brand-subtle focus:text-brand dark:text-brand-accent dark:shadow-[inset_2px_0_0_var(--qp-color-brand-accent)] dark:focus:text-brand-accent')}>
+              <NavLink to={t.path} testId={tid.nav.tab(t.view)} aria-current={pathname === t.path ? 'page' : undefined}>{t.label}</NavLink>
+            </DropdownMenuItem>)}
+          </DropdownMenuContent>
         </DropdownMenu>))}
     </nav>);
 }
 
-/* Prototype render() (html:10214-10230, more-tabs handler html:12072-12081):
-   at most five destinations, plus More for the rest, painted from the same
-   array the strip uses (`tabs` here is Shell's `stripTabs`, so setup already
-   arrives section-scoped with its "back to setup" entry at index 0 — nothing
-   setup-specific needed here). Shown below 768px, the same width the strip
-   above hides at (prototype .tabs{display:none}/.btabs{display:flex} pair,
-   html:791-818). More opens a Dialog (Radix traps and restores focus, per
-   Modal.tsx) rather than a dropdown: closer to the prototype's own "Go to"
-   box than an anchored menu would be. Each destination there closes it on
-   selection (prototype: `data-tab data-close` on the same button), so it
-   never blocks reopening it for the next one. */
+/* The prototype's bottom bar glyphs (TAB_GLYPH, v15:10648-10653). The two
+   that are emoji code points (a sun, a warning sign) come from the shared
+   icon set instead, at the same 14px. Anything unlisted takes the dot. */
+const GLYPH: Record<string, ReactNode> = {
+  home: '⌂', ts: '◷', shifts: '▦', leave: <Sun />, hours: '◴', profile: '○', docs: '▤', onb: '◱', notices: '⚑', tnotices: '⚑',
+  thome: '⌂', tteam: '◷', thours: '◴', trota: '▦', tcover: '◈', tleave: <Sun />, tsick: '⊕', tpeople: '○', tonb: '◱', texc: <TriangleAlert />,
+  tshifts: '▥', tpat: '▧',
+};
+const BAR_ITEM = 'flex min-h-[52px] min-w-0 flex-1 flex-col items-center gap-[3px] px-[2px] pt-[9px] pb-[10px] text-xs leading-[1.25] font-semibold';
+const barGlyph = (g: ReactNode) => <span aria-hidden="true" className="text-sm leading-none [&_svg]:size-[14px]">{g}</span>;
+/* The first word of a tab's name, as the prototype shows it; the link's
+   accessible name stays the whole name. */
+const shortLabel = (label: string) => label.split(' ')[0] ?? label;
+
+/* .btabs (v15:796-817): fixed to the foot of a phone screen above the page
+   (80) and below any sheet (100+), the home-indicator inset added once, by
+   the bar. Each destination is a 52px column: a glyph over a 12px/600 short
+   label in muted ink, the one you are on in brand (the accent in dark). At
+   most five items: five destinations, or four and More for the rest, from
+   the same array the strip uses (v15:10654-10661; `tabs` here is Shell's
+   `stripTabs`, so setup already arrives section-scoped with its "back to
+   setup" entry first). More opens a Dialog (Radix traps and restores focus,
+   per Modal.tsx), a sheet from the bottom on a phone. Each destination there
+   closes it on selection, so it never blocks reopening it for the next. */
 function BottomBar({ tabs, pathname }: { tabs: NavTab[]; pathname: string }) {
   const [moreOpen, setMoreOpen] = useState(false);
-  const destinations = tabs.slice(0, 5);
-  const remaining = tabs.slice(5);
+  const overflow = tabs.length > 5;
+  const destinations = overflow ? tabs.slice(0, 4) : tabs;
+  const remaining = overflow ? tabs.slice(4) : [];
   if (!destinations.length) return null;
+  const on = (active: boolean) => active ? 'text-brand dark:text-brand-accent' : 'text-text-muted';
   return (
-    <nav aria-label="Quick pages" className="flex border-t border-border bg-surface-card md:hidden">
-      {destinations.map(t => <NavLink key={t.view} to={t.path} testId={tid.nav.bottom(t.view)}
-        aria-current={pathname === t.path ? 'page' : undefined}
-        className={`flex min-h-touch flex-1 flex-col items-center justify-center px-sm py-sm text-xs ${pathname === t.path ? 'font-semibold text-brand' : 'text-text-secondary'}`}>{t.label}</NavLink>)}
+    <nav aria-label="Quick pages" className="fixed inset-x-0 bottom-0 z-[80] flex border-t bg-surface-card pb-[env(safe-area-inset-bottom,0px)] md:hidden">
+      {destinations.map(t => <NavLink key={t.view} to={t.path} testId={tid.nav.bottom(t.view)} aria-label={t.label}
+        aria-current={pathname === t.path ? 'page' : undefined} className={cn(BAR_ITEM, on(pathname === t.path))}>
+        {barGlyph(GLYPH[t.view] ?? '●')}<span className="max-w-full truncate">{shortLabel(t.label)}</span></NavLink>)}
       {remaining.length > 0 && <>
-        <button type="button" data-testid={tid.nav.more} aria-haspopup="dialog" onClick={() => setMoreOpen(true)}
-          className="flex min-h-touch flex-1 flex-col items-center justify-center px-sm py-sm text-xs text-text-secondary">More</button>
+        <button type="button" data-testid={tid.nav.more} aria-haspopup="dialog" aria-label="More pages" onClick={() => setMoreOpen(true)}
+          className={cn(BAR_ITEM, on(remaining.some(t => t.path === pathname)))}>{barGlyph('⋯')}<span>More</span></button>
         <Modal open={moreOpen} onOpenChange={setMoreOpen} title="More pages">
           <ul className="flex flex-col gap-xs">
             {remaining.map(t => <li key={t.view}>
               <NavLink to={t.path} testId={tid.nav.bottom(t.view)} onClick={() => setMoreOpen(false)}
                 aria-current={pathname === t.path ? 'page' : undefined}
-                className={`flex min-h-touch items-center rounded-control px-md ${pathname === t.path ? 'font-semibold text-brand' : ''}`}>{t.label}</NavLink>
+                className={cn('flex min-h-touch items-center rounded-control border px-md text-sm font-semibold',
+                  pathname === t.path ? 'border-transparent bg-brand-subtle text-brand dark:text-brand-accent' : 'bg-surface-card')}>{t.label}</NavLink>
             </li>)}
           </ul>
         </Modal>

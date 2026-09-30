@@ -75,11 +75,11 @@ test('inside a setup section the strip shows a way back plus that section\'s pag
    SetupIndex, which needs a full SessionProvider; that belongs to
    shell-data.test.tsx. This checks the same rule at the level it actually
    lives: the pure helper Shell.tsx uses to decide what the strip shows. */
-test('at the setup index there is nothing for the strip to show (SetupIndex itself shows the section cards)', () => {
+test('at the setup index the strip holds the index tab alone, as in the prototype (SetupIndex itself shows the section cards)', () => {
   const nav = buildNav({ caps: new Set(['perm_cfg']), modules: { CORE: true }, flags: {}, onboarding: false });
   const setup = nav.find(g => g.key === 'setup');
   if (!setup) throw new Error('expected a setup group to exist for this capability set');
-  expect(stripTabsFor(setup, '/setup/asetup')).toEqual([]);
+  expect(stripTabsFor(setup, '/setup/asetup').map(t => [t.view, t.label])).toEqual([['asetup', 'Qnipay setup']]);
 });
 
 /* MANAGER NAV GROUPED BY MODULE: "The secondary strip stays scannable"

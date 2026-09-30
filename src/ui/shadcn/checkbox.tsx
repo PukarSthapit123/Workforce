@@ -3,6 +3,8 @@ import { cn } from "@/lib/utils"
 import { CheckIcon } from "lucide-react"
 import { Checkbox as CheckboxPrimitive } from "radix-ui"
 
+/* The prototype's .cbx (qnipay-workforce-v15.html:534): a 16px box in the
+   brand colour (the accent in dark), with a transparent 44px hit area. */
 function Checkbox({
   className,
   ...props
@@ -11,7 +13,7 @@ function Checkbox({
     <CheckboxPrimitive.Root
       data-slot="checkbox"
       className={cn(
-        "peer size-4 shrink-0 rounded-sm border border-input shadow-xs transition-shadow outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground dark:bg-input/30 dark:aria-invalid:ring-destructive/40 dark:data-[state=checked]:bg-primary",
+        "peer relative size-4 shrink-0 rounded-xs border border-border-strong bg-surface-card outline-none before:absolute before:top-1/2 before:left-1/2 before:size-11 before:-translate-1/2 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-err data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground",
         className
       )}
       {...props}
