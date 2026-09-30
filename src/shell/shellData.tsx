@@ -5,6 +5,7 @@ import { getTenant } from '@/contract/tenant';
 import { buildNav, type NavGroup } from '@/domain/nav';
 import type { Session } from '@/contract/session';
 import { tid } from '@/testids';
+import { Button } from '@/ui';
 import { useSession } from './SessionProvider';
 
 /* Shared by Shell and any routed page that needs to know what this account
@@ -18,9 +19,12 @@ export type ShellData =
   | { kind: 'error'; onRetry(): void; onSignOut(): void }
   | { kind: 'ready'; session: Session; nav: NavGroup[]; onSignOut(): void; onViewAs(personCode: string): void; onEndViewAs(): void };
 
+/* The tenant's settings, from the one cached query the shell itself reads. */
+export const useTenant = () => useQuery({ queryKey: ['tenant'], queryFn: () => api(getTenant) });
+
 export function useShellData(): ShellData {
   const { session, signOut, viewAs, endViewAs } = useSession();
-  const tenant = useQuery({ queryKey: ['tenant'], queryFn: () => api(getTenant) });
+  const tenant = useTenant();
   /* A ref, not a dependency: signOut is a fresh function identity every
      SessionProvider render, and this must fire once per failed attempt, not
      once per unrelated re-render. Refs are only ever written from an effect,
@@ -56,10 +60,8 @@ export function ShellError({ onRetry, onSignOut }: { onRetry(): void; onSignOut(
       <p data-testid={tid.shell.error} className="text-err">Qnipay could not load your workspace. Nothing has changed on your account.</p>
       <p className="text-text-secondary">Try again, or sign out and sign back in.</p>
       <div className="flex gap-sm">
-        <button type="button" data-testid={tid.shell.retry} onClick={onRetry}
-          className="inline-flex min-h-touch items-center rounded-control border border-border px-md py-sm">Try again</button>
-        <button type="button" data-testid={tid.shell.signOut} onClick={onSignOut}
-          className="inline-flex min-h-touch items-center rounded-control border border-border px-md py-sm">Sign out</button>
+        <Button testId={tid.shell.retry} kind="primary" onClick={onRetry}>Try again</Button>
+        <Button testId={tid.shell.signOut} kind="ghost" onClick={onSignOut}>Sign out</Button>
       </div>
     </div>);
 }
