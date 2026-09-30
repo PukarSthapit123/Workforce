@@ -83,6 +83,19 @@ export const tid = {
     confirmDecline: 'profile-queue-confirm-decline', cancelDecline: 'profile-queue-cancel-decline', warn: 'profile-queue-warn',
     count: (stage: string) => k('profile-queue-count', stage),
   },
+  /* plan 1b: Dimensions (aloc) and Contracts (acon) */
+  dims: {
+    card: (kind: string) => k('dims-card', kind), cardDescription: (kind: string) => k('dims-description', kind), back: 'dims-back', add: 'dims-add',
+    table: 'dims-table', row: (code: string) => k('dims-row', code), edit: (code: string) => k('dims-edit', code),
+    cell: (code: string, key: string) => k('dims-cell', code, key), field: (key: string) => k('dims-form', key),
+    save: 'dims-form-save', remove: 'dims-form-remove', cancel: 'dims-form-cancel', warn: 'dims-form-warn',
+    groupTip: (kind: string) => k('dims-group', kind, 'tip'), empty: 'dims-empty', error: 'dims-error',
+  },
+  contracts: {
+    table: 'contracts-table', row: (code: string) => k('contracts-row', code), edit: (code: string) => k('contracts-edit', code),
+    hours: 'contracts-hours', max: 'contracts-max', save: 'contracts-save', cancel: 'contracts-cancel', warn: 'contracts-warn',
+    state: (code: string) => k('contracts-state', code), error: 'contracts-error',
+  },
   /* A Field's own ids come from the control it wraps, so a form never types one by hand. */
   field: { root: (controlTestId: string) => `${controlTestId}-field`, tip: (controlTestId: string) => `${controlTestId}-field-tip` },
   modal: { root: 'modal', title: 'modal-title', close: 'modal-close', confirm: 'modal-confirm', cancel: 'modal-cancel' },

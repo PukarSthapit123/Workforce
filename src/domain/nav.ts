@@ -24,7 +24,7 @@ const LATER: Record<string, string> = {
   tpat: 'Rota', tleave: 'Leave', tsick: 'Leave', texc: 'Timesheet', tonb: 'Onboarding',
   tnotices: 'Workforce core (plan 1c)',
   aorg: 'Workforce core (plan 1c)', acal: 'Workforce core (plan 1c)', amods: 'Workforce core (plan 1c)',
-  atypes: 'Workforce core (plan 1b)', acon: 'Workforce core (plan 1b)', aloc: 'Workforce core (plan 1b)', anotif: 'Workforce core (plan 1c)',
+  atypes: 'Workforce core (plan 1b)', anotif: 'Workforce core (plan 1c)',
   aappr: 'Workforce core (plan 1c)', mts: 'Timesheet', mrota: 'Rota', mleave: 'Leave', mpay: 'Timesheet',
   ipay: 'Payroll and Business Central', ibc: 'Payroll and Business Central', iit: 'Rota',
 };

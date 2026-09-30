@@ -146,5 +146,5 @@ test('an admin capability set produces exactly one top-level group: setup, not t
 test('plan 1b builds the people, profile, dimensions, contracts and employee types pages', () => {
   const g = buildNav({ caps: caps('own_home', 'master_data', 'team_people', 'type_cfg'), modules: ALL_MODULES, flags, onboarding: false });
   const tabs = g.flatMap(x => x.tabs);
-  for (const view of ['apeople', 'tpeople', 'profile']) expect(tabs.find(t => t.view === view), view).toMatchObject({ built: true });
+  for (const view of ['apeople', 'tpeople', 'profile', 'aloc', 'acon']) expect(tabs.find(t => t.view === view), view).toMatchObject({ built: true });
 });
