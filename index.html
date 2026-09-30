@@ -1,6 +1,10 @@
 <!doctype html>
 <html lang="en-GB">
   <head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Qnipay Workforce</title></head>
+    <title>Qnipay Workforce</title>
+    <!-- The chosen theme applies before the first paint, sign-in screen
+         included, so a dark-theme user never sees a white flash. The shell's
+         theme toggle (src/shell/Shell.tsx) writes the same key. -->
+    <script>try { if (localStorage.getItem('qnipay.theme') === 'dark') document.documentElement.dataset.theme = 'dark'; } catch { /* storage blocked: light */ }</script></head>
   <body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body>
 </html>

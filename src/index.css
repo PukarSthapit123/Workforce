@@ -1,5 +1,11 @@
 @import "tailwindcss";
 @import "./ui/tokens.css";
+/* Inter, self-hosted so it renders offline and in the production build, at the
+   four weights the prototype loads from Google Fonts (v15 <head>). */
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
 
 /* the prototype switches theme with [data-theme="dark"], so shadcn's dark: does too */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
@@ -39,6 +45,17 @@
      left it unreadable in dark theme — axe's color-contrast check on
      /setup/asetup caught this, task 11 fix round 1). */
   --qp-color-text-on-accent: #0A2410;
+  /* The rest of the prototype's shell and overlay literals, each named once
+     here for the same reason as the ink above: no --qp token carries them.
+     Each is the exact value the prototype paints (line numbers in v15). */
+  --qp-color-shell-ink-muted: #98B29D;           /* .modsw button, 293 */
+  --qp-color-shell-ink: #D9E9D2;                 /* .iconbtn, 309 */
+  --qp-color-text-on-inverse: #EAF4E6;           /* .avbtn, .toast, #tipbubble */
+  --qp-color-shell-hover: rgba(255,255,255,.10); /* .modsw, .iconbtn, .avbtn :hover */
+  --qp-color-accent-line: rgba(173,238,104,.4);  /* .rolepill border, 305 */
+  --qp-color-scrim: rgba(10,36,16,.55);          /* .scrim, 574 */
+  --qp-color-brand-primary-subtle-hover: #CFEFC2;/* .btn.sec:hover, 438 */
+  --qp-ring-invalid: 0 0 0 3px rgba(138,44,32,.15); /* .fld.bad, 506 */
 }
 
 /* Dark theme re-points shadcn's primary alias to the lime accent, not to a
@@ -51,6 +68,7 @@
   --primary: var(--qp-color-brand-accent);
   --primary-foreground: var(--qp-color-text-on-accent);
   --ring: var(--qp-color-brand-accent);
+  --qp-color-brand-primary-subtle-hover: #1D4A24; /* [data-theme=dark] .btn.sec:hover, 439 */
 }
 
 @theme inline {
@@ -84,6 +102,18 @@
   --color-text-primary: var(--qp-color-text-primary);
   --color-text-secondary: var(--qp-color-text-secondary);
   --color-text-disabled: var(--qp-color-text-disabled);
+  --color-text-muted: var(--qp-color-text-muted);
+  --color-border-strong: var(--qp-color-border-strong);
+  --color-surface-tint: var(--qp-color-surface-tint);
+  --color-brand-subtle: var(--qp-color-brand-primary-subtle);
+  --color-brand-subtle-hover: var(--qp-color-brand-primary-subtle-hover);
+  --color-brand-active: var(--qp-color-brand-primary-active);
+  --color-shell-ink: var(--qp-color-shell-ink);
+  --color-shell-ink-muted: var(--qp-color-shell-ink-muted);
+  --color-shell-hover: var(--qp-color-shell-hover);
+  --color-accent-line: var(--qp-color-accent-line);
+  --color-scrim: var(--qp-color-scrim);
+  --color-text-on-inverse: var(--qp-color-text-on-inverse);
   /* Stable text for a fixed-colour surface, unlike --color-*-foreground above:
      those track --foreground/--primary-foreground, which each flip meaning
      between themes for reasons of their own (page background legibility;
@@ -143,10 +173,49 @@
   --shadow-sm: var(--qp-shadow-sm);
   --shadow-md: var(--qp-shadow-md);
   --shadow-lg: var(--qp-shadow-lg);
+  --shadow-focus: var(--qp-ring-focus);
+  --shadow-invalid: var(--qp-ring-invalid);
+  /* The official type scale (tokens.css), not Tailwind's own: text-xs is
+     12px, text-sm 14px and so on, at the prototype's body line-height of
+     1.45; the headline sizes take its headline line-height of 1.33. */
+  --text-xs: var(--qp-text-12); --text-xs--line-height: var(--qp-lh-body);
+  --text-sm: var(--qp-text-14); --text-sm--line-height: var(--qp-lh-body);
+  --text-base: var(--qp-text-16); --text-base--line-height: var(--qp-lh-body);
+  --text-lg: var(--qp-text-18); --text-lg--line-height: var(--qp-lh-headline);
+  --text-xl: var(--qp-text-20); --text-xl--line-height: var(--qp-lh-headline);
+  --text-2xl: var(--qp-text-24); --text-2xl--line-height: var(--qp-lh-headline);
+  --ease-qp: var(--qp-ease);
+  --ease-qp-out: var(--qp-ease-out);
+  --ease-qp-sheet: var(--qp-ease-sheet);
 }
 
-body { background: var(--background); color: var(--foreground); font-family: var(--qp-font-body);
-  font-size: var(--qp-text-14); line-height: var(--qp-lh-14); }
+/* The prototype's element rules (v15:234-253), in the base layer so every
+   component's own utility classes still win over them. */
+@layer base {
+  /* Tailwind 4 draws a bare `border` in currentColor; the prototype draws
+     every border in --qp-color-border. This is shadcn's own base rule, which
+     was never added: without it, table rules, menus and dialogs drew in ink. */
+  *, ::before, ::after { border-color: var(--color-border); }
+  html { -webkit-text-size-adjust: 100%; }
+  body { background: var(--background); color: var(--foreground); font-family: var(--qp-font-body);
+    font-size: var(--qp-text-14); line-height: var(--qp-lh-body); -webkit-font-smoothing: antialiased; }
+  h1, h2, h3, h4 { font-family: var(--qp-font-display); font-weight: var(--qp-weight-semibold);
+    letter-spacing: -.01em; line-height: var(--qp-lh-headline); }
+  h1 { font-size: var(--qp-text-24); }
+  h2 { font-size: var(--qp-text-18); }
+  h3 { font-size: var(--qp-text-16); }
+  button:not(:disabled), [role="button"]:not([aria-disabled="true"]) { cursor: pointer; }
+  /* the ring never reshapes what it rings: a pill stays a pill, a circle a circle */
+  :focus-visible { outline: none; box-shadow: var(--qp-ring-focus); }
+  /* a box-shadow ring does not render in Windows High Contrast, so give it an outline there */
+  @media (forced-colors: active) { :focus-visible { outline: 2px solid Highlight; outline-offset: 2px; } }
+  /* Reduced motion means less movement, not no feedback (v15:1585-1590). */
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: .01ms !important; animation-iteration-count: 1 !important;
+      transition-property: opacity, color, background-color, border-color, box-shadow, fill, stroke !important;
+      transition-duration: var(--qp-duration-fast) !important; transition-timing-function: var(--qp-ease) !important; }
+  }
+}
 
 /* Ported from the prototype's `select[multiple]{height:auto;min-height:96px}`
    rule (CONTROLS LOOK LIKE THEIR NEIGHBOURS): a native multi-select gets room
@@ -154,6 +223,6 @@ body { background: var(--background); color: var(--foreground); font-family: var
    rather than the browser's cramped default. */
 select[multiple] {
   height: auto; min-height: calc(var(--qp-size-touch) * 2);
-  border: thin solid var(--qp-color-border); border-radius: var(--qp-radius-control);
+  border: thin solid var(--qp-color-border-strong); border-radius: var(--qp-radius-control);
   padding: var(--qp-space-xs);
 }
