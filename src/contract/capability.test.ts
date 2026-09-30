@@ -16,7 +16,9 @@ const everyCapability = () => Object.keys(store.coll('capabilities'));
 function employeeHolding(caps: string[]): Account {
   const emp = Object.values(store.coll<Account>('accounts')).find(a => a.userType === 'employee');
   if (!emp) throw new Error('no seeded employee');
-  emp.grants = caps; emp.revocations = [];
+  /* revoking the rest too, so a capability the employee template already
+     holds (own_home, say) is really taken away */
+  emp.grants = caps; emp.revocations = everyCapability().filter(c => !caps.includes(c));
   return emp;
 }
 async function tokenFor(email: string): Promise<string> {
