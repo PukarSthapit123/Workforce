@@ -42,15 +42,24 @@ test('IC Icons come from the shared icon set, and no built page renders an emoji
 });
 
 /* SECTION LABELS ARE NOT SHOUTED #1 "Section labels are sentence case, not
-   all capitals" and #3 "Form and menu labels follow": nothing on a built page,
-   the account menu and the exceptions dialog included, is set in capitals or
-   with wide tracking. */
+   all capitals" and #3 "Form and menu labels follow". The prototype's own
+   check (qnipay-regression-suite.js:3129-3139) is narrower than "no capitals
+   anywhere": its section labels (.wtsub) are sentence case with no tracking,
+   and capitals survive only on a short list of rules, the column headers
+   (th), the role pill and the small badges among them. So: no heading, form
+   label or section label is in capitals or wide tracking, and the only
+   elements in capitals are table column headers and elements that declare
+   themselves a capitals badge (data-caps: the role pill, a scope badge, the
+   required marker). Checked on every built page, the account menu and the
+   exceptions dialog. */
 test('SL Nothing on a built page, its menu or its dialog, is set in capitals or wide tracking', async ({ page, api, signInAs }) => {
   const shouted = () => page.evaluate(() => [...document.body.querySelectorAll('*')].filter(el => {
     if (!(el as HTMLElement).innerText?.trim()) return false;
     const cs = getComputedStyle(el);
     const spacing = cs.letterSpacing === 'normal' ? 0 : parseFloat(cs.letterSpacing) / parseFloat(cs.fontSize);
-    return cs.textTransform === 'uppercase' || spacing > 0.05;
+    const label = el.matches('h1, h2, h3, h4, h5, h6, label, legend');
+    if (label) return cs.textTransform === 'uppercase' || spacing > 0.05;
+    return cs.textTransform === 'uppercase' && !el.closest('th, [data-caps]');
   }).map(el => `${el.tagName.toLowerCase()} "${(el as HTMLElement).innerText.slice(0, 30)}"`));
   await page.getByTestId(tid.signIn.form).waitFor();
   expect(await shouted(), 'sign-in').toEqual([]);

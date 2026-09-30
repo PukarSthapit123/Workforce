@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const proto = readFileSync(resolve(__dirname, '../../Qnipay workforce cc/mockup/qnipay-workforce-v15.html'), 'utf8');
+/* PROTOTYPE_PATH overrides the sibling-checkout default, as in lift-tokens.mjs (a git worktree sits deeper). */
+const proto = readFileSync(process.env.PROTOTYPE_PATH || resolve(__dirname, '../../Qnipay workforce cc/mockup/qnipay-workforce-v15.html'), 'utf8');
 const lifted = readFileSync(resolve(__dirname, '../src/ui/tokens.css'), 'utf8');
 const defs = (s: string) => new Set([...s.matchAll(/(--qp-[a-z0-9-]+)\s*:/g)].map(m => m[1]));
 
