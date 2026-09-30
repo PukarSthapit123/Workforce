@@ -1,17 +1,25 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
+/* The prototype's .fld input (qnipay-workforce-v15.html:497-508, 944-946):
+   38px, 0 11px, a strong border on the sunken surface, radius 8, 14px. Focus
+   rings it and draws the border in brand; an invalid field is outlined in
+   error. On a phone it is 44px and 16px, so iOS does not zoom the page. */
+export const fieldControl =
+  "h-[38px] w-full min-w-0 rounded-control border border-border-strong bg-surface-sunken px-[11px] text-sm text-text-primary transition-[border-color,box-shadow] outline-none placeholder:text-text-muted focus:border-brand focus:shadow-focus disabled:cursor-default disabled:bg-surface-tint disabled:text-text-secondary aria-invalid:border-err aria-invalid:shadow-invalid max-md:min-h-touch max-md:text-base"
+
+/* The prototype's filter-bar controls (.srch input, select.flt, .chipbtn;
+   v15:538-549): 32px pills on the card surface with a strong border. On a
+   phone they take the same 44px/16px floor as every other control. */
+export const filterControl =
+  "h-8 rounded-pill border border-border-strong bg-surface-card text-text-primary outline-none focus:shadow-focus max-md:min-h-touch max-md:text-base"
+
 function Input({ className, type, ...props }: React.ComponentProps<"input">) {
   return (
     <input
       type={type}
       data-slot="input"
-      className={cn(
-        "h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:bg-input/30",
-        "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
-        "aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40",
-        className
-      )}
+      className={cn(fieldControl, className)}
       {...props}
     />
   )

@@ -4,28 +4,26 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 import { Switch as SwitchPrimitive } from "radix-ui"
 
+/* The prototype's .tog (qnipay-workforce-v15.html:522-529, 941-943): a
+   40x23 track with an 18px knob, strong grey off, brand on (the accent in
+   dark). A switch is a drawn object, so it never stretches to the touch
+   target: a transparent 44px square around it takes the tap instead. */
 function Switch({
   className,
-  size = "default",
   ...props
-}: React.ComponentProps<typeof SwitchPrimitive.Root> & {
-  size?: "sm" | "default"
-}) {
+}: React.ComponentProps<typeof SwitchPrimitive.Root>) {
   return (
     <SwitchPrimitive.Root
       data-slot="switch"
-      data-size={size}
       className={cn(
-        "peer group/switch inline-flex shrink-0 items-center rounded-full border border-transparent shadow-xs transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 data-[size=default]:h-[1.15rem] data-[size=default]:w-8 data-[size=sm]:h-3.5 data-[size=sm]:w-6 data-[state=checked]:bg-primary data-[state=unchecked]:bg-input dark:data-[state=unchecked]:bg-input/80",
+        "peer relative inline-flex h-[23px] w-10 shrink-0 items-center rounded-pill transition-[background-color] duration-(--qp-duration-fast) ease-qp outline-none before:absolute before:top-1/2 before:left-1/2 before:size-11 before:-translate-1/2 disabled:cursor-not-allowed disabled:opacity-40 data-[state=checked]:bg-brand data-[state=unchecked]:bg-border-strong dark:data-[state=checked]:bg-brand-accent",
         className
       )}
       {...props}
     >
       <SwitchPrimitive.Thumb
         data-slot="switch-thumb"
-        className={cn(
-          "pointer-events-none block rounded-full bg-background ring-0 transition-transform group-data-[size=default]/switch:size-4 group-data-[size=sm]/switch:size-3 data-[state=checked]:translate-x-[calc(100%-2px)] data-[state=unchecked]:translate-x-0 dark:data-[state=checked]:bg-primary-foreground dark:data-[state=unchecked]:bg-foreground"
-        )}
+        className="pointer-events-none block size-[18px] translate-x-[2.5px] rounded-full bg-text-on-brand shadow-sm transition-transform duration-(--qp-duration-fast) ease-qp data-[state=checked]:translate-x-[19.5px]"
       />
     </SwitchPrimitive.Root>
   )

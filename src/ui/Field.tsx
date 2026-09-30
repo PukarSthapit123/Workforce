@@ -4,7 +4,12 @@ import { Input } from '@/ui/shadcn/input';
 import { tid } from '@/testids';
 import { Tip } from './Affordances';
 
-/* The wrapped control is one element carrying its own testId (TextInput,
+/* The prototype's .fld (qnipay-workforce-v15.html:489-508): a 12px/600 label
+   5px above the control, hint or error 12px and 4px below it, 12px under the
+   whole field. The required marker is .req, a small error-coloured
+   "• required" beside the label, never an asterisk inside it.
+
+   The wrapped control is one element carrying its own testId (TextInput,
    SelectBox, CheckboxField and so on). The Field's test id, and its tip's,
    are derived from that one, so they can never drift or be typed by hand. */
 export function Field({ label, hint, error, required, tip, children }: {
@@ -17,17 +22,17 @@ export function Field({ label, hint, error, required, tip, children }: {
     id, 'aria-describedby': hint || error ? descId : undefined, 'aria-invalid': error ? 'true' : undefined,
     'aria-required': required ? 'true' : undefined });
   return (
-    <div data-testid={tid.field.root(controlTestId)} className="flex flex-col gap-xs">
+    <div data-testid={tid.field.root(controlTestId)} className="mb-md flex flex-col last:mb-0">
       {/* The tip sits beside the label, not inside it, so its text never
           becomes part of the control's accessible name. */}
-      <div className="flex min-h-5 items-center gap-xs">
-        <Label htmlFor={id} className="text-text-secondary">
-          {label}{required && <span aria-hidden="true" className="text-err">*</span>}
-        </Label>
+      <div className="mb-[5px] flex items-center">
+        <Label htmlFor={id}>{label}</Label>
+        {required && <span aria-hidden="true" data-caps
+          className="ml-[5px] align-[1px] text-xs font-bold tracking-[.04em] text-err uppercase before:content-['•_']">required</span>}
         {tip && <Tip testId={tid.field.tip(controlTestId)} text={tip} />}
       </div>
       {control}
-      {(error || hint) && <p id={descId} className={error ? 'text-err text-xs' : 'text-text-secondary text-xs'}>{error ?? hint}</p>}
+      {(error || hint) && <p id={descId} className={`mt-xs text-xs ${error ? 'text-err' : 'text-text-muted'}`}>{error ?? hint}</p>}
     </div>);
 }
 export function TextInput({ testId, ...rest }: { testId: string } & InputHTMLAttributes<HTMLInputElement>) {

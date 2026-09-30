@@ -14,6 +14,10 @@ export interface SelectBoxProps {
   'aria-describedby'?: string;
   'aria-required'?: boolean | 'true' | 'false';
   'aria-invalid'?: boolean | 'true' | 'false';
+  /* A filter-bar select has no visible label, so it names itself. */
+  'aria-label'?: string;
+  /* field: a form field inside a Field. filter: a pill in a FilterBar. */
+  look?: 'field' | 'filter';
 }
 /* Field.tsx clones its child with an `id`, `aria-describedby`, `aria-invalid`
    and `aria-required` (for the <label htmlFor> and its hint/error text),
@@ -22,10 +26,11 @@ export interface SelectBoxProps {
    trigger is left with no accessible name, and its hint/error/required state
    never reaches assistive tech at all. */
 export function SelectBox({ testId, options, value, onValueChange, placeholder, disabled, name, id,
-  'aria-describedby': ariaDescribedBy, 'aria-required': ariaRequired, 'aria-invalid': ariaInvalid }: SelectBoxProps) {
+  'aria-describedby': ariaDescribedBy, 'aria-required': ariaRequired, 'aria-invalid': ariaInvalid, 'aria-label': ariaLabel, look = 'field' }: SelectBoxProps) {
   return (
     <Select value={value} onValueChange={onValueChange} disabled={disabled} name={name}>
-      <SelectTrigger id={id} data-testid={testId} aria-describedby={ariaDescribedBy} aria-required={ariaRequired} aria-invalid={ariaInvalid}>
+      <SelectTrigger id={id} data-testid={testId} size={look === 'filter' ? 'filter' : 'default'} aria-label={ariaLabel}
+        aria-describedby={ariaDescribedBy} aria-required={ariaRequired} aria-invalid={ariaInvalid}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>

@@ -17,6 +17,6 @@ export function App() {
   return (
     <div data-testid={tid.app}>
       <QueryClientProvider client={queryClient}><BrowserRouter><SessionProvider><Gate /></SessionProvider></BrowserRouter></QueryClientProvider>
-      <Toaster position="bottom-right" />
+      <Toaster />
     </div>);
 }

@@ -10,6 +10,7 @@ export const tid = {
   signIn: {
     form: 'sign-in-form', email: 'sign-in-email', password: 'sign-in-password', submit: 'sign-in-submit',
     error: 'sign-in-error', showAccounts: 'sign-in-show-accounts', storageNote: 'sign-in-storage-note', account: (email: string) => k('sign-in-account', email),
+    storageTip: 'sign-in-storage-tip',
   },
   nav: {
     group: (key: string) => k('nav-group', key),
@@ -41,6 +42,7 @@ export const tid = {
     exceptionCap: 'access-exception-cap', exceptionMode: 'access-exception-mode',
     exceptionReason: 'access-exception-reason', exceptionSave: 'access-exception-save',
     exceptionRemove: (email: string, cap: string) => k('access-exception-remove', email, cap),
+    reach: 'access-reach', reachTip: 'access-reach-tip', usersTip: 'access-users-tip',
   },
   audit: {
     table: 'audit-table', row: (id: string) => k('audit-row', id),
@@ -51,4 +53,6 @@ export const tid = {
   field: { root: (controlTestId: string) => `${controlTestId}-field`, tip: (controlTestId: string) => `${controlTestId}-field-tip` },
   modal: { root: 'modal', title: 'modal-title', close: 'modal-close', confirm: 'modal-confirm', cancel: 'modal-cancel' },
   toast: { info: 'toast-info', error: 'toast-error', next: 'toast-next' },
+  /* A page head's own affordances (src/ui/Page.tsx): its i tip and its standing caution. */
+  head: { tip: (view: string) => k('head-tip', view), caution: (view: string) => k('head-caution', view) },
 } as const;

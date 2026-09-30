@@ -3,31 +3,40 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 import { Slot } from "radix-ui"
 
+/* The prototype's .btn (qnipay-workforce-v15.html:423-449, 939-940): 38px,
+   0 16px, radius 8, 14px/600, gap 7px, a 1px border that is transparent
+   unless the kind draws one. On a phone every button grows to the 44px touch
+   target with the padding to match; the small size does too (the prototype
+   stops at 40px there, spec §10.3 does not). The focus ring is the base
+   layer's :focus-visible box-shadow (src/index.css), --qp-ring-focus. */
 const buttonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "inline-flex shrink-0 items-center justify-center gap-[7px] rounded-control border border-transparent text-sm font-semibold whitespace-nowrap transition-[background-color,border-color,color] duration-(--qp-duration-fast) ease-qp outline-none disabled:cursor-not-allowed disabled:border-transparent disabled:bg-surface-tint disabled:text-text-disabled aria-invalid:border-destructive [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive:
-          "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40",
-        outline:
-          "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
-        secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost:
-          "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
-        link: "text-primary underline-offset-4 hover:underline",
+        /* .pri: brand, and the lime accent with its dark ink in dark theme
+           (--primary is re-pointed there). The prototype's dark rule is
+           declared after :hover, so hover does not change it in dark. */
+        default: "bg-primary text-primary-foreground hover:bg-brand-hover active:bg-brand-active dark:hover:bg-primary dark:active:bg-primary",
+        /* .dgr: an outlined error, never a filled red block */
+        destructive: "border-err bg-transparent text-err hover:bg-err-surface",
+        outline: "border-border-strong bg-surface-card text-text-primary hover:bg-surface-tint",
+        /* .sec: the brand's subtle tint with brand ink, accent ink in dark */
+        secondary: "bg-brand-subtle text-brand hover:bg-brand-subtle-hover dark:text-brand-accent",
+        /* .gho: a 1px strong outline on the card surface */
+        ghost: "border-border-strong bg-surface-card text-text-primary hover:bg-surface-tint",
+        link: "h-auto border-0 p-0 text-xs font-semibold text-brand underline dark:text-brand-accent",
       },
       size: {
-        default: "h-9 px-4 py-2 has-[>svg]:px-3",
-        xs: "h-6 gap-1 rounded-md px-2 text-xs has-[>svg]:px-1.5 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-8 gap-1.5 rounded-md px-3 has-[>svg]:px-2.5",
-        lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
-        icon: "size-9",
-        "icon-xs": "size-6 rounded-md [&_svg:not([class*='size-'])]:size-3",
-        "icon-sm": "size-8",
-        "icon-lg": "size-10",
+        default: "h-[38px] px-lg max-md:h-auto max-md:min-h-touch max-md:px-[18px] max-md:py-[11px]",
+        /* .sml: 30px, 0 11px, 12px, radius 4 */
+        sm: "h-[30px] rounded-sm px-[11px] text-xs max-md:h-auto max-md:min-h-touch max-md:px-[14px] max-md:py-[9px] max-md:text-sm",
+        xs: "h-6 rounded-sm px-sm text-xs",
+        lg: "h-11 px-xl",
+        icon: "size-[38px]",
+        "icon-xs": "size-6 rounded-sm",
+        "icon-sm": "size-[30px] rounded-sm",
+        "icon-lg": "size-11",
       },
     },
     defaultVariants: {

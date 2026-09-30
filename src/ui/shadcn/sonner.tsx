@@ -17,12 +17,19 @@ function useAppTheme(): ToasterProps["theme"] {
   return (document.documentElement.dataset.theme === "dark" ? "dark" : "light")
 }
 
+/* The prototype's #toasts (qnipay-workforce-v15.html:627-640, 1566-1567):
+   bottom centre, 20px up, at most 520px wide; on a phone it clears the
+   bottom bar and the home indicator under it, 12px in from each edge. The
+   toasts themselves are drawn by src/ui/toast.tsx. */
 const Toaster = ({ ...props }: ToasterProps) => {
   const theme = useAppTheme()
 
   return (
     <Sonner
       theme={theme}
+      position="bottom-center"
+      offset={{ bottom: 20 }}
+      mobileOffset={{ bottom: "calc(72px + env(safe-area-inset-bottom, 0px))", left: 12, right: 12 }}
       className="toaster group"
       icons={{
         success: <CircleCheckIcon className="size-4" />,
@@ -33,10 +40,11 @@ const Toaster = ({ ...props }: ToasterProps) => {
       }}
       style={
         {
-          "--normal-bg": "var(--popover)",
-          "--normal-text": "var(--popover-foreground)",
-          "--normal-border": "var(--border)",
-          "--border-radius": "var(--radius)",
+          "--width": "min(520px, calc(100vw - 24px))",
+          "--normal-bg": "var(--qp-color-surface-inverse)",
+          "--normal-text": "var(--qp-color-text-on-inverse)",
+          "--normal-border": "transparent",
+          "--border-radius": "var(--qp-radius-control)",
         } as React.CSSProperties
       }
       {...props}
