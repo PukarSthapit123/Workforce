@@ -21,7 +21,9 @@ test('each setup card keeps what its section configures behind hover, and says i
   window.history.pushState({}, '', '/setup/asetup');
   render(<App />);
   const card = await screen.findByTestId(tid.setup.card('gov'));
-  expect(card).toHaveAccessibleName(/^Governance \d+ pages?$/);
+  /* the prototype's .setupcard: the section, then the pages it holds, then
+     their count (a pill that says "3 pages" to a screen reader) */
+  expect(card).toHaveAccessibleName(/^Governance Permissions · .+ \d+ pages?$/);
   expect(card).toHaveAccessibleDescription('Who may do what, who is told, and who signs it off');
   expect(screen.getByTestId(tid.setup.cardDescription('gov'))).toHaveClass('sr-only');
   expect(card).not.toHaveTextContent('Who may do what');
