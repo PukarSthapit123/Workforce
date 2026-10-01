@@ -4,6 +4,7 @@ import { tid } from '@/testids';
 import { expectTestIdCoverage } from '@/test/testid-coverage';
 import { renderPage, withFakeServer } from '@/test/render-page';
 import { fault, personOf, resetTo, signInAs, snapshot } from '@/test/api-helpers';
+import { store } from '@/mocks/store';
 import { ContractsPage } from './ContractsPage';
 
 withFakeServer();
@@ -49,4 +50,21 @@ test('CR A crumb still appears where it names a real route', async () => {
   renderPage(<ContractsPage />);
   await screen.findByTestId(tid.contracts.table);
   expect(screen.getByText('Qnipay setup · Contracts')).toBeInTheDocument();
+});
+/* After a 412 the screen re-reads the people, and the open form starts again
+   from the record as it now stands, so the next save carries the fresh
+   version instead of being refused again. */
+test('after someone else saves the same person, a 412 refreshes the form and the next save goes through', async () => {
+  await openEdit('CP-1042');
+  const p = personOf('CP-1042');
+  store.coll('people')[p.id] = { ...p, version: p.version + 1, maxHours: 44 };
+  store.save();
+  set(tid.contracts.hours, '30');
+  await userEvent.click(screen.getByTestId(tid.contracts.save));
+  expect(await screen.findByTestId(tid.toast.error)).toBeInTheDocument();
+  expect(await screen.findByDisplayValue('44')).toBe(screen.getByTestId(tid.contracts.max));
+  set(tid.contracts.hours, '30');
+  await userEvent.click(screen.getByTestId(tid.contracts.save));
+  expect(await screen.findByTestId(tid.toast.info)).toHaveTextContent('Amara Okafor updated · 1 field(s) changed');
+  expect(personOf('CP-1042')).toMatchObject({ contractedHours: 30, maxHours: 44, version: p.version + 2 });
 });

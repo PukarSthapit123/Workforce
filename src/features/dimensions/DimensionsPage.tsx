@@ -6,6 +6,7 @@ import { DIMENSIONS, DIMENSION_KINDS, type DimensionKind } from '@/contract/dime
 import { Button, Card, Empty, Page, PageHead, Pill, Row, SetupCardButton, Small, Tip } from '@/ui';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import { useDimension, type InUseRow } from '@/api/reference';
+import { latest, versionKey } from '@/lib/latest';
 import { DIM_GROUPS, DIM_SPECS } from './spec';
 import { DimensionForm } from './DimensionForm';
 
@@ -52,6 +53,8 @@ function DimensionIndex({ onOpen }: { onOpen(k: DimensionKind): void }) {
 function DimensionTable({ kind, onBack }: { kind: DimensionKind; onBack(): void }) {
   const spec = DIM_SPECS[kind], list = useDimension(kind);
   const [form, setForm] = useState<{ row?: InUseRow } | null>(null);
+  /* the form works on the entry as last read, and starts again when it changes */
+  const editing = form?.row && latest(form.row, list.data);
   const cols = spec.fields.filter(f => !f.wide).slice(0, 6);
   const cell = (r: InUseRow, key: string, kindOf: string) => {
     const v = r[key];
@@ -81,6 +84,6 @@ function DimensionTable({ kind, onBack }: { kind: DimensionKind; onBack(): void 
       </Table>)}
     {list.data?.length === 0 && <Card><Empty testId={tid.dims.empty}>Nothing here yet.</Empty></Card>}
     <Small>In use counts {spec.usedAs}. An entry that is in use cannot be removed.</Small>
-    {form && <DimensionForm kind={kind} row={form.row} onClose={() => setForm(null)} />}
+    {form && <DimensionForm key={editing ? versionKey(editing) : 'new'} kind={kind} row={editing} onClose={() => setForm(null)} />}
   </>);
 }

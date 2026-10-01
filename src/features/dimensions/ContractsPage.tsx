@@ -5,6 +5,7 @@ import { Button, Field, FormWarn, Modal, Page, PageHead, Row, UnitInput, toastIn
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import { usePeople, useUpdatePerson } from '@/api/people';
 import { formatDate } from '@/lib/format';
+import { latest, versionKey } from '@/lib/latest';
 import { StatePill } from '@/features/people/StatePill';
 
 const basis = (h: number) => (h >= 35 ? 'Full time' : h > 0 ? 'Part time' : 'No contracted hours');
@@ -17,7 +18,9 @@ const basis = (h: number) => (h >= 35 ? 'Full time' : h > 0 ? 'Part time' : 'No 
    patterns belong to Rota, which is not built. */
 export function ContractsPage() {
   const people = usePeople('all', '');
-  const [editing, setEditing] = useState<Person | null>(null);
+  const [held, setEditing] = useState<Person | null>(null);
+  /* the form works on the record as last read, and starts again when it changes */
+  const editing = held && latest(held, people.data);
   return (
     <Page testId={tid.page('acon')}>
       <PageHead title="Contracts" crumb="Qnipay setup · Contracts" tipTestId={tid.head.tip('acon')}
@@ -46,7 +49,7 @@ export function ContractsPage() {
               <TableCell kind="foot" className="text-right"><Button testId={tid.contracts.edit(p.code)} kind="ghost" small onClick={() => setEditing(p)}>Edit</Button></TableCell>
             </Row>))}</TableBody>
         </Table>)}
-      {editing && <ContractForm person={editing} onClose={() => setEditing(null)} />}
+      {editing && <ContractForm key={versionKey(editing)} person={editing} onClose={() => setEditing(null)} />}
     </Page>);
 }
 

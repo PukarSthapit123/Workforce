@@ -6,6 +6,7 @@ import { Avatar, Button, Card, CardHead, Field, FormWarn, Modal, Pill, Small, Te
 import { useDecide, useProfileQueue } from '@/api/profile';
 import { selfField } from '@/domain/selfService';
 import { formatDate } from '@/lib/format';
+import { latest } from '@/lib/latest';
 
 const TITLE = { manager: 'Profile changes awaiting you', payroll: 'Bank detail changes awaiting payroll' } as const;
 
@@ -16,7 +17,9 @@ const TITLE = { manager: 'Profile changes awaiting you', payroll: 'Bank detail c
    payroll stage on Qnipay setup · People. Declining needs a reason (D4). */
 export function ProfileQueue({ stage }: { stage: 'manager' | 'payroll' }) {
   const queue = useProfileQueue(true);
-  const [declining, setDeclining] = useState<ProfileChange | null>(null);
+  const [held, setDeclining] = useState<ProfileChange | null>(null);
+  /* the decline sends the change as last read, so a retry after a 412 carries the fresh version */
+  const declining = held && latest(held, queue.data);
   const [reason, setReason] = useState('');
   const decide = useDecide();
   const done = (c: ProfileChange) => {
