@@ -113,6 +113,12 @@ export const peopleHandlers = [
       if (!acc) return invalid({ field: 'userType', message: 'This person has no account yet. Give them a work email first.' });
       userTypeChangeProblem(session, acc, typeChange);
     }
+    /* D8 makes the work email the sign-in identity, so changing it re-keys the
+       account. For an account with more than an employee's rights that is an
+       access decision, as the user type is: without perm_cfg, a manager could
+       move an admin's account to an address of their choosing. */
+    const rekeys = acc !== undefined && patch.email !== undefined && patch.email !== acc.email.toLowerCase();
+    if (rekeys && acc.userType !== 'employee') requireUserTypeRight(session);
     const next = { ...p, ...patch };
     const changes = diffFields(p, next, EDITABLE);
     if (typeChange && acc) changes.push({ field: 'userType', from: acc.userType, to: typeChange });

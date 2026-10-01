@@ -209,7 +209,35 @@ describe('PATCH /api/v1/people/:id', () => {
     const p = personOf(accountOf('employee').personCode), before = snapshot(...WRITES);
     const r = await call('PATCH', `/api/v1/people/${p.id}`, { userType: 'manager' }, p.version);
     expect(r.status).toBe(403);
+    expect(Refusal.parse(r.body).code).toBe('capability');
     expect(snapshot(...WRITES)).toEqual(before);
+  });
+  /* The work email is the sign-in identity (D8): re-keying an account that
+     carries more than an employee's rights is an access decision, as the
+     user type is. Without this a manager could move an admin's account to an
+     address of their choosing and lock the admin out. */
+  test('a manager cannot change the work email of an admin in their own location', async () => {
+    resetTo('qnipay');
+    const mgr = accountOf('manager'), here = String(personOf(mgr.personCode).location);
+    const admin = Object.values(store.coll<{ email: string; userType: string; personCode: string }>('accounts'))
+      .find(a => a.userType === 'admin' && personOf(a.personCode).location === here);
+    if (!admin) throw new Error('the qnipay seed has no admin at the manager\'s location');
+    const call = await as('manager'), p = personOf(admin.personCode), before = snapshot(...WRITES);
+    const r = await call('PATCH', `/api/v1/people/${p.id}`, { email: 'someone.else@dogmagroup.co.uk' }, p.version);
+    expect(r.status).toBe(403);
+    expect(Refusal.parse(r.body)).toMatchObject({ code: 'capability', next: expect.any(String) });
+    expect(snapshot(...WRITES)).toEqual(before);
+    expect(store.coll('accounts')[`acc_${admin.email.toLowerCase()}`]).toMatchObject({ personCode: admin.personCode, userType: 'admin' });
+  });
+  test('a manager can still change the work email of an employee, and the account follows it', async () => {
+    const p = personOf(accountOf('employee').personCode), old = String(p.email);
+    expect(p.location).toBe(managerLocation());
+    const call = await as('manager'), rows = audits().length;
+    const r = await call('PATCH', `/api/v1/people/${p.id}`, { email: 'moved.here@brightpath.org' }, p.version);
+    expect(r.status).toBe(200);
+    expect(store.coll('accounts')[`acc_${old.toLowerCase()}`]).toBeUndefined();
+    expect(store.coll('accounts')['acc_moved.here@brightpath.org']).toMatchObject({ personCode: p.code, userType: 'employee' });
+    expect(audits()).toHaveLength(rows + 1);
   });
   test('a manager cannot edit someone at another location', async () => {
     const other = Object.values(store.coll<{ id: string; version: number; location: string }>('people')).find(p => p.location !== managerLocation());
