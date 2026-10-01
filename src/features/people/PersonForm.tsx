@@ -134,7 +134,9 @@ function PersonFormBody({ person, initial, onClose, onChangeState }: { person?: 
                   onValueChange={x => { if (isUserType(x)) set('userType', x); }} /></Field>
             : <Small className="mb-md">{!canSetType
               ? (editing ? 'The user type is changed on Qnipay setup · Permissions.' : 'New people get an Employee account. An administrator can change it.')
-              : 'This person has no account yet. Give them a work email to create one.'}</Small>}
+              : person?.email
+                ? `This person has no account of their own: ${person.email} already signs in to another account. Give them an address of their own to create one.`
+                : 'This person has no account yet. Give them a work email to create one.'}</Small>}
           {!editing && <Field label="Starting state" error={err('state')} hint={LIFECYCLE[v.state].note}>
             <SelectBox testId={tid.personForm.field('state')} options={STARTING_STATES.map(s => ({ value: s, label: LIFECYCLE[s].label }))}
               value={v.state} onValueChange={x => { if (isStart(x)) set('state', x); }} /></Field>}

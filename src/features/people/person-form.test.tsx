@@ -119,6 +119,21 @@ describe('editing someone', () => {
     expect(screen.queryByTestId(tid.personForm.field('userType'))).toBeNull();
     expect(screen.getByTestId(tid.personForm.root)).toHaveTextContent('Qnipay setup · Permissions');
   });
+  test('someone whose work email already signs in another account is told the address must change, not to add one', async () => {
+    resetTo('qnipay');
+    await signInAs('admin');
+    const shared = String(personOf('EMP015').email);
+    expect(shared).toBe(String(personOf('EMP014').email));
+    /* EMP015 is archived, so the list shows them only under every state */
+    renderPage(<AdminPeoplePage />);
+    await userEvent.click(await screen.findByTestId(tid.people.stateFilter));
+    await userEvent.click(await screen.findByTestId(`${tid.people.stateFilter}-option-all`));
+    await userEvent.click(await screen.findByTestId(tid.people.edit('EMP015')));
+    await screen.findByTestId(tid.personForm.root);
+    const form = screen.getByTestId(tid.personForm.root);
+    expect(form).toHaveTextContent(`${shared} already signs in to another account`);
+    expect(form).not.toHaveTextContent('Give them a work email');
+  });
 });
 test('T A tooltip inside a modal exists (the reported case)', async () => {
   await signInAs('admin');
