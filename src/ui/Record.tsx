@@ -20,6 +20,15 @@ export function Avatar({ name, large }: { name: string; large?: boolean }) {
 export function PersonName({ name }: { name: string }) {
   return <span className="flex items-center gap-[9px]"><Avatar name={name} /><strong className="font-semibold">{name}</strong></span>;
 }
+/* .emp with lines under the name, as an approval queue row shows it
+   (v15:5625-5629): the avatar, then the name and what is asked of it. */
+export function PersonBlock({ name, children }: { name: string; children: ReactNode }) {
+  return (
+    <div className="flex min-w-0 flex-1 items-center gap-[9px]">
+      <Avatar name={name} />
+      <div className="min-w-0"><strong className="text-sm font-semibold">{name}</strong>{children}</div>
+    </div>);
+}
 
 /* .mr (v15:727-729): a label and its value on one line, a light rule under
    every row but the last. The value carries the test id. */
@@ -85,6 +94,10 @@ export function Count({ testId, children }: { testId?: string; children: ReactNo
 /* .sm (v15:251): the 12px muted line under a title. */
 export function Small({ children, className, testId }: { children: ReactNode; className?: string; testId?: string }) {
   return <p data-testid={testId} className={cn('text-xs leading-[1.45] text-text-muted', className)}>{children}</p>;
+}
+/* .sm closing a card, set off from the rows above it (v15:5633). */
+export function CardNote({ children }: { children: ReactNode }) {
+  return <Small className="mt-[10px]">{children}</Small>;
 }
 
 /* .arow (v15:1449-1456, 954): one setting, its name and what it does on the
