@@ -2,13 +2,16 @@ import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { z } from 'zod';
 import { api, ApiError } from './client';
-import { defineEndpoint, RecordMeta } from '@/contract';
+import { RecordMeta, type Endpoint } from '@/contract';
 
+/* Plain objects, not defineEndpoint: that adds to the contract registry, which
+   the OpenAPI, capability and served-registry tests read, and test workers
+   are shared across files. */
 const Thing = RecordMeta.extend({ name: z.string() });
 const ThingParams = z.object({ id: z.string() });
-const getThing = defineEndpoint({ method: 'GET', path: '/api/v1/things/:id', params: ThingParams, response: Thing, summary: 'test' });
-const putThing = defineEndpoint({ method: 'PUT', path: '/api/v1/things/:id', params: ThingParams, request: z.object({ name: z.string() }), response: Thing, versioned: true, summary: 'test' });
-const listThings = defineEndpoint({ method: 'GET', path: '/api/v1/things', query: z.object({ q: z.string().optional(), limit: z.coerce.number().optional() }), response: z.array(Thing), summary: 'test' });
+const getThing = { method: 'GET', path: '/api/v1/things/:id', params: ThingParams, response: Thing, summary: 'test' } as const satisfies Endpoint;
+const putThing = { method: 'PUT', path: '/api/v1/things/:id', params: ThingParams, request: z.object({ name: z.string() }), response: Thing, versioned: true, summary: 'test' } as const satisfies Endpoint;
+const listThings = { method: 'GET', path: '/api/v1/things', query: z.object({ q: z.string().optional(), limit: z.coerce.number().optional() }), response: z.array(Thing), summary: 'test' } as const satisfies Endpoint;
 
 const server = setupServer(
   http.get('/api/v1/things', ({ request }) => HttpResponse.json(new URL(request.url).search === '?q=a&limit=5' ? [] : [{ id: 1 }])),

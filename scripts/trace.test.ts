@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 const trace = JSON.parse(readFileSync(resolve(__dirname, '../e2e/trace.json'), 'utf8'));
