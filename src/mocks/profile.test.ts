@@ -22,6 +22,13 @@ const decideWith = (call: Call, c: { id: string; version: number }, decision: 'a
 const decide = async (who: Persona, c: { id: string; version: number }, decision: 'approve' | 'decline', reason = '') =>
   decideWith(await as(who), c, decision, reason);
 const me = () => personOf(accountOf('employee').personCode);
+/* A bank change the manager has already passed on, waiting for payroll. */
+const atPayroll = (code: string, from = String(personOf(code).bankAccount ?? '')) => {
+  const id = `pfc_test_payroll_${code}`;
+  store.coll('profileChanges')[id] = { id, version: 2, updatedAt: store.now(), personCode: code, field: 'bankAccount', from, to: '87654321',
+    note: '', raisedAt: store.now(), status: 'pending', stage: 'payroll', route: ['manager', 'payroll'], decisions: [] };
+  return { id, version: 2 };
+};
 
 describe('GET /api/v1/profile', () => {
   test('an employee reads their own record, the six fields, and nothing pending', async () => {
@@ -96,8 +103,16 @@ describe('GET /api/v1/profile-changes', () => {
     expect(Refusal.parse(r.body).message).toContain('Approve profile changes');
   });
   test('payroll sees only changes waiting for payroll', async () => {
+    const waiting = atPayroll(me().code);
     const q = listProfileChanges.response.parse((await (await as('admin'))('GET', '/api/v1/profile-changes')).body);
-    expect(q).toEqual([]);
+    expect(q.map(c => c.id)).toEqual([waiting.id]);
+  });
+  test('payroll is not offered its own bank change, which it could not decide', async () => {
+    atPayroll(me().code);
+    const own = atPayroll(accountOf('admin').personCode);
+    const q = listProfileChanges.response.parse((await (await as('admin'))('GET', '/api/v1/profile-changes')).body);
+    expect(q.map(c => c.personCode)).toEqual([me().code]);
+    expect(q.map(c => c.id)).not.toContain(own.id);
   });
 });
 
@@ -147,6 +162,22 @@ describe('POST /api/v1/profile-changes/:id/decision', () => {
     const r = await decideWith(call, changeFor(mgr, 'phone'), 'approve');
     expect(r.status).toBe(409);
     expect(Refusal.parse(r.body).code).toBe('own-change');
+    expect(snapshot(...WRITES)).toEqual(before);
+  });
+  test('nobody decides their own bank change at the payroll stage either', async () => {
+    const admin = accountOf('admin').personCode, c = atPayroll(admin);
+    const call = await as('admin'), before = snapshot(...WRITES);
+    const r = await decideWith(call, c, 'approve');
+    expect(r.status).toBe(409);
+    expect(Refusal.parse(r.body).code).toBe('own-change');
+    expect(snapshot(...WRITES)).toEqual(before);
+  });
+  test('at the payroll stage, a bank change the record has overtaken is refused, and the newer value stands', async () => {
+    const code = me().code, c = atPayroll(code, 'not-the-current-number');
+    const call = await as('admin'), before = snapshot(...WRITES);
+    const r = await decideWith(call, c, 'approve');
+    expect(r.status).toBe(409);
+    expect(Refusal.parse(r.body)).toMatchObject({ code: 'changed-since', next: 'Decline this change and ask for a new proposal.' });
     expect(snapshot(...WRITES)).toEqual(before);
   });
   test('a change the record has overtaken is refused, and the newer value stands', async () => {

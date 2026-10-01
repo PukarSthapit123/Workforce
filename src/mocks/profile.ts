@@ -68,7 +68,7 @@ export const profileHandlers = [
     const self = effectiveCode(session);
     return Object.values(changes()).filter(c => c.status === 'pending' && (
       (mgr && c.stage === 'manager' && c.personCode !== self && inScope(session, personByCode(c.personCode)?.location ?? '')) ||
-      (pay && c.stage === 'payroll')))
+      (pay && c.stage === 'payroll' && c.personCode !== self)))
       .sort((a, b) => a.raisedAt.localeCompare(b.raisedAt))
       .map(view);
   }),
