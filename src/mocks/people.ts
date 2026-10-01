@@ -12,7 +12,7 @@ import { diffFields } from '@/domain/history';
 import { isHere } from '@/domain/lifecycle';
 import { resolveCapabilities } from '@/domain/capabilities';
 import {
-  accountOfPerson, accounts, inScope, isSelf, people, personContext, personView, recordAt, requireScope, scopeOf,
+  accountOfPerson, accounts, inScope, isSelf, nameOf, people, personContext, personView, recordAt, requireScope, scopeOf,
   writeHistory, type Signed, type StoredAccount, type StoredPerson,
 } from './world';
 
@@ -61,7 +61,8 @@ export const peopleHandlers = [
     return Object.values(people())
       .filter(p => sc.all || p.location === sc.location)
       .filter(p => state === 'all' || (state === 'here' ? isHere(p.state) : p.state === state))
-      .filter(p => !q || p.name.toLowerCase().includes(q) || p.code.toLowerCase().includes(q))
+      /* name, employee ID or job profile, as the prototype's admPeople search (v15:6066) */
+      .filter(p => !q || [p.name, p.code, p.jobProfile ? nameOf('jobProfiles', p.jobProfile) : ''].some(s => s.toLowerCase().includes(q)))
       .sort((a, b) => a.name.localeCompare(b.name))
       .map(personView);
   }),

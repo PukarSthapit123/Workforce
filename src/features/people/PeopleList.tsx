@@ -39,7 +39,7 @@ export function PeopleList({ variant, total, onOpen, actions }: {
     <>
       <FilterBar>
         <SearchFilter testId={tid.people.search} label="Search people" value={q} onChange={e => setQ(e.target.value)}
-          placeholder="Search name or ID" />
+          placeholder={team ? 'Search name or ID' : 'Search name, ID or job profile'} />
         {team
           ? <SelectFilter testId={tid.people.categoryFilter} label="Worker category" value={category} onValueChange={setCategory}
               options={[{ value: ALL, label: 'Everyone' }, { value: 'Contracted', label: 'Contracted' }, { value: 'Bank', label: 'Bank' }]} />
@@ -84,7 +84,7 @@ export function PeopleList({ variant, total, onOpen, actions }: {
                     <TableCell label="Location">{names.location(p.location)}</TableCell>
                     <TableCell label="Manager" empty={!p.manager} className="text-text-muted">{p.manager || '—'}</TableCell>
                   </>}
-                  <TableCell label="State"><StatePill testId={tid.people.state(p.code)} state={p.state} /></TableCell>
+                  <TableCell label="State"><StatePill testId={tid.people.state(p.code)} state={p.state} withNote /></TableCell>
                   <TableCell kind="foot" className="text-right whitespace-nowrap">
                     <span className="inline-flex gap-xs">{actions?.(p)}
                       <Button testId={tid.people.open(p.code)} kind="ghost" small onClick={() => onOpen(p)}>Open</Button></span>

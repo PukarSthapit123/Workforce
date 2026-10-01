@@ -6,6 +6,7 @@ import { useCreatePerson, useNextCode, useUpdatePerson } from '@/api/people';
 import { useDimension, useEmployeeTypes } from '@/api/reference';
 import { useCaps } from '@/shell/useCaps';
 import { LIFECYCLE, STARTING_STATES } from '@/domain/lifecycle';
+import { todayIso } from '@/lib/format';
 
 type UserType = 'employee' | 'manager' | 'admin';
 type Start = (typeof STARTING_STATES)[number];
@@ -37,7 +38,7 @@ export function PersonForm({ person, defaultLocation, onClose, onChangeState }: 
   const firstType = types.data?.[0];
   const initial: Draft = person ? fromPerson(person) : {
     code: next.data?.code ?? '', name: '', email: '', phone: '', resource: '', cis: false,
-    employeeType: firstType?.code ?? '', jobProfile: '', location: defaultLocation ?? locs.data?.[0]?.code ?? '', department: '', manager: '', start: '',
+    employeeType: firstType?.code ?? '', jobProfile: '', location: defaultLocation ?? locs.data?.[0]?.code ?? '', department: '', manager: '', start: todayIso(),
     category: firstType?.category ?? 'Contracted', contractedHours: '0', maxHours: '48', night: false, userType: 'employee', state: 'candidate' };
   return <PersonFormBody person={person} initial={initial} onClose={onClose} onChangeState={onChangeState} />;
 }

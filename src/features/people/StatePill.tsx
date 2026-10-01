@@ -10,7 +10,10 @@ import { LIFECYCLE, type PersonState } from '@/domain/lifecycle';
 const GLYPH: Record<PersonState, ReactNode> = {
   candidate: <Circle />, preboard: <Clock />, active: <Check />, suspended: <X />, onleave: <Sun />, leaver: <ArrowRight />, archived: <Minus />,
 };
-export function StatePill({ testId, state }: { testId: string; state: PersonState }) {
+/* In a list, the pill carries the state's note as its tip, as the
+   prototype's mgrPeople does (v15:5675-5676); where the note is already
+   written beside the pill (the record, the lifecycle dialog) it is not. */
+export function StatePill({ testId, state, withNote }: { testId: string; state: PersonState; withNote?: boolean }) {
   const s = LIFECYCLE[state];
-  return <Pill testId={testId} tone={s.tone} glyph={GLYPH[state]}>{s.label}</Pill>;
+  return <Pill testId={testId} tone={s.tone} glyph={GLYPH[state]} note={withNote ? s.note : undefined}>{s.label}</Pill>;
 }

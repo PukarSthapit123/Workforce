@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { server } from '@/mocks/node';
 import { tid } from '@/testids';
+import { LIFECYCLE } from '@/domain/lifecycle';
 import { expectTestIdCoverage } from '@/test/testid-coverage';
 import { renderPage, withFakeServer } from '@/test/render-page';
 import { caller, personOf, resetTo, signInAs } from '@/test/api-helpers';
@@ -72,5 +73,11 @@ describe('My team · People, as a manager', () => {
     expect(screen.getByTestId(tid.people.row('CP-1042'))).toBeInTheDocument();
     expect(screen.queryByTestId(tid.people.row('EMP-2044'))).toBeNull();
     expectTestIdCoverage(document.body);
+  });
+  test('each state pill carries what the state means, reachable from the keyboard and by a screen reader', async () => {
+    renderPage(<TeamPeoplePage />);
+    const pill = await screen.findByTestId(tid.people.state('CP-1042'));
+    expect(pill).toHaveAttribute('tabindex', '0');
+    expect(pill).toHaveTextContent(LIFECYCLE.active.note);
   });
 });

@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { store } from '@/mocks/store';
 import { tid } from '@/testids';
 import { nextEmployeeCode } from '@/domain/codes';
+import { todayIso } from '@/lib/format';
 import { expectTestIdCoverage } from '@/test/testid-coverage';
 import { renderPage, withFakeServer } from '@/test/render-page';
 import { audits, fault, personOf, resetTo, signInAs, snapshot } from '@/test/api-helpers';
@@ -42,6 +43,10 @@ describe('adding someone, as an admin', () => {
   test('CR It proposes the next free employee ID, in the tenant’s own scheme', async () => {
     await openAdd();
     expect(f('code')).toHaveValue(nextCode());
+  });
+  test('a new person starts today unless the date is changed, as the prototype’s form did', async () => {
+    await openAdd();
+    expect(f('start')).toHaveValue(todayIso());
   });
   test('CR It uses the design system field pattern', async () => {
     await openAdd();

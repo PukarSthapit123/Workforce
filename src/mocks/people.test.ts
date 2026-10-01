@@ -35,6 +35,14 @@ describe('GET /api/v1/people', () => {
     expect(list.map(p => p.name)).toContain('Amara Okafor');
     expect(list.every(p => /okafor/i.test(p.name) || /okafor/i.test(p.code))).toBe(true);
   });
+  test('q also finds people by their job profile’s name', async () => {
+    const job = Object.values(store.coll<{ code: string; name: string }>('jobProfiles'))
+      .find(j => Object.values(store.coll<{ jobProfile: string; state: string }>('people')).some(p => p.jobProfile === j.code && p.state === 'active'));
+    if (!job) throw new Error('the seed has no job profile anyone active holds');
+    const list = listPeople.response.parse((await (await as('admin'))('GET', `/api/v1/people?q=${encodeURIComponent(job.name.toLowerCase())}`)).body);
+    expect(list.length).toBeGreaterThan(0);
+    expect(list.some(p => p.jobProfile === job.code)).toBe(true);
+  });
   test('a manager sees only their own location', async () => {
     const list = listPeople.response.parse((await (await as('manager'))('GET', '/api/v1/people?state=all')).body);
     expect(list.length).toBeGreaterThan(0);

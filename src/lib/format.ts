@@ -15,3 +15,7 @@ export const formatDate = (iso: string) => {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
   return m ? `${m[3] ?? ''}/${m[2] ?? ''}/${m[1] ?? ''}` : '—';
 };
+
+/* Today as an ISO date (YYYY-MM-DD), in London time like every date shown. */
+const DAY = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit' });
+export const todayIso = (now: Date = new Date()) => DAY.format(now);
