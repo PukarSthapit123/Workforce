@@ -8,4 +8,5 @@ export * from './people';
 export * from './dimensions';
 export * from './employee-types';
 export * from './profile';
+export * from './timesheets';
 /* feature contracts register themselves on import; each later task adds one line */

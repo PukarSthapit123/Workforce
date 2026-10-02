@@ -578,3 +578,49 @@ export function queueChecksum(rows: readonly QueueRow[]): string {
   };
   return run(0x811c9dc5) + run(0x01000193);
 }
+
+/* ---------------------------------------------------- setup (D11, D12) */
+/* What Timesheet setup may hold. Checked by the server on every save, so a
+   config that the capture rules could not run on is never stored. Rule values
+   are multipliers and thresholds; an amount belongs to Business Central. */
+export interface ConfigInput {
+  rules: CaptureRules; cutoff: string; allowances: Record<string, AllowanceDef>; types: Record<string, TypeCapture>;
+}
+export interface ConfigContext { employeeTypes: readonly string[]; payCodes: readonly string[] }
+const CURRENCY = /[£$€]/;
+export const CUTOFF_PATTERN = /^(Sunday|Monday|Tuesday|Wednesday|Thursday) (\d{2}:\d{2})$/;
+export function timesheetConfigProblem(c: ConfigInput, ctx: ConfigContext): Problem | null {
+  const r = c.rules;
+  const bad = (field: string, message: string): Problem => ({ field, message });
+  if (!(r.maxDaily > 0 && r.maxDaily <= 24)) return bad('rules.maxDaily', 'The daily maximum must be more than 0 and at most 24 hours.');
+  if (!(r.warnDaily > 0 && r.warnDaily <= r.maxDaily)) return bad('rules.warnDaily', 'The review threshold must be more than 0 and no higher than the daily maximum.');
+  if (!(r.minNet >= 0 && r.minNet < r.maxDaily)) return bad('rules.minNet', 'The minimum net time must be 0 or more and below the daily maximum.');
+  if (!(r.varianceWarn >= 0)) return bad('rules.varianceWarn', 'The rota variance must be 0 or more hours.');
+  if (!(r.otDaily > 0 && r.otDaily <= 24)) return bad('rules.otDaily', 'The daily overtime threshold must be more than 0 and at most 24 hours.');
+  if (!(r.otWeekly > 0 && r.otWeekly <= 168)) return bad('rules.otWeekly', 'The weekly overtime threshold must be more than 0 and at most 168 hours.');
+  if (toMin(r.nightFrom) == null) return bad('rules.nightFrom', 'The night window must start at a 24-hour time such as 20:00.');
+  if (toMin(r.nightTo) == null) return bad('rules.nightTo', 'The night window must end at a 24-hour time such as 06:00.');
+  const cut = CUTOFF_PATTERN.exec(c.cutoff);
+  if (!cut || toMin(cut[2]) == null) return bad('cutoff', 'The cut-off must be a day from Sunday to Thursday and a 24-hour time, such as Monday 12:00.');
+  for (const [key, a] of Object.entries(c.allowances)) {
+    if (a.code !== key) return bad(`allowances.${key}.code`, `The allowance stored as ${key} must have the code ${key}.`);
+    if (!a.label.trim()) return bad(`allowances.${key}.label`, 'Give the allowance a label.');
+    if (CURRENCY.test(a.label)) return bad(`allowances.${key}.label`, 'An allowance label names the allowance, never an amount. Business Central holds the rates.');
+  }
+  const payable = (code: string) => ctx.payCodes.includes(code) || Object.hasOwn(c.allowances, code);
+  for (const [code, t] of Object.entries(c.types)) {
+    if (!ctx.employeeTypes.includes(code)) return bad(`types.${code}`, `There is no employee type with the code ${code}.`);
+    const unknown = t.allowances.find(a => !payable(a));
+    if (unknown) return bad(`types.${code}.allowances`, `${unknown} is neither an allowance nor a pay code.`);
+    for (const [i, rule] of t.rules.entries()) {
+      const at = `types.${code}.rules.${i}`;
+      if (rule.when && !Object.hasOwn(RATE_TRIGGERS, rule.when)) return bad(`${at}.when`, 'Choose a trigger from the list.');
+      if (!payable(rule.code)) return bad(`${at}.code`, `${rule.code} is not a pay code.`);
+      if (CURRENCY.test(rule.value)) return bad(`${at}.value`, 'A rule value is a multiplier or a threshold, never an amount. Business Central holds the rates.');
+    }
+    const ot = t.overtime;
+    if (ot && !(ot.threshold > 0 && ot.threshold <= 168)) return bad(`types.${code}.overtime.threshold`, 'The overtime threshold must be more than 0 and at most 168 hours.');
+    if (ot && !(ot.multiplier >= 1 && ot.weekendMultiplier >= 1)) return bad(`types.${code}.overtime.multiplier`, 'An overtime multiplier must be at least 1.');
+  }
+  return null;
+}
