@@ -71,6 +71,7 @@ const DIALOGS_1B: Record<string, [string, string]> = { '/setup/apeople': [tid.pe
 for (const theme of ['light', 'dark'] as const) {
   for (const persona of ['admin', 'manager', 'employee'] as const) {
     test(`axe: plan 1b pages for the ${persona} have no serious issues (${theme})`, async ({ page, signInAs }) => {
+      test.setTimeout(90_000); // six admin pages, a dialog and an axe run on each
       const check = async (where: string) => {
         await page.evaluate(t => document.documentElement.setAttribute('data-theme', t), theme);
         const r = await new AxeBuilder({ page }).analyze();
