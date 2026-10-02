@@ -158,7 +158,133 @@ function shape(tenantKey, data, PERMS_META, PERM_GROUPS, PROFILE_CHANGES) {
   return { version: 'extracted', tenant: tenantKey, data: {
     people: byId(people), accounts: byId(accounts), userTypes: byId(userTypes), capabilities: byId(capabilities),
     capabilityGroups: byId(capabilityGroups), tenant: { tenant }, locations, departments, costCentres, jobProfiles, projects,
-    employeeTypes, profileChanges, personHistory: {}, notices: byId(notices), audit: {} } };
+    employeeTypes, profileChanges, personHistory: {}, notices: byId(notices), audit: {}, ...timesheets(data, people) } };
+}
+
+/* ---- module 2: timesheets ---- */
+/* No money crosses into the app (brief D11): an allowance's £ value, a flat pay
+   code's value, a rule value in pounds and the expenses-to-claim field all stay behind. */
+const MONEY_FIELDS = new Set(['expenses']);
+const isMoney = v => /£/.test(String(v ?? ''));
+/* The copy rule: an em-dash aside becomes its own sentence. */
+const plain = s => String(s || '').replace(/\s+—\s+(\w)/g, (_m, c) => `. ${c.toUpperCase()}`);
+/* 'dd/mm HH:MM' in London summer time (the sample data is all August 2026) to UTC. */
+const londonStamp = (dm, hm, year = 2026) => {
+  const [d, m] = String(dm).split('/').map(Number), [h, mi] = String(hm).split(':').map(Number);
+  return new Date(Date.UTC(year, m - 1, d, h - 1, mi)).toISOString();
+};
+/* Decisions in the sample data land no later than 09:00 on the prototype's frozen day (its clock reads 13/08/2026 09:12). */
+const LAST_DECISION = '2026-08-13T08:00:00.000Z';
+const hmToMin = s => { const m = /(\d+)h\s*(\d+)?/.exec(String(s || '')); return m ? Number(m[1]) * 60 + Number(m[2] || 0) : 0; };
+const clockMin = hm => { const [h, m] = hm.split(':').map(Number); return h * 60 + m; };
+const clockAdd = (hm, min) => { const t = (((clockMin(hm) + min) % 1440) + 1440) % 1440;
+  return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`; };
+/* The rota line a submission names gives its start time (the shift_code options
+   in FIELDS: Early 07:00–15:00, Late 14:30–22:00, Night 22:00–07:00). The
+   prototype held only the hours, so the times are rebuilt from them: a shift
+   longer than the hours takes the difference as one break four hours in, and a
+   shorter one runs on to make up the hours. */
+const SHIFT_TIMES = { E: ['07:00', '15:00'], L: ['14:30', '22:00'], N: ['22:00', '07:00'] };
+function entryFor(shift, minutes) {
+  const [start, finish] = SHIFT_TIMES[shift] || SHIFT_TIMES.E;
+  const span = (((clockMin(finish) - clockMin(start)) % 1440) + 1440) % 1440;
+  if (span > minutes) return { start, finish, breaks: [{ start: clockAdd(start, 240), end: clockAdd(start, 240 + span - minutes) }], fields: {} };
+  return { start, finish: clockAdd(start, minutes), breaks: [], fields: {} };
+}
+/* weekLabel's inverse: 'Week 32 · 03–09 Aug 2026' or 'Week 31 · 27 Jul – 02 Aug 2026' to the Monday. */
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function weekStartOf(label) {
+  const m = /·\s*(\d{2})(?:\s+([A-Z][a-z]{2}))?\s*–\s*\d{2}\s+([A-Z][a-z]{2})\s+(\d{4})/.exec(label);
+  if (!m) throw new Error('extractor: cannot read the week in ' + label);
+  return new Date(Date.UTC(Number(m[4]), MONTHS.indexOf(m[2] || m[3]), Number(m[1]))).toISOString().slice(0, 10);
+}
+const addIsoDays = (isoDate, n) => new Date(Date.parse(isoDate + 'T00:00:00Z') + n * 86400000).toISOString().slice(0, 10);
+
+function timesheets(data, people) {
+  const CFG = data.CFG || {}, TENANT = data.TENANT || {}, TYPES = data.TYPES || {};
+  const byCode = new Map(people.map(p => [p.code, p]));
+  /* Names are matched with their spacing normalised: the roster spells Manish
+     Nepal with a no-break space, and his reports' manager field with a plain one. */
+  const norm = s => String(s || '').replace(/\s+/g, ' ').trim();
+  const byName = new Map(people.map(p => [norm(p.name), p]));
+  const actor = p => ({ personCode: p.code, name: p.name });
+  /* D10: the prototype's submissions name care ids (CP-1042...). Where the roster
+     has them (social) they are used as they are. Where it does not (qnipay), the
+     six rows go, in order, to the six people who report to the managing admin at
+     the manager location: not a manager themselves, and still employed. */
+  const subs = data.TS_SUBMISSIONS || [];
+  const managers = new Set(Object.values(data.USERS || {}).filter(u => u.role === 'manager').map(u => u.eid));
+  let owners = subs.map(s => byCode.get(s.eid));
+  if (owners.some(o => !o)) {
+    const lead = byName.get('Manish Nepal');
+    if (!lead) throw new Error('extractor: D10 needs Manish Nepal in the roster');
+    const reports = people.filter(p => norm(p.manager) === norm(lead.name) && p.location === lead.location && !managers.has(p.code)
+      && p.state === 'active');
+    if (reports.length < subs.length) throw new Error(`extractor: D10 needs ${subs.length} reports to ${lead.name}, found ${reports.length}`);
+    owners = reports.slice(0, subs.length);
+  }
+  const managerOf = p => byName.get(norm(p.manager)) || p;
+  const days = {}, attempts = {};
+  subs.forEach((s, i) => {
+    const p = owners[i], date = iso(s.date), id = `tsd_${p.code}_${date}`, mgr = managerOf(p);
+    const [dm, hm] = String(s.sub).split(' ');
+    const submittedAt = londonStamp(dm, hm);
+    /* a decision follows a day after the submission, and never after the frozen clock */
+    const decidedAt = new Date(Math.min(Date.parse(submittedAt) + 86400000, Date.parse(LAST_DECISION))).toISOString();
+    const proxy = !!s.proxy;
+    const parts = String(s.el || '').split('+').map(x => x.trim());
+    const allowances = parts.slice(1);
+    const reason = s.reason ? plain(s.reason).replace(/([^.?!])$/, '$1.') : '';
+    const history = [{ from: 'draft', to: 'pend', by: actor(proxy ? mgr : p), at: submittedAt, reason: proxy ? 'Submitted on their behalf' : '' }];
+    if (s.st === 'ok' || s.st === 'back') history.push({ from: 'pend', to: s.st, by: actor(mgr), at: decidedAt, reason: s.st === 'back' ? reason : '' });
+    let integrationAttemptId = '';
+    if (s.st === 'ok') {
+      integrationAttemptId = `int_ts${s.id}`;
+      attempts[integrationAttemptId] = meta({ id: integrationAttemptId, event: 'Post to buffer', ref: `${p.name} · ${s.date}`,
+        summary: s.el, state: s.bc === 'posted' ? 'posted' : 'queued', attempt: 1, simulated: true, dayId: id, at: decidedAt });
+    }
+    days[id] = meta({ id, personCode: p.code, date, state: s.st, entries: [entryFor(s.shift, hmToMin(s.hrs))],
+      workType: parts[0].split(' ')[0] || 'STD', allowances, shift: s.shift || '', nonWorkingReason: '',
+      captureSource: proxy ? 'proxy' : 'self', enteredBy: proxy ? mgr.code : p.code, submittedAt, returnReason: s.st === 'back' ? reason : '',
+      warnings: [], history, integrationAttemptId });
+  });
+  /* TS_MULTIWEEK: past weeks still in draft, as the days they are made of (D1),
+     for the person who owns the first submission. 7h 30m a day from Monday. */
+  const mwOwner = owners[0];
+  if (mwOwner) for (const w of literalTsMultiweek) {
+    const start = weekStartOf(w.w), total = hmToMin(w.hrs);
+    for (let n = 0; n * 450 < total; n++) {
+      const date = addIsoDays(start, n), id = `tsd_${mwOwner.code}_${date}`;
+      days[id] = meta({ id, personCode: mwOwner.code, date, state: w.st, workType: 'STD', allowances: [], shift: '',
+        entries: [{ start: '09:00', finish: '17:00', breaks: [{ start: '12:30', end: '13:00' }], fields: {} }], nonWorkingReason: '',
+        captureSource: 'self', enteredBy: mwOwner.code, submittedAt: '', returnReason: '', warnings: [], history: [], integrationAttemptId: '' });
+    }
+  }
+  /* The one failed posting in INTLOG, so the retry endpoint has something to re-queue.
+     The posted rows name care staff from another roster and are left behind. */
+  for (const r of data.INTLOG || []) if (r.st === 'failed') {
+    const id = `int_${String(r.id).replace(/^INT-/, '')}`;
+    const [dm, hm] = String(r.t).split(' ');
+    attempts[id] = meta({ id, event: r.ev, ref: r.ref, summary: r.pay, state: 'failed', attempt: r.att || 1, simulated: true,
+      cause: r.cause || '', reason: r.reason || r.cause || '', dayId: '', at: londonStamp(dm, hm) });
+  }
+  const types = Object.fromEntries(Object.entries(TYPES).map(([k, t]) => [k, {
+    fields: Object.fromEntries(Object.entries(t.fields || {}).filter(([c]) => !MONEY_FIELDS.has(c))),
+    allowances: t.allow || [],
+    rules: (t.rules || []).map(r => ({ trigger: plain(r.trig), when: r.when || '', code: r.code, value: isMoney(r.val) ? '' : (r.val || ''), how: r.how || 'Auto (BC)' })),
+    overtime: (t.uom || 'hour') === 'day' ? null : {
+      threshold: Number(t.ot?.threshold ?? 40), multiplier: Number(t.ot?.mult ?? 1.5), weekendMultiplier: Number(t.ot?.wbh ?? 1.5) },
+  }]));
+  const allowances = Object.fromEntries(Object.entries(literalAllowanceLib).map(([code, a]) => [code,
+    { code, label: a.label, payCode: a.pay, tier: a.tier, element: `PE-${code.split('_')[0]}`, basis: 'flat' }]));
+  const config = meta({ id: 'timesheetConfig', rules: data.TS_RULES || {}, cutoff: TENANT.cutoff || 'Monday 12:00',
+    timeFormat: TENANT.timeFmt === 'HH:MM' ? 'HH:MM' : 'h m', returnReasonRequired: TENANT.returnReason !== false,
+    weekGrid: CFG.weekGrid || 'hours', weekLayout: CFG.weekLayout || 'classic',
+    fieldDefaults: Object.fromEntries(Object.entries(CFG.fields || {}).filter(([c]) => !MONEY_FIELDS.has(c))),
+    allowances, types });
+  const payCodes = byId((data.BASE_CODES || []).map(b => meta({ id: `pc_${b.code}`, code: b.code, basis: b.basis,
+    value: b.basis === 'flat' || isMoney(b.value) ? '' : String(b.value ?? ''), element: b.element, label: b.label || b.code, workType: !!b.wt })));
+  return { timesheetConfig: { timesheetConfig: config }, payCodes, timesheetDays: days, integrationAttempts: attempts };
 }
 
 /* A missing PEOPLE roster, or a `social` snapshot indistinguishable from
@@ -180,6 +306,11 @@ const PERMS_META = literal('PERMS');
 const PERM_GROUPS = literal('PERM_GROUPS');
 /* never persisted by the prototype, so read from its source */
 const PROFILE_CHANGES = literal('PROFILE_CHANGES');
+const literalAllowanceLib = literal('ALLOWANCE_LIB');
+const literalTsMultiweek = literal('TS_MULTIWEEK');
+/* The capture field catalogue, less any money: the £ value on each allowance and the expenses-to-claim field. */
+const timesheetFields = literal('FIELDS').filter(f => !MONEY_FIELDS.has(f.c))
+  .map(f => Object.fromEntries(Object.entries(f).filter(([k]) => k !== 'amt')));
 const { w, signInAdmin, switchTemplate } = boot();
 /* TYPE_LIB builds each type's field set with helper calls (mkFieldCfg over
    the FLD_* lists). Only the fields below are read, so the helpers are stubbed. */
@@ -208,6 +339,7 @@ writeFileSync(resolve(OUT, 'social.json'), JSON.stringify(shape('social', social
 writeFileSync(resolve(OUT, 'meta.json'), JSON.stringify({
   flags: literal('FLAGS'), modules: literal('MODULES'), permGroups: literal('PERM_GROUPS'), empStates: literal('EMP_STATES'),
   supportLevels: literal('SUPPORT_LEVELS'), typeArchetypes, typeCapabilities: literal('CAPS'), selfFields: literal('SELF_FIELDS'),
+  timesheetFields, timesheetRepeats: literal('REPEATS'),
 }, null, 1) + '\n');
 console.log('seed written: qnipay', (qnipay.PEOPLE || []).length, 'people,', Object.keys(qnipay.TYPES || {}).length, 'types; social',
   (social.PEOPLE || []).length, 'people,', Object.keys(social.TYPES || {}).length, 'types');

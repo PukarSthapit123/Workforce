@@ -1568,6 +1568,1298 @@
     "history": []
    }
   },
-  "audit": {}
+  "audit": {},
+  "timesheetConfig": {
+   "timesheetConfig": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "timesheetConfig",
+    "rules": {
+     "maxDaily": 16,
+     "warnDaily": 10,
+     "minNet": 0.25,
+     "varianceWarn": 2,
+     "blockFuture": true,
+     "enforceRest": false,
+     "enforceLock": true,
+     "otDaily": 8,
+     "otWeekly": 40,
+     "nightFrom": "20:00",
+     "nightTo": "06:00"
+    },
+    "cutoff": "Monday 12:00",
+    "timeFormat": "HH:MM",
+    "returnReasonRequired": true,
+    "weekGrid": "times",
+    "weekLayout": "classic",
+    "fieldDefaults": {
+     "start": {
+      "vis": true,
+      "mand": false,
+      "label": "Start date & time"
+     },
+     "finish": {
+      "vis": true,
+      "mand": false,
+      "label": "Finish date & time"
+     },
+     "travel": {
+      "vis": true,
+      "mand": false,
+      "label": "Travel time"
+     },
+     "work_type": {
+      "vis": true,
+      "mand": false,
+      "label": "Rate type"
+     },
+     "shift_code": {
+      "vis": true,
+      "mand": false,
+      "label": "Rota line"
+     },
+     "project": {
+      "vis": true,
+      "mand": false,
+      "label": "Project"
+     },
+     "job_task": {
+      "vis": true,
+      "mand": false,
+      "label": "Project task"
+     },
+     "cost_c": {
+      "vis": true,
+      "mand": false,
+      "label": "Cost centre"
+     },
+     "billable": {
+      "vis": true,
+      "mand": false,
+      "label": "Billable"
+     },
+     "site": {
+      "vis": true,
+      "mand": false,
+      "label": "Office"
+     },
+     "vehicle": {
+      "vis": true,
+      "mand": false,
+      "label": "1st vehicle registration"
+     },
+     "movement": {
+      "vis": true,
+      "mand": false,
+      "label": "1st movement details"
+     },
+     "vehicle2": {
+      "vis": true,
+      "mand": false,
+      "label": "2nd vehicle registration"
+     },
+     "movement2": {
+      "vis": true,
+      "mand": false,
+      "label": "2nd movement details"
+     },
+     "vehicle3": {
+      "vis": true,
+      "mand": false,
+      "label": "3rd vehicle registration"
+     },
+     "movement3": {
+      "vis": true,
+      "mand": false,
+      "label": "3rd movement details"
+     },
+     "vehicle4": {
+      "vis": true,
+      "mand": false,
+      "label": "4th vehicle registration"
+     },
+     "movement4": {
+      "vis": true,
+      "mand": false,
+      "label": "4th movement details"
+     },
+     "drive": {
+      "vis": true,
+      "mand": false,
+      "label": "Drive time"
+     },
+     "poa": {
+      "vis": true,
+      "mand": false,
+      "label": "Period of availability"
+     },
+     "passenger": {
+      "vis": true,
+      "mand": false,
+      "label": "Passenger only?"
+     },
+     "codriver": {
+      "vis": true,
+      "mand": false,
+      "label": "Co-driver name"
+     },
+     "break_s": {
+      "vis": true,
+      "mand": false,
+      "label": "Break 1 start"
+     },
+     "break_e": {
+      "vis": true,
+      "mand": false,
+      "label": "Break 1 end"
+     },
+     "break_s2": {
+      "vis": true,
+      "mand": false,
+      "label": "Break 2 start"
+     },
+     "break_e2": {
+      "vis": true,
+      "mand": false,
+      "label": "Break 2 end"
+     },
+     "break_s3": {
+      "vis": true,
+      "mand": false,
+      "label": "Break 3 start"
+     },
+     "break_e3": {
+      "vis": true,
+      "mand": false,
+      "label": "Break 3 end"
+     },
+     "break_s4": {
+      "vis": true,
+      "mand": false,
+      "label": "Break 4 start"
+     },
+     "break_e4": {
+      "vis": true,
+      "mand": false,
+      "label": "Break 4 end"
+     },
+     "break_s5": {
+      "vis": true,
+      "mand": false,
+      "label": "Break 5 start"
+     },
+     "break_e5": {
+      "vis": true,
+      "mand": false,
+      "label": "Break 5 end"
+     },
+     "overtime": {
+      "vis": true,
+      "mand": false,
+      "label": "Overtime worked beyond the shift"
+     },
+     "late_fin": {
+      "vis": true,
+      "mand": false,
+      "label": "Late finish (finish after 20:00)"
+     },
+     "unsocial": {
+      "vis": true,
+      "mand": false,
+      "label": "Unsocial hours (work 00:00–05:00)"
+     },
+     "call_out": {
+      "vis": true,
+      "mand": false,
+      "label": "Called out from standby"
+     },
+     "site_allow": {
+      "vis": true,
+      "mand": false,
+      "label": "Site allowance"
+     },
+     "sleep_in": {
+      "vis": true,
+      "mand": false,
+      "label": "Sleep-in shift"
+     },
+     "waking_night": {
+      "vis": true,
+      "mand": false,
+      "label": "Waking night shift"
+     },
+     "on_call": {
+      "vis": true,
+      "mand": false,
+      "label": "On-call standby"
+     },
+     "night_out": {
+      "vis": true,
+      "mand": false,
+      "label": "Stayed out overnight?"
+     },
+     "rapid": {
+      "vis": true,
+      "mand": false,
+      "label": "Rapid response"
+     },
+     "t75": {
+      "vis": true,
+      "mand": false,
+      "label": "7.5T allowance"
+     },
+     "notes": {
+      "vis": true,
+      "mand": false,
+      "label": "Notes"
+     },
+     "dept": {
+      "vis": true,
+      "mand": false,
+      "label": "Department"
+     },
+     "work_order": {
+      "vis": true,
+      "mand": false,
+      "label": "Work order / job no."
+     },
+     "mileage": {
+      "vis": true,
+      "mand": false,
+      "label": "Business mileage (miles)"
+     },
+     "training_hours": {
+      "vis": true,
+      "mand": false,
+      "label": "Training hours"
+     },
+     "plant": {
+      "vis": true,
+      "mand": false,
+      "label": "Plant / equipment used"
+     },
+     "ppe": {
+      "vis": true,
+      "mand": false,
+      "label": "Safety briefing / PPE check done"
+     },
+     "lone_work": {
+      "vis": true,
+      "mand": false,
+      "label": "Lone-working check-in completed"
+     },
+     "visits": {
+      "vis": true,
+      "mand": false,
+      "label": "Visits / sessions completed"
+     },
+     "handover": {
+      "vis": true,
+      "mand": false,
+      "label": "Handover notes"
+     },
+     "client_sign": {
+      "vis": true,
+      "mand": false,
+      "label": "Client signature captured"
+     }
+    },
+    "allowances": {
+     "LATE_FINISH": {
+      "code": "LATE_FINISH",
+      "label": "Late finish",
+      "payCode": "LATE_FINISH",
+      "tier": "core",
+      "element": "PE-LATE",
+      "basis": "flat"
+     },
+     "UNSOCIAL": {
+      "code": "UNSOCIAL",
+      "label": "Unsocial hours",
+      "payCode": "UNSOCIAL",
+      "tier": "core",
+      "element": "PE-UNSOCIAL",
+      "basis": "flat"
+     },
+     "CALL_OUT": {
+      "code": "CALL_OUT",
+      "label": "Call-out",
+      "payCode": "CALL_OUT",
+      "tier": "core",
+      "element": "PE-CALL",
+      "basis": "flat"
+     },
+     "SITE_ALLOW": {
+      "code": "SITE_ALLOW",
+      "label": "Site allowance",
+      "payCode": "SITE_ALLOW",
+      "tier": "site",
+      "element": "PE-SITE",
+      "basis": "flat"
+     },
+     "SLEEP_IN": {
+      "code": "SLEEP_IN",
+      "label": "Sleep-in",
+      "payCode": "SLEEP_IN",
+      "tier": "shift",
+      "element": "PE-SLEEP",
+      "basis": "flat"
+     },
+     "WAKING_NIGHT": {
+      "code": "WAKING_NIGHT",
+      "label": "Waking night",
+      "payCode": "WAKING_NIGHT",
+      "tier": "shift",
+      "element": "PE-WAKING",
+      "basis": "flat"
+     },
+     "ON_CALL": {
+      "code": "ON_CALL",
+      "label": "On-call standby",
+      "payCode": "ON_CALL",
+      "tier": "core",
+      "element": "PE-ON",
+      "basis": "flat"
+     },
+     "NIGHT_OUT": {
+      "code": "NIGHT_OUT",
+      "label": "Night out",
+      "payCode": "NIGHT_OUT",
+      "tier": "logistics",
+      "element": "PE-NIGHT",
+      "basis": "flat"
+     },
+     "RAPID": {
+      "code": "RAPID",
+      "label": "Rapid response",
+      "payCode": "RAPID",
+      "tier": "logistics",
+      "element": "PE-RAPID",
+      "basis": "flat"
+     },
+     "T75_ALLOW": {
+      "code": "T75_ALLOW",
+      "label": "7.5T allowance",
+      "payCode": "T75_ALLOW",
+      "tier": "logistics",
+      "element": "PE-T75",
+      "basis": "flat"
+     }
+    },
+    "types": {
+     "salaried": {
+      "fields": {
+       "start": {
+        "vis": true,
+        "mand": true
+       },
+       "finish": {
+        "vis": true,
+        "mand": false
+       },
+       "notes": {
+        "vis": true,
+        "mand": false
+       },
+       "dept": {
+        "vis": true,
+        "mand": false
+       },
+       "training_hours": {
+        "vis": true,
+        "mand": false
+       },
+       "project": {
+        "vis": true,
+        "mand": false
+       },
+       "job_task": {
+        "vis": true,
+        "mand": false
+       },
+       "cost_c": {
+        "vis": true,
+        "mand": false
+       },
+       "billable": {
+        "vis": true,
+        "mand": false
+       },
+       "work_type": {
+        "vis": true,
+        "mand": false
+       }
+      },
+      "allowances": [
+       "OT15"
+      ],
+      "rules": [
+       {
+        "trigger": "Everything else",
+        "when": "else",
+        "code": "STD",
+        "value": "1×",
+        "how": "Auto (BC)"
+       }
+      ],
+      "overtime": null
+     },
+     "hourly": {
+      "fields": {
+       "start": {
+        "vis": true,
+        "mand": true
+       },
+       "finish": {
+        "vis": true,
+        "mand": true
+       },
+       "notes": {
+        "vis": true,
+        "mand": false
+       },
+       "dept": {
+        "vis": true,
+        "mand": false
+       },
+       "break_s": {
+        "vis": true,
+        "mand": false
+       },
+       "break_e": {
+        "vis": true,
+        "mand": false
+       },
+       "break_s2": {
+        "vis": true,
+        "mand": false
+       },
+       "break_e2": {
+        "vis": true,
+        "mand": false
+       },
+       "break_s3": {
+        "vis": true,
+        "mand": false
+       },
+       "break_e3": {
+        "vis": true,
+        "mand": false
+       },
+       "break_s4": {
+        "vis": true,
+        "mand": false
+       },
+       "break_e4": {
+        "vis": true,
+        "mand": false
+       },
+       "break_s5": {
+        "vis": true,
+        "mand": false
+       },
+       "break_e5": {
+        "vis": true,
+        "mand": false
+       },
+       "mileage": {
+        "vis": true,
+        "mand": false
+       },
+       "project": {
+        "vis": true,
+        "mand": false
+       },
+       "job_task": {
+        "vis": true,
+        "mand": false
+       },
+       "cost_c": {
+        "vis": true,
+        "mand": false
+       },
+       "billable": {
+        "vis": true,
+        "mand": false
+       },
+       "work_type": {
+        "vis": true,
+        "mand": false
+       }
+      },
+      "allowances": [
+       "OT15",
+       "LATE_FINISH",
+       "UNSOCIAL",
+       "CALL_OUT"
+      ],
+      "rules": [
+       {
+        "trigger": "Everything else",
+        "when": "else",
+        "code": "STD",
+        "value": "1×",
+        "how": "Auto (BC)"
+       }
+      ],
+      "overtime": {
+       "threshold": 40,
+       "multiplier": 1.5,
+       "weekendMultiplier": 1.5
+      }
+     }
+    }
+   }
+  },
+  "payCodes": {
+   "pc_STD": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "pc_STD",
+    "code": "STD",
+    "basis": "multiplier",
+    "value": "1",
+    "element": "PE-STD",
+    "label": "Standard time",
+    "workType": true
+   },
+   "pc_OT15": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "pc_OT15",
+    "code": "OT15",
+    "basis": "multiplier",
+    "value": "1.5",
+    "element": "PE-OT15",
+    "label": "Overtime 1.5×",
+    "workType": true
+   },
+   "pc_OT20": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "pc_OT20",
+    "code": "OT20",
+    "basis": "multiplier",
+    "value": "2",
+    "element": "PE-OT20",
+    "label": "Overtime 2×",
+    "workType": true
+   },
+   "pc_OT-WD": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "pc_OT-WD",
+    "code": "OT-WD",
+    "basis": "multiplier",
+    "value": "1.5",
+    "element": "PE-OTWD",
+    "label": "Overtime — Mon–Fri",
+    "workType": true
+   },
+   "pc_OT-SAT": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "pc_OT-SAT",
+    "code": "OT-SAT",
+    "basis": "multiplier",
+    "value": "1.5",
+    "element": "PE-OTSAT",
+    "label": "Overtime — Saturday",
+    "workType": true
+   },
+   "pc_OT-SUN": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "pc_OT-SUN",
+    "code": "OT-SUN",
+    "basis": "multiplier",
+    "value": "2",
+    "element": "PE-OTSUN",
+    "label": "Overtime — Sunday",
+    "workType": true
+   },
+   "pc_NIGHT": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "pc_NIGHT",
+    "code": "NIGHT",
+    "basis": "multiplier",
+    "value": "1.5",
+    "element": "PE-NIGHT",
+    "label": "Night work",
+    "workType": true
+   },
+   "pc_TRAVEL": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "pc_TRAVEL",
+    "code": "TRAVEL",
+    "basis": "multiplier",
+    "value": "1",
+    "element": "PE-TRAVEL",
+    "label": "Travel time",
+    "workType": true
+   },
+   "pc_DAY_RATE": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "pc_DAY_RATE",
+    "code": "DAY_RATE",
+    "basis": "days",
+    "value": "1",
+    "element": "PE-DAY",
+    "label": "Day rate",
+    "workType": false
+   },
+   "pc_UNSOC": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "pc_UNSOC",
+    "code": "UNSOC",
+    "basis": "flat",
+    "value": "",
+    "element": "PE-UNSOC",
+    "label": "Unsocial hours",
+    "workType": false
+   },
+   "pc_ABS": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "pc_ABS",
+    "code": "ABS",
+    "basis": "units",
+    "value": "1",
+    "element": "PE-ABS",
+    "label": "Absence",
+    "workType": false
+   },
+   "pc_LVE": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "pc_LVE",
+    "code": "LVE",
+    "basis": "units",
+    "value": "1",
+    "element": "PE-LVE",
+    "label": "Leave",
+    "workType": false
+   },
+   "pc_SSP": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "pc_SSP",
+    "code": "SSP",
+    "basis": "units",
+    "value": "1",
+    "element": "PE-SSP",
+    "label": "Statutory sick pay",
+    "workType": false
+   }
+  },
+  "timesheetDays": {
+   "tsd_EMP004_2026-08-12": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsd_EMP004_2026-08-12",
+    "personCode": "EMP004",
+    "date": "2026-08-12",
+    "state": "pend",
+    "entries": [
+     {
+      "start": "07:00",
+      "finish": "15:00",
+      "breaks": [
+       {
+        "start": "11:00",
+        "end": "11:30"
+       }
+      ],
+      "fields": {}
+     }
+    ],
+    "workType": "STD",
+    "allowances": [],
+    "shift": "E",
+    "nonWorkingReason": "",
+    "captureSource": "self",
+    "enteredBy": "EMP004",
+    "submittedAt": "2026-08-12T14:20:00.000Z",
+    "returnReason": "",
+    "warnings": [],
+    "history": [
+     {
+      "from": "draft",
+      "to": "pend",
+      "by": {
+       "personCode": "EMP004",
+       "name": "Bigyan Poudel"
+      },
+      "at": "2026-08-12T14:20:00.000Z",
+      "reason": ""
+     }
+    ],
+    "integrationAttemptId": ""
+   },
+   "tsd_EMP005_2026-08-11": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsd_EMP005_2026-08-11",
+    "personCode": "EMP005",
+    "date": "2026-08-11",
+    "state": "pend",
+    "entries": [
+     {
+      "start": "22:00",
+      "finish": "07:00",
+      "breaks": [],
+      "fields": {}
+     }
+    ],
+    "workType": "STD",
+    "allowances": [
+     "WAKING_NIGHT"
+    ],
+    "shift": "N",
+    "nonWorkingReason": "",
+    "captureSource": "self",
+    "enteredBy": "EMP005",
+    "submittedAt": "2026-08-12T07:04:00.000Z",
+    "returnReason": "",
+    "warnings": [],
+    "history": [
+     {
+      "from": "draft",
+      "to": "pend",
+      "by": {
+       "personCode": "EMP005",
+       "name": "Bijay Shrestha"
+      },
+      "at": "2026-08-12T07:04:00.000Z",
+      "reason": ""
+     }
+    ],
+    "integrationAttemptId": ""
+   },
+   "tsd_EMP007_2026-08-10": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsd_EMP007_2026-08-10",
+    "personCode": "EMP007",
+    "date": "2026-08-10",
+    "state": "pend",
+    "entries": [
+     {
+      "start": "22:00",
+      "finish": "07:30",
+      "breaks": [],
+      "fields": {}
+     }
+    ],
+    "workType": "STD",
+    "allowances": [
+     "UNSOC"
+    ],
+    "shift": "N",
+    "nonWorkingReason": "",
+    "captureSource": "self",
+    "enteredBy": "EMP007",
+    "submittedAt": "2026-08-11T06:55:00.000Z",
+    "returnReason": "",
+    "warnings": [],
+    "history": [
+     {
+      "from": "draft",
+      "to": "pend",
+      "by": {
+       "personCode": "EMP007",
+       "name": "Jamir Maharjan"
+      },
+      "at": "2026-08-11T06:55:00.000Z",
+      "reason": ""
+     }
+    ],
+    "integrationAttemptId": ""
+   },
+   "tsd_EMP009_2026-08-10": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsd_EMP009_2026-08-10",
+    "personCode": "EMP009",
+    "date": "2026-08-10",
+    "state": "ok",
+    "entries": [
+     {
+      "start": "07:00",
+      "finish": "15:00",
+      "breaks": [
+       {
+        "start": "11:00",
+        "end": "11:30"
+       }
+      ],
+      "fields": {}
+     }
+    ],
+    "workType": "STD",
+    "allowances": [],
+    "shift": "E",
+    "nonWorkingReason": "",
+    "captureSource": "self",
+    "enteredBy": "EMP009",
+    "submittedAt": "2026-08-10T14:10:00.000Z",
+    "returnReason": "",
+    "warnings": [],
+    "history": [
+     {
+      "from": "draft",
+      "to": "pend",
+      "by": {
+       "personCode": "EMP009",
+       "name": "KATHERINE HULL"
+      },
+      "at": "2026-08-10T14:10:00.000Z",
+      "reason": ""
+     },
+     {
+      "from": "pend",
+      "to": "ok",
+      "by": {
+       "personCode": "EMP014",
+       "name": "Manish Nepal"
+      },
+      "at": "2026-08-11T14:10:00.000Z",
+      "reason": ""
+     }
+    ],
+    "integrationAttemptId": "int_ts4"
+   },
+   "tsd_EMP010_2026-08-12": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsd_EMP010_2026-08-12",
+    "personCode": "EMP010",
+    "date": "2026-08-12",
+    "state": "ok",
+    "entries": [
+     {
+      "start": "14:30",
+      "finish": "22:00",
+      "breaks": [],
+      "fields": {}
+     }
+    ],
+    "workType": "STD",
+    "allowances": [],
+    "shift": "L",
+    "nonWorkingReason": "",
+    "captureSource": "self",
+    "enteredBy": "EMP010",
+    "submittedAt": "2026-08-12T21:12:00.000Z",
+    "returnReason": "",
+    "warnings": [],
+    "history": [
+     {
+      "from": "draft",
+      "to": "pend",
+      "by": {
+       "personCode": "EMP010",
+       "name": "Lina Townsend"
+      },
+      "at": "2026-08-12T21:12:00.000Z",
+      "reason": ""
+     },
+     {
+      "from": "pend",
+      "to": "ok",
+      "by": {
+       "personCode": "EMP014",
+       "name": "Manish Nepal"
+      },
+      "at": "2026-08-13T08:00:00.000Z",
+      "reason": ""
+     }
+    ],
+    "integrationAttemptId": "int_ts5"
+   },
+   "tsd_EMP011_2026-08-10": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsd_EMP011_2026-08-10",
+    "personCode": "EMP011",
+    "date": "2026-08-10",
+    "state": "back",
+    "entries": [
+     {
+      "start": "14:30",
+      "finish": "22:00",
+      "breaks": [],
+      "fields": {}
+     }
+    ],
+    "workType": "STD",
+    "allowances": [],
+    "shift": "L",
+    "nonWorkingReason": "",
+    "captureSource": "proxy",
+    "enteredBy": "EMP014",
+    "submittedAt": "2026-08-11T08:30:00.000Z",
+    "returnReason": "Break times missing. Please add and resubmit.",
+    "warnings": [],
+    "history": [
+     {
+      "from": "draft",
+      "to": "pend",
+      "by": {
+       "personCode": "EMP014",
+       "name": "Manish Nepal"
+      },
+      "at": "2026-08-11T08:30:00.000Z",
+      "reason": "Submitted on their behalf"
+     },
+     {
+      "from": "pend",
+      "to": "back",
+      "by": {
+       "personCode": "EMP014",
+       "name": "Manish Nepal"
+      },
+      "at": "2026-08-12T08:30:00.000Z",
+      "reason": "Break times missing. Please add and resubmit."
+     }
+    ],
+    "integrationAttemptId": ""
+   },
+   "tsd_EMP004_2026-08-03": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsd_EMP004_2026-08-03",
+    "personCode": "EMP004",
+    "date": "2026-08-03",
+    "state": "draft",
+    "workType": "STD",
+    "allowances": [],
+    "shift": "",
+    "entries": [
+     {
+      "start": "09:00",
+      "finish": "17:00",
+      "breaks": [
+       {
+        "start": "12:30",
+        "end": "13:00"
+       }
+      ],
+      "fields": {}
+     }
+    ],
+    "nonWorkingReason": "",
+    "captureSource": "self",
+    "enteredBy": "EMP004",
+    "submittedAt": "",
+    "returnReason": "",
+    "warnings": [],
+    "history": [],
+    "integrationAttemptId": ""
+   },
+   "tsd_EMP004_2026-08-04": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsd_EMP004_2026-08-04",
+    "personCode": "EMP004",
+    "date": "2026-08-04",
+    "state": "draft",
+    "workType": "STD",
+    "allowances": [],
+    "shift": "",
+    "entries": [
+     {
+      "start": "09:00",
+      "finish": "17:00",
+      "breaks": [
+       {
+        "start": "12:30",
+        "end": "13:00"
+       }
+      ],
+      "fields": {}
+     }
+    ],
+    "nonWorkingReason": "",
+    "captureSource": "self",
+    "enteredBy": "EMP004",
+    "submittedAt": "",
+    "returnReason": "",
+    "warnings": [],
+    "history": [],
+    "integrationAttemptId": ""
+   },
+   "tsd_EMP004_2026-08-05": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsd_EMP004_2026-08-05",
+    "personCode": "EMP004",
+    "date": "2026-08-05",
+    "state": "draft",
+    "workType": "STD",
+    "allowances": [],
+    "shift": "",
+    "entries": [
+     {
+      "start": "09:00",
+      "finish": "17:00",
+      "breaks": [
+       {
+        "start": "12:30",
+        "end": "13:00"
+       }
+      ],
+      "fields": {}
+     }
+    ],
+    "nonWorkingReason": "",
+    "captureSource": "self",
+    "enteredBy": "EMP004",
+    "submittedAt": "",
+    "returnReason": "",
+    "warnings": [],
+    "history": [],
+    "integrationAttemptId": ""
+   },
+   "tsd_EMP004_2026-08-06": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsd_EMP004_2026-08-06",
+    "personCode": "EMP004",
+    "date": "2026-08-06",
+    "state": "draft",
+    "workType": "STD",
+    "allowances": [],
+    "shift": "",
+    "entries": [
+     {
+      "start": "09:00",
+      "finish": "17:00",
+      "breaks": [
+       {
+        "start": "12:30",
+        "end": "13:00"
+       }
+      ],
+      "fields": {}
+     }
+    ],
+    "nonWorkingReason": "",
+    "captureSource": "self",
+    "enteredBy": "EMP004",
+    "submittedAt": "",
+    "returnReason": "",
+    "warnings": [],
+    "history": [],
+    "integrationAttemptId": ""
+   },
+   "tsd_EMP004_2026-08-07": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsd_EMP004_2026-08-07",
+    "personCode": "EMP004",
+    "date": "2026-08-07",
+    "state": "draft",
+    "workType": "STD",
+    "allowances": [],
+    "shift": "",
+    "entries": [
+     {
+      "start": "09:00",
+      "finish": "17:00",
+      "breaks": [
+       {
+        "start": "12:30",
+        "end": "13:00"
+       }
+      ],
+      "fields": {}
+     }
+    ],
+    "nonWorkingReason": "",
+    "captureSource": "self",
+    "enteredBy": "EMP004",
+    "submittedAt": "",
+    "returnReason": "",
+    "warnings": [],
+    "history": [],
+    "integrationAttemptId": ""
+   },
+   "tsd_EMP004_2026-07-27": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsd_EMP004_2026-07-27",
+    "personCode": "EMP004",
+    "date": "2026-07-27",
+    "state": "draft",
+    "workType": "STD",
+    "allowances": [],
+    "shift": "",
+    "entries": [
+     {
+      "start": "09:00",
+      "finish": "17:00",
+      "breaks": [
+       {
+        "start": "12:30",
+        "end": "13:00"
+       }
+      ],
+      "fields": {}
+     }
+    ],
+    "nonWorkingReason": "",
+    "captureSource": "self",
+    "enteredBy": "EMP004",
+    "submittedAt": "",
+    "returnReason": "",
+    "warnings": [],
+    "history": [],
+    "integrationAttemptId": ""
+   },
+   "tsd_EMP004_2026-07-28": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsd_EMP004_2026-07-28",
+    "personCode": "EMP004",
+    "date": "2026-07-28",
+    "state": "draft",
+    "workType": "STD",
+    "allowances": [],
+    "shift": "",
+    "entries": [
+     {
+      "start": "09:00",
+      "finish": "17:00",
+      "breaks": [
+       {
+        "start": "12:30",
+        "end": "13:00"
+       }
+      ],
+      "fields": {}
+     }
+    ],
+    "nonWorkingReason": "",
+    "captureSource": "self",
+    "enteredBy": "EMP004",
+    "submittedAt": "",
+    "returnReason": "",
+    "warnings": [],
+    "history": [],
+    "integrationAttemptId": ""
+   },
+   "tsd_EMP004_2026-07-29": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsd_EMP004_2026-07-29",
+    "personCode": "EMP004",
+    "date": "2026-07-29",
+    "state": "draft",
+    "workType": "STD",
+    "allowances": [],
+    "shift": "",
+    "entries": [
+     {
+      "start": "09:00",
+      "finish": "17:00",
+      "breaks": [
+       {
+        "start": "12:30",
+        "end": "13:00"
+       }
+      ],
+      "fields": {}
+     }
+    ],
+    "nonWorkingReason": "",
+    "captureSource": "self",
+    "enteredBy": "EMP004",
+    "submittedAt": "",
+    "returnReason": "",
+    "warnings": [],
+    "history": [],
+    "integrationAttemptId": ""
+   },
+   "tsd_EMP004_2026-07-30": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsd_EMP004_2026-07-30",
+    "personCode": "EMP004",
+    "date": "2026-07-30",
+    "state": "draft",
+    "workType": "STD",
+    "allowances": [],
+    "shift": "",
+    "entries": [
+     {
+      "start": "09:00",
+      "finish": "17:00",
+      "breaks": [
+       {
+        "start": "12:30",
+        "end": "13:00"
+       }
+      ],
+      "fields": {}
+     }
+    ],
+    "nonWorkingReason": "",
+    "captureSource": "self",
+    "enteredBy": "EMP004",
+    "submittedAt": "",
+    "returnReason": "",
+    "warnings": [],
+    "history": [],
+    "integrationAttemptId": ""
+   }
+  },
+  "integrationAttempts": {
+   "int_ts4": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "int_ts4",
+    "event": "Post to buffer",
+    "ref": "KATHERINE HULL · 10/08/2026",
+    "summary": "STD 7.5h",
+    "state": "posted",
+    "attempt": 1,
+    "simulated": true,
+    "dayId": "tsd_EMP009_2026-08-10",
+    "at": "2026-08-11T14:10:00.000Z"
+   },
+   "int_ts5": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "int_ts5",
+    "event": "Post to buffer",
+    "ref": "Lina Townsend · 12/08/2026",
+    "summary": "STD 7.5h",
+    "state": "posted",
+    "attempt": 1,
+    "simulated": true,
+    "dayId": "tsd_EMP010_2026-08-12",
+    "at": "2026-08-13T08:00:00.000Z"
+   },
+   "int_a1f3": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "int_a1f3",
+    "event": "Post to buffer",
+    "ref": "Batch WK32 · generic API",
+    "summary": "14h",
+    "state": "failed",
+    "attempt": 1,
+    "simulated": true,
+    "cause": "Line 2: unknown cost centre CC-991",
+    "reason": "Line 2: unknown cost centre CC-991",
+    "dayId": "",
+    "at": "2026-08-10T08:47:00.000Z"
+   }
+  }
  }
 }

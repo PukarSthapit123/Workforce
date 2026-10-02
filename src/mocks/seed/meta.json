@@ -517,5 +517,671 @@
    "type": "text",
    "sens": true
   }
- ]
+ ],
+ "timesheetFields": [
+  {
+   "c": "start",
+   "tier": "core",
+   "label": "Start date & time",
+   "cat": "Time",
+   "input": "text",
+   "t": "time",
+   "val": "07:00",
+   "grp": "core"
+  },
+  {
+   "c": "finish",
+   "tier": "core",
+   "label": "Finish date & time",
+   "cat": "Time",
+   "input": "text",
+   "t": "time",
+   "val": "15:00",
+   "grp": "core"
+  },
+  {
+   "c": "travel",
+   "tier": "core",
+   "label": "Travel time",
+   "cat": "Time",
+   "input": "text",
+   "t": "duration",
+   "val": "",
+   "grp": "core"
+  },
+  {
+   "c": "work_type",
+   "tier": "core",
+   "label": "Rate type",
+   "cat": "Time",
+   "input": "select",
+   "opts": [],
+   "grp": "core"
+  },
+  {
+   "c": "shift_code",
+   "tier": "shift",
+   "label": "Rota line",
+   "cat": "Shift",
+   "input": "select",
+   "opts": [
+    "Early · 07:00–15:00",
+    "Late · 14:30–22:00",
+    "Night · 22:00–07:00"
+   ],
+   "flag": "SHIFT",
+   "req": "shift",
+   "grp": "core"
+  },
+  {
+   "c": "project",
+   "tier": "project",
+   "label": "Project",
+   "cat": "Project",
+   "input": "select",
+   "opts": [
+    "Camden Supported Living",
+    "Northgate Fit-out",
+    "GoFibre Rollout",
+    "Internal"
+   ],
+   "flag": "PROJECT",
+   "req": "project",
+   "grp": "alloc"
+  },
+  {
+   "c": "job_task",
+   "tier": "project",
+   "label": "Job task",
+   "cat": "Project",
+   "input": "select",
+   "opts": [
+    "One-to-one support",
+    "Group activity",
+    "Appointment escort",
+    "Handover & records"
+   ],
+   "flag": "PROJECT",
+   "req": "project",
+   "grp": "alloc"
+  },
+  {
+   "c": "cost_c",
+   "tier": "project",
+   "label": "Cost centre",
+   "cat": "Project",
+   "input": "select",
+   "opts": [
+    "WH-CAM-01",
+    "BC-ISL-02",
+    "RL-HAC-03",
+    "FS-NOR-04",
+    "CC-104",
+    "CC-220"
+   ],
+   "flag": "PROJECT",
+   "req": "project",
+   "grp": "alloc"
+  },
+  {
+   "c": "billable",
+   "tier": "project",
+   "label": "Billable",
+   "cat": "Project",
+   "input": "check",
+   "flag": "PROJECT",
+   "req": "project",
+   "grp": "alloc"
+  },
+  {
+   "c": "site",
+   "tier": "site",
+   "label": "Location",
+   "cat": "Location",
+   "input": "select",
+   "opts": [
+    "Willow House",
+    "Beacon Court",
+    "Rowan Lodge",
+    "Floating Support",
+    "London Gateway",
+    "Slough Depot",
+    "Manchester Hub"
+   ],
+   "mod": "C",
+   "req": "site",
+   "grp": "alloc"
+  },
+  {
+   "c": "vehicle",
+   "tier": "logistics",
+   "label": "1st vehicle registration",
+   "cat": "Vehicle",
+   "input": "select",
+   "opts": [
+    "KU75 XSC",
+    "LG24 WRT",
+    "MN71 KLP"
+   ],
+   "flag": "VEHICLE",
+   "driverOnly": true,
+   "grp": "vehicle",
+   "repeat": "vehicle",
+   "seq": 1
+  },
+  {
+   "c": "movement",
+   "tier": "logistics",
+   "label": "1st movement details",
+   "cat": "Vehicle",
+   "input": "text",
+   "val": "WH – Heysham – WH (onsite work)",
+   "flag": "VEHICLE",
+   "driverOnly": true,
+   "grp": "vehicle",
+   "repeat": "vehicle",
+   "seq": 1
+  },
+  {
+   "c": "vehicle2",
+   "tier": "logistics",
+   "label": "2nd vehicle registration",
+   "cat": "Vehicle",
+   "input": "select",
+   "opts": [
+    "—",
+    "KU75 XSC",
+    "LG24 WRT",
+    "MN71 KLP"
+   ],
+   "flag": "VEHICLE",
+   "driverOnly": true,
+   "grp": "vehicle",
+   "repeat": "vehicle",
+   "seq": 2
+  },
+  {
+   "c": "movement2",
+   "tier": "logistics",
+   "label": "2nd movement details",
+   "cat": "Vehicle",
+   "input": "text",
+   "val": "",
+   "flag": "VEHICLE",
+   "driverOnly": true,
+   "grp": "vehicle",
+   "repeat": "vehicle",
+   "seq": 2
+  },
+  {
+   "c": "vehicle3",
+   "tier": "logistics",
+   "label": "3rd vehicle registration",
+   "cat": "Vehicle",
+   "input": "select",
+   "opts": [
+    "—",
+    "KU75 XSC",
+    "LG24 WRT",
+    "MN71 KLP"
+   ],
+   "flag": "VEHICLE",
+   "driverOnly": true,
+   "grp": "vehicle",
+   "repeat": "vehicle",
+   "seq": 3
+  },
+  {
+   "c": "movement3",
+   "tier": "logistics",
+   "label": "3rd movement details",
+   "cat": "Vehicle",
+   "input": "text",
+   "val": "",
+   "flag": "VEHICLE",
+   "driverOnly": true,
+   "grp": "vehicle",
+   "repeat": "vehicle",
+   "seq": 3
+  },
+  {
+   "c": "vehicle4",
+   "tier": "logistics",
+   "label": "4th vehicle registration",
+   "cat": "Vehicle",
+   "input": "select",
+   "opts": [
+    "—",
+    "KU75 XSC",
+    "LG24 WRT",
+    "MN71 KLP"
+   ],
+   "flag": "VEHICLE",
+   "driverOnly": true,
+   "grp": "vehicle",
+   "repeat": "vehicle",
+   "seq": 4
+  },
+  {
+   "c": "movement4",
+   "tier": "logistics",
+   "label": "4th movement details",
+   "cat": "Vehicle",
+   "input": "text",
+   "val": "",
+   "flag": "VEHICLE",
+   "driverOnly": true,
+   "grp": "vehicle",
+   "repeat": "vehicle",
+   "seq": 4
+  },
+  {
+   "c": "drive",
+   "tier": "logistics",
+   "label": "Drive time",
+   "cat": "Compliance",
+   "input": "calc",
+   "val": "3h 00m",
+   "src": "from tachograph / movement",
+   "driverOnly": true,
+   "grp": "driving"
+  },
+  {
+   "c": "poa",
+   "tier": "logistics",
+   "label": "Period of availability",
+   "cat": "Compliance",
+   "input": "text",
+   "t": "duration",
+   "val": "0h 00m",
+   "driverOnly": true,
+   "grp": "driving"
+  },
+  {
+   "c": "passenger",
+   "tier": "logistics",
+   "label": "Passenger only?",
+   "cat": "Compliance",
+   "input": "check",
+   "driverOnly": true,
+   "grp": "driving"
+  },
+  {
+   "c": "codriver",
+   "tier": "logistics",
+   "label": "Co-driver name",
+   "cat": "Compliance",
+   "input": "text",
+   "val": "",
+   "driverOnly": true,
+   "grp": "driving"
+  },
+  {
+   "c": "break_s",
+   "tier": "core",
+   "label": "Break 1 start",
+   "cat": "Breaks",
+   "input": "text",
+   "t": "time",
+   "val": "",
+   "flag": "BREAKS",
+   "grp": "breaks",
+   "repeat": "breaks",
+   "seq": 1
+  },
+  {
+   "c": "break_e",
+   "tier": "core",
+   "label": "Break 1 end",
+   "cat": "Breaks",
+   "input": "text",
+   "t": "time",
+   "val": "",
+   "flag": "BREAKS",
+   "grp": "breaks",
+   "repeat": "breaks",
+   "seq": 1
+  },
+  {
+   "c": "break_s2",
+   "tier": "core",
+   "label": "Break 2 start",
+   "cat": "Breaks",
+   "input": "text",
+   "t": "time",
+   "val": "",
+   "flag": "BREAKS",
+   "grp": "breaks",
+   "repeat": "breaks",
+   "seq": 2
+  },
+  {
+   "c": "break_e2",
+   "tier": "core",
+   "label": "Break 2 end",
+   "cat": "Breaks",
+   "input": "text",
+   "t": "time",
+   "val": "",
+   "flag": "BREAKS",
+   "grp": "breaks",
+   "repeat": "breaks",
+   "seq": 2
+  },
+  {
+   "c": "break_s3",
+   "tier": "core",
+   "label": "Break 3 start",
+   "cat": "Breaks",
+   "input": "text",
+   "t": "time",
+   "val": "",
+   "flag": "BREAKS",
+   "grp": "breaks",
+   "repeat": "breaks",
+   "seq": 3
+  },
+  {
+   "c": "break_e3",
+   "tier": "core",
+   "label": "Break 3 end",
+   "cat": "Breaks",
+   "input": "text",
+   "t": "time",
+   "val": "",
+   "flag": "BREAKS",
+   "grp": "breaks",
+   "repeat": "breaks",
+   "seq": 3
+  },
+  {
+   "c": "break_s4",
+   "tier": "core",
+   "label": "Break 4 start",
+   "cat": "Breaks",
+   "input": "text",
+   "t": "time",
+   "val": "",
+   "flag": "BREAKS",
+   "grp": "breaks",
+   "repeat": "breaks",
+   "seq": 4
+  },
+  {
+   "c": "break_e4",
+   "tier": "core",
+   "label": "Break 4 end",
+   "cat": "Breaks",
+   "input": "text",
+   "t": "time",
+   "val": "",
+   "flag": "BREAKS",
+   "grp": "breaks",
+   "repeat": "breaks",
+   "seq": 4
+  },
+  {
+   "c": "break_s5",
+   "tier": "core",
+   "label": "Break 5 start",
+   "cat": "Breaks",
+   "input": "text",
+   "t": "time",
+   "val": "",
+   "flag": "BREAKS",
+   "grp": "breaks",
+   "repeat": "breaks",
+   "seq": 5
+  },
+  {
+   "c": "break_e5",
+   "tier": "core",
+   "label": "Break 5 end",
+   "cat": "Breaks",
+   "input": "text",
+   "t": "time",
+   "val": "",
+   "flag": "BREAKS",
+   "grp": "breaks",
+   "repeat": "breaks",
+   "seq": 5
+  },
+  {
+   "c": "overtime",
+   "tier": "core",
+   "label": "Overtime worked beyond the shift",
+   "cat": "Allowance",
+   "input": "check",
+   "pay": "OT15",
+   "grp": "allow"
+  },
+  {
+   "c": "late_fin",
+   "tier": "core",
+   "label": "Late finish (finish after 20:00)",
+   "cat": "Allowance",
+   "input": "check",
+   "pay": "LATE_FINISH",
+   "grp": "allow"
+  },
+  {
+   "c": "unsocial",
+   "tier": "core",
+   "label": "Unsocial hours (work 00:00–05:00)",
+   "cat": "Allowance",
+   "input": "check",
+   "pay": "UNSOCIAL",
+   "grp": "allow"
+  },
+  {
+   "c": "call_out",
+   "tier": "core",
+   "label": "Called out from standby",
+   "cat": "Allowance",
+   "input": "check",
+   "pay": "CALL_OUT",
+   "grp": "allow"
+  },
+  {
+   "c": "site_allow",
+   "tier": "site",
+   "label": "Site allowance",
+   "cat": "Allowance",
+   "input": "check",
+   "pay": "SITE_ALLOW",
+   "grp": "allow"
+  },
+  {
+   "c": "sleep_in",
+   "tier": "shift",
+   "label": "Sleep-in shift",
+   "cat": "Allowance",
+   "input": "check",
+   "pay": "SLEEP_IN",
+   "grp": "allow"
+  },
+  {
+   "c": "waking_night",
+   "tier": "shift",
+   "label": "Waking night shift",
+   "cat": "Allowance",
+   "input": "check",
+   "pay": "WAKING_NIGHT",
+   "grp": "allow"
+  },
+  {
+   "c": "on_call",
+   "tier": "core",
+   "label": "On-call standby",
+   "cat": "Allowance",
+   "input": "check",
+   "pay": "ON_CALL",
+   "grp": "allow"
+  },
+  {
+   "c": "night_out",
+   "tier": "logistics",
+   "label": "Stayed out overnight?",
+   "cat": "Allowance",
+   "input": "check",
+   "pay": "NIGHT_OUT",
+   "driverOnly": true,
+   "grp": "allow"
+  },
+  {
+   "c": "rapid",
+   "tier": "logistics",
+   "label": "Rapid response",
+   "cat": "Allowance",
+   "input": "check",
+   "pay": "RAPID",
+   "driverOnly": true,
+   "grp": "allow"
+  },
+  {
+   "c": "t75",
+   "tier": "logistics",
+   "label": "7.5T allowance",
+   "cat": "Allowance",
+   "input": "check",
+   "pay": "T75_ALLOW",
+   "grp": "allow"
+  },
+  {
+   "c": "notes",
+   "tier": "core",
+   "label": "Notes",
+   "cat": "General",
+   "input": "textarea",
+   "val": "",
+   "grp": "core"
+  },
+  {
+   "c": "dept",
+   "tier": "core",
+   "label": "Department",
+   "cat": "Allocation",
+   "input": "select",
+   "opts": [
+    "Care Services",
+    "Operations",
+    "Projects",
+    "Administration"
+   ],
+   "grp": "alloc"
+  },
+  {
+   "c": "work_order",
+   "tier": "project",
+   "label": "Work order / job no.",
+   "cat": "Project",
+   "input": "text",
+   "val": "",
+   "flag": "PROJECT",
+   "req": "project",
+   "grp": "alloc"
+  },
+  {
+   "c": "mileage",
+   "tier": "core",
+   "label": "Business mileage (miles)",
+   "cat": "Expenses",
+   "input": "text",
+   "t": "number",
+   "val": "",
+   "grp": "extra"
+  },
+  {
+   "c": "training_hours",
+   "tier": "core",
+   "label": "Training hours",
+   "cat": "Time",
+   "input": "text",
+   "t": "duration",
+   "val": "",
+   "grp": "extra"
+  },
+  {
+   "c": "plant",
+   "tier": "site",
+   "label": "Plant / equipment used",
+   "cat": "Equipment",
+   "input": "select",
+   "opts": [
+    "—",
+    "Telehandler",
+    "MEWP",
+    "Dumper",
+    "Hand tools only"
+   ],
+   "mod": "C",
+   "req": "site",
+   "grp": "extra"
+  },
+  {
+   "c": "ppe",
+   "tier": "site",
+   "label": "Safety briefing / PPE check done",
+   "cat": "Compliance",
+   "input": "check",
+   "mod": "C",
+   "req": "site",
+   "grp": "extra"
+  },
+  {
+   "c": "lone_work",
+   "tier": "shift",
+   "label": "Lone-working check-in completed",
+   "cat": "Compliance",
+   "input": "check",
+   "flag": "SHIFT",
+   "req": "shift",
+   "grp": "extra"
+  },
+  {
+   "c": "visits",
+   "tier": "shift",
+   "label": "Visits / sessions completed",
+   "cat": "Output",
+   "input": "text",
+   "t": "number",
+   "val": "",
+   "flag": "SHIFT",
+   "req": "shift",
+   "grp": "extra"
+  },
+  {
+   "c": "handover",
+   "tier": "shift",
+   "label": "Handover notes",
+   "cat": "General",
+   "input": "textarea",
+   "val": "",
+   "flag": "SHIFT",
+   "req": "shift",
+   "grp": "extra"
+  },
+  {
+   "c": "client_sign",
+   "tier": "project",
+   "label": "Client signature captured",
+   "cat": "Evidence",
+   "input": "check",
+   "flag": "PROJECT",
+   "req": "project",
+   "grp": "extra"
+  }
+ ],
+ "timesheetRepeats": {
+  "vehicle": {
+   "name": "Vehicles & movements",
+   "max": 4,
+   "unit": "vehicle"
+  },
+  "breaks": {
+   "name": "Breaks",
+   "max": 5,
+   "unit": "break"
+  }
+ }
 }
