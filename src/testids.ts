@@ -110,4 +110,34 @@ export const tid = {
   toast: { info: 'toast-info', error: 'toast-error', next: 'toast-next' },
   /* A page head's own affordances (src/ui/Page.tsx): its i tip and its standing caution. */
   head: { tip: (view: string) => k('head-tip', view), caution: (view: string) => k('head-caution', view) },
+  /* module 2: a page's guide behind `?` (src/ui/Guide.tsx) */
+  guide: { open: (view: string) => k('guide-open', view), close: 'guide-close' },
+  /* module 2: My timesheet (ts): the page, the day view's frame and the week view's frame */
+  ts: {
+    view: (v: string) => k('ts-view', v), error: 'ts-error',
+    dayPrev: 'ts-day-prev', dayNext: 'ts-day-next', dayToday: 'ts-day-today', dayLabel: 'ts-day-label', dayState: 'ts-day-state',
+    nonWorking: 'ts-non-working', copyDay: 'ts-copy-day', reason: 'ts-reason', reasonNotes: 'ts-reason-notes',
+    workedAnyway: 'ts-worked-anyway', submitReason: 'ts-submit-reason', entryTip: 'ts-entry-tip', banner: (kind: string) => k('ts-banner', kind),
+    weekPrev: 'ts-week-prev', weekNext: 'ts-week-next', weekToday: 'ts-week-today', weekLabel: 'ts-week-label', weekState: 'ts-week-state',
+    fillRota: 'ts-fill-rota', submitWeek: 'ts-submit-week', weekTotal: 'ts-week-total', contracted: 'ts-contracted', weekResult: 'ts-week-result',
+    multiweek: 'ts-multiweek', mwTip: 'ts-multiweek-tip', mwAll: 'ts-multiweek-all', mwRow: (ws: string) => k('ts-multiweek-row', ws),
+    mwCheck: (ws: string) => k('ts-multiweek-check', ws), mwState: (ws: string) => k('ts-multiweek-state', ws), mwSubmit: 'ts-multiweek-submit',
+    mwResult: 'ts-multiweek-result',
+  },
+  /* module 2: the day form, shared by My timesheet and proxy entry */
+  dayForm: {
+    field: (code: string) => k('day-form', code), tip: (code: string) => k('day-form-tip', code), group: (key: string) => k('day-form-group', key),
+    addBreak: 'day-form-add-break', save: 'day-form-save', submit: 'day-form-submit', warn: 'day-form-warn', check: 'day-form-check',
+    stat: (key: string) => k('day-form-stat', key), rateTip: 'day-form-rate-tip', empty: 'day-form-empty', refusal: 'day-form-refusal',
+  },
+  /* module 2: the weekly grid in its three layouts, shared by My timesheet and proxy entry */
+  week: {
+    grid: 'week-grid', empty: 'week-empty', allocRow: (row: number) => k('week-alloc-row', row), row: (row: number) => k('week-row', row),
+    cell: (row: number, day: number, part: string) => k('week-cell', row, day, part), ctx: (row: number, field: string) => k('week-ctx', row, field),
+    addAlloc: 'week-add-alloc', delAlloc: (row: number) => k('week-del-alloc', row), rowTotal: (row: number) => k('week-row-total', row),
+    dayTotal: (day: number) => k('week-day-total', day), total: 'week-total', alloc: 'week-alloc', allocTip: 'week-alloc-tip',
+    day: (day: number) => k('week-day', day), addLine: (day: number) => k('week-add-line', day), delLine: (day: number, line: number) => k('week-del-line', day, line),
+    lineCtx: (day: number, line: number, field: string) => k('week-line-ctx', day, line, field),
+    lineCell: (day: number, line: number, part: string) => k('week-line-cell', day, line, part), closed: (day: number) => k('week-closed', day),
+  },
 } as const;

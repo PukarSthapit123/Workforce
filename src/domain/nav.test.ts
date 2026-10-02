@@ -33,9 +33,11 @@ test('someone still onboarding sees onboarding and nothing else', () => {
   expect(g.flatMap(x => x.tabs).map(t => t.label)).toEqual(['Onboarding']);
 });
 test('views outside plan 1a are marked not built and name their sub-project', () => {
-  const g = buildNav({ caps: caps('own_home', 'own_ts'), modules: ALL_MODULES, flags, onboarding: false });
-  const ts = must(must(g[0]).tabs.find(t => t.view === 'ts'));
-  expect(ts).toMatchObject({ built: false, subProject: 'Timesheet' });
+  const g = buildNav({ caps: caps('own_home', 'own_ts', 'own_hours'), modules: ALL_MODULES, flags, onboarding: false });
+  const hours = must(must(g[0]).tabs.find(t => t.view === 'hours'));
+  expect(hours).toMatchObject({ built: false, subProject: 'Timesheet' });
+  /* module 2 builds My timesheet */
+  expect(must(must(g[0]).tabs.find(t => t.view === 'ts'))).toMatchObject({ built: true });
 });
 
 test('team tabs carry a stable groupKey distinct from their display label (never derived from it)', () => {

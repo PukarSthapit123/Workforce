@@ -31,7 +31,7 @@ import {
 type StoredDay = Omit<TimesheetDay, 'minutes' | 'posting' | 'enteredByName'>;
 type StoredAttempt = IntegrationAttempt;
 interface Tenant { modules: Record<string, boolean>; flags: Record<string, unknown> }
-interface StoredType { code: string; name: string; capabilities: string[] }
+interface StoredType { code: string; name: string; capabilities: string[]; mode?: 'form' | 'grid' | 'clock' }
 
 export const FIELDS: TimesheetField[] = meta.timesheetFields;
 const days = () => store.coll<StoredDay>('timesheetDays');
@@ -230,6 +230,7 @@ function captureFor(p: StoredPerson) {
     rules: c.rules, cutoff: c.cutoff, timeFormat: c.timeFormat, returnReasonRequired: c.returnReasonRequired, weekGrid: c.weekGrid,
     weekLayout: c.weekLayout, fields: FIELDS, type, modules: t.modules, flags: Object.keys(t.flags).filter(k => Boolean(t.flags[k])),
     capabilities: employeeType(p.employeeType)?.capabilities ?? [], fieldDefaults: c.fieldDefaults, allowances, payCodes: codes,
+    mode: employeeType(p.employeeType)?.mode ?? 'form',
   };
 }
 const daysOf = (code: string) => Object.values(days()).filter(d => d.personCode === code);
@@ -314,7 +315,7 @@ export const timesheetHandlers = [
     const totals = weekTotals(ws, list.flatMap(x => (x.record ? [{ date: x.date, entries: x.record.entries }] : [])), alloc);
     return {
       person: { code: p.code, name: p.name, employeeType: p.employeeType, typeName: employeeType(p.employeeType)?.name ?? p.employeeType,
-        location: p.location, manager: p.manager },
+        location: p.location, manager: p.manager, contractedHours: Math.max(0, p.contractedHours) },
       weekStart: ws, label: weekLabel(ws), now: today, days: list, weekMinutes: totals.weekMinutes, byAllocation: totals.byAllocation,
       capture: captureFor(p), earlierWeeks: earlierWeeks(p),
     };

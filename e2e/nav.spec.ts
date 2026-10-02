@@ -9,7 +9,7 @@ test('NV Manager navigation has two primary areas', async ({ page, signInAs }) =
 });
 test('NV A view from a later sub-project says so and names it', async ({ page, signInAs }) => {
   await signInAs('employee');
-  await page.getByTestId(tid.nav.tab('ts')).click();
+  await page.getByTestId(tid.nav.tab('hours')).click();
   await expect(page.getByTestId(tid.notBuilt.subProject)).toHaveText('Timesheet');
 });
 

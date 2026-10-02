@@ -68,13 +68,15 @@ const BANNER: Record<BannerTone, { cls: string; icon: ReactNode }> = {
   warn: { cls: 'border-warn bg-warn-surface text-warn', icon: <TriangleAlert /> },
   info: { cls: 'border-info bg-info-surface text-info', icon: <Info /> },
 };
-export function Banner({ tone, title, testId, actions, children }: {
-  tone: BannerTone; title: string; testId?: string; actions?: ReactNode; children?: ReactNode;
+/* `icon` replaces the tone's own glyph where the prototype draws a specific
+   one: a padlock for a closed period, a return arrow for a resubmission. */
+export function Banner({ tone, title, testId, actions, icon, children }: {
+  tone: BannerTone; title: string; testId?: string; actions?: ReactNode; icon?: ReactNode; children?: ReactNode;
 }) {
   const b = BANNER[tone];
   return (
     <div data-testid={testId} role="note" className={cn('mb-md flex items-start gap-md rounded-card border border-l-4 px-lg py-md max-md:flex-wrap', b.cls)}>
-      <span aria-hidden="true" className="mt-[3px] shrink-0 [&_svg]:size-[15px]">{b.icon}</span>
+      <span aria-hidden="true" className="mt-[3px] shrink-0 [&_svg]:size-[15px]">{icon ?? b.icon}</span>
       <div className="min-w-0 flex-1">
         <div className="text-sm font-semibold">{title}</div>
         {children && <div className="mt-px text-xs opacity-90">{children}</div>}

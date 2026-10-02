@@ -13277,6 +13277,10 @@
                         },
                         "manager": {
                           "type": "string"
+                        },
+                        "contractedHours": {
+                          "type": "number",
+                          "minimum": 0
                         }
                       },
                       "required": [
@@ -13285,7 +13289,8 @@
                         "employeeType",
                         "typeName",
                         "location",
-                        "manager"
+                        "manager",
+                        "contractedHours"
                       ],
                       "additionalProperties": false
                     },
@@ -13655,6 +13660,20 @@
                               ],
                               "additionalProperties": false
                             }
+                          },
+                          "absence": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "leave",
+                                  "sickness"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           }
                         },
                         "required": [
@@ -14058,6 +14077,14 @@
                             ],
                             "additionalProperties": false
                           }
+                        },
+                        "mode": {
+                          "type": "string",
+                          "enum": [
+                            "form",
+                            "grid",
+                            "clock"
+                          ]
                         }
                       },
                       "required": [
@@ -14074,7 +14101,8 @@
                         "capabilities",
                         "fieldDefaults",
                         "allowances",
-                        "payCodes"
+                        "payCodes",
+                        "mode"
                       ],
                       "additionalProperties": false
                     },

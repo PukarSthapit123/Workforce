@@ -96,6 +96,8 @@ export const CaptureSetup = z.object({
   weekGrid: WeekGrid, weekLayout: WeekLayout, fields: z.array(TimesheetField), type: TypeCapture.nullable(),
   modules: z.record(z.string(), z.boolean()), flags: z.array(z.string()), capabilities: z.array(z.string()),
   fieldDefaults: z.record(z.string(), FieldDefault), allowances: z.array(AllowanceDef), payCodes: z.array(PayCode),
+  /* the employee type's entry mode: a grid type opens My timesheet on the week while WEEKLY is on (defaultTsView) */
+  mode: z.enum(['form', 'grid', 'clock']),
 });
 export type CaptureSetup = z.infer<typeof CaptureSetup>;
 export const WeekDay = z.object({
@@ -103,12 +105,18 @@ export const WeekDay = z.object({
   /* the If-Match a write to this day sends: the record's version, or 0 when there is none yet */
   version: z.number().int().nonnegative(), minutes: z.number().int().nonnegative(),
   future: z.boolean(), locked: z.boolean(), lockNote: z.string(), flags: z.array(AdvisoryFlag),
+  /* Approved leave or sickness on the day while leave blocks capture. Leave is
+     module 4, so nothing sets it yet; the day view shows the blocking banner when it is set. */
+  absence: z.enum(['leave', 'sickness']).nullable().optional(),
 });
+export type WeekDay = z.infer<typeof WeekDay>;
 export const EarlierWeek = z.object({
   weekStart: IsoDate, label: z.string(), minutes: z.number().int().nonnegative(), status: z.enum(['ready', 'submitted']),
   locked: z.boolean(), lockNote: z.string(),
 });
-export const TimesheetPerson = z.object({ code: z.string(), name: z.string(), employeeType: z.string(), typeName: z.string(), location: z.string(), manager: z.string() });
+export const TimesheetPerson = z.object({ code: z.string(), name: z.string(), employeeType: z.string(), typeName: z.string(), location: z.string(), manager: z.string(),
+  /* the week's contracted line: 0 for bank and zero-hours colleagues */
+  contractedHours: z.number().nonnegative() });
 export const TimesheetWeek = z.object({
   person: TimesheetPerson, weekStart: IsoDate, label: z.string(), now: Clock, days: z.array(WeekDay),
   weekMinutes: z.number().int().nonnegative(), byAllocation: z.record(z.string(), z.number()),

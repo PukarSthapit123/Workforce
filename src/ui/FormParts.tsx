@@ -55,3 +55,47 @@ export function ChoiceList({ label, children }: { label: string; children: React
 export function NativeSelect({ testId, className, children, ...rest }: { testId: string } & SelectHTMLAttributes<HTMLSelectElement>) {
   return <select data-testid={testId} {...rest} className={cn(fieldControl, 'cursor-pointer pr-lg', className)}>{children}</select>;
 }
+
+/* The capture form's layout (qnipay-workforce-v15.html:1257-1272, 1299-1304),
+   shared by the day form, the weekly grid and proxy entry. */
+
+/* .fgrid: two columns of fields, one on a phone or in a narrow column (`single`). */
+export function FieldGrid({ single, children }: { single?: boolean; children: ReactNode }) {
+  return <div className={cn('grid gap-x-md', single ? 'grid-cols-1' : 'grid-cols-2 max-md:grid-cols-1')}>{children}</div>;
+}
+/* .fsec: an open group's name, 12px/700 in muted ink with wide tracking, set
+   in sentence case. */
+export function FormGroupLabel({ children }: { children: ReactNode }) {
+  return <div className="mt-lg mb-sm text-xs font-bold tracking-[.08em] text-text-muted first:mt-0">{children}</div>;
+}
+/* .fexp: a group that stays closed until it applies, a + or – before its name
+   and a muted note at the end of the summary line. */
+export function FormExpander({ testId, title, note, defaultOpen, children }: {
+  testId: string; title: string; note?: string; defaultOpen?: boolean; children: ReactNode;
+}) {
+  return (
+    <details open={defaultOpen} className="group mb-sm rounded-card border bg-surface-card px-lg py-md last:mb-0">
+      <summary data-testid={testId} role="button"
+        className="flex cursor-pointer list-none items-center gap-sm text-sm font-semibold before:w-[14px] before:font-bold before:text-text-muted before:content-['+'] group-open:before:content-['–'] [&::-webkit-details-marker]:hidden">
+        {title}{note && <span className="ml-auto text-xs font-normal text-text-muted">{note}</span>}
+      </summary>
+      <div className="mt-md">{children}</div>
+    </details>);
+}
+/* .addline: a dashed button that reveals one more of a repeating pair, with how many are shown beside it. */
+export function AddLine({ testId, label, note, onClick }: { testId: string; label: string; note?: string; onClick: () => void }) {
+  return (
+    <div className="col-span-full mt-sm flex items-center gap-md">
+      <button type="button" data-testid={testId} onClick={onClick}
+        className="inline-flex items-center gap-[6px] rounded-sm border border-dashed border-border-strong px-md py-[6px] text-xs font-semibold text-brand hover:bg-brand-subtle max-md:min-h-touch dark:text-brand-accent">
+        <span aria-hidden="true">+</span> {label}</button>
+      {note && <span className="text-xs text-text-muted">{note}</span>}
+    </div>);
+}
+/* .chk: a checkbox and its words on one clickable row. The control carries the test id. */
+export function CheckRow({ children, control, tip, className }: { children: ReactNode; control: ReactNode; tip?: ReactNode; className?: string }) {
+  return (
+    <div className={cn('col-span-full flex items-center gap-[9px] py-[6px] text-sm', className)}>
+      <label className="flex cursor-pointer items-center gap-[9px]">{control}<span>{children}</span></label>{tip}
+    </div>);
+}
