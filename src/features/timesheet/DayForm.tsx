@@ -106,7 +106,7 @@ export function DayStatsCard({ capture, stats }: { capture: CaptureSetup; stats:
           <div data-caps className="flex items-center text-xs font-bold tracking-[.05em] text-text-muted uppercase">
             {c.label}{c.why && <Tip testId={tid.dayForm.rateTip} text={c.why} />}</div>
           <div data-testid={tid.dayForm.stat(c.key)}
-            className={cn('mt-[2px] text-lg font-semibold tabular-nums', !has ? 'text-text-disabled' : c.accent && 'text-brand dark:text-brand-accent')}>{c.value}</div>
+            className={cn('mt-[2px] text-lg font-semibold tabular-nums', !has ? 'text-text-muted' : c.accent && 'text-brand dark:text-brand-accent')}>{c.value}</div>
         </div>))}
     </div>);
 }

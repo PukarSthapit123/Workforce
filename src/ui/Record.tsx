@@ -65,7 +65,9 @@ export function Stat({ label, testId, foot, tone, children }: {
 }
 
 /* .banner (v15:439-453): a statement about this screen, in the status colour
-   with a thick left rule. The glyph comes from the shared icon set. */
+   with a thick left rule. The glyph comes from the shared icon set. The body
+   line is at full strength, not the prototype's opacity .9, which takes the
+   warn tone's 12px text below AA contrast. */
 type BannerTone = 'err' | 'ok' | 'warn' | 'info';
 const BANNER: Record<BannerTone, { cls: string; icon: ReactNode }> = {
   err: { cls: 'border-err bg-err-surface text-err', icon: <OctagonAlert /> },
@@ -84,7 +86,7 @@ export function Banner({ tone, title, testId, actions, icon, children }: {
       <span aria-hidden="true" className="mt-[3px] shrink-0 [&_svg]:size-[15px]">{icon ?? b.icon}</span>
       <div className="min-w-0 flex-1">
         <div className="text-sm font-semibold">{title}</div>
-        {children && <div className="mt-px text-xs opacity-90">{children}</div>}
+        {children && <div className="mt-px text-xs">{children}</div>}
       </div>
       {actions && <div className="ml-auto flex shrink-0 gap-sm max-md:ml-0 max-md:w-full">{actions}</div>}
     </div>);

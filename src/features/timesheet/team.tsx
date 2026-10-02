@@ -67,5 +67,5 @@ export function PostingDot({ testId, posting }: { testId: string; posting: Dot }
 /* The history count beside the state pill, its transitions behind hover. */
 export function HistoryCount({ testId, row }: { testId: string; row: Pick<QueueRow, 'history'> }) {
   if (!row.history.length) return null;
-  return <Note testId={testId} note={historyText(row)} className="ml-[6px] text-xs opacity-60"><span aria-hidden="true">({row.history.length})</span></Note>;
+  return <Note testId={testId} note={historyText(row)} className="ml-[6px] text-xs text-text-muted"><span aria-hidden="true">({row.history.length})</span></Note>;
 }

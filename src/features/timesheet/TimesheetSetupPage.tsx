@@ -162,11 +162,14 @@ function SetupDraftView({ setup, types, env, picked, onPick }: {
         {current && <>
           <h3 className={SUB}>Allowances this type can claim <span className={SUB_NOTE}>· the employee ticks these on the day; the value is what Business Central posts</span></h3>
           <div>
+            {/* An allowance the type lacks the capability for is not dimmed as a whole row, as the
+                prototype did: at half opacity its name and line fall below AA contrast. Its switch
+                is disabled and the line says which capability it needs. */}
             {Object.values(draft.allowances).map(a => {
               const need = allowanceNeed(a.tier), blocked = Boolean(need && !(current.capabilities as readonly string[]).includes(need));
               const on = type.allowances.includes(a.code), err = fe(`allowances.${a.code}.label`);
               return (
-                <div key={a.code} data-testid={tid.mts.allowRow(a.code)} className={cn('flex flex-wrap items-center gap-md border-b py-[10px] last:border-b-0', blocked && 'opacity-50')}>
+                <div key={a.code} data-testid={tid.mts.allowRow(a.code)} className="flex flex-wrap items-center gap-md border-b py-[10px] last:border-b-0">
                   <div className="min-w-[200px] flex-1">
                     <input data-testid={tid.mts.allowLabel(a.code)} aria-label="Allowance name" className={INL} value={a.label} aria-invalid={err ? true : undefined}
                       onChange={e => setDraft(d => ({ ...d, allowances: { ...d.allowances, [a.code]: { ...a, label: e.target.value } } }))} />

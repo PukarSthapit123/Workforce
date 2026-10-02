@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
-import { test, expect } from './support/fixtures';
+import { test, expect, FROZEN } from './support/fixtures';
+import { BIGYAN, EDDIE, PUKAR, signInEmail } from './support/timesheet';
 import { tid } from '../src/testids';
 
 /* Every built page beyond sign-in, keyed to the one extra piece of its own
@@ -101,4 +102,61 @@ test('phone: plan 1b pages have no horizontal overflow at 390px', async ({ page,
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), path).toBe(true);
     }
   }
+});
+
+/* Module 2's pages on the qnipay seed, where the timesheet data is: My
+   timesheet (week and day) for Bigyan Poudel, Team timesheets (queue, week
+   matrix, return and bulk dialogs) and proxy entry for Pukar Sthapit, and
+   Timesheet setup with its Add allowance dialog for Eddie Harford. Each step
+   is one state of the screen, read once its own data is on screen. */
+type Step = [where: string, go: (page: Page) => Promise<void>];
+const open = (path: string, ready: string) => async (page: Page) => { await page.goto(path); await page.getByTestId(ready).waitFor(); };
+const click = (testId: string, ready: string) => async (page: Page) => { await page.getByTestId(testId).click(); await page.getByTestId(ready).waitFor(); };
+const escape = async (page: Page) => { await page.keyboard.press('Escape'); await expect(page.getByTestId(tid.modal.root)).toHaveCount(0); };
+const PAGES_2: [string, Step[]][] = [
+  [BIGYAN, [
+    ['/work/ts week', open('/work/ts', tid.week.grid)],
+    ['/work/ts day', click(tid.ts.view('day'), tid.dayForm.field('start'))],
+  ]],
+  [PUKAR, [
+    ['/team/tteam queue', open('/team/tteam', tid.tteam.table)],
+    ['return dialog', click(tid.tteam.ret('tsd_EMP005_2026-08-11'), tid.tteam.returnReason)],
+    ['bulk dialog', async page => { await escape(page); await click(tid.tteam.approveAll, tid.tteam.bulkAck)(page); }],
+    ['/team/tteam week', async page => { await escape(page); await click(tid.tteam.view('week'), tid.tteam.matrix)(page); }],
+    ['proxy dialog day', async page => { await open('/team/tpeople', tid.people.table)(page); await page.getByTestId(tid.people.open('EMP005')).click();
+      await click(tid.proxy.open, tid.dayForm.field('start'))(page); }],
+    ['proxy dialog week', click(tid.proxy.view('week'), tid.week.grid)],
+  ]],
+  [EDDIE, [
+    ['/setup/mts', open('/setup/mts', tid.mts.card('rules'))],
+    ['add allowance dialog', click(tid.mts.allowAdd, tid.mts.allowName)],
+  ]],
+];
+test.describe('module 2 pages', () => {
+  test.beforeEach(async ({ api }) => { await api.seed('qnipay'); await api.setClock(FROZEN); });
+  for (const theme of ['light', 'dark'] as const) {
+    test(`axe: timesheet pages and dialogs have no serious issues (${theme})`, async ({ page }) => {
+      test.setTimeout(120_000);
+      for (const [email, steps] of PAGES_2) {
+        await signInEmail(page, email);
+        for (const [where, go] of steps) {
+          await go(page);
+          await page.evaluate(t => document.documentElement.setAttribute('data-theme', t), theme);
+          const r = await new AxeBuilder({ page }).analyze();
+          expect(r.violations.filter(v => ['serious', 'critical'].includes(v.impact ?? '')).map(v => `${where} ${v.id}: ${v.nodes.length}`)).toEqual([]);
+        }
+      }
+    });
+  }
+  test('phone: timesheet pages and dialogs have no horizontal overflow at 390px', async ({ page }) => {
+    test.setTimeout(120_000);
+    await page.setViewportSize({ width: 390, height: 844 });
+    for (const [email, steps] of PAGES_2) {
+      await signInEmail(page, email);
+      for (const [where, go] of steps) {
+        await go(page);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), where).toBe(true);
+      }
+    }
+  });
 });
