@@ -171,6 +171,8 @@ export const ApprovalQueue = z.object({
   rows: z.array(QueueRow), nextCursor: z.string().nullable(),
   counts: z.object({ pend: z.number().int(), resub: z.number().int(), ok: z.number().int(), back: z.number().int(), all: z.number().int() }),
   oldestPending: IsoDate.nullable(), bulk: BulkSet,
+  /* the server's clock (the matrix opens on its week) and whether a return needs a reason (returnBox) */
+  now: Clock, returnReasonRequired: z.boolean(),
 });
 export type ApprovalQueue = z.infer<typeof ApprovalQueue>;
 export const QueueQuery = z.object({

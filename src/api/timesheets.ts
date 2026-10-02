@@ -1,13 +1,13 @@
 /* Module 2 Timesheet: the reads and writes the ts, tteam, proxy and mts screens
    use. Writes go through useRecordMutation, so nothing changes on screen until
    the server has answered and the queries below have been read again. */
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { api } from './client';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
+import { api, ApiError } from './client';
 import { useRecordMutation } from './mutation';
 import {
   bulkApproveTimesheets, getTimesheetConfig, getTimesheetWeek, listTimesheetApprovals, retryIntegrationAttempt, saveTimesheetDay,
   submitMultiweek, submitTimesheetDay, submitTimesheetWeek, transitionTimesheetDay, updateTimesheetConfig,
-  type ApprovalQueue, type DayInput, type IntegrationAttempt, type QueueRow, type TimesheetConfig, type TimesheetDay, type TimesheetSetup,
+  type ApprovalQueue, type BulkApproved, type DayInput, type IntegrationAttempt, type QueueRow, type TimesheetConfig, type TimesheetDay, type TimesheetSetup,
   type TimesheetWeek, type UpdateTimesheetConfig, type WeekSubmit,
 } from '@/contract/timesheets';
 
@@ -67,11 +67,21 @@ export const useDecideDay = () => useRecordMutation({
 });
 /* The ids and checksum are the ones the queue read returned (ApprovalQueue.bulk),
    or for the matrix the chosen rows' ids with queueChecksum over those rows. */
-export const useBulkApprove = () => useRecordMutation({
-  mutationFn: (v: { ids: string[]; checksum: string }) => api(bulkApproveTimesheets, { body: v }),
-  recordKey: () => 'timesheet-bulk',
-  invalidates: AFTER,
-});
+/* QUEUE_CHANGED approves nothing (D7); the queue is read again before the
+   refusal reaches the screen, so the next attempt is over what is there now. */
+export const useBulkApprove = () => {
+  const qc = useQueryClient();
+  return useRecordMutation({
+    mutationFn: async (v: { ids: string[]; checksum: string }) => {
+      try { return await api(bulkApproveTimesheets, { body: v }); } catch (e) {
+        if (e instanceof ApiError && e.refusal.code === 'QUEUE_CHANGED') await qc.invalidateQueries({ queryKey: timesheetKeys.queue });
+        throw e;
+      }
+    },
+    recordKey: () => 'timesheet-bulk',
+    invalidates: AFTER,
+  });
+};
 export const useSaveTimesheetConfig = () => useRecordMutation({
   mutationFn: (v: { config: Pick<TimesheetConfig, 'version'>; body: UpdateTimesheetConfig }) =>
     api(updateTimesheetConfig, { body: v.body, ifMatch: v.config.version }),
@@ -85,4 +95,4 @@ export const useRetryAttempt = () => useRecordMutation({
   invalidates: AFTER,
 });
 
-export type { ApprovalQueue, DayInput, IntegrationAttempt, QueueRow, TimesheetConfig, TimesheetDay, TimesheetSetup, TimesheetWeek, UpdateTimesheetConfig, WeekSubmit };
+export type { ApprovalQueue, BulkApproved, DayInput, IntegrationAttempt, QueueRow, TimesheetConfig, TimesheetDay, TimesheetSetup, TimesheetWeek, UpdateTimesheetConfig, WeekSubmit };

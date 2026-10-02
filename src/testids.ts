@@ -140,4 +140,23 @@ export const tid = {
     lineCtx: (day: number, line: number, field: string) => k('week-line-ctx', day, line, field),
     lineCell: (day: number, line: number, part: string) => k('week-line-cell', day, line, part), closed: (day: number) => k('week-closed', day),
   },
+  /* module 2: Team timesheets (tteam): the day queue, the week matrix, and the bulk approval and return dialogs */
+  tteam: {
+    view: (v: string) => k('tteam-view', v), error: 'tteam-error', pending: 'tteam-pending', clear: 'tteam-clear', approveAll: 'tteam-approve-all',
+    filter: (f: string) => k('tteam-filter', f), search: 'tteam-search', table: 'tteam-table', row: (id: string) => k('tteam-row', id),
+    proxyPill: (id: string) => k('tteam-proxy', id), dot: (id: string) => k('tteam-dot', id), state: (id: string) => k('tteam-state', id),
+    history: (id: string) => k('tteam-history', id), approve: (id: string) => k('tteam-approve', id), ret: (id: string) => k('tteam-return', id),
+    empty: 'tteam-empty', more: 'tteam-more', refusal: 'tteam-refusal', held: 'tteam-held', elementsTip: 'tteam-elements-tip',
+    matrix: 'tteam-matrix', mxAll: 'tteam-mx-all', mxRow: (code: string) => k('tteam-mx-row', code), mxCheck: (code: string) => k('tteam-mx-check', code),
+    pip: (code: string, day: number) => k('tteam-pip', code, day), approveSelected: 'tteam-approve-selected',
+    weekPrev: 'tteam-week-prev', weekNext: 'tteam-week-next', weekNow: 'tteam-week-now', weekLabel: 'tteam-week-label',
+    bulkStat: (key: string) => k('tteam-bulk-stat', key), bulkFlagRow: (id: string) => k('tteam-bulk-flag', id), bulkOutside: 'tteam-bulk-outside',
+    bulkAck: 'tteam-bulk-ack', bulkWarn: 'tteam-bulk-warn', bulkConfirm: 'tteam-bulk-confirm', bulkCancel: 'tteam-bulk-cancel',
+    returnReason: 'tteam-return-reason', returnConfirm: 'tteam-return-confirm', returnCancel: 'tteam-return-cancel', returnWarn: 'tteam-return-warn',
+  },
+  /* module 2: proxy entry, opened from a team member's record */
+  proxy: {
+    open: 'proxy-open', view: (v: string) => k('proxy-view', v), banner: 'proxy-banner', error: 'proxy-error',
+    submitDay: 'proxy-submit-day', submitWeek: 'proxy-submit-week', refusal: 'proxy-refusal', held: 'proxy-held',
+  },
 } as const;

@@ -14,7 +14,7 @@ export { Tip, HelpButton, Caution } from './Affordances';
 export { toastInfo, toastRefusal } from './toast';
 export { Page, PageHead, SectionHead } from './Page';
 export { Card, CardHead, IconTile, AdminCard } from './Card';
-export { FilterBar, SearchFilter, SelectFilter } from './Filters';
+export { FilterBar, SearchFilter, SelectFilter, ChipButton } from './Filters';
 export { Logo } from './Logo';
 export { Avatar, PersonName, PersonBlock, CardNote, initials, Fact, GroupLabel, Stats, Stat, Banner, Empty, Count, Small, SettingRow, ChipPicker, Chip, SetupCardButton } from './Record';
 export { FormSection, Wide, FormWarn, UnitInput, ChoiceRow, ChoiceList, NativeSelect, FieldGrid, FormGroupLabel, FormExpander, AddLine, CheckRow } from './FormParts';

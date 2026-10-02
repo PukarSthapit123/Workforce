@@ -82,7 +82,7 @@ export function WeekGrid(p: WeekGridProps) {
         {p.layout === 'grid' && p.state.kind === 'allocs'
           ? <><Small className="flex-[1_1_260px]">{m.times ? 'Start and finish per day.' : 'One total per day.'}{m.ctx.length
             ? ` Split the week across more than one ${m.ctx.map(c => c.label.toLowerCase()).join(' or ')} by adding an allocation.` : ''}</Small>
-            <span className="text-xs text-text-muted">{contracted}</span></>
+            <span className="text-xs text-text-muted">{contracted}</span>{seeded}</>
           : seeded}
       </div>
     </div>);

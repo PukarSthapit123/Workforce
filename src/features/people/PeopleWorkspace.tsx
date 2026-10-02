@@ -4,6 +4,9 @@ import type { Person } from '@/contract/people';
 import { Button, Page, PageHead } from '@/ui';
 import { usePeople } from '@/api/people';
 import { useCaps } from '@/shell/useCaps';
+import { useCurrentSession } from '@/shell/SessionProvider';
+import { useTenant } from '@/shell/shellData';
+import { ProxyEntry, type ProxyTarget } from '@/features/timesheet/ProxyEntry';
 import { latest, versionKey } from '@/lib/latest';
 import { PeopleList } from './PeopleList';
 import { PersonRecord } from './PersonRecord';
@@ -16,7 +19,11 @@ import { LifecycleDialog } from './LifecycleDialog';
 export function PeopleWorkspace({ variant, view, crumb, tip, above }: {
   variant: 'admin' | 'team'; view: string; crumb: string; tip: string; above?: ReactNode;
 }) {
-  const crud = useCaps().has('emp_crud');
+  const caps = useCaps(), crud = caps.has('emp_crud');
+  const self = useCurrentSession()?.account.personCode, modules = useTenant().data?.modules;
+  /* proxy entry (proxyBox): a manager entering time for someone they look after, while a timesheet module is on */
+  const proxyOk = variant === 'team' && caps.has('proxy') && caps.has('team_ts') && Boolean(modules?.A || modules?.B);
+  const [proxy, setProxy] = useState<ProxyTarget | null>(null);
   const everyone = usePeople(variant === 'admin' ? 'all' : 'here', '');
   const [open, setOpen] = useState<string | null>(null);
   const [form, setForm] = useState<{ person?: Person } | null>(null);
@@ -35,9 +42,12 @@ export function PeopleWorkspace({ variant, view, crumb, tip, above }: {
       <PageHead title="People" crumb={crumb} tip={tip} tipTestId={tid.head.tip(view)} actions={add || undefined} />
       <PeopleList variant={variant} total={everyone.data?.length} onOpen={p => setOpen(p.id)}
         actions={crud ? p => <Button testId={tid.people.edit(p.code)} kind="ghost" small onClick={() => setForm({ person: p })}>Edit</Button> : undefined} />
-      {open && <PersonRecord personId={open} onClose={() => setOpen(null)} actions={crud ? p => <>
-        <Button testId={tid.person.changeState} kind="ghost" onClick={() => { setOpen(null); setMoving(p); }}>Change state</Button>
-        <Button testId={tid.person.edit} kind="primary" onClick={() => { setOpen(null); setForm({ person: p }); }}>Edit</Button></> : undefined} />}
+      {open && <PersonRecord personId={open} onClose={() => setOpen(null)} actions={crud || proxyOk ? p => <>
+        {crud && <Button testId={tid.person.changeState} kind="ghost" onClick={() => { setOpen(null); setMoving(p); }}>Change state</Button>}
+        {proxyOk && p.code !== self && <Button testId={tid.proxy.open} kind={crud ? 'secondary' : 'primary'}
+          onClick={() => { setOpen(null); setProxy({ code: p.code, name: p.name }); }}>Enter time on their behalf</Button>}
+        {crud && <Button testId={tid.person.edit} kind="primary" onClick={() => { setOpen(null); setForm({ person: p }); }}>Edit</Button>}</> : undefined} />}
+      {proxy && <ProxyEntry person={proxy} onClose={() => setProxy(null)} />}
       {form && <PersonForm key={editing ? versionKey(editing) : 'new'} person={editing} defaultLocation={defaultLocation} onClose={() => setForm(null)}
         onChangeState={p => { setForm(null); setMoving(p); }} />}
       {move && <LifecycleDialog key={versionKey(move)} person={move} onClose={() => setMoving(null)} />}

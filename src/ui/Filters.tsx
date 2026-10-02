@@ -15,6 +15,14 @@ export function SearchFilter({ testId, label, className, ...rest }: { testId: st
   return <Input data-testid={testId} type="search" aria-label={label} {...rest}
     className={cn(filterControl, 'h-8 w-auto min-w-[190px] px-[14px] text-sm max-md:flex-1', className)} />;
 }
+/* .chipbtn (v15:540-544): a 32px pill that picks one filter out of a few,
+   12px/500 in secondary ink; the one picked is filled brand, the accent in dark. */
+export function ChipButton({ testId, on, onClick, children }: { testId: string; on: boolean; onClick: () => void; children: ReactNode }) {
+  return <button type="button" data-testid={testId} aria-pressed={on} onClick={onClick}
+    className={cn(filterControl, 'px-md text-xs font-medium transition-colors max-md:min-h-[40px] max-md:text-xs',
+      on ? 'border-brand bg-brand text-text-on-brand dark:border-brand-accent dark:bg-brand-accent dark:text-text-on-accent'
+        : 'text-text-secondary hover:bg-surface-tint')}>{children}</button>;
+}
 /* select.flt: 32px pill, 0 10px, 12px */
 export function SelectFilter({ testId, label, options, value, onValueChange }: {
   testId: string; label: string; options: SelectOption[]; value?: string; onValueChange?: (value: string) => void;

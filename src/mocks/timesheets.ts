@@ -471,6 +471,7 @@ export const timesheetHandlers = [
       bulk: { ids: pending.map(x => x.d.id).sort(), checksum: queueChecksum(pending.map(x => x.d)), people: new Set(pending.map(x => x.p.code)).size,
         minutes: pending.reduce((n, x) => n + dayMinutes(x.d.entries), 0), flagged,
         outside: submitted.filter(x => tsPending(x.d.state) && !(sc.all || x.p.location === sc.location)).length },
+      now: now(), returnReasonRequired: config().returnReasonRequired,
     };
   }),
 
