@@ -109,7 +109,7 @@ export function CardNote({ children }: { children: ReactNode }) {
 
 /* .arow (v15:1449-1456, 954): one setting, its name and what it does on the
    left, its control on the right; on a phone the control drops under it. */
-export function SettingRow({ title, desc, children }: { title: string; desc?: ReactNode; children: ReactNode }) {
+export function SettingRow({ title, desc, children }: { title: ReactNode; desc?: ReactNode; children: ReactNode }) {
   return (
     <div className="flex flex-wrap items-center gap-md border-b py-[11px] last:border-b-0">
       <div className="min-w-[190px] flex-1">

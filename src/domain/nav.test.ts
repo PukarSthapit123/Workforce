@@ -68,7 +68,8 @@ test('the module setup and integration pages the prototype\'s SETUP_NEED lists a
   const g = buildNav({ caps: caps('mod_cfg', 'integration'), modules: ALL_MODULES, flags: { ...flags, ITACCESS: true }, onboarding: false });
   const setup = must(g.find((x): x is NavGroup => x.key === 'setup'));
   const byView = (v: string) => must(setup.tabs.find(t => t.view === v), `no setup tab for view "${v}"`);
-  expect(byView('mts')).toMatchObject({ built: false, subProject: 'Timesheet', section: 'Modules' });
+  expect(byView('mts')).toMatchObject({ built: true, path: '/setup/mts', section: 'Modules' });
+  expect(byView('mts').subProject).toBeUndefined();
   expect(byView('mrota')).toMatchObject({ built: false, subProject: 'Rota', section: 'Modules' });
   expect(byView('mleave')).toMatchObject({ built: false, subProject: 'Leave', section: 'Modules' });
   expect(byView('mpay')).toMatchObject({ built: false, subProject: 'Timesheet', section: 'Integrations' });

@@ -27,15 +27,17 @@ export function IconTile({ children, off }: { children: ReactNode; off?: boolean
 
 /* The prototype's .acard (v15:1402-1405, 1440-1442): an admin card with an
    icon tile and a 16px title, 16px 24px padding (16px on a narrow screen).
-   A tip on the title carries what the card is for. */
-export function AdminCard({ icon, title, tip, tipTestId, testId, children }: {
-  icon: ReactNode; title: string; tip?: string; tipTestId?: string; testId?: string; children: ReactNode;
+   A tip on the title carries what the card is for; `desc` is the .acard-h p
+   line under the title (12px muted, 2px above). */
+export function AdminCard({ icon, title, tip, tipTestId, testId, desc, children }: {
+  icon: ReactNode; title: string; tip?: string; tipTestId?: string; testId?: string; desc?: ReactNode; children: ReactNode;
 }) {
   return (
     <section data-testid={testId} className="mb-md rounded-card border bg-surface-card px-xl py-lg max-lg:p-md">
       <div className="mb-md flex items-start gap-md">
         <IconTile>{icon}</IconTile>
-        <div><h3>{title}{tip && tipTestId && <Tip testId={tipTestId} text={tip} />}</h3></div>
+        <div><h3>{title}{tip && tipTestId && <Tip testId={tipTestId} text={tip} />}</h3>
+          {desc && <p className="mt-[2px] text-xs text-text-muted">{desc}</p>}</div>
       </div>
       {children}
     </section>);

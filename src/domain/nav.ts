@@ -25,7 +25,7 @@ const LATER: Record<string, string> = {
   tnotices: 'Workforce core (plan 1c)',
   aorg: 'Workforce core (plan 1c)', acal: 'Workforce core (plan 1c)', amods: 'Workforce core (plan 1c)',
   anotif: 'Workforce core (plan 1c)',
-  aappr: 'Workforce core (plan 1c)', mts: 'Timesheet', mrota: 'Rota', mleave: 'Leave', mpay: 'Timesheet',
+  aappr: 'Workforce core (plan 1c)', mrota: 'Rota', mleave: 'Leave', mpay: 'Timesheet',
   ipay: 'Payroll and Business Central', ibc: 'Payroll and Business Central', iit: 'Rota',
 };
 const tab = (group: NavGroup['key'], view: string, label: string, extra: Partial<NavTab> = {}): NavTab =>

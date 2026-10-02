@@ -159,4 +159,19 @@ export const tid = {
     open: 'proxy-open', view: (v: string) => k('proxy-view', v), banner: 'proxy-banner', error: 'proxy-error',
     submitDay: 'proxy-submit-day', submitWeek: 'proxy-submit-week', refusal: 'proxy-refusal', held: 'proxy-held',
   },
+  /* module 2: Timesheet setup (mts): capture fields, capture rules, allowances and pay rules by type, overtime, the BC boundary */
+  mts: {
+    error: 'mts-error', warn: 'mts-warn', save: 'mts-save', cancel: 'mts-cancel', dirty: 'mts-dirty',
+    card: (key: string) => k('mts-card', key), tip: (key: string) => k('mts-tip', key),
+    fieldType: (code: string) => k('mts-field-type', code), fieldCat: (cat: string) => k('mts-field-cat', cat),
+    fieldRow: (c: string) => k('mts-field-row', c), fieldVis: (c: string) => k('mts-field-vis', c), fieldMand: (c: string) => k('mts-field-mand', c),
+    fieldsEmpty: 'mts-fields-empty', rule: (key: string) => k('mts-rule', key), weekGrid: 'mts-week-grid', weekLayout: 'mts-week-layout',
+    type: (code: string) => k('mts-type', code), allowRow: (code: string) => k('mts-allow-row', code),
+    allowLabel: (code: string) => k('mts-allow-label', code), allowOn: (code: string) => k('mts-allow-on', code),
+    allowAdd: 'mts-allow-add', allowName: 'mts-allow-name', allowConfirm: 'mts-allow-confirm', allowCancel: 'mts-allow-cancel',
+    payRow: (i: number) => k('mts-pay-row', i), payTrigger: (i: number) => k('mts-pay-trigger', i), payWhen: (i: number) => k('mts-pay-when', i),
+    payCode: (i: number) => k('mts-pay-code', i), payValue: (i: number) => k('mts-pay-value', i), payHow: (i: number) => k('mts-pay-how', i),
+    payRemove: (i: number) => k('mts-pay-remove', i), payEmpty: 'mts-pay-empty', payAdd: 'mts-pay-add',
+    ot: (key: string) => k('mts-ot', key), otDay: 'mts-ot-day',
+  },
 } as const;
