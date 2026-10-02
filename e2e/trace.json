@@ -1580,7 +1580,7 @@
    "text": "G No ? appears where no guide is registered",
    "area": "ui",
    "status": "ported",
-   "test": "e2e/ui-rules.spec.ts › G No built page shows a ? guide button, since none registers a guide"
+   "test": "e2e/ui-rules.spec.ts › G A ? guide button appears only where a guide is registered, once, and opens that guide"
   },
   {
    "id": "GUIDE-AFFORDANCE-opens-i-only-hovers#6",
@@ -1588,7 +1588,7 @@
    "text": "G Admin pages without a guide show no ?",
    "area": "ui",
    "status": "ported",
-   "test": "e2e/ui-rules.spec.ts › G No built page shows a ? guide button, since none registers a guide"
+   "test": "e2e/ui-rules.spec.ts › G A ? guide button appears only where a guide is registered, once, and opens that guide"
   },
   {
    "id": "GUIDE-AFFORDANCE-opens-i-only-hovers#7",

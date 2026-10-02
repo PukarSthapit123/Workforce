@@ -3,30 +3,52 @@ import { test, expect } from './support/fixtures';
 import { tid } from '../src/testids';
 
 /* Generic interface rules from the prototype suite, checked on every page
-   this build has actually built. Each test names the trace rows it ports. */
-const BUILT = ['/setup/asetup', '/setup/aperm', '/setup/iaudit', '/setup/apeople', '/setup/aloc', '/setup/aloc?d=locations', '/setup/acon', '/setup/atypes'];
+   this build has actually built. Each test names the trace rows it ports.
+   The admin's pages first; then the pages only an employee or a manager
+   reaches (My timesheet, Team timesheets), each signed in as that persona,
+   and the admin is signed in again at the end. */
+type Persona = 'employee' | 'manager' | 'admin';
+const BUILT = ['/setup/asetup', '/setup/aperm', '/setup/iaudit', '/setup/apeople', '/setup/aloc', '/setup/aloc?d=locations', '/setup/acon', '/setup/atypes',
+  '/setup/mts'];
+const BUILT_AS: [Persona, string][] = [['employee', '/work/ts'], ['manager', '/team/tteam']];
 const READY: Record<string, string> = { '/setup/asetup': tid.page('asetup'), '/setup/aperm': tid.access.table, '/setup/iaudit': tid.page('iaudit'),
   '/setup/apeople': tid.people.table, '/setup/aloc': tid.dims.card('locations'), '/setup/aloc?d=locations': tid.dims.table,
-  '/setup/acon': tid.contracts.table, '/setup/atypes': tid.types.detail };
+  '/setup/acon': tid.contracts.table, '/setup/atypes': tid.types.detail, '/setup/mts': tid.mts.card('rules'),
+  '/work/ts': tid.ts.view('day'), '/team/tteam': tid.tteam.table };
+/* The pages that register a guide (src/ui/guides.ts), by path, with the view it is registered under */
+const GUIDED: Record<string, string> = { '/work/ts': 'ts', '/team/tteam': 'tteam', '/setup/mts': 'mts' };
 
-async function eachBuiltPage(page: Page, check: (path: string) => Promise<void>) {
+async function eachBuiltPage(page: Page, signInAs: (p: Persona) => Promise<void>, check: (path: string) => Promise<void>) {
+  test.setTimeout(120_000); // three sign-ins and twelve pages
   await check('sign-in');
-  for (const path of BUILT) {
+  const visit = async (path: string) => {
     await page.goto(path);
     await page.getByTestId(READY[path] ?? tid.page('none')).waitFor();
     await check(path);
-  }
+  };
+  for (const [persona, path] of BUILT_AS) { await signInAs(persona); await visit(path); }
+  await signInAs('admin');
+  for (const path of BUILT) await visit(path);
 }
 
 /* GUIDE AFFORDANCE #5 "No ? appears where no guide is registered" and #6
-   "Admin pages without a guide show no ?". No built page registers a guide
-   yet, so none may show a hollow ?. */
-test('G No built page shows a ? guide button, since none registers a guide', async ({ page, signInAs }) => {
+   "Admin pages without a guide show no ?". My timesheet, Team timesheets and
+   Timesheet setup register a guide, so each shows exactly one ?, the one that
+   opens it; every other built page shows none, never a hollow one. */
+test('G A ? guide button appears only where a guide is registered, once, and opens that guide', async ({ page, signInAs }) => {
   const helpButtons = () => page.evaluate(() => [...document.querySelectorAll('button')].filter(b => b.textContent?.trim() === '?' || b.hasAttribute('data-guide')).length);
   await page.getByTestId(tid.signIn.form).waitFor();
   expect(await helpButtons()).toBe(0);
-  await signInAs('admin');
-  await eachBuiltPage(page, async path => { if (path !== 'sign-in') expect(await helpButtons(), path).toBe(0); });
+  await eachBuiltPage(page, signInAs, async path => {
+    if (path === 'sign-in') return;
+    const view = GUIDED[path];
+    expect(await helpButtons(), path).toBe(view ? 1 : 0);
+    if (!view) return;
+    await page.getByTestId(tid.guide.open(view)).click();
+    await expect(page.getByTestId(tid.modal.title), path).not.toBeEmpty();
+    await page.getByTestId(tid.guide.close).click();
+    await expect(page.getByTestId(tid.modal.root)).toHaveCount(0);
+  });
 });
 
 /* ICONS, CRUMBS AND REDUNDANT COUNTS #2 "They come from the shared icon set,
@@ -36,9 +58,8 @@ test('IC Icons come from the shared icon set, and no built page renders an emoji
   const emoji = () => page.evaluate(() => (document.body.innerText.match(/\p{Extended_Pictographic}/gu) ?? []).join(''));
   await page.getByTestId(tid.signIn.form).waitFor();
   expect(await emoji(), 'sign-in').toBe('');
-  await signInAs('admin');
+  await eachBuiltPage(page, signInAs, async path => { expect(await emoji(), path).toBe(''); });
   await expect(page.getByTestId(tid.shell.bell).locator('svg.lucide')).toHaveCount(1);
-  await eachBuiltPage(page, async path => { expect(await emoji(), path).toBe(''); });
   await page.goto('/setup/aperm');
   await expect(page.getByTestId(tid.access.caution).locator('svg.lucide')).toHaveCount(1);
 });
@@ -65,8 +86,7 @@ test('SL Nothing on a built page, its menu or its dialog, is set in capitals or 
   }).map(el => `${el.tagName.toLowerCase()} "${(el as HTMLElement).innerText.slice(0, 30)}"`));
   await page.getByTestId(tid.signIn.form).waitFor();
   expect(await shouted(), 'sign-in').toEqual([]);
-  await signInAs('admin');
-  await eachBuiltPage(page, async path => { expect(await shouted(), path).toEqual([]); });
+  await eachBuiltPage(page, signInAs, async path => { expect(await shouted(), path).toEqual([]); });
   await page.getByTestId(tid.shell.account).click();
   await page.getByTestId(tid.shell.menuAccount).waitFor();
   expect(await shouted(), 'account menu').toEqual([]);
