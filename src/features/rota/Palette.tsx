@@ -36,7 +36,7 @@ export function Palette({ shifts, lifted, onLift, onDragStart, onDragEnd, canMak
           className={cn('inline-flex cursor-grab items-center gap-[6px] rounded-[7px] border-l-3 px-[10px] py-[6px] text-xs font-semibold select-none',
             'transition-shadow duration-(--qp-duration-fast) ease-qp hover:shadow-sm focus-visible:shadow-focus active:cursor-grabbing',
             TONE_CLASS[cellTone(shifts, s.code)], lifted === s.code && 'opacity-55 shadow-focus')}>
-          <b>{s.code}</b> {s.name}<span className="text-xs font-medium tabular-nums opacity-75">{s.from}–{s.to}</span>
+          <b>{s.code}</b> {s.name}<span className="text-xs font-medium tabular-nums">{s.from}–{s.to}</span>
         </button>))}
       {canMake && onNew && <Button testId={tid.trota.newShift} kind="ghost" small onClick={onNew}>New shift type</Button>}
       {canMake && !onNew && <NavLink testId={tid.trota.newShift} to="/team/tshifts"

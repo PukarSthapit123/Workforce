@@ -123,7 +123,7 @@
   --qp-rota-early-surface:var(--qp-info-100);   --qp-rota-early-ink:var(--qp-info-700);
   --qp-rota-late-surface:var(--qp-sec2-100);    --qp-rota-late-ink:var(--qp-sec2-800);
   --qp-rota-night-surface:var(--qp-sec1-100);   --qp-rota-night-ink:var(--qp-sec1-800);
-  --qp-rota-leave-surface:var(--qp-bg-secondary);--qp-rota-leave-ink:var(--qp-ink-secondary);
+  --qp-rota-leave-surface:var(--qp-bg-secondary);--qp-rota-leave-ink:var(--qp-ink-secondary-aa);
   --qp-rota-sick-surface:var(--qp-danger-100);  --qp-rota-sick-ink:var(--qp-danger-700);
   --qp-rota-gap-border:var(--qp-danger-500);
   /* spacing — 4x4 base grid, Figma frame 102:1409 */
