@@ -7,7 +7,7 @@ import {
 } from '@/contract/timesheets';
 import { mutation } from '@/contract/common';
 import { queueChecksum } from '@/domain/timesheet';
-import { FROZEN, audits, caller, fault, resetTo, snapshot, tokenFor, type Persona } from '@/test/api-helpers';
+import { FROZEN, accountOf, audits, caller, fault, resetTo, snapshot, tokenFor, type Persona } from '@/test/api-helpers';
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' })); afterAll(() => server.close());
 beforeEach(() => resetTo('social'));
@@ -78,6 +78,45 @@ describe('GET /api/v1/timesheets/:personId/weeks/:weekStart', () => {
     const r = await (await as('manager'))('GET', '/api/v1/timesheets/CP-1288/weeks/2026-08-10');
     expect(r.status).toBe(403);
     expect(refusal(r).code).toBe('scope');
+  });
+});
+
+describe('the published rota on the timesheet reads (module 3 D13, D14, D16)', () => {
+  const read = async (call: Call, code = 'CP-1042') => TimesheetWeek.parse((await call('GET', `/api/v1/timesheets/${code}/weeks/2026-08-10`)).body);
+  test('social: each day carries its rota line, rest days and leave, and the capture offers the shift catalogue', async () => {
+    const w = await read(await as('employee'));
+    expect(w.days.map(d => d.rota?.code)).toEqual(['E', 'E', '', 'N', 'N', '', '']);
+    expect(w.days[3]?.rota).toEqual({ code: 'N', name: 'Night', from: '22:00', to: '07:00', time: '22:00–07:00', hours: 9, cross: true });
+    expect(w.days[2]?.rota?.name).toBe('Rest day');
+    expect(w.capture.rotaLines?.map(l => l.code)).toEqual(['E', 'L', 'N']);
+    const m = await read(await as('manager'), 'CP-1088');
+    expect(m.days.slice(0, 2).map(d => [d.rota?.code, d.absence])).toEqual([['V', 'leave'], ['V', 'leave']]);
+  });
+  test('a draft week shows no rota line, no rest day and no absence', async () => {
+    const wk = store.coll<{ state: string }>('rotaWeeks')['rw_WH_2026-08-10'];
+    if (!wk) throw new Error('no Willow House week');
+    wk.state = 'draft';
+    const w = await read(await as('manager'), 'CP-1088');
+    expect(w.days.every(d => d.rota === undefined && !d.absence)).toBe(true);
+    expect(w.capture.rotaLines?.length).toBe(3);
+  });
+  test('the matrix read carries everyone’s published week at the approver’s location', async () => {
+    const q = ApprovalQueue.parse((await (await as('manager'))('GET', '/api/v1/approvals/timesheets?status=all&weekStart=2026-08-10')).body);
+    expect(q.rota?.['CP-1088']?.map(d => d.code)).toEqual(['V', 'V', 'L', 'L', '', 'E', '']);
+    expect(q.rota?.['CP-1266']?.[0]).toMatchObject({ code: 'N', hours: 9 });
+    expect(Object.keys(q.rota ?? {})).not.toContain('EMP-2044');
+    const plain = ApprovalQueue.parse((await (await as('manager'))('GET', '/api/v1/approvals/timesheets')).body);
+    expect(plain.rota).toBeUndefined();
+  });
+  test('qnipay (Rota off): no rota line, no catalogue and no matrix rota', async () => {
+    resetTo('qnipay');
+    const call = await as('employee');
+    const me = accountOf('employee').personCode;
+    const w = TimesheetWeek.parse((await call('GET', `/api/v1/timesheets/${me}/weeks/2026-08-10`)).body);
+    expect(w.days.every(d => d.rota === undefined && !d.absence)).toBe(true);
+    expect(w.capture.rotaLines).toBeUndefined();
+    const q = ApprovalQueue.parse((await (await as('manager'))('GET', '/api/v1/approvals/timesheets?status=all&weekStart=2026-08-10')).body);
+    expect(q.rota).toBeUndefined();
   });
 });
 

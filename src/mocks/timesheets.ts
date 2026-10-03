@@ -10,14 +10,14 @@ import { serve } from './serve';
 import { actor, requireCapability } from './auth';
 import { writeAudit } from './audit';
 import { faults } from './faults';
-import { rotaInputOn } from './rota';
+import { rotaDaysFor, rotaInputOn, rotaLineOptions, rotaWeekDays } from './rota';
 import { invalid } from './people';
 import meta from './seed/meta.json';
 import { effectiveCode, inScope, nameOf, personByCode, recordAt, scopeOf, type Signed, type StoredPerson } from './world';
 import {
   bulkApproveTimesheets, getTimesheetConfig, getTimesheetWeek, listTimesheetApprovals, retryIntegrationAttempt, saveTimesheetDay,
   submitMultiweek, submitTimesheetDay, submitTimesheetWeek, transitionTimesheetDay, updateTimesheetConfig,
-  type DayInput, type IntegrationAttempt, type QueueRow, type TimesheetConfig, type TimesheetDay, type TimesheetField, type UpdateTimesheetConfig,
+  type DayInput, type IntegrationAttempt, type RotaDay, type QueueRow, type TimesheetConfig, type TimesheetDay, type TimesheetField, type UpdateTimesheetConfig,
 } from '@/contract/timesheets';
 import type { Problem } from '@/domain/codes';
 import {
@@ -236,7 +236,7 @@ const flagsFor = (d: StoredDay) => {
   return advisoryFlags({ date: d.date, minutes: dayMinutes(d.entries), state: d.state, captureSource: d.captureSource }, { ...rulesCtx(), rota: rotaOn(d.personCode, d.date) });
 };
 function captureFor(p: StoredPerson) {
-  const c = config(), t = tenant(), type = typeOf(p) ?? null, codes = payCodes();
+  const c = config(), t = tenant(), type = typeOf(p) ?? null, codes = payCodes(), lines = rotaLineOptions();
   const allowances: AllowanceDef[] = (type?.allowances ?? []).map(code => recordAt(c.allowances, code)
     ?? { code, label: codes.find(x => x.code === code)?.label ?? code, payCode: code, tier: 'core' });
   return {
@@ -244,6 +244,7 @@ function captureFor(p: StoredPerson) {
     weekLayout: c.weekLayout, fields: FIELDS, type, modules: t.modules, flags: Object.keys(t.flags).filter(k => Boolean(t.flags[k])),
     capabilities: employeeType(p.employeeType)?.capabilities ?? [], fieldDefaults: c.fieldDefaults, allowances, payCodes: codes,
     mode: employeeType(p.employeeType)?.mode ?? 'form', projects: openProjects(),
+    ...(lines ? { rotaLines: lines } : {}),
   };
 }
 const daysOf = (code: string) => Object.values(days()).filter(d => d.personCode === code);
@@ -320,17 +321,26 @@ function located(): Located[] {
 const rowOf = ({ d, p }: Located): QueueRow =>
   ({ ...dayView(d), personName: p.name, location: p.location, locationName: nameOf('locations', p.location), flags: flagsFor(d) });
 
+/* The matrix's rota: everyone on a published week in the approver's scope (module 3, gap 6). */
+function weekRota(sc: ReturnType<typeof scopeOf>, weekStart: string): Record<string, RotaDay[]> {
+  const locs = sc.all ? Object.values(store.coll<{ code: string }>('locations')).map(l => l.code) : [sc.location];
+  return Object.fromEntries(locs.flatMap(l => Object.entries(rotaWeekDays(l, weekStart))));
+}
+
 export const timesheetHandlers = [
   serve(getTimesheetWeek, ({ session, params }) => {
     const p = personFor(params.personId);
     access(session, p, false);
     requireMonday(params.weekStart);
     const ws = params.weekStart, c = config(), today = now();
-    const list = weekDates(ws).map(date => {
-      const d = recordAt(days(), dayId(p.code, date)), locked = isLocked(date);
+    /* the published rota for the week (module 3 D13, D16); a V or S cell is the day's absence, not a line */
+    const rota = rotaDaysFor(p.code, ws);
+    const list = weekDates(ws).map((date, i) => {
+      const d = recordAt(days(), dayId(p.code, date)), locked = isLocked(date), r = rota?.[i];
+      const absence = r?.code === 'V' ? 'leave' as const : r?.code === 'S' ? 'sickness' as const : undefined;
       return { date, record: d ? dayView(d) : null, state: d?.state ?? 'none' as const, version: d?.version ?? 0,
         minutes: d ? dayMinutes(d.entries) : 0, future: date > today.date, locked, lockNote: locked ? lockNote(date, c.cutoff) : '',
-        flags: d && d.state !== 'draft' ? flagsFor(d) : [] };
+        flags: d && d.state !== 'draft' ? flagsFor(d) : [], ...(absence ? { absence } : {}), ...(r ? { rota: r } : {}) };
     });
     const alloc = weekModel(FIELDS, typeOf(p), envFor(p), c.weekGrid).ctx.map(f => f.c);
     const totals = weekTotals(ws, list.flatMap(x => (x.record ? [{ date: x.date, entries: x.record.entries }] : [])), alloc);
@@ -498,6 +508,7 @@ export const timesheetHandlers = [
         minutes: pending.reduce((n, x) => n + dayMinutes(x.d.entries), 0), flagged,
         outside: submitted.filter(x => tsPending(x.d.state) && !(sc.all || x.p.location === sc.location)).length },
       now: now(), returnReasonRequired: config().returnReasonRequired,
+      ...(query.weekStart && tenant().modules.R ? { rota: weekRota(sc, query.weekStart) } : {}),
     };
   }),
 

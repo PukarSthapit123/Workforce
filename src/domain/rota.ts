@@ -899,3 +899,15 @@ export function rotaInputFor(line: Line | undefined, day: number, ctx: Omit<Rule
   return { line: { code: s.code, name: s.name, hours: s.hours, cross: s.cross },
     rest: { gapHours: restAround(normLine(line), day, code, ctx.shifts), ruleHours: restNeed(ctx.typeRota, ctx.config), typeName: ctx.typeName } };
 }
+/* What the timesheet shows of one day of the published rota: the shift with
+   its times and hours, a rest day (code ''), or leave (V) or sickness (S). A
+   code no longer in the catalogue reads as a rest day, because there is no
+   shift left to work against. */
+export interface RotaDay { code: string; name: string; from: string; to: string; time: string; hours: number; cross: boolean }
+export function rotaDayOf(code: string, shifts: readonly ShiftType[]): RotaDay {
+  if (isAbsence(code)) return { code, name: code === LEAVE ? 'Annual leave' : 'Sickness', from: '', to: '', time: '', hours: 0, cross: false };
+  const s = shiftBy(shifts, code);
+  if (!s) return { code: '', name: 'Rest day', from: '', to: '', time: '', hours: 0, cross: false };
+  return { code: s.code, name: s.name, from: s.from, to: s.to, time: `${s.from}–${s.to}`, hours: s.hours, cross: s.cross };
+}
+export const rotaDaysOf = (line: Line | undefined, shifts: readonly ShiftType[]): RotaDay[] => normLine(line).map(c => rotaDayOf(c, shifts));

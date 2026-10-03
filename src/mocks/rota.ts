@@ -35,11 +35,11 @@ import {
   itRequestFor, itRequestNotice, lineOf, lineRestIssues, minFor, newCover, onRoster, onShift, openCoverProblem, openShiftNotice,
   openShiftsFor, patternGenerateProblem, patternProblem, patternUsage, planSummary, planWeek, publishAuditText, publishNotice,
   publishProblem, publishSummary, publishWeek, recalcShift, renumberStages, repeatAuditText, repeatProblem, repeatSummary, repeatWeek,
-  resizeCycle, restNeed, rotaConfigProblem, rotaInputFor, rotaPolicyWithholds, rotaState, rotaTransitionProblem, rotaVisible, rotaWeekId,
+  resizeCycle, restNeed, rotaConfigProblem, rotaDaysOf, rotaInputFor, rotaPolicyWithholds, rotaState, rotaTransitionProblem, rotaVisible, rotaWeekId,
   rotadHours, setCell, setCells, shiftAssignedNotice, shiftBy, shiftRemovalProblem, shiftTime, shiftTypeProblem, shiftUsage,
   staggerOffsets, suggest, thinnest, typeRotaFor, typesAfterNightChange, typesAfterShiftCreate, typesWithoutShift, rotaKeyCounts,
   type AssignMode, type AssignOutcome, type Candidate, type CellWrite, type PatternPersonInfo, type RotaActor, type RotaChange,
-  type RotaWeekCore, type RotaWorker, type RuleContext, type Suggestion, type WeekLookup,
+  type RotaDay, type RotaWeekCore, type RotaWorker, type RuleContext, type Suggestion, type WeekLookup,
 } from '@/domain/rota';
 
 /* ------------------------------------------------------------- the world */
@@ -340,6 +340,28 @@ export function rotaInputOn(personCode: string, date: string): RotaInput | undef
   return rotaInputFor(lineOf(w, p.code), dowMon(date), { shifts: shiftList(), typeRota: typeRotaFor(c.types, p.employeeType), config: c,
     typeName: nameOf('employeeTypes', p.employeeType) });
 }
+
+/* What the timesheet shows of the rota (D13, D14, D16): the person's published
+   week, Monday first. Nothing while the Rota module is off or the week is a
+   draft or in review, so an unpublished plan never reaches a timesheet. */
+const visibleWeek = (loc: string, ws: string) => {
+  if (!tenant().modules.R) return undefined;
+  const w = weekRec(loc, ws);
+  return w && rotaVisible(w.state) ? w : undefined;
+};
+export function rotaDaysFor(personCode: string, weekStart: string): RotaDay[] | undefined {
+  const p = personByCode(personCode), w = p ? visibleWeek(p.location, weekStart) : undefined;
+  return p && w ? rotaDaysOf(lineOf(w, p.code), shiftList()) : undefined;
+}
+/* Everyone on a location's published week, by person code, for the approver's matrix. */
+export function rotaWeekDays(location: string, weekStart: string): Record<string, RotaDay[]> {
+  const w = visibleWeek(location, weekStart);
+  if (!w) return {};
+  const sh = shiftList();
+  return Object.fromEntries(Object.keys(w.lines).map(code => [code, rotaDaysOf(lineOf(w, code), sh)]));
+}
+/* The catalogue as the timesheet's Rota line options, while the Rota module is on. */
+export const rotaLineOptions = () => (tenant().modules.R ? shiftList().map(s => ({ code: s.code, name: s.name, from: s.from, to: s.to })) : undefined);
 
 const r2 = (n: number) => Number(n.toFixed(2));
 

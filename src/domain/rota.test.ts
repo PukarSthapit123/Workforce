@@ -5,7 +5,7 @@ import {
   generateAuditText, generateSummary, hoursPosition, ineligibleMessage, isValidCell, itRequestFor, lineRestIssues, minFor, newCover,
   normLine, onRoster, onShift, openCoverProblem, openShiftsFor, patternGenerateProblem, patternProblem, patternUsage, planSummary, planWeek,
   publishNotice, publishProblem, publishSummary, publishWeek, recalcShift, repeatProblem, repeatSummary, repeatWeek, resizeCycle,
-  rotaCan, rotaConfigProblem, rotaInputFor, rotaKeyCounts, rotaLive, rotaPolicyWithholds, rotaTransitionProblem, rotaVisible, rotaWeekId,
+  rotaCan, rotaConfigProblem, rotaDayOf, rotaDaysOf, rotaInputFor, rotaKeyCounts, rotaLive, rotaPolicyWithholds, rotaTransitionProblem, rotaVisible, rotaWeekId,
   setCell, setCells, shiftAssignedNotice, shiftLetter, shiftName, shiftRemovalProblem, shiftShortTime, shiftTime, shiftTypeProblem,
   shiftUsage, sortShifts, staggerOffsets, suggest, thinnest, typesAfterNightChange, typesAfterShiftCreate, typesWithoutShift,
   type Candidate, type CoverCore, type FulfilStage, type PatternCore, type RotaActor, type RotaWeekCore, type RotaWorker,
@@ -505,5 +505,12 @@ describe('the timesheet\'s rota line (D16)', () => {
     expect(rotaInputFor(line('N'), 0, tctx)?.line).toEqual({ code: 'N', name: 'Night', hours: 9, cross: true });
     expect([rotaInputFor(line('V'), 0, tctx), rotaInputFor(line('S'), 0, tctx), rotaInputFor(line(), 0, tctx), rotaInputFor(undefined, 0, tctx)])
       .toEqual([undefined, undefined, undefined, undefined]);
+  });
+  test('a day of the published rota reads as its shift with times and hours, a rest day, leave or sickness', () => {
+    expect(rotaDayOf('N', SHIFTS)).toEqual({ code: 'N', name: 'Night', from: '22:00', to: '07:00', time: '22:00–07:00', hours: 9, cross: true });
+    expect(rotaDayOf('', SHIFTS)).toMatchObject({ code: '', name: 'Rest day', hours: 0 });
+    expect(rotaDayOf('X', SHIFTS)).toMatchObject({ code: '', name: 'Rest day' });
+    expect([rotaDayOf('V', SHIFTS).name, rotaDayOf('S', SHIFTS).name]).toEqual(['Annual leave', 'Sickness']);
+    expect(rotaDaysOf(line('E', '', 'V'), SHIFTS).map(d => d.code)).toEqual(['E', '', 'V', '', '', '', '']);
   });
 });

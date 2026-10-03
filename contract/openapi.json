@@ -1005,6 +1005,54 @@
                     },
                     "returnReasonRequired": {
                       "type": "boolean"
+                    },
+                    "rota": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {
+                        "minItems": 7,
+                        "maxItems": 7,
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "from": {
+                              "type": "string"
+                            },
+                            "to": {
+                              "type": "string"
+                            },
+                            "time": {
+                              "type": "string"
+                            },
+                            "hours": {
+                              "type": "number",
+                              "minimum": 0
+                            },
+                            "cross": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "code",
+                            "name",
+                            "from",
+                            "to",
+                            "time",
+                            "hours",
+                            "cross"
+                          ],
+                          "additionalProperties": false
+                        }
+                      }
                     }
                   },
                   "required": [
@@ -26224,6 +26272,43 @@
                                 "type": "null"
                               }
                             ]
+                          },
+                          "rota": {
+                            "type": "object",
+                            "properties": {
+                              "code": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "from": {
+                                "type": "string"
+                              },
+                              "to": {
+                                "type": "string"
+                              },
+                              "time": {
+                                "type": "string"
+                              },
+                              "hours": {
+                                "type": "number",
+                                "minimum": 0
+                              },
+                              "cross": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "code",
+                              "name",
+                              "from",
+                              "to",
+                              "time",
+                              "hours",
+                              "cross"
+                            ],
+                            "additionalProperties": false
                           }
                         },
                         "required": [
@@ -26658,6 +26743,33 @@
                               "code",
                               "name",
                               "tasks"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "rotaLines": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "code": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "from": {
+                                "type": "string"
+                              },
+                              "to": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "code",
+                              "name",
+                              "from",
+                              "to"
                             ],
                             "additionalProperties": false
                           }

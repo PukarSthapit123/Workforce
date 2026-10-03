@@ -87,6 +87,16 @@ export type PayCode = z.infer<typeof PayCode>;
 /* ------------------------------------------------------------------ week */
 export const AdvisoryFlag = z.object({ code: z.enum(['long', 'variance', 'rest', 'proxy', 'resub', 'locked']), text: z.string() });
 export const Clock = z.object({ date: IsoDate, time: z.string() });
+/* One day of the person's published rota (module 3 D13, D14, D16): the shift
+   with its times and hours, a rest day (code ''), or leave (V) or sickness (S).
+   Present only while the Rota module is on and the person's location week is
+   published, amended or republished; a draft or review week shows nothing. */
+export const RotaDay = z.object({
+  code: z.string(), name: z.string(), from: z.string(), to: z.string(), time: z.string(), hours: z.number().nonnegative(), cross: z.boolean(),
+});
+export type RotaDay = z.infer<typeof RotaDay>;
+/* A shift in the tenant's catalogue, offered as the Rota line while the Rota module is on. */
+export const RotaLineOption = z.object({ code: z.string(), name: z.string(), from: z.string(), to: z.string() });
 /* One of the tenant's open projects with its own tasks: the Project and Job task options (fieldOpts). */
 export const OpenProject = z.object({ code: z.string(), name: z.string(), tasks: z.array(z.string()) });
 /* Everything the form needs to render this person's capture and to run the
@@ -102,6 +112,8 @@ export const CaptureSetup = z.object({
   mode: z.enum(['form', 'grid', 'clock']),
   /* the tenant's open projects; a Project or Job task value outside them is refused (TS_INVALID) */
   projects: z.array(OpenProject),
+  /* the tenant's shift catalogue, the Rota line's options, while the Rota module is on */
+  rotaLines: z.array(RotaLineOption).optional(),
 });
 export type CaptureSetup = z.infer<typeof CaptureSetup>;
 export const WeekDay = z.object({
@@ -109,9 +121,12 @@ export const WeekDay = z.object({
   /* the If-Match a write to this day sends: the record's version, or 0 when there is none yet */
   version: z.number().int().nonnegative(), minutes: z.number().int().nonnegative(),
   future: z.boolean(), locked: z.boolean(), lockNote: z.string(), flags: z.array(AdvisoryFlag),
-  /* Approved leave or sickness on the day while leave blocks capture. Leave is
-     module 4, so nothing sets it yet; the day view shows the blocking banner when it is set. */
+  /* Leave or sickness on the day. Today it comes from a V or S cell on the
+     published rota (module 3); leave booking itself is module 4. The day view
+     shows the absence banner when it is set. */
   absence: z.enum(['leave', 'sickness']).nullable().optional(),
+  /* the day on the person's published rota; absent with the Rota module off or the week unpublished */
+  rota: RotaDay.optional(),
 });
 export type WeekDay = z.infer<typeof WeekDay>;
 export const EarlierWeek = z.object({
@@ -179,6 +194,9 @@ export const ApprovalQueue = z.object({
   oldestPending: IsoDate.nullable(), bulk: BulkSet,
   /* the server's clock (the matrix opens on its week) and whether a return needs a reason (returnBox) */
   now: Clock, returnReasonRequired: z.boolean(),
+  /* On a weekStart read with the Rota module on: each person's published rota
+     for the week, Monday first, by person code, for the people in the approver's scope. */
+  rota: z.record(z.string(), z.array(RotaDay).length(7)).optional(),
 });
 export type ApprovalQueue = z.infer<typeof ApprovalQueue>;
 export const QueueQuery = z.object({
