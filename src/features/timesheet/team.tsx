@@ -3,7 +3,7 @@ import { Check, Clock, Minus, RotateCw, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Tone } from '@/ui';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/shadcn/tooltip';
-import type { QueueRow } from '@/contract/timesheets';
+import type { QueueRow, RotaDay } from '@/contract/timesheets';
 import { POSTING_DOT, formatMinutes, tsStateInfo, type PostingDot as Dot } from '@/domain/timesheet';
 
 /* What the approver's queue and matrix show of a day: the prototype's
@@ -34,15 +34,20 @@ export function statePill(state: string): { label: string; tone: Tone; glyph: Re
 }
 export const isPending = (state: string) => state === 'pend' || state === 'resub';
 
-/* The matrix pip (v15:1387-1393): approved, sent back, awaiting a decision, or nothing to show. */
-export type PipState = 'ok' | 'back' | 'pend' | 'off';
-export function pipFor(row: Pick<QueueRow, 'state' | 'minutes'> | undefined): { state: PipState; value: string } {
-  if (!row) return { state: 'off', value: '–' };
-  const state: PipState = row.state === 'ok' ? 'ok' : row.state === 'back' ? 'back' : 'pend';
-  return { state, value: hoursFigure(row.minutes) };
+/* The matrix pip (mgrTeamMatrix, v15:7076-7097, and .pip, 1387-1393): leave (AL)
+   or sickness (S) on the published rota first, then the submitted day
+   (approved, sent back, awaiting a decision), then a shift scheduled and not
+   yet worked with its rota hours, or nothing to show. */
+export type PipState = 'ok' | 'back' | 'pend' | 'sched' | 'off';
+export function pipFor(row: Pick<QueueRow, 'state' | 'minutes'> | undefined, rota?: RotaDay): { state: PipState; value: string } {
+  if (rota?.code === 'V' || rota?.code === 'S') return { state: 'off', value: rota.code === 'V' ? 'AL' : 'S' };
+  if (row) return { state: row.state === 'ok' ? 'ok' : row.state === 'back' ? 'back' : 'pend', value: hoursFigure(row.minutes) };
+  if (rota?.code) return { state: 'sched', value: String(rota.hours) };
+  return { state: 'off', value: '–' };
 }
 export const PIP: Record<PipState, string> = {
-  ok: 'bg-ok-surface text-ok', back: 'bg-err-surface text-err', pend: 'bg-info-surface text-info', off: 'bg-transparent text-text-disabled',
+  ok: 'bg-ok-surface text-ok', back: 'bg-err-surface text-err', pend: 'bg-info-surface text-info', sched: 'bg-surface-tint text-text-muted',
+  off: 'bg-transparent text-text-disabled',
 };
 
 /* A hover note on something small that is not a control: focusable, with the

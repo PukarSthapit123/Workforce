@@ -68,7 +68,7 @@ export function TeamMatrix({ today, self, rota, onDone }: {
                   </label>
                 </TableCell>
                 {days.map((d, i) => {
-                  const pip = pipFor(rows.find(r => r.personCode === p.code && r.date === d));
+                  const pip = pipFor(rows.find(r => r.personCode === p.code && r.date === d), mx.data?.rota?.[p.code]?.[i]);
                   return <TableCell key={d}>
                     <span data-testid={tid.tteam.pip(p.code, i)} data-state={pip.state}
                       className={cn('inline-grid h-7 w-[34px] place-items-center rounded-sm text-xs font-semibold tabular-nums', PIP[pip.state])}>{pip.value}</span>
