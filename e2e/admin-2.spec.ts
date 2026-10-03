@@ -19,7 +19,7 @@ test('an admin lowers the daily maximum on Timesheet setup, and the employee’s
   /* nothing is stored until Save */
   expect(((await api.get('/api/v1/timesheet-config')).body as { config: { rules: { maxDaily: number } } }).config.rules.maxDaily).toBe(16);
   await page.getByTestId(tid.mts.save).click();
-  await expect(page.getByTestId(tid.toast.info).last()).toContainText('Timesheet setup saved. It applies to the next save or submission.');
+  await expect(page.getByTestId(tid.toast.info).filter({ hasText: 'Timesheet setup saved. It applies to the next save or submission.' })).toBeVisible();
   await expect(page.getByTestId(tid.mts.save)).toBeDisabled();
   expect(((await api.get('/api/v1/timesheet-config')).body as { config: { rules: { maxDaily: number } } }).config.rules.maxDaily).toBe(12);
   const saved = await auditOf(api, 'timesheetConfig');
@@ -50,6 +50,6 @@ test('an admin lowers the daily maximum on Timesheet setup, and the employee’s
   /* a 12-hour day is inside the new maximum and saves */
   await page.getByTestId(tid.dayForm.field('finish')).fill('19:00');
   await page.getByTestId(tid.dayForm.save).click();
-  await expect(page.getByTestId(tid.toast.info).last()).toContainText('Draft saved · 12:00 · not submitted yet');
+  await expect(page.getByTestId(tid.toast.info).filter({ hasText: 'Draft saved · 12:00 · not submitted yet' })).toBeVisible();
   expect((await dayState(api, 'EMP004', TODAY)).minutes).toBe(720);
 });

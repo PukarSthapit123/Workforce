@@ -21,11 +21,11 @@ test('an employee saves a day, submits it, submits the rest of the week in one r
   await page.getByTestId(tid.dayForm.field('finish')).fill('17:00');
   await expect(page.getByTestId(tid.dayForm.stat('net'))).toContainText('08:00');
   await page.getByTestId(tid.dayForm.save).click();
-  await expect(page.getByTestId(tid.toast.info).last()).toContainText('Draft saved · 08:00 · not submitted yet');
+  await expect(page.getByTestId(tid.toast.info).filter({ hasText: 'Draft saved · 08:00 · not submitted yet' })).toBeVisible();
   expect(await dayState(api, 'EMP004', TODAY)).toMatchObject({ state: 'draft', minutes: 480 });
 
   await page.getByTestId(tid.dayForm.submit).click();
-  await expect(page.getByTestId(tid.toast.info).last()).toContainText('Day submitted · 08:00 · routed to Manish Nepal for sign-off');
+  await expect(page.getByTestId(tid.toast.info).filter({ hasText: 'Day submitted · 08:00 · routed to Manish Nepal for sign-off' })).toBeVisible();
   await expect(page.getByTestId(tid.ts.dayState)).toContainText('Awaiting approval');
   expect((await dayState(api, 'EMP004', TODAY)).state).toBe('pend');
 
@@ -39,7 +39,7 @@ test('an employee saves a day, submits it, submits the rest of the week in one r
   const submitted = page.waitForResponse(r => r.request().method() === 'POST' && r.url().endsWith('/weeks/2026-08-10/submit'));
   await page.getByTestId(tid.ts.submitWeek).click();
   expect((await submitted).status()).toBe(200);
-  await expect(page.getByTestId(tid.toast.info).last()).toContainText('Week 33 submitted · 1 day · 08:30 · routed to Manish Nepal');
+  await expect(page.getByTestId(tid.toast.info).filter({ hasText: 'Week 33 submitted · 1 day · 08:30 · routed to Manish Nepal' })).toBeVisible();
   await expect(page.getByTestId(tid.ts.weekResult)).toContainText('Fri 14 Aug is in the future, so it is held back until it happens.');
   expect(await dayState(api, 'EMP004', '2026-08-10')).toMatchObject({ state: 'pend', minutes: 510 });
   expect((await dayState(api, 'EMP004', '2026-08-14')).state).toBe('none');

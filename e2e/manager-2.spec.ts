@@ -16,7 +16,7 @@ test('a manager approves a day, returns one with a reason, and approves the rest
   await expect(page.getByTestId(tid.tteam.pending)).toContainText('3 timesheets awaiting your decision');
 
   await page.getByTestId(tid.tteam.approve(BIGYAN_DAY)).click();
-  await expect(page.getByTestId(tid.toast.info).last()).toContainText('Approved · Bigyan Poudel · queued for Business Central');
+  await expect(page.getByTestId(tid.toast.info).filter({ hasText: 'Approved · Bigyan Poudel · queued for Business Central' })).toBeVisible();
   await expect(page.getByTestId(tid.tteam.row(BIGYAN_DAY))).toHaveCount(0);
   expect((await dayState(api, 'EMP004', '2026-08-12')).state).toBe('ok');
 
@@ -25,7 +25,7 @@ test('a manager approves a day, returns one with a reason, and approves the rest
   await expect(page.getByTestId(tid.field.root(tid.tteam.returnReason))).toContainText('A reason is required.');
   await page.getByTestId(tid.tteam.returnReason).fill('The waking night allowance needs a note.');
   await page.getByTestId(tid.tteam.returnConfirm).click();
-  await expect(page.getByTestId(tid.toast.info).last()).toContainText('Sent back with a reason · Bijay Shrestha');
+  await expect(page.getByTestId(tid.toast.info).filter({ hasText: 'Sent back with a reason · Bijay Shrestha' })).toBeVisible();
   expect(await dayState(api, 'EMP005', '2026-08-11')).toMatchObject({ state: 'back', record: { returnReason: 'The waking night allowance needs a note.' } });
 
   await expect(page.getByTestId(tid.tteam.pending)).toContainText('1 timesheet awaiting your decision');
@@ -35,7 +35,7 @@ test('a manager approves a day, returns one with a reason, and approves the rest
   await expect(page.getByTestId(tid.tteam.bulkWarn)).toContainText('Tick the confirmation to continue.');
   await page.getByTestId(tid.tteam.bulkAck).click();
   await page.getByTestId(tid.tteam.bulkConfirm).click();
-  await expect(page.getByTestId(tid.toast.info).last()).toContainText('1 approved');
+  await expect(page.getByTestId(tid.toast.info).filter({ hasText: '1 approved' })).toBeVisible();
   await expect(page.getByTestId(tid.tteam.clear)).toContainText('Nothing waiting on you');
   expect((await dayState(api, 'EMP007', '2026-08-10')).state).toBe('ok');
 
@@ -55,8 +55,7 @@ test('a manager enters a day on a team member’s behalf, it shows as a proxy en
   await page.getByTestId(tid.dayForm.field('start')).fill('07:00');
   await page.getByTestId(tid.dayForm.field('finish')).fill('15:00');
   await page.getByTestId(tid.proxy.submitDay).click();
-  await expect(page.getByTestId(tid.toast.info).last())
-    .toContainText('Submitted for Bijay Shrestha on their behalf · 13/08/2026 · 08:00 · attributed to you · Bijay notified');
+  await expect(page.getByTestId(tid.toast.info).filter({ hasText: 'Submitted for Bijay Shrestha on their behalf · 13/08/2026 · 08:00 · attributed to you · Bijay notified' })).toBeVisible();
   expect(await dayState(api, 'EMP005', TODAY)).toMatchObject({ state: 'pend', record: { captureSource: 'proxy', enteredBy: 'EMP001' } });
 
   const proxyDay = `tsd_EMP005_${TODAY}`;
@@ -69,7 +68,7 @@ test('a manager enters a day on a team member’s behalf, it shows as a proxy en
   await page.getByTestId(tid.tteam.mxCheck('EMP005')).click();
   await page.getByTestId(tid.tteam.approveSelected).click();
   /* Bijay's 11/08 day is pending too, so the week approves both */
-  await expect(page.getByTestId(tid.toast.info).last()).toContainText('2 days approved · 1 employee · queued for Business Central');
+  await expect(page.getByTestId(tid.toast.info).filter({ hasText: '2 days approved · 1 employee · queued for Business Central' })).toBeVisible();
   await expect(page.getByTestId(tid.tteam.pip('EMP005', 3))).toHaveAttribute('data-state', 'ok');
   expect((await dayState(api, 'EMP005', TODAY)).state).toBe('ok');
   expect((await dayState(api, 'EMP004', '2026-08-12')).state).toBe('pend');

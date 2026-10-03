@@ -13,7 +13,7 @@ test.beforeEach(async ({ api }) => { await api.seed('qnipay'); await api.setCloc
 
 test('a fault on any timesheet write shows the refusal, and leaves no record and no audit row', async ({ page, api }) => {
   test.setTimeout(120_000);
-  const refused = async () => { await expect(page.getByTestId(tid.toast.error).last()).toContainText('Nothing has been changed'); };
+  const refused = async () => { await expect(page.getByTestId(tid.toast.error).first()).toContainText('Nothing has been changed'); };
   const day = `/api/v1/timesheets/EMP004/days/${TODAY}`;
 
   await signInEmail(page, BIGYAN);
