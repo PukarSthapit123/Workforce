@@ -286,7 +286,8 @@
    "section": "IMP-001 · A5 — manager-facing posting dot",
    "text": "Helper text says queues, not posts",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › the queue says approval queues the timesheet for Business Central, not that it posts"
   },
   {
    "id": "IMP-001-A5-manager-facing-posting-dot#5",
@@ -925,7 +926,8 @@
    "section": "CHUNK B — timesheet integrity",
    "text": "B2 Always-refused rules are stated in the page guide",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/setup.test.tsx › the page guide states the rules that are always refused, overlapping breaks among them"
   },
   {
    "id": "CHUNK-B-timesheet-integrity#16",
@@ -2065,7 +2067,6 @@
    "section": "TOOLTIPS — escape their container and stay on screen",
    "text": "T Table-wrapper tooltips exist and now use the same bubble",
    "area": "timesheet",
-   "deferredTo": "timesheet",
    "status": "n/a",
    "reason": "prototype-only: the check asserts nothing (it is always true) and looks at the Hours position table of module 6; the shared tooltip bubble is checked in the ui area"
   },
@@ -3067,7 +3068,8 @@
    "section": "LEGENDS BECOME LIVE SUMMARIES",
    "text": "LG The full key is in the page guide",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › the page guide carries the full key, sent back included"
   },
   {
    "id": "LEGENDS-BECOME-LIVE-SUMMARIES#11",
@@ -3904,7 +3906,8 @@
    "section": "WEEKLY VIEW — layouts",
    "text": "WK Empty days read as a zero total, not a dash",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › an empty day in the grid layout totals 00:00, not a dash"
   },
   {
    "id": "WEEKLY-VIEW-layouts#21",
@@ -3919,84 +3922,96 @@
    "section": "WEEKLY VIEW — layouts",
    "text": "WK An allocation can be added",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › an added allocation is a second section, numbered, blank, with its own day row; only it can be removed, and the day columns line up"
   },
   {
    "id": "WEEKLY-VIEW-layouts#23",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK ... as a second section",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › an added allocation is a second section, numbered, blank, with its own day row; only it can be removed, and the day columns line up"
   },
   {
    "id": "WEEKLY-VIEW-layouts#24",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK ... with its own day row",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › an added allocation is a second section, numbered, blank, with its own day row; only it can be removed, and the day columns line up"
   },
   {
    "id": "WEEKLY-VIEW-layouts#25",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK ... numbered so it can be referred to",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › an added allocation is a second section, numbered, blank, with its own day row; only it can be removed, and the day columns line up"
   },
   {
    "id": "WEEKLY-VIEW-layouts#26",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK ... and blank, not a copy of the first",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › an added allocation is a second section, numbered, blank, with its own day row; only it can be removed, and the day columns line up"
   },
   {
    "id": "WEEKLY-VIEW-layouts#27",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK The first section cannot be removed, later ones can",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › an added allocation is a second section, numbered, blank, with its own day row; only it can be removed, and the day columns line up"
   },
   {
    "id": "WEEKLY-VIEW-layouts#28",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK The day columns still line up across both sections",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › an added allocation is a second section, numbered, blank, with its own day row; only it can be removed, and the day columns line up"
   },
   {
    "id": "WEEKLY-VIEW-layouts#29",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK Editing the second section updates its own total",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › hours in the second section update its own total, the Monday total and the allocation breakdown, and removing it returns to one"
   },
   {
    "id": "WEEKLY-VIEW-layouts#30",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK ... and rolls into the Monday column total",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › hours in the second section update its own total, the Monday total and the allocation breakdown, and removing it returns to one"
   },
   {
    "id": "WEEKLY-VIEW-layouts#31",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK ... and into the allocation breakdown",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › hours in the second section update its own total, the Monday total and the allocation breakdown, and removing it returns to one"
   },
   {
    "id": "WEEKLY-VIEW-layouts#32",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK Removing a section returns to one",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › hours in the second section update its own total, the Monday total and the allocation breakdown, and removing it returns to one"
   },
   {
    "id": "WEEKLY-VIEW-layouts#33",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK Submission still reads the grid",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › submitting the week in the grid layout sends what the grid holds"
   },
   {
    "id": "WEEKLY-VIEW-layouts#34",
@@ -4107,14 +4122,16 @@
    "section": "WEEKLY LAYOUT IS CONFIGURABLE",
    "text": "CL Allocation comes before the times on each line",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › each line takes its allocation before its times, today is marked, and the foot shows the week total and contracted hours"
   },
   {
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#9",
    "section": "WEEKLY LAYOUT IS CONFIGURABLE",
    "text": "CL Today is marked",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › each line takes its allocation before its times, today is marked, and the foot shows the week total and contracted hours"
   },
   {
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#10",
@@ -4129,7 +4146,8 @@
    "section": "WEEKLY LAYOUT IS CONFIGURABLE",
    "text": "CL The week total and contracted hours are shown",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › each line takes its allocation before its times, today is marked, and the foot shows the week total and contracted hours"
   },
   {
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#12",
@@ -4152,7 +4170,8 @@
    "section": "WEEKLY LAYOUT IS CONFIGURABLE",
    "text": "CL ... to that day only",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › a line added to a day goes on that day only, starts blank, alone has a remove control, adds to the day, and removing it returns to one line"
   },
   {
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#15",
@@ -4167,28 +4186,32 @@
    "section": "WEEKLY LAYOUT IS CONFIGURABLE",
    "text": "CL ... blank, not a copy",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › a line added to a day goes on that day only, starts blank, alone has a remove control, adds to the day, and removing it returns to one line"
   },
   {
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#17",
    "section": "WEEKLY LAYOUT IS CONFIGURABLE",
    "text": "CL The first line has no remove control, the second does",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › a line added to a day goes on that day only, starts blank, alone has a remove control, adds to the day, and removing it returns to one line"
   },
   {
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#18",
    "section": "WEEKLY LAYOUT IS CONFIGURABLE",
    "text": "CL Editing a line updates its own total and the day",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › a line added to a day goes on that day only, starts blank, alone has a remove control, adds to the day, and removing it returns to one line"
   },
   {
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#19",
    "section": "WEEKLY LAYOUT IS CONFIGURABLE",
    "text": "CL Removing it returns to one line",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › a line added to a day goes on that day only, starts blank, alone has a remove control, adds to the day, and removing it returns to one line"
   },
   {
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#20",
@@ -4203,7 +4226,8 @@
    "section": "WEEKLY LAYOUT IS CONFIGURABLE",
    "text": "CL Submission reads the list layout",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › submitting the week in the list layout sends the lines"
   },
   {
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#22",
@@ -6087,21 +6111,24 @@
    "section": "TIME IS CAPTURED AS TIME",
    "text": "TT The week grid uses time controls, not free text",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › the week grid’s start and finish are time controls in five-minute steps, not free text"
   },
   {
    "id": "TIME-IS-CAPTURED-AS-TIME#2",
    "section": "TIME IS CAPTURED AS TIME",
    "text": "TT The day form renders a field as the type it holds",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › the day form renders each field as the type the catalogue declares"
   },
   {
    "id": "TIME-IS-CAPTURED-AS-TIME#3",
    "section": "TIME IS CAPTURED AS TIME",
    "text": "TT The catalogue declares the type",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/seed/seed-2.test.ts › the capture field catalogue declares each field’s type: times as time, durations as duration, counts as number"
   },
   {
    "id": "TIME-IS-CAPTURED-AS-TIME#4",
@@ -6301,7 +6328,6 @@
    "section": "CONSISTENCY",
    "text": "CN Allocation selects share one rule across all three layouts",
    "area": "timesheet",
-   "deferredTo": "timesheet",
    "status": "ported",
    "test": "e2e/visual-2.spec.ts › visual: the module 2 screens at"
   },
@@ -6572,7 +6598,6 @@
    "section": "TODAY IS TODAY",
    "text": "TD The sample data is moved onto the current week",
    "area": "timesheet",
-   "deferredTo": "timesheet",
    "status": "n/a",
    "reason": "prototype-only: shiftSeededDates moves the prototype’s sample data onto the real week; the mock seeds relative to a frozen clock instead"
   },
@@ -6581,7 +6606,6 @@
    "section": "TODAY IS TODAY",
    "text": "TD ... by whole weeks, so a Thursday stays a Thursday",
    "area": "timesheet",
-   "deferredTo": "timesheet",
    "status": "n/a",
    "reason": "prototype-only: shiftSeededDates moves the prototype’s sample data onto the real week; the mock seeds relative to a frozen clock instead"
   },
@@ -6598,7 +6622,6 @@
    "section": "TODAY IS TODAY",
    "text": "TD Submission identifiers cannot collide",
    "area": "timesheet",
-   "deferredTo": "timesheet",
    "status": "n/a",
    "reason": "replaced by one record per person per day (D1): its id is derived from the person and the date, so two submissions cannot collide"
   },
@@ -6607,7 +6630,6 @@
    "section": "TODAY IS TODAY",
    "text": "TD A submission is stamped with today rather than a written-in date",
    "area": "timesheet",
-   "deferredTo": "timesheet",
    "status": "ported",
    "test": "src/mocks/timesheets.test.ts › a new day is saved and submitted in one request, with history and one audit row"
   },
