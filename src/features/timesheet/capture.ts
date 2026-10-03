@@ -6,7 +6,7 @@
    function the server also runs (brief D3): the client only warns early. */
 import type { CaptureSetup, DayInput, WeekDay } from '@/contract/timesheets';
 import {
-  deriveWorkType, fieldProblem, fieldSettingFor, fieldVisible, formatMinutes, missingMandatory, rotaFor, toMin, validateTimes,
+  deriveWorkType, fieldProblem, fieldSettingFor, fieldVisible, formatMinutes, missingMandatory, projectOptions, rotaFor, taskOptions, toMin, validateTimes,
   type BreakInput, type Clock, type DerivedRate, type FieldDef, type FieldDefault, type FieldEnv, type TypeCapture,
 } from '@/domain/timesheet';
 
@@ -80,10 +80,18 @@ export function formGroups(c: CaptureSetup): { group: FieldGroup; fields: FormFi
     .map(def => ({ def, setting: fieldSettingFor(def, type, env), hint: FIELD_HINTS[def.c] })) }))
     .filter(g => g.fields.length > 0);
 }
-/* fieldOpts: a select's choices. A rate type lists the pay codes marked as work types. */
-export function fieldOptions(def: FieldDef, c: CaptureSetup): { value: string; label: string }[] {
+/* fieldOpts: a select's choices as plain values. Project lists the tenant's
+   open projects and Job task the chosen project's own tasks, never the
+   catalogue's sample names; anything else lists the catalogue's options. */
+export function selectValues(code: string, opts: readonly string[] | undefined, c: CaptureSetup, chosen: Readonly<Record<string, unknown>>): string[] {
+  if (code === 'project') return projectOptions(c.projects);
+  if (code === 'job_task') return taskOptions(c.projects, typeof chosen.project === 'string' ? chosen.project : '');
+  return [...(opts ?? [])];
+}
+/* A rate type lists the pay codes marked as work types. */
+export function fieldOptions(def: FieldDef, c: CaptureSetup, chosen: Readonly<Record<string, unknown>> = {}): { value: string; label: string }[] {
   if (def.c === 'work_type') return c.payCodes.filter(p => p.workType).map(p => ({ value: p.code, label: p.label || p.code }));
-  return (def.opts ?? []).map(o => ({ value: o, label: o }));
+  return selectValues(def.c, def.opts, c, chosen).map(o => ({ value: o, label: o }));
 }
 
 /* ---------------------------------------------------------- form values */

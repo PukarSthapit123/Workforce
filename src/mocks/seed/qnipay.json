@@ -2860,6 +2860,773 @@
     "dayId": "",
     "at": "2026-08-10T08:47:00.000Z"
    }
+  },
+  "projectTasks": {
+   "tsk_J00010_001": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00010_001",
+    "projectCode": "J00010",
+    "name": "PT-02-02-04 · AS-IS process flow diagrams",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_001": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_001",
+    "projectCode": "J00020",
+    "name": "PT-01-03-08 · Workshop Preparation",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_002": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_002",
+    "projectCode": "J00020",
+    "name": "PT-01-03-27 · Workshop Preparation and Session",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_003": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_003",
+    "projectCode": "J00020",
+    "name": "PT-100 · Workshop 4 - BC - TO BE - Finance & Accounts",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_004": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_004",
+    "projectCode": "J00020",
+    "name": "PT-103 · Prepare Payroll BC Financial Core Data Template for Configuration/Development",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_005": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_005",
+    "projectCode": "J00020",
+    "name": "PT-114 · Workshop 7 - BC - TO BE - Cashflow Forecast",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_006": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_006",
+    "projectCode": "J00020",
+    "name": "PT-127 · Workshop 2 - BC - AS IS - Purchase & Payables",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_007": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_007",
+    "projectCode": "J00020",
+    "name": "PT-135 · HR/BC/Payroll Playback- Integration",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_008": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_008",
+    "projectCode": "J00020",
+    "name": "PT-140 · Workshop 1 - Payroll - Full Payroll Scoping",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_009": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_009",
+    "projectCode": "J00020",
+    "name": "PT-142 · Set up and Configure",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_010": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_010",
+    "projectCode": "J00020",
+    "name": "PT-151 · Configuration UK",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_011": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_011",
+    "projectCode": "J00020",
+    "name": "PT-183 · Prepare Payroll Blueprint Documentation",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_012": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_012",
+    "projectCode": "J00020",
+    "name": "PT-187 · D365 BC Core Configuration",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_013": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_013",
+    "projectCode": "J00020",
+    "name": "PT-188 · D365 BC Financial Modules Config",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_014": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_014",
+    "projectCode": "J00020",
+    "name": "PT-189 · D365 BC Project Management Config",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_015": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_015",
+    "projectCode": "J00020",
+    "name": "PT-202 · Sirius MDM Octopus Configuration",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_016": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_016",
+    "projectCode": "J00020",
+    "name": "PT-204 · Workflow Configuration",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_017": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_017",
+    "projectCode": "J00020",
+    "name": "PT-205 · Data Migration Planning",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_018": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_018",
+    "projectCode": "J00020",
+    "name": "PT-206 · Data Migration Execution",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_019": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_019",
+    "projectCode": "J00020",
+    "name": "PT-224 · End User Training - PM",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_020": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_020",
+    "projectCode": "J00020",
+    "name": "PT-237 · Configuration of Dependency Data - No Impact Testing",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_021": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_021",
+    "projectCode": "J00020",
+    "name": "PT-242 · Integration Mapping Document - System Wide",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_022": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_022",
+    "projectCode": "J00020",
+    "name": "PT-254 · Bug Fixing",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_023": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_023",
+    "projectCode": "J00020",
+    "name": "PT-268 · Workshop 3 - BC - AS IS - Sales & Receivables",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_024": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_024",
+    "projectCode": "J00020",
+    "name": "PT-279 · Configuration US",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_025": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_025",
+    "projectCode": "J00020",
+    "name": "PT-282 · BC UAT – With Integration and Customisation",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_026": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_026",
+    "projectCode": "J00020",
+    "name": "PT-318 · Reporting UAT- Power BI report",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_027": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_027",
+    "projectCode": "J00020",
+    "name": "PT-325 · Workshop 5 - BC - TO BE - Purchase & Payables",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_028": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_028",
+    "projectCode": "J00020",
+    "name": "PT-327 · Configuration Issue fixes",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_029": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_029",
+    "projectCode": "J00020",
+    "name": "PT-335 · Prepare Payroll BC Data for Production",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_030": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_030",
+    "projectCode": "J00020",
+    "name": "PT-344 · Playback Session - India Entity",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_031": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_031",
+    "projectCode": "J00020",
+    "name": "PT-352 · Workshop 4 - Project Management - TO BE - Workflows & System Integration",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_032": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_032",
+    "projectCode": "J00020",
+    "name": "PT-355 · Follow up Meeting to Discussion / Clarity on Data Templates",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_033": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_033",
+    "projectCode": "J00020",
+    "name": "PT-377 · Deployment to UAT Environment",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_034": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_034",
+    "projectCode": "J00020",
+    "name": "PT-91 · Workshop 6 - BC - TO BE - Sales & Receivables",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00020_035": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00020_035",
+    "projectCode": "J00020",
+    "name": "PT-94 · Workshop 1 - BC - AS IS - Finance & Accounts",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_J00030_001": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_001",
+    "projectCode": "J00030",
+    "name": "PT-01-120 · HCPC: Deferred Income",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_002": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_002",
+    "projectCode": "J00030",
+    "name": "PT-01-131 · Invoiced status not updating back to Dynamics CRM",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_003": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_003",
+    "projectCode": "J00030",
+    "name": "PT-05-105-010 · Document Review for scoping session",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_004": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_004",
+    "projectCode": "J00030",
+    "name": "PT-05-105-08 · Deferral income automatic posting discussion",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_005": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_005",
+    "projectCode": "J00030",
+    "name": "PT-05-105-12 · Additional requirement discussion with client",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_006": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_006",
+    "projectCode": "J00030",
+    "name": "PT-05-105-13 · Version upgrade Review",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_007": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_007",
+    "projectCode": "J00030",
+    "name": "PT-05-105-14 · Additional requirement discussion with client continue",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_008": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_008",
+    "projectCode": "J00030",
+    "name": "PT-05-105-15 · Continuing the discussion with client",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_009": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_009",
+    "projectCode": "J00030",
+    "name": "PT-05-105-25 · Deferral Discussion",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_010": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_010",
+    "projectCode": "J00030",
+    "name": "PT-05-105-26 · Data validation sent by client",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_011": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_011",
+    "projectCode": "J00030",
+    "name": "PT-05-105-28 · Data validation review with client",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_012": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_012",
+    "projectCode": "J00030",
+    "name": "PT-05-105-31 · Further discussion of credit memo issue",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_013": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_013",
+    "projectCode": "J00030",
+    "name": "PT-05-105-38 · Duplicate invoice discussion",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_014": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_014",
+    "projectCode": "J00030",
+    "name": "PT-05-106-010 · Report changes Discussion",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_015": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_015",
+    "projectCode": "J00030",
+    "name": "PT-05-106-04 · new report customization CR discussion",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_016": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_016",
+    "projectCode": "J00030",
+    "name": "PT-05-117-03 · Dimension issue Discussion",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_017": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_017",
+    "projectCode": "J00030",
+    "name": "PT-05-117-07 · Additional currency setup",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_018": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_018",
+    "projectCode": "J00030",
+    "name": "PT-05-120-010 · CAS-16418-Q1Y6M4: Error from Year End Closing Journal",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_019": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_019",
+    "projectCode": "J00030",
+    "name": "PT-05-120-02 · Closing year end",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_020": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_020",
+    "projectCode": "J00030",
+    "name": "PT-05-120-04 · Company setup requirement gathering",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_021": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_021",
+    "projectCode": "J00030",
+    "name": "PT-05-120-05 · Support case discussion",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_022": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_022",
+    "projectCode": "J00030",
+    "name": "PT-05-120-07 · CR document review",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_023": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_023",
+    "projectCode": "J00030",
+    "name": "PT-05-62-02 · version 25.2 upgrade validation in UAT and Dev environment",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_024": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_024",
+    "projectCode": "J00030",
+    "name": "PT-05-62-06 · Payment not landing",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_025": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_025",
+    "projectCode": "J00030",
+    "name": "PT-05-63-01 · VAT return file investigation and discussion",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_026": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_026",
+    "projectCode": "J00030",
+    "name": "PT-05-63-02 · Continuing the VAT Discussion",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_027": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_027",
+    "projectCode": "J00030",
+    "name": "PT-05-64-03 · VAT Return",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_028": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_028",
+    "projectCode": "J00030",
+    "name": "PT-05-64-04 · New company setup",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_029": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_029",
+    "projectCode": "J00030",
+    "name": "PT-05-74-02 · Investigation of Consolidation Inconsistency",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_030": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_030",
+    "projectCode": "J00030",
+    "name": "PT-05-74-03 · Consolidation issue",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_031": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_031",
+    "projectCode": "J00030",
+    "name": "PT-05-74-04 · Training on year end process",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_032": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_032",
+    "projectCode": "J00030",
+    "name": "PT-05-77-01 · Allocating Journal to PO's",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_033": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_033",
+    "projectCode": "J00030",
+    "name": "PT-05-77-03 · VAT date on closed period",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_034": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_034",
+    "projectCode": "J00030",
+    "name": "PT-05-91-01 · Wireframes, iterations and prototype",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00030_035": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00030_035",
+    "projectCode": "J00030",
+    "name": "PT-05-92-03 · Assistance required in VAT submission",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_J00040_001": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_J00040_001",
+    "projectCode": "J00040",
+    "name": "PT-14 · Preparation for UAT",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_JOB00010_001": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_JOB00010_001",
+    "projectCode": "JOB00010",
+    "name": "PT-01-05-010 · Review & Align Pricing Structure – Client Requirements",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_JOB00010_002": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_JOB00010_002",
+    "projectCode": "JOB00010",
+    "name": "PT-01-05-14 · PIM Techincal Discussion and sales query discussion",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_JOB00020_001": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_JOB00020_001",
+    "projectCode": "JOB00020",
+    "name": "PT-01-16-01 · Year end closing discussion",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_JOB00030_001": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_JOB00030_001",
+    "projectCode": "JOB00030",
+    "name": "PT-01-010-22 · Receivables Fit Gap + Solution Design Documentation",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_JOB00030_002": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_JOB00030_002",
+    "projectCode": "JOB00030",
+    "name": "PT-01-010-23 · payable user stories review and update",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_JOB00030_003": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_JOB00030_003",
+    "projectCode": "JOB00030",
+    "name": "PT-01-010-27 · GC overall documentation review & update",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_JOB00030_004": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_JOB00030_004",
+    "projectCode": "JOB00030",
+    "name": "PT-01-010-31 · Preparation for To Be Session",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_JOB00030_005": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_JOB00030_005",
+    "projectCode": "JOB00030",
+    "name": "PT-01-010-32 · Bank Reconciliation To Be Session",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_JOB00030_006": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_JOB00030_006",
+    "projectCode": "JOB00030",
+    "name": "PT-01-010-35 · Fit Gap Finalization",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_JOB00030_007": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_JOB00030_007",
+    "projectCode": "JOB00030",
+    "name": "PT-01-12-07 · Process Flow Diagrams",
+    "group": "Delivery",
+    "billable": true
+   },
+   "tsk_LEAVE_001": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_LEAVE_001",
+    "projectCode": "LEAVE",
+    "name": "ANNUAL LEAVE · Annual Leave",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_LEAVE_002": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_LEAVE_002",
+    "projectCode": "LEAVE",
+    "name": "BANK HOLIDAY · Bank Holiday",
+    "group": "Internal",
+    "billable": false
+   },
+   "tsk_LEAVE_003": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_LEAVE_003",
+    "projectCode": "LEAVE",
+    "name": "SICK LEAVE · Sick Leave",
+    "group": "Internal",
+    "billable": false
+   }
   }
  }
 }

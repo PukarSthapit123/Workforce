@@ -114,6 +114,20 @@ describe('My timesheet, day view', () => {
     expect(screen.getByTestId(tid.dayForm.save)).toBeDisabled();
     expect(screen.getByTestId(tid.dayForm.submit)).toBeDisabled();
   });
+  /* review Important 3, trace TD#8: the options are this organisation’s own projects and the chosen project’s own tasks */
+  test('Project lists this organisation’s open projects, and Job task lists the chosen project’s own tasks', async () => {
+    await openDay();
+    const project = tid.dayForm.field('project'), task = tid.dayForm.field('job_task');
+    await userEvent.click(screen.getByTestId(project));
+    expect(await screen.findByTestId(`${project}-option-Go fibre BC implementation Project`)).toBeInTheDocument();
+    expect(screen.queryByTestId(`${project}-option-Northgate Fit-out`)).toBeNull();
+    await userEvent.click(screen.getByTestId(`${project}-option-Qnipay D365 Implementation`));
+    await userEvent.click(screen.getByTestId(task));
+    const tasks = (await screen.findAllByRole('option')).map(o => o.textContent ?? '');
+    expect(tasks).toHaveLength(35);
+    expect(tasks.every(t => t.startsWith('PT-'))).toBe(true);
+    expect(tasks).not.toContain('One-to-one support');
+  });
   test('copy yesterday fills the form from yesterday’s entry', async () => {
     await openDay();
     await userEvent.click(screen.getByTestId(tid.ts.copyDay));
@@ -181,6 +195,16 @@ describe('My timesheet, week view', () => {
     expect(screen.getByTestId(tid.week.dayTotal(0))).toHaveTextContent('02:00');
     await userEvent.click(screen.getByTestId(tid.week.delAlloc(1)));
     expect(screen.queryByTestId(tid.week.row(1))).toBeNull();
+  });
+  test('the allocation selects list this organisation’s projects, and a task list that follows the chosen project', async () => {
+    await openWeek();
+    const optionsOf = (testId: string) => [...within(screen.getByTestId(testId)).getAllByRole('option')].map(o => o.textContent ?? '').filter(t => t !== '—');
+    expect(optionsOf(tid.week.ctx(0, 'project'))).toContain('Go fibre BC implementation Project');
+    expect(optionsOf(tid.week.ctx(0, 'project'))).not.toContain('Northgate Fit-out');
+    set(tid.week.ctx(0, 'project'), 'Qnipay D365 Implementation');
+    const tasks = optionsOf(tid.week.ctx(0, 'job_task'));
+    expect(tasks).toHaveLength(35);
+    expect(tasks.every(t => t.startsWith('PT-'))).toBe(true);
   });
   test('the grid layout puts each allocation in a section header with its own row', async () => {
     config().weekLayout = 'grid';

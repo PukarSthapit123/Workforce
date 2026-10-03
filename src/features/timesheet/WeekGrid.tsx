@@ -5,7 +5,8 @@ import { cn } from '@/lib/utils';
 import { Button, Empty, NativeSelect, Pill, Row, ScopeBadge, Small, Tip, toastInfo } from '@/ui';
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import type { TimesheetWeek } from '@/contract/timesheets';
-import { NO_TIME_FIELDS, formatMinutes, type WeekLayout, type WeekModel } from '@/domain/timesheet';
+import { NO_TIME_FIELDS, formatMinutes, taskReset, type WeekLayout, type WeekModel } from '@/domain/timesheet';
+import { selectValues } from './capture';
 import { MAX_ALLOCS, MAX_LINES, blankAlloc, blankCell, cellMinutes, defaultCtx, gridTotals, type Alloc, type Cell, type GridState, type Line } from './week';
 
 /* The weekly grid in the tenant's layout (renderWeekGrid, renderWeekClassic,
@@ -45,15 +46,15 @@ function CellInputs({ cell, times, label, disabled, testId, onCell }: {
 }
 
 /* An allocation's selects: stacked in the classic first column, inline in the grid's section header, on the line in the day list. */
-function CtxSelects({ model, ctx, testId, labelFor, onCtx, className }: {
-  model: WeekModel; ctx: Record<string, string>; testId: (field: string) => string; labelFor: (label: string) => string;
+function CtxSelects({ week, model, ctx, testId, labelFor, onCtx, className }: {
+  week: TimesheetWeek; model: WeekModel; ctx: Record<string, string>; testId: (field: string) => string; labelFor: (label: string) => string;
   onCtx: (field: string, v: string) => void; className: string;
 }) {
   return <>{model.ctx.map(f => (
     <label key={f.c} className={className}>
       <span className="text-xs font-semibold text-text-secondary">{f.label}</span>
       <NativeSelect testId={testId(f.c)} aria-label={labelFor(f.label)} className={SEL} value={ctx[f.c] ?? ''} onChange={e => onCtx(f.c, e.target.value)}>
-        <option value="">—</option>{f.opts.map(o => <option key={o}>{o}</option>)}
+        <option value="">—</option>{selectValues(f.c, f.opts, week.capture, ctx).map(o => <option key={o}>{o}</option>)}
       </NativeSelect>
     </label>))}</>;
 }
@@ -96,7 +97,7 @@ function allocEdits(p: AllocProps) {
   return {
     cell: (a: number, i: number, part: keyof Cell, v: string) =>
       set(p.allocs.map((x, k) => (k === a ? { ...x, cells: x.cells.map((c, j) => (j === i ? { ...c, [part]: v } : c)) } : x))),
-    ctx: (a: number, f: string, v: string) => set(p.allocs.map((x, k) => (k === a ? { ...x, ctx: { ...x.ctx, [f]: v } } : x))),
+    ctx: (a: number, f: string, v: string) => set(p.allocs.map((x, k) => (k === a ? { ...x, ctx: { ...x.ctx, [f]: v, ...taskReset(f, x.ctx[f], v) } } : x))),
     add: () => {
       set([...p.allocs, blankAlloc(p.model)]);
       toastInfo(`Allocation ${p.allocs.length + 1} added · pick where the hours belong, then enter them`);
@@ -165,7 +166,7 @@ function Classic(p: AllocProps) {
               <Row key={a} testId={tid.week.row(a)}>
                 <TableCell className="w-[180px] min-w-[180px] pt-sm align-top max-md:w-[150px] max-md:min-w-[150px]">
                   {m.ctx.length
-                    ? <CtxSelects model={m} ctx={alloc.ctx} testId={f => tid.week.ctx(a, f)} labelFor={l => `${l} for allocation ${a + 1}`}
+                    ? <CtxSelects week={p.week} model={m} ctx={alloc.ctx} testId={f => tid.week.ctx(a, f)} labelFor={l => `${l} for allocation ${a + 1}`}
                       onCtx={(f, v) => edit.ctx(a, f, v)} className="mb-sm flex flex-col gap-xs last:mb-0" />
                     : <span className="text-xs text-text-muted">Hours</span>}
                 </TableCell>
@@ -198,7 +199,7 @@ function SectionGrid(p: AllocProps) {
                 <TableCell colSpan={9} className="bg-surface-tint p-0">
                   <div className="flex flex-wrap items-end gap-md px-md py-sm">
                     <span className="mb-[6px]"><ScopeBadge>Allocation {a + 1}</ScopeBadge></span>
-                    <CtxSelects model={m} ctx={alloc.ctx} testId={f => tid.week.ctx(a, f)} labelFor={l => `${l} for allocation ${a + 1}`}
+                    <CtxSelects week={p.week} model={m} ctx={alloc.ctx} testId={f => tid.week.ctx(a, f)} labelFor={l => `${l} for allocation ${a + 1}`}
                       onCtx={(f, v) => edit.ctx(a, f, v)} className="flex min-w-0 flex-[1_1_150px] flex-col gap-xs text-left max-md:flex-[1_1_120px]" />
                     {a > 0 && <RemoveAlloc a={a} withText onClick={() => edit.remove(a)} />}
                   </div>
@@ -247,8 +248,8 @@ function DayList(p: LinesProps) {
                 return (
                   <div key={j} className="flex flex-wrap items-end gap-md">
                     {m.ctx.length > 0 && <div className="flex min-w-0 flex-[1_1_240px] flex-wrap gap-sm max-md:order-first max-md:basis-full">
-                      <CtxSelects model={m} ctx={l.ctx} testId={f => tid.week.lineCtx(i, j, f)} labelFor={lb => `${lb} for ${dow}`}
-                        onCtx={(f, v) => edit(i, j, x => ({ ...x, ctx: { ...x.ctx, [f]: v } }))} className="flex min-w-0 flex-[1_1_130px] flex-col gap-xs" />
+                      <CtxSelects week={p.week} model={m} ctx={l.ctx} testId={f => tid.week.lineCtx(i, j, f)} labelFor={lb => `${lb} for ${dow}`}
+                        onCtx={(f, v) => edit(i, j, x => ({ ...x, ctx: { ...x.ctx, [f]: v, ...taskReset(f, x.ctx[f], v) } }))} className="flex min-w-0 flex-[1_1_130px] flex-col gap-xs" />
                     </div>}
                     <span className="inline-flex flex-none items-center gap-sm">
                       {m.times ? <>

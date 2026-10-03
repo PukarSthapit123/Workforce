@@ -43,7 +43,7 @@ function Control({ f, p }: { f: FormField; p: DayFieldsProps }) {
   let control;
   if (def.input === 'calc') control = <TextInput testId={id} value={def.val ?? ''} readOnly />;
   else if (def.input === 'select')
-    control = <SelectBox testId={id} options={fieldOptions(def, p.capture)} value={text || undefined} placeholder="Choose" disabled={p.disabled}
+    control = <SelectBox testId={id} options={fieldOptions(def, p.capture, p.values)} value={text || undefined} placeholder="Choose" disabled={p.disabled}
       onValueChange={x => p.onChange(code, x)} />;
   else if (def.input === 'textarea')
     control = <TextArea testId={id} value={text} disabled={p.disabled} onChange={e => p.onChange(code, e.target.value)} onBlur={() => p.onBlur(code)} />;

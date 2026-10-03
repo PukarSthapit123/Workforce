@@ -141,6 +141,34 @@ describe('PUT /api/v1/timesheets/:personId/days/:date (Review Focus 2)', () => {
   });
 });
 
+/* review Important 3: Project and Job task are this tenant's own projects and the chosen project's own tasks */
+describe('project and job task', () => {
+  const charged = (fields: Record<string, string>) => ({ entries: [{ ...entry('07:00', '15:00', [['11:00', '11:30']]), fields }], shift: 'E' });
+  test('the capture setup carries the tenant’s open projects, each with its own tasks', async () => {
+    resetTo('qnipay');
+    const w = TimesheetWeek.parse((await (await asEmail('bigyan.poudel@dogmagroup.co.uk'))('GET', '/api/v1/timesheets/EMP004/weeks/2026-08-10')).body);
+    expect(w.capture.projects.map(x => x.name)).toContain('Go fibre BC implementation Project');
+    expect(w.capture.projects.map(x => x.name)).not.toContain('Northgate Fit-out');
+    expect(w.capture.projects.find(x => x.code === 'J00020')?.tasks.some(t => t.startsWith('PT-187 ·'))).toBe(true);
+  });
+  test('a project and a task on it save', async () => {
+    const r = await put(await as('employee'), 'CP-1042', '2026-08-13', charged({ project: 'Camden Supported Living', job_task: 'One-to-one support' }));
+    expect(r.status).toBe(200);
+    expect(DaySaved.parse(r.body).record.entries[0]?.fields).toEqual({ project: 'Camden Supported Living', job_task: 'One-to-one support' });
+  });
+  test('a project that is not open in this organisation is refused naming the field, and nothing is written', async () => {
+    const call = await as('employee'), before = snapshot(...WRITES);
+    const r = await put(call, 'CP-1042', '2026-08-13', charged({ project: 'Go fibre BC implementation Project' }));
+    expect(r.status).toBe(422);
+    expect(refusal(r)).toMatchObject({ code: 'TS_INVALID', field: 'entries.0.project', message: 'Go fibre BC implementation Project is not an open project in this organisation.' });
+    expect(snapshot(...WRITES)).toEqual(before);
+  });
+  test('a task that is not on the chosen project is refused naming the field', async () => {
+    const r = await submit(await as('employee'), 'CP-1042', '2026-08-13', charged({ project: 'Camden Supported Living', job_task: 'Cable pull' }));
+    expect(refusal(r)).toMatchObject({ code: 'TS_INVALID', field: 'entries.0.job_task', message: 'Cable pull is not a task on Camden Supported Living.' });
+  });
+});
+
 describe('POST /api/v1/timesheets/:personId/days/:date/submit', () => {
   test('a new day is saved and submitted in one request, with history and one audit row', async () => {
     const r = await submit(await as('employee'), 'CP-1042', '2026-08-13', shiftDay());

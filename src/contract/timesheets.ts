@@ -87,6 +87,8 @@ export type PayCode = z.infer<typeof PayCode>;
 /* ------------------------------------------------------------------ week */
 export const AdvisoryFlag = z.object({ code: z.enum(['long', 'variance', 'rest', 'proxy', 'resub', 'locked']), text: z.string() });
 export const Clock = z.object({ date: IsoDate, time: z.string() });
+/* One of the tenant's open projects with its own tasks: the Project and Job task options (fieldOpts). */
+export const OpenProject = z.object({ code: z.string(), name: z.string(), tasks: z.array(z.string()) });
 /* Everything the form needs to render this person's capture and to run the
    same checks the server runs: the rules, the clock, and the field inputs to
    fieldVisible, weekModel and missingMandatory. Read from the target person,
@@ -98,6 +100,8 @@ export const CaptureSetup = z.object({
   fieldDefaults: z.record(z.string(), FieldDefault), allowances: z.array(AllowanceDef), payCodes: z.array(PayCode),
   /* the employee type's entry mode: a grid type opens My timesheet on the week while WEEKLY is on (defaultTsView) */
   mode: z.enum(['form', 'grid', 'clock']),
+  /* the tenant's open projects; a Project or Job task value outside them is refused (TS_INVALID) */
+  projects: z.array(OpenProject),
 });
 export type CaptureSetup = z.infer<typeof CaptureSetup>;
 export const WeekDay = z.object({

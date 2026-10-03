@@ -4,6 +4,7 @@ import { FormWarn } from '@/ui';
 import { useSaveDay, useSubmitDay } from '@/api/timesheets';
 import type { Refusal } from '@/contract/common';
 import type { DaySaved, TimesheetWeek, WeekDay } from '@/contract/timesheets';
+import { taskReset } from '@/domain/timesheet';
 import { breakIndex, breaksShown, checkDay, checkField, dayInputFrom, dayStats, serverField, valuesFromDay, type FormValues, type LocalCheck } from './capture';
 import type { DayFieldsProps } from './DayForm';
 
@@ -45,7 +46,7 @@ export function useDayEntry({ week, day, personId, onSaved, onSubmitted }: {
   const fill = (from: FormValues) => { setValues(x => ({ ...x, ...from })); setBreaks(b => Math.max(b, breaksShown(from))); };
   const fields: Omit<DayFieldsProps, 'which' | 'single'> = {
     capture: c, values, errorFor, breaks, onBlur, onAddBreak: () => setBreaks(b => b + 1),
-    onChange: (code, v) => setValues(x => ({ ...x, [code]: v })),
+    onChange: (code, v) => setValues(x => ({ ...x, [code]: v, ...taskReset(code, x[code], v) })),
   };
   return { fields, stats: dayStats(values, c, day.date), attempt, fill, busy, checked, submit, refusal: submit.refusal ?? save.refusal };
 }

@@ -284,7 +284,11 @@ function timesheets(data, people) {
     allowances, types });
   const payCodes = byId((data.BASE_CODES || []).map(b => meta({ id: `pc_${b.code}`, code: b.code, basis: b.basis,
     value: b.basis === 'flat' || isMoney(b.value) ? '' : String(b.value ?? ''), element: b.element, label: b.label || b.code, workType: !!b.wt })));
-  return { timesheetConfig: { timesheetConfig: config }, payCodes, timesheetDays: days, integrationAttempts: attempts };
+  /* Each project's own tasks (PROJECTS[].tasks), for the Job task field: a task
+     belongs to its project, as Business Central's job tasks do. */
+  const projectTasks = byId((data.PROJECTS || []).flatMap(pr => (pr.tasks || []).map((t, i) => meta({
+    id: `tsk_${pr.code}_${String(i + 1).padStart(3, '0')}`, projectCode: pr.code, name: t.n, group: t.g || '', billable: !!t.b }))));
+  return { timesheetConfig: { timesheetConfig: config }, payCodes, timesheetDays: days, integrationAttempts: attempts, projectTasks };
 }
 
 /* A missing PEOPLE roster, or a `social` snapshot indistinguishable from

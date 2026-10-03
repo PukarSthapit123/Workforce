@@ -3111,6 +3111,143 @@
     "dayId": "",
     "at": "2026-08-10T08:47:00.000Z"
    }
+  },
+  "projectTasks": {
+   "tsk_PRJ-114_001": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_PRJ-114_001",
+    "projectCode": "PRJ-114",
+    "name": "Site survey",
+    "group": "Field",
+    "billable": true
+   },
+   "tsk_PRJ-114_002": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_PRJ-114_002",
+    "projectCode": "PRJ-114",
+    "name": "Installation",
+    "group": "Field",
+    "billable": true
+   },
+   "tsk_PRJ-114_003": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_PRJ-114_003",
+    "projectCode": "PRJ-114",
+    "name": "Snagging",
+    "group": "Field",
+    "billable": true
+   },
+   "tsk_PRJ-114_004": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_PRJ-114_004",
+    "projectCode": "PRJ-114",
+    "name": "Project admin",
+    "group": "Office",
+    "billable": false
+   },
+   "tsk_PRJ-121_001": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_PRJ-121_001",
+    "projectCode": "PRJ-121",
+    "name": "Cable pull",
+    "group": "Field",
+    "billable": true
+   },
+   "tsk_PRJ-121_002": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_PRJ-121_002",
+    "projectCode": "PRJ-121",
+    "name": "Splicing",
+    "group": "Field",
+    "billable": true
+   },
+   "tsk_PRJ-121_003": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_PRJ-121_003",
+    "projectCode": "PRJ-121",
+    "name": "Testing & handover",
+    "group": "Field",
+    "billable": true
+   },
+   "tsk_PRJ-204_001": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_PRJ-204_001",
+    "projectCode": "PRJ-204",
+    "name": "One-to-one support",
+    "group": "Service",
+    "billable": true
+   },
+   "tsk_PRJ-204_002": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_PRJ-204_002",
+    "projectCode": "PRJ-204",
+    "name": "Group activity",
+    "group": "Service",
+    "billable": true
+   },
+   "tsk_PRJ-204_003": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_PRJ-204_003",
+    "projectCode": "PRJ-204",
+    "name": "Appointment escort",
+    "group": "Service",
+    "billable": true
+   },
+   "tsk_PRJ-204_004": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_PRJ-204_004",
+    "projectCode": "PRJ-204",
+    "name": "Handover & records",
+    "group": "Service",
+    "billable": false
+   },
+   "tsk_PRJ-009_001": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_PRJ-009_001",
+    "projectCode": "PRJ-009",
+    "name": "Goods receiving",
+    "group": "Warehouse",
+    "billable": false
+   },
+   "tsk_PRJ-009_002": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_PRJ-009_002",
+    "projectCode": "PRJ-009",
+    "name": "Pick & pack",
+    "group": "Warehouse",
+    "billable": false
+   },
+   "tsk_PRJ-009_003": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_PRJ-009_003",
+    "projectCode": "PRJ-009",
+    "name": "Training",
+    "group": "Office",
+    "billable": false
+   },
+   "tsk_PRJ-009_004": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "tsk_PRJ-009_004",
+    "projectCode": "PRJ-009",
+    "name": "Vehicle checks",
+    "group": "Yard",
+    "billable": false
+   }
   }
  }
 }

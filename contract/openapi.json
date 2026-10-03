@@ -14107,6 +14107,32 @@
                             "grid",
                             "clock"
                           ]
+                        },
+                        "projects": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "code": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "tasks": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "required": [
+                              "code",
+                              "name",
+                              "tasks"
+                            ],
+                            "additionalProperties": false
+                          }
                         }
                       },
                       "required": [
@@ -14124,7 +14150,8 @@
                         "fieldDefaults",
                         "allowances",
                         "payCodes",
-                        "mode"
+                        "mode",
+                        "projects"
                       ],
                       "additionalProperties": false
                     },

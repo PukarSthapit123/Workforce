@@ -25,7 +25,7 @@ import {
   periodLocked, periodStart, planWeekSubmit, queueChecksum, queuedAttempt, retryAttempt, retryAuditText, retryProblem,
   returnReasonProblem, rotaFor, timesheetConfigProblem, toMin, transitionAuditText, tsCan, tsPending, tsTransitionProblem,
   validateTimes, weekBlockedMessage, weekDates, weekDayOutcome, weekLabel, weekModel, weekTotals, NOTHING_TO_SUBMIT,
-  type AllowanceDef, type CheckContext, type FieldEnv, type PayCode, type TsState, type WeekDayInput,
+  allocationProblem, type AllowanceDef, type CheckContext, type FieldEnv, type PayCode, type TsState, type WeekDayInput,
 } from '@/domain/timesheet';
 
 type StoredDay = Omit<TimesheetDay, 'minutes' | 'posting' | 'enteredByName'>;
@@ -56,6 +56,14 @@ const envFor = (p: StoredPerson): FieldEnv => {
   return { modules: t.modules, flagOn: c => Boolean(t.flags[c]), capabilities: employeeType(p.employeeType)?.capabilities ?? [], defaults: config().fieldDefaults };
 };
 const now = () => clockFromIso(store.now());
+/* The tenant's open projects (1b's projects) with their own tasks (the seed's projectTasks), in seed order. */
+interface StoredProject { code: string; name: string; status: string }
+interface StoredTask { projectCode: string; name: string }
+function openProjects() {
+  const tasks = Object.values(store.coll<StoredTask>('projectTasks'));
+  return Object.values(store.coll<StoredProject>('projects')).filter(p => p.status !== 'Closed')
+    .map(p => ({ code: p.code, name: p.name, tasks: tasks.filter(t => t.projectCode === p.code).map(t => t.name) }));
+}
 const managerOf = (p: StoredPerson) => p.manager.trim() || 'your manager';
 /* The rota line reaches the checks only while Rota is on (D9). Rota lines are
    module 3's; until it lands there is no line to pass, so none is. */
@@ -111,7 +119,10 @@ function checkDay(p: StoredPerson, date: string, input: DayInput): DayCheck {
   if (!input.entries.length && !input.nonWorkingReason?.trim())
     errors.push({ field: 'entries', message: 'Enter a start and finish time, or mark the day as non-working with a reason.' });
   let entryMaxed = false;
+  const projects = openProjects();
   input.entries.forEach((e, i) => {
+    const alloc = allocationProblem(e.fields ?? {}, projects);
+    if (alloc) errors.push({ field: `entries.${i}.${alloc.field}`, message: alloc.message });
     const blank = !e.start.trim() && !e.finish.trim();
     if (blank && e.hours == null) { errors.push({ field: `entries.${i}.start`, message: 'Add a start and finish time.' }); return; }
     if (blank) return;
@@ -230,7 +241,7 @@ function captureFor(p: StoredPerson) {
     rules: c.rules, cutoff: c.cutoff, timeFormat: c.timeFormat, returnReasonRequired: c.returnReasonRequired, weekGrid: c.weekGrid,
     weekLayout: c.weekLayout, fields: FIELDS, type, modules: t.modules, flags: Object.keys(t.flags).filter(k => Boolean(t.flags[k])),
     capabilities: employeeType(p.employeeType)?.capabilities ?? [], fieldDefaults: c.fieldDefaults, allowances, payCodes: codes,
-    mode: employeeType(p.employeeType)?.mode ?? 'form',
+    mode: employeeType(p.employeeType)?.mode ?? 'form', projects: openProjects(),
   };
 }
 const daysOf = (code: string) => Object.values(days()).filter(d => d.personCode === code);

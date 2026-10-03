@@ -5291,8 +5291,8 @@
    "section": "TENANT DATA FROM THE BC EXPORT",
    "text": "TD Project tasks are available on the entry line",
    "area": "timesheet",
-   "deferredTo": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › Project lists this organisation’s open projects, and Job task lists the chosen project’s own tasks"
   },
   {
    "id": "TENANT-DATA-FROM-THE-BC-EXPORT#9",

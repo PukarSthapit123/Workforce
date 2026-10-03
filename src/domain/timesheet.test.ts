@@ -1,5 +1,5 @@
 import {
-  APPROVAL_AUDIT_SUFFIX, DEFAULT_RULES, NOTHING_TO_SUBMIT, NO_TIME_FIELDS, POSTING_DOT, RATE_TRIGGERS, TS_STATE, TS_STATES,
+  APPROVAL_AUDIT_SUFFIX, DEFAULT_RULES, allocationProblem, projectOptions, taskOptions, taskReset, NOTHING_TO_SUBMIT, NO_TIME_FIELDS, POSTING_DOT, RATE_TRIGGERS, TS_STATE, TS_STATES,
   WEEK_LAYOUTS, WEEK_LAYOUT_LABEL, addDays, advisoryFlags, allSubmittedMessage, alreadySubmittedMessage, clockFromIso, cutoffFor,
   dayMinutes, deriveWorkType, dispatchAttempt, dowMon, entryMinutes, fieldActive, fieldProblem, fieldSettingFor, fieldVisible,
   formatDay, formatDmy, formatMinutes, historyEntry, isoWeek, lockNote, missingMandatory, payBasisOf, payCodeList, payElement,
@@ -434,6 +434,34 @@ describe('weekly layout', () => {
     expect(WEEK_LAYOUTS.map(l => WEEK_LAYOUT_LABEL[l])).toEqual([
       'Classic · allocation in the first column', 'Grid · allocation as a section header', 'List · one row per day']);
     expect(NO_TIME_FIELDS).toBe('No time fields are enabled for this employee type. Turn Start or Finish back on under Timesheet setup.');
+  });
+});
+
+describe('projects and tasks (fieldOpts)', () => {
+  const projects = [{ code: 'PRJ-204', name: 'Camden Supported Living', tasks: ['One-to-one support', 'Group activity'] },
+    { code: 'PRJ-114', name: 'Northgate Fit-out', tasks: ['Site survey'] }, { code: 'PRJ-009', name: 'Internal', tasks: [] }];
+  test('Project lists the open projects; Job task lists the chosen project’s tasks, or the first project’s while none is chosen', () => {
+    expect(projectOptions(projects)).toEqual(['Camden Supported Living', 'Northgate Fit-out', 'Internal']);
+    expect(taskOptions(projects, 'Northgate Fit-out')).toEqual(['Site survey']);
+    expect(taskOptions(projects, '')).toEqual(['One-to-one support', 'Group activity']);
+    expect(taskOptions(projects, 'Internal')).toEqual([]);
+    expect(taskOptions([], '')).toEqual([]);
+  });
+  test('changing the project empties the task; any other choice leaves it', () => {
+    expect(taskReset('project', 'Internal', 'Northgate Fit-out')).toEqual({ job_task: '' });
+    expect(taskReset('project', 'Internal', 'Internal')).toEqual({});
+    expect(taskReset('job_task', 'a', 'b')).toEqual({});
+  });
+  test('the server refuses a project that is not open here, and a task that is not on the chosen project', () => {
+    expect(allocationProblem({}, projects)).toBeNull();
+    expect(allocationProblem({ project: 'Northgate Fit-out', job_task: 'Site survey' }, projects)).toBeNull();
+    expect(allocationProblem({ job_task: 'Group activity' }, projects)).toBeNull();
+    expect(allocationProblem({ project: 'GoFibre Rollout' }, projects))
+      .toEqual({ field: 'project', message: 'GoFibre Rollout is not an open project in this organisation.' });
+    expect(allocationProblem({ project: 'Northgate Fit-out', job_task: 'Group activity' }, projects))
+      .toEqual({ field: 'job_task', message: 'Group activity is not a task on Northgate Fit-out.' });
+    expect(allocationProblem({ job_task: 'Cable pull' }, projects))
+      .toEqual({ field: 'job_task', message: 'Cable pull is not a task on any open project.' });
   });
 });
 

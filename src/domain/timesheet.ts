@@ -320,6 +320,33 @@ export function fieldProblem(code: string, value: string, setting: FieldDefault 
   return null;
 }
 
+/* ------------------------------------------------------ projects and tasks */
+/* fieldOpts (v15:3099-3109): Project lists the tenant's open projects, and Job
+   task lists the chosen project's own tasks (the first open project's while
+   none is chosen), because Business Central will not take a job journal line
+   whose task is not on the job it is booked to. Values are the names. */
+export interface OpenProject { code: string; name: string; tasks: readonly string[] }
+export const projectOptions = (projects: readonly OpenProject[]): string[] => projects.map(p => p.name);
+export function taskOptions(projects: readonly OpenProject[], chosen: string): string[] {
+  const pr = projects.find(p => p.name === chosen) ?? projects[0];
+  return pr ? [...pr.tasks] : [];
+}
+/* A choice made in one select empties the task chosen under the old project. */
+export const taskReset = (code: string, was: unknown, now: unknown): Record<string, string> =>
+  (code === 'project' && was !== now ? { job_task: '' } : {});
+/* The server's check on an entry's allocation: a project must be one of the
+   tenant's open projects, and a task must be on the chosen project (or, with
+   none chosen, on some open project). Fields are named as the entry names them. */
+export function allocationProblem(fields: Readonly<Record<string, string | boolean>>, projects: readonly OpenProject[]): Problem | null {
+  const text = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
+  const project = text(fields.project), task = text(fields.job_task);
+  const pr = projects.find(p => p.name === project);
+  if (project && !pr) return { field: 'project', message: `${project} is not an open project in this organisation.` };
+  if (task && !(pr ? pr.tasks : projects.flatMap(p => p.tasks)).includes(task))
+    return { field: 'job_task', message: pr ? `${task} is not a task on ${pr.name}.` : `${task} is not a task on any open project.` };
+  return null;
+}
+
 /* ----------------------------------------------------------- rate derivation */
 /* A base pay code, read-only here (pay code upkeep is module 6). `value` holds a
    multiplier or a unit count; a flat code's value would be money, so it is blank. */
