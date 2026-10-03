@@ -4,7 +4,7 @@ import { tid } from '@/testids';
 import { cn } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import {
-  AdminCard, Button, Chip, ChipPicker, Empty, Field, FormWarn, GroupLabel, GuideButton, Modal, Page, PageHead, Pill, Row, ScopeBadge,
+  ActionBar, AdminCard, Button, Chip, ChipPicker, Empty, Field, FormWarn, GroupLabel, GuideButton, Modal, Page, PageHead, Pill, Row, ScopeBadge,
   SettingRow, Small, SwitchField, TextInput, Tip, UnitInput, toastInfo,
 } from '@/ui';
 import { useSaveTimesheetConfig, useTimesheetConfig, type TimesheetConfig, type TimesheetSetup } from '@/api/timesheets';
@@ -44,10 +44,10 @@ export function TimesheetSetupPage() {
     </Page>);
 }
 
-function Head({ actions }: { actions?: ReactNode }) {
+function Head() {
   return <PageHead title="Timesheet setup" crumb="Modules · Timesheet · Timesheet setup" tipTestId={tid.head.tip('mts')}
     tip="What each employee type captures, what the system refuses, and how time reaches payroll"
-    actions={<>{actions}<GuideButton view="mts" /></>} />;
+    actions={<GuideButton view="mts" />} />;
 }
 
 /* .inl (v15:507-512): an input that reads as text until it is hovered or focused. */
@@ -104,11 +104,7 @@ function SetupDraftView({ setup, types, env, picked, onPick }: {
 
   return (
     <>
-      <Head actions={<>
-        {dirty && <span data-testid={tid.mts.dirty} className="text-xs text-text-muted">Unsaved changes</span>}
-        <Button testId={tid.mts.cancel} kind="ghost" disabled={!dirty || save.anyPending} onClick={cancel}>Cancel</Button>
-        <Button testId={tid.mts.save} kind="primary" disabled={!dirty} pending={save.anyPending} onClick={submit}>Save</Button>
-      </>} />
+      <Head />
       {save.refusal && <FormWarn testId={tid.mts.warn}>{save.refusal.message} {save.refusal.next}</FormWarn>}
 
       <AdminCard testId={tid.mts.card('fields')} icon={<SlidersHorizontal />} title="Capture fields" tipTestId={tid.mts.tip('fields')}
@@ -202,6 +198,13 @@ function SetupDraftView({ setup, types, env, picked, onPick }: {
         tip="The platform posts hours and pay codes. Rates, tax treatment and gross-to-net stay in Business Central.">
         <Boundary />
       </AdminCard>
+
+      {/* Save and Cancel stay in reach while a lower card is edited */}
+      <ActionBar>
+        {dirty && <span data-testid={tid.mts.dirty} className="mr-auto text-xs text-text-muted">Unsaved changes</span>}
+        <Button testId={tid.mts.cancel} kind="ghost" disabled={!dirty || save.anyPending} onClick={cancel}>Cancel</Button>
+        <Button testId={tid.mts.save} kind="primary" disabled={!dirty} pending={save.anyPending} onClick={submit}>Save</Button>
+      </ActionBar>
 
       {adding && current && <AddAllowance typeName={current.name} exists={c => Object.hasOwn(draft.allowances, c)} onClose={() => setAdding(false)}
         onAdd={(c, label) => {

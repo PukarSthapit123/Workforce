@@ -35,6 +35,17 @@ export function PageHead({ title, crumb, tip, tipTestId, actions }: {
     </>);
 }
 
+/* A long settings page's Save and Cancel, kept in reach while any card on it
+   is edited, as a dialog's .mf keeps its buttons: buttons on the right, 8px
+   apart, on the card surface, stuck 8px above the foot of the screen (above
+   the phone's bottom tabs) and resting after the last card once scrolled to. */
+export function ActionBar({ children }: { children: ReactNode }) {
+  return (
+    <div className="sticky bottom-sm z-[50] mt-lg flex flex-wrap items-center justify-end gap-sm rounded-card border bg-surface-card px-lg py-md shadow-md max-md:bottom-[calc(61px+env(safe-area-inset-bottom,0px))]">
+      {children}
+    </div>);
+}
+
 /* A titled section inside a page: the prototype's h2 (v15:241), 18px/600,
    24px above and 12px below. */
 export function SectionHead({ title, tip, tipTestId }: { title: string; tip?: string; tipTestId?: string }) {

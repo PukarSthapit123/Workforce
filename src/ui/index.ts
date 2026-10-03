@@ -12,7 +12,7 @@ export { NavLink } from './NavLink';
 export type { Tone } from './Pill';
 export { Tip, HelpButton, Caution } from './Affordances';
 export { toastInfo, toastRefusal } from './toast';
-export { Page, PageHead, SectionHead } from './Page';
+export { Page, PageHead, SectionHead, ActionBar } from './Page';
 export { Card, CardHead, IconTile, AdminCard } from './Card';
 export { FilterBar, SearchFilter, SelectFilter, ChipButton } from './Filters';
 export { Logo } from './Logo';
