@@ -227,7 +227,7 @@ export const transitionTimesheetDay = defineEndpoint({ method: 'POST', path: '/a
   summary: 'Approve or return one day (If-Match). Approval queues a posting for Business Central; it never posts.' });
 export const listTimesheetApprovals = defineEndpoint({ method: 'GET', path: '/api/v1/approvals/timesheets', query: QueueQuery,
   response: ApprovalQueue, capability: 'team_ts',
-  summary: 'The approver\'s queue at their location, cursor-paged. Query: status (pend, all, resub, ok, back), q, cursor, weekStart. Reading it runs the posting dispatcher.' });
+  summary: 'The approver\'s queue at their location, cursor-paged. Query: status (pend, all, resub, ok, back), q, cursor, weekStart. A weekStart read returns the whole week in one page. Reading it runs the posting dispatcher.' });
 export const bulkApproveTimesheets = defineEndpoint({ method: 'POST', path: '/api/v1/approvals/timesheets/bulk', request: BulkApprove,
   response: BulkApproved, capability: 'team_ts', errors: [409],
   summary: 'Approve the listed days, checked against the checksum of what the approver was shown. Any change since refuses the whole batch (QUEUE_CHANGED).' });

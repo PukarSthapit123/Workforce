@@ -217,6 +217,26 @@ describe('Team timesheets, the week matrix', () => {
     await userEvent.click(screen.getByTestId(tid.tteam.mxAll));
     expect(screen.getByTestId(tid.tteam.mxCheck('EMP007'))).toBeChecked();
   });
+
+  /* review Important 2: more than one queue page of days in the week; the earliest days must still show and be approved */
+  test('a full week at the location shows every day, and Approve selected approves the whole of a person’s week', async () => {
+    const seed = dayOf(BIGYAN);
+    const team = Object.values(store.coll<Person>('people')).filter(p => p.location === 'MCR' && p.code !== 'EMP001' && p.state === 'active');
+    const week = ['2026-08-10', '2026-08-11', '2026-08-12', '2026-08-13', '2026-08-14'];
+    for (const p of team) for (const date of week)
+      days()[`tsd_${p.code}_${date}`] = { ...seed, id: `tsd_${p.code}_${date}`, personCode: p.code, date, state: 'pend', history: [], integrationAttemptId: '' };
+    expect(team.length * week.length).toBeGreaterThan(50);
+    const last = [...team].sort((a, b) => a.name.localeCompare(b.name)).at(-1);
+    if (!last) throw new Error('no team');
+    await openQueue();
+    await userEvent.click(screen.getByTestId(tid.tteam.view('week')));
+    await screen.findByTestId(tid.tteam.matrix);
+    await waitFor(() => expect(screen.getByTestId(tid.tteam.pip(last.code, 0))).toHaveAttribute('data-state', 'pend'));
+    await userEvent.click(screen.getByTestId(tid.tteam.mxCheck(last.code)));
+    await userEvent.click(screen.getByTestId(tid.tteam.approveSelected));
+    expect(await screen.findByTestId(tid.toast.info)).toHaveTextContent('5 days approved · 1 employee · queued for Business Central');
+    expect(week.map(date => dayOf(`tsd_${last.code}_${date}`).state)).toEqual(['ok', 'ok', 'ok', 'ok', 'ok']);
+  });
 });
 
 describe('Proxy entry from a team member’s record', () => {

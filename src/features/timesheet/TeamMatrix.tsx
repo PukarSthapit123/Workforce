@@ -11,7 +11,8 @@ import { PIP, isPending, pipFor } from './team';
 /* mgrTeamMatrix (qnipay-workforce-v15.html:7076-7097) and approve-matrix
    (11904-11920): everyone at the approver's location against the days of
    one week. Approve selected sends the chosen people's pending days on this
-   week, with queueChecksum over exactly those rows (D7). */
+   week, with queueChecksum over exactly those rows (D7). A weekStart read
+   comes whole, never paged, so those rows are every day of the week. */
 export function TeamMatrix({ today, self, rota, onDone }: {
   today: string; self: string; rota: boolean; onDone: (res: BulkApproved, rows: QueueRow[]) => void;
 }) {

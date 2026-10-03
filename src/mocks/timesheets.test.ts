@@ -393,6 +393,18 @@ describe('GET /api/v1/approvals/timesheets and the dispatcher (Review Focus 4)',
     expect(r.status).toBe(422);
     expect(refusal(r).field).toBe('cursor');
   });
+  /* review Important 2: the matrix reads a week whole, so Approve selected covers every day of it */
+  test('a week read returns every row of the week, past the page size, and the bulk call approves them all', async () => {
+    const team = Object.values(store.coll<{ code: string; location: string }>('people')).filter(p => p.location === 'WH' && p.code !== 'CP-1001');
+    const ids = team.flatMap(p => ['2026-08-03', '2026-08-04', '2026-08-05', '2026-08-06', '2026-08-07'].map(date => plant(p.code, date)));
+    expect(ids.length).toBeGreaterThan(50);
+    const call = await as('manager'), q = await queue(call, '?status=all&weekStart=2026-08-03');
+    expect(q.rows).toHaveLength(ids.length);
+    expect(q.nextCursor).toBeNull();
+    const out = BulkApproved.parse((await call('POST', '/api/v1/approvals/timesheets/bulk', { ids: q.rows.map(r => r.id), checksum: queueChecksum(q.rows) })).body);
+    expect(out.approved).toHaveLength(ids.length);
+    expect(ids.every(id => store.coll<Day>('timesheetDays')[id]?.state === 'ok')).toBe(true);
+  });
   test('an employee cannot read the queue', async () => {
     expect((await (await as('employee'))('GET', '/api/v1/approvals/timesheets')).status).toBe(403);
   });

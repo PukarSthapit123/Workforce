@@ -469,14 +469,16 @@ export const timesheetHandlers = [
       .filter(x => status === 'all' || (status === 'pend' ? tsPending(x.d.state) : x.d.state === status))
       .filter(x => !q || [x.p.name.toLowerCase(), x.d.date, formatDmy(x.d.date)].some(s => s.includes(q)))
       .sort((a, b) => b.d.date.localeCompare(a.d.date) || a.p.name.localeCompare(b.p.name) || a.d.id.localeCompare(b.d.id));
-    const offset = Number(query.cursor ?? '0');
+    /* A week read (the matrix) is bounded by people × 7, so it comes whole: Approve selected
+       must see every day of the week, never only the first page of it. */
+    const offset = Number(query.cursor ?? '0'), size = week ? Math.max(1, rows.length) : PAGE;
     const pending = mine.filter(x => tsPending(x.d.state));
     const flagged = pending.map(x => ({ x, why: flagsFor(x.d).map(f => f.text) })).filter(f => f.why.length)
       .map(({ x, why }) => ({ id: x.d.id, personName: x.p.name, date: x.d.date, why }));
     const oldest = pending.map(x => x.d.submittedAt).filter(Boolean).sort()[0];
     const count = (s: TsState) => inWeek.filter(x => x.d.state === s).length;
     return {
-      rows: rows.slice(offset, offset + PAGE).map(rowOf), nextCursor: offset + PAGE < rows.length ? String(offset + PAGE) : null,
+      rows: rows.slice(offset, offset + size).map(rowOf), nextCursor: offset + size < rows.length ? String(offset + size) : null,
       counts: { pend: inWeek.filter(x => tsPending(x.d.state)).length, resub: count('resub'), ok: count('ok'), back: count('back'), all: inWeek.length },
       oldestPending: oldest ? clockFromIso(oldest).date : null,
       bulk: { ids: pending.map(x => x.d.id).sort(), checksum: queueChecksum(pending.map(x => x.d)), people: new Set(pending.map(x => x.p.code)).size,

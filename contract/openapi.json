@@ -491,7 +491,7 @@
     },
     "/api/v1/approvals/timesheets": {
       "get": {
-        "summary": "The approver's queue at their location, cursor-paged. Query: status (pend, all, resub, ok, back), q, cursor, weekStart. Reading it runs the posting dispatcher.",
+        "summary": "The approver's queue at their location, cursor-paged. Query: status (pend, all, resub, ok, back), q, cursor, weekStart. A weekStart read returns the whole week in one page. Reading it runs the posting dispatcher.",
         "security": [
           {
             "bearer": []
