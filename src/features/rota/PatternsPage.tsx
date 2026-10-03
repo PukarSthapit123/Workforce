@@ -8,6 +8,7 @@ import { useDimension } from '@/api/reference';
 import { useDeletePattern, usePatterns, useRotaHome, useShiftCatalogue, type PatternList, type PatternRecord } from '@/api/rota';
 import { genLabel } from '@/domain/rota';
 import { NewPatternDialog, PatternEditor, PatternPeopleDialog, activePill, useGenerateRun, type PatternCtx } from './PatternEditor';
+import { PatternUploadDialog } from './PatternUpload';
 
 /* Working patterns: the prototype's mgrPatternsPage and mgrPatternsBody
    (qnipay-workforce-v15.html:7238-7246, 7119-7141). The patterns that cover
@@ -15,7 +16,7 @@ import { NewPatternDialog, PatternEditor, PatternPeopleDialog, activePill, useGe
    from each: open it, add people, or generate the rota. The server scopes
    the list and every write to the manager's location, and Rota setup can
    keep patterns for administrators only (D5). */
-type Box = { k: 'edit' | 'people' | 'delete'; code: string; back?: boolean } | { k: 'new' } | null;
+type Box = { k: 'edit' | 'people' | 'delete' | 'upload'; code: string; back?: boolean } | { k: 'new' } | null;
 const TIP = 'A pattern staffs a repeating cycle. Generating from it writes rota lines forward, skipping cells that are already filled and weeks that are already published.';
 
 export function PatternsPage() {
@@ -89,7 +90,9 @@ function Patterns({ list, location, ctx, locName, box, setBox }: {
       {box?.k === 'new' && <NewPatternDialog patterns={list.items} ctx={ctx} onClose={close} onCreated={code => setBox({ k: 'edit', code })} />}
       {/* a saved pattern opens again from the server's copy */}
       {box?.k === 'edit' && cur && <PatternEditor key={`${cur.code}:${cur.version}`} pattern={cur} ctx={ctx} onClose={close}
-        onAddPeople={() => setBox({ k: 'people', code: cur.code, back: true })} onDelete={() => setBox({ k: 'delete', code: cur.code })} />}
+        onAddPeople={() => setBox({ k: 'people', code: cur.code, back: true })} onDelete={() => setBox({ k: 'delete', code: cur.code })}
+        onUpload={() => setBox({ k: 'upload', code: cur.code })} />}
+      {box?.k === 'upload' && cur && <PatternUploadDialog horizon={cur.horizon} onClose={() => setBox({ k: 'edit', code: cur.code })} />}
       {box?.k === 'people' && cur && <PatternPeopleDialog pattern={cur} ctx={ctx}
         onClose={() => setBox(box.back ? { k: 'edit', code: cur.code } : null)} />}
       {box?.k === 'delete' && cur && <ConfirmModal open onOpenChange={o => { if (!o) setBox({ k: 'edit', code: cur.code }); }}

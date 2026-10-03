@@ -72,8 +72,10 @@ const changes = (p: PatternRecord, d: Draft): UpdatePattern =>
   Object.fromEntries(DRAFT_KEYS.filter(k => JSON.stringify(p[k]) !== JSON.stringify(d[k])).map(k => [k, d[k]]));
 
 /* patternWindow with patternDetail (v15:9073-9082, 8865-8958). */
-export function PatternEditor({ pattern, ctx, onClose, onAddPeople, onDelete }: {
+export function PatternEditor({ pattern, ctx, onClose, onAddPeople, onDelete, onUpload }: {
   pattern: PatternRecord; ctx: PatternCtx; onClose: () => void; onAddPeople: () => void; onDelete: () => void;
+  /* Upload patterns from a file (simulated), offered where the prototype offers it */
+  onUpload?: () => void;
 }) {
   const [d, setD] = useState<Draft>(() => draftOf(pattern));
   const [cycleText, setCycleText] = useState(String(pattern.cycle));
@@ -222,6 +224,7 @@ export function PatternEditor({ pattern, ctx, onClose, onAddPeople, onDelete }: 
         <div className="mt-lg flex flex-wrap justify-end gap-sm">
           <Button testId={tid.tpat.run} kind="secondary" disabled={dirty} title={later} pending={gen.pending(pattern.code)} onClick={() => gen.run(pattern)}>Generate the rota from this pattern</Button>
           <Button testId={tid.tpat.editorAdd} kind="ghost" disabled={dirty} title={later} onClick={onAddPeople}>Add a person</Button>
+          {onUpload && <Button testId={tid.patUpload.editorOpen} kind="ghost" onClick={onUpload}>Upload patterns from a file</Button>}
           <Button testId={tid.tpat.remove} kind="danger" disabled={dirty} title={later} onClick={onDelete}>Delete this pattern</Button>
         </div>
       </div>
