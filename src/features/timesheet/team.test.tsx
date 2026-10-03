@@ -181,6 +181,12 @@ describe('Team timesheets, bulk approval', () => {
     expect(warn).toHaveTextContent('Reload the queue, check it again, then approve.');
     expect([dayOf(BIGYAN).state, dayOf(BIJAY).state, dayOf(JAMIR).state]).toEqual(['pend', 'pend', 'pend']);
     expect(audits()).toHaveLength(before);
+    /* the set read again is not the one confirmed, so the tick is off and must be given again */
+    await waitFor(() => expect(screen.getByTestId(tid.tteam.bulkAck)).not.toBeChecked());
+    await userEvent.click(screen.getByTestId(tid.tteam.bulkConfirm));
+    expect(screen.getByTestId(tid.tteam.bulkWarn)).toHaveTextContent('Tick the confirmation to continue.');
+    expect(dayOf(BIGYAN).state).toBe('pend');
+    await userEvent.click(screen.getByTestId(tid.tteam.bulkAck));
     await userEvent.click(screen.getByTestId(tid.tteam.bulkConfirm));
     expect(await screen.findByTestId(tid.toast.info)).toHaveTextContent('3 approved');
     expect([dayOf(BIGYAN).state, dayOf(BIJAY).state, dayOf(JAMIR).state]).toEqual(['ok', 'ok', 'ok']);

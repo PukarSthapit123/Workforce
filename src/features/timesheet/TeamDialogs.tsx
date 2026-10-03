@@ -17,7 +17,9 @@ export function BulkApproveDialog({ queue, where, onClose, onDone }: {
   queue: ApprovalQueue; where: string; onClose: () => void; onDone: (res: BulkApproved) => void;
 }) {
   const s = queue.bulk, n = s.ids.length, flagged = s.flagged;
-  const [ack, setAck] = useState(false);
+  /* the tick confirms this set: it clears itself when the set read again after QUEUE_CHANGED differs */
+  const [ackFor, setAckFor] = useState<string | null>(null);
+  const ack = ackFor === s.checksum;
   const [warn, setWarn] = useState(false);
   const bulk = useBulkApprove();
   const records = `record${n === 1 ? '' : 's'}`;
@@ -60,7 +62,7 @@ export function BulkApproveDialog({ queue, where, onClose, onDone }: {
       </>}
       {s.outside > 0 && <Small testId={tid.tteam.bulkOutside}>{s.outside} further record(s) are pending at other locations. They are outside your scope and will not be approved.</Small>}
       <CheckRow className="mt-[14px] items-start" control={<CheckboxField testId={tid.tteam.bulkAck} checked={ack}
-        onCheckedChange={v => { setAck(v === true); if (v === true) setWarn(false); }} />}>
+        onCheckedChange={v => { setAckFor(v === true ? s.checksum : null); if (v === true) setWarn(false); }} />}>
         <span className="text-xs">I have reviewed {n} {records} totalling {queueHours(s.minutes)}
           {flagged.length ? `, including ${flagged.length} flagged for review` : ''}, and I am approving them for payroll.</span>
       </CheckRow>
