@@ -9,13 +9,13 @@ import { useRecordMutation } from './mutation';
 import { timesheetKeys } from './timesheets';
 import {
   acceptRotaPlan, addPatternPeople, askAllCover, assignCover, claimCover, clearRotaWeek, confirmFilled, copyRotaWeek, createPattern,
-  createShiftType, deletePattern, deleteShiftType, escalateCover, fillCover, generatePattern, getMyShifts, getRotaConfig, getRotaWeek,
+  createShiftType, deletePattern, deleteShiftType, escalateCover, fillCover, generatePattern, getMyShifts, getRotaConfig, getRotaHome, getRotaWeek,
   listCover, listPatterns, listShiftTypes, openCover, planRotaWeek, repeatRotaWeek, setCoverReason, suggestRotaCell, transitionRotaWeek,
   updatePattern, updateRotaConfig, updateShiftType, writeRotaCell,
   type AcceptPlan, type AddPatternPeople, type CellInput, type CellSaved, type CellSuggestions, type CoverBoard, type CoverFilled,
   type CoverSaved, type CoverView, type CreatePattern, type CreateShiftType, type FilledConfirmed, type FilledView, type GeneratePattern,
   type MyShifts, type OpenCover, type OpenShift, type PatternGenerated, type PatternList, type PatternRecord, type PlanAccepted,
-  type PlanItem, type RotaConfigRecord, type RotaRow, type RotaSetup, type RotaWeekView, type ShiftCatalogue, type ShiftTypeRecord,
+  type PlanItem, type RotaConfigRecord, type RotaHome, type RotaRow, type RotaSetup, type RotaWeekView, type ShiftCatalogue, type ShiftTypeRecord,
   type UpdatePattern, type UpdateRotaConfig, type UpdateShiftType, type WeekCleared, type WeekCopied, type WeekMoved, type WeekPlan,
   type WeekRepeated,
 } from '@/contract/rota';
@@ -23,6 +23,7 @@ import {
 export type CoverStatus = 'all' | 'urgent' | 'filled';
 export const rotaKeys = {
   all: ['rota'] as const,
+  home: ['rota', 'home'] as const,
   weeks: ['rota', 'week'] as const,
   week: (location: string, weekStart: string) => ['rota', 'week', location, weekStart] as const,
   plan: (location: string, weekStart: string) => ['rota', 'week', location, weekStart, 'plan'] as const,
@@ -37,6 +38,8 @@ export const rotaKeys = {
 };
 
 /* ---------------------------------------------------------------- reads */
+/* Where Team rota opens: the locations this person may manage, their own, and the server's week. */
+export const useRotaHome = (enabled = true) => useQuery({ queryKey: rotaKeys.home, queryFn: () => api(getRotaHome), enabled });
 export const useRotaWeek = (location: string, weekStart: string, enabled = true) => useQuery({
   queryKey: rotaKeys.week(location, weekStart), queryFn: () => api(getRotaWeek, { params: { location, weekStart } }), enabled: enabled && !!location,
 });
@@ -169,6 +172,6 @@ export const useSaveRotaConfig = () => useRecordMutation({
 export type {
   AcceptPlan, CellInput, CellSaved, CellSuggestions, CoverBoard, CoverFilled, CoverSaved, CoverView, CreatePattern, CreateShiftType,
   FilledConfirmed, FilledView, GeneratePattern, MyShifts, OpenCover, OpenShift, PatternGenerated, PatternList, PatternRecord, PlanAccepted,
-  PlanItem, RotaConfigRecord, RotaRow, RotaSetup, RotaWeekView, ShiftCatalogue, ShiftTypeRecord, UpdatePattern, UpdateRotaConfig,
+  PlanItem, RotaConfigRecord, RotaHome, RotaRow, RotaSetup, RotaWeekView, ShiftCatalogue, ShiftTypeRecord, UpdatePattern, UpdateRotaConfig,
   UpdateShiftType, WeekCleared, WeekCopied, WeekMoved, WeekPlan, WeekRepeated,
 };

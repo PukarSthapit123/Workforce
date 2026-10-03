@@ -254,6 +254,12 @@ const ByCode = z.object({ code: z.string().min(1) });
 const ById = z.object({ id: z.string().min(1) });
 const WEEK = '/api/v1/rota/weeks/:location/:weekStart';
 
+/* Where Team rota opens: the locations this person may manage (D5), the one to start on
+   (their own), and the server's today with its week, so the screen never guesses either. */
+export const RotaHome = z.object({ locations: z.array(LocationOption), location: z.string(), today: IsoDate, weekStart: IsoDate });
+export type RotaHome = z.infer<typeof RotaHome>;
+export const getRotaHome = defineEndpoint({ method: 'GET', path: '/api/v1/rota/home', response: RotaHome, capability: 'team_rota',
+  summary: 'Where Team rota opens: the locations this person may manage, the one to start on, and today\'s week' });
 export const getRotaWeek = defineEndpoint({ method: 'GET', path: WEEK, params: LocWeek, response: RotaWeekView, capability: 'team_rota', errors: [404],
   summary: 'One location\'s rota week: lines per person, coverage and gaps per day, hours position per person, state, version, change log and recent publications' });
 export const writeRotaCell = defineEndpoint({ method: 'PUT', path: `${WEEK}/cells`, params: LocWeek, request: CellInput, response: CellSaved,

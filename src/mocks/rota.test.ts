@@ -3,7 +3,7 @@ import { store } from './store';
 import { Refusal } from '@/contract/common';
 import {
   CellSaved, CellSuggestions, CoverBoard, CoverFilled, CoverSaved, FilledConfirmed, MyShifts, PatternGenerated, PatternList, PlanAccepted,
-  RotaSetup, RotaWeekView, ShiftCatalogue, WeekCleared, WeekCopied, WeekMoved, WeekPlan, WeekRepeated,
+  RotaHome, RotaSetup, RotaWeekView, ShiftCatalogue, WeekCleared, WeekCopied, WeekMoved, WeekPlan, WeekRepeated,
 } from '@/contract/rota';
 import { DaySaved } from '@/contract/timesheets';
 import { FROZEN, accountOf, audits, caller, fault, resetTo, snapshot, tokenFor, type Persona } from '@/test/api-helpers';
@@ -78,6 +78,13 @@ describe('scope (Review Focus 1)', () => {
     expect(r.status).toBe(403);
     expect(refusal(r).code).toBe('capability');
     expect(snapshot(...WRITES)).toEqual(before);
+  });
+  test('Team rota opens on the manager\'s own location and the server\'s week; an employee is refused', async () => {
+    const h = RotaHome.parse((await (await as('manager'))('GET', '/api/v1/rota/home')).body);
+    expect(h).toEqual({ locations: [{ code: 'WH', name: 'Willow House' }], location: 'WH', today: '2026-08-13', weekStart: '2026-08-10' });
+    const e = await (await as('employee'))('GET', '/api/v1/rota/home');
+    expect(e.status).toBe(403);
+    expect(refusal(e).code).toBe('capability');
   });
   test('an admin with team_rota may pick every active location', async () => {
     const a = Object.values(store.coll<{ personCode: string; grants: string[] }>('accounts')).find(x => x.personCode === accountOf('admin').personCode);

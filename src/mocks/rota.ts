@@ -17,7 +17,7 @@ import {
 } from './world';
 import {
   acceptRotaPlan, addPatternPeople, askAllCover, assignCover, claimCover, clearRotaWeek, confirmFilled, copyRotaWeek, createPattern,
-  createShiftType, deletePattern, deleteShiftType, escalateCover, fillCover, generatePattern, getMyShifts, getRotaConfig, getRotaWeek,
+  createShiftType, deletePattern, deleteShiftType, escalateCover, fillCover, generatePattern, getMyShifts, getRotaConfig, getRotaHome, getRotaWeek,
   listCover, listPatterns, listShiftTypes, openCover, planRotaWeek, repeatRotaWeek, setCoverReason, suggestRotaCell, transitionRotaWeek,
   updatePattern, updateRotaConfig, updateShiftType, writeRotaCell,
   type CoverRecord, type CoverView, type FilledShift, type HoursFlag, type ItRequest, type PatternRecord, type RotaConfigRecord,
@@ -345,6 +345,13 @@ const r2 = (n: number) => Number(n.toFixed(2));
 
 export const rotaHandlers = [
   /* ------------------------------------------------------------ the week */
+  serve(getRotaHome, ({ session }) => {
+    requireRota();
+    const ls = manageable(session), sc = scopeOf(session), now = today();
+    const own = sc.all ? personByCode(effectiveCode(session))?.location : sc.location;
+    return { locations: ls, location: ls.find(l => l.code === own)?.code ?? ls[0]?.code ?? '', today: now, weekStart: periodStart(now) };
+  }),
+
   serve(getRotaWeek, ({ session, params }) => {
     requireRota();
     const l = locationFor(session, params.location);
