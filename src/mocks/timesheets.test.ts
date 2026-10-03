@@ -94,7 +94,9 @@ describe('PUT /api/v1/timesheets/:personId/days/:date (Review Focus 2)', () => {
   test('a warning never blocks: a 12-hour day saves and says so', async () => {
     const r = await put(await as('employee'), 'CP-1042', '2026-08-13', shiftDay('07:00', '19:00', []));
     expect(r.status).toBe(200);
-    expect(DaySaved.parse(r.body).warnings).toEqual(['That is 12h 00m in one day. It is above the 10-hour review threshold.']);
+    /* module 3 D13: CP-1042 is on a Night (9 h) in the published Willow House week, so the variance warning is real now */
+    expect(DaySaved.parse(r.body).warnings).toEqual(['That is 12h 00m in one day. It is above the 10-hour review threshold.',
+      'That is +3.00 h against the rota line (Night 9 h).']);
   });
   const refusals: [string, string, unknown, number, Partial<Refusal>][] = [
     ['a future date', '2026-08-14', shiftDay(), 422, { code: 'TS_INVALID', field: 'date', message: 'You cannot record time for Fri 14 Aug. It is in the future.' }],

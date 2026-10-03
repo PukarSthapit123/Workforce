@@ -10,6 +10,7 @@ import { serve } from './serve';
 import { actor, requireCapability } from './auth';
 import { writeAudit } from './audit';
 import { faults } from './faults';
+import { rotaInputOn } from './rota';
 import { invalid } from './people';
 import meta from './seed/meta.json';
 import { effectiveCode, inScope, nameOf, personByCode, recordAt, scopeOf, type Signed, type StoredPerson } from './world';
@@ -65,13 +66,14 @@ function openProjects() {
     .map(p => ({ code: p.code, name: p.name, tasks: tasks.filter(t => t.projectCode === p.code).map(t => t.name) }));
 }
 const managerOf = (p: StoredPerson) => p.manager.trim() || 'your manager';
-/* The rota line reaches the checks only while Rota is on (D9). Rota lines are
-   module 3's; until it lands there is no line to pass, so none is. */
-const rulesCtx = (): Omit<CheckContext, 'date'> => {
+const rulesCtx = (): Omit<CheckContext, 'date' | 'rota'> => {
   const c = config();
-  return { now: now(), rules: c.rules, cutoff: c.cutoff, timeFormat: c.timeFormat, rota: rotaFor(tenant().modules, undefined) };
+  return { now: now(), rules: c.rules, cutoff: c.cutoff, timeFormat: c.timeFormat };
 };
-const ctxFor = (date: string): CheckContext => ({ date, ...rulesCtx() });
+/* The person's rota line for the day reaches the checks only while Rota is on
+   (module 2 D9, module 3 D13): their cell in their location's published week. */
+const rotaOn = (personCode: string, date: string) => rotaFor(tenant().modules, rotaInputOn(personCode, date));
+const ctxFor = (p: StoredPerson, date: string): CheckContext => ({ date, ...rulesCtx(), rota: rotaOn(p.code, date) });
 const isLocked = (date: string) => { const c = config(); return periodLocked(date, { enforceLock: c.rules.enforceLock, cutoff: c.cutoff }, now()); };
 const hm = (min: number) => formatMinutes(min, config().timeFormat);
 
@@ -113,7 +115,7 @@ function valuesFor(input: DayInput): Record<string, string | boolean | undefined
 /* Everything validateTimes and the field rules say about one day, entry by
    entry, with each field named as the form names it (entries.0.start). */
 function checkDay(p: StoredPerson, date: string, input: DayInput): DayCheck {
-  const ctx = ctxFor(date), rules = ctx.rules, type = typeOf(p);
+  const ctx = ctxFor(p, date), rules = ctx.rules, type = typeOf(p);
   const errors: Problem[] = [], warnings: string[] = [];
   errors.push(...validateTimes({ start: '', finish: '', breaks: [] }, ctx).errors);
   if (!input.entries.length && !input.nonWorkingReason?.trim())
@@ -231,7 +233,7 @@ function dispatch() {
 
 /* ---------------------------------------------------------------- reading */
 const flagsFor = (d: StoredDay) => {
-  return advisoryFlags({ date: d.date, minutes: dayMinutes(d.entries), state: d.state, captureSource: d.captureSource }, rulesCtx());
+  return advisoryFlags({ date: d.date, minutes: dayMinutes(d.entries), state: d.state, captureSource: d.captureSource }, { ...rulesCtx(), rota: rotaOn(d.personCode, d.date) });
 };
 function captureFor(p: StoredPerson) {
   const c = config(), t = tenant(), type = typeOf(p) ?? null, codes = payCodes();
