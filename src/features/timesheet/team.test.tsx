@@ -1,5 +1,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { http } from 'msw';
+import { server } from '@/mocks/node';
 import { store } from '@/mocks/store';
 import { setToken } from '@/api/session-token';
 import { tid } from '@/testids';
@@ -286,5 +288,28 @@ describe('Proxy entry from a team member’s record', () => {
     expect(held).toHaveTextContent('1 day held back');
     expect(held).toHaveTextContent('Wed 12 Aug is already awaiting approval, so it was left alone.');
     expect(screen.getByTestId(tid.proxy.banner)).toBeInTheDocument();
+  });
+});
+
+describe('Team timesheets, what the queue says and shows', () => {
+  /* trace IMP-001 A5#4: the helper text says approval queues, never that it posts */
+  test('the queue says approval queues the timesheet for Business Central, not that it posts', async () => {
+    await openQueue();
+    expect(screen.getByText('Approval queues the timesheet as hours and pay codes. Business Central resolves what they are worth.')).toBeInTheDocument();
+    expect(document.body).not.toHaveTextContent(/approval posts/i);
+  });
+  /* fidelity gap 8: only the action being written shows pending */
+  test('while an approval is being written, only Approve shows pending; Return waits without claiming to be busy', async () => {
+    let release = () => {};
+    const gate = new Promise<void>(r => { release = r; });
+    server.use(http.post('/api/v1/timesheet-days/:id/transition', async () => { await gate; }));
+    await openQueue();
+    await userEvent.click(screen.getByTestId(tid.tteam.approve(BIGYAN)));
+    expect(screen.getByTestId(tid.tteam.approve(BIGYAN))).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByTestId(tid.tteam.ret(BIGYAN))).not.toHaveAttribute('aria-busy');
+    expect(screen.getByTestId(tid.tteam.ret(BIGYAN))).toBeDisabled();
+    expect(screen.getByTestId(tid.tteam.approve(BIJAY))).not.toHaveAttribute('aria-busy');
+    release();
+    expect(await screen.findByTestId(tid.toast.info)).toHaveTextContent('Approved · Bigyan Poudel · queued for Business Central');
   });
 });

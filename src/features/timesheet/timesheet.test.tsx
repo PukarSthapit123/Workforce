@@ -9,6 +9,7 @@ import type { TimesheetConfig, TimesheetDay, TimesheetWeek } from '@/contract/ti
 import { expectTestIdCoverage } from '@/test/testid-coverage';
 import { renderPage, withFakeServer } from '@/test/render-page';
 import { audits, caller, resetTo } from '@/test/api-helpers';
+import meta from '@/mocks/seed/meta.json';
 import { TimesheetPage } from './TimesheetPage';
 
 /* The qnipay seed at the frozen clock (Thursday 13/08/2026 15:30 London).
@@ -291,5 +292,143 @@ describe('My timesheet, catching up on earlier weeks', () => {
     expect(await screen.findByTestId(tid.toast.info)).toHaveTextContent('1 week submitted · each routes through approval separately');
     expect(dayOf('EMP004', '2026-08-03')?.state).toBe('pend');
     expect(dayOf('EMP004', '2026-07-27')?.state).toBe('draft');
+  });
+});
+
+describe('My timesheet, the page guide', () => {
+  beforeEach(async () => { await signInEmail(BIGYAN); });
+  /* trace LG#10: the exhaustive key moved behind the ? */
+  test('the page guide carries the full key, sent back included', async () => {
+    await openWeek();
+    await userEvent.click(screen.getByTestId(tid.guide.open('ts')));
+    const guide = await screen.findByRole('dialog');
+    expect(guide).toHaveTextContent('The full key');
+    expect(guide).toHaveTextContent(/sent back/i);
+  });
+});
+
+/* trace TT#1 and TT#2: time is captured as time, and each field as what it holds */
+describe('My timesheet, time is captured as time', () => {
+  beforeEach(async () => { await signInEmail(BIGYAN); });
+  test('the week grid’s start and finish are time controls in five-minute steps, not free text', async () => {
+    const grid = await openWeek();
+    const times = within(grid).getAllByLabelText(/ (start|finish)$/);
+    expect(times).toHaveLength(14);
+    for (const t of times) {
+      expect(t).toHaveAttribute('type', 'time');
+      expect(t).toHaveAttribute('step', '300');
+    }
+  });
+  test('the day form renders each field as the type the catalogue declares', async () => {
+    await openDay();
+    const fields = meta.timesheetFields as { c: string; input: string; t?: string }[];
+    const kinds = new Set<string>();
+    for (const f of fields) {
+      const el = screen.queryByTestId(tid.dayForm.field(f.c));
+      if (!el) continue;
+      if (f.input === 'select') { expect(el, f.c).toHaveRole('combobox'); kinds.add('select'); }
+      else if (f.input === 'check') { expect(el, f.c).toHaveRole('checkbox'); kinds.add('check'); }
+      else if (f.input === 'textarea') { expect(el.tagName, f.c).toBe('TEXTAREA'); kinds.add('textarea'); }
+      else if (f.input === 'calc') { expect(el, f.c).toHaveAttribute('readonly'); kinds.add('calc'); }
+      else if (f.t === 'time') { expect(el, f.c).toHaveAttribute('type', 'time'); kinds.add('time'); }
+      else if (f.t === 'duration') { expect(el, f.c).toHaveAttribute('type', 'number'); expect(el, f.c).toHaveAttribute('step', '0.25'); kinds.add('duration'); }
+      else if (f.t === 'number') { expect(el, f.c).toHaveAttribute('type', 'number'); kinds.add('number'); }
+      else { expect(el, f.c).toHaveAttribute('type', 'text'); kinds.add('text'); }
+    }
+    expect([...kinds]).toEqual(expect.arrayContaining(['time', 'select', 'textarea']));
+  });
+});
+
+/* trace WK#20 and WK#22-33: the grid layout, one section per allocation */
+describe('My timesheet, the grid layout', () => {
+  beforeEach(async () => { await signInEmail(BIGYAN); config().weekLayout = 'grid'; });
+  test('an empty day in the grid layout totals 00:00, not a dash', async () => {
+    await openWeek();
+    expect(screen.getByTestId(tid.week.dayTotal(0))).toHaveTextContent(/^00:00$/);
+    expect(screen.getByTestId(tid.week.dayTotal(2))).toHaveTextContent('07:30');
+  });
+  test('an added allocation is a second section, numbered, blank, with its own day row; only it can be removed, and the day columns line up', async () => {
+    await openWeek();
+    expect(screen.queryByTestId(tid.week.allocRow(1))).toBeNull();
+    await userEvent.click(screen.getByTestId(tid.week.addAlloc));
+    expect(screen.getByTestId(tid.week.allocRow(1))).toHaveTextContent('Allocation 2');
+    expect(screen.getByTestId(tid.week.row(1))).toBeInTheDocument();
+    expect(await screen.findByTestId(tid.toast.info)).toHaveTextContent('Allocation 2 added');
+    const inputs = [...screen.getByTestId(tid.week.row(1)).querySelectorAll('input')];
+    expect(inputs).toHaveLength(14);
+    for (const i of inputs) expect(i).toHaveValue('');
+    for (const s of within(screen.getByTestId(tid.week.allocRow(1))).getAllByRole('combobox')) expect(s).toHaveValue('');
+    expect(screen.queryByTestId(tid.week.delAlloc(0))).toBeNull();
+    expect(screen.getByTestId(tid.week.delAlloc(1))).toBeInTheDocument();
+    const cells = (row: number) => screen.getByTestId(tid.week.row(row)).querySelectorAll('td').length;
+    expect(cells(1)).toBe(cells(0));
+    expect(cells(1)).toBe(9);
+  });
+  test('hours in the second section update its own total, the Monday total and the allocation breakdown, and removing it returns to one', async () => {
+    await openWeek();
+    await userEvent.click(screen.getByTestId(tid.week.addAlloc));
+    set(tid.week.ctx(1, 'project'), 'Qnipay D365 Implementation');
+    set(tid.week.cell(1, 0, 'start'), '18:00');
+    set(tid.week.cell(1, 0, 'finish'), '20:00');
+    expect(screen.getByTestId(tid.week.rowTotal(1))).toHaveTextContent('02:00');
+    expect(screen.getByTestId(tid.week.dayTotal(0))).toHaveTextContent('02:00');
+    expect(screen.getByTestId(tid.week.total)).toHaveTextContent('09:30');
+    expect(screen.getByTestId(tid.week.alloc)).toHaveTextContent('Qnipay D365 Implementation 02:00');
+    await userEvent.click(screen.getByTestId(tid.week.delAlloc(1)));
+    expect(screen.queryByTestId(tid.week.allocRow(1))).toBeNull();
+    expect(screen.queryByTestId(tid.week.row(1))).toBeNull();
+    expect(screen.getByTestId(tid.week.allocRow(0))).toBeInTheDocument();
+    expect(screen.getByTestId(tid.week.dayTotal(0))).toHaveTextContent(/^00:00$/);
+  });
+  test('submitting the week in the grid layout sends what the grid holds', async () => {
+    await openWeek();
+    set(tid.week.cell(0, 0, 'start'), '09:00');
+    set(tid.week.cell(0, 0, 'finish'), '17:00');
+    await userEvent.click(screen.getByTestId(tid.ts.submitWeek));
+    expect(await screen.findByTestId(tid.toast.info)).toHaveTextContent('Week 33 submitted · 1 day · 08:00');
+    expect(dayOf('EMP004', '2026-08-10')).toMatchObject({ state: 'pend', entries: [{ start: '09:00', finish: '17:00' }] });
+  });
+});
+
+/* trace CL#8-21: the list layout, one row per day */
+describe('My timesheet, the list layout', () => {
+  beforeEach(async () => { await signInEmail(BIGYAN); config().weekLayout = 'days'; });
+  test('each line takes its allocation before its times, today is marked, and the foot shows the week total and contracted hours', async () => {
+    await openWeek();
+    const select = screen.getByTestId(tid.week.lineCtx(2, 0, 'project')), start = screen.getByTestId(tid.week.lineCell(2, 0, 'start'));
+    expect(select.compareDocumentPosition(start) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(within(screen.getByTestId(tid.week.day(3))).getByText('Today')).toBeInTheDocument();
+    for (const i of [0, 1, 2, 4, 5, 6]) expect(within(screen.getByTestId(tid.week.day(i))).queryByText('Today')).toBeNull();
+    const foot = screen.getByTestId(tid.week.total).parentElement;
+    expect(screen.getByTestId(tid.week.total)).toHaveTextContent('07:30');
+    expect(foot).toHaveTextContent('Week total');
+    expect(foot).toHaveTextContent('contracted 40:00');
+  });
+  test('a line added to a day goes on that day only, starts blank, alone has a remove control, adds to the day, and removing it returns to one line', async () => {
+    await openWeek();
+    await userEvent.click(screen.getByTestId(tid.week.addLine(2)));
+    expect(screen.getByTestId(tid.week.lineCell(2, 1, 'start'))).toHaveValue('');
+    expect(screen.getByTestId(tid.week.lineCell(2, 1, 'finish'))).toHaveValue('');
+    for (const i of [0, 1, 3, 4, 5, 6]) expect(screen.queryByTestId(tid.week.lineCell(i, 1, 'start'))).toBeNull();
+    expect(screen.queryByTestId(tid.week.lineCell(0, 0, 'start'))).toBeNull();
+    expect(screen.queryByTestId(tid.week.delLine(2, 0))).toBeNull();
+    expect(screen.getByTestId(tid.week.delLine(2, 1))).toBeInTheDocument();
+    set(tid.week.lineCell(2, 1, 'start'), '18:00');
+    set(tid.week.lineCell(2, 1, 'finish'), '21:00');
+    expect(within(screen.getByTestId(tid.week.day(2))).getByText('03:00')).toBeInTheDocument();
+    expect(screen.getByTestId(tid.week.dayTotal(2))).toHaveTextContent('10:30');
+    await userEvent.click(screen.getByTestId(tid.week.delLine(2, 1)));
+    expect(screen.queryByTestId(tid.week.lineCell(2, 1, 'start'))).toBeNull();
+    expect(screen.getByTestId(tid.week.lineCell(2, 0, 'start'))).toHaveValue('07:00');
+    expect(screen.getByTestId(tid.week.dayTotal(2))).toHaveTextContent('07:30');
+  });
+  test('submitting the week in the list layout sends the lines', async () => {
+    await openWeek();
+    await userEvent.click(screen.getByTestId(tid.week.addLine(0)));
+    set(tid.week.lineCell(0, 0, 'start'), '09:00');
+    set(tid.week.lineCell(0, 0, 'finish'), '17:00');
+    await userEvent.click(screen.getByTestId(tid.ts.submitWeek));
+    expect(await screen.findByTestId(tid.toast.info)).toHaveTextContent('Week 33 submitted · 1 day · 08:00');
+    expect(dayOf('EMP004', '2026-08-10')).toMatchObject({ state: 'pend', entries: [{ start: '09:00', finish: '17:00' }] });
   });
 });

@@ -121,3 +121,27 @@ test('an allowance with a code that exists is refused; a new one joins the type 
   expect(config().allowances.WAKING_WATCH).toEqual({ code: 'WAKING_WATCH', label: 'Waking watch', payCode: 'WAKING_WATCH', tier: 'core' });
   expect(config().types.hourly?.allowances).toContain('WAKING_WATCH');
 });
+
+/* trace CHUNK B#15: the hard-rule list moved behind the page guide */
+test('the page guide states the rules that are always refused, overlapping breaks among them', async () => {
+  await open();
+  await userEvent.click(screen.getByTestId(tid.guide.open('mts')));
+  const guide = await screen.findByRole('dialog');
+  expect(guide).toHaveTextContent('Always refused, whatever these are set to');
+  expect(guide).toHaveTextContent(/overlapping breaks/i);
+});
+
+test('the weekly view layout offers the three layouts by name, and a new one applies on Save with one audit row', async () => {
+  await open();
+  const select = screen.getByTestId(tid.mts.weekLayout);
+  expect([...select.querySelectorAll('option')].map(o => o.textContent)).toEqual([
+    'Classic · allocation in the first column', 'Grid · allocation as a section header', 'List · one row per day']);
+  expect(select).toHaveValue('classic');
+  choose(tid.mts.weekLayout, 'days');
+  expect(config().weekLayout).toBe('classic');
+  await userEvent.click(screen.getByTestId(tid.mts.save));
+  await screen.findByText('Timesheet setup saved. It applies to the next save or submission.');
+  expect(config().weekLayout).toBe('days');
+  expect(setupAudits()).toHaveLength(1);
+  await waitFor(() => expect(screen.getByTestId(tid.mts.weekLayout)).toHaveValue('days'));
+});

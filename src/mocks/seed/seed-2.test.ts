@@ -105,3 +105,12 @@ test('meta carries the capture field catalogue without money, and the repeating 
   expect(JSON.stringify(fields)).not.toMatch(/£|"amt"/);
   expect(meta.timesheetRepeats).toEqual({ vehicle: { name: 'Vehicles & movements', max: 4, unit: 'vehicle' }, breaks: { name: 'Breaks', max: 5, unit: 'break' } });
 });
+/* trace TT#3: the catalogue declares what each field holds, so the form can render it as that */
+test('the capture field catalogue declares each field’s type: times as time, durations as duration, counts as number', () => {
+  const fields = meta.timesheetFields as { c: string; input: string; t?: string }[];
+  const typeOf = (c: string) => fields.find(f => f.c === c)?.t;
+  for (const c of ['start', 'finish', 'break_s', 'break_e']) expect(typeOf(c), c).toBe('time');
+  expect(typeOf('travel')).toBe('duration');
+  expect(typeOf('mileage')).toBe('number');
+  for (const f of fields.filter(x => x.t)) expect(['time', 'duration', 'number', 'date'], f.c).toContain(f.t);
+});
