@@ -16,6 +16,9 @@ test('an employee gets My Work only, in prototype order', () => {
   const g = buildNav({ caps: caps('own_home', 'own_ts', 'own_shifts', 'own_leave', 'own_hours', 'own_notices'), modules: ALL_MODULES, flags, onboarding: false });
   expect(g.map(x => x.key)).toEqual(['work']);
   expect(must(g[0]).tabs.map(t => t.label)).toEqual(['Home', 'Timesheet', 'Shifts', 'Leave', 'Hours', 'Profile', 'Documents', 'Notices']);
+  /* module 3 builds My shifts */
+  expect(must(must(g[0]).tabs.find(t => t.view === 'shifts'))).toMatchObject({ built: true, path: '/work/shifts' });
+  expect(must(must(g[0]).tabs.find(t => t.view === 'shifts')).subProject).toBeUndefined();
 });
 test('a manager also gets My Team, with Team Home and Approvals in the strip and the rest under headings', () => {
   const g = buildNav({ caps: caps('own_home', 'team_ts', 'team_rota', 'team_cover', 'team_leave', 'team_sick', 'team_hours', 'team_people', 'onb_track', 'notice_post'), modules: ALL_MODULES, flags, onboarding: false });
@@ -83,7 +86,8 @@ test('the module setup and integration pages the prototype\'s SETUP_NEED lists a
   const byView = (v: string) => must(setup.tabs.find(t => t.view === v), `no setup tab for view "${v}"`);
   expect(byView('mts')).toMatchObject({ built: true, path: '/setup/mts', section: 'Modules' });
   expect(byView('mts').subProject).toBeUndefined();
-  expect(byView('mrota')).toMatchObject({ built: false, subProject: 'Rota', section: 'Modules' });
+  expect(byView('mrota')).toMatchObject({ built: true, path: '/setup/mrota', section: 'Modules' });
+  expect(byView('mrota').subProject).toBeUndefined();
   expect(byView('mleave')).toMatchObject({ built: false, subProject: 'Leave', section: 'Modules' });
   expect(byView('mpay')).toMatchObject({ built: false, subProject: 'Timesheet', section: 'Integrations' });
   expect(byView('ipay')).toMatchObject({ built: false, subProject: 'Payroll and Business Central', section: 'Integrations' });
