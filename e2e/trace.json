@@ -70,189 +70,216 @@
    "section": "IMP-001 · A1 — approval QUEUES rather than posts",
    "text": "Team timesheets surface reached",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › renders the pending banner and the queue, filters and searches, and has full test id coverage"
   },
   {
    "id": "IMP-001-A1-approval-QUEUES-rather-than-posts#2",
    "section": "IMP-001 · A1 — approval QUEUES rather than posts",
    "text": "Approve control present",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › Approve queues the day for Business Central once the server has answered"
   },
   {
    "id": "IMP-001-A1-approval-QUEUES-rather-than-posts#3",
    "section": "IMP-001 · A1 — approval QUEUES rather than posts",
    "text": "Approve toast says queued, not posted",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › Approve queues the day for Business Central once the server has answered"
   },
   {
    "id": "IMP-001-A1-approval-QUEUES-rather-than-posts#4",
    "section": "IMP-001 · A1 — approval QUEUES rather than posts",
    "text": "Approve toast makes no posting claim",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › Approve queues the day for Business Central once the server has answered"
   },
   {
    "id": "IMP-001-A1-approval-QUEUES-rather-than-posts#5",
    "section": "IMP-001 · A1 — approval QUEUES rather than posts",
    "text": "BC page reached",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "IMP-001-A1-approval-QUEUES-rather-than-posts#6",
    "section": "IMP-001 · A1 — approval QUEUES rather than posts",
    "text": "Simulated-integration banner shown",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "IMP-001-A1-approval-QUEUES-rather-than-posts#7",
    "section": "IMP-001 · A1 — approval QUEUES rather than posts",
    "text": "Queued counter present",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "IMP-001-A1-approval-QUEUES-rather-than-posts#8",
    "section": "IMP-001 · A1 — approval QUEUES rather than posts",
    "text": "A Queued record exists after approval",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/timesheets.test.ts › approval queues a posting and never claims it was posted"
   },
   {
    "id": "IMP-001-A1-approval-QUEUES-rather-than-posts#9",
    "section": "IMP-001 · A1 — approval QUEUES rather than posts",
    "text": "Integration ID rendered",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "IMP-001-A1-approval-QUEUES-rather-than-posts#10",
    "section": "IMP-001 · A1 — approval QUEUES rather than posts",
    "text": "Attempt column rendered",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "IMP-001-A1-approval-QUEUES-rather-than-posts#11",
    "section": "IMP-001 · A1 — approval QUEUES rather than posts",
    "text": "No \"confirmed by Business Central\" claim survives",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/timesheet.test.ts › the posting dot never claims a Business Central confirmation"
   },
   {
    "id": "IMP-001-A2-dispatcher-resolves-the-record#1",
    "section": "IMP-001 · A2 — dispatcher resolves the record",
    "text": "Queued record resolved to Posted",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/timesheets.test.ts › only the dispatcher resolves: queued after approval, posted after the next read of the queue"
   },
   {
    "id": "IMP-001-A2-dispatcher-resolves-the-record#2",
    "section": "IMP-001 · A2 — dispatcher resolves the record",
    "text": "Posted result labelled (simulated)",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/timesheet.test.ts › the posting dot never claims a Business Central confirmation"
   },
   {
    "id": "IMP-001-A2-dispatcher-resolves-the-record#3",
    "section": "IMP-001 · A2 — dispatcher resolves the record",
    "text": "Seeded failure remains Failed",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/timesheets.test.ts › an attempt with an unresolved cause fails on dispatch, and a fault-injected attempt fails once"
   },
   {
    "id": "IMP-001-A2-dispatcher-resolves-the-record#4",
    "section": "IMP-001 · A2 — dispatcher resolves the record",
    "text": "Resolution toast fired",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "IMP-001-A3-retry-re-queues-and-counts-does-not-decide#1",
    "section": "IMP-001 · A3 — retry re-queues and counts, does not decide",
    "text": "Retry offered only on the failed row",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "IMP-001-A3-retry-re-queues-and-counts-does-not-decide#2",
    "section": "IMP-001 · A3 — retry re-queues and counts, does not decide",
    "text": "Retry toast says re-queued with attempt number",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "IMP-001-A3-retry-re-queues-and-counts-does-not-decide#3",
    "section": "IMP-001 · A3 — retry re-queues and counts, does not decide",
    "text": "Retry toast never claims acceptance",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "IMP-001-A3-retry-re-queues-and-counts-does-not-decide#4",
    "section": "IMP-001 · A3 — retry re-queues and counts, does not decide",
    "text": "Record returned to Queued",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/timesheets.test.ts › a retry re-queues and counts; the unresolved cause fails it again on the next dispatch"
   },
   {
    "id": "IMP-001-A3-retry-re-queues-and-counts-does-not-decide#5",
    "section": "IMP-001 · A3 — retry re-queues and counts, does not decide",
    "text": "Unresolved cause fails again on retry",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/timesheets.test.ts › a retry re-queues and counts; the unresolved cause fails it again on the next dispatch"
   },
   {
    "id": "IMP-001-A3-retry-re-queues-and-counts-does-not-decide#6",
    "section": "IMP-001 · A3 — retry re-queues and counts, does not decide",
    "text": "Original failure reason retained",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/timesheets.test.ts › a retry re-queues and counts; the unresolved cause fails it again on the next dispatch"
   },
   {
    "id": "IMP-001-A3-retry-re-queues-and-counts-does-not-decide#7",
    "section": "IMP-001 · A3 — retry re-queues and counts, does not decide",
    "text": "Attempt count now shows 2",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/timesheets.test.ts › a retry re-queues and counts; the unresolved cause fails it again on the next dispatch"
   },
   {
    "id": "IMP-001-A4-audit-trail-is-truthful#1",
    "section": "IMP-001 · A4 — audit trail is truthful",
    "text": "Approval audited as queued, not posted",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/timesheets.test.ts › approval queues a posting and never claims it was posted"
   },
   {
    "id": "IMP-001-A4-audit-trail-is-truthful#2",
    "section": "IMP-001 · A4 — audit trail is truthful",
    "text": "Retry audited with attempt number",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/timesheets.test.ts › a retry re-queues and counts; the unresolved cause fails it again on the next dispatch"
   },
   {
    "id": "IMP-001-A5-manager-facing-posting-dot#1",
    "section": "IMP-001 · A5 — manager-facing posting dot",
    "text": "Posting-state dot still rendered",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › renders the pending banner and the queue, filters and searches, and has full test id coverage"
   },
   {
    "id": "IMP-001-A5-manager-facing-posting-dot#2",
    "section": "IMP-001 · A5 — manager-facing posting dot",
    "text": "Dot tooltip no longer claims BC confirmation",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/timesheet.test.ts › the posting dot never claims a Business Central confirmation"
   },
   {
    "id": "IMP-001-A5-manager-facing-posting-dot#3",
    "section": "IMP-001 · A5 — manager-facing posting dot",
    "text": "Dot distinguishes posted-simulated from confirmed",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/timesheet.test.ts › the posting dot never claims a Business Central confirmation"
   },
   {
    "id": "IMP-001-A5-manager-facing-posting-dot#4",
@@ -266,553 +293,632 @@
    "section": "IMP-001 · A5 — manager-facing posting dot",
    "text": "A rota tenant can be selected for the rota-dependent checks",
    "area": "timesheet",
-   "status": "pending"
+   "status": "n/a",
+   "reason": "prototype-only: the regression harness picks a rota tenant; here the Rota-on paths are covered by flipping the module flag in the test world (D9)"
   },
   {
    "id": "IMP-005a-week-submission-creates-real-records#1",
    "section": "IMP-005a — week submission creates real records",
    "text": "Weekly view is offered",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › a grid type opens on the week in the classic layout, with totals, the contracted line and full test id coverage"
   },
   {
    "id": "IMP-005a-week-submission-creates-real-records#2",
    "section": "IMP-005a — week submission creates real records",
    "text": "Weekly grid rendered",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › a grid type opens on the week in the classic layout, with totals, the contracted line and full test id coverage"
   },
   {
    "id": "IMP-005a-week-submission-creates-real-records#3",
    "section": "IMP-005a — week submission creates real records",
    "text": "Manager pending count readable",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › renders the pending banner and the queue, filters and searches, and has full test id coverage"
   },
   {
    "id": "IMP-005a-week-submission-creates-real-records#4",
    "section": "IMP-005a — week submission creates real records",
    "text": "Submit week control present",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › submitting the week sends one request; the future day and the day already submitted come back held with their reasons"
   },
   {
    "id": "IMP-005a-week-submission-creates-real-records#5",
    "section": "IMP-005a — week submission creates real records",
    "text": "Hours can be entered on the week",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › submitting the week sends one request; the future day and the day already submitted come back held with their reasons"
   },
   {
    "id": "IMP-005a-week-submission-creates-real-records#6",
    "section": "IMP-005a — week submission creates real records",
    "text": "Toast reports a day count, not a bare confirmation",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › submitting the week sends one request; the future day and the day already submitted come back held with their reasons"
   },
   {
    "id": "IMP-005a-week-submission-creates-real-records#7",
    "section": "IMP-005a — week submission creates real records",
    "text": "Toast names the approver",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › submitting the week sends one request; the future day and the day already submitted come back held with their reasons"
   },
   {
    "id": "IMP-005a-week-submission-creates-real-records#8",
    "section": "IMP-005a — week submission creates real records",
    "text": "Manager queue grew — records actually exist",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/timesheets.test.ts › one request submits the week: the ready days become real records, the rest come back held with reasons"
   },
   {
    "id": "IMP-005a-week-submission-creates-real-records#9",
    "section": "IMP-005a — week submission creates real records",
    "text": "Submitted rows are approvable",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/manager-2.spec.ts › a manager enters a day on a team member’s behalf, it shows as a proxy entry, and they approve it from the week matrix"
   },
   {
    "id": "IMP-005a-week-submission-creates-real-records#10",
    "section": "IMP-005a — week submission creates real records",
    "text": "Re-submission is refused, not silently duplicated",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/timesheets.test.ts › a week where everything is already with the approver is refused with ALREADY_SUBMITTED"
   },
   {
    "id": "IMP-005a-week-submission-creates-real-records#11",
    "section": "IMP-005a — week submission creates real records",
    "text": "Pending count unchanged after re-submit",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/timesheets.test.ts › a retried submit is refused with ALREADY_SUBMITTED and never makes a second record (D8)"
   },
   {
    "id": "IMP-005a-week-submission-creates-real-records#12",
    "section": "IMP-005a — week submission creates real records",
    "text": "Empty week is refused, not confirmed",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › a week with nothing new to send is refused, with its message and what to do next"
   },
   {
    "id": "IMP-005a-week-submission-creates-real-records#13",
    "section": "IMP-005a — week submission creates real records",
    "text": "Week submission is audited",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › submitting the week sends one request; the future day and the day already submitted come back held with their reasons"
   },
   {
    "id": "IMP-005b-proxy-week-submission-creates-real-records#1",
    "section": "IMP-005b — proxy week submission creates real records",
    "text": "A second employee is available for proxy entry",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › a day submitted for someone is theirs, attributed to the manager, and the toast says so"
   },
   {
    "id": "IMP-005b-proxy-week-submission-creates-real-records#2",
    "section": "IMP-005b — proxy week submission creates real records",
    "text": "Proxy entry control reachable",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › a day submitted for someone is theirs, attributed to the manager, and the toast says so"
   },
   {
    "id": "IMP-005b-proxy-week-submission-creates-real-records#3",
    "section": "IMP-005b — proxy week submission creates real records",
    "text": "Proxy modal opened with a week grid",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › the week grid is seeded from the team member’s timesheet, not the manager’s, and submits for them"
   },
   {
    "id": "IMP-005b-proxy-week-submission-creates-real-records#4",
    "section": "IMP-005b — proxy week submission creates real records",
    "text": "Proxy week view offered",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › the week grid is seeded from the team member’s timesheet, not the manager’s, and submits for them"
   },
   {
    "id": "IMP-005b-proxy-week-submission-creates-real-records#5",
    "section": "IMP-005b — proxy week submission creates real records",
    "text": "Proxy submit-week control present",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › the week grid is seeded from the team member’s timesheet, not the manager’s, and submits for them"
   },
   {
    "id": "IMP-005b-proxy-week-submission-creates-real-records#6",
    "section": "IMP-005b — proxy week submission creates real records",
    "text": "Proxy toast names the employee and a day count",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › the week grid is seeded from the team member’s timesheet, not the manager’s, and submits for them"
   },
   {
    "id": "IMP-005b-proxy-week-submission-creates-real-records#7",
    "section": "IMP-005b — proxy week submission creates real records",
    "text": "Proxy toast confirms attribution to the acting manager",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › the week grid is seeded from the team member’s timesheet, not the manager’s, and submits for them"
   },
   {
    "id": "IMP-005b-proxy-week-submission-creates-real-records#8",
    "section": "IMP-005b — proxy week submission creates real records",
    "text": "Proxy toast confirms the employee was notified",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › the week grid is seeded from the team member’s timesheet, not the manager’s, and submits for them"
   },
   {
    "id": "IMP-005b-proxy-week-submission-creates-real-records#9",
    "section": "IMP-005b — proxy week submission creates real records",
    "text": "Manager queue grew from the proxy week",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/timesheets.test.ts › a manager\\'s week entry creates real records for the target, attributed to the manager"
   },
   {
    "id": "IMP-005b-proxy-week-submission-creates-real-records#10",
    "section": "IMP-005b — proxy week submission creates real records",
    "text": "Proxy rows are flagged as Proxy in the queue",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › renders the pending banner and the queue, filters and searches, and has full test id coverage"
   },
   {
    "id": "IMP-005b-proxy-week-submission-creates-real-records#11",
    "section": "IMP-005b — proxy week submission creates real records",
    "text": "Proxy week submission is audited naming both parties",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/timesheets.test.ts › a manager\\'s week entry creates real records for the target, attributed to the manager"
   },
   {
    "id": "IMP-005b-proxy-week-submission-creates-real-records#12",
    "section": "IMP-005b — proxy week submission creates real records",
    "text": "Proxy permission cell exists in the matrix",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/access.spec.ts › Permissions: granting a capability to a template is saved and audited"
   },
   {
    "id": "IMP-005c-proxy-grid-seeds-from-the-target-employee#1",
    "section": "IMP-005c — proxy grid seeds from the target employee",
    "text": "Proxy grid populated for employee A",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › the week grid is seeded from the team member’s timesheet, not the manager’s, and submits for them"
   },
   {
    "id": "IMP-005c-proxy-grid-seeds-from-the-target-employee#2",
    "section": "IMP-005c — proxy grid seeds from the target employee",
    "text": "Proxy grid populated for employee B",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/timesheets.test.ts › the proxy grid seeds from the target person, never from the manager (D6)"
   },
   {
    "id": "IMP-005c-proxy-grid-seeds-from-the-target-employee#3",
    "section": "IMP-005c — proxy grid seeds from the target employee",
    "text": "Grids differ between employees — seeded per person, not from the manager",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/timesheets.test.ts › the proxy grid seeds from the target person, never from the manager (D6)"
   },
   {
    "id": "IMP-005c-proxy-grid-seeds-from-the-target-employee#4",
    "section": "IMP-005c — proxy grid seeds from the target employee",
    "text": "Night worker seeds night times",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "rota",
+   "status": "pending",
+   "deferredTo": "rota"
   },
   {
    "id": "IMP-005c-proxy-grid-seeds-from-the-target-employee#5",
    "section": "IMP-005c — proxy grid seeds from the target employee",
    "text": "Late-shift worker seeds late times",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "rota",
+   "status": "pending",
+   "deferredTo": "rota"
   },
   {
    "id": "IMP-005c-proxy-grid-seeds-from-the-target-employee#6",
    "section": "IMP-005c — proxy grid seeds from the target employee",
    "text": "Caption names whose rota it came from",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "rota",
+   "status": "pending",
+   "deferredTo": "rota"
   },
   {
    "id": "IMP-005c-proxy-grid-seeds-from-the-target-employee#7",
    "section": "IMP-005c — proxy grid seeds from the target employee",
    "text": "Caption no longer says \"your rota\" in proxy",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "rota",
+   "status": "pending",
+   "deferredTo": "rota"
   },
   {
    "id": "IMP-005c-proxy-grid-seeds-from-the-target-employee#8",
    "section": "IMP-005c — proxy grid seeds from the target employee",
    "text": "R-04 Own weekly grid still renders",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › a grid type opens on the week in the classic layout, with totals, the contracted line and full test id coverage"
   },
   {
    "id": "IMP-005c-proxy-grid-seeds-from-the-target-employee#9",
    "section": "IMP-005c — proxy grid seeds from the target employee",
    "text": "R-04 Your own grid says nothing about whose rota it is — it is yours",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "rota",
+   "status": "pending",
+   "deferredTo": "rota"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#1",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A1 Proxy day form exposes time fields",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › a day submitted for someone is theirs, attributed to the manager, and the toast says so"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#2",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A1 Proxy day form seeds the rota line from the target",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "rota",
+   "status": "pending",
+   "deferredTo": "rota"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#3",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A1 Seeded line comes from that person, whichever shift they are on",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "rota",
+   "status": "pending",
+   "deferredTo": "rota"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#4",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A1 Proxy day form seeds times from the target",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "rota",
+   "status": "pending",
+   "deferredTo": "rota"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#5",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A1 Proxy toast reflects the entered hours, not a fixed 7h 30m",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/manager-2.spec.ts › a manager enters a day on a team member’s behalf, it shows as a proxy entry, and they approve it from the week matrix"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#6",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A1 Proxy toast no longer says a bare \"Submitted as proxy\"",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/manager-2.spec.ts › a manager enters a day on a team member’s behalf, it shows as a proxy entry, and they approve it from the week matrix"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#7",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A1 Record carries the entered hours",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/timesheets.test.ts › a manager\\'s day entry is attributed to the manager, flagged as proxy and audited as theirs"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#8",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A2 Fill-from-rota reports a real day count",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "rota",
+   "status": "pending",
+   "deferredTo": "rota"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#9",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A2 Grid actually repopulated",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "rota",
+   "status": "pending",
+   "deferredTo": "rota"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#10",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A2 No \"copy last week\" control remains",
    "area": "timesheet",
-   "status": "pending"
+   "status": "n/a",
+   "reason": "prototype-only: the prototype’s copy-last-week stub; this build never offers one, copy yesterday is the only copy control"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#11",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A4 Rota copy-week control is disabled",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "rota",
+   "status": "pending",
+   "deferredTo": "rota"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#12",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A5 Horizon publish declares itself simulated",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "rota",
+   "status": "pending",
+   "deferredTo": "rota"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#13",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A6 Mass upload declares itself simulated",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "rota",
+   "status": "pending",
+   "deferredTo": "rota"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#14",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A6 Upload toast states no patterns were created",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "rota",
+   "status": "pending",
+   "deferredTo": "rota"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#15",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A6 Audit row says simulated, not imported",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "rota",
+   "status": "pending",
+   "deferredTo": "rota"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#16",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A7 Upload error report triggers a real download",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "rota",
+   "status": "pending",
+   "deferredTo": "rota"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#17",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A7 Error toast reports counts",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "rota",
+   "status": "pending",
+   "deferredTo": "rota"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#18",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A8 Export triggers a real download",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#19",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A8 Export toast reports a row count",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#20",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A8 Export is audited",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#21",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A9 Outlook action states it is not built",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "rota",
+   "status": "pending",
+   "deferredTo": "rota"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#22",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A10 Message action states nothing was sent",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "leave",
+   "status": "pending",
+   "deferredTo": "leave"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#23",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A11 Return-to-work request confirms notification",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "leave",
+   "status": "pending",
+   "deferredTo": "leave"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#24",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A11 Return-to-work is audited",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "leave",
+   "status": "pending",
+   "deferredTo": "leave"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#25",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A12 Matrix checkboxes identify their employee",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › select people, approve their pending days on the week, and only theirs"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#26",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A12 Empty selection is refused",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › select people, approve their pending days on the week, and only theirs"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#27",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A12 Bulk approval reports days and employees, and queues",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/manager-2.spec.ts › a manager enters a day on a team member’s behalf, it shows as a proxy entry, and they approve it from the week matrix"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#28",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A12 Approval survives a re-render",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › select people, approve their pending days on the week, and only theirs"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#29",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A12 Pending queue shrank but was not emptied — scoped to the selection",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › select people, approve their pending days on the week, and only theirs"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#30",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A12 matrix view reachable",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › select people, approve their pending days on the week, and only theirs"
   },
   {
    "id": "CHUNK-B-timesheet-integrity#1",
    "section": "CHUNK B — timesheet integrity",
    "text": "B1 Day form open",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › the day view renders today with the type’s capture fields, the guide and full test id coverage"
   },
   {
    "id": "CHUNK-B-timesheet-integrity#2",
    "section": "CHUNK B — timesheet integrity",
    "text": "B1 Finish-before-start is refused rather than silently wrapped to 23h",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/timesheet.test.ts › net time above the daily maximum, which finish-before-start reaches as 23 hours"
   },
   {
    "id": "CHUNK-B-timesheet-integrity#3",
    "section": "CHUNK B — timesheet integrity",
    "text": "B1 Break outside the shift is refused",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/timesheet.test.ts › a break outside the shift"
   },
   {
    "id": "CHUNK-B-timesheet-integrity#4",
    "section": "CHUNK B — timesheet integrity",
    "text": "B1 Overlapping breaks are refused",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/timesheet.test.ts › overlapping breaks"
   },
   {
    "id": "CHUNK-B-timesheet-integrity#5",
    "section": "CHUNK B — timesheet integrity",
    "text": "B1 Breaks longer than the shift are refused",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/timesheet.test.ts › breaks longer than the shift"
   },
   {
    "id": "CHUNK-B-timesheet-integrity#6",
    "section": "CHUNK B — timesheet integrity",
    "text": "B1 A half-entered break is refused",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/timesheet.test.ts › a half-entered break"
   },
   {
    "id": "CHUNK-B-timesheet-integrity#7",
    "section": "CHUNK B — timesheet integrity",
    "text": "B1 A day above the 16-hour maximum is refused",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/timesheet.test.ts › net time above the daily maximum, which finish-before-start reaches as 23 hours"
   },
   {
    "id": "CHUNK-B-timesheet-integrity#8",
    "section": "CHUNK B — timesheet integrity",
    "text": "B1 A day above the review threshold is allowed but flagged in the confirmation",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/timesheet.test.ts › above the review threshold"
   },
   {
    "id": "CHUNK-B-timesheet-integrity#9",
    "section": "CHUNK B — timesheet integrity",
    "text": "B1 Rota variance is flagged alongside it",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/timesheet.test.ts › variance from the rota line, only when a rota line is given (D9)"
   },
   {
    "id": "CHUNK-B-timesheet-integrity#10",
    "section": "CHUNK B — timesheet integrity",
    "text": "B1 A legitimate midnight crossing is accepted as 6h",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/timesheet.test.ts › a midnight crossing is read as one shift and flagged"
   },
   {
    "id": "CHUNK-B-timesheet-integrity#11",
    "section": "CHUNK B — timesheet integrity",
    "text": "B1 The crossing is flagged rather than silently applied",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/timesheet.test.ts › a midnight crossing is read as one shift and flagged"
   },
   {
    "id": "CHUNK-B-timesheet-integrity#12",
    "section": "CHUNK B — timesheet integrity",
    "text": "B1 A duplicate submission is refused and names the current state",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/timesheets.test.ts › a retried submit is refused with ALREADY_SUBMITTED and never makes a second record (D8)"
   },
   {
    "id": "CHUNK-B-timesheet-integrity#13",
    "section": "CHUNK B — timesheet integrity",
    "text": "B2 Capture rules card is on Timesheet setup",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/setup.test.tsx › the page shows every card, with full test id coverage, and a day-rate type has no overtime inputs"
   },
   {
    "id": "CHUNK-B-timesheet-integrity#14",
    "section": "CHUNK B — timesheet integrity",
    "text": "B2 Daily maximum is configurable",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-2.spec.ts › an admin lowers the daily maximum on Timesheet setup, and the employee’s 13-hour day is then refused by it"
   },
   {
    "id": "CHUNK-B-timesheet-integrity#15",
@@ -825,85 +931,97 @@
    "id": "CHUNK-B-timesheet-integrity#16",
    "section": "CHUNK B — timesheet integrity",
    "text": "B2 Period state is computed next to the cut-off",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "CHUNK-B-timesheet-integrity#17",
    "section": "CHUNK B — timesheet integrity",
    "text": "B2 Cut-off enforcement is toggleable",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/timesheet.test.ts › turning enforcement off opens every period"
   },
   {
    "id": "CHUNK-B-timesheet-integrity#18",
    "section": "CHUNK B — timesheet integrity",
    "text": "B2 A closed period shows a lock banner",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › a day in a closed pay period says so and offers no way to save it"
   },
   {
    "id": "CHUNK-B-timesheet-integrity#19",
    "section": "CHUNK B — timesheet integrity",
    "text": "B2 Submit is disabled in a closed period",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › a day in a closed pay period says so and offers no way to save it"
   },
   {
    "id": "CHUNK-B-timesheet-integrity#20",
    "section": "CHUNK B — timesheet integrity",
    "text": "B3 Resubmitted filter chip exists",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › renders the pending banner and the queue, filters and searches, and has full test id coverage"
   },
   {
    "id": "CHUNK-B-timesheet-integrity#21",
    "section": "CHUNK B — timesheet integrity",
    "text": "B3 Return control present",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › Return needs a reason, then sends the day back with it"
   },
   {
    "id": "CHUNK-B-timesheet-integrity#22",
    "section": "CHUNK B — timesheet integrity",
    "text": "B3 Return asks for a reason",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › Return needs a reason, then sends the day back with it"
   },
   {
    "id": "CHUNK-B-timesheet-integrity#23",
    "section": "CHUNK B — timesheet integrity",
    "text": "B3 Return confirms with the employee named",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › Return needs a reason, then sends the day back with it"
   },
   {
    "id": "CHUNK-B-timesheet-integrity#24",
    "section": "CHUNK B — timesheet integrity",
    "text": "B3 Returned row shows the Sent back state",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › renders the pending banner and the queue, filters and searches, and has full test id coverage"
   },
   {
    "id": "CHUNK-B-timesheet-integrity#25",
    "section": "CHUNK B — timesheet integrity",
    "text": "B3 Returned row carries a transition history",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › renders the pending banner and the queue, filters and searches, and has full test id coverage"
   },
   {
    "id": "CHUNK-B-timesheet-integrity#26",
    "section": "CHUNK B — timesheet integrity",
    "text": "B3 Transition is audited with from → to",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/timesheet.test.ts › history and audit text record from, to, who and why"
   },
   {
    "id": "CHUNK-B-timesheet-integrity#27",
    "section": "CHUNK B — timesheet integrity",
    "text": "B3 A returned record offers no Approve control",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › renders the pending banner and the queue, filters and searches, and has full test id coverage"
   },
   {
    "id": "CHUNK-C-rota-lifecycle-and-the-week-store#1",
@@ -1071,182 +1189,208 @@
    "section": "ITEM 1 — bulk approval guard-rails (IMP-008)",
    "text": "1 Approve-all button states the scoped count",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › renders the pending banner and the queue, filters and searches, and has full test id coverage"
   },
   {
    "id": "ITEM-1-bulk-approval-guard-rails-IMP-008#2",
    "section": "ITEM 1 — bulk approval guard-rails (IMP-008)",
    "text": "1 A confirmation dialog is raised, not an immediate approval",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › the dialog states the scope and needs the tick; a row the approver may no longer decide is held and listed back"
   },
   {
    "id": "ITEM-1-bulk-approval-guard-rails-IMP-008#3",
    "section": "ITEM 1 — bulk approval guard-rails (IMP-008)",
    "text": "1 It shows records, colleagues and hours",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › the dialog states the scope and needs the tick; a row the approver may no longer decide is held and listed back"
   },
   {
    "id": "ITEM-1-bulk-approval-guard-rails-IMP-008#4",
    "section": "ITEM 1 — bulk approval guard-rails (IMP-008)",
    "text": "1 It warns the action cannot be undone",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › the dialog states the scope and needs the tick; a row the approver may no longer decide is held and listed back"
   },
   {
    "id": "ITEM-1-bulk-approval-guard-rails-IMP-008#5",
    "section": "ITEM 1 — bulk approval guard-rails (IMP-008)",
    "text": "1 It states the location scope",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › the dialog states the scope and needs the tick; a row the approver may no longer decide is held and listed back"
   },
   {
    "id": "ITEM-1-bulk-approval-guard-rails-IMP-008#6",
    "section": "ITEM 1 — bulk approval guard-rails (IMP-008)",
    "text": "1 It requires an acknowledgement",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › the dialog states the scope and needs the tick; a row the approver may no longer decide is held and listed back"
   },
   {
    "id": "ITEM-1-bulk-approval-guard-rails-IMP-008#7",
    "section": "ITEM 1 — bulk approval guard-rails (IMP-008)",
    "text": "1 Approving without acknowledging is refused",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › the dialog states the scope and needs the tick; a row the approver may no longer decide is held and listed back"
   },
   {
    "id": "ITEM-1-bulk-approval-guard-rails-IMP-008#8",
    "section": "ITEM 1 — bulk approval guard-rails (IMP-008)",
    "text": "1 Nothing was approved by the refused attempt",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › the dialog states the scope and needs the tick; a row the approver may no longer decide is held and listed back"
   },
   {
    "id": "ITEM-1-bulk-approval-guard-rails-IMP-008#9",
    "section": "ITEM 1 — bulk approval guard-rails (IMP-008)",
    "text": "1 Approval reports records, hours and colleagues",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › the dialog states the scope and needs the tick; a row the approver may no longer decide is held and listed back"
   },
   {
    "id": "ITEM-1-bulk-approval-guard-rails-IMP-008#10",
    "section": "ITEM 1 — bulk approval guard-rails (IMP-008)",
    "text": "1 Approval queues rather than posts",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › the dialog states the scope and needs the tick; a row the approver may no longer decide is held and listed back"
   },
   {
    "id": "ITEM-1-bulk-approval-guard-rails-IMP-008#11",
    "section": "ITEM 1 — bulk approval guard-rails (IMP-008)",
    "text": "1 Bulk approval is audited with scope and hours",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/timesheets.test.ts › approves what the approver was shown, queues a posting each, and writes one audit row"
   },
   {
    "id": "ITEM-1-bulk-approval-guard-rails-IMP-008#12",
    "section": "ITEM 1 — bulk approval guard-rails (IMP-008)",
    "text": "1 Approve-all control reachable",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/team.test.tsx › the dialog states the scope and needs the tick; a row the approver may no longer decide is held and listed back"
   },
   {
    "id": "ITEM-3-exception-centre-IMP-015#1",
    "section": "ITEM 3 — exception centre (IMP-015)",
    "text": "3 Exception state filters are offered",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "ITEM-3-exception-centre-IMP-015#2",
    "section": "ITEM 3 — exception centre (IMP-015)",
    "text": "3 Needs-action filter is the default",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "ITEM-3-exception-centre-IMP-015#3",
    "section": "ITEM 3 — exception centre (IMP-015)",
    "text": "3 Every exception carries a state pill",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "ITEM-3-exception-centre-IMP-015#4",
    "section": "ITEM 3 — exception centre (IMP-015)",
    "text": "3 An exception can be taken",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "ITEM-3-exception-centre-IMP-015#5",
    "section": "ITEM 3 — exception centre (IMP-015)",
    "text": "3 Taking it assigns an owner",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "ITEM-3-exception-centre-IMP-015#6",
    "section": "ITEM 3 — exception centre (IMP-015)",
    "text": "3 Owner is shown on the row",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "ITEM-3-exception-centre-IMP-015#7",
    "section": "ITEM 3 — exception centre (IMP-015)",
    "text": "3 In progress state is rendered",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "ITEM-3-exception-centre-IMP-015#8",
    "section": "ITEM 3 — exception centre (IMP-015)",
    "text": "3 A resolve control appears once in progress",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "ITEM-3-exception-centre-IMP-015#9",
    "section": "ITEM 3 — exception centre (IMP-015)",
    "text": "3 Resolving asks what was done",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "ITEM-3-exception-centre-IMP-015#10",
    "section": "ITEM 3 — exception centre (IMP-015)",
    "text": "3 Resolving without a note is refused",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "ITEM-3-exception-centre-IMP-015#11",
    "section": "ITEM 3 — exception centre (IMP-015)",
    "text": "3 Resolution is recorded",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "ITEM-3-exception-centre-IMP-015#12",
    "section": "ITEM 3 — exception centre (IMP-015)",
    "text": "3 Resolved exceptions are filterable and show the resolution",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "ITEM-3-exception-centre-IMP-015#13",
    "section": "ITEM 3 — exception centre (IMP-015)",
    "text": "3 A resolved exception offers Reopen",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "ITEM-3-exception-centre-IMP-015#14",
    "section": "ITEM 3 — exception centre (IMP-015)",
    "text": "3 Exception transitions are audited",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "ITEM-3-payroll-readiness-IMP-016#1",
@@ -1618,24 +1762,24 @@
    "id": "MODAL-SIZING-STRUCTURE#3",
    "section": "MODAL SIZING + STRUCTURE",
    "text": "M An exception dialog can be opened",
-   "area": "timesheet",
-   "deferredTo": "timesheet",
+   "area": "payroll",
+   "deferredTo": "payroll",
    "status": "pending"
   },
   {
    "id": "MODAL-SIZING-STRUCTURE#4",
    "section": "MODAL SIZING + STRUCTURE",
    "text": "M Exception dialog uses the real modal structure",
-   "area": "timesheet",
-   "deferredTo": "timesheet",
+   "area": "payroll",
+   "deferredTo": "payroll",
    "status": "pending"
   },
   {
    "id": "MODAL-SIZING-STRUCTURE#5",
    "section": "MODAL SIZING + STRUCTURE",
    "text": "M Its close control sits in the header",
-   "area": "timesheet",
-   "deferredTo": "timesheet",
+   "area": "payroll",
+   "deferredTo": "payroll",
    "status": "pending"
   },
   {
@@ -1922,7 +2066,8 @@
    "text": "T Table-wrapper tooltips exist and now use the same bubble",
    "area": "timesheet",
    "deferredTo": "timesheet",
-   "status": "pending"
+   "status": "n/a",
+   "reason": "prototype-only: the check asserts nothing (it is always true) and looks at the Hours position table of module 6; the shared tooltip bubble is checked in the ui area"
   },
   {
    "id": "TOOLTIPS-escape-their-container-and-stay-on-screen#19",
@@ -2314,183 +2459,209 @@
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#1",
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS Modules are Core, Timesheet, Rota, Leave, Onboarding",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#2",
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS Manual entry, clocking and sites are no longer peers of Rota",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#3",
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS The Timesheet card counts its capture methods",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#4",
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS Its features tab lists the three capture methods as switches",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#5",
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS The module has a master switch you can licence off",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#6",
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS Its enable row is the same shape as every other module’s",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#7",
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS And there is no bespoke \"Module state\" row any more",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#8",
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS Its features are grouped by the capability they belong to",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#9",
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS It now holds the capture features that were filed under Workforce core",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#10",
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS Module-level features come before capability ones",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#11",
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS Turning a capture method off asks first",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#12",
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS The module stays on while manual entry remains",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#13",
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS Employee timesheet still reachable with one method on",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#14",
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS With every method off it says so on the enable row",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#15",
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS And the employee Timesheet tab disappears",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#16",
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS Restoring a method brings the tab back",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "HEADER-PILLS-REMOVED-WARNING-RELOCATED#1",
    "section": "HEADER PILLS REMOVED, WARNING RELOCATED",
    "text": "PL The \"applies immediately\" pill is gone from page headers",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "HEADER-PILLS-REMOVED-WARNING-RELOCATED#2",
    "section": "HEADER PILLS REMOVED, WARNING RELOCATED",
    "text": "PL It is gone from every admin page, not just this one",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "HEADER-PILLS-REMOVED-WARNING-RELOCATED#3",
    "section": "HEADER PILLS REMOVED, WARNING RELOCATED",
    "text": "PL It is behind a warning icon, not a banner",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "HEADER-PILLS-REMOVED-WARNING-RELOCATED#4",
    "section": "HEADER PILLS REMOVED, WARNING RELOCATED",
    "text": "PL The icon carries the full caution",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "HEADER-PILLS-REMOVED-WARNING-RELOCATED#5",
    "section": "HEADER PILLS REMOVED, WARNING RELOCATED",
    "text": "PL And is reachable by keyboard with a label",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "HEADER-PILLS-REMOVED-WARNING-RELOCATED#6",
    "section": "HEADER PILLS REMOVED, WARNING RELOCATED",
    "text": "PL The modules index carries the same affordance",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "HEADER-PILLS-REMOVED-WARNING-RELOCATED#7",
    "section": "HEADER PILLS REMOVED, WARNING RELOCATED",
    "text": "PL The \"N of M on\" pill is gone from the features page header",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "HEADER-PILLS-REMOVED-WARNING-RELOCATED#8",
    "section": "HEADER PILLS REMOVED, WARNING RELOCATED",
    "text": "PL The toggles it summarised are right there anyway",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "HEADER-PILLS-REMOVED-WARNING-RELOCATED#9",
    "section": "HEADER PILLS REMOVED, WARNING RELOCATED",
    "text": "PL The count is kept on the index card, where features are not visible",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "HEADER-PILLS-REMOVED-WARNING-RELOCATED#10",
    "section": "HEADER PILLS REMOVED, WARNING RELOCATED",
    "text": "PL Changing a feature says it is live for everyone now",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "TIMESHEET-IS-LICENSABLE-CORE-IS-THE-BASE-APP#1",
@@ -2823,64 +2994,73 @@
    "id": "LEGENDS-BECOME-LIVE-SUMMARIES#1",
    "section": "LEGENDS BECOME LIVE SUMMARIES",
    "text": "LG The month key exists",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "leave",
+   "status": "pending",
+   "deferredTo": "leave"
   },
   {
    "id": "LEGENDS-BECOME-LIVE-SUMMARIES#2",
    "section": "LEGENDS BECOME LIVE SUMMARIES",
    "text": "LG It carries counts, not just names",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "leave",
+   "status": "pending",
+   "deferredTo": "leave"
   },
   {
    "id": "LEGENDS-BECOME-LIVE-SUMMARIES#3",
    "section": "LEGENDS BECOME LIVE SUMMARIES",
    "text": "LG It omits states not present this month",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "leave",
+   "status": "pending",
+   "deferredTo": "leave"
   },
   {
    "id": "LEGENDS-BECOME-LIVE-SUMMARIES#4",
    "section": "LEGENDS BECOME LIVE SUMMARIES",
    "text": "LG Its glyphs use the calendar’s own state colours",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "leave",
+   "status": "pending",
+   "deferredTo": "leave"
   },
   {
    "id": "LEGENDS-BECOME-LIVE-SUMMARIES#5",
    "section": "LEGENDS BECOME LIVE SUMMARIES",
    "text": "LG The rota key counts whatever shifts are on the week",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "rota",
+   "status": "pending",
+   "deferredTo": "rota"
   },
   {
    "id": "LEGENDS-BECOME-LIVE-SUMMARIES#6",
    "section": "LEGENDS BECOME LIVE SUMMARIES",
    "text": "LG It reports how many cells are still unassigned",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "rota",
+   "status": "pending",
+   "deferredTo": "rota"
   },
   {
    "id": "LEGENDS-BECOME-LIVE-SUMMARIES#7",
    "section": "LEGENDS BECOME LIVE SUMMARIES",
    "text": "LG It lists only shift types actually present",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "rota",
+   "status": "pending",
+   "deferredTo": "rota"
   },
   {
    "id": "LEGENDS-BECOME-LIVE-SUMMARIES#8",
    "section": "LEGENDS BECOME LIVE SUMMARIES",
    "text": "LG It is derived from the week shown, not a fixed list",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "rota",
+   "status": "pending",
+   "deferredTo": "rota"
   },
   {
    "id": "LEGENDS-BECOME-LIVE-SUMMARIES#9",
    "section": "LEGENDS BECOME LIVE SUMMARIES",
    "text": "LG An empty week says so rather than listing every shift type",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "rota",
+   "status": "pending",
+   "deferredTo": "rota"
   },
   {
    "id": "LEGENDS-BECOME-LIVE-SUMMARIES#10",
@@ -2893,8 +3073,9 @@
    "id": "LEGENDS-BECOME-LIVE-SUMMARIES#11",
    "section": "LEGENDS BECOME LIVE SUMMARIES",
    "text": "LG Calendar cells carry one class attribute, not two",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "leave",
+   "status": "pending",
+   "deferredTo": "leave"
   },
   {
    "id": "SHIFT-PALETTE-DRAG-AND-DROP#1",
@@ -3571,133 +3752,152 @@
    "section": "WEEKLY VIEW — layouts",
    "text": "WK Classic is the default layout",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › a grid type opens on the week in the classic layout, with totals, the contracted line and full test id coverage"
   },
   {
    "id": "WEEKLY-VIEW-layouts#2",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK ... with the allocation stacked in the first column",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › a grid type opens on the week in the classic layout, with totals, the contracted line and full test id coverage"
   },
   {
    "id": "WEEKLY-VIEW-layouts#3",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK ... days across as columns",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › a grid type opens on the week in the classic layout, with totals, the contracted line and full test id coverage"
   },
   {
    "id": "WEEKLY-VIEW-layouts#4",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK ... and one row per allocation",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › a grid type opens on the week in the classic layout, with totals, the contracted line and full test id coverage"
   },
   {
    "id": "WEEKLY-VIEW-layouts#5",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK Add allocation row is offered",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › a grid type opens on the week in the classic layout, with totals, the contracted line and full test id coverage"
   },
   {
    "id": "WEEKLY-VIEW-layouts#6",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK ... adding one gives a second row",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › a grid type opens on the week in the classic layout, with totals, the contracted line and full test id coverage"
   },
   {
    "id": "WEEKLY-VIEW-layouts#7",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK ... blank, not a copy",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › a grid type opens on the week in the classic layout, with totals, the contracted line and full test id coverage"
   },
   {
    "id": "WEEKLY-VIEW-layouts#8",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK ... and totals still aggregate",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › a grid type opens on the week in the classic layout, with totals, the contracted line and full test id coverage"
   },
   {
    "id": "WEEKLY-VIEW-layouts#9",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK ... and it can be removed",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › a grid type opens on the week in the classic layout, with totals, the contracted line and full test id coverage"
   },
   {
    "id": "WEEKLY-VIEW-layouts#10",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK On a phone the allocation column is pinned",
    "area": "timesheet",
-   "status": "pending"
+   "status": "n/a",
+   "reason": "replaced by the day list: a phone always gets the day list (weekLayoutFor), so no allocation column is pinned"
   },
   {
    "id": "WEEKLY-VIEW-layouts#11",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK A control returns to the current week",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › a grid type opens on the week in the classic layout, with totals, the contracted line and full test id coverage"
   },
   {
    "id": "WEEKLY-VIEW-layouts#12",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK Days run across as columns again",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › a grid type opens on the week in the classic layout, with totals, the contracted line and full test id coverage"
   },
   {
    "id": "WEEKLY-VIEW-layouts#13",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK Today is marked in the header",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › the grid layout puts each allocation in a section header with its own row"
   },
   {
    "id": "WEEKLY-VIEW-layouts#14",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK Weekends are distinguished",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/visual-2.spec.ts › visual: the module 2 screens at"
   },
   {
    "id": "WEEKLY-VIEW-layouts#15",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK One allocation section to start",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › the grid layout puts each allocation in a section header with its own row"
   },
   {
    "id": "WEEKLY-VIEW-layouts#16",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK The allocation is a section header, not a tall first column",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › the grid layout puts each allocation in a section header with its own row"
   },
   {
    "id": "WEEKLY-VIEW-layouts#17",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK Its selects are laid out horizontally",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/visual-2.spec.ts › visual: the module 2 screens at"
   },
   {
    "id": "WEEKLY-VIEW-layouts#18",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK Each section has its own seven-day row and total",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › the grid layout puts each allocation in a section header with its own row"
   },
   {
    "id": "WEEKLY-VIEW-layouts#19",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK A single totals row keeps the day columns aligned",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/visual-2.spec.ts › visual: the module 2 screens at"
   },
   {
    "id": "WEEKLY-VIEW-layouts#20",
@@ -3711,7 +3911,8 @@
    "section": "WEEKLY VIEW — layouts",
    "text": "WK Contracted hours are shown alongside the week total",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › a grid type opens on the week in the classic layout, with totals, the contracted line and full test id coverage"
   },
   {
    "id": "WEEKLY-VIEW-layouts#22",
@@ -3802,91 +4003,104 @@
    "section": "WEEKLY VIEW — layouts",
    "text": "WK On a phone the label column is pinned by the shared .tw rule",
    "area": "timesheet",
-   "status": "pending"
+   "status": "n/a",
+   "reason": "replaced by the day list: a phone always gets the day list (weekLayoutFor), so no label column is pinned"
   },
   {
    "id": "WEEKLY-VIEW-layouts#35",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK The grid reuses .tw and .dense rather than a bespoke wrapper",
    "area": "timesheet",
-   "status": "pending"
+   "status": "n/a",
+   "reason": "replaced by the shared Table component and token classes (src/ui); the prototype’s .tw and .dense class names do not exist"
   },
   {
    "id": "WEEKLY-VIEW-layouts#36",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK Inputs reuse the .inl in-table input",
    "area": "timesheet",
-   "status": "pending"
+   "status": "n/a",
+   "reason": "replaced by the INL token classes in WeekGrid; the prototype’s .inl class does not exist"
   },
   {
    "id": "WEEKLY-VIEW-layouts#37",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK The section badge reuses .scope",
    "area": "timesheet",
-   "status": "pending"
+   "status": "n/a",
+   "reason": "replaced by the shared Pill and token classes; the prototype’s .scope class does not exist"
   },
   {
    "id": "WEEKLY-VIEW-layouts#38",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK Three layouts exist and are chosen by configuration",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › the days layout lists one row per day, and a day nobody worked starts with no line"
   },
   {
    "id": "WEEKLY-VIEW-layouts#39",
    "section": "WEEKLY VIEW — layouts",
    "text": "WK Switching back restores classic, the default",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#1",
    "section": "WEEKLY LAYOUT IS CONFIGURABLE",
    "text": "CL A layout setting sits on the weekly-grid feature",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#2",
    "section": "WEEKLY LAYOUT IS CONFIGURABLE",
    "text": "CL It offers both layouts by name",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#3",
    "section": "WEEKLY LAYOUT IS CONFIGURABLE",
    "text": "CL Switching to the list layout is confirmed and audited",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#4",
    "section": "WEEKLY LAYOUT IS CONFIGURABLE",
    "text": "CL ... and says what changed",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#5",
    "section": "WEEKLY LAYOUT IS CONFIGURABLE",
    "text": "CL ... and is recorded",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#6",
    "section": "WEEKLY LAYOUT IS CONFIGURABLE",
    "text": "CL The list layout renders seven day rows",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › the days layout lists one row per day, and a day nobody worked starts with no line"
   },
   {
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#7",
    "section": "WEEKLY LAYOUT IS CONFIGURABLE",
    "text": "CL The grid table is gone in this layout",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › the days layout lists one row per day, and a day nobody worked starts with no line"
   },
   {
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#8",
@@ -3907,7 +4121,8 @@
    "section": "WEEKLY LAYOUT IS CONFIGURABLE",
    "text": "CL Each day shows its own total",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › the days layout lists one row per day, and a day nobody worked starts with no line"
   },
   {
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#11",
@@ -3921,14 +4136,16 @@
    "section": "WEEKLY LAYOUT IS CONFIGURABLE",
    "text": "CL It reuses .inl for its inputs",
    "area": "timesheet",
-   "status": "pending"
+   "status": "n/a",
+   "reason": "replaced by the INL token classes in WeekGrid; the prototype’s .inl class does not exist"
   },
   {
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#13",
    "section": "WEEKLY LAYOUT IS CONFIGURABLE",
    "text": "CL A line can be added to a day",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › the days layout lists one row per day, and a day nobody worked starts with no line"
   },
   {
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#14",
@@ -3942,7 +4159,8 @@
    "section": "WEEKLY LAYOUT IS CONFIGURABLE",
    "text": "CL A day nobody worked starts with no line at all",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › the days layout lists one row per day, and a day nobody worked starts with no line"
   },
   {
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#16",
@@ -3976,8 +4194,9 @@
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#20",
    "section": "WEEKLY LAYOUT IS CONFIGURABLE",
    "text": "CL Fill-from-rota works in the list layout",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "rota",
+   "status": "pending",
+   "deferredTo": "rota"
   },
   {
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#21",
@@ -3990,8 +4209,9 @@
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#22",
    "section": "WEEKLY LAYOUT IS CONFIGURABLE",
    "text": "CL Switching back restores the grid",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#1",
@@ -4740,148 +4960,169 @@
    "id": "PAY-CODE-CRUD#1",
    "section": "PAY CODE CRUD",
    "text": "PC An Add control exists",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "PAY-CODE-CRUD#2",
    "section": "PAY CODE CRUD",
    "text": "PC Rows offer Edit",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "PAY-CODE-CRUD#3",
    "section": "PAY CODE CRUD",
    "text": "PC Allowance rows are marked as not editable here",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "PAY-CODE-CRUD#4",
    "section": "PAY CODE CRUD",
    "text": "PC The form says money is not set here",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "PAY-CODE-CRUD#5",
    "section": "PAY CODE CRUD",
    "text": "PC A code is required",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "PAY-CODE-CRUD#6",
    "section": "PAY CODE CRUD",
    "text": "PC The code format is checked",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "PAY-CODE-CRUD#7",
    "section": "PAY CODE CRUD",
    "text": "PC A duplicate code is refused, because BC matches on it",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "PAY-CODE-CRUD#8",
    "section": "PAY CODE CRUD",
    "text": "PC A pay element already mapped to another code is refused",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "PAY-CODE-CRUD#9",
    "section": "PAY CODE CRUD",
    "text": "PC A value is required for a multiplier",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "PAY-CODE-CRUD#10",
    "section": "PAY CODE CRUD",
    "text": "PC A valid code is created",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "PAY-CODE-CRUD#11",
    "section": "PAY CODE CRUD",
    "text": "PC ... and says where it becomes available",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "PAY-CODE-CRUD#12",
    "section": "PAY CODE CRUD",
    "text": "PC It appears on the page",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "PAY-CODE-CRUD#13",
    "section": "PAY CODE CRUD",
    "text": "PC ... and immediately as a rate type option",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "PAY-CODE-CRUD#14",
    "section": "PAY CODE CRUD",
    "text": "PC Creation is audited with basis and element",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "PAY-CODE-CRUD#15",
    "section": "PAY CODE CRUD",
    "text": "PC The code itself is locked once it exists",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "PAY-CODE-CRUD#16",
    "section": "PAY CODE CRUD",
    "text": "PC ... and says why",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "PAY-CODE-CRUD#17",
    "section": "PAY CODE CRUD",
    "text": "PC An edit reports how many fields changed",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "PAY-CODE-CRUD#18",
    "section": "PAY CODE CRUD",
    "text": "PC The edit is audited as a diff",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "PAY-CODE-CRUD#19",
    "section": "PAY CODE CRUD",
    "text": "PC A code in use cannot be removed, and says what uses it",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "PAY-CODE-CRUD#20",
    "section": "PAY CODE CRUD",
    "text": "PC An unused code can be removed",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "PAY-CODE-CRUD#21",
    "section": "PAY CODE CRUD",
    "text": "PC ... and is gone from the page",
-   "area": "timesheet",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "EMPLOYEE-TYPE-CRUD-pre-existing-now-covered#1",
@@ -5867,7 +6108,8 @@
    "section": "TIME IS CAPTURED AS TIME",
    "text": "TT Grid inputs use the control radius, not a square corner",
    "area": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/visual-2.spec.ts › visual: the module 2 screens at"
   },
   {
    "id": "ONBOARDING-DOCUMENTS-POLICIES-AND-LABELS#1",
@@ -6060,7 +6302,8 @@
    "text": "CN Allocation selects share one rule across all three layouts",
    "area": "timesheet",
    "deferredTo": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/visual-2.spec.ts › visual: the module 2 screens at"
   },
   {
    "id": "CONSISTENCY#2",
@@ -6330,7 +6573,8 @@
    "text": "TD The sample data is moved onto the current week",
    "area": "timesheet",
    "deferredTo": "timesheet",
-   "status": "pending"
+   "status": "n/a",
+   "reason": "prototype-only: shiftSeededDates moves the prototype’s sample data onto the real week; the mock seeds relative to a frozen clock instead"
   },
   {
    "id": "TODAY-IS-TODAY#3",
@@ -6338,7 +6582,8 @@
    "text": "TD ... by whole weeks, so a Thursday stays a Thursday",
    "area": "timesheet",
    "deferredTo": "timesheet",
-   "status": "pending"
+   "status": "n/a",
+   "reason": "prototype-only: shiftSeededDates moves the prototype’s sample data onto the real week; the mock seeds relative to a frozen clock instead"
   },
   {
    "id": "TODAY-IS-TODAY#4",
@@ -6354,7 +6599,8 @@
    "text": "TD Submission identifiers cannot collide",
    "area": "timesheet",
    "deferredTo": "timesheet",
-   "status": "pending"
+   "status": "n/a",
+   "reason": "replaced by one record per person per day (D1): its id is derived from the person and the date, so two submissions cannot collide"
   },
   {
    "id": "TODAY-IS-TODAY#6",
@@ -6362,7 +6608,8 @@
    "text": "TD A submission is stamped with today rather than a written-in date",
    "area": "timesheet",
    "deferredTo": "timesheet",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/timesheets.test.ts › a new day is saved and submitted in one request, with history and one audit row"
   },
   {
    "id": "CONTROLS-LOOK-LIKE-THEIR-NEIGHBOURS#1",

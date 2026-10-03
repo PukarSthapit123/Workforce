@@ -24,6 +24,7 @@
     "IMP-031 — pattern generation writes real shifts": "rota", "IMP-031 — manager scoping": "rota", "MULTI-PERSON ADD + STAGGER": "rota",
     "WEEKLY REPEAT (IMP-032)": "rota", "ROTA OFF EMPTIES THE CALENDAR": "rota", "CLEAR WEEK": "rota",
     "ITEM 3 — payroll readiness (IMP-016)": "payroll", "PAY CODE CRUD": "timesheet",
+    "LEAVE AND SICKNESS (module 4, deferred rows from timesheet)": "leave",
     "REGRESSION (baseline register)": "prototype-only", "RESULT": "prototype-only"
   },
   "defaultArea": "timesheet"
