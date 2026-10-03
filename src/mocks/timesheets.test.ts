@@ -579,6 +579,17 @@ describe('a fault on each write leaves no record and no audit row (Review Focus 
     ['save the setup', 'admin', 'PATCH', '/api/v1/timesheet-config', { weekLayout: 'grid' }, 1],
     ['retry a posting', 'admin', 'POST', '/api/v1/integration/attempts/int_a1f3/retry', undefined, 1],
   ];
+  /* review Minor 2: the fault rows above answer before the handler runs; this one throws mid-handler */
+  test('a throw after a handler has written rolls every write back: bulk approve with the audit write failing', async () => {
+    const call = await as('manager'), set = ApprovalQueue.parse((await call('GET', '/api/v1/approvals/timesheets')).body).bulk;
+    const before = snapshot(...WRITES);
+    /* a frozen audit log: the audit write, the handler's last, throws after the days and postings are written */
+    store.db.audit = Object.freeze({ ...store.db.audit });
+    const r = await call('POST', '/api/v1/approvals/timesheets/bulk', { ids: set.ids, checksum: set.checksum });
+    expect(r.status).toBe(500);
+    expect(snapshot(...WRITES)).toEqual(before);
+    expect(set.ids.map(id => store.coll<Day>('timesheetDays')[id]?.state)).toEqual(['pend', 'pend', 'pend']);
+  });
   for (const [what, who, method, path, body, v] of writes) {
     test(what, async () => {
       const call = await as(who), before = snapshot(...WRITES);
