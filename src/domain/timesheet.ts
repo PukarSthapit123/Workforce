@@ -7,6 +7,7 @@
    line, which it does only while the Rota module is on (D9). Messages are the
    prototype's, with each em-dash aside rewritten as its own sentence. */
 import type { Problem } from './codes';
+import { addDays, dowMon, formatDay, formatDmy, pad, toMin, weekDates, periodStart, type Clock } from './time';
 
 /* ---------------------------------------------------------------- states (D2) */
 export const TS_STATES = ['draft', 'pend', 'back', 'resub', 'ok'] as const;
@@ -54,57 +55,14 @@ export const transitionAuditText = (personName: string, date: string, from: TsSt
   `${personName} · ${formatDmy(date)} · ${TS_STATE[from].label} → ${TS_STATE[to].label}${reason ? ` · "${reason}"` : ''}`;
 
 /* ------------------------------------------------------------- time and dates */
+/* The date and clock helpers live in ./time, shared with Rota; re-exported so callers keep importing them from here. */
+export { toMin, addDays, dowMon, formatDay, formatDmy, isoWeek, weekLabel, clockFromIso, periodStart, weekDates, restGap } from './time';
+export type { Clock, ShiftSpan } from './time';
 export type TimeFormat = 'HH:MM' | 'h m';
-/* 'HH:MM' to minutes from midnight. The prototype accepted 25:99; a server must not. */
-export function toMin(t: string | null | undefined): number | null {
-  const m = /^(\d{1,2}):(\d{2})$/.exec(String(t ?? '').trim());
-  if (!m) return null;
-  const h = Number(m[1]), mm = Number(m[2]);
-  return h < 24 && mm < 60 ? h * 60 + mm : null;
-}
-const pad = (n: number) => String(n).padStart(2, '0');
 /* The prototype's hm(): the tenant's time format decides 07:30 or 7h 30m. */
 export function formatMinutes(min: number, fmt: TimeFormat): string {
   const v = Math.max(0, Math.round(min)), h = Math.floor(v / 60), m = v % 60;
   return fmt === 'HH:MM' ? `${pad(h)}:${pad(m)}` : `${h}h ${pad(m)}m`;
-}
-
-const DOW_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
-const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as const;
-const parseIso = (iso: string) => {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
-  return m ? new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]))) : new Date(Number.NaN);
-};
-const toIso = (d: Date) => `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
-export const addDays = (iso: string, n: number) => { const d = parseIso(iso); d.setUTCDate(d.getUTCDate() + n); return toIso(d); };
-/* 0 is Monday, 6 is Sunday. */
-export const dowMon = (iso: string) => (parseIso(iso).getUTCDay() + 6) % 7;
-/* "Thu 13 Aug" */
-export const formatDay = (iso: string) => { const d = parseIso(iso); return `${DOW_SHORT[dowMon(iso)] ?? ''} ${d.getUTCDate()} ${MONTH_SHORT[d.getUTCMonth()] ?? ''}`; };
-/* "13/08/2026" */
-export const formatDmy = (iso: string) => { const d = parseIso(iso); return `${pad(d.getUTCDate())}/${pad(d.getUTCMonth() + 1)}/${d.getUTCFullYear()}`; };
-export function isoWeek(iso: string): number {
-  const j = parseIso(iso), day = (j.getUTCDay() + 6) % 7;
-  j.setUTCDate(j.getUTCDate() - day + 3);
-  const first = new Date(Date.UTC(j.getUTCFullYear(), 0, 4));
-  return 1 + Math.round(((j.getTime() - first.getTime()) / 86400000 - 3 + ((first.getUTCDay() + 6) % 7)) / 7);
-}
-/* The multi-week card's label: "Week 32 · 03–09 Aug 2026", or across a month "Week 31 · 27 Jul – 02 Aug 2026". */
-export function weekLabel(weekStart: string): string {
-  const a = parseIso(weekStart), b = parseIso(addDays(weekStart, 6));
-  const mon = (d: Date) => MONTH_SHORT[d.getUTCMonth()] ?? '';
-  const span = a.getUTCMonth() === b.getUTCMonth()
-    ? `${pad(a.getUTCDate())}–${pad(b.getUTCDate())} ${mon(b)}`
-    : `${pad(a.getUTCDate())} ${mon(a)} – ${pad(b.getUTCDate())} ${mon(b)}`;
-  return `Week ${isoWeek(weekStart)} · ${span} ${b.getUTCFullYear()}`;
-}
-
-/* The clock every rule reads: a London date and time. The prototype froze it at 13/08/2026 09:12. */
-export interface Clock { date: string; time: string }
-const LONDON = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
-export function clockFromIso(iso: string): Clock {
-  const part = (k: string) => LONDON.formatToParts(new Date(iso)).find(p => p.type === k)?.value ?? '00';
-  return { date: `${part('year')}-${part('month')}-${part('day')}`, time: `${part('hour')}:${part('minute')}` };
 }
 
 /* ------------------------------------------------------ capture rules and lock */
@@ -120,8 +78,6 @@ export const DEFAULT_RULES: CaptureRules = {
 };
 
 const CUTOFF_DAYS: Record<string, number> = { Sunday: 6, Monday: 7, Tuesday: 8, Wednesday: 9, Thursday: 10 };
-/* The Monday of the pay week containing the date. */
-export const periodStart = (iso: string) => addDays(iso, -dowMon(iso));
 /* When the period beginning `weekStart` closes, from the tenant's cut-off ("Monday 12:00"). */
 export function cutoffFor(weekStart: string, cutoff: string): { date: string; time: string } {
   const [day = '', time] = String(cutoff || 'Monday 12:00').split(' ');
@@ -230,24 +186,6 @@ export function validateTimes(input: TimesInput, ctx: CheckContext): TimesResult
       warnings.push(`Only ${rest.gapHours} h rest against an adjacent shift. The rule for ${rest.typeName} is ${rest.ruleHours} h.`);
   }
   return { errors, warnings, net };
-}
-
-/* Rest between a shift and the others in its rota week, in hours; negative when
-   they overlap, 99 when there is nothing to compare. Hours run from Monday 00:00
-   of the week, so a shift's `end` may pass 24. The prototype's restGap. */
-export interface ShiftSpan { start: number; end: number }
-export function restGap(week: readonly (ShiftSpan | null)[], day: number, shift: ShiftSpan | null): number {
-  if (!shift) return 99;
-  const a = [day * 24 + shift.start, day * 24 + shift.end] as const;
-  let min = 99;
-  week.forEach((s, i) => {
-    if (!s || i === day) return;
-    const b = [i * 24 + s.start, i * 24 + s.end] as const;
-    if (min === -1) return;
-    if (a[0] < b[1] && b[0] < a[1]) { min = -1; return; }
-    min = Math.min(min, a[0] >= b[1] ? a[0] - b[1] : b[0] - a[1]);
-  });
-  return min;
 }
 
 /* -------------------------------------------------------- mandatory fields */
@@ -427,7 +365,6 @@ export function entryMinutes(e: TimeEntry): number {
   return Math.max(0, worked - brk);
 }
 export const dayMinutes = (entries: readonly TimeEntry[]) => entries.reduce((a, e) => a + entryMinutes(e), 0);
-export const weekDates = (weekStart: string) => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 /* Per-day minutes, minutes per allocation (the first allocation field that has a value) and the week total. */
 export function weekTotals(weekStart: string, days: readonly DayEntries[], allocationFields: readonly string[] = []) {
   const dates = weekDates(weekStart);
