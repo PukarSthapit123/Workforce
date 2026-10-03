@@ -4,6 +4,15 @@ import { test, expect, FROZEN } from './support/fixtures';
 import { BIGYAN, EDDIE, PUKAR, signInEmail } from './support/timesheet';
 import { tid } from '../src/testids';
 
+/* Flip the theme, then let the colour transitions it starts finish: axe reads
+   computed colours, and a chip caught mid-transition reads as low contrast. */
+async function setTheme(page: Page, theme: 'light' | 'dark') {
+  await page.evaluate(async t => {
+    document.documentElement.setAttribute('data-theme', t);
+    await Promise.all(document.getAnimations().filter(a => a instanceof CSSTransition).map(a => a.finished.catch(() => undefined)));
+  }, theme);
+}
+
 /* Every built page beyond sign-in, keyed to the one extra piece of its own
    data (besides the page container itself) that means it is actually ready:
    the permissions matrix or the audit table. Running axe or the overflow
@@ -33,7 +42,7 @@ async function seedOneAuditRow(page: Page) {
 for (const theme of ['light', 'dark'] as const) {
   test(`axe: sign-in, permissions and audit have no serious issues (${theme})`, async ({ page, signInAs }) => {
     const check = async () => {
-      await page.evaluate(t => document.documentElement.setAttribute('data-theme', t), theme);
+      await setTheme(page, theme);
       const r = await new AxeBuilder({ page }).analyze();
       expect(r.violations.filter(v => ['serious', 'critical'].includes(v.impact ?? '')).map(v => `${v.id}: ${v.nodes.length}`)).toEqual([]);
     };
@@ -73,7 +82,7 @@ for (const theme of ['light', 'dark'] as const) {
     test(`axe: plan 1b pages for the ${persona} have no serious issues (${theme})`, async ({ page, signInAs }) => {
       test.setTimeout(90_000); // six admin pages, a dialog and an axe run on each
       const check = async (where: string) => {
-        await page.evaluate(t => document.documentElement.setAttribute('data-theme', t), theme);
+        await setTheme(page, theme);
         const r = await new AxeBuilder({ page }).analyze();
         expect(r.violations.filter(v => ['serious', 'critical'].includes(v.impact ?? '')).map(v => `${where} ${v.id}: ${v.nodes.length}`)).toEqual([]);
       };
@@ -142,7 +151,7 @@ test.describe('module 2 pages', () => {
         await signInEmail(page, email);
         for (const [where, go] of steps) {
           await go(page);
-          await page.evaluate(t => document.documentElement.setAttribute('data-theme', t), theme);
+          await setTheme(page, theme);
           const r = await new AxeBuilder({ page }).analyze();
           expect(r.violations.filter(v => ['serious', 'critical'].includes(v.impact ?? '')).map(v => `${where} ${v.id}: ${v.nodes.length}`)).toEqual([]);
         }
