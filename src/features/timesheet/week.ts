@@ -7,6 +7,7 @@
    per-day entries for the one-request week submission. */
 import type { TimesheetWeek, WeekSubmit } from '@/contract/timesheets';
 import { dayMinutes, entryMinutes, toMin, type BreakInput, type WeekLayout, type WeekModel } from '@/domain/timesheet';
+import { rotaShift } from './capture';
 
 /* A cell is one entry on one day. `breaks` and `extra` are what the day form
    saved with it (its breaks and its other fields): the grid does not show
@@ -76,6 +77,33 @@ export function gridAs(state: GridState, kind: GridState['kind'], m: WeekModel):
 }
 export const gridLines = (state: GridState, m: WeekModel) => (state.kind === 'lines' ? state.lines : linesFromAllocs(state.allocs, m));
 
+/* fill-from-rota (v15:11370-11392): each day with a shift on the published rota
+   takes the shift's start and finish (or its hours, in an hours grid): the
+   first allocation's cell in the classic and grid layouts, the day's first
+   line in the list. Days with no shift, and closed days, are left as they are,
+   where the prototype blanked them; `only` limits it to some days (proxy entry
+   seeds only the days with nothing saved). Returns how many days it filled. */
+export function fillFromRota(state: GridState, week: TimesheetWeek, m: WeekModel, only: (day: number) => boolean = () => true): { state: GridState; days: number } {
+  const shifts = week.days.map((d, i) => (d.locked || !only(i) ? undefined : rotaShift(d)));
+  const put = (cell: Cell, i: number): Cell => {
+    const s = shifts[i];
+    if (!s) return cell;
+    return m.times ? { ...cell, start: s.from, finish: s.to } : { ...cell, hours: String(s.hours) };
+  };
+  const days = shifts.filter(Boolean).length;
+  if (state.kind === 'lines') {
+    const lines = state.lines.map((ls, i) => {
+      if (!shifts[i]) return ls;
+      const [first, ...rest] = ls;
+      return [first ? { ...first, cell: put(first.cell, i) } : { ctx: defaultCtx(m), cell: put(blankCell(), i) }, ...rest];
+    });
+    return { state: { kind: 'lines', lines }, days };
+  }
+  const base = state.allocs.length ? state.allocs : [blankAlloc(m)];
+  const allocs = base.map((a, k) => (k === 0 ? { ...a, cells: a.cells.map((c, i) => put(c, i)) } : a));
+  return { state: { kind: 'allocs', allocs }, days };
+}
+
 /* recalcWeekGrid: minutes per day, per allocation and for the week. */
 export function gridTotals(state: GridState, m: WeekModel) {
   const lines = gridLines(state, m);
@@ -114,7 +142,9 @@ export function weekBody(week: TimesheetWeek, state: GridState, m: WeekModel): W
         : { start: '', finish: '', breaks: [], hours: cellMinutes(l.cell, false) / 60, fields };
     });
     if (rec ? sameEntries(entries, rec.entries, m) : !entries.length) return asRead;
-    return { ...asRead, entries, allowances: rec?.allowances ?? [], ...(rec?.shift ? { shift: rec.shift } : {}) };
+    /* the rota line travels with the day: the saved one, or the day's shift on the published rota */
+    const shift = rec?.shift || rotaShift(d)?.code;
+    return { ...asRead, entries, allowances: rec?.allowances ?? [], ...(shift ? { shift } : {}) };
   });
   return { days };
 }

@@ -5,8 +5,8 @@ import { Banner, Button, CalNav, Card, FormWarn, Pill, toastInfo, useNarrow, typ
 import { useSubmitWeek } from '@/api/timesheets';
 import type { TimesheetWeek, WeekSubmitted } from '@/contract/timesheets';
 import { addDays, formatDay, isoWeek, periodStart, weekLayoutFor, weekModel } from '@/domain/timesheet';
-import { envOf, flagOn, hm, typeOf } from './capture';
-import { gridAs, gridTotals, initialGrid, kindFor, weekBody, type GridState } from './week';
+import { envOf, flagOn, hm, rotaShift, typeOf } from './capture';
+import { fillFromRota, gridAs, gridTotals, initialGrid, kindFor, weekBody, type GridState } from './week';
 import { WeekGrid } from './WeekGrid';
 import { MultiWeek } from './MultiWeek';
 
@@ -69,8 +69,16 @@ function WeekPanel({ week, today, onAnchor, onSubmit, pending }: {
   const totals = gridTotals(current, m);
   const chip = weekChip(week);
   const end = addDays(week.weekStart, 6), thisWeek = periodStart(today);
-  const fillFromRota = () => toastInfo('Nothing to fill. You have no shifts rota’d this week.');
+  /* fill-from-rota: the published rota's shifts into the grid, with a true count of the days filled */
+  const fill = () => {
+    const r = fillFromRota(current, week, m);
+    if (!r.days) { toastInfo('Nothing to fill. You have no shifts rota’d this week.'); return; }
+    setState(r.state);
+    toastInfo(`Filled from your rota · ${r.days} day${r.days > 1 ? 's' : ''} · check and adjust before submitting`);
+  };
   const contracted = week.person.contractedHours;
+  /* rotadHrs: the hours of the shifts on this week's published rota */
+  const rotad = Number(week.days.reduce((n, d) => n + (rotaShift(d)?.hours ?? 0), 0).toFixed(2));
   return (
     <Card>
       <div className="mb-md flex flex-wrap items-center gap-md">
@@ -80,15 +88,16 @@ function WeekPanel({ week, today, onAnchor, onSubmit, pending }: {
           back={{ testId: tid.ts.weekToday, label: 'Back to this week', current: 'This week', atCurrent: week.weekStart === thisWeek, onClick: () => onAnchor(today) }} />
         <div className="ml-auto flex flex-wrap items-center gap-sm">
           <Pill testId={tid.ts.weekState} tone={chip.tone} glyph={chip.glyph}>{chip.label}</Pill>
-          {c.modules.R && <Button testId={tid.ts.fillRota} kind="ghost" small onClick={fillFromRota}>Fill from rota</Button>}
+          {c.modules.R && <Button testId={tid.ts.fillRota} kind="ghost" small onClick={fill}>Fill from rota</Button>}
           <Button testId={tid.ts.submitWeek} kind="primary" small pending={pending} onClick={() => onSubmit(current)}>Submit week</Button>
         </div>
       </div>
       <WeekGrid week={week} model={m} layout={layout} state={current} onChange={setState} today={today} />
       <div className="mt-md flex flex-wrap items-center gap-md text-xs text-text-muted">
         <span>Total <b data-testid={tid.ts.weekTotal} className="text-text-primary tabular-nums">{hm(c, totals.weekMin)}</b> · {chip.label.toLowerCase()}</span>
-        {contracted > 0 && <span data-testid={tid.ts.contracted} className="ml-auto">
-          {c.modules.R ? <>Rota’d <b className="tabular-nums">0h</b> of {contracted}h contracted</> : <><b className="tabular-nums">{contracted}h</b> contracted</>}</span>}
+        {c.modules.R
+          ? <span data-testid={tid.ts.contracted} className="ml-auto">Rota’d <b className="tabular-nums">{rotad}h</b>{contracted > 0 && <> of {contracted}h contracted</>}</span>
+          : contracted > 0 && <span data-testid={tid.ts.contracted} className="ml-auto"><b className="tabular-nums">{contracted}h</b> contracted</span>}
       </div>
     </Card>);
 }
