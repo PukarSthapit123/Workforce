@@ -62,7 +62,7 @@ export function TeamQueue({ returnReasonRequired }: { returnReasonRequired: bool
                 </TableCell>
                 <TableCell kind="foot" empty={!open} className="text-right whitespace-nowrap">
                   {open && <span className="inline-flex gap-sm max-md:w-full">
-                    <Button testId={tid.tteam.ret(r.id)} kind="ghost" small pending={busy} onClick={() => setReturning(r)}>Return</Button>
+                    <Button testId={tid.tteam.ret(r.id)} kind="ghost" small disabled={busy} onClick={() => setReturning(r)}>Return</Button>
                     <Button testId={tid.tteam.approve(r.id)} kind="primary" small pending={busy} onClick={() => approve(r)}>Approve</Button>
                   </span>}
                 </TableCell>
