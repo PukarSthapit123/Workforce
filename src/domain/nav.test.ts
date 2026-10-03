@@ -25,10 +25,19 @@ test('a manager also gets My Team, with Team Home and Approvals in the strip and
   /* module 2 builds Team timesheets */
   expect(must(team.tabs.find(t => t.view === 'tteam'))).toMatchObject({ built: true, path: '/team/tteam' });
   expect(must(team.tabs.find(t => t.view === 'tteam')).subProject).toBeUndefined();
-  /* module 3 builds Team rota; the rest of Scheduling is still to come */
+  /* module 3 builds Team rota and Cover requests */
   expect(must(team.tabs.find(t => t.view === 'trota'))).toMatchObject({ built: true, path: '/team/trota', group: 'Scheduling' });
   expect(must(team.tabs.find(t => t.view === 'trota')).subProject).toBeUndefined();
-  expect(must(team.tabs.find(t => t.view === 'tcover'))).toMatchObject({ built: false, subProject: 'Rota' });
+  expect(must(team.tabs.find(t => t.view === 'tcover'))).toMatchObject({ built: true, path: '/team/tcover', group: 'Scheduling' });
+  expect(must(team.tabs.find(t => t.view === 'tcover')).subProject).toBeUndefined();
+});
+test('a manager who builds the rota gets the Shift catalogue and Working patterns, built, in the prototype order', () => {
+  const g = buildNav({ caps: caps('own_home', 'team_rota', 'team_cover', 'rota_shift', 'rota_pattern'), modules: ALL_MODULES, flags, onboarding: false });
+  const team = must(g.find((x): x is NavGroup => x.key === 'team'));
+  expect(team.tabs.filter(t => t.group === 'Scheduling').map(t => t.label)).toEqual(['Rota', 'Cover requests', 'Shift catalogue', 'Working patterns']);
+  expect(team.tabs.filter(t => t.group === 'Scheduling').every(t => t.built && !t.subProject)).toBe(true);
+  expect(must(team.tabs.find(t => t.view === 'tshifts')).path).toBe('/team/tshifts');
+  expect(must(team.tabs.find(t => t.view === 'tpat')).path).toBe('/team/tpat');
 });
 test('a module switched off removes its tabs', () => {
   const g = buildNav({ caps: caps('own_home', 'own_shifts', 'own_leave'), modules: { ...ALL_MODULES, R: false, L: false }, flags, onboarding: false });

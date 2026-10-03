@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router';
 import { CircleCheck } from 'lucide-react';
 import { tid } from '@/testids';
 import {
@@ -25,8 +26,15 @@ import { NO_FILTERS, dow, filterRows, overCap, shortDay, type RotaFilters } from
    answered; every assignment (drag, keyboard, tap, the picker, a suggestion,
    the plan) goes through one write path, which runs eligibility on the server
    and turns a change to a live week into an amendment. */
+/* Cover requests' Add an extra shift hands its suggestion over in the route state. */
+const planFrom = (state: unknown): PlanItem[] | null => {
+  const plan = state && typeof state === 'object' && 'plan' in state ? state.plan : null;
+  return Array.isArray(plan) && plan.length ? (plan as PlanItem[]) : null;
+};
+
 export function RotaPage() {
   const home = useRotaHome();
+  const sent = planFrom(useLocation().state);
   const [loc, setLoc] = useState<string | null>(null);
   const [ws, setWs] = useState<string | null>(null);
   const location = loc ?? home.data?.location ?? '';
@@ -38,7 +46,7 @@ export function RotaPage() {
   return (
     <>
       {view && home.data && <Board key={location} view={view} loading={view.weekStart !== weekStart} thisWeek={home.data.weekStart}
-        onLocation={setLoc} onWeek={setWs} />}
+        initialPlan={location === home.data.location && view.weekStart === home.data.weekStart ? sent : null} onLocation={setLoc} onWeek={setWs} />}
       {!view && (
         <Page testId={tid.page('trota')}>
           <PageHead title="Team rota" crumb="My team · Team rota" />
@@ -55,13 +63,13 @@ type Box = { k: 'add' | 'shift'; person: string; day: number } | { k: 'gap'; day
 const LEAVE_NOTE = 'Annual leave. Change it on Team leave, and the rota follows.';
 const SICK_NOTE = 'Sickness. Change it on the Sickness tab.';
 
-function Board({ view, loading, thisWeek, onLocation, onWeek }: {
-  view: RotaWeekView; loading: boolean; thisWeek: string; onLocation: (code: string) => void; onWeek: (weekStart: string) => void;
+function Board({ view, loading, thisWeek, initialPlan, onLocation, onWeek }: {
+  view: RotaWeekView; loading: boolean; thisWeek: string; initialPlan: PlanItem[] | null; onLocation: (code: string) => void; onWeek: (weekStart: string) => void;
 }) {
   const caps = useCaps();
   const [filters, setFilters] = useState<RotaFilters>(NO_FILTERS);
   const [day, setDay] = useState(() => (view.today >= view.weekStart && view.today <= addDays(view.weekStart, 6) ? daysBetween(view.weekStart, view.today) : 0));
-  const [plan, setPlan] = useState<PlanItem[] | null>(null);
+  const [plan, setPlan] = useState<PlanItem[] | null>(initialPlan);
   const [lifted, setLifted] = useState<string | null>(null);
   const [box, setBox] = useState<Box>(null);
   const write = useWriteCell(), move = useMoveWeek(), copy = useCopyWeek(), accept = useAcceptPlan();
