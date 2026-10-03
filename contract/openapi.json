@@ -12808,7 +12808,6 @@
                         }
                       },
                       "required": [
-                        "entries",
                         "date",
                         "version"
                       ]

@@ -1,4 +1,4 @@
-import { fireEvent, screen, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { server } from '@/mocks/node';
@@ -217,6 +217,24 @@ describe('My timesheet, week view', () => {
     expect(dayOf('EMP004', '2026-08-10')?.state).toBe('pend');
     expect(dayOf('EMP004', '2026-08-14')).toBeUndefined();
     expect(audits().filter(a => a.act === 'Timesheet week submitted')).toHaveLength(1);
+  });
+  test('a day somebody else saved since the week was read refuses the week, nothing is written, and the grid reads it again', async () => {
+    await openWeek();
+    /* the manager saves Tuesday as a proxy draft after Bigyan opened the week */
+    const wed = dayOf('EMP004', '2026-08-12');
+    if (!wed) throw new Error('no seeded day');
+    store.coll<TimesheetDay>('timesheetDays')['tsd_EMP004_2026-08-11'] = { ...wed, id: 'tsd_EMP004_2026-08-11', date: '2026-08-11', state: 'draft',
+      captureSource: 'proxy', enteredBy: 'EMP001', history: [], submittedAt: '', integrationAttemptId: '' };
+    set(tid.week.cell(0, 0, 'start'), '09:00');
+    set(tid.week.cell(0, 0, 'finish'), '17:00');
+    const before = audits().length;
+    await userEvent.click(screen.getByTestId(tid.ts.submitWeek));
+    const warn = await screen.findByTestId(tid.ts.banner('week-refusal'));
+    expect(warn).toHaveTextContent('Somebody changed 11/08/2026 since you opened this week. Nothing has been saved.');
+    expect(dayOf('EMP004', '2026-08-10')).toBeUndefined();
+    expect(dayOf('EMP004', '2026-08-11')).toMatchObject({ state: 'draft', captureSource: 'proxy', enteredBy: 'EMP001' });
+    expect(audits()).toHaveLength(before);
+    await waitFor(() => expect(screen.getByTestId(tid.week.cell(0, 1, 'start'))).toHaveValue('07:00'));
   });
   test('a week with nothing new to send is refused, with its message and what to do next', async () => {
     await openWeek();

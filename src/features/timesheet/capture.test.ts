@@ -87,17 +87,17 @@ describe('the weekly grid', () => {
     const back = gridAs({ kind: 'allocs', allocs }, 'lines', m);
     expect(back.kind === 'lines' && back.lines[2]?.[0]?.cell.start).toBe('07:00');
   });
-  test('the week body leaves out a day as it was saved, and sends a changed day with its saved breaks', () => {
+  test('the week body sends all seven days with their versions, entries only for a changed day, with its saved breaks', () => {
     const m = model(), state = initialGrid(week, m, 'classic');
-    expect(weekBody(week, state, m).days).toEqual([]);
+    expect(weekBody(week, state, m).days).toEqual(week.days.map(d => ({ date: d.date, version: d.version })));
     if (state.kind !== 'allocs') throw new Error('classic holds allocation rows');
     const a = state.allocs[0];
     if (!a) throw new Error('no allocation row');
     const edited = { kind: 'allocs' as const, allocs: [{ ...a, cells: a.cells.map((x, i) => (i === 2 ? { ...x, finish: '16:00' } : i === 0 ? { ...x, start: '09:00', finish: '17:00' } : x)) }] };
     const body = weekBody(week, edited, m).days;
-    expect(body.map(d => d.date)).toEqual(['2026-08-10', '2026-08-12']);
-    expect(body[1]?.entries[0]).toMatchObject({ start: '07:00', finish: '16:00', breaks: [{ start: '11:00', end: '11:30' }] });
-    expect(body[1]?.version).toBe(day(2).version);
+    expect(body.filter(x => x.entries).map(x => x.date)).toEqual(['2026-08-10', '2026-08-12']);
+    expect(body[2]?.entries?.[0]).toMatchObject({ start: '07:00', finish: '16:00', breaks: [{ start: '11:00', end: '11:30' }] });
+    expect(body[2]?.version).toBe(day(2).version);
   });
   test('the week chip reads the stored days: one awaiting approval and nothing else reads as awaiting', () => {
     expect(weekChip(week).label).toBe('Awaiting approval');

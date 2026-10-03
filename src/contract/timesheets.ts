@@ -134,10 +134,12 @@ export type DayInput = z.infer<typeof DayInput>;
 export const DaySaved = z.object({ record: TimesheetDay, warnings: z.array(z.string()), auditId: z.string().nullable() });
 export type DaySaved = z.infer<typeof DaySaved>;
 export const HeldDay = z.object({ date: IsoDate, reason: z.string() });
-export const WeekSubmit = z.object({
-  /* each day carries the version it was read at (0 for a day with no record), as If-Match does for one record */
-  days: z.array(DayInput.extend({ date: IsoDate, version: z.number().int().nonnegative() })).max(7),
-});
+/* Only the days sent are acted on. Each carries the version it was read at (0
+   for a day with no record), as If-Match does for one record. A changed day
+   carries its entries; a day sent without entries is submitted as it was read,
+   keeping who entered it, and a sent-back day sent that way is held, not resubmitted. */
+export const WeekSubmitDay = DayInput.extend({ date: IsoDate, version: z.number().int().nonnegative(), entries: z.array(TimeEntry).max(6).optional() });
+export const WeekSubmit = z.object({ days: z.array(WeekSubmitDay).max(7) });
 export type WeekSubmit = z.infer<typeof WeekSubmit>;
 export const WeekSubmitted = z.object({
   submitted: z.array(TimesheetDay), held: z.array(HeldDay), flagged: z.array(z.string()),

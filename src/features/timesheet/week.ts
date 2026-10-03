@@ -90,30 +90,31 @@ export function gridTotals(state: GridState, m: WeekModel) {
 }
 
 type DaySubmit = WeekSubmit['days'][number];
-const sameEntries = (a: DaySubmit['entries'], b: DaySubmit['entries'], m: WeekModel) =>
+type Entries = NonNullable<DaySubmit['entries']>;
+const sameEntries = (a: Entries, b: Entries, m: WeekModel) =>
   a.length === b.length && a.every((x, i) => {
     const y = b[i];
     if (!y) return false;
     const times = m.times ? x.start === y.start && x.finish === y.finish : dayMinutes([x]) === dayMinutes([y]);
     return times && m.ctx.every(f => (x.fields?.[f.c] ?? '') === (y.fields?.[f.c] ?? ''));
   });
-/* The week submission's body. A day left as it was saved is left out, so the
-   server reads the stored record as it is; a changed day carries each
-   entry's saved breaks and other fields under its new times. */
+/* The week submission's body: all seven days, each with the version it was
+   read at, so the server refuses the week (412) if anyone changed a day since.
+   A day left as it was read goes without entries, so it is submitted as it is
+   stored and keeps who entered it; a changed day carries each entry's saved
+   breaks and other fields under its new times. */
 export function weekBody(week: TimesheetWeek, state: GridState, m: WeekModel): WeekSubmit {
   const lines = gridLines(state, m);
-  const days: DaySubmit[] = [];
-  week.days.forEach((d, i) => {
-    const rec = d.record;
+  const days: DaySubmit[] = week.days.map((d, i) => {
+    const rec = d.record, asRead = { date: d.date, version: d.version };
     const entries = (lines[i] ?? []).filter(l => cellMinutes(l.cell, m.times) > 0).map(l => {
       const fields = { ...l.cell.extra, ...Object.fromEntries(Object.entries(l.ctx).filter(([, v]) => v !== '')) };
       return m.times
         ? { start: l.cell.start, finish: l.cell.finish, breaks: [...l.cell.breaks], fields }
         : { start: '', finish: '', breaks: [], hours: cellMinutes(l.cell, false) / 60, fields };
     });
-    if (rec && sameEntries(entries, rec.entries, m)) return;
-    if (!rec && !entries.length) return;
-    days.push({ date: d.date, version: d.version, entries, allowances: rec?.allowances ?? [], ...(rec?.shift ? { shift: rec.shift } : {}) });
+    if (rec ? sameEntries(entries, rec.entries, m) : !entries.length) return asRead;
+    return { ...asRead, entries, allowances: rec?.allowances ?? [], ...(rec?.shift ? { shift: rec.shift } : {}) };
   });
   return { days };
 }

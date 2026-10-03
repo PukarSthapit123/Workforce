@@ -448,6 +448,11 @@ describe('week submission plan', () => {
       { date: '2026-08-13', reason: 'Thu 13 Aug is already awaiting approval, so it was left alone.' },
       { date: '2026-08-14', reason: 'Fri 14 Aug is in the future, so it is held back until it happens.' }] });
   });
+  test('a sent-back day the request left unchanged is held, not resubmitted as it was', () => {
+    const plan = planWeekSubmit([{ date: '2026-08-10', minutes: 450, state: 'back', unchanged: true }, { date: '2026-08-11', minutes: 450, state: 'back' }], c);
+    expect(plan).toMatchObject({ submit: [], resubmit: ['2026-08-11'],
+      held: [{ date: '2026-08-10', reason: 'Mon 10 Aug was sent back and has not been corrected, so it was left alone.' }] });
+  });
   test('a closed period, an impossible total or a capture error blocks the whole week', () => {
     const plan = planWeekSubmit([{ date: '2026-08-10', minutes: 450 }, { date: '2026-08-11', minutes: 1000 },
       { date: '2026-08-12', minutes: 450, errors: [{ field: 'breaks.1', message: 'Breaks 1 and 2 overlap.' }] }], c);

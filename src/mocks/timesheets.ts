@@ -257,16 +257,23 @@ function requireMonday(weekStart: string, field = 'weekStart') {
 }
 
 /* ----------------------------------------------------------- week submit */
-interface Planned { date: string; input: DayInput | null; existing: StoredDay | undefined; check: DayCheck | null }
-function planWeek(p: StoredPerson, weekStart: string, given: Map<string, DayInput>) {
+/* `unchanged`: the day goes as it is stored, so it keeps who entered it, and a sent-back day is held rather than resubmitted. */
+interface Planned { date: string; input: DayInput | null; existing: StoredDay | undefined; check: DayCheck | null; unchanged: boolean }
+/* What the request names for each day: new entries, or null for "as it was read". */
+type Sent = ReadonlyMap<string, DayInput | null>;
+const asStored = (d: StoredDay): DayInput => ({ entries: d.entries, allowances: d.allowances, shift: d.shift, nonWorkingReason: d.nonWorkingReason });
+/* Only the days in `sent` are planned; `'stored'` plans every stored day as it is (multi-week catch-up). */
+function planWeek(p: StoredPerson, weekStart: string, sent: Sent | 'stored') {
   const planned: Planned[] = weekDates(weekStart).map(date => {
     const existing = recordAt(days(), dayId(p.code, date));
-    const input = given.get(date) ?? (existing ? { entries: existing.entries, allowances: existing.allowances, shift: existing.shift, nonWorkingReason: existing.nonWorkingReason } : null);
+    const given = sent === 'stored' ? null : sent.get(date);
+    const named = sent === 'stored' || sent.has(date);
+    const input = given ?? (named && existing ? asStored(existing) : null);
     const minutes = input ? dayMinutes(input.entries) : 0;
-    return { date, input, existing, check: input && minutes ? checkDay(p, date, input) : null };
+    return { date, input, existing, check: input && minutes ? checkDay(p, date, input) : null, unchanged: !given };
   });
   /* the week's own message already opens with "Submission blocked.", so a mandatory field message does not repeat it */
-  const inputs: WeekDayInput[] = planned.map(d => ({ date: d.date, minutes: d.check?.minutes ?? 0, state: d.existing?.state ?? null,
+  const inputs: WeekDayInput[] = planned.map(d => ({ date: d.date, minutes: d.check?.minutes ?? 0, state: d.existing?.state ?? null, unchanged: d.unchanged,
     errors: (d.check?.errors ?? []).map(e => ({ ...e, message: e.message.replace(/^Submission blocked\. /, '') })) }));
   const ctx = rulesCtx();
   return { planned, inputs, plan: planWeekSubmit(inputs, ctx), ctx };
@@ -286,7 +293,8 @@ function submitPlanned(p: StoredPerson, planned: readonly Planned[], dates: read
     const base = d.existing ?? blankDay(p, date);
     const to: TsState = base.state === 'back' ? 'resub' : 'pend';
     const reason = to === 'resub' ? 'Corrected and resubmitted' : mode === 'proxy' ? 'Submitted on their behalf' : '';
-    return save(base, { ...applyInput(p, base, d.input, d.check, s, mode), ...moved(base, to, s, reason), submittedAt: store.now() });
+    const kept = d.unchanged && d.existing ? { captureSource: d.existing.captureSource, enteredBy: d.existing.enteredBy } : {};
+    return save(base, { ...applyInput(p, base, d.input, d.check, s, mode), ...kept, ...moved(base, to, s, reason), submittedAt: store.now() });
   });
 }
 
@@ -357,16 +365,17 @@ export const timesheetHandlers = [
   serve(submitTimesheetWeek, ({ session, params, body }) => {
     const p = personFor(params.personId), mode = access(session, p, true);
     requireMonday(params.weekStart);
-    const dates = weekDates(params.weekStart), given = new Map<string, DayInput>();
+    /* only the days sent are acted on, each checked against the version it was read at (D8) */
+    const dates = weekDates(params.weekStart), sent = new Map<string, DayInput | null>();
     body.days.forEach((d, i) => {
       if (!dates.includes(d.date)) invalid({ field: `days.${i}.date`, message: `${formatDmy(d.date)} is not in this week.` });
-      if (given.has(d.date)) invalid({ field: `days.${i}.date`, message: `${formatDmy(d.date)} is in this request twice.` });
+      if (sent.has(d.date)) invalid({ field: `days.${i}.date`, message: `${formatDmy(d.date)} is in this request twice.` });
       const stored = recordAt(days(), dayId(p.code, d.date));
       if ((stored?.version ?? 0) !== d.version)
         refuse(412, { code: 'stale', field: `days.${i}`, message: `Somebody changed ${formatDmy(d.date)} since you opened this week. Nothing has been saved.`, next: 'Reload and apply your change again' });
-      given.set(d.date, { entries: d.entries, allowances: d.allowances, shift: d.shift, nonWorkingReason: d.nonWorkingReason });
+      sent.set(d.date, d.entries ? { entries: d.entries, allowances: d.allowances, shift: d.shift, nonWorkingReason: d.nonWorkingReason } : null);
     });
-    const { planned, inputs, plan, ctx } = planWeek(p, params.weekStart, given);
+    const { planned, inputs, plan, ctx } = planWeek(p, params.weekStart, sent);
     if (plan.blocked.length) {
       const first = firstBlocked(planned, ctx), at = first ? body.days.findIndex(d => d.date === first.date) : -1;
       if (first && isLocked(first.date)) refuse(409, { code: 'PERIOD_LOCKED', field: at >= 0 ? `days.${at}` : 'weekStart', message: weekBlockedMessage(plan.blocked), next: LOCK_NEXT(p) });
@@ -378,7 +387,9 @@ export const timesheetHandlers = [
       if (!inputs.some(d => d.minutes)) refuse(422, { code: 'NOTHING_TO_SUBMIT', field: 'days', message: NOTHING_TO_SUBMIT, next: 'Enter the hours you worked, then submit the week.' });
       const onlyDecided = plan.held.every(h => { const s = inputs.find(d => d.date === h.date)?.state; return s && s !== 'draft' && s !== 'back'; });
       if (onlyDecided) refuse(409, { code: 'ALREADY_SUBMITTED', message: allSubmittedMessage(managerOf(p)), next: 'Open a day to see where it is.' });
-      refuse(422, { code: 'NOTHING_TO_SUBMIT', field: 'days', message: `Nothing to submit. ${plan.held.map(h => h.reason).join(' ')}`, next: 'Submit those days once they have happened.' });
+      const sentBack = plan.held.some(h => inputs.find(d => d.date === h.date)?.state === 'back');
+      refuse(422, { code: 'NOTHING_TO_SUBMIT', field: 'days', message: `Nothing to submit. ${plan.held.map(h => h.reason).join(' ')}`,
+        next: sentBack ? 'Correct the day that was sent back, then submit the week again.' : 'Submit those days once they have happened.' });
     }
     const made = submitPlanned(p, planned, moving.sort(), session, mode);
     const weekMinutes = made.reduce((n, d) => n + dayMinutes(d.entries), 0), n = made.length;
@@ -401,7 +412,7 @@ export const timesheetHandlers = [
       if (ws >= current) invalid({ field: `weeks.${i}`, message: 'Only earlier weeks are caught up here. Submit this week from the week view.' });
     });
     const out = weeks.sort().reverse().map(ws => {
-      const { planned, plan } = planWeek(p, ws, new Map());
+      const { planned, plan } = planWeek(p, ws, 'stored');
       const label = weekLabel(ws);
       const withTime = planned.filter(d => d.check);
       const holdAll = (reason: string) => ({ weekStart: ws, label, outcome: 'held' as const, reason, submitted: [] as TimesheetDay[],

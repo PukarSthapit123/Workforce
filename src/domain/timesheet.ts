@@ -476,6 +476,8 @@ export interface WeekDayInput {
   state?: TsState | null;
   /* validateTimes errors for the day's entries */
   errors?: readonly Problem[];
+  /* true when the request left the day's entries as they were read: a sent-back day is then not resubmitted unchanged */
+  unchanged?: boolean;
 }
 export interface HeldDay { date: string; reason: string }
 export interface WeekPlan { blocked: string[]; submit: string[]; resubmit: string[]; held: HeldDay[]; flagged: string[] }
@@ -487,6 +489,7 @@ export function planWeekSubmit(days: readonly WeekDayInput[], ctx: Omit<CheckCon
       plan.held.push({ date: d.date, reason: `${formatDay(d.date)} is already ${TS_STATE[d.state].label.toLowerCase()}, so it was left alone.` });
       continue;
     }
+    if (d.state === 'back' && d.unchanged) { plan.held.push({ date: d.date, reason: sentBackUnchanged(d.date) }); continue; }
     const o = weekDayOutcome(d.date, d.minutes, ctx);
     if (o.kind === 'held') { plan.held.push({ date: d.date, reason: o.reason }); continue; }
     if (o.kind === 'blocked') { plan.blocked.push(o.reason); continue; }
@@ -496,6 +499,7 @@ export function planWeekSubmit(days: readonly WeekDayInput[], ctx: Omit<CheckCon
   }
   return plan;
 }
+export const sentBackUnchanged = (date: string) => `${formatDay(date)} was sent back and has not been corrected, so it was left alone.`;
 export const weekBlockedMessage = (blocked: readonly string[]) => `Submission blocked. ${blocked.join(' ')}`;
 export const allSubmittedMessage = (manager: string) => `Already submitted. Every day on this week is with ${manager} or decided.`;
 /* A second submission of a day that already has one (D8's ALREADY_SUBMITTED). */

@@ -38,6 +38,11 @@ function plant(code: string, date: string, state = 'pend') {
     warnings: [], history: [], integrationAttemptId: '' };
   return id;
 }
+/* Every day of a week as it is stored now, each with its version and no entries: "submit as read". */
+const asRead = (code: string, weekStart: string) => Array.from({ length: 7 }, (_, i) => {
+  const date = new Date(Date.parse(`${weekStart}T00:00:00Z`) + i * 86400000).toISOString().slice(0, 10);
+  return { date, version: day(code, date)?.version ?? 0 };
+});
 const LOCK_0805 = 'Pay period 03/08/2026 – 09/08/2026 closed at Monday 12:00 (10/08/2026 12:00).';
 
 describe('GET /api/v1/timesheets/:personId/weeks/:weekStart', () => {
@@ -204,7 +209,8 @@ describe('POST /api/v1/timesheets/:personId/weeks/:weekStart/submit (Review Focu
   const url = '/api/v1/timesheets/CP-1042/weeks/2026-08-10/submit';
   test('one request submits the week: the ready days become real records, the rest come back held with reasons', async () => {
     const call = await as('employee');
-    const r = await call('POST', url, { days: ['2026-08-10', '2026-08-11', '2026-08-13', '2026-08-14'].map(date => ({ date, version: 0, ...shiftDay() })) });
+    const r = await call('POST', url, { days: [...['2026-08-10', '2026-08-11', '2026-08-13', '2026-08-14'].map(date => ({ date, version: 0, ...shiftDay() })),
+      { date: '2026-08-12', version: 1 }] });
     expect(r.status).toBe(200);
     const out = WeekSubmitted.parse(r.body);
     expect(out.submitted.map(d => [d.date, d.state])).toEqual([['2026-08-10', 'pend'], ['2026-08-11', 'pend'], ['2026-08-13', 'pend']]);
@@ -227,14 +233,14 @@ describe('POST /api/v1/timesheets/:personId/weeks/:weekStart/submit (Review Focu
   });
   test('a week in a closed period is refused with PERIOD_LOCKED', async () => {
     const call = await as('employee'), before = snapshot(...WRITES);
-    const r = await call('POST', '/api/v1/timesheets/CP-1042/weeks/2026-08-03/submit', { days: [] });
+    const r = await call('POST', '/api/v1/timesheets/CP-1042/weeks/2026-08-03/submit', { days: asRead('CP-1042', '2026-08-03') });
     expect(r.status).toBe(409);
     expect(refusal(r)).toMatchObject({ code: 'PERIOD_LOCKED', next: 'Ask Rachel Hussain to raise an amendment.' });
     expect(refusal(r).message).toMatch(/^Submission blocked\. Mon 3 Aug: Pay period 03\/08\/2026/);
     expect(snapshot(...WRITES)).toEqual(before);
   });
   test('a week where everything is already with the approver is refused with ALREADY_SUBMITTED', async () => {
-    const r = await (await as('employee'))('POST', url, { days: [] });
+    const r = await (await as('employee'))('POST', url, { days: asRead('CP-1042', '2026-08-10') });
     expect(r.status).toBe(409);
     expect(refusal(r)).toMatchObject({ code: 'ALREADY_SUBMITTED', message: 'Already submitted. Every day on this week is with Rachel Hussain or decided.' });
   });
@@ -242,6 +248,35 @@ describe('POST /api/v1/timesheets/:personId/weeks/:weekStart/submit (Review Focu
     const r = await (await as('employee'))('POST', url, { days: [{ date: '2026-08-12', version: 0, ...shiftDay() }] });
     expect(r.status).toBe(412);
     expect(refusal(r)).toMatchObject({ code: 'stale', field: 'days.0' });
+  });
+  /* review Important 1: the server acts only on the days the client sent, each checked against the version it was read at */
+  test('a day somebody else saved since the week was read refuses the week with 412, and nothing is written', async () => {
+    const emp = await as('employee'), read = asRead('CP-1042', '2026-08-10');
+    expect((await put(await as('manager'), 'CP-1042', '2026-08-11', shiftDay('07:00', '19:00', []))).status).toBe(200);
+    const before = snapshot(...WRITES);
+    const r = await emp('POST', url, { days: read.map(d => (d.date === '2026-08-10' ? { ...d, ...shiftDay() } : d)) });
+    expect(r.status).toBe(412);
+    expect(refusal(r)).toMatchObject({ code: 'stale', field: 'days.1' });
+    expect(snapshot(...WRITES)).toEqual(before);
+  });
+  test('a day the request leaves out is not touched: its state and who entered it stay as they were', async () => {
+    expect((await put(await as('manager'), 'CP-1042', '2026-08-11', shiftDay('07:00', '19:00', []))).status).toBe(200);
+    const out = WeekSubmitted.parse((await (await as('employee'))('POST', url, { days: [{ date: '2026-08-10', version: 0, ...shiftDay() }] })).body);
+    expect(out.submitted.map(d => d.date)).toEqual(['2026-08-10']);
+    expect(day('CP-1042', '2026-08-11')).toMatchObject({ state: 'draft', version: 1, captureSource: 'proxy', enteredBy: 'CP-1001' });
+  });
+  test('a day sent as it was read is submitted with who entered it kept', async () => {
+    expect((await put(await as('manager'), 'CP-1042', '2026-08-11', shiftDay())).status).toBe(200);
+    const out = WeekSubmitted.parse((await (await as('employee'))('POST', url, { days: [{ date: '2026-08-11', version: 1 }] })).body);
+    expect(out.submitted.map(d => [d.date, d.state, d.captureSource, d.enteredBy])).toEqual([['2026-08-11', 'pend', 'proxy', 'CP-1001']]);
+  });
+  test('a sent-back day sent unchanged is held with its reason, not resubmitted as it was', async () => {
+    const r = await (await asEmail('priya.shah@brightpath.org'))('POST', '/api/v1/timesheets/CP-1201/weeks/2026-08-10/submit',
+      { days: [{ date: '2026-08-10', version: 1 }, { date: '2026-08-11', version: 0, entries: [entry('14:30', '22:00', [['18:00', '18:30']])], shift: 'L' }] });
+    const out = WeekSubmitted.parse(r.body);
+    expect(out.submitted.map(d => d.date)).toEqual(['2026-08-11']);
+    expect(out.held).toEqual([{ date: '2026-08-10', reason: 'Mon 10 Aug was sent back and has not been corrected, so it was left alone.' }]);
+    expect(day('CP-1201', '2026-08-10')).toMatchObject({ state: 'back', version: 1, captureSource: 'proxy' });
   });
 });
 
