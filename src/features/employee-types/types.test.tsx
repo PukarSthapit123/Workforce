@@ -27,7 +27,8 @@ test('AD Employee types is no longer the densest page in the admin, and it says 
   renderPage(<EmployeeTypesPage />);
   const detail = await screen.findByTestId(tid.types.detail);
   expect(detail.querySelectorAll('[role="switch"]').length).toBeLessThanOrEqual(6);
-  expect(detail).toHaveTextContent('set with the Timesheet module');
+  expect(detail).toHaveTextContent('set in Timesheet setup');
+  expect(detail).toHaveTextContent('is set in Rota setup under Rota eligibility by employee type');
   expectTestIdCoverage(document.body);
 });
 test('ET A New employee type control exists, and the new-type form has full test id coverage', async () => {

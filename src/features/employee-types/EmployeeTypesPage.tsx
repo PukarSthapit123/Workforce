@@ -15,8 +15,8 @@ const SUB = 'mt-lg mb-sm border-b pb-xs text-xs font-[650] tracking-normal text-
    v15.html:9099-9107, 8105-8180): pick a type, then how it captures time and
    what its forms offer, one setting to a row. The prototype wrote each
    setting as it changed; here the type is saved once, with If-Match and one
-   audit row. Rota eligibility and leave policy on a type belong to the Rota
-   and Leave modules. Job profiles live under Dimensions. */
+   audit row. Capture fields are set in Timesheet setup and rota eligibility
+   in Rota setup; leave policy belongs to the Leave module. Job profiles live under Dimensions. */
 export function EmployeeTypesPage() {
   const types = useEmployeeTypes(), jobs = useDimension('job-profiles');
   const [selected, setSelected] = useState<string | null>(null);
@@ -80,7 +80,7 @@ function TypeDetail({ type, onRemoved }: { type: EmployeeTypeRow; onRemoved(): v
           <SwitchField testId={tid.types.cap(c.code)} aria-label={c.label} checked={v.capabilities.includes(c.code)} onCheckedChange={() => toggle(c.code)} />
         </SettingRow>))}
       <h3 className={SUB}>Capture fields, rota eligibility and leave policy</h3>
-      <Small>Which fields this type fills in is set with the Timesheet module, what it may be rota’d to with Rota, and its leave policy with Leave. None of those modules is built in this build.</Small>
+      <Small>Which fields this type fills in is set in Timesheet setup. What it may be rota’d to, with its hours, rest and night limits, is set in Rota setup under Rota eligibility by employee type. Its leave policy belongs to the Leave module, which is not built yet.</Small>
       {refusal && <FormWarn testId={tid.types.warn}>{refusal.usedBy ? `${refusal.message} ${refusal.next}` : refusal.message}</FormWarn>}
       <div className="mt-lg flex flex-wrap items-center justify-end gap-sm">
         <span data-testid={tid.types.heldBy} className="mr-auto text-xs text-text-muted">Held by {type.inUse} {type.inUse === 1 ? 'person' : 'people'} · code <span className="tabular-nums">{type.code}</span></span>
