@@ -2,6 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
 import { test, expect, FROZEN } from './support/fixtures';
 import { BIGYAN, EDDIE, PUKAR, signInEmail } from './support/timesheet';
+import { AMARA, DEE, RACHEL } from './support/rota';
 import { tid } from '../src/testids';
 
 /* Flip the theme, then let the colour transitions it starts finish: axe reads
@@ -164,6 +165,69 @@ test.describe('module 2 pages', () => {
     for (const [email, steps] of PAGES_2) {
       await signInEmail(page, email);
       for (const [where, go] of steps) {
+        await go(page);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), where).toBe(true);
+      }
+    }
+  });
+});
+
+/* Module 3's pages on the social seed, where Rota is on: Team rota (the week
+   grid, its day view and the Add a shift dialog), Shift catalogue, Working
+   patterns with its editor, and Cover requests for Rachel Hussain; My shifts
+   and My timesheet's day with the rota banner for Amara Okafor; Rota setup
+   with its upload dialog for Dee Fitzgerald. */
+const PAGES_3: [string, Step[]][] = [
+  [RACHEL, [
+    ['/team/trota', open('/team/trota', tid.trota.dayview)],
+    ['add a shift dialog', click(tid.trota.add('CP-1402', 4), tid.trota.sugTip)],
+    ['/team/tshifts', async page => { await escape(page); await open('/team/tshifts', tid.tshifts.catalogue)(page); }],
+    ['/team/tpat', open('/team/tpat', tid.tpat.list)],
+    ['pattern editor', click(tid.tpat.open('WP-02'), tid.tpat.editor)],
+    ['/team/tcover', async page => { await escape(page); await open('/team/tcover', tid.tcover.stages)(page); await page.getByTestId(tid.tcover.request('cov_2')).waitFor(); }],
+  ]],
+  [AMARA, [
+    ['/work/shifts', open('/work/shifts', tid.shifts.cards)],
+    ['/work/ts day with the rota banner', async page => { await open('/work/ts', tid.ts.view('day'))(page); await click(tid.ts.view('day'), tid.ts.banner('rota'))(page); }],
+  ]],
+  [DEE, [
+    ['/setup/mrota', async page => { await open('/setup/mrota', tid.mrota.card('staffing'))(page); await page.getByTestId(tid.tshifts.catalogue).waitFor(); await page.getByTestId(tid.mrota.patterns).waitFor(); }],
+    ['pattern upload dialog', click(tid.patUpload.open, tid.patUpload.import)],
+  ]],
+];
+test.describe('module 3 pages', () => {
+  test.beforeEach(async ({ api }) => { await api.seed('social'); await api.setClock(FROZEN); });
+  const serious = async (page: Page, where: string, theme: 'light' | 'dark') => {
+    await setTheme(page, theme);
+    const r = await new AxeBuilder({ page }).analyze();
+    expect(r.violations.filter(v => ['serious', 'critical'].includes(v.impact ?? '')).map(v => `${where} ${v.id}: ${v.nodes.length}`)).toEqual([]);
+  };
+  for (const theme of ['light', 'dark'] as const) {
+    test(`axe: rota pages and dialogs have no serious issues (${theme})`, async ({ page }) => {
+      test.setTimeout(150_000);
+      for (const [email, steps] of PAGES_3) {
+        await signInEmail(page, email);
+        for (const [where, go] of steps) {
+          await go(page);
+          await serious(page, where, theme);
+        }
+      }
+    });
+    test(`axe: the rota's day view at 390px has no serious issues (${theme})`, async ({ page }) => {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await signInEmail(page, RACHEL);
+      await open('/team/trota', tid.trota.dayview)(page);
+      await expect(page.getByTestId(tid.trota.grid)).toBeHidden();
+      await serious(page, '/team/trota day view', theme);
+    });
+  }
+  test('phone: rota pages and dialogs have no horizontal overflow at 390px', async ({ page }) => {
+    test.setTimeout(150_000);
+    await page.setViewportSize({ width: 390, height: 844 });
+    for (const [email, steps] of PAGES_3) {
+      await signInEmail(page, email);
+      /* a phone has the day view, not the grid, so no empty cell to add a shift on */
+      for (const [where, go] of steps.filter(([w]) => w !== 'add a shift dialog')) {
         await go(page);
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), where).toBe(true);
       }
