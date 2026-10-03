@@ -51,15 +51,15 @@ export function GroupLabel({ children, className }: { children: ReactNode; class
 export function Stats({ children }: { children: ReactNode }) {
   return <div className="mb-md grid grid-cols-[repeat(auto-fit,minmax(min(100%,190px),1fr))] gap-md max-md:grid-cols-2">{children}</div>;
 }
-/* `foot` is the .f line under the figure; `tone` is .st.bad and .st.warn, the figure in the status ink. */
+/* `foot` is the .f line under the figure; `tone` is .st.bad, .st.warn and .st.good, the figure in the status ink. */
 export function Stat({ label, testId, foot, tone, children }: {
-  label: string; testId?: string; foot?: ReactNode; tone?: 'bad' | 'warn'; children: ReactNode;
+  label: string; testId?: string; foot?: ReactNode; tone?: 'bad' | 'warn' | 'good'; children: ReactNode;
 }) {
   return (
     <div className="rounded-card border bg-surface-card p-lg">
       <div data-caps className="text-xs font-bold tracking-[.04em] text-text-muted uppercase">{label}</div>
       <div data-testid={testId} className={cn('mt-[3px] text-2xl leading-[1.15] font-semibold tabular-nums',
-        tone === 'bad' && 'text-err', tone === 'warn' && 'text-warn')}>{children}</div>
+        tone === 'bad' && 'text-err', tone === 'warn' && 'text-warn', tone === 'good' && 'text-ok')}>{children}</div>
       {foot && <div className="mt-[2px] text-xs text-text-muted">{foot}</div>}
     </div>);
 }

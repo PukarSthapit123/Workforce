@@ -71,4 +71,16 @@ export const GUIDES: Readonly<Record<string, Guide>> = {
     ['What is checked',
       'Rest between the days it writes is checked against the employee type’s rule and reported. Clearance, qualifications and maximum hours are evaluated when the week is opened.'],
   ] },
+  mrota: { label: 'How the rota is built', title: 'How the rota is built', sections: [
+    ['Three ways to fill a week',
+      'Copy last week brings the previous week forward. Repeat forward repeats the week on screen for a chosen number of weeks. A working pattern generates from a repeating cycle across a long horizon.'],
+    ['What none of them will do',
+      'Overwrite a cell that already holds a shift, leave or sickness, or write into a week that is already published. Those are reported rather than silently applied.'],
+    ['Publishing',
+      'A week moves Draft → Review → Published. Changing a published week makes it an Amendment, records who changed what, and requires republishing before colleagues see it.'],
+    ['Who may build it',
+      'A tenant policy above the permission matrix. The matrix decides whether a persona could hold the capability; the policy decides whether the tenant allows it. Both must agree.'],
+    ['Reading the grid',
+      'Each cell carries the shift code and its times. The key under the grid lists only the shifts actually on this week, with a count of each, plus leave, sickness and how many cells are still unassigned.'],
+  ] },
 };

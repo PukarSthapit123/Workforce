@@ -251,4 +251,33 @@ export const tid = {
     filled: (id: string) => k('tcover-filled', id), it: (id: string) => k('tcover-it', id), confirmed: (id: string) => k('tcover-confirmed', id),
     confirm: (id: string) => k('tcover-confirm', id), confirmTip: (id: string) => k('tcover-confirm-tip', id),
   },
+  /* module 3: My shifts (shifts): the published week, next shift, rest days, open shifts to claim */
+  shifts: {
+    error: 'shifts-error', loading: 'shifts-loading', cards: 'shifts-cards', published: 'shifts-published', publishedTip: 'shifts-published-tip',
+    outlook: 'shifts-outlook', teamRota: 'shifts-team-rota', next: 'shifts-next', nextWhen: 'shifts-next-when', week: 'shifts-week',
+    weekHead: 'shifts-week-head', day: (date: string) => k('shifts-day', date), noShifts: 'shifts-no-shifts', notPublished: 'shifts-not-published',
+    rest: 'shifts-rest', open: 'shifts-open', openTip: 'shifts-open-tip', offer: (id: string) => k('shifts-offer', id),
+    urgent: (id: string) => k('shifts-urgent', id), claim: (id: string) => k('shifts-claim', id), notPermitted: (id: string) => k('shifts-not-permitted', id),
+    whoOn: 'shifts-who-on',
+  },
+  /* module 3: Rota setup (mrota): catalogue, patterns, staffing, fulfilment stages, safe-worker rules, calendars, per-type limits */
+  mrota: {
+    error: 'mrota-error', loading: 'mrota-loading', off: 'mrota-off', warn: 'mrota-warn', save: 'mrota-save', cancel: 'mrota-cancel', dirty: 'mrota-dirty',
+    card: (key: string) => k('mrota-card', key), tip: (key: string) => k('mrota-tip', key),
+    patterns: 'mrota-patterns', patternsEmpty: 'mrota-patterns-empty', patternsError: 'mrota-patterns-error', pattern: (code: string) => k('mrota-pattern', code),
+    patternOpen: (code: string) => k('mrota-pattern-open', code), newPattern: 'mrota-new-pattern',
+    flag: (code: string) => k('mrota-flag', code), num: (key: string) => k('mrota-num', key), toggle: (key: string) => k('mrota-toggle', key),
+    builtBy: 'mrota-built-by', horizon: 'mrota-horizon', level: (code: string) => k('mrota-level', code),
+    stage: (i: number) => k('mrota-stage', i), stageAudience: (i: number) => k('mrota-stage-audience', i), stageWait: (i: number) => k('mrota-stage-wait', i),
+    stageChannel: (i: number) => k('mrota-stage-channel', i), stageNext: (i: number) => k('mrota-stage-next', i),
+    stageRemove: (i: number) => k('mrota-stage-remove', i), stageAdd: 'mrota-stage-add', safe: (key: string) => k('mrota-safe', key),
+    type: (code: string) => k('mrota-type', code), typeShift: (code: string) => k('mrota-type-shift', code), typeNight: 'mrota-type-night',
+    typeNum: (key: string) => k('mrota-type-num', key), typeFlexible: 'mrota-type-flexible',
+  },
+  /* module 3: Upload working patterns (simulated): the validation preview, its error report and the import that writes nothing */
+  patUpload: {
+    open: 'pat-upload-open', editorOpen: 'pat-upload-editor-open', file: 'pat-upload-file', rows: 'pat-upload-rows', valid: 'pat-upload-valid',
+    invalid: 'pat-upload-invalid', error: (row: number) => k('pat-upload-error', row), warning: (row: number) => k('pat-upload-warning', row),
+    horizon: 'pat-upload-horizon', cancel: 'pat-upload-cancel', download: 'pat-upload-download', import: 'pat-upload-import',
+  },
 } as const;
