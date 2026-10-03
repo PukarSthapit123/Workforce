@@ -24,3 +24,4 @@ export { CalNav } from './CalNav';
 export { GuideButton } from './Guide';
 export { GUIDES } from './guides';
 export { useNarrow } from './useNarrow';
+export { SugCard, WhyList, SugPanel, RuledOutList, RuledOutRow } from './Suggest';
