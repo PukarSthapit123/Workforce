@@ -158,7 +158,56 @@ function shape(tenantKey, data, PERMS_META, PERM_GROUPS, PROFILE_CHANGES) {
   return { version: 'extracted', tenant: tenantKey, data: {
     people: byId(people), accounts: byId(accounts), userTypes: byId(userTypes), capabilities: byId(capabilities),
     capabilityGroups: byId(capabilityGroups), tenant: { tenant }, locations, departments, costCentres, jobProfiles, projects,
-    employeeTypes, profileChanges, personHistory: {}, notices: byId(notices), audit: {}, ...timesheets(data, people) } };
+    employeeTypes, profileChanges, personHistory: {}, notices: byId(notices), audit: {}, ...timesheets(data, people),
+    ...((data.CFG || {}).modules?.R ? rota(data, people) : {}) } };
+}
+
+/* ---- module 3: rota (brief D1, D9) ---- */
+/* Only a tenant with the Rota module gets rota data; qnipay keeps R off and gets none.
+   The prototype's stored ROTA_WEEKS were stashed under the template it booted with
+   (qnipay's empty roster), so the two weeks are rebuilt from the social roster's own
+   lines, as seedRotaWeeks builds them: the week on the frozen clock is p.sh, published
+   v1, and the week before is each line rotated by a day, also published v1. Weeks
+   are per location (D1), for every location with somebody on its roster. */
+const CURRENT_WEEK = (() => { const d = new Date(FROZEN); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7)); return d.toISOString().slice(0, 10); })();
+function rota(data, people) {
+  const byCode = new Map(people.map(p => [p.code, p]));
+  const actorNamed = name => { const p = people.find(x => x.name === name); if (!p) throw new Error('extractor: no person named ' + name); return { personCode: p.code, name: p.name }; };
+  const cell = c => String(c || '').replace('__', '');
+  const active = p => ['leaver', 'archived'].indexOf(p.state || 'active') === -1;
+  const shiftTypes = byId((data.SHIFTS || []).map(s => meta({ id: `sht_${s.code}`, code: s.code, name: s.name, from: s.from, to: s.to,
+    breakMinutes: s.brk || 0, hours: s.hours, cross: !!s.cross, night: !!s.night, start: s.start, end: s.end, tone: s.tone || 'E' })));
+  const patterns = byId((data.PATTERNS || []).map(p => meta({ id: `pat_${p.id}`, code: p.id, name: p.name, cycle: p.cycle,
+    locations: p.locs || [], jobProfiles: p.jobs || [], costCentre: p.cc || '', starts: iso(p.starts), horizon: p.horizon, gen: p.gen || '12m',
+    genFrom: p.genFrom || '', genTo: p.genTo || '', active: !!p.active, days: (p.days || []).map(cell),
+    people: (p.people || []).map(x => ({ personCode: x.id, offset: x.offset })) })));
+  const weeks = {};
+  const PUBLISHED = [[CURRENT_WEEK, londonStamp('07/08', '16:40'), l => l], [addIsoDays(CURRENT_WEEK, -7), londonStamp('31/07', '16:20'), l => l.slice(1).concat(l.slice(0, 1))]];
+  const rachel = actorNamed('Rachel Hussain');
+  for (const loc of data.LOCATIONS || []) {
+    const roster = (data.PEOPLE || []).filter(p => p.loc === loc.code && active(p) && ((p.con || 0) > 0 || (p.sh || []).some(c => cell(c))));
+    if (!roster.length) continue;
+    for (const [weekStart, publishedAt, shape] of PUBLISHED) {
+      const id = `rw_${loc.code}_${weekStart}`;
+      weeks[id] = meta({ id, location: loc.code, weekStart, state: 'published', publishVersion: 1, publishedAt, publishedBy: rachel, changes: [],
+        lines: Object.fromEntries(roster.map(p => [p.id, shape((p.sh || ['', '', '', '', '', '', '']).map(cell))])) });
+    }
+  }
+  /* The safe-worker facts eligibility reads, kept beside the person record rather than on it. */
+  const rotaProfiles = byId((data.PEOPLE || []).filter(p => byCode.has(p.id)).map(p => meta({ id: `rp_${p.id}`, personCode: p.id,
+    cleared: p.cleared !== false, dbsExpiry: iso(p.dbs), qualifications: p.quals || '', favourite: !!p.fav, preferredDays: p.subs || [] })));
+  /* COVER, FILLED and FULFIL_STAGES are never persisted, so they come from the source. Day
+     indexes are days of the current week. `next` is derived (coverNext), not stored. */
+  const stamp = s => { const [dm, hm] = String(s).split(' '); return londonStamp(dm.slice(0, 5), hm); };
+  const coverRequests = byId(literalCover.map(c => meta({ id: `cov_${c.id}`, location: c.loc, date: addIsoDays(CURRENT_WEEK, c.day), shift: c.code,
+    reason: c.reason || '', stage: c.stage, open: !!c.open, urgent: !!c.urgent, openedAt: stamp(c.opened), asked: c.asked || '',
+    log: (c.log || []).map(l => ({ stage: l.n, at: stamp(l.at), audience: l.audience, channel: l.ch, sent: l.sent })) })));
+  const filledShifts = byId(literalFilled.map((f, i) => meta({ id: `fil_${i + 1}`, coverId: '', location: f.loc, date: addIsoDays(CURRENT_WEEK, f.day),
+    shift: f.code, personCode: f.eid, name: f.by, confirmed: !!f.confirmed, itRequest: f.it || '' })));
+  const fulfilStages = literalFulfilStages.map(s => ({ n: s.n, audience: s.audience, wait: s.wait, channel: s.ch, next: s.next }));
+  const types = Object.fromEntries(Object.entries(data.TYPES || {}).filter(([, t]) => t.rota).map(([k, t]) => [k, { ...t.rota }]));
+  const rotaConfig = meta({ id: 'rotaConfig', ...(data.ROTA_CFG || {}), fulfilStages, types });
+  return { shiftTypes, patterns, rotaWeeks: weeks, rotaProfiles, coverRequests, filledShifts, rotaConfig: { rotaConfig } };
 }
 
 /* ---- module 2: timesheets ---- */
@@ -312,6 +361,9 @@ const PERM_GROUPS = literal('PERM_GROUPS');
 const PROFILE_CHANGES = literal('PROFILE_CHANGES');
 const literalAllowanceLib = literal('ALLOWANCE_LIB');
 const literalTsMultiweek = literal('TS_MULTIWEEK');
+const literalCover = literal('COVER');
+const literalFilled = literal('FILLED');
+const literalFulfilStages = literal('FULFIL_STAGES');
 /* The capture field catalogue, less any money: the £ value on each allowance and the expenses-to-claim field. */
 const timesheetFields = literal('FIELDS').filter(f => !MONEY_FIELDS.has(f.c))
   .map(f => Object.fromEntries(Object.entries(f).filter(([k]) => k !== 'amt')));

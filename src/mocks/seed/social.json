@@ -3248,6 +3248,1077 @@
     "group": "Yard",
     "billable": false
    }
+  },
+  "shiftTypes": {
+   "sht_E": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "sht_E",
+    "code": "E",
+    "name": "Early",
+    "from": "07:00",
+    "to": "15:00",
+    "breakMinutes": 30,
+    "hours": 7.5,
+    "cross": false,
+    "night": false,
+    "start": 7,
+    "end": 15,
+    "tone": "E"
+   },
+   "sht_L": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "sht_L",
+    "code": "L",
+    "name": "Late",
+    "from": "14:30",
+    "to": "22:00",
+    "breakMinutes": 0,
+    "hours": 7.5,
+    "cross": false,
+    "night": false,
+    "start": 14.5,
+    "end": 22,
+    "tone": "L"
+   },
+   "sht_N": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "sht_N",
+    "code": "N",
+    "name": "Night",
+    "from": "22:00",
+    "to": "07:00",
+    "breakMinutes": 0,
+    "hours": 9,
+    "cross": true,
+    "night": true,
+    "start": 22,
+    "end": 31,
+    "tone": "N"
+   }
+  },
+  "patterns": {
+   "pat_WP-01": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "pat_WP-01",
+    "code": "WP-01",
+    "name": "4-on / 4-off nights",
+    "cycle": 8,
+    "locations": [
+     "WH",
+     "BC"
+    ],
+    "jobProfiles": [
+     "NS"
+    ],
+    "costCentre": "WH-CAM-01",
+    "starts": "2026-07-06",
+    "horizon": 12,
+    "gen": "12m",
+    "genFrom": "",
+    "genTo": "",
+    "active": true,
+    "days": [
+     "N",
+     "N",
+     "N",
+     "N",
+     "",
+     "",
+     "",
+     ""
+    ],
+    "people": [
+     {
+      "personCode": "CP-1266",
+      "offset": 1
+     },
+     {
+      "personCode": "CP-1153",
+      "offset": 5
+     }
+    ]
+   },
+   "pat_WP-02": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "pat_WP-02",
+    "code": "WP-02",
+    "name": "Early / Late, 5 over 7",
+    "cycle": 7,
+    "locations": [
+     "WH"
+    ],
+    "jobProfiles": [
+     "SW",
+     "SSW"
+    ],
+    "costCentre": "WH-CAM-01",
+    "starts": "2026-07-06",
+    "horizon": 12,
+    "gen": "12m",
+    "genFrom": "",
+    "genTo": "",
+    "active": true,
+    "days": [
+     "E",
+     "E",
+     "L",
+     "L",
+     "E",
+     "",
+     ""
+    ],
+    "people": [
+     {
+      "personCode": "CP-1042",
+      "offset": 1
+     },
+     {
+      "personCode": "CP-1402",
+      "offset": 1
+     },
+     {
+      "personCode": "CP-1088",
+      "offset": 3
+     },
+     {
+      "personCode": "CP-1201",
+      "offset": 5
+     },
+     {
+      "personCode": "CP-1153",
+      "offset": 2
+     }
+    ]
+   },
+   "pat_WP-03": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "pat_WP-03",
+    "code": "WP-03",
+    "name": "Floating support",
+    "cycle": 14,
+    "locations": [
+     "BC",
+     "FS"
+    ],
+    "jobProfiles": [
+     "SW"
+    ],
+    "costCentre": "BC-ISL-02",
+    "starts": "2026-07-06",
+    "horizon": 12,
+    "gen": "12m",
+    "genFrom": "",
+    "genTo": "",
+    "active": true,
+    "days": [
+     "E",
+     "E",
+     "",
+     "L",
+     "L",
+     "",
+     "",
+     "E",
+     "E",
+     "",
+     "L",
+     "L",
+     "",
+     ""
+    ],
+    "people": [
+     {
+      "personCode": "CP-1288",
+      "offset": 1
+     }
+    ]
+   },
+   "pat_WP-04": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "pat_WP-04",
+    "code": "WP-04",
+    "name": "Weekend cover, 2 over 7",
+    "cycle": 7,
+    "locations": [
+     "RL"
+    ],
+    "jobProfiles": [
+     "SW"
+    ],
+    "costCentre": "RL-HAC-03",
+    "starts": "2026-09-01",
+    "horizon": 6,
+    "gen": "3m",
+    "genFrom": "",
+    "genTo": "",
+    "active": false,
+    "days": [
+     "",
+     "",
+     "",
+     "",
+     "",
+     "E",
+     "L"
+    ],
+    "people": []
+   }
+  },
+  "rotaWeeks": {
+   "rw_WH_2026-08-10": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "rw_WH_2026-08-10",
+    "location": "WH",
+    "weekStart": "2026-08-10",
+    "state": "published",
+    "publishVersion": 1,
+    "publishedAt": "2026-08-07T15:40:00.000Z",
+    "publishedBy": {
+     "personCode": "CP-1001",
+     "name": "Rachel Hussain"
+    },
+    "changes": [],
+    "lines": {
+     "CP-1042": [
+      "E",
+      "E",
+      "",
+      "N",
+      "N",
+      "",
+      ""
+     ],
+     "CP-1088": [
+      "V",
+      "V",
+      "L",
+      "L",
+      "",
+      "E",
+      ""
+     ],
+     "CP-1153": [
+      "E",
+      "N",
+      "N",
+      "L",
+      "",
+      "E",
+      "E"
+     ],
+     "CP-1201": [
+      "L",
+      "",
+      "",
+      "",
+      "L",
+      "",
+      "L"
+     ],
+     "CP-1266": [
+      "N",
+      "",
+      "N",
+      "",
+      "",
+      "N",
+      "N"
+     ],
+     "CP-1402": [
+      "E",
+      "L",
+      "E",
+      "",
+      "",
+      "L",
+      "L"
+     ],
+     "CP-1310": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "E",
+      ""
+     ],
+     "CP-1001": [
+      "E",
+      "E",
+      "E",
+      "E",
+      "E",
+      "",
+      ""
+     ],
+     "CP-1501": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ],
+     "CP-1502": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    }
+   },
+   "rw_WH_2026-08-03": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "rw_WH_2026-08-03",
+    "location": "WH",
+    "weekStart": "2026-08-03",
+    "state": "published",
+    "publishVersion": 1,
+    "publishedAt": "2026-07-31T15:20:00.000Z",
+    "publishedBy": {
+     "personCode": "CP-1001",
+     "name": "Rachel Hussain"
+    },
+    "changes": [],
+    "lines": {
+     "CP-1042": [
+      "E",
+      "",
+      "N",
+      "N",
+      "",
+      "",
+      "E"
+     ],
+     "CP-1088": [
+      "V",
+      "L",
+      "L",
+      "",
+      "E",
+      "",
+      "V"
+     ],
+     "CP-1153": [
+      "N",
+      "N",
+      "L",
+      "",
+      "E",
+      "E",
+      "E"
+     ],
+     "CP-1201": [
+      "",
+      "",
+      "",
+      "L",
+      "",
+      "L",
+      "L"
+     ],
+     "CP-1266": [
+      "",
+      "N",
+      "",
+      "",
+      "N",
+      "N",
+      "N"
+     ],
+     "CP-1402": [
+      "L",
+      "E",
+      "",
+      "",
+      "L",
+      "L",
+      "E"
+     ],
+     "CP-1310": [
+      "",
+      "",
+      "",
+      "",
+      "E",
+      "",
+      ""
+     ],
+     "CP-1001": [
+      "E",
+      "E",
+      "E",
+      "E",
+      "",
+      "",
+      "E"
+     ],
+     "CP-1501": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ],
+     "CP-1502": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    }
+   },
+   "rw_FS_2026-08-10": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "rw_FS_2026-08-10",
+    "location": "FS",
+    "weekStart": "2026-08-10",
+    "state": "published",
+    "publishVersion": 1,
+    "publishedAt": "2026-08-07T15:40:00.000Z",
+    "publishedBy": {
+     "personCode": "CP-1001",
+     "name": "Rachel Hussain"
+    },
+    "changes": [],
+    "lines": {
+     "CP-1002": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    }
+   },
+   "rw_FS_2026-08-03": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "rw_FS_2026-08-03",
+    "location": "FS",
+    "weekStart": "2026-08-03",
+    "state": "published",
+    "publishVersion": 1,
+    "publishedAt": "2026-07-31T15:20:00.000Z",
+    "publishedBy": {
+     "personCode": "CP-1001",
+     "name": "Rachel Hussain"
+    },
+    "changes": [],
+    "lines": {
+     "CP-1002": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    }
+   },
+   "rw_LGW_2026-08-10": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "rw_LGW_2026-08-10",
+    "location": "LGW",
+    "weekStart": "2026-08-10",
+    "state": "published",
+    "publishVersion": 1,
+    "publishedAt": "2026-08-07T15:40:00.000Z",
+    "publishedBy": {
+     "personCode": "CP-1001",
+     "name": "Rachel Hussain"
+    },
+    "changes": [],
+    "lines": {
+     "EMP-2044": [
+      "E",
+      "E",
+      "E",
+      "E",
+      "",
+      "",
+      ""
+     ],
+     "EMP-2062": [
+      "",
+      "N",
+      "N",
+      "N",
+      "N",
+      "",
+      ""
+     ]
+    }
+   },
+   "rw_LGW_2026-08-03": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "rw_LGW_2026-08-03",
+    "location": "LGW",
+    "weekStart": "2026-08-03",
+    "state": "published",
+    "publishVersion": 1,
+    "publishedAt": "2026-07-31T15:20:00.000Z",
+    "publishedBy": {
+     "personCode": "CP-1001",
+     "name": "Rachel Hussain"
+    },
+    "changes": [],
+    "lines": {
+     "EMP-2044": [
+      "E",
+      "E",
+      "E",
+      "",
+      "",
+      "",
+      "E"
+     ],
+     "EMP-2062": [
+      "N",
+      "N",
+      "N",
+      "N",
+      "",
+      "",
+      ""
+     ]
+    }
+   },
+   "rw_SLO_2026-08-10": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "rw_SLO_2026-08-10",
+    "location": "SLO",
+    "weekStart": "2026-08-10",
+    "state": "published",
+    "publishVersion": 1,
+    "publishedAt": "2026-08-07T15:40:00.000Z",
+    "publishedBy": {
+     "personCode": "CP-1001",
+     "name": "Rachel Hussain"
+    },
+    "changes": [],
+    "lines": {
+     "EMP-2071": [
+      "E",
+      "E",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    }
+   },
+   "rw_SLO_2026-08-03": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "rw_SLO_2026-08-03",
+    "location": "SLO",
+    "weekStart": "2026-08-03",
+    "state": "published",
+    "publishVersion": 1,
+    "publishedAt": "2026-07-31T15:20:00.000Z",
+    "publishedBy": {
+     "personCode": "CP-1001",
+     "name": "Rachel Hussain"
+    },
+    "changes": [],
+    "lines": {
+     "EMP-2071": [
+      "E",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "E"
+     ]
+    }
+   },
+   "rw_MAN_2026-08-10": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "rw_MAN_2026-08-10",
+    "location": "MAN",
+    "weekStart": "2026-08-10",
+    "state": "published",
+    "publishVersion": 1,
+    "publishedAt": "2026-08-07T15:40:00.000Z",
+    "publishedBy": {
+     "personCode": "CP-1001",
+     "name": "Rachel Hussain"
+    },
+    "changes": [],
+    "lines": {
+     "EMP-2088": [
+      "E",
+      "E",
+      "E",
+      "E",
+      "E",
+      "",
+      ""
+     ]
+    }
+   },
+   "rw_MAN_2026-08-03": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "rw_MAN_2026-08-03",
+    "location": "MAN",
+    "weekStart": "2026-08-03",
+    "state": "published",
+    "publishVersion": 1,
+    "publishedAt": "2026-07-31T15:20:00.000Z",
+    "publishedBy": {
+     "personCode": "CP-1001",
+     "name": "Rachel Hussain"
+    },
+    "changes": [],
+    "lines": {
+     "EMP-2088": [
+      "E",
+      "E",
+      "E",
+      "E",
+      "",
+      "",
+      "E"
+     ]
+    }
+   }
+  },
+  "rotaProfiles": {
+   "rp_CP-1042": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "rp_CP-1042",
+    "personCode": "CP-1042",
+    "cleared": true,
+    "dbsExpiry": "2027-03-31",
+    "qualifications": "All valid",
+    "favourite": false,
+    "preferredDays": []
+   },
+   "rp_CP-1088": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "rp_CP-1088",
+    "personCode": "CP-1088",
+    "cleared": true,
+    "dbsExpiry": "2027-08-12",
+    "qualifications": "All valid",
+    "favourite": false,
+    "preferredDays": []
+   },
+   "rp_CP-1153": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "rp_CP-1153",
+    "personCode": "CP-1153",
+    "cleared": true,
+    "dbsExpiry": "2027-02-02",
+    "qualifications": "First aid expires in 24 days",
+    "favourite": false,
+    "preferredDays": []
+   },
+   "rp_CP-1201": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "rp_CP-1201",
+    "personCode": "CP-1201",
+    "cleared": true,
+    "dbsExpiry": "2026-11-22",
+    "qualifications": "All valid",
+    "favourite": false,
+    "preferredDays": []
+   },
+   "rp_CP-1266": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "rp_CP-1266",
+    "personCode": "CP-1266",
+    "cleared": true,
+    "dbsExpiry": "2027-05-09",
+    "qualifications": "All valid",
+    "favourite": false,
+    "preferredDays": []
+   },
+   "rp_CP-1402": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "rp_CP-1402",
+    "personCode": "CP-1402",
+    "cleared": true,
+    "dbsExpiry": "2027-06-30",
+    "qualifications": "All valid",
+    "favourite": false,
+    "preferredDays": []
+   },
+   "rp_CP-1310": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "rp_CP-1310",
+    "personCode": "CP-1310",
+    "cleared": true,
+    "dbsExpiry": "2027-01-18",
+    "qualifications": "All valid",
+    "favourite": true,
+    "preferredDays": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6
+    ]
+   },
+   "rp_CP-1455": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "rp_CP-1455",
+    "personCode": "CP-1455",
+    "cleared": true,
+    "dbsExpiry": "2027-07-27",
+    "qualifications": "All valid",
+    "favourite": true,
+    "preferredDays": [
+     1,
+     2,
+     4
+    ]
+   },
+   "rp_CP-1377": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "rp_CP-1377",
+    "personCode": "CP-1377",
+    "cleared": true,
+    "dbsExpiry": "2026-09-14",
+    "qualifications": "All valid",
+    "favourite": false,
+    "preferredDays": [
+     5,
+     6
+    ]
+   },
+   "rp_CP-1490": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "rp_CP-1490",
+    "personCode": "CP-1490",
+    "cleared": false,
+    "dbsExpiry": "2026-06-30",
+    "qualifications": "DBS expired 30/06/2026",
+    "favourite": false,
+    "preferredDays": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6
+    ]
+   },
+   "rp_CP-1001": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "rp_CP-1001",
+    "personCode": "CP-1001",
+    "cleared": true,
+    "dbsExpiry": "2028-04-04",
+    "qualifications": "All valid",
+    "favourite": false,
+    "preferredDays": []
+   },
+   "rp_CP-1002": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "rp_CP-1002",
+    "personCode": "CP-1002",
+    "cleared": true,
+    "dbsExpiry": "2028-01-01",
+    "qualifications": "All valid",
+    "favourite": false,
+    "preferredDays": []
+   },
+   "rp_CP-1288": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "rp_CP-1288",
+    "personCode": "CP-1288",
+    "cleared": true,
+    "dbsExpiry": "2026-10-19",
+    "qualifications": "All valid",
+    "favourite": false,
+    "preferredDays": []
+   },
+   "rp_EMP-2044": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "rp_EMP-2044",
+    "personCode": "EMP-2044",
+    "cleared": true,
+    "dbsExpiry": "",
+    "qualifications": "CPC valid",
+    "favourite": false,
+    "preferredDays": []
+   },
+   "rp_EMP-2062": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "rp_EMP-2062",
+    "personCode": "EMP-2062",
+    "cleared": true,
+    "dbsExpiry": "",
+    "qualifications": "CSCS valid",
+    "favourite": false,
+    "preferredDays": []
+   },
+   "rp_EMP-2071": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "rp_EMP-2071",
+    "personCode": "EMP-2071",
+    "cleared": true,
+    "dbsExpiry": "",
+    "qualifications": "CSCS valid",
+    "favourite": false,
+    "preferredDays": []
+   },
+   "rp_EMP-2088": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "rp_EMP-2088",
+    "personCode": "EMP-2088",
+    "cleared": true,
+    "dbsExpiry": "",
+    "qualifications": "All valid",
+    "favourite": false,
+    "preferredDays": []
+   },
+   "rp_CP-1501": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "rp_CP-1501",
+    "personCode": "CP-1501",
+    "cleared": false,
+    "dbsExpiry": "",
+    "qualifications": "Not recorded",
+    "favourite": false,
+    "preferredDays": []
+   },
+   "rp_CP-1502": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "rp_CP-1502",
+    "personCode": "CP-1502",
+    "cleared": false,
+    "dbsExpiry": "",
+    "qualifications": "Not recorded",
+    "favourite": false,
+    "preferredDays": []
+   }
+  },
+  "coverRequests": {
+   "cov_1": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "cov_1",
+    "location": "WH",
+    "date": "2026-08-11",
+    "shift": "N",
+    "reason": "Sickness",
+    "stage": 2,
+    "open": true,
+    "urgent": false,
+    "openedAt": "2026-08-11T05:40:00.000Z",
+    "asked": "Employees at Willow House, then favourite bank workers",
+    "log": [
+     {
+      "stage": 1,
+      "at": "2026-08-11T05:40:00.000Z",
+      "audience": "Employees at location",
+      "channel": "In-app + email",
+      "sent": 6
+     },
+     {
+      "stage": 2,
+      "at": "2026-08-11T05:55:00.000Z",
+      "audience": "Favourite bank workers",
+      "channel": "In-app + email",
+      "sent": 2
+     }
+    ]
+   },
+   "cov_2": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "cov_2",
+    "location": "WH",
+    "date": "2026-08-14",
+    "shift": "L",
+    "reason": "Double cover",
+    "stage": 1,
+    "open": true,
+    "urgent": true,
+    "openedAt": "2026-08-12T13:02:00.000Z",
+    "asked": "Employees at Willow House and favourites at the same time",
+    "log": [
+     {
+      "stage": 1,
+      "at": "2026-08-12T13:02:00.000Z",
+      "audience": "Employees at location + favourites (urgent)",
+      "channel": "In-app + email + SMS",
+      "sent": 8
+     }
+    ]
+   }
+  },
+  "filledShifts": {
+   "fil_1": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "fil_1",
+    "coverId": "",
+    "location": "WH",
+    "date": "2026-08-15",
+    "shift": "E",
+    "personCode": "CP-1310",
+    "name": "Ellie Warren",
+    "confirmed": false,
+    "itRequest": ""
+   }
+  },
+  "rotaConfig": {
+   "rotaConfig": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "rotaConfig",
+    "minDefault": 4,
+    "maxHours": 45,
+    "capTolerance": 1,
+    "restHours": 11,
+    "restWarn": true,
+    "maxConsec": 6,
+    "horizon": 12,
+    "favHeadStart": 15,
+    "flexMilestones": [
+     9,
+     12
+    ],
+    "flexNotifyTo": "HR administrators",
+    "itAccess": true,
+    "agencyManual": true,
+    "bhEnhanced": true,
+    "outlook": true,
+    "publishBlockOnGap": true,
+    "rotaBuiltBy": "Admins and managers",
+    "safeRules": {
+     "clearance": true,
+     "quals": true,
+     "night": true,
+     "availability": true,
+     "conflicts": true,
+     "maxHours": true,
+     "rest": true,
+     "consec": true
+    },
+    "fulfilStages": [
+     {
+      "n": 1,
+      "audience": "Employees at location",
+      "wait": 15,
+      "channel": "In-app + email",
+      "next": "Favourite workers"
+     },
+     {
+      "n": 2,
+      "audience": "Favourite bank workers",
+      "wait": 30,
+      "channel": "In-app + email",
+      "next": "All cleared workers"
+     },
+     {
+      "n": 3,
+      "audience": "All cleared bank workers",
+      "wait": 120,
+      "channel": "In-app + email + SMS",
+      "next": "Manager escalation"
+     },
+     {
+      "n": 4,
+      "audience": "Service Manager",
+      "wait": 240,
+      "channel": "Email",
+      "next": "Agency / manual booking"
+     }
+    ],
+    "types": {
+     "shift": {
+      "shifts": [
+       "E",
+       "L",
+       "N"
+      ],
+      "night": true,
+      "maxHours": 45,
+      "restHours": 11,
+      "maxConsec": 5,
+      "flexible": false
+     },
+     "casual": {
+      "shifts": [
+       "E",
+       "L",
+       "N"
+      ],
+      "night": true,
+      "maxHours": 37.5,
+      "restHours": 11,
+      "maxConsec": 5,
+      "flexible": true
+     },
+     "salaried": {
+      "shifts": [
+       "E",
+       "L"
+      ],
+      "night": false,
+      "maxHours": 45,
+      "restHours": 11,
+      "maxConsec": 6,
+      "flexible": false
+     }
+    }
+   }
   }
  }
 }
