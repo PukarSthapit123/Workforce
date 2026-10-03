@@ -1,4 +1,5 @@
 import { useState, type DragEvent, type MouseEvent } from 'react';
+import { TriangleAlert } from 'lucide-react';
 import { tid } from '@/testids';
 import { cn } from '@/lib/utils';
 import { Avatar, Button, ChipButton, Empty, FilterBar, Pill, Row } from '@/ui';
@@ -77,7 +78,7 @@ export function RotaGrid({ view, rows, handlers }: { view: RotaWeekView; rows: r
                             warned && 'shadow-[inset_0_0_0_2px_var(--qp-rota-gap-border)]')}>
                           <span aria-hidden="true" className="flex-none text-sm font-bold">{shiftLetter(code)}</span>
                           <span aria-hidden="true" className="text-xs leading-[1.25] tabular-nums opacity-90">{shiftShortTime(shifts, code)}</span>
-                          {warned && <span aria-hidden="true" title={`Under ${view.rules.restHours} hours rest`} className="ml-auto text-sm font-bold">⚠</span>}
+                          {warned && <span aria-hidden="true" title={`Under ${view.rules.restHours} hours rest`} className="ml-auto inline-flex [&_svg]:size-[13px]"><TriangleAlert /></span>}
                         </button>
                       : <button type="button" data-testid={tid.trota.add(r.personCode, day)} onClick={click(r, day)}
                           aria-label={`Add a shift for ${r.name} on ${shortDay(ws, day)}`}
@@ -98,7 +99,7 @@ export function RotaGrid({ view, rows, handlers }: { view: RotaWeekView; rows: r
                     className={cn('flex flex-col items-center justify-center gap-[3px] rounded-[7px] bg-surface-tint px-xs py-[6px]',
                       lo && 'border border-(--qp-rota-gap-border) bg-err-surface')}>
                     <div aria-hidden="true" className={cn('text-sm font-bold tabular-nums', lo && 'text-err')}>
-                      {lo && '⚠ '}{c}<span className="font-medium text-text-muted">/{view.min}</span></div>
+                      {lo && <TriangleAlert aria-hidden="true" className="mr-[3px] inline size-[13px] align-[-2px]" />}{c}<span className="font-medium text-text-muted">/{view.min}</span></div>
                     {lo && <button type="button" data-testid={tid.trota.fill(day)} onClick={() => handlers.onFill(day)}
                       aria-label={`Fill ${shortDay(ws, day)}`}
                       className="rounded-sm border border-border-strong bg-surface-card px-[9px] py-[2px] text-xs font-semibold text-brand dark:text-brand-accent">Fill</button>}
@@ -147,7 +148,7 @@ export function DayView({ view, rows, day, onDay, onFill }: {
       <div className="mb-md flex flex-wrap items-center gap-sm">
         <div className="text-sm font-semibold">Day at a time</div>
         <div className="ml-auto flex flex-wrap items-center gap-sm">
-          <Pill testId={tid.trota.dayPill} tone={lo ? 'err' : 'ok'} glyph={lo ? '⚠' : '✓'}>{lo ? `${c} of ${view.min}` : `${c} on shift`}</Pill>
+          <Pill testId={tid.trota.dayPill} tone={lo ? 'err' : 'ok'} glyph={lo ? <TriangleAlert aria-hidden="true" /> : '✓'}>{lo ? `${c} of ${view.min}` : `${c} on shift`}</Pill>
           <span className="text-xs text-text-muted">{longDay(ws, day)}</span>
           {lo && <Button testId={tid.trota.dayFill} kind="ghost" small onClick={() => onFill(day)}>Fill {view.min - c}</Button>}
         </div>
@@ -155,7 +156,8 @@ export function DayView({ view, rows, day, onDay, onFill }: {
       <FilterBar>
         {DAY_INDEXES.map(i => (
           <ChipButton key={i} testId={tid.trota.day(i)} on={i === day} onClick={() => onDay(i)}>
-            {shortDay(ws, i)}{view.rules.minStaff && (view.onShift[i] ?? 0) < view.min ? ' ⚠' : ''}</ChipButton>))}
+            {shortDay(ws, i)}{view.rules.minStaff && (view.onShift[i] ?? 0) < view.min
+              && <><TriangleAlert aria-hidden="true" className="ml-[3px] inline size-[12px]" /><span className="sr-only">, short</span></>}</ChipButton>))}
       </FilterBar>
       <Table>
         <TableBody>

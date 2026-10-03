@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { TriangleAlert } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { tid } from '@/testids';
 import {
@@ -107,7 +108,7 @@ function Request({ c, stages }: { c: CoverView; stages: readonly FulfilStage[] }
       <div className="flex flex-wrap items-start gap-md">
         <div>
           <div className="flex flex-wrap items-center gap-sm text-sm font-semibold">{c.shiftName} · {formatDay(c.date)}
-            {c.urgent && <Pill testId={tid.tcover.urgent(c.id)} tone="err" glyph="⚠">Urgent</Pill>}</div>
+            {c.urgent && <Pill testId={tid.tcover.urgent(c.id)} tone="err" glyph={<TriangleAlert aria-hidden="true" />}>Urgent</Pill>}</div>
           <Small>{c.time} · {c.locationName} · stage {c.stage} of {stages.length} · opened {formatDateTime(c.openedAt)}</Small>
         </div>
         <div className="ml-auto"><Pill tone="warn" glyph="◷">Waiting</Pill></div>

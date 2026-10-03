@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router';
+import { TriangleAlert } from 'lucide-react';
 import { tid } from '@/testids';
 import { Button, Card, EssBig, EssButton, EssCard, EssCols, EssRow, GuideButton, Page, PageHead, Pill, Tip, WhyList, toastInfo, toastRefusal } from '@/ui';
 import { ApiError } from '@/api/client';
@@ -109,7 +110,7 @@ function Offer({ o, canClaim, pending, onClaim }: { o: OpenShift; canClaim: bool
         <div className="min-w-0">
           <div className="text-sm font-semibold">{formatDay(o.date)} · {o.shiftName}</div>
           <div className="text-xs text-text-muted">{o.time} · {o.locationName}
-            {o.urgent && <> · <Pill testId={tid.shifts.urgent(o.id)} tone="err" glyph="⚠">Urgent</Pill></>}</div>
+            {o.urgent && <> · <Pill testId={tid.shifts.urgent(o.id)} tone="err" glyph={<TriangleAlert aria-hidden="true" />}>Urgent</Pill></>}</div>
         </div>
         <span className="ml-auto flex flex-wrap gap-[6px]">
           {canClaim
