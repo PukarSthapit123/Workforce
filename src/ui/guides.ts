@@ -53,4 +53,22 @@ export const GUIDES: Readonly<Record<string, Guide>> = {
     ['Where they apply',
       'Every path that writes time: the day form, the weekly grid, proxy entry on behalf of somebody else, and week submission.'],
   ] },
+  tshifts: { label: 'What a shift type is', title: 'What a shift type is', sections: [
+    ['One definition, used everywhere',
+      'A shift carries a code, its times, an unpaid break and a colour. Paid hours, whether it crosses midnight and how it appears on the grid all follow from those times. Nothing is entered twice.'],
+    ['It is tenant-wide',
+      'Adding or changing a shift affects every location. Existing rota days keep the shift and have their hours recalculated, which is why a change is audited.'],
+    ['Night shifts',
+      'A shift flagged as a night shift is only offered to people whose employee type permits night work and who hold the training for it.'],
+    ['Removing one',
+      'A shift still used on a rota day or in a working pattern cannot be removed until those uses are cleared.'],
+  ] },
+  tpat: { label: 'How patterns fill a rota', title: 'How patterns fill a rota', sections: [
+    ['A repeating cycle',
+      'Set which day of the cycle carries which shift, attach the locations and job profiles it runs at, then add people with an offset each so they stagger across the cycle.'],
+    ['Generating',
+      'Generating writes rota lines forward to the horizon. It never overwrites a cell that already holds a shift, leave or sickness, and it skips weeks that are already published. Both are reported rather than applied silently.'],
+    ['What is checked',
+      'Rest between the days it writes is checked against the employee type’s rule and reported. Clearance, qualifications and maximum hours are evaluated when the week is opened.'],
+  ] },
 };

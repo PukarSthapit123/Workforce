@@ -1,11 +1,11 @@
-import { useEffect, useState, type ReactNode, type SelectHTMLAttributes } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Check, FlaskConical, Minus, Plug, Ruler, SlidersHorizontal } from 'lucide-react';
 import { tid } from '@/testids';
 import { cn } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import {
   ActionBar, AdminCard, Button, Chip, ChipPicker, Empty, Field, FormWarn, GroupLabel, GuideButton, Modal, Page, PageHead, Pill, Row, ScopeBadge,
-  SettingRow, Small, SwitchField, TextInput, Tip, UnitInput, toastInfo,
+  INLINE_INPUT, SettingRow, SettingSelect as Asel, Small, SwitchField, TextInput, Tip, UnitInput, toastInfo,
 } from '@/ui';
 import { useSaveTimesheetConfig, useTimesheetConfig, type TimesheetConfig, type TimesheetSetup } from '@/api/timesheets';
 import { useEmployeeTypes } from '@/api/reference';
@@ -50,18 +50,12 @@ function Head() {
     actions={<GuideButton view="mts" />} />;
 }
 
-/* .inl (v15:507-512): an input that reads as text until it is hovered or focused. */
-const INL = 'h-[30px] w-full min-w-[168px] rounded-sm border border-transparent bg-transparent px-[7px] text-sm text-ellipsis outline-none hover:bg-surface-tint focus:border-border-strong focus:bg-surface-sunken focus:text-clip focus:shadow-focus aria-invalid:border-err max-md:min-h-touch max-md:text-base';
-/* .asel and .asel.sml (v15:1457-1459): the 32px setting select, 28px at 12px in a table. */
-const ASEL = 'h-8 max-w-[250px] cursor-pointer rounded-sm border border-border-strong bg-surface-sunken px-[9px] text-sm aria-invalid:border-err max-md:min-h-touch max-md:text-base';
-const ASEL_SML = 'h-7 text-xs';
+/* .inl and .asel are shared (src/ui FormParts). */
+const INL = INLINE_INPUT;
 /* .wtsub (v15:1503-1506) */
 const SUB = 'mt-lg mb-sm border-b pb-xs text-xs font-[650] tracking-normal text-text-secondary first:mt-0';
 const SUB_NOTE = 'font-normal text-text-muted';
 
-function Asel({ testId, small, className, children, ...rest }: { testId: string; small?: boolean } & SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select data-testid={testId} {...rest} className={cn(ASEL, small && ASEL_SML, className)}>{children}</select>;
-}
 function Err({ text }: { text?: string }) {
   return text ? <p role="alert" className="mt-xs text-xs text-err">{text}</p> : null;
 }

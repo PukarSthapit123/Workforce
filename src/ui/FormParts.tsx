@@ -100,3 +100,24 @@ export function CheckRow({ children, control, tip, className }: { children: Reac
       <label className="flex cursor-pointer items-center gap-[9px]">{control}<span>{children}</span></label>{tip}
     </div>);
 }
+
+/* .inl (v15:507-512): an input that reads as text until it is hovered or
+   focused, for editing a value where it sits in a table row. */
+export const INLINE_INPUT = 'h-[30px] w-full min-w-[168px] rounded-sm border border-transparent bg-transparent px-[7px] text-sm text-ellipsis outline-none hover:bg-surface-tint focus:border-border-strong focus:bg-surface-sunken focus:text-clip focus:shadow-focus aria-invalid:border-err max-md:min-h-touch max-md:text-base';
+export function InlineInput({ testId, className, ...rest }: { testId: string } & InputHTMLAttributes<HTMLInputElement>) {
+  return <input data-testid={testId} {...rest} className={cn(INLINE_INPUT, className)} />;
+}
+/* .asel and .asel.sml (v15:1457-1459): the 32px setting select, 28px at 12px in a table. */
+const SETTING_SELECT = 'h-8 max-w-[250px] cursor-pointer rounded-sm border border-border-strong bg-surface-sunken px-[9px] text-sm aria-invalid:border-err max-md:min-h-touch max-md:text-base';
+export function SettingSelect({ testId, small, className, children, ...rest }: { testId: string; small?: boolean } & SelectHTMLAttributes<HTMLSelectElement>) {
+  return <select data-testid={testId} {...rest} className={cn(SETTING_SELECT, small && 'h-7 text-xs', className)}>{children}</select>;
+}
+/* .ctext (v15:1460-1462): a 32px text box beside a setting, 270px at most. */
+export function SettingText({ testId, className, ...rest }: { testId: string } & InputHTMLAttributes<HTMLInputElement>) {
+  return <input data-testid={testId} {...rest}
+    className={cn('h-8 w-[270px] max-w-full flex-none rounded-sm border border-border-strong bg-surface-sunken px-[9px] text-sm outline-none focus:border-brand focus:shadow-focus aria-invalid:border-err max-md:min-h-touch max-md:text-base', className)} />;
+}
+/* .wtsub (v15:1503-1506): a sub-heading inside a card, 12px/650 secondary ink over a rule. */
+export function SubHead({ children }: { children: ReactNode }) {
+  return <div className="mt-lg mb-sm border-b pb-xs text-xs font-[650] tracking-normal text-text-secondary first:mt-0">{children}</div>;
+}
