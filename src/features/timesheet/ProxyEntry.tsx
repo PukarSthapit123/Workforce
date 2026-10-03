@@ -8,7 +8,7 @@ import { todayIso } from '@/lib/format';
 import { envOf, flagOn, hm, typeOf } from './capture';
 import { DayFields } from './DayForm';
 import { DayChecks, holdFocus, useDayEntry } from './useDayEntry';
-import { gridAs, initialGrid, kindFor, weekBody, type GridState } from './week';
+import { fillFromRota, gridAs, initialGrid, kindFor, weekBody, type GridState } from './week';
 import { WeekGrid } from './WeekGrid';
 
 /* Proxy entry: the prototype's proxyBox, proxy-submit and proxy-week-submit
@@ -77,7 +77,8 @@ function ProxyWeek({ week, today, person, onDone }: { week: TimesheetWeek; today
   const c = week.capture, first = firstName(person.name), narrow = useNarrow();
   const m = weekModel(c.fields, typeOf(c), envOf(c), c.weekGrid);
   const layout = weekLayoutFor(c.weekLayout, narrow);
-  const [state, setState] = useState<GridState>(() => initialGrid(week, m, layout));
+  /* seeded from the team member's published rota on every day with nothing saved (IMP-005c), never from the manager's */
+  const [state, setState] = useState<GridState>(() => fillFromRota(initialGrid(week, m, layout), week, m, i => !week.days[i]?.record).state);
   const current = gridAs(state, kindFor(layout), m);
   const submit = useSubmitWeek();
   const send = () => submit.mutate({ personId: person.code, weekStart: week.weekStart, body: weekBody(week, current, m) }, { onSuccess: res => {

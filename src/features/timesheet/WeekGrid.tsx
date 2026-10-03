@@ -70,7 +70,9 @@ export function WeekGrid(p: WeekGridProps) {
     <div data-testid={tid.week.alloc} className="mt-sm flex flex-wrap gap-md text-xs text-text-muted">
       {Object.entries(totals.byCtx).map(([k, v]) => <span key={k}>{k} <b className="font-[650] text-text-primary">{hm(v)}</b></span>)}
     </div>);
-  const seeded = p.who && <Small>Seeded from {whose} timesheet, not yours.</Small>;
+  /* IMP-005c: a proxy grid says whose it is: their rota, while there is a published one, or their timesheet */
+  const source = week.days.some(d => d.rota) ? 'rota' : 'timesheet';
+  const seeded = p.who && <Small testId={tid.tsRota.seeded}>Seeded from {whose} {source}, not yours.</Small>;
   return (
     <div data-testid={tid.week.grid}>
       {p.state.kind === 'lines'
