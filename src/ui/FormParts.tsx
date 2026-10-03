@@ -59,9 +59,10 @@ export function NativeSelect({ testId, className, children, ...rest }: { testId:
 /* The capture form's layout (qnipay-workforce-v15.html:1257-1272, 1299-1304),
    shared by the day form, the weekly grid and proxy entry. */
 
-/* .fgrid: two columns of fields, one on a phone or in a narrow column (`single`). */
+/* .fgrid: two columns of fields 12px apart both ways, one on a phone or in a
+   narrow column (`single`). A field in it keeps .fld's own 12px under it. */
 export function FieldGrid({ single, children }: { single?: boolean; children: ReactNode }) {
-  return <div className={cn('grid gap-x-md', single ? 'grid-cols-1' : 'grid-cols-2 max-md:grid-cols-1')}>{children}</div>;
+  return <div className={cn('grid gap-md', single ? 'grid-cols-1' : 'grid-cols-2 max-md:grid-cols-1')}>{children}</div>;
 }
 /* .fsec: an open group's name, 12px/700 in muted ink with wide tracking, set
    in sentence case. */

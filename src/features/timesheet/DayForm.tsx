@@ -53,7 +53,7 @@ function Control({ f, p }: { f: FormField; p: DayFieldsProps }) {
       onChange={e => p.onChange(code, e.target.value)} onBlur={() => p.onBlur(code)} />;
   }
   return (
-    <div className={cn(wide && 'col-span-full')}>
+    <div className={cn('mb-md', wide && 'col-span-full')}>
       <Field label={def.input === 'calc' && def.src ? `${setting.label} (${def.src})` : setting.label} required={setting.mand} tip={hint} error={p.errorFor(code)}>
         {control}
       </Field>
