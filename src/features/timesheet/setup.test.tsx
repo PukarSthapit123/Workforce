@@ -145,3 +145,15 @@ test('the weekly view layout offers the three layouts by name, and a new one app
   expect(setupAudits()).toHaveLength(1);
   await waitFor(() => expect(screen.getByTestId(tid.mts.weekLayout)).toHaveValue('days'));
 });
+
+/* fidelity gap 10: Save and Cancel stay in reach while a lower card is edited */
+test('Save and Cancel rest after the last card, and stay stuck in view while a change waits to be saved', async () => {
+  await open();
+  const bar = () => screen.getByTestId(tid.mts.save).parentElement;
+  expect(bar()).not.toHaveClass('sticky');
+  choose(tid.mts.rule('maxDaily'), '14');
+  expect(bar()).toHaveClass('sticky');
+  expect(bar()).toContainElement(screen.getByTestId(tid.mts.cancel));
+  await userEvent.click(screen.getByTestId(tid.mts.cancel));
+  expect(bar()).not.toHaveClass('sticky');
+});

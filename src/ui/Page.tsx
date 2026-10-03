@@ -35,13 +35,15 @@ export function PageHead({ title, crumb, tip, tipTestId, actions }: {
     </>);
 }
 
-/* A long settings page's Save and Cancel, kept in reach while any card on it
-   is edited, as a dialog's .mf keeps its buttons: buttons on the right, 8px
-   apart, on the card surface, stuck 8px above the foot of the screen (above
-   the phone's bottom tabs) and resting after the last card once scrolled to. */
-export function ActionBar({ children }: { children: ReactNode }) {
+/* A long settings page's Save and Cancel, as a dialog's .mf holds its
+   buttons: on the right, 8px apart, on the card surface, after the last card.
+   While there is something to save (`stuck`) it stays in reach, stuck 8px
+   above the foot of the screen (above the phone's bottom tabs), until the
+   page is scrolled to where it rests. */
+export function ActionBar({ stuck, children }: { stuck?: boolean; children: ReactNode }) {
   return (
-    <div className="sticky bottom-sm z-[50] mt-lg flex flex-wrap items-center justify-end gap-sm rounded-card border bg-surface-card px-lg py-md shadow-md max-md:bottom-[calc(61px+env(safe-area-inset-bottom,0px))]">
+    <div className={cn('mt-lg flex flex-wrap items-center justify-end gap-sm rounded-card border bg-surface-card px-lg py-md',
+      stuck && 'sticky bottom-sm z-[50] shadow-md max-md:bottom-[calc(61px+env(safe-area-inset-bottom,0px))]')}>
       {children}
     </div>);
 }

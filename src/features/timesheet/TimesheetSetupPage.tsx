@@ -199,8 +199,8 @@ function SetupDraftView({ setup, types, env, picked, onPick }: {
         <Boundary />
       </AdminCard>
 
-      {/* Save and Cancel stay in reach while a lower card is edited */}
-      <ActionBar>
+      {/* Save and Cancel stay in reach while a change waits to be saved */}
+      <ActionBar stuck={dirty}>
         {dirty && <span data-testid={tid.mts.dirty} className="mr-auto text-xs text-text-muted">Unsaved changes</span>}
         <Button testId={tid.mts.cancel} kind="ghost" disabled={!dirty || save.anyPending} onClick={cancel}>Cancel</Button>
         <Button testId={tid.mts.save} kind="primary" disabled={!dirty} pending={save.anyPending} onClick={submit}>Save</Button>
