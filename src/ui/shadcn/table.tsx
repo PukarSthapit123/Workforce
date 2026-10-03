@@ -9,6 +9,8 @@ import { cn } from "@/lib/utils"
    - matrix: a table read by comparing rows (the permissions matrix). On a
      phone it keeps scrolling sideways, at least 560px wide, with its first
      column pinned so each row stays identifiable.
+   - plain and matrix on a phone: the .tw scroll shades (scroll-shade in
+     src/index.css) mark the edge that has more to show.
    - records: table.rec. On a phone each row becomes a card: the header row
      is kept for screen readers only, every cell is labelled from `label`
      (uppercase 12px in a 42% column), the `title` cell heads the card and
@@ -27,7 +29,7 @@ function Table({ className, variant = "plain", dense, ...props }: React.Componen
         data-slot="table-container"
         className={cn(
           "relative mb-md w-full overflow-auto rounded-card border bg-surface-card",
-          variant === "records" && "max-md:overflow-visible max-md:border-0 max-md:bg-transparent"
+          variant === "records" ? "max-md:overflow-visible max-md:border-0 max-md:bg-transparent" : "max-md:scroll-shade"
         )}
       >
         <table

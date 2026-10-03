@@ -226,3 +226,22 @@ select[multiple] {
   border: thin solid var(--qp-color-border-strong); border-radius: var(--qp-radius-control);
   padding: var(--qp-space-xs);
 }
+
+/* .tw on a phone (v15:927-933): a table that scrolls sideways shades the edge
+   that has more to show. The two card-coloured covers scroll with the content
+   (local), the two shades stay at the wrapper's edges (scroll), so a shade
+   shows only while there is more past that edge. The background colour stays
+   the wrapper's own. The shade is the prototype's 10% black, named here
+   because the lifted token set has no name for it. */
+:root { --qp-scroll-shade: rgba(0, 0, 0, .10); }
+@utility scroll-shade {
+  background-image:
+    linear-gradient(90deg, var(--qp-color-surface-card) 30%, transparent),
+    linear-gradient(270deg, var(--qp-color-surface-card) 30%, transparent),
+    linear-gradient(90deg, var(--qp-scroll-shade), transparent),
+    linear-gradient(270deg, var(--qp-scroll-shade), transparent);
+  background-position: 0 0, 100% 0, 0 0, 100% 0;
+  background-repeat: no-repeat;
+  background-size: 36px 100%, 36px 100%, 14px 100%, 14px 100%;
+  background-attachment: local, local, scroll, scroll;
+}
