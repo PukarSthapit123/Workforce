@@ -20,7 +20,7 @@ export interface NavGroup { key: 'work' | 'team' | 'setup'; label: string; tabs:
 const LATER: Record<string, string> = {
   home: 'Workforce core (plan 1c)', shifts: 'Rota', leave: 'Leave', hours: 'Timesheet',
   docs: 'Workforce core (plan 1c)', notices: 'Workforce core (plan 1c)', onb: 'Onboarding',
-  thome: 'Workforce core (plan 1c)', thours: 'Timesheet', trota: 'Rota', tcover: 'Rota', tshifts: 'Rota',
+  thome: 'Workforce core (plan 1c)', thours: 'Timesheet', tcover: 'Rota', tshifts: 'Rota',
   tpat: 'Rota', tleave: 'Leave', tsick: 'Leave', texc: 'Timesheet', tonb: 'Onboarding',
   tnotices: 'Workforce core (plan 1c)',
   aorg: 'Workforce core (plan 1c)', acal: 'Workforce core (plan 1c)', amods: 'Workforce core (plan 1c)',

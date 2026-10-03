@@ -22,11 +22,12 @@ import { EmployeeTypesPage } from '@/features/employee-types/EmployeeTypesPage';
 import { TimesheetPage } from '@/features/timesheet/TimesheetPage';
 import { TeamTimesheetsPage } from '@/features/timesheet/TeamTimesheetsPage';
 import { TimesheetSetupPage } from '@/features/timesheet/TimesheetSetupPage';
+import { RotaPage } from '@/features/rota/RotaPage';
 
 const BUILT: Record<string, ComponentType> = { asetup: SetupIndex, aperm: PermissionsPage, iaudit: AuditPage,
   apeople: AdminPeoplePage, tpeople: TeamPeoplePage, profile: ProfilePage,
   aloc: DimensionsPage, acon: ContractsPage, atypes: EmployeeTypesPage, ts: TimesheetPage, tteam: TeamTimesheetsPage,
-  mts: TimesheetSetupPage };
+  mts: TimesheetSetupPage, trota: RotaPage };
 const THEME_KEY = 'qnipay.theme';
 
 /* Avoids a non-null assertion on role[0]: charAt(0) is always defined, even

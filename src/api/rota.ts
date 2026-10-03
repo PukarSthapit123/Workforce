@@ -3,7 +3,7 @@
    screen until the server has answered and the queries below have been read again.
    Every week write sends the week's version as last read (RotaWeekView.version,
    0 for a week not stored yet). */
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { api } from './client';
 import { useRecordMutation } from './mutation';
 import { timesheetKeys } from './timesheets';
@@ -42,6 +42,8 @@ export const rotaKeys = {
 export const useRotaHome = (enabled = true) => useQuery({ queryKey: rotaKeys.home, queryFn: () => api(getRotaHome), enabled });
 export const useRotaWeek = (location: string, weekStart: string, enabled = true) => useQuery({
   queryKey: rotaKeys.week(location, weekStart), queryFn: () => api(getRotaWeek, { params: { location, weekStart } }), enabled: enabled && !!location,
+  /* moving a week keeps the one on screen until the next has arrived */
+  placeholderData: keepPreviousData,
 });
 /* Suggestions for the days below the minimum. Nothing is written until accepted. */
 export const useRotaPlan = (location: string, weekStart: string, enabled = true) => useQuery({

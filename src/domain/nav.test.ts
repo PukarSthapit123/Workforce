@@ -25,6 +25,10 @@ test('a manager also gets My Team, with Team Home and Approvals in the strip and
   /* module 2 builds Team timesheets */
   expect(must(team.tabs.find(t => t.view === 'tteam'))).toMatchObject({ built: true, path: '/team/tteam' });
   expect(must(team.tabs.find(t => t.view === 'tteam')).subProject).toBeUndefined();
+  /* module 3 builds Team rota; the rest of Scheduling is still to come */
+  expect(must(team.tabs.find(t => t.view === 'trota'))).toMatchObject({ built: true, path: '/team/trota', group: 'Scheduling' });
+  expect(must(team.tabs.find(t => t.view === 'trota')).subProject).toBeUndefined();
+  expect(must(team.tabs.find(t => t.view === 'tcover'))).toMatchObject({ built: false, subProject: 'Rota' });
 });
 test('a module switched off removes its tabs', () => {
   const g = buildNav({ caps: caps('own_home', 'own_shifts', 'own_leave'), modules: { ...ALL_MODULES, R: false, L: false }, flags, onboarding: false });
