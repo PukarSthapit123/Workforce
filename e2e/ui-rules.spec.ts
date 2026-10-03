@@ -6,34 +6,45 @@ import { tid } from '../src/testids';
    this build has actually built. Each test names the trace rows it ports.
    The admin's pages first; then the pages only an employee or a manager
    reaches (My timesheet, Team timesheets), each signed in as that persona,
-   and the admin is signed in again at the end. */
+   and the admin is signed in again at the end. The default seed is social,
+   where Rota is on, so module 3's pages are among them: My shifts for the
+   employee, Team rota, Shift catalogue, Working patterns and Cover requests
+   for the manager, and Rota setup for the admin. */
 type Persona = 'employee' | 'manager' | 'admin';
 const BUILT = ['/setup/asetup', '/setup/aperm', '/setup/iaudit', '/setup/apeople', '/setup/aloc', '/setup/aloc?d=locations', '/setup/acon', '/setup/atypes',
-  '/setup/mts'];
-const BUILT_AS: [Persona, string][] = [['employee', '/work/ts'], ['manager', '/team/tteam']];
+  '/setup/mts', '/setup/mrota'];
+const BUILT_AS: [Persona, string][] = [['employee', '/work/ts'], ['employee', '/work/shifts'], ['manager', '/team/tteam'], ['manager', '/team/trota'],
+  ['manager', '/team/tshifts'], ['manager', '/team/tpat'], ['manager', '/team/tcover']];
 const READY: Record<string, string> = { '/setup/asetup': tid.page('asetup'), '/setup/aperm': tid.access.table, '/setup/iaudit': tid.page('iaudit'),
   '/setup/apeople': tid.people.table, '/setup/aloc': tid.dims.card('locations'), '/setup/aloc?d=locations': tid.dims.table,
   '/setup/acon': tid.contracts.table, '/setup/atypes': tid.types.detail, '/setup/mts': tid.mts.card('rules'),
-  '/work/ts': tid.ts.view('day'), '/team/tteam': tid.tteam.table };
+  '/work/ts': tid.ts.view('day'), '/team/tteam': tid.tteam.table, '/setup/mrota': tid.mrota.card('staffing'), '/work/shifts': tid.shifts.cards,
+  '/team/trota': tid.trota.grid, '/team/tshifts': tid.tshifts.catalogue, '/team/tpat': tid.tpat.list, '/team/tcover': tid.tcover.stages };
 /* The pages that register a guide (src/ui/guides.ts), by path, with the view it is registered under */
-const GUIDED: Record<string, string> = { '/work/ts': 'ts', '/team/tteam': 'tteam', '/setup/mts': 'mts' };
+const GUIDED: Record<string, string> = { '/work/ts': 'ts', '/team/tteam': 'tteam', '/setup/mts': 'mts', '/team/trota': 'trota', '/team/tshifts': 'tshifts',
+  '/team/tpat': 'tpat', '/setup/mrota': 'mrota' };
 
 async function eachBuiltPage(page: Page, signInAs: (p: Persona) => Promise<void>, check: (path: string) => Promise<void>) {
-  test.setTimeout(120_000); // three sign-ins and twelve pages
+  test.setTimeout(180_000); // three sign-ins and eighteen pages
   await check('sign-in');
   const visit = async (path: string) => {
     await page.goto(path);
     await page.getByTestId(READY[path] ?? tid.page('none')).waitFor();
     await check(path);
   };
-  for (const [persona, path] of BUILT_AS) { await signInAs(persona); await visit(path); }
+  let as: Persona | null = null;
+  for (const [persona, path] of BUILT_AS) {
+    if (persona !== as) { await signInAs(persona); as = persona; }
+    await visit(path);
+  }
   await signInAs('admin');
   for (const path of BUILT) await visit(path);
 }
 
 /* GUIDE AFFORDANCE #5 "No ? appears where no guide is registered" and #6
-   "Admin pages without a guide show no ?". My timesheet, Team timesheets and
-   Timesheet setup register a guide, so each shows exactly one ?, the one that
+   "Admin pages without a guide show no ?". My timesheet, Team timesheets,
+   Timesheet setup, Team rota, Shift catalogue, Working patterns and Rota
+   setup register a guide, so each shows exactly one ?, the one that
    opens it; every other built page shows none, never a hollow one. */
 test('G A ? guide button appears only where a guide is registered, once, and opens that guide', async ({ page, signInAs }) => {
   const helpButtons = () => page.evaluate(() => [...document.querySelectorAll('button')].filter(b => b.textContent?.trim() === '?' || b.hasAttribute('data-guide')).length);
@@ -71,9 +82,10 @@ test('IC Icons come from the shared icon set, and no built page renders an emoji
    and capitals survive only on a short list of rules, the column headers
    (th), the role pill and the small badges among them. So: no heading, form
    label or section label is in capitals or wide tracking, and the only
-   elements in capitals are table column headers and elements that declare
-   themselves a capitals badge (data-caps: the role pill, a scope badge, the
-   required marker). Checked on every built page, the account menu and the
+   elements in capitals are column headers (a table's th, or a grid's
+   role="columnheader", as the rota grid's day heads are in the prototype,
+   .g .h) and elements that declare themselves a capitals badge (data-caps:
+   the role pill, a scope badge, the required marker). Checked on every built page, the account menu and the
    exceptions dialog. */
 test('SL Nothing on a built page, its menu or its dialog, is set in capitals or wide tracking', async ({ page, api, signInAs }) => {
   const shouted = () => page.evaluate(() => [...document.body.querySelectorAll('*')].filter(el => {
@@ -82,7 +94,7 @@ test('SL Nothing on a built page, its menu or its dialog, is set in capitals or 
     const spacing = cs.letterSpacing === 'normal' ? 0 : parseFloat(cs.letterSpacing) / parseFloat(cs.fontSize);
     const label = el.matches('h1, h2, h3, h4, h5, h6, label, legend');
     if (label) return cs.textTransform === 'uppercase' || spacing > 0.05;
-    return cs.textTransform === 'uppercase' && !el.closest('th, [data-caps]');
+    return cs.textTransform === 'uppercase' && !el.closest('th, [role="columnheader"], [data-caps]');
   }).map(el => `${el.tagName.toLowerCase()} "${(el as HTMLElement).innerText.slice(0, 30)}"`));
   await page.getByTestId(tid.signIn.form).waitFor();
   expect(await shouted(), 'sign-in').toEqual([]);
