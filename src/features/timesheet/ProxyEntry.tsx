@@ -7,7 +7,7 @@ import { formatDmy, isoWeek, periodStart, weekLayoutFor, weekModel } from '@/dom
 import { todayIso } from '@/lib/format';
 import { envOf, flagOn, hm, typeOf } from './capture';
 import { DayFields } from './DayForm';
-import { DayChecks, useDayEntry } from './useDayEntry';
+import { DayChecks, holdFocus, useDayEntry } from './useDayEntry';
 import { gridAs, initialGrid, kindFor, weekBody, type GridState } from './week';
 import { WeekGrid } from './WeekGrid';
 
@@ -69,7 +69,7 @@ function ProxyDay({ week, day, person, onDone }: { week: TimesheetWeek; day: Wee
     <DayFields {...entry.fields} which="all" single />
     <DayChecks checked={entry.checked} refusal={entry.refusal} />
     <Button testId={tid.proxy.submitDay} kind="primary" className="mt-[14px] w-full" disabled={day.locked} title={day.locked ? day.lockNote : undefined}
-      pending={entry.busy} onClick={() => entry.attempt('submit')}>Submit day for approval</Button>
+      pending={entry.busy} onMouseDown={holdFocus} onClick={() => entry.attempt('submit')}>Submit day for approval</Button>
   </>;
 }
 

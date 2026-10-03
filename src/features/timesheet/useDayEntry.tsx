@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type MouseEvent } from 'react';
 import { tid } from '@/testids';
 import { FormWarn } from '@/ui';
 import { useSaveDay, useSubmitDay } from '@/api/timesheets';
@@ -50,6 +50,12 @@ export function useDayEntry({ week, day, personId, onSaved, onSubmitted }: {
   };
   return { fields, stats: dayStats(values, c, day.date), attempt, fill, busy, checked, submit, refusal: submit.refusal ?? save.refusal };
 }
+
+/* Save and Submit keep the focus where it is on a mouse press. Leaving a
+   field runs its inline check, which can clear the message under it; the form
+   then moves up while the button is held, the release lands off the button,
+   and the click is lost. The attempt checks every field anyway. */
+export const holdFocus = (e: MouseEvent) => e.preventDefault();
 
 /* What the last attempt found: the blocking errors, or the warnings that travel with the save, and any refusal from the server with what to do next. */
 export function DayChecks({ checked, refusal }: { checked: LocalCheck | null; refusal: Refusal | null }) {

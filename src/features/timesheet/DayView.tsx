@@ -6,7 +6,7 @@ import type { DaySaved, TimesheetWeek, WeekDay } from '@/contract/timesheets';
 import { addDays, dowMon, formatDay, formatDmy } from '@/domain/timesheet';
 import { NON_WORKING_REASONS, formGroups, hm, valuesFromDay } from './capture';
 import { DayFields, DayStatsCard, hasClosedGroups } from './DayForm';
-import { DayChecks, useDayEntry } from './useDayEntry';
+import { DayChecks, holdFocus, useDayEntry } from './useDayEntry';
 
 /* The day chip: the prototype's stMap in essTimesheet (qnipay-workforce-v15.html:6263-6266),
    with the glyphs from the shared icon set. A resubmission reads as awaiting approval, as dayInfo maps it. */
@@ -125,8 +125,8 @@ function DayPanel({ week, day, today, onDate, personId }: {
             <DayFields {...fields} which={side ? 'open' : 'all'} />
             <DayChecks checked={entry.checked} refusal={entry.refusal} />
             <div className="mt-lg flex flex-wrap justify-end gap-sm">
-              <Button testId={tid.dayForm.save} kind="ghost" disabled={day.locked} title={lockedTitle} pending={busy} onClick={() => entry.attempt('save')}>Save draft</Button>
-              <Button testId={tid.dayForm.submit} kind="primary" disabled={day.locked} title={lockedTitle} pending={busy} onClick={() => entry.attempt('submit')}>Submit day</Button>
+              <Button testId={tid.dayForm.save} kind="ghost" disabled={day.locked} title={lockedTitle} pending={busy} onMouseDown={holdFocus} onClick={() => entry.attempt('save')}>Save draft</Button>
+              <Button testId={tid.dayForm.submit} kind="primary" disabled={day.locked} title={lockedTitle} pending={busy} onMouseDown={holdFocus} onClick={() => entry.attempt('submit')}>Submit day</Button>
             </div>
           </Card>
         </div>

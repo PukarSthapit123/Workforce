@@ -94,6 +94,11 @@ describe('My timesheet, day view', () => {
     expect(dayOf('EMP004', '2026-08-13')).toBeUndefined();
     expect(audits().length).toBe(before);
   });
+  test('pressing Save or Submit leaves the focus in the field, so a message cleared on leaving it cannot move the button from under the click', async () => {
+    await openDay();
+    expect(fireEvent.mouseDown(screen.getByTestId(tid.dayForm.save))).toBe(false);
+    expect(fireEvent.mouseDown(screen.getByTestId(tid.dayForm.submit))).toBe(false);
+  });
   test('a day already with the approver is refused by the server, with its message and what to do next', async () => {
     await openDay();
     await userEvent.click(screen.getByTestId(tid.ts.dayPrev));
