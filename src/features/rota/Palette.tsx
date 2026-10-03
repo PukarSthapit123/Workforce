@@ -1,7 +1,7 @@
 import type { DragEvent, MouseEvent } from 'react';
 import { tid } from '@/testids';
 import { cn } from '@/lib/utils';
-import { NavLink } from '@/ui';
+import { Button, NavLink } from '@/ui';
 import { buttonVariants } from '@/ui/shadcn/button';
 import type { ShiftTypeRecord } from '@/contract/rota';
 import { TONE_CLASS, cellTone } from './week';
@@ -11,12 +11,13 @@ import { TONE_CLASS, cellTone } from './week';
    colours. A chip can be dragged onto a cell, or picked up with Enter, Space
    or a tap and put down on a cell the same way; every route ends in the one
    assignment path, so none can place a shift the picker would refuse (D11).
-   Shared with the Shift catalogue page. */
-export function Palette({ shifts, lifted, onLift, onDragStart, onDragEnd, canMake }: {
+   Shared with the Shift catalogue page, where "New shift type" opens the
+   dialog in place (`onNew`) rather than going to the page it is already on. */
+export function Palette({ shifts, lifted, onLift, onDragStart, onDragEnd, canMake, onNew }: {
   shifts: readonly ShiftTypeRecord[]; lifted: string | null;
   /* `keyboard`: raised by Enter or Space rather than a pointer */
   onLift: (code: string, keyboard: boolean) => void;
-  onDragStart: (code: string) => void; onDragEnd: () => void; canMake: boolean;
+  onDragStart: (code: string) => void; onDragEnd: () => void; canMake: boolean; onNew?: () => void;
 }) {
   const start = (code: string) => (e: DragEvent<HTMLButtonElement>) => {
     e.dataTransfer.effectAllowed = 'copy';
@@ -37,7 +38,8 @@ export function Palette({ shifts, lifted, onLift, onDragStart, onDragEnd, canMak
             TONE_CLASS[cellTone(shifts, s.code)], lifted === s.code && 'opacity-55 shadow-focus')}>
           <b>{s.code}</b> {s.name}<span className="text-xs font-medium tabular-nums opacity-75">{s.from}–{s.to}</span>
         </button>))}
-      {canMake && <NavLink testId={tid.trota.newShift} to="/team/tshifts"
+      {canMake && onNew && <Button testId={tid.trota.newShift} kind="ghost" small onClick={onNew}>New shift type</Button>}
+      {canMake && !onNew && <NavLink testId={tid.trota.newShift} to="/team/tshifts"
         className={buttonVariants({ variant: 'ghost', size: 'sm' })}>New shift type</NavLink>}
     </div>);
 }
