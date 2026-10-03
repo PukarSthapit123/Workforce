@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { tid } from '@/testids';
 import { Banner, Button, FormWarn, Modal, Seg, toastInfo, useNarrow } from '@/ui';
 import { useSubmitWeek, useTimesheetWeek } from '@/api/timesheets';
-import type { DaySaved, TimesheetWeek, WeekDay } from '@/contract/timesheets';
+import type { DaySaved, TimesheetWeek, WeekDay, WeekSubmitted } from '@/contract/timesheets';
 import { formatDmy, isoWeek, periodStart, weekLayoutFor, weekModel } from '@/domain/timesheet';
 import { todayIso } from '@/lib/format';
 import { envOf, flagOn, hm, typeOf } from './capture';
@@ -16,7 +16,8 @@ import { WeekGrid } from './WeekGrid';
    are the team member's: their week is read with their employee ID, so the
    capture fields, the checks and the seeded grid are theirs, never the
    manager's (D6, IMP-005c). The server records the manager as enteredBy and
-   the day as a proxy entry. Day is today by the server's clock. */
+   the day as a proxy entry. Day is today by the server's clock. A week with
+   days held back keeps the dialog open and lists each held day with its reason. */
 type View = 'day' | 'week';
 export interface ProxyTarget { code: string; name: string }
 const firstName = (name: string) => name.split(/\s+/)[0] ?? name;
@@ -24,6 +25,7 @@ const firstName = (name: string) => name.split(/\s+/)[0] ?? name;
 export function ProxyEntry({ person, onClose }: { person: ProxyTarget; onClose: () => void }) {
   const [serverToday, setServerToday] = useState<string | null>(null);
   const [view, setView] = useState<View>('day');
+  const [held, setHeld] = useState<WeekSubmitted['held']>([]);
   const q = useTimesheetWeek(person.code, periodStart(serverToday ?? todayIso()));
   /* the server's clock, adopted once, as My timesheet does */
   if (q.data && serverToday === null) setServerToday(q.data.now.date);
@@ -46,7 +48,10 @@ export function ProxyEntry({ person, onClose }: { person: ProxyTarget; onClose: 
         </div>
         {shown === 'day'
           ? <ProxyDay key={`${day.date}:${day.version}`} week={week} day={day} person={person} onDone={onClose} />
-          : <ProxyWeek key={`${week.weekStart}:${week.days.map(d => d.version).join('.')}`} week={week} today={day.date} person={person} onDone={onClose} />}
+          : <ProxyWeek key={`${week.weekStart}:${week.days.map(d => d.version).join('.')}`} week={week} today={day.date} person={person}
+              onDone={res => { if (res.held.length) setHeld(res.held); else onClose(); }} />}
+        {shown === 'week' && held.length > 0 && <Banner testId={tid.proxy.held} tone="info" title={`${held.length} day${held.length === 1 ? '' : 's'} held back`}>
+          {held.map(h => <span key={h.date} className="block">{h.reason}</span>)}</Banner>}
       </>}
     </Modal>);
 }
@@ -68,7 +73,7 @@ function ProxyDay({ week, day, person, onDone }: { week: TimesheetWeek; day: Wee
   </>;
 }
 
-function ProxyWeek({ week, today, person, onDone }: { week: TimesheetWeek; today: string; person: ProxyTarget; onDone: () => void }) {
+function ProxyWeek({ week, today, person, onDone }: { week: TimesheetWeek; today: string; person: ProxyTarget; onDone: (res: WeekSubmitted) => void }) {
   const c = week.capture, first = firstName(person.name), narrow = useNarrow();
   const m = weekModel(c.fields, typeOf(c), envOf(c), c.weekGrid);
   const layout = weekLayoutFor(c.weekLayout, narrow);
@@ -80,7 +85,7 @@ function ProxyWeek({ week, today, person, onDone }: { week: TimesheetWeek; today
     toastInfo(`Week ${isoWeek(week.weekStart)} submitted for ${person.name} on their behalf · ${n} day${n === 1 ? '' : 's'} · ${hm(c, res.weekMinutes)}`
       + ` · attributed to you · ${first} notified` + (res.held.length ? ` · ${res.held.length} day${res.held.length === 1 ? '' : 's'} held back` : ''),
     res.flagged.length ? `Flagged: ${res.flagged.join('; ')}` : undefined);
-    onDone();
+    onDone(res);
   } });
   return <>
     <WeekGrid week={week} model={m} layout={layout} state={current} onChange={setState} today={today} who={first} />

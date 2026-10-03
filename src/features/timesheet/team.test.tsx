@@ -281,5 +281,10 @@ describe('Proxy entry from a team member’s record', () => {
     expect(await screen.findByTestId(tid.toast.info))
       .toHaveTextContent('Week 33 submitted for Bigyan Poudel on their behalf · 1 day · 04:00 · attributed to you · Bigyan notified · 1 day held back');
     expect(dayOf('tsd_EMP004_2026-08-13')).toMatchObject({ state: 'pend', captureSource: 'proxy', enteredBy: 'EMP001' });
+    /* review Minor 3: the dialog stays open and lists the held day with its reason */
+    const held = await screen.findByTestId(tid.proxy.held);
+    expect(held).toHaveTextContent('1 day held back');
+    expect(held).toHaveTextContent('Wed 12 Aug is already awaiting approval, so it was left alone.');
+    expect(screen.getByTestId(tid.proxy.banner)).toBeInTheDocument();
   });
 });
