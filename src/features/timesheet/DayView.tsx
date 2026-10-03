@@ -1,10 +1,11 @@
 import { useState, type ReactNode } from 'react';
-import { Check, Clock, Lock, Minus, RotateCw, X } from 'lucide-react';
+import { CalendarDays, Check, Clock, Lock, Minus, RotateCw, X } from 'lucide-react';
 import { tid } from '@/testids';
-import { Banner, Button, CalNav, Card, CardHead, CheckboxField, CheckRow, Field, Pill, SelectBox, Small, SwitchField, TextInput, Tip, toastInfo, type Tone } from '@/ui';
+import { Banner, Button, CalNav, Card, CardHead, CheckboxField, CheckRow, Field, NavLink, Pill, SelectBox, Small, SwitchField, TextInput, Tip, toastInfo, type Tone } from '@/ui';
+import { buttonVariants } from '@/ui/shadcn/button';
 import type { DaySaved, TimesheetWeek, WeekDay } from '@/contract/timesheets';
 import { addDays, dowMon, formatDay, formatDmy } from '@/domain/timesheet';
-import { NON_WORKING_REASONS, formGroups, hm, valuesFromDay } from './capture';
+import { NON_WORKING_REASONS, formGroups, hm, rotaShift, valuesFromDay, valuesFromRota, varianceText } from './capture';
 import { DayFields, DayStatsCard, hasClosedGroups } from './DayForm';
 import { DayChecks, holdFocus, useDayEntry } from './useDayEntry';
 
@@ -18,12 +19,14 @@ const CHIP: Record<string, { label: string; tone: Tone; glyph: ReactNode }> = {
   back: { label: 'Sent back', tone: 'err', glyph: <X /> },
   leave: { label: 'Annual leave', tone: 'neu', glyph: <Lock /> },
   sickness: { label: 'Sickness', tone: 'err', glyph: <Lock /> },
+  rest: { label: 'Rest day', tone: 'neu', glyph: <Minus /> },
   future: { label: 'Not yet open', tone: 'neu', glyph: <Minus /> },
   none: { label: 'Nothing logged', tone: 'neu', glyph: <Minus /> },
 };
 const NONE_CHIP = { label: 'Nothing logged', tone: 'neu' as Tone, glyph: <Minus /> };
+/* A day with nothing recorded is a rest day when the published rota says so (dayInfo), whether or not it has come yet. */
 export function dayChip(day: WeekDay) {
-  const key = day.absence ?? (day.state !== 'none' ? day.state : day.future ? 'future' : 'none');
+  const key = day.absence ?? (day.state !== 'none' ? day.state : day.rota?.code === '' ? 'rest' : day.future ? 'future' : 'none');
   return CHIP[key] ?? NONE_CHIP;
 }
 
@@ -69,16 +72,19 @@ function DayPanel({ week, day, today, onDate, personId }: {
   const submitReason = () => entry.submit.mutate(
     { personId, date: day.date, version: day.version, body: { entries: [], nonWorkingReason: notes.trim() ? `${reason} · ${notes.trim()}` : reason } },
     { onSuccess: () => toastInfo(`Reason submitted · ${reason} · routed to ${mgr}`) });
-  /* copy-day: yesterday's recorded entry, where the prototype copied yesterday's rota line (there is no rota line without module 3) */
+  /* copy-day: yesterday's rota line when there is one (the prototype's), otherwise yesterday's recorded entry */
   const copyYesterday = () => {
     const y = week.days[dowMon(day.date) - 1];
     if (!y) { toastInfo('No previous day in this week to copy'); return; }
+    const line = rotaShift(y);
+    if (line) { entry.fill(valuesFromRota(line)); toastInfo(`Filled from yesterday’s rota · ${line.from}`); return; }
     if (!y.record?.entries.length) { toastInfo('Nothing recorded yesterday to copy'); return; }
     const from = valuesFromDay(y, c);
     entry.fill(from);
     toastInfo(`Filled from yesterday · ${typeof from.start === 'string' ? from.start : ''}`);
   };
-  const side = hasClosedGroups(c);
+  const side = hasClosedGroups(c), line = rotaShift(day);
+  const recorded = rec?.entries.length ? rec.minutes / 60 : 0;
   return (
     <>
       <Card className="px-lg py-md">
@@ -96,6 +102,11 @@ function DayPanel({ week, day, today, onDate, personId }: {
           </div>
         </div>
       </Card>
+      {line && <Banner testId={tid.ts.banner('rota')} tone="info" icon={<CalendarDays />}
+        title={`Scheduled on the rota · ${line.name} ${line.time} · ${line.hours} hours`}
+        actions={<NavLink testId={tid.tsRota.seeShift} to="/work/shifts" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>See the shift</NavLink>}>
+        This timesheet entry is linked to that rota shift, so scheduled and actual hours reconcile.
+        {recorded > 0 && <> Recorded so far: {Number(recorded.toFixed(2))}h ({varianceText(rec?.minutes ?? 0, line.hours)}h against the rota).</>}</Banner>}
       {day.absence && <Banner testId={tid.ts.banner('absence')} tone="warn" icon={<Lock />}
         title={`${day.absence === 'leave' ? 'Annual leave' : 'Sickness'} is recorded for this day`}>
         Approved absence blocks timesheet capture while “Leave blocks timesheet capture” is on under Qnipay setup · Leave. If you did work,
@@ -131,7 +142,7 @@ function DayPanel({ week, day, today, onDate, personId }: {
           </Card>
         </div>
         <div className="lg:sticky lg:top-[150px]">
-          <DayStatsCard capture={c} stats={stats} />
+          <DayStatsCard capture={c} stats={stats} scheduled={line?.hours} />
           {side && <Card>
             <CardHead title="Shift details" actions={<span className="text-xs text-text-muted">Add only what applies</span>} />
             <DayFields {...fields} which="closed" />

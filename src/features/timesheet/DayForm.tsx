@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { fieldControl } from '@/ui/shadcn/input';
 import { AddLine, CheckboxField, CheckRow, Empty, Field, FieldGrid, FormExpander, FormGroupLabel, SelectBox, TextInput, Tip } from '@/ui';
 import type { CaptureSetup } from '@/contract/timesheets';
-import { MAX_BREAKS, breakIndex, fieldOptions, formGroups, hm, isAllowance, type DayStats as Stats, type FormField, type FormValues } from './capture';
+import { MAX_BREAKS, breakIndex, fieldOptions, formGroups, hm, isAllowance, varianceText, type DayStats as Stats, type FormField, type FormValues } from './capture';
 
 /* The day form: the prototype's buildForm and fieldControl
    (qnipay-workforce-v15.html:6097-6125, 6177-6205). One renderer for every
@@ -90,8 +90,11 @@ export function DayFields(p: DayFieldsProps) {
 export const hasClosedGroups = (c: CaptureSetup) => formGroups(c).some(g => !g.group.open);
 
 /* .sstats and .cst (v15:1273-1282): the day's figures, read with the hours.
-   Muted while there are no times yet; the rate its rules resolve carries why. */
-export function DayStatsCard({ capture, stats }: { capture: CaptureSetup; stats: Stats }) {
+   Muted while there are no times yet; the rate its rules resolve carries why.
+   With a rota shift on the day, "Against the rota" spans the card under them
+   (renderDaySummary, v15:6740-6757): the hours scheduled and, once there are
+   times, the variance. */
+export function DayStatsCard({ capture, stats, scheduled }: { capture: CaptureSetup; stats: Stats; scheduled?: number }) {
   const has = stats.net != null;
   const cells: { key: string; label: string; value: string; accent?: boolean; why?: string }[] = [
     { key: 'net', label: 'Net working', value: hm(capture, stats.net ?? 0), accent: true },
@@ -108,5 +111,10 @@ export function DayStatsCard({ capture, stats }: { capture: CaptureSetup; stats:
           <div data-testid={tid.dayForm.stat(c.key)}
             className={cn('mt-[2px] text-lg font-semibold tabular-nums', !has ? 'text-text-muted' : c.accent && 'text-brand dark:text-brand-accent')}>{c.value}</div>
         </div>))}
+      {scheduled ? <div className="col-span-full border-t pt-[10px]">
+        <div data-caps className="text-xs font-bold tracking-[.05em] text-text-muted uppercase">Against the rota</div>
+        <div data-testid={tid.dayForm.stat('rota')} className="mt-[2px] text-sm font-semibold tabular-nums">
+          {scheduled}h scheduled{stats.net != null ? ` · ${varianceText(stats.net, scheduled)}h variance` : ''}</div>
+      </div> : null}
     </div>);
 }

@@ -280,4 +280,6 @@ export const tid = {
     invalid: 'pat-upload-invalid', error: (row: number) => k('pat-upload-error', row), warning: (row: number) => k('pat-upload-warning', row),
     horizon: 'pat-upload-horizon', cancel: 'pat-upload-cancel', download: 'pat-upload-download', import: 'pat-upload-import',
   },
+  /* module 3: the rota on the timesheet: the rota banner's link to My shifts, and whose rota a week grid was seeded from */
+  tsRota: { seeShift: 'ts-rota-see-shift', seeded: 'ts-rota-seeded' },
 } as const;

@@ -4,7 +4,7 @@
    6097-6228, 6778-6823, 3357-3373), how the form's values become the DayInput
    the server takes, and the client-side checks. Every check is a domain
    function the server also runs (brief D3): the client only warns early. */
-import type { CaptureSetup, DayInput, WeekDay } from '@/contract/timesheets';
+import type { CaptureSetup, DayInput, RotaDay, WeekDay } from '@/contract/timesheets';
 import {
   deriveWorkType, fieldProblem, fieldSettingFor, fieldVisible, formatMinutes, missingMandatory, projectOptions, rotaFor, taskOptions, toMin, validateTimes,
   type BreakInput, type Clock, type DerivedRate, type FieldDef, type FieldDefault, type FieldEnv, type TypeCapture,
@@ -88,9 +88,12 @@ export function selectValues(code: string, opts: readonly string[] | undefined, 
   if (code === 'job_task') return taskOptions(c.projects, typeof chosen.project === 'string' ? chosen.project : '');
   return [...(opts ?? [])];
 }
-/* A rate type lists the pay codes marked as work types. */
+/* A rate type lists the pay codes marked as work types. With the Rota module on,
+   the Rota line lists the tenant's shift catalogue by code ("Early · 07:00–15:00"),
+   so a line seeded from the rota is one of its options. */
 export function fieldOptions(def: FieldDef, c: CaptureSetup, chosen: Readonly<Record<string, unknown>> = {}): { value: string; label: string }[] {
   if (def.c === 'work_type') return c.payCodes.filter(p => p.workType).map(p => ({ value: p.code, label: p.label || p.code }));
+  if (def.c === 'shift_code' && c.rotaLines) return c.rotaLines.map(l => ({ value: l.code, label: `${l.name} · ${l.from}–${l.to}` }));
   return selectValues(def.c, def.opts, c, chosen).map(o => ({ value: o, label: o }));
 }
 
@@ -98,10 +101,23 @@ export function fieldOptions(def: FieldDef, c: CaptureSetup, chosen: Readonly<Re
 export type FormValues = Record<string, string | boolean>;
 const str = (v: string | boolean | undefined) => (typeof v === 'string' ? v : '');
 
-/* A saved day as the form shows it: the first entry's times, breaks and fields, the rota line, the allowances ticked. */
+/* ---------------------------------------------------------- the rota */
+/* The day's shift on the published rota: rest, leave and sickness are not a shift. */
+export const rotaShift = (day: WeekDay | undefined): RotaDay | undefined =>
+  (day?.rota && day.rota.code && day.rota.code !== 'V' && day.rota.code !== 'S' ? day.rota : undefined);
+/* seedFromRota (v15:6952-6961): a shift's start, finish and rota line, so scheduled and actual start from the same place. */
+export const valuesFromRota = (r: RotaDay): FormValues => ({ start: r.from, finish: r.to, shift_code: r.code });
+/* The hours either side of the rota line, one decimal, signed: "+0.5". */
+export const varianceText = (netMin: number, hours: number) => {
+  const d = Number((netMin / 60 - hours).toFixed(1));
+  return `${d >= 0 ? '+' : ''}${d}`;
+};
+
+/* A saved day as the form shows it: the first entry's times, breaks and fields, the rota line, the allowances ticked.
+   A day with nothing saved starts from the person's rota shift, if they have one (seedFromRota). */
 export function valuesFromDay(day: WeekDay | undefined, c: CaptureSetup): FormValues {
   const rec = day?.record, out: FormValues = {};
-  if (!rec) return out;
+  if (!rec) { const r = rotaShift(day); return r ? valuesFromRota(r) : out; }
   const e = rec.entries[0];
   if (e) {
     Object.assign(out, e.fields ?? {});
@@ -146,11 +162,11 @@ const formFieldOf = (field: string) => {
   return BREAK_PAIRS[Number(m[1] ?? 0)]?.[0] ?? 'break_s';
 };
 /* validateEntry: mandatory fields first, then the times. Errors block the save; warnings never do. */
-export function checkDay(v: FormValues, c: CaptureSetup, date: string, now: Clock): LocalCheck {
+export function checkDay(v: FormValues, c: CaptureSetup, date: string, now: Clock, rota?: RotaDay): LocalCheck {
   const missing = missingMandatory(c.fields, typeOf(c), envOf(c), v);
   if (missing) return { errors: [{ field: missing.field, message: missing.message }], warnings: [], net: null };
   const r = validateTimes({ start: str(v.start), finish: str(v.finish), breaks: breaksOf(v) },
-    { date, now, rules: c.rules, cutoff: c.cutoff, timeFormat: c.timeFormat, rota: rotaFor(c.modules, undefined) });
+    { date, now, rules: c.rules, cutoff: c.cutoff, timeFormat: c.timeFormat, rota: rotaFor(c.modules, rota ? { line: { code: rota.code, name: rota.name, hours: rota.hours, cross: rota.cross } } : undefined) });
   const errors = r.errors.map(e => ({ field: formFieldOf(e.field), message: e.message }));
   if (!errors.length && toMin(str(v.start)) == null && toMin(str(v.finish)) == null)
     errors.push({ field: 'start', message: 'Add a start and finish time.' });

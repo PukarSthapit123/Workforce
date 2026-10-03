@@ -5,7 +5,7 @@ import { useSaveDay, useSubmitDay } from '@/api/timesheets';
 import type { Refusal } from '@/contract/common';
 import type { DaySaved, TimesheetWeek, WeekDay } from '@/contract/timesheets';
 import { taskReset } from '@/domain/timesheet';
-import { breakIndex, breaksShown, checkDay, checkField, dayInputFrom, dayStats, serverField, valuesFromDay, type FormValues, type LocalCheck } from './capture';
+import { breakIndex, breaksShown, checkDay, checkField, dayInputFrom, dayStats, rotaShift, serverField, valuesFromDay, type FormValues, type LocalCheck } from './capture';
 import type { DayFieldsProps } from './DayForm';
 
 /* One day's entry: the form's values, its inline and on-attempt checks, and
@@ -34,7 +34,7 @@ export function useDayEntry({ week, day, personId, onSaved, onSubmitted }: {
   };
   /* validateEntry before anything is sent: errors block, warnings travel with the save */
   const attempt = (kind: 'save' | 'submit') => {
-    const r = checkDay(values, c, day.date, week.now);
+    const r = checkDay(values, c, day.date, week.now, rotaShift(day));
     setErrors(Object.fromEntries(r.errors.map(e => [e.field, e.message])));
     setChecked(r);
     if (r.errors.length) return;
@@ -42,7 +42,7 @@ export function useDayEntry({ week, day, personId, onSaved, onSubmitted }: {
     if (kind === 'save') save.mutate(vars, { onSuccess: onSaved });
     else submit.mutate(vars, { onSuccess: onSubmitted });
   };
-  /* Copy in another day's values (copy yesterday), widening the break rows to fit. */
+  /* Copy in another day's values (copy yesterday, or yesterday's rota line), widening the break rows to fit. */
   const fill = (from: FormValues) => { setValues(x => ({ ...x, ...from })); setBreaks(b => Math.max(b, breaksShown(from))); };
   const fields: Omit<DayFieldsProps, 'which' | 'single'> = {
     capture: c, values, errorFor, breaks, onBlur, onAddBreak: () => setBreaks(b => b + 1),
