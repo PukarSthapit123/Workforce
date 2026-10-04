@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { api, ApiError } from '@/api/client';
-import { getTenant } from '@/contract/tenant';
+import { ApiError } from '@/api/client';
+import { useTenant } from '@/api/tenant';
 import { buildNav, type NavGroup } from '@/domain/nav';
 import type { Session } from '@/contract/session';
 import { tid } from '@/testids';
@@ -19,8 +18,9 @@ export type ShellData =
   | { kind: 'error'; onRetry(): void; onSignOut(): void }
   | { kind: 'ready'; session: Session; nav: NavGroup[]; onSignOut(): void; onViewAs(personCode: string): void; onEndViewAs(): void };
 
-/* The tenant's settings, from the one cached query the shell itself reads. */
-export const useTenant = () => useQuery({ queryKey: ['tenant'], queryFn: () => api(getTenant) });
+/* The tenant's settings, from the one cached query the shell itself reads
+   (src/api/tenant.ts, beside the writes that invalidate it). */
+export { useTenant };
 
 export function useShellData(): ShellData {
   const { session, signOut, viewAs, endViewAs } = useSession();
