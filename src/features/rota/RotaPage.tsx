@@ -60,8 +60,13 @@ export function RotaPage() {
 }
 
 type Box = { k: 'add' | 'shift'; person: string; day: number } | { k: 'gap'; day: number } | { k: 'clear' | 'repeat' | 'horizon' | 'adhoc' } | null;
-const LEAVE_NOTE = 'Annual leave. Change it on Team leave, and the rota follows.';
-const SICK_NOTE = 'Sickness. Change it on the Sickness tab.';
+/* A V or S cell is written from the leave record (module 4 D7), never by hand: the note says so, and names
+   the page that changes it for someone who may use it. */
+const FROM_LEAVE = 'Leave and sickness come from the leave record. Change them there.';
+const absenceNote = (code: string, caps: ReadonlySet<string>) => {
+  const leave = code === 'V', page = leave ? (caps.has('team_leave') ? 'Team leave' : '') : (caps.has('team_sick') ? 'Sickness' : '');
+  return { message: leave ? 'Annual leave' : 'Sickness', next: page ? `${FROM_LEAVE} Go to ${page}.` : FROM_LEAVE };
+};
 
 function Board({ view, loading, thisWeek, initialPlan, onLocation, onWeek }: {
   view: RotaWeekView; loading: boolean; thisWeek: string; initialPlan: PlanItem[] | null; onLocation: (code: string) => void; onWeek: (weekStart: string) => void;
@@ -116,7 +121,7 @@ function Board({ view, loading, thisWeek, initialPlan, onLocation, onWeek }: {
       return;
     }
     const code = r.line[d] ?? '';
-    if (isAbsence(code)) { toastInfo(code === 'V' ? LEAVE_NOTE : SICK_NOTE); return; }
+    if (isAbsence(code)) { const n = absenceNote(code, caps); toastInfo(n.message, n.next); return; }
     setBox({ k: shiftBy(shifts, code) ? 'shift' : 'add', person: r.personCode, day: d });
   };
 

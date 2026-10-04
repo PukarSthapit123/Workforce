@@ -338,4 +338,12 @@ describe('Team rota', () => {
     await expectToast('Early → Rosa Mendes · Fri 14 · 07:00–15:00');
     expect(week()).toMatchObject({ version: 5, state: 'amendment' });
   });
+  test('a leave cell says it comes from the leave record and points a manager to Team leave (module 4 D7)', async () => {
+    await open();
+    const before = snapshot('rotaWeeks', 'audit');
+    await userEvent.click(screen.getByTestId(tid.trota.chip('CP-1088', 0)));
+    await expectToast('Annual leaveLeave and sickness come from the leave record. Change them there. Go to Team leave.');
+    expect(screen.queryByTestId(tid.modal.root)).toBeNull();
+    expect(snapshot('rotaWeeks', 'audit')).toEqual(before);
+  });
 });
