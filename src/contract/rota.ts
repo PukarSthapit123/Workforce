@@ -161,8 +161,12 @@ export const PatternRecord = RecordMeta.extend({
 });
 export type PatternRecord = z.infer<typeof PatternRecord>;
 export const PatternCandidate = z.object({ code: z.string(), name: z.string(), location: z.string(), jobProfile: z.string(), category: z.string() });
-/* today and canCover (the locations a pattern may cover: the manager's own, or every active one for an administrator) travel with the list, so Rota setup needs no team_rota read. */
-export const PatternList = z.object({ items: z.array(PatternRecord), people: z.array(PatternCandidate), canCover: z.array(LocationOption), today: IsoDate });
+/* today and canCover (the locations a pattern may cover: the manager's own, or every active one for an administrator) travel with the list, so Rota setup needs no team_rota read.
+   elsewhere: the employee IDs on the listed patterns who work at a location this person does not manage (another location's people on a shared pattern).
+   They stay as they are, so the editor offers no Remove for them. Always empty for an administrator. */
+export const PatternList = z.object({
+  items: z.array(PatternRecord), people: z.array(PatternCandidate), canCover: z.array(LocationOption), today: IsoDate, elsewhere: z.array(z.string()),
+});
 export type PatternList = z.infer<typeof PatternList>;
 const PatternFields = {
   name: z.string().max(80), cycle: z.number().int(), days: z.array(CellCode).max(28), locations: z.array(z.string()).max(20),

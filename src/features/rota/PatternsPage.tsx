@@ -39,7 +39,7 @@ export function PatternsPage() {
         {refused && refused.code !== 'network' ? `${refused.message} ${refused.next}` : 'Working patterns could not be loaded. Reload the page to try again.'}</p>}
       {!ready && !(home.isError || list.isError || cat.isError) && <p data-testid={tid.tpat.loading} className="text-text-secondary">Loading working patterns&hellip;</p>}
       {ready && <Patterns list={list.data} location={location} ctx={{
-        shifts: cat.data.items, people: list.data.people, today: list.data.today, canCover: list.data.canCover,
+        shifts: cat.data.items, people: list.data.people, today: list.data.today, canCover: list.data.canCover, elsewhere: list.data.elsewhere,
         locations: (locs.data ?? list.data.canCover).filter(l => !('active' in l) || l.active !== false).map(l => ({ code: l.code, name: l.name })),
         jobs: (jobs.data ?? []).map(j => ({ code: j.code, name: j.name })), costCentres: (ccs.data ?? []).map(c => ({ code: c.code, name: c.name })),
       }} locName={locName} box={box} setBox={setBox} />}

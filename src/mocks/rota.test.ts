@@ -145,6 +145,9 @@ describe('scope (Review Focus 1)', () => {
     const drop = await call('PATCH', '/api/v1/rota/patterns/WP-01', { people: wp1?.people.filter(x => x.personCode !== 'CP-1288') }, 1);
     expect(drop.status).toBe(403);
     expect(refusal(drop)).toMatchObject({ code: 'scope', message: expect.stringContaining('does not work at Willow House') });
+    /* the list names them, so the editor offers no Remove the server would refuse */
+    expect(PatternList.parse((await call('GET', '/api/v1/rota/patterns')).body).elsewhere).toEqual(['CP-1288']);
+    expect(PatternList.parse((await (await as('admin'))('GET', '/api/v1/rota/patterns')).body).elsewhere).toEqual([]);
     /* an administrator is not limited to one location */
     const admin = await as('admin');
     expect((await admin('PATCH', '/api/v1/rota/patterns/WP-02', { people: [...wp2, { personCode: 'EMP-2044', offset: 1 }] }, 1)).status).toBe(200);

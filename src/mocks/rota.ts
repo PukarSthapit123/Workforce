@@ -638,7 +638,10 @@ export const rotaHandlers = [
     const ppl = Object.values(people()).filter(p => isActive(p) && (sc.all || p.location === sc.location))
       .map(p => ({ code: p.code, name: p.name, location: p.location, jobProfile: p.jobProfile, category: p.category }));
     const canCover = locations().filter(l => (sc.all ? l.active !== false : l.code === sc.location)).map(l => ({ code: l.code, name: l.name }));
-    return { items, people: ppl, canCover, today: today() };
+    /* the people requireOwnPeople keeps a manager from taking off */
+    const elsewhere = sc.all ? [] : [...new Set(items.flatMap(p => p.people.map(x => x.personCode)))]
+      .filter(code => { const q = personByCode(code); return !!q && q.location !== sc.location; });
+    return { items, people: ppl, canCover, today: today(), elsewhere };
   }),
 
   serve(createPattern, ({ session, body }) => {

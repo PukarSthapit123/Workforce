@@ -117,6 +117,8 @@ describe('Rota setup', () => {
     await waitFor(() => expect(openBtn).toBeEnabled());
     await userEvent.click(openBtn);
     await screen.findByTestId(tid.tpat.editor);
+    /* an administrator is held to no location, so anyone on the pattern can be taken off */
+    expect(screen.getByTestId(tid.tpat.removePerson('CP-1288'))).toBeInTheDocument();
     type(tid.tpat.name, 'Beacon nights');
     await userEvent.click(screen.getByTestId(tid.tpat.save));
     await expectToast(/^Beacon nights saved/);
@@ -129,6 +131,16 @@ describe('Rota setup', () => {
     await userEvent.click(screen.getByTestId(tid.tpat.newCreate));
     await expectToast('Twilights created as a draft');
     expect(Object.values(store.coll<{ name: string; locations: string[] }>('patterns')).find(p => p.name === 'Twilights')?.locations).toEqual(['BC', 'FS']);
+  });
+
+  test('an administrator\'s new pattern offers every active location, with none chosen for them', async () => {
+    await open();
+    await waitFor(() => expect(screen.getByTestId(tid.mrota.newPattern)).toBeEnabled());
+    await userEvent.click(screen.getByTestId(tid.mrota.newPattern));
+    const locs = within(await screen.findByTestId(tid.modal.root)).getByTestId<HTMLSelectElement>(tid.tpat.newLocs);
+    expect(within(locs).getAllByRole('option').map(o => o.getAttribute('value'))).toEqual(expect.arrayContaining(['WH', 'BC', 'FS', 'LGW']));
+    expect(within(locs).getAllByRole('option').length).toBeGreaterThan(4);
+    expect(locs.selectedOptions).toHaveLength(0);
   });
 
   test('the pattern upload is simulated: Import writes nothing, and the failed rows download as a real CSV', async () => {

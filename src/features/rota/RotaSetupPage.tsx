@@ -95,7 +95,7 @@ function PatternsCard({ horizon }: { horizon: number }) {
   const locName = nameIn(locs.data ?? list.data?.canCover), jobName = nameIn(jobs.data);
   const ready = list.data && cat.data;
   const ctx: PatternCtx | null = ready ? {
-    shifts: cat.data.items, people: list.data.people, today: list.data.today, canCover: list.data.canCover,
+    shifts: cat.data.items, people: list.data.people, today: list.data.today, canCover: list.data.canCover, elsewhere: list.data.elsewhere,
     locations: (locs.data ?? list.data.canCover).filter(l => !('active' in l) || l.active !== false).map(l => ({ code: l.code, name: l.name })),
     jobs: (jobs.data ?? []).map(j => ({ code: j.code, name: j.name })), costCentres: (ccs.data ?? []).map(c => ({ code: c.code, name: c.name })),
   } : null;

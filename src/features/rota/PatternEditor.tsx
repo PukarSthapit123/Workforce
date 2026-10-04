@@ -29,6 +29,8 @@ export interface PatternCtx {
   shifts: readonly ShiftTypeRecord[]; people: readonly Candidate[]; locations: readonly Named[]; jobs: readonly Named[]; costCentres: readonly Named[];
   /* the locations a new pattern may cover: the manager's own, or every one an admin manages */
   canCover: readonly Named[]; today: string;
+  /* another location's people on a shared pattern: a manager can neither add nor take them off */
+  elsewhere: readonly string[];
 }
 const nameIn = (list: readonly Named[]) => (code: string) => list.find(x => x.code === code)?.name ?? code;
 const pluralOf = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
@@ -215,8 +217,8 @@ export function PatternEditor({ pattern, ctx, onClose, onAddPeople, onDelete, on
                     aria-invalid={fe(`people.${i}.offset`) ? true : undefined}
                     onChange={e => set({ people: d.people.map((y, k) => (k === i ? { ...y, offset: Math.max(1, Math.min(d.cycle, Math.trunc(Number(e.target.value)) || 1)) } : y)) })} /></TableCell>
                   <TableCell className="text-xs text-text-muted" data-testid={tid.tpat.first(x.personCode)}>{first ? `${shiftName(sh, first) || first} · ${shiftTime(sh, first)}` : 'Rest day'}</TableCell>
-                  <TableCell className="text-right"><Button testId={tid.tpat.removePerson(x.personCode)} kind="ghost" small
-                    onClick={() => set({ people: d.people.filter((_, k) => k !== i) })}>Remove</Button></TableCell>
+                  <TableCell className="text-right">{!ctx.elsewhere.includes(x.personCode) && <Button testId={tid.tpat.removePerson(x.personCode)} kind="ghost" small
+                    onClick={() => set({ people: d.people.filter((_, k) => k !== i) })}>Remove</Button>}</TableCell>
                 </Row>);
             }) : <TableRow><TableCell colSpan={6}><div data-testid={tid.tpat.noPeople} className="px-lg py-xl text-center text-sm text-text-muted">Nobody is on this pattern yet</div></TableCell></TableRow>}
           </TableBody>
