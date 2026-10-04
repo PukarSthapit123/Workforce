@@ -161,6 +161,7 @@ function shape(tenantKey, data, PERMS_META, PERM_GROUPS, PROFILE_CHANGES, ref) {
     people: byId(people), accounts: byId(accounts), userTypes: byId(userTypes), capabilities: byId(capabilities),
     capabilityGroups: byId(capabilityGroups), tenant: { tenant }, locations, departments, costCentres, jobProfiles, projects,
     employeeTypes, profileChanges, personHistory: {}, notices: byId(notices), audit: {}, ...notificationSeed(data, accounts), ...timesheets(data, people),
+    delegations: delegationSeed(people),
     ...rotaData, ...leave(data, people, ref, rotaData.rotaWeeks) } };
 }
 
@@ -185,6 +186,19 @@ function notificationSeed(data, accounts) {
   const notifEvidence = byId(literalEvidence.map((e, i) => meta({ id: `nev_${i + 1}`, employee: e.emp, employeeId: e.eid, event: `${e.milestone} milestone`,
     at: londonSummer(e.ts), recipient: e.to, channel: 'In-app + email', ref: e.ref })));
   return { notifications, notifEvidence };
+}
+
+/* ---- 1c group 5: delegations (brief D8) ----
+   DELEGATIONS is never persisted by the prototype, so it is read from its
+   source. Its people are named; here they are employee codes, and a row
+   whose people are not on this tenant's roster is not carried (the qnipay
+   tenant has neither Rachel Hussain nor Dee Fitzgerald). Its modules are a
+   list. The approval chains are not seeded: until a chain is first saved it
+   is the prototype's APPROVAL_CHAIN, from src/domain/approvals.ts. */
+function delegationSeed(people) {
+  const code = nm => (people.find(p => p.name === nm) || {}).code;
+  return byId(literalDelegations.filter(d => code(d.who) && code(d.to)).map((d, i) => meta({ id: `dlg_${i + 1}`,
+    who: code(d.who), to: code(d.to), from: iso(d.from), until: iso(d.until), modules: String(d.mods).split(',').map(m => m.trim()).filter(Boolean) })));
 }
 
 /* ---- 1c: tenant settings (brief D5-D7) ----
@@ -576,6 +590,7 @@ const literalFinYear = literal('FIN_YEAR');
 const literalBankHolidays = literal('BANK_HOLIDAYS');
 const literalRepeats = literal('REPEATS');
 const literalEvidence = literal('NOTIF_EVIDENCE');
+const literalDelegations = literal('DELEGATIONS');
 const leaveRules = await tsImport('../src/domain/leave.ts', import.meta.url);
 /* The capture field catalogue, less any money: the £ value on each allowance and the expenses-to-claim field. */
 const timesheetFields = literal('FIELDS').filter(f => !MONEY_FIELDS.has(f.c))

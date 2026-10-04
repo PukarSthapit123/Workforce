@@ -54,3 +54,9 @@ test('social runs Rota and holds its horizon on Rota setup; qnipay has none and 
   expect((social as unknown as SeedFile).data.rotaConfig?.rotaConfig).toMatchObject({ horizon: 12 });
   expect((qnipay as unknown as SeedFile).data.rotaConfig).toBeUndefined();
 });
+test('social carries the prototype\'s delegation by employee code (D8); qnipay has none; no chain is seeded', () => {
+  expect((social as unknown as SeedFile).data.delegations).toEqual({ dlg_1: { id: 'dlg_1', version: 1, updatedAt: '2026-08-13T14:30:00.000Z',
+    who: 'CP-1001', to: 'CP-1002', from: '2026-08-24', until: '2026-08-31', modules: ['Timesheet', 'Leave'] } });
+  expect((qnipay as unknown as SeedFile).data.delegations).toEqual({});
+  for (const s of [social, qnipay]) expect((s as unknown as SeedFile).data.approvalChains).toBeUndefined();
+});

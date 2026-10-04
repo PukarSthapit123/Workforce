@@ -4170,6 +4170,21 @@
     "billable": false
    }
   },
+  "delegations": {
+   "dlg_1": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "dlg_1",
+    "who": "CP-1001",
+    "to": "CP-1002",
+    "from": "2026-08-24",
+    "until": "2026-08-31",
+    "modules": [
+     "Timesheet",
+     "Leave"
+    ]
+   }
+  },
   "shiftTypes": {
    "sht_E": {
     "version": 1,

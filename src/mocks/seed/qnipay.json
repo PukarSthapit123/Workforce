@@ -4373,6 +4373,7 @@
     "billable": false
    }
   },
+  "delegations": {},
   "leaveConfig": {
    "leaveConfig": {
     "version": 1,

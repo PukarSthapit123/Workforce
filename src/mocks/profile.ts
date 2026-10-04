@@ -6,6 +6,8 @@ import { writeAudit } from './audit';
 import { invalid } from './people';
 import { effectiveCode, inScope, people, personByCode, personView, recordAt, writeHistory, type Signed, type StoredPerson } from './world';
 import { getProfile, proposeChanges, listProfileChanges, decideProfileChange, type ProfileChange } from '@/contract/profile';
+import { chainRecord, decidersToday } from './approvals';
+import { notifyEvent } from './notify';
 import {
   SELF_FIELDS, STAGE_CAPABILITY, afterDecision, maskBank, routeFor, selfField, type SelfFieldKey, type Stage,
 } from '@/domain/selfService';
@@ -20,6 +22,20 @@ function mine(s: Signed) {
   return personByCode(effectiveCode(s)) ?? refuse(404, { code: 'not-found', message: 'Your account has no person record.', next: 'Ask an administrator to link your account.' });
 }
 const valueOf = (p: StoredPerson, field: SelfFieldKey): string => p[field];
+/* 1c D8: a change routes along the Profile approval chain as it stands when
+   it is proposed; a later change to the chain leaves it on its route. */
+const STAGE_ROLE: Record<Stage, string> = { manager: 'Line manager', payroll: 'Payroll' };
+/* Who decides a stage for one person today: the chain's role for it, then
+   whoever holds it, then their delegate while a Profile delegation is in force. */
+function stageDeciders(stage: Stage, personCode: string): string[] {
+  const layer = chainRecord('Profile').steps.find(s => s.role === STAGE_ROLE[stage]);
+  return decidersToday('Profile', STAGE_ROLE[stage], layer?.scope ?? 'All departments', personCode);
+}
+/* pf_req, as the prototype's pf-send raises it: the person, the fields, awaiting approval. */
+function raiseRequested(stage: Stage, person: StoredPerson, labels: readonly string[]) {
+  notifyEvent('pf_req', stageDeciders(stage, person.code), { title: 'Profile change requested',
+    body: `${person.name} (${person.code}). ${labels.join(', ')}. Awaiting approval.` });
+}
 /* A counter one past the highest stored (the seed's own ids are pfc_9001 and
    pfc_9002), so ids stay unique across a reload and across tabs. */
 function nextChangeId(): string {
@@ -51,13 +67,16 @@ export const profileHandlers = [
           next: 'Wait for a decision on it, or ask your manager to decline it first.' });
     }
     if (!wanted.size) return refuse(422, { code: 'unchanged', field: 'changes', message: 'Nothing has changed.', next: 'Change a value before sending it for approval.' });
+    const chain = chainRecord('Profile').steps;
     const records = [...wanted].map(([field, to]) => {
-      const id = nextChangeId();
+      const id = nextChangeId(), route = routeFor(field, chain);
       const rec: StoredChange = { id, version: 1, updatedAt: store.now(), personCode: me.code, field, from: valueOf(me, field), to, note: note.trim(),
-        raisedAt: store.now(), status: 'pending', stage: 'manager', route: routeFor(field), decisions: [] };
+        raisedAt: store.now(), status: 'pending', stage: route[0] ?? 'manager', route, decisions: [] };
       changes()[id] = rec;
       return rec;
     });
+    for (const stage of new Set(records.map(r => r.stage)))
+      if (stage !== 'done') raiseRequested(stage, me, records.filter(r => r.stage === stage).map(r => selfField(r.field).label));
     const auditId = writeAudit({ who: actor(session), act: 'Profile change requested', entity: 'person', entityId: me.code, before: null,
       after: { fields: records.map(r => selfField(r.field).label), ...(note.trim() ? { note: note.trim() } : {}) } });
     return { records: records.map(view), auditId };
@@ -101,6 +120,11 @@ export const profileHandlers = [
       people()[person.id] = updated;
       writeHistory(person.code, who, 'profile-change', [{ field: c.field, from: masked(c.field, c.from), to: masked(c.field, c.to) }]);
     }
+    /* pf_done to the person once it is decided, as the prototype's data-pfok and
+       data-pfno raise it; pf_req to the next stage's approvers when it moves on */
+    if (out.status === 'pending' && out.stage !== 'done') raiseRequested(out.stage, person, [label]);
+    else notifyEvent('pf_done', [person.code], { title: `Profile change ${out.status}`,
+      body: `${label}. ${out.status === 'approved' ? masked(c.field, c.to) : `Left as ${masked(c.field, c.from) || 'it was'}`}. Decided by ${who.name}.` });
     const act = out.status === 'approved' ? 'Profile change approved' : out.status === 'declined' ? 'Profile change declined' : 'Profile change passed to payroll';
     const auditId = writeAudit({ who, act, entity: 'profileChange', entityId: c.id,
       before: { status: c.status, stage: c.stage, field: label }, after: { status: out.status, stage: out.stage }, ...(why ? { reason: why } : {}) });

@@ -15,3 +15,4 @@ export * from './saved-data';
 /* feature contracts register themselves on import; each later task adds one line */
 export * from './templates';
 export * from './notifications';
+export * from './approvals';
