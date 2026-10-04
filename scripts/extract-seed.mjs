@@ -136,7 +136,7 @@ function shape(tenantKey, data, PERMS_META, PERM_GROUPS, PROFILE_CHANGES, ref) {
   const capabilityGroups = PERM_GROUPS.map((g, i) => meta({ id: g.k, label: g.label, description: g.desc, order: i }));
   const rotaData = (data.CFG || {}).modules?.R ? rota(data, people) : {};
   const tenant = meta({ id: 'tenant', name: (data.TENANT || {}).name || tenantKey, template: (data.CFG || {}).template || tenantKey,
-    modules: (data.CFG || {}).modules || {}, flags: (data.CFG || {}).flags || {} });
+    modules: (data.CFG || {}).modules || {}, flags: (data.CFG || {}).flags || {}, ...tenantSettings(data) });
   const notices = (data.NOTICES || []).map(n => meta({ ...n }, { id: n.id }));
   const rows = (prefix, list, fn) => byId((list || []).map(x => meta(fn(x), { id: `${prefix}_${x.code}` })));
   const locations = rows('loc', data.LOCATIONS, x => ({ code: x.code, name: x.name, area: noDash(x.area), department: x.dept || '',
@@ -162,6 +162,32 @@ function shape(tenantKey, data, PERMS_META, PERM_GROUPS, PROFILE_CHANGES, ref) {
     capabilityGroups: byId(capabilityGroups), tenant: { tenant }, locations, departments, costCentres, jobProfiles, projects,
     employeeTypes, profileChanges, personHistory: {}, notices: byId(notices), audit: {}, ...timesheets(data, people),
     ...rotaData, ...leave(data, people, ref, rotaData.rotaWeeks) } };
+}
+
+/* ---- 1c: tenant settings (brief D5-D7) ----
+   Company fields without the currency (no money), the financial year, the
+   fixed Monday week start and the bank holidays (all read-only in the
+   prototype and never persisted, so read from its source; BANK_HOLIDAYS is
+   keyed y-m-d with a zero-based month), the extras that hang off a feature
+   with no other home (the breaks stepper, REPEATS.breaks.max, and the vehicle
+   maximum, CFG.maxVehicles), and the restore memory (MOD_RESTORE), empty.
+   The weekly grid's capture and layout already live on timesheetConfig and
+   the rota horizon on rotaConfig, so they are not repeated here (D6). The
+   pay-period cut-off lives on timesheetConfig too. */
+function tenantSettings(data) {
+  const T = data.TENANT || {};
+  return {
+    company: { registration: T.reg || '', address: T.addr || '', country: T.country || 'United Kingdom', nmwCheck: T.nmw !== false,
+      bankHolidayRegion: T.bh || 'England & Wales', payFrequency: T.freq || 'Weekly', weekEnding: T.weekEnd || 'Sunday', firstPayDate: iso(T.firstPay) },
+    financialYear: { start: iso(literalFinYear.start), end: iso(literalFinYear.end), label: literalFinYear.label },
+    weekStart: 'Monday',
+    bankHolidays: Object.entries(literalBankHolidays).map(([k, name]) => {
+      const [y, m, d] = k.split('-').map(Number);
+      return { date: `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`, name };
+    }).sort((a, b) => a.date.localeCompare(b.date)),
+    extras: { breaksMax: literalRepeats.breaks.max, vehiclesMax: (data.CFG || {}).maxVehicles ?? 4 },
+    restore: {},
+  };
 }
 
 /* ---- module 4: leave (brief D1-D3, D7, D9, D10, D13, D14) ----
@@ -522,6 +548,10 @@ const literalLeavePolicies = literal('LEAVE_POLICIES');
 const literalLeaveAdjustments = literal('LEAVE_ADJUSTMENTS');
 const literalLeavers = literal('LEAVERS');
 const literalAbsence = literal('ABSENCE');
+/* 1c: calendar constants the prototype never persists */
+const literalFinYear = literal('FIN_YEAR');
+const literalBankHolidays = literal('BANK_HOLIDAYS');
+const literalRepeats = literal('REPEATS');
 const leaveRules = await tsImport('../src/domain/leave.ts', import.meta.url);
 /* The capture field catalogue, less any money: the £ value on each allowance and the expenses-to-claim field. */
 const timesheetFields = literal('FIELDS').filter(f => !MONEY_FIELDS.has(f.c))

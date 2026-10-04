@@ -1179,7 +1179,42 @@
      "LV_SLA": true,
      "LV_ROTA": true,
      "LV_TOIL": true
-    }
+    },
+    "company": {
+     "registration": "09876543",
+     "address": "Brightpath House, 22 Camden High Street, London NW1 0JH",
+     "country": "United Kingdom",
+     "nmwCheck": true,
+     "bankHolidayRegion": "England & Wales",
+     "payFrequency": "Fortnightly",
+     "weekEnding": "Sunday",
+     "firstPayDate": "2026-08-21"
+    },
+    "financialYear": {
+     "start": "2026-04-01",
+     "end": "2027-03-31",
+     "label": "2026/27"
+    },
+    "weekStart": "Monday",
+    "bankHolidays": [
+     {
+      "date": "2026-08-31",
+      "name": "Summer bank holiday"
+     },
+     {
+      "date": "2026-12-25",
+      "name": "Christmas Day"
+     },
+     {
+      "date": "2026-12-28",
+      "name": "Boxing Day"
+     }
+    ],
+    "extras": {
+     "breaksMax": 5,
+     "vehiclesMax": 4
+    },
+    "restore": {}
    }
   },
   "locations": {
