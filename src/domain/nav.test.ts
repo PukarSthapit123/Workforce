@@ -96,7 +96,8 @@ test('the module setup and integration pages the prototype\'s SETUP_NEED lists a
   expect(byView('mts').subProject).toBeUndefined();
   expect(byView('mrota')).toMatchObject({ built: true, path: '/setup/mrota', section: 'Modules' });
   expect(byView('mrota').subProject).toBeUndefined();
-  expect(byView('mleave')).toMatchObject({ built: false, subProject: 'Leave', section: 'Modules' });
+  expect(byView('mleave')).toMatchObject({ built: true, path: '/setup/mleave', section: 'Modules' });
+  expect(byView('mleave').subProject).toBeUndefined();
   expect(byView('mpay')).toMatchObject({ built: false, subProject: 'Timesheet', section: 'Integrations' });
   expect(byView('ipay')).toMatchObject({ built: false, subProject: 'Payroll and Business Central', section: 'Integrations' });
   expect(byView('ibc')).toMatchObject({ built: false, subProject: 'Payroll and Business Central', section: 'Integrations' });

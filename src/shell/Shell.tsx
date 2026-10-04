@@ -31,12 +31,13 @@ import { RotaSetupPage } from '@/features/rota/RotaSetupPage';
 import { LeavePage } from '@/features/leave/LeavePage';
 import { TeamLeavePage } from '@/features/leave/TeamLeavePage';
 import { SicknessPage } from '@/features/leave/SicknessPage';
+import { LeaveSetupPage } from '@/features/leave/LeaveSetupPage';
 
 const BUILT: Record<string, ComponentType> = { asetup: SetupIndex, aperm: PermissionsPage, iaudit: AuditPage,
   apeople: AdminPeoplePage, tpeople: TeamPeoplePage, profile: ProfilePage,
   aloc: DimensionsPage, acon: ContractsPage, atypes: EmployeeTypesPage, ts: TimesheetPage, tteam: TeamTimesheetsPage,
   mts: TimesheetSetupPage, trota: RotaPage, tshifts: ShiftsPage, tpat: PatternsPage,
-  tcover: CoverPage, shifts: MyShiftsPage, mrota: RotaSetupPage, leave: LeavePage, tleave: TeamLeavePage, tsick: SicknessPage };
+  tcover: CoverPage, shifts: MyShiftsPage, mrota: RotaSetupPage, leave: LeavePage, tleave: TeamLeavePage, tsick: SicknessPage, mleave: LeaveSetupPage };
 const THEME_KEY = 'qnipay.theme';
 
 /* Avoids a non-null assertion on role[0]: charAt(0) is always defined, even
