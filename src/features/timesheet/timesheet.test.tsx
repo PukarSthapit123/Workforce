@@ -40,6 +40,14 @@ const openWeek = async () => {
   renderPage(<TimesheetPage />);
   return screen.findByTestId(tid.week.grid);
 };
+/* module 4 D8: the absence comes from the leave record itself, with no rota on qnipay */
+const leaveToday = () => {
+  const lr = store.coll<{ id: string; from: string; to: string }>('leaveRequests');
+  const approved = lr.lr_5;
+  if (!approved) throw new Error('no lr_5');
+  lr.lr_today = { ...approved, id: 'lr_today', from: '2026-08-13', to: '2026-08-13' };
+  store.save();
+};
 
 describe('My timesheet, day view', () => {
   beforeEach(async () => { await signInEmail(BIGYAN); });
@@ -148,14 +156,6 @@ describe('My timesheet, day view', () => {
     expect(await screen.findByTestId(tid.toast.info)).toHaveTextContent('Reason submitted · Annual leave · routed to Manish Nepal');
     expect(dayOf('EMP004', '2026-08-13')).toMatchObject({ state: 'pend', entries: [], nonWorkingReason: 'Annual leave · Covering a training day' });
   });
-  /* module 4 D8: the absence comes from the leave record itself, with no rota on qnipay */
-  const leaveToday = () => {
-    const lr = store.coll<{ id: string; from: string; to: string }>('leaveRequests');
-    const approved = lr.lr_5;
-    if (!approved) throw new Error('no lr_5');
-    lr.lr_today = { ...approved, id: 'lr_today', from: '2026-08-13', to: '2026-08-13' };
-    store.save();
-  };
   test('approved leave from the leave record shows the banner; time is refused until the day is marked called in and worked anyway', async () => {
     leaveToday();
     const before = audits().length;
@@ -305,6 +305,18 @@ describe('My timesheet, week view', () => {
     const warn = await screen.findByTestId(tid.ts.banner('week-refusal'));
     expect(warn).toHaveTextContent('Already submitted. Every day on this week is with Manish Nepal or decided.');
     expect(warn).toHaveTextContent('Open a day to see where it is.');
+  });
+  test('time on a day of approved leave is refused for the week, naming the day (module 4 D8)', async () => {
+    leaveToday();
+    await openWeek();
+    set(tid.week.cell(0, 3, 'start'), '09:00');
+    set(tid.week.cell(0, 3, 'finish'), '17:00');
+    const before = audits().length;
+    await userEvent.click(screen.getByTestId(tid.ts.submitWeek));
+    const warn = await screen.findByTestId(tid.ts.banner('week-refusal'));
+    expect(warn).toHaveTextContent(/^Thu 13 Aug: Annual leave is recorded for this day./);
+    expect(dayOf('EMP004', '2026-08-13')).toBeUndefined();
+    expect(audits()).toHaveLength(before);
   });
 });
 

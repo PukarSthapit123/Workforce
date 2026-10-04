@@ -269,6 +269,25 @@ describe('Proxy entry from a team member’s record', () => {
     await waitFor(() => expect(screen.queryByTestId(tid.proxy.banner)).toBeNull());
   });
 
+  test('on a day of approved leave the time goes only as called in and worked anyway (module 4 D8)', async () => {
+    const lr = store.coll<{ id: string; from: string; to: string; state: string }>('leaveRequests');
+    const pending = lr.lr_1;
+    if (!pending) throw new Error('no lr_1');
+    lr.lr_today = { ...pending, id: 'lr_today', from: '2026-08-13', to: '2026-08-13', state: 'approved' };
+    store.save();
+    await openProxy('EMP005');
+    fireEvent.change(await screen.findByTestId(tid.dayForm.field('start')), { target: { value: '07:00' } });
+    fireEvent.change(screen.getByTestId(tid.dayForm.field('finish')), { target: { value: '15:00' } });
+    await userEvent.click(screen.getByTestId(tid.proxy.submitDay));
+    expect(await screen.findByTestId(tid.dayForm.refusal)).toHaveTextContent('Annual leave is recorded for this day.');
+    expect(store.coll('timesheetDays')['tsd_EMP005_2026-08-13']).toBeUndefined();
+    expectTestIdCoverage(document.body);
+    await userEvent.click(screen.getByTestId(tid.leaveLink.proxyAnyway));
+    await userEvent.click(screen.getByTestId(tid.proxy.submitDay));
+    expect(await screen.findByTestId(tid.toast.info)).toHaveTextContent('Submitted for Bijay Shrestha on their behalf');
+    expect(dayOf('tsd_EMP005_2026-08-13')).toMatchObject({ state: 'pend', captureSource: 'proxy' });
+  });
+
   test('the week grid is seeded from the team member’s timesheet, not the manager’s, and submits for them', async () => {
     await openProxy('EMP004');
     await userEvent.click(await screen.findByTestId(tid.proxy.view('week')));
