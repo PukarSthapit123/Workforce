@@ -137,7 +137,14 @@ function shape(tenantKey, data, PERMS_META, PERM_GROUPS, PROFILE_CHANGES, ref) {
   const rotaData = (data.CFG || {}).modules?.R ? rota(data, people) : {};
   const tenant = meta({ id: 'tenant', name: (data.TENANT || {}).name || tenantKey, template: (data.CFG || {}).template || tenantKey,
     modules: (data.CFG || {}).modules || {}, flags: (data.CFG || {}).flags || {}, ...tenantSettings(data) });
-  const notices = (data.NOTICES || []).map(n => meta({ ...n }, { id: n.id }));
+  /* 1c group 6 (D10): the prototype's ver is the notice's textVersion (its
+     words); version is the record's concurrency counter. Its 'DD/MM/YYYY HH:MM'
+     London stamps become instants, and an acknowledgement names a person by code. */
+  const notices = (data.NOTICES || []).map(n => meta({ id: n.id, textVersion: n.ver, title: n.title, body: n.body,
+    scope: { kind: n.scope.kind, code: n.scope.code || '', loc: n.scope.loc || '' }, pinned: !!n.pinned, urgent: !!n.urgent, mustAck: !!n.mustAck,
+    from: n.from, until: n.until || '', state: n.state, by: n.by, at: londonSummer(n.at), withdrawReason: n.withdrawReason || '',
+    acks: (n.acks || []).map(a => ({ personCode: a.eid, textVersion: a.ver, at: londonSummer(a.at) })),
+    history: (n.history || []).map(h => ({ textVersion: h.ver, title: h.title, body: h.body, by: h.by, at: londonSummer(h.at) })) }));
   const rows = (prefix, list, fn) => byId((list || []).map(x => meta(fn(x), { id: `${prefix}_${x.code}` })));
   const locations = rows('loc', data.LOCATIONS, x => ({ code: x.code, name: x.name, area: noDash(x.area), department: x.dept || '',
     costCentre: x.cc || '', level: x.level || '', minPerShift: x.min ?? 1, manager: x.manager || '', address: x.address || '', active: x.active !== false }));

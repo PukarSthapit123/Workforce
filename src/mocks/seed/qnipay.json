@@ -1470,7 +1470,7 @@
     "version": 1,
     "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "NTC-0001",
-    "ver": 2,
+    "textVersion": 2,
     "title": "Updated lone working policy",
     "body": "Lone working is allowed only where a check-in is booked every two hours. Night staff now check in by phone at 23:00, 01:00, 03:00 and 05:00.",
     "scope": {
@@ -1485,37 +1485,37 @@
     "until": "",
     "state": "live",
     "by": "Pukar Sthapit",
-    "at": "03/08/2026 09:00",
+    "at": "2026-08-03T08:00:00.000Z",
     "withdrawReason": "",
     "acks": [
      {
-      "eid": "EMP001",
-      "ver": 2,
-      "at": "10/08/2026 10:00"
+      "personCode": "EMP001",
+      "textVersion": 2,
+      "at": "2026-08-10T09:00:00.000Z"
      },
      {
-      "eid": "EMP002",
-      "ver": 2,
-      "at": "09/08/2026 10:01"
+      "personCode": "EMP002",
+      "textVersion": 2,
+      "at": "2026-08-09T09:01:00.000Z"
      },
      {
-      "eid": "EMP003",
-      "ver": 1,
-      "at": "08/08/2026 10:02"
+      "personCode": "EMP003",
+      "textVersion": 1,
+      "at": "2026-08-08T09:02:00.000Z"
      },
      {
-      "eid": "EMP004",
-      "ver": 1,
-      "at": "07/08/2026 10:03"
+      "personCode": "EMP004",
+      "textVersion": 1,
+      "at": "2026-08-07T09:03:00.000Z"
      }
     ],
     "history": [
      {
-      "ver": 1,
+      "textVersion": 1,
       "title": "Lone working policy",
       "body": "Lone working is allowed only where a check-in is booked every two hours.",
       "by": "Pukar Sthapit",
-      "at": "03/08/2026 09:00"
+      "at": "2026-08-03T08:00:00.000Z"
      }
     ]
    },
@@ -1523,7 +1523,7 @@
     "version": 1,
     "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "NTC-0002",
-    "ver": 1,
+    "textVersion": 1,
     "title": "Fire drill on Thursday at 10:00",
     "body": "Leave by the nearest exit and meet at the front car park. Residents who cannot use the stairs stay with their named carer.",
     "scope": {
@@ -1538,18 +1538,18 @@
     "until": "2026-08-20",
     "state": "live",
     "by": "Pukar Sthapit",
-    "at": "12/08/2026 16:10",
+    "at": "2026-08-12T15:10:00.000Z",
     "withdrawReason": "",
     "acks": [
      {
-      "eid": "EMP002",
-      "ver": 1,
-      "at": "13/08/2026 08:40"
+      "personCode": "EMP002",
+      "textVersion": 1,
+      "at": "2026-08-13T07:40:00.000Z"
      },
      {
-      "eid": "EMP003",
-      "ver": 1,
-      "at": "13/08/2026 08:40"
+      "personCode": "EMP003",
+      "textVersion": 1,
+      "at": "2026-08-13T07:40:00.000Z"
      }
     ],
     "history": []
@@ -1558,7 +1558,7 @@
     "version": 1,
     "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "NTC-0003",
-    "ver": 1,
+    "textVersion": 1,
     "title": "Summer social",
     "body": "Thank you to everyone who came. Photos are with the office.",
     "scope": {
@@ -1573,7 +1573,7 @@
     "until": "2026-08-10",
     "state": "live",
     "by": "Pukar Sthapit",
-    "at": "14/07/2026 12:00",
+    "at": "2026-07-14T11:00:00.000Z",
     "withdrawReason": "",
     "acks": [],
     "history": []
@@ -1582,7 +1582,7 @@
     "version": 1,
     "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "NTC-0004",
-    "ver": 1,
+    "textVersion": 1,
     "title": "Car park resurfacing",
     "body": "The car park closes for two days. Dates to follow.",
     "scope": {
@@ -1597,7 +1597,7 @@
     "until": "",
     "state": "draft",
     "by": "Pukar Sthapit",
-    "at": "13/08/2026 08:00",
+    "at": "2026-08-13T07:00:00.000Z",
     "withdrawReason": "",
     "acks": [],
     "history": []
