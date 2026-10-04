@@ -3,7 +3,8 @@ import { tid } from '@/testids';
 import { cn } from '@/lib/utils';
 import { AddLine, CheckboxField, CheckRow, Empty, Field, FieldGrid, FormExpander, FormGroupLabel, SelectBox, TextArea, TextInput, Tip } from '@/ui';
 import type { CaptureSetup } from '@/contract/timesheets';
-import { MAX_BREAKS, breakIndex, fieldOptions, formGroups, hm, isAllowance, varianceText, type DayStats as Stats, type FormField, type FormValues } from './capture';
+import { useTenant } from '@/api/tenant';
+import { MAX_BREAKS, MAX_VEHICLES, breakIndex, fieldOptions, formGroups, hm, isAllowance, varianceText, type DayStats as Stats, type FormField, type FormValues } from './capture';
 
 /* The day form: the prototype's buildForm and fieldControl
    (qnipay-workforce-v15.html:6097-6125, 6177-6205). One renderer for every
@@ -56,12 +57,17 @@ function Control({ f, p }: { f: FormField; p: DayFieldsProps }) {
     </div>);
 }
 
-/* Break rows are opt-in (applyOptIn): one pair shows, "Add break" reveals the next. */
+/* Break rows are opt-in (applyOptIn): one pair shows, "Add break" reveals the next.
+   How many breaks and vehicles an entry may hold is the tenant's, set beside
+   Break tracking and Vehicle & movement fields in Modules & features (D6). */
 function GroupBody({ fields, p }: { fields: FormField[]; p: DayFieldsProps }) {
-  const avail = Math.min(MAX_BREAKS, new Set(fields.map(f => breakIndex(f.def.c)).filter(i => i >= 0)).size);
+  const extras = useTenant().data?.extras;
+  const maxBreaks = extras?.breaksMax ?? MAX_BREAKS, maxVehicles = extras?.vehiclesMax ?? MAX_VEHICLES;
+  const shown = fields.filter(f => f.def.repeat !== 'vehicle' || (f.def.seq ?? 1) <= maxVehicles);
+  const avail = Math.min(maxBreaks, MAX_BREAKS, new Set(shown.map(f => breakIndex(f.def.c)).filter(i => i >= 0)).size);
   return (
     <FieldGrid single={p.single}>
-      {fields.filter(f => breakIndex(f.def.c) < p.breaks).map(f => <Control key={f.def.c} f={f} p={p} />)}
+      {shown.filter(f => breakIndex(f.def.c) < Math.min(p.breaks, maxBreaks)).map(f => <Control key={f.def.c} f={f} p={p} />)}
       {avail > 0 && p.breaks < avail && <AddLine testId={tid.dayForm.addBreak} label="Add break" onClick={p.onAddBreak}
         note={`${p.breaks} of ${avail} breaks shown`} />}
     </FieldGrid>);

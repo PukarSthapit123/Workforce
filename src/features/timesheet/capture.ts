@@ -66,6 +66,8 @@ export const NON_WORKING_REASONS = ['Annual leave', 'Time off in lieu', 'Sicknes
 /* --------------------------------------------------------------- fields */
 export const BREAK_PAIRS: readonly (readonly [string, string])[] = ['', '2', '3', '4', '5'].map(n => [`break_s${n}`, `break_e${n}`] as const);
 export const MAX_BREAKS = BREAK_PAIRS.length;
+/* The vehicle blocks the field catalogue holds (vehicle to vehicle4). The tenant may allow fewer (D6). */
+export const MAX_VEHICLES = 4;
 const isBreak = (code: string) => /^break_[se]\d?$/.test(code);
 /* 0 for break_s or break_e, 1 for break_s2, and so on; -1 for anything else */
 export const breakIndex = (code: string) => (isBreak(code) ? Math.max(0, Number(code.replace(/^break_[se]/, '') || '1') - 1) : -1);

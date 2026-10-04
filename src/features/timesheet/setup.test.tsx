@@ -131,19 +131,16 @@ test('the page guide states the rules that are always refused, overlapping break
   expect(guide).toHaveTextContent(/overlapping breaks/i);
 });
 
-test('the weekly view layout offers the three layouts by name, and a new one applies on Save with one audit row', async () => {
+/* D6: the weekly grid's capture and layout are set on its row in Modules &
+   features (src/features/modules/modules.test.tsx changes them there); here
+   they are a read-only pointer to that row */
+test('the weekly grid shows what it captures and its layout, read-only, with a link to its row in Modules & features', async () => {
   await open();
-  const select = screen.getByTestId(tid.mts.weekLayout);
-  expect([...select.querySelectorAll('option')].map(o => o.textContent)).toEqual([
-    'Classic · allocation in the first column', 'Grid · allocation as a section header', 'List · one row per day']);
-  expect(select).toHaveValue('classic');
-  choose(tid.mts.weekLayout, 'days');
-  expect(config().weekLayout).toBe('classic');
-  await userEvent.click(screen.getByTestId(tid.mts.save));
-  await screen.findByText('Timesheet setup saved. It applies to the next save or submission.');
-  expect(config().weekLayout).toBe('days');
-  expect(setupAudits()).toHaveLength(1);
-  await waitFor(() => expect(screen.getByTestId(tid.mts.weekLayout)).toHaveValue('days'));
+  expect(screen.queryByTestId(tid.mts.weekLayout)).toBeNull();
+  expect(screen.queryByTestId(tid.mts.weekGrid)).toBeNull();
+  expect(screen.getByTestId(tid.mtsPointer.weekly)).toHaveTextContent(
+    'Captures start & finish. Classic · allocation in the first column. Set on the Weekly grid row in Modules & features.');
+  expect(screen.getByTestId(tid.mtsPointer.link)).toHaveAttribute('href', '/setup/amods?m=TS');
 });
 
 /* fidelity gap 10: Save and Cancel stay in reach while a lower card is edited */

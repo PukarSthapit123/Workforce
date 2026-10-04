@@ -4,7 +4,7 @@ import { tid } from '@/testids';
 import { cn } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import {
-  ActionBar, AdminCard, Button, Chip, ChipPicker, Empty, Field, FormWarn, GroupLabel, GuideButton, Modal, Page, PageHead, Pill, Row, ScopeBadge,
+  ActionBar, AdminCard, Button, Chip, ChipPicker, Empty, Field, FormWarn, GroupLabel, GuideButton, Modal, NavLink, Page, PageHead, Pill, Row, ScopeBadge,
   INLINE_INPUT, SettingRow, SettingSelect as Asel, Small, SwitchField, TextInput, Tip, UnitInput, toastInfo,
 } from '@/ui';
 import { useSaveTimesheetConfig, useTimesheetConfig, type TimesheetConfig, type TimesheetSetup } from '@/api/timesheets';
@@ -13,7 +13,7 @@ import { useTenant } from '@/shell/shellData';
 import type { EmployeeTypeRow } from '@/contract/employee-types';
 import type { CaptureRules, PayCode, TypeCapture } from '@/contract/timesheets';
 import type { TypeRule } from '@/domain/timesheet';
-import { PAY_BASIS, RATE_TRIGGERS, WEEK_GRID_LABEL, WEEK_GRIDS, WEEK_LAYOUT_LABEL, WEEK_LAYOUTS, payBasisOf, payCodeList, payElement } from '@/domain/timesheet';
+import { PAY_BASIS, RATE_TRIGGERS, WEEK_GRID_LABEL, WEEK_LAYOUT_LABEL, payBasisOf, payCodeList, payElement } from '@/domain/timesheet';
 import { versionKey } from '@/lib/latest';
 import {
   ALLOWANCE_EXISTS, DEFAULT_OVERTIME, HOW_APPLIED, allowanceCode, allowanceNeed, draftOf, emptyType, newRule, setupBody, setupFieldGroups,
@@ -130,16 +130,12 @@ function SetupDraftView({ setup, types, env, picked, onPick }: {
         <SettingRow title="Warn on short rest" desc="Flag when rest against an adjacent shift is below the employee type’s rule">
           <SwitchField testId={tid.mts.rule('enforceRest')} aria-label="Warn on short rest" checked={draft.rules.enforceRest}
             onCheckedChange={v => setRule('enforceRest', v)} /></SettingRow>
-        {env.flags.WEEKLY && <>
-          <SettingRow title="Weekly grid" desc="What the weekly grid asks for">
-            <Asel testId={tid.mts.weekGrid} small aria-label="Weekly grid" value={draft.weekGrid}
-              onChange={e => { const v = WEEK_GRIDS.find(x => x === e.target.value); if (v) setDraft(d => ({ ...d, weekGrid: v })); }}>
-              {WEEK_GRIDS.map(g => <option key={g} value={g}>{WEEK_GRID_LABEL[g]}</option>)}</Asel></SettingRow>
-          <SettingRow title="Weekly view layout" desc="How the week is laid out on the weekly grid">
-            <Asel testId={tid.mts.weekLayout} small aria-label="Weekly view layout" value={draft.weekLayout}
-              onChange={e => { const v = WEEK_LAYOUTS.find(x => x === e.target.value); if (v) setDraft(d => ({ ...d, weekLayout: v })); }}>
-              {WEEK_LAYOUTS.map(l => <option key={l} value={l}>{WEEK_LAYOUT_LABEL[l]}</option>)}</Asel></SettingRow>
-        </>}
+        {/* D6: what the weekly grid captures and how it is laid out live on the
+            Weekly grid feature's row in Modules & features; this is a pointer to it */}
+        {env.flags.WEEKLY && <SettingRow title="Weekly grid"
+          desc={<span data-testid={tid.mtsPointer.weekly}>{WEEK_GRID_LABEL[config.weekGrid]}. {WEEK_LAYOUT_LABEL[config.weekLayout]}. Set on the Weekly grid row in Modules &amp; features.</span>}>
+          <NavLink testId={tid.mtsPointer.link} to="/setup/amods?m=TS" className="text-xs font-semibold text-brand underline dark:text-brand-accent">Change it in Modules &amp; features</NavLink>
+        </SettingRow>}
       </AdminCard>
 
       <AdminCard testId={tid.mts.card('allowances')} icon={<FlaskConical />} title="Allowances & rules by employee type"

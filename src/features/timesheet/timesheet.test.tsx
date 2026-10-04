@@ -498,3 +498,14 @@ describe('My timesheet, the list layout', () => {
     expect(dayOf('EMP004', '2026-08-10')).toMatchObject({ state: 'pend', entries: [{ start: '09:00', finish: '17:00' }] });
   });
 });
+
+/* D6: how many breaks an entry may hold is set beside Break tracking in Modules & features */
+test('the day form offers only as many breaks as the tenant allows', async () => {
+  const t = store.coll<{ extras: { breaksMax: number } }>('tenant').tenant;
+  if (!t) throw new Error('no tenant');
+  t.extras.breaksMax = 2;
+  await signInEmail(BIGYAN);
+  await openDay();
+  expect(await screen.findByTestId(tid.dayForm.addBreak)).toBeInTheDocument();
+  expect(screen.getByText('1 of 2 breaks shown')).toBeInTheDocument();
+});
