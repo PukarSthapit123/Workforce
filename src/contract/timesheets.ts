@@ -32,6 +32,9 @@ export const TimesheetDay = RecordMeta.extend({
   captureSource: z.enum(['self', 'proxy']), enteredBy: z.string(), enteredByName: z.string(),
   submittedAt: z.union([IsoDateTime, z.literal('')]), returnReason: z.string(), warnings: z.array(z.string()),
   history: z.array(TsHistory), integrationAttemptId: z.string(),
+  /* "Called in and worked anyway", stored with the day so a later week submit
+     or catch-up can tell it from time on an absence day (module 4 D8) */
+  workedAnyway: z.boolean().optional(),
   /* derived on every read, never stored */
   minutes: z.number().int().nonnegative(), posting: PostingState,
 });

@@ -66,7 +66,7 @@ function ProxyDay({ week, day, person, onDone }: { week: TimesheetWeek; day: Wee
       onDone();
     } });
   /* a day of leave or sickness takes time only as called in and worked anyway, while leave blocks capture (module 4 D8) */
-  const [anyway, setAnyway] = useState(false);
+  const [anyway, setAnyway] = useState(Boolean(day.record?.workedAnyway));
   return <>
     <DayFields {...entry.fields} which="all" single />
     {day.absence && <CheckRow control={<CheckboxField testId={tid.leaveLink.proxyAnyway} checked={anyway} onCheckedChange={v => setAnyway(v === true)} />}>

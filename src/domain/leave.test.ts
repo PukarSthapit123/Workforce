@@ -1,6 +1,6 @@
 import {
   CANCELLED_TOAST, CHOOSE_TYPE, DEFAULT_LEAVE_CONFIG, DEFAULT_TYPE_LEAVE, LAST_BEFORE_FIRST, OVER_BALANCE, PICK_BOTH_DATES, REASON_REQUIRED, ROTA_OFF_IMPACT,
-  RTW_ALREADY, RTW_TOAST, SELF_APPROVAL, SETTLED_IN_PAYROLL, absenceBlockedProblem, absenceCellPlan, absenceCellWrites, bookedLeaveDates, datesCellPlan, sicknessDates, absenceMark, absenceOn, approvedNotice,
+  RTW_ALREADY, RTW_TOAST, SELF_APPROVAL, SETTLED_IN_PAYROLL, absenceBlockedProblem, absenceHeldReason, absenceCellPlan, absenceCellWrites, bookedLeaveDates, datesCellPlan, sicknessDates, absenceMark, absenceOn, approvedNotice,
   approvedToast, balanceOf, balanceText, bradford, cancelTip, cancelWindowAdvisory, cancelledNotice, coverImpact, dailyHours, daysReturnedNotice,
   daysReturnedToast, daysToTakeText, declineReasonProblem, declinedNotice, declinedToast, entitlement, episodeDays, episodeEnd, escalationText,
   giveBackProblem, giveBackRow, halfDaySingle, latestAbsenceText, leaveCan, leaveConfigProblem, leaveCoverReason, leaveRange, leaveRotaWhy, leaveShape,
@@ -484,5 +484,10 @@ describe('leave to timesheet (D8)', () => {
       message: 'Annual leave is recorded for this day. Approved absence blocks timesheet capture while “Leave blocks timesheet capture” is on.',
       next: 'If you did work, mark the day non-working and tick “Called in and worked anyway”.' });
     expect(absenceBlockedProblem('S').message).toMatch(/^Sickness is recorded for this day\./);
+  });
+  /* review I1: a stored day a week submit or a catch-up would send is held back with this reason */
+  test('a day held back for absence says which day and why', () => {
+    expect(absenceHeldReason('2026-08-11', 'S')).toBe('Tue 11 Aug was held back. Sickness is recorded for that day, and approved absence blocks timesheet capture while “Leave blocks timesheet capture” is on.');
+    expect(absenceHeldReason('2026-08-10', 'V')).toMatch(/^Mon 10 Aug was held back\. Annual leave is recorded for that day,/);
   });
 });

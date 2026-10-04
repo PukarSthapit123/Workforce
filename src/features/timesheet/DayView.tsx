@@ -61,10 +61,12 @@ function DayPanel({ week, day, today, onDate, personId }: {
       ? `Resubmitted · ${formatDmy(day.date)} · back with ${mgr}`
       : `Day submitted · ${hm(c, res.record.minutes)} · routed to ${mgr} for sign-off`, flagged(res)) });
   const savedReason = rec && !rec.entries.length ? rec.nonWorkingReason : '';
-  const [nonwork, setNonwork] = useState(Boolean(savedReason));
+  /* a day stored as called in and worked anyway opens that way, so saving or submitting it again keeps the mark */
+  const savedAnyway = Boolean(rec?.workedAnyway && rec.entries.length);
+  const [nonwork, setNonwork] = useState(Boolean(savedReason) || savedAnyway);
   const [reason, setReason] = useState(() => savedReason.split(' · ')[0] || NON_WORKING_REASONS[0]);
   const [notes, setNotes] = useState(() => savedReason.split(' · ').slice(1).join(' · '));
-  const [worked, setWorked] = useState(false);
+  const [worked, setWorked] = useState(savedAnyway);
   const { busy, fields, stats } = entry, chip = dayChip(day);
   /* the times below go as "called in and worked anyway", which a leave or sickness day needs while leave blocks capture */
   const anyway = { workedAnyway: nonwork && worked };

@@ -529,3 +529,7 @@ export function absenceOn(date: string, requests: readonly Pick<LeaveRecord, 'ty
 export const absenceBlockedProblem = (mark: string): LeaveRefusal => ({ code: 'ABSENCE_BLOCKED',
   message: `${mark === SICK ? 'Sickness' : 'Annual leave'} is recorded for this day. Approved absence blocks timesheet capture while “Leave blocks timesheet capture” is on.`,
   next: 'If you did work, mark the day non-working and tick “Called in and worked anyway”.' });
+/* A stored day a week submit or a multi-week catch-up would send, held back
+   because absence now covers it (review I1). */
+export const absenceHeldReason = (date: string, mark: string) =>
+  `${formatDay(date)} was held back. ${mark === SICK ? 'Sickness' : 'Annual leave'} is recorded for that day, and approved absence blocks timesheet capture while “Leave blocks timesheet capture” is on.`;

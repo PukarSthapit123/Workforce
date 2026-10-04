@@ -177,6 +177,22 @@ describe('My timesheet, day view', () => {
     expect(await screen.findByTestId(tid.toast.info)).toHaveTextContent('Draft saved · 08:00 · not submitted yet');
     expect(dayOf('EMP004', '2026-08-13')).toMatchObject({ state: 'draft', entries: [{ start: '09:00', finish: '17:00' }] });
   });
+  /* module 4 review I1: the mark is stored on the day, so the form opens with it and sends it again */
+  test('a day saved as called in and worked anyway opens with the tick on, and submits', async () => {
+    leaveToday();
+    const id = 'tsd_EMP004_2026-08-13';
+    store.coll<Omit<TimesheetDay, 'minutes' | 'posting' | 'enteredByName'>>('timesheetDays')[id] = { id, version: 1, updatedAt: '2026-08-13T09:00:00.000Z',
+      personCode: 'EMP004', date: '2026-08-13', state: 'draft', entries: [{ start: '09:00', finish: '17:00', breaks: [], fields: {} }], workType: 'STD',
+      allowances: [], shift: '', nonWorkingReason: '', captureSource: 'self', enteredBy: 'EMP004', submittedAt: '', returnReason: '', warnings: [], history: [],
+      integrationAttemptId: '', workedAnyway: true };
+    store.save();
+    await openDay();
+    expect(screen.getByTestId(tid.ts.workedAnyway)).toBeChecked();
+    expect(screen.getByTestId(tid.dayForm.field('start'))).toHaveValue('09:00');
+    await userEvent.click(screen.getByTestId(tid.dayForm.submit));
+    expect(await screen.findByTestId(tid.toast.info)).toHaveTextContent('Day submitted · 08:00');
+    expect(dayOf('EMP004', '2026-08-13')).toMatchObject({ state: 'pend', workedAnyway: true });
+  });
   test('with leave not blocking capture the banner still shows and time saves', async () => {
     leaveToday();
     const cfg = store.coll<{ blocksTimesheet: boolean }>('leaveConfig').leaveConfig;

@@ -21,7 +21,7 @@ import {
   type DayInput, type IntegrationAttempt, type RotaDay, type QueueRow, type TimesheetConfig, type TimesheetDay, type TimesheetField, type UpdateTimesheetConfig,
 } from '@/contract/timesheets';
 import type { Problem } from '@/domain/codes';
-import { absenceBlockedProblem } from '@/domain/leave';
+import { absenceBlockedProblem, absenceHeldReason } from '@/domain/leave';
 import {
   APPROVAL_AUDIT_SUFFIX, TS_STATE, advisoryFlags, allSubmittedMessage, alreadySubmittedMessage, clockFromIso, dayMinutes,
   deriveWorkType, dispatchAttempt, dowMon, formatDmy, formatMinutes, historyEntry, isoWeek, lockNote, missingMandatory,
@@ -181,6 +181,7 @@ function applyInput(p: StoredPerson, base: StoredDay, input: DayInput, check: Da
     entries: input.entries.map(e => ({ start: e.start.trim(), finish: e.finish.trim(), breaks: e.breaks, ...(e.hours != null ? { hours: e.hours } : {}), fields: e.fields ?? {} })),
     allowances: input.allowances ?? [], shift: input.shift ?? base.shift, nonWorkingReason: input.nonWorkingReason?.trim() ?? '',
     workType: derived?.code ?? BASE_WORK_TYPE, warnings: check.warnings, captureSource: mode, enteredBy: s.account.personCode,
+    workedAnyway: Boolean(input.workedAnyway),
   };
 }
 const by = (s: Signed) => { const w = actor(s); return { personCode: w.personCode, name: w.name }; };
@@ -276,10 +277,23 @@ function absenceOf(personCode: string, date: string): '' | 'V' | 'S' {
 }
 /* With "Leave blocks timesheet capture" on, time on an absence day is refused
    unless the day is marked called in and worked anyway. A reason alone is fine. */
+function blockingAbsence(personCode: string, date: string, input: Pick<DayInput, 'entries' | 'workedAnyway'>): '' | 'V' | 'S' {
+  if (!input.entries.length || input.workedAnyway || !leaveBlocksTimesheet()) return '';
+  return absenceOf(personCode, date);
+}
 function refuseAbsence(personCode: string, date: string, input: Pick<DayInput, 'entries' | 'workedAnyway'>, field: string) {
-  if (!input.entries.length || input.workedAnyway || !leaveBlocksTimesheet()) return;
-  const mark = absenceOf(personCode, date);
+  const mark = blockingAbsence(personCode, date, input);
   if (mark) refuse(409, { ...absenceBlockedProblem(mark), field });
+}
+/* Review I1: every day a week submit or a catch-up would move is checked
+   again, as stored or as sent, since absence recorded after a draft was saved
+   blocks it just the same. */
+function absenceHolds(p: StoredPerson, planned: readonly Planned[], dates: readonly string[]) {
+  return dates.flatMap(date => {
+    const input = planned.find(x => x.date === date)?.input;
+    const mark = input ? blockingAbsence(p.code, date, input) : '';
+    return mark ? [{ date, mark, reason: absenceHeldReason(date, mark) }] : [];
+  });
 }
 function requireMonday(weekStart: string, field = 'weekStart') {
   if (dowMon(weekStart) !== 0) invalid({ field, message: 'A week starts on a Monday.' });
@@ -290,7 +304,8 @@ function requireMonday(weekStart: string, field = 'weekStart') {
 interface Planned { date: string; input: DayInput | null; existing: StoredDay | undefined; check: DayCheck | null; unchanged: boolean }
 /* What the request names for each day: new entries, or null for "as it was read". */
 type Sent = ReadonlyMap<string, DayInput | null>;
-const asStored = (d: StoredDay): DayInput => ({ entries: d.entries, allowances: d.allowances, shift: d.shift, nonWorkingReason: d.nonWorkingReason });
+const asStored = (d: StoredDay): DayInput => ({ entries: d.entries, allowances: d.allowances, shift: d.shift, nonWorkingReason: d.nonWorkingReason,
+  ...(d.workedAnyway ? { workedAnyway: true } : {}) });
 /* Only the days in `sent` are planned; `'stored'` plans every stored day as it is (multi-week catch-up). */
 function planWeek(p: StoredPerson, weekStart: string, sent: Sent | 'stored') {
   const planned: Planned[] = weekDates(weekStart).map(date => {
@@ -415,10 +430,16 @@ export const timesheetHandlers = [
       const stored = recordAt(days(), dayId(p.code, d.date));
       if ((stored?.version ?? 0) !== d.version)
         refuse(412, { code: 'stale', field: `days.${i}`, message: `Somebody changed ${formatDmy(d.date)} since you opened this week. Nothing has been saved.`, next: 'Reload and apply your change again' });
-      if (d.entries) refuseAbsence(p.code, d.date, { entries: d.entries, workedAnyway: d.workedAnyway }, `days.${i}`);
-      sent.set(d.date, d.entries ? { entries: d.entries, allowances: d.allowances, shift: d.shift, nonWorkingReason: d.nonWorkingReason } : null);
+      /* the week grid edits times only, so a changed day keeps the worked-anyway mark it was stored with unless the request says otherwise */
+      const anyway = d.workedAnyway ?? stored?.workedAnyway ?? false;
+      if (d.entries) refuseAbsence(p.code, d.date, { entries: d.entries, workedAnyway: anyway }, `days.${i}`);
+      sent.set(d.date, d.entries ? { entries: d.entries, allowances: d.allowances, shift: d.shift, nonWorkingReason: d.nonWorkingReason, workedAnyway: anyway } : null);
     });
-    const { planned, inputs, plan, ctx } = planWeek(p, params.weekStart, sent);
+    const { planned, inputs, plan: full, ctx } = planWeek(p, params.weekStart, sent);
+    /* a stored day sent as it was read, with absence recorded on it since, is held back (review I1) */
+    const absent = absenceHolds(p, planned, [...full.submit, ...full.resubmit]), out = new Set(absent.map(a => a.date));
+    const plan = { ...full, submit: full.submit.filter(d => !out.has(d)), resubmit: full.resubmit.filter(d => !out.has(d)),
+      held: [...full.held, ...absent.map(({ date, reason }) => ({ date, reason }))].sort((a, b) => a.date.localeCompare(b.date)) };
     if (plan.blocked.length) {
       const first = firstBlocked(planned, ctx), at = first ? body.days.findIndex(d => d.date === first.date) : -1;
       if (first && isLocked(first.date)) refuse(409, { code: 'PERIOD_LOCKED', field: at >= 0 ? `days.${at}` : 'weekStart', message: weekBlockedMessage(plan.blocked), next: LOCK_NEXT(p) });
@@ -427,6 +448,11 @@ export const timesheetHandlers = [
     }
     const moving = [...plan.submit, ...plan.resubmit];
     if (!moving.length) {
+      const first = absent[0];
+      if (first) {
+        const at = body.days.findIndex(d => d.date === first.date);
+        refuse(409, { ...absenceBlockedProblem(first.mark), field: at >= 0 ? `days.${at}` : 'days' });
+      }
       if (!inputs.some(d => d.minutes)) refuse(422, { code: 'NOTHING_TO_SUBMIT', field: 'days', message: NOTHING_TO_SUBMIT, next: 'Enter the hours you worked, then submit the week.' });
       const onlyDecided = plan.held.every(h => { const s = inputs.find(d => d.date === h.date)?.state; return s && s !== 'draft' && s !== 'back'; });
       if (onlyDecided) refuse(409, { code: 'ALREADY_SUBMITTED', message: allSubmittedMessage(managerOf(p)), next: 'Open a day to see where it is.' });
@@ -464,6 +490,9 @@ export const timesheetHandlers = [
       if (isLocked(ws)) return holdAll(`${lockNote(ws, c.cutoff)}. ${LOCK_NEXT(p)}`);
       if (plan.blocked.length) return holdAll(weekBlockedMessage(plan.blocked));
       const moving = [...plan.submit, ...plan.resubmit];
+      /* review I1: a week with a stored day now on leave or sickness is held back whole, as a locked week is */
+      const absent = absenceHolds(p, planned, moving);
+      if (absent.length) return holdAll(absent.map(a => a.reason).join(' '));
       if (!moving.length) return { ...holdAll(withTime.length ? allSubmittedMessage(managerOf(p)) : NOTHING_TO_SUBMIT), held: plan.held };
       const made = submitPlanned(p, planned, moving.sort(), session, mode);
       return { weekStart: ws, label, outcome: 'submitted' as const, reason: '', submitted: made.map(dayView), held: plan.held };

@@ -5,9 +5,9 @@ import {
   DaysGivenBack, EntitlementDetail, LeaveDecided, LeaveMoved, LeaveRequested, LeaveSetup, Leavers, MyLeave, RtwArranged, SicknessBoard,
   SicknessRecorded, TeamBalances, TeamRequests,
 } from '@/contract/leave';
-import { TimesheetWeek } from '@/contract/timesheets';
+import { MultiweekSubmitted, TimesheetWeek, WeekSubmitted } from '@/contract/timesheets';
 import {
-  CHOOSE_TYPE, LAST_BEFORE_FIRST, PICK_BOTH_DATES, REASON_REQUIRED, RTW_ALREADY, SELF_APPROVAL, approvedToast, halfDaySingle, moreThanLeft,
+  CHOOSE_TYPE, LAST_BEFORE_FIRST, PICK_BOTH_DATES, REASON_REQUIRED, RTW_ALREADY, SELF_APPROVAL, absenceHeldReason, approvedToast, halfDaySingle, moreThanLeft,
   triggerBannerText,
 } from '@/domain/leave';
 import { audits, caller, fault, resetTo, snapshot, tokenFor, type Persona } from '@/test/api-helpers';
@@ -263,6 +263,57 @@ describe('the timesheet reads leave records (Review Focus 5, D8)', () => {
     expect(refusal(sub).code).toBe('ABSENCE_BLOCKED');
     expect(snapshot('timesheetDays', 'audit')).toEqual(before);
     expect((await save(emp, 'CP-1042', '2026-08-11', { workedAnyway: true })).status).toBe(200);
+  });
+  /* review I1: a draft stored before the absence was recorded is checked again when it is sent */
+  const sick = (call: Call, code: string, from: string, to = from) => call('POST', '/api/v1/leave/sickness', { personCode: code, from, to, reason: 'Cold or flu' });
+  const asRead = async (call: Call, code: string, ws: string) =>
+    TimesheetWeek.parse((await call('GET', `/api/v1/timesheets/${code}/weeks/${ws}`)).body).days.map(d => ({ date: d.date, version: d.version }));
+  const tsDay = (code: string, date: string) => store.coll<{ state: string; workedAnyway?: boolean }>('timesheetDays')[`tsd_${code}_${date}`];
+  const submitWeek = async (call: Call, code: string, ws: string) => call('POST', `/api/v1/timesheets/${code}/weeks/${ws}/submit`, { days: await asRead(call, code, ws) });
+  test('a draft saved before sickness was recorded is held back when the week is submitted unchanged; the rest of the week goes', async () => {
+    const emp = await asEmail(AMARA);
+    expect((await save(emp, 'CP-1042', '2026-08-10')).status).toBe(200);
+    expect((await save(emp, 'CP-1042', '2026-08-11')).status).toBe(200);
+    expect((await sick(await as('manager'), 'CP-1042', '2026-08-11')).status).toBe(200);
+    const r = await submitWeek(emp, 'CP-1042', '2026-08-10');
+    expect(r.status).toBe(200);
+    const out = WeekSubmitted.parse(r.body);
+    expect(out.submitted.map(d => d.date)).toEqual(['2026-08-10']);
+    expect(out.held).toContainEqual({ date: '2026-08-11', reason: absenceHeldReason('2026-08-11', 'S') });
+    expect(tsDay('CP-1042', '2026-08-11')?.state).toBe('draft');
+  });
+  test('when the only day to send falls on approved leave, the week is refused with ABSENCE_BLOCKED and nothing is written', async () => {
+    const emp = await asEmail(AMARA);
+    expect((await save(emp, 'CP-1042', '2026-08-11')).status).toBe(200);
+    const lr = LeaveRequested.parse((await ask(emp, { from: '2026-08-11', to: '2026-08-11' })).body).record;
+    LeaveDecided.parse((await approve(await as('manager'), lr.id)).body);
+    const before = snapshot('timesheetDays', 'audit');
+    const r = await submitWeek(emp, 'CP-1042', '2026-08-10');
+    expect(r.status).toBe(409);
+    expect(refusal(r)).toMatchObject({ code: 'ABSENCE_BLOCKED', field: 'days.1' });
+    expect(refusal(r).message).toMatch(/^Annual leave is recorded for this day\./);
+    expect(snapshot('timesheetDays', 'audit')).toEqual(before);
+  });
+  test('a day saved as called in and worked anyway keeps the mark, and the week submits it as stored', async () => {
+    const emp = await asEmail(AMARA);
+    expect((await sick(await as('manager'), 'CP-1042', '2026-08-11')).status).toBe(200);
+    expect((await save(emp, 'CP-1042', '2026-08-11', { workedAnyway: true })).status).toBe(200);
+    expect(tsDay('CP-1042', '2026-08-11')?.workedAnyway).toBe(true);
+    const out = WeekSubmitted.parse((await submitWeek(emp, 'CP-1042', '2026-08-10')).body);
+    expect(out.submitted.map(d => [d.date, d.state, d.workedAnyway])).toEqual([['2026-08-11', 'pend', true]]);
+  });
+  test('multi-week catch-up holds back a week whose stored time falls on sickness; the other week still goes', async () => {
+    resetTo('qnipay');
+    const ts = store.coll<{ rules: { enforceLock: boolean } }>('timesheetConfig').timesheetConfig;
+    if (ts) ts.rules.enforceLock = false;
+    expect((await sick(await asEmail(PUKAR), 'EMP004', '2026-08-05')).status).toBe(200);
+    const held = snapshot('timesheetDays');
+    const out = MultiweekSubmitted.parse((await (await asEmail(BIGYAN))('POST', '/api/v1/timesheets/EMP004/multiweek/submit', { weeks: ['2026-07-27', '2026-08-03'] })).body);
+    expect(out.weeks.map(w => [w.weekStart, w.outcome, w.submitted.length])).toEqual([['2026-08-03', 'held', 0], ['2026-07-27', 'submitted', 4]]);
+    expect(out.weeks[0]?.reason).toBe(absenceHeldReason('2026-08-05', 'S'));
+    const weekOf3Aug = (s: Record<string, unknown>) => Object.entries((s.timesheetDays ?? {}) as Record<string, unknown>)
+      .filter(([id]) => id.slice(-10) >= '2026-08-03' && id.slice(-10) <= '2026-08-09');
+    expect(weekOf3Aug(snapshot('timesheetDays'))).toEqual(weekOf3Aug(held));
   });
   test('with blocksTimesheet off the absence still shows and time is accepted', async () => {
     const cfg = store.coll<{ blocksTimesheet: boolean }>('leaveConfig').leaveConfig;
