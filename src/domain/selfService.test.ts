@@ -11,6 +11,14 @@ test('contact and emergency changes go to the line manager; bank changes go to p
   expect(routeFor('bankAccount')).toEqual(['manager', 'payroll']);
   expect(routeFor('bankSortCode')).toEqual(['manager', 'payroll']);
 });
+test('the route follows the Profile chain: its order, its conditions and only its two roles', () => {
+  const p = (role: string, when: string) => ({ module: 'Profile', role, scope: 'All departments', when, sla: '2 days', fixed: false });
+  const payrollFirst = [p('Payroll', 'Every contact detail change'), p('Line manager', 'Only bank details')];
+  expect(routeFor('phone', payrollFirst)).toEqual(['payroll']);
+  expect(routeFor('bankAccount', payrollFirst)).toEqual(['payroll', 'manager']);
+  const managerOnly = [p('Line manager', 'Every contact detail change')];
+  expect(routeFor('bankSortCode', managerOnly)).toEqual(['manager']);
+});
 test('approval moves along the route and finishes only at its end', () => {
   expect(afterDecision({ stage: 'manager', route: ['manager'] }, 'approve')).toEqual({ status: 'approved', stage: 'done' });
   expect(afterDecision({ stage: 'manager', route: ['manager', 'payroll'] }, 'approve')).toEqual({ status: 'pending', stage: 'payroll' });
