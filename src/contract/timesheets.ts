@@ -121,9 +121,9 @@ export const WeekDay = z.object({
   /* the If-Match a write to this day sends: the record's version, or 0 when there is none yet */
   version: z.number().int().nonnegative(), minutes: z.number().int().nonnegative(),
   future: z.boolean(), locked: z.boolean(), lockNote: z.string(), flags: z.array(AdvisoryFlag),
-  /* Leave or sickness on the day. Today it comes from a V or S cell on the
-     published rota (module 3); leave booking itself is module 4. The day view
-     shows the absence banner when it is set. */
+  /* Leave or sickness on the day: a V or S cell on the published rota (module 3),
+     or an approved leave request or recorded sickness (module 4 D8, any tenant).
+     The day view shows the absence banner when it is set. */
   absence: z.enum(['leave', 'sickness']).nullable().optional(),
   /* the day on the person's published rota; absent with the Rota module off or the week unpublished */
   rota: RotaDay.optional(),
@@ -148,6 +148,9 @@ export type TimesheetWeek = z.infer<typeof TimesheetWeek>;
 export const DayInput = z.object({
   entries: z.array(TimeEntry).max(6), allowances: z.array(z.string()).max(20).optional(), shift: z.string().max(10).optional(),
   nonWorkingReason: z.string().max(200).optional(),
+  /* "Called in and worked anyway": time on a day of approved leave or sickness is
+     accepted while Leave blocks timesheet capture (module 4 D8). */
+  workedAnyway: z.boolean().optional(),
 });
 export type DayInput = z.infer<typeof DayInput>;
 export const DaySaved = z.object({ record: TimesheetDay, warnings: z.array(z.string()), auditId: z.string().nullable() });

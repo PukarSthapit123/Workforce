@@ -11,6 +11,7 @@ import { actor, requireCapability } from './auth';
 import { writeAudit } from './audit';
 import { faults } from './faults';
 import { rotaDaysFor, rotaInputOn, rotaLineOptions, rotaWeekDays } from './rota';
+import { leaveAbsenceOn, leaveBlocksTimesheet } from './leave';
 import { invalid } from './people';
 import meta from './seed/meta.json';
 import { effectiveCode, inScope, nameOf, personByCode, recordAt, scopeOf, type Signed, type StoredPerson } from './world';
@@ -20,6 +21,7 @@ import {
   type DayInput, type IntegrationAttempt, type RotaDay, type QueueRow, type TimesheetConfig, type TimesheetDay, type TimesheetField, type UpdateTimesheetConfig,
 } from '@/contract/timesheets';
 import type { Problem } from '@/domain/codes';
+import { absenceBlockedProblem } from '@/domain/leave';
 import {
   APPROVAL_AUDIT_SUFFIX, TS_STATE, advisoryFlags, allSubmittedMessage, alreadySubmittedMessage, clockFromIso, dayMinutes,
   deriveWorkType, dispatchAttempt, dowMon, formatDmy, formatMinutes, historyEntry, isoWeek, lockNote, missingMandatory,
@@ -266,6 +268,19 @@ function earlierWeeks(p: StoredPerson) {
       status: ready ? 'ready' as const : 'submitted' as const, locked, lockNote: locked ? lockNote(ws, cutoff) : '' };
   }).filter(w => w !== null).sort((a, b) => b.weekStart.localeCompare(a.weekStart)).slice(0, 8);
 }
+/* The day's absence (module 4 D8): a V or S cell on the published rota, else
+   approved leave or recorded sickness from the leave records, on any tenant. */
+function absenceOf(personCode: string, date: string): '' | 'V' | 'S' {
+  const cell = rotaDaysFor(personCode, periodStart(date))?.[dowMon(date)]?.code;
+  return cell === 'V' || cell === 'S' ? cell : leaveAbsenceOn(personCode, date);
+}
+/* With "Leave blocks timesheet capture" on, time on an absence day is refused
+   unless the day is marked called in and worked anyway. A reason alone is fine. */
+function refuseAbsence(personCode: string, date: string, input: Pick<DayInput, 'entries' | 'workedAnyway'>, field: string) {
+  if (!input.entries.length || input.workedAnyway || !leaveBlocksTimesheet()) return;
+  const mark = absenceOf(personCode, date);
+  if (mark) refuse(409, { ...absenceBlockedProblem(mark), field });
+}
 function requireMonday(weekStart: string, field = 'weekStart') {
   if (dowMon(weekStart) !== 0) invalid({ field, message: 'A week starts on a Monday.' });
 }
@@ -333,11 +348,13 @@ export const timesheetHandlers = [
     access(session, p, false);
     requireMonday(params.weekStart);
     const ws = params.weekStart, c = config(), today = now();
-    /* the published rota for the week (module 3 D13, D16); a V or S cell is the day's absence, not a line */
+    /* the published rota for the week (module 3 D13, D16); a V or S cell is the day's absence, not a line,
+       and so are approved leave and recorded sickness (module 4 D8) */
     const rota = rotaDaysFor(p.code, ws);
     const list = weekDates(ws).map((date, i) => {
       const d = recordAt(days(), dayId(p.code, date)), locked = isLocked(date), r = rota?.[i];
-      const absence = r?.code === 'V' ? 'leave' as const : r?.code === 'S' ? 'sickness' as const : undefined;
+      const mark = r?.code === 'V' || r?.code === 'S' ? r.code : leaveAbsenceOn(p.code, date);
+      const absence = mark === 'V' ? 'leave' as const : mark === 'S' ? 'sickness' as const : undefined;
       return { date, record: d ? dayView(d) : null, state: d?.state ?? 'none' as const, version: d?.version ?? 0,
         minutes: d ? dayMinutes(d.entries) : 0, future: date > today.date, locked, lockNote: locked ? lockNote(date, c.cutoff) : '',
         flags: d && d.state !== 'draft' ? flagsFor(d) : [], ...(absence ? { absence } : {}), ...(r ? { rota: r } : {}) };
@@ -358,6 +375,7 @@ export const timesheetHandlers = [
     if (existing && existing.state !== 'draft' && existing.state !== 'back') alreadySubmitted(existing);
     const base = existing ?? blankDay(p, params.date);
     checkVersion(base);
+    refuseAbsence(p.code, params.date, body, 'date');
     const check = checkDay(p, params.date, body);
     if (check.errors.length) refuseDay(p, params.date, check.errors);
     const rec = save(base, applyInput(p, base, body, check, session, mode));
@@ -374,6 +392,7 @@ export const timesheetHandlers = [
     if (existing && (tsPending(existing.state) || existing.state === 'ok')) alreadySubmitted(existing);
     const base = existing ?? blankDay(p, params.date);
     checkVersion(base);
+    refuseAbsence(p.code, params.date, body, 'date');
     const check = checkDay(p, params.date, body);
     if (check.errors.length) refuseDay(p, params.date, check.errors);
     const to: TsState = base.state === 'back' ? 'resub' : 'pend';
@@ -396,6 +415,7 @@ export const timesheetHandlers = [
       const stored = recordAt(days(), dayId(p.code, d.date));
       if ((stored?.version ?? 0) !== d.version)
         refuse(412, { code: 'stale', field: `days.${i}`, message: `Somebody changed ${formatDmy(d.date)} since you opened this week. Nothing has been saved.`, next: 'Reload and apply your change again' });
+      if (d.entries) refuseAbsence(p.code, d.date, { entries: d.entries, workedAnyway: d.workedAnyway }, `days.${i}`);
       sent.set(d.date, d.entries ? { entries: d.entries, allowances: d.allowances, shift: d.shift, nonWorkingReason: d.nonWorkingReason } : null);
     });
     const { planned, inputs, plan, ctx } = planWeek(p, params.weekStart, sent);

@@ -92,12 +92,13 @@ describe('the published rota on the timesheet reads (module 3 D13, D14, D16)', (
     const m = await read(await as('manager'), 'CP-1088');
     expect(m.days.slice(0, 2).map(d => [d.rota?.code, d.absence])).toEqual([['V', 'leave'], ['V', 'leave']]);
   });
-  test('a draft week shows no rota line, no rest day and no absence', async () => {
+  test('a draft week shows no rota line and no rest day; the absence then comes from the leave record alone (module 4 D8)', async () => {
     const wk = store.coll<{ state: string }>('rotaWeeks')['rw_WH_2026-08-10'];
     if (!wk) throw new Error('no Willow House week');
     wk.state = 'draft';
     const w = await read(await as('manager'), 'CP-1088');
-    expect(w.days.every(d => d.rota === undefined && !d.absence)).toBe(true);
+    expect(w.days.every(d => d.rota === undefined)).toBe(true);
+    expect(w.days.map(d => d.absence ?? '')).toEqual(['leave', 'leave', '', '', '', '', '']);
     expect(w.capture.rotaLines?.length).toBe(3);
   });
   test('the matrix read carries everyone’s published week at the approver’s location', async () => {

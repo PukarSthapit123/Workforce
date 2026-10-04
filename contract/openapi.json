@@ -29403,6 +29403,9 @@
                   "nonWorkingReason": {
                     "type": "string",
                     "maxLength": 200
+                  },
+                  "workedAnyway": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -29922,6 +29925,9 @@
                   "nonWorkingReason": {
                     "type": "string",
                     "maxLength": 200
+                  },
+                  "workedAnyway": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -30880,6 +30886,9 @@
                         "nonWorkingReason": {
                           "type": "string",
                           "maxLength": 200
+                        },
+                        "workedAnyway": {
+                          "type": "boolean"
                         },
                         "date": {
                           "type": "string",
