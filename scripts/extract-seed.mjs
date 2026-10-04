@@ -577,8 +577,11 @@ assertTenantChanged(qnipay, social, 'social');
 
 /* The prototype names its default tenant `qcic` (template key and client
    name). This app calls that tenant `qnipay`, so the rename is applied to the
-   extracted JSON rather than by retyping any record. */
-const renameTenant = json => json.replace(/qcic/g, 'qnipay').replace(/QCIC/g, 'Qnipay');
+   extracted JSON rather than by retyping any record. The template it runs on
+   keeps the prototype's key, qcic, which is the shipped template's key in
+   src/domain/templates.ts. */
+const renameTenant = json => json.replace(/qcic/g, 'qnipay').replace(/QCIC/g, 'Qnipay')
+  .replace('"template": "qnipay"', '"template": "qcic"');
 writeFileSync(resolve(OUT, 'qnipay.json'), renameTenant(JSON.stringify(shape('qnipay', qnipay, PERMS_META, PERM_GROUPS, PROFILE_CHANGES, social), null, 1)) + '\n');
 writeFileSync(resolve(OUT, 'social.json'), JSON.stringify(shape('social', social, PERMS_META, PERM_GROUPS, PROFILE_CHANGES, social), null, 1) + '\n');
 writeFileSync(resolve(OUT, 'meta.json'), JSON.stringify({

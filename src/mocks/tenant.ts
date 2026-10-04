@@ -26,25 +26,25 @@ import { DEFAULT_ROTA_CONFIG } from '@/domain/rota';
 interface Meta { id: string; version: number; updatedAt: string }
 /* What the tenant record holds. rotaHorizon, weekGrid, weekLayout and
    rotaSetAside are read from their own homes into the view. */
-type StoredTenant = Omit<Tenant, 'rotaHorizon' | 'extras' | 'rotaSetAside'> & { extras: { breaksMax: number; vehiclesMax: number } };
+export type StoredTenant = Omit<Tenant, 'rotaHorizon' | 'extras' | 'rotaSetAside'> & { extras: { breaksMax: number; vehiclesMax: number } };
 interface SetAside extends Meta { weeks: Record<string, WeekLines>; count: number }
 interface StoredWeek extends Meta { lines: WeekLines }
 interface StoredType extends Meta { code: string; name: string; capabilities: string[] }
 
 const NO_TENANT = { code: 'not-found', message: 'This tenant has no settings loaded.', next: 'Reload the page. If it keeps happening, report it.' };
 const SET_ASIDE = 'rotaSetAside';
-const tenantRec = (): StoredTenant => recordAt(store.coll<StoredTenant>('tenant'), 'tenant') ?? refuse(404, NO_TENANT);
-const saveTenant = (t: StoredTenant, changes: Partial<StoredTenant>) => {
+export const tenantRec = (): StoredTenant => recordAt(store.coll<StoredTenant>('tenant'), 'tenant') ?? refuse(404, NO_TENANT);
+export const saveTenant = (t: StoredTenant, changes: Partial<StoredTenant>) => {
   const saved = bump(t, changes);
   store.coll<StoredTenant>('tenant')[saved.id] = saved;
   return saved;
 };
-const tsConfig = () => recordAt(store.coll<TimesheetConfig>('timesheetConfig'), 'timesheetConfig');
+export const tsConfig = () => recordAt(store.coll<TimesheetConfig>('timesheetConfig'), 'timesheetConfig');
 const rotaConfig = () => recordAt(store.coll<RotaConfigRecord>('rotaConfig'), 'rotaConfig');
 const setAside = () => recordAt(store.coll<SetAside>(SET_ASIDE), SET_ASIDE);
 const count = (coll: string) => Object.keys(store.coll(coll)).length;
 
-function view(t: StoredTenant): Tenant {
+export function view(t: StoredTenant): Tenant {
   const tc = tsConfig();
   return {
     ...t,
@@ -60,7 +60,7 @@ const refuseWith = (r: DomainRefusal): never =>
   refuse(r.status, { code: r.code, message: r.message, next: r.next, ...(r.field ? { field: r.field } : {}) });
 
 /* ------------------------------------------------------- Rota off and on */
-function rotaOff(): number {
+export function rotaOff(): number {
   const weeks = store.coll<StoredWeek>('rotaWeeks');
   const r = setAsideShifts(Object.fromEntries(Object.values(weeks).map(w => [w.id, w.lines])));
   for (const [id, lines] of Object.entries(r.cleared)) {
@@ -71,7 +71,7 @@ function rotaOff(): number {
   store.coll<SetAside>(SET_ASIDE)[SET_ASIDE] = { id: SET_ASIDE, version: (was?.version ?? 0) + 1, updatedAt: store.now(), weeks: r.kept, count: r.count };
   return r.count;
 }
-function rotaOn(): number {
+export function rotaOn(): number {
   const kept = setAside();
   if (!kept) return 0;
   const weeks = store.coll<StoredWeek>('rotaWeeks');
@@ -84,7 +84,7 @@ function rotaOn(): number {
   return r.count;
 }
 /* Sites off takes the site capability from every employee type (the prototype's mod-off). */
-function sitesOff(): string[] {
+export function sitesOff(): string[] {
   const types = store.coll<StoredType>('employeeTypes');
   const changed: string[] = [];
   for (const t of Object.values(types)) {
