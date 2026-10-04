@@ -66,6 +66,8 @@ function DayPanel({ week, day, today, onDate, personId }: {
   const [notes, setNotes] = useState(() => savedReason.split(' · ').slice(1).join(' · '));
   const [worked, setWorked] = useState(false);
   const { busy, fields, stats } = entry, chip = dayChip(day);
+  /* the times below go as "called in and worked anyway", which a leave or sickness day needs while leave blocks capture */
+  const anyway = { workedAnyway: nonwork && worked };
   const lockedTitle = day.locked ? day.lockNote : undefined;
 
   /* submit-nonwork: a reason and no times, routed to the approver like any day */
@@ -136,8 +138,8 @@ function DayPanel({ week, day, today, onDate, personId }: {
             <DayFields {...fields} which={side ? 'open' : 'all'} />
             <DayChecks checked={entry.checked} refusal={entry.refusal} />
             <div className="mt-lg flex flex-wrap justify-end gap-sm">
-              <Button testId={tid.dayForm.save} kind="ghost" disabled={day.locked} title={lockedTitle} pending={busy} onMouseDown={holdFocus} onClick={() => entry.attempt('save')}>Save draft</Button>
-              <Button testId={tid.dayForm.submit} kind="primary" disabled={day.locked} title={lockedTitle} pending={busy} onMouseDown={holdFocus} onClick={() => entry.attempt('submit')}>Submit day</Button>
+              <Button testId={tid.dayForm.save} kind="ghost" disabled={day.locked} title={lockedTitle} pending={busy} onMouseDown={holdFocus} onClick={() => entry.attempt('save', anyway)}>Save draft</Button>
+              <Button testId={tid.dayForm.submit} kind="primary" disabled={day.locked} title={lockedTitle} pending={busy} onMouseDown={holdFocus} onClick={() => entry.attempt('submit', anyway)}>Submit day</Button>
             </div>
           </Card>
         </div>

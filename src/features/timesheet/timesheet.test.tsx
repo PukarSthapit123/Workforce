@@ -1,14 +1,12 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { http, HttpResponse } from 'msw';
-import { server } from '@/mocks/node';
 import { store } from '@/mocks/store';
 import { setToken } from '@/api/session-token';
 import { tid } from '@/testids';
-import type { TimesheetConfig, TimesheetDay, TimesheetWeek } from '@/contract/timesheets';
+import type { TimesheetConfig, TimesheetDay } from '@/contract/timesheets';
 import { expectTestIdCoverage } from '@/test/testid-coverage';
 import { renderPage, withFakeServer } from '@/test/render-page';
-import { audits, caller, resetTo } from '@/test/api-helpers';
+import { audits, resetTo } from '@/test/api-helpers';
 import meta from '@/mocks/seed/meta.json';
 import { TimesheetPage } from './TimesheetPage';
 
@@ -150,13 +148,48 @@ describe('My timesheet, day view', () => {
     expect(await screen.findByTestId(tid.toast.info)).toHaveTextContent('Reason submitted · Annual leave · routed to Manish Nepal');
     expect(dayOf('EMP004', '2026-08-13')).toMatchObject({ state: 'pend', entries: [], nonWorkingReason: 'Annual leave · Covering a training day' });
   });
-  test('approved leave on the day shows the blocking banner when the week says so', async () => {
-    const real = (await caller(await signInEmail(BIGYAN))('GET', '/api/v1/timesheets/EMP004/weeks/2026-08-10')).body as TimesheetWeek;
-    server.use(http.get('/api/v1/timesheets/:personId/weeks/:weekStart', () =>
-      HttpResponse.json({ ...real, days: real.days.map(d => (d.date === '2026-08-13' ? { ...d, absence: 'leave' } : d)) })));
+  /* module 4 D8: the absence comes from the leave record itself, with no rota on qnipay */
+  const leaveToday = () => {
+    const lr = store.coll<{ id: string; from: string; to: string }>('leaveRequests');
+    const approved = lr.lr_5;
+    if (!approved) throw new Error('no lr_5');
+    lr.lr_today = { ...approved, id: 'lr_today', from: '2026-08-13', to: '2026-08-13' };
+    store.save();
+  };
+  test('approved leave from the leave record shows the banner; time is refused until the day is marked called in and worked anyway', async () => {
+    leaveToday();
+    const before = audits().length;
     await openDay();
     expect(screen.getByTestId(tid.ts.banner('absence'))).toHaveTextContent('Annual leave is recorded for this day');
     expect(screen.getByTestId(tid.ts.dayState)).toHaveTextContent('Annual leave');
+    set(tid.dayForm.field('start'), '09:00');
+    set(tid.dayForm.field('finish'), '17:00');
+    await userEvent.click(screen.getByTestId(tid.dayForm.save));
+    expect(await screen.findByTestId(tid.dayForm.refusal)).toHaveTextContent(
+      'Annual leave is recorded for this day. Approved absence blocks timesheet capture while “Leave blocks timesheet capture” is on.');
+    expect(screen.getByTestId(tid.dayForm.refusal)).toHaveTextContent('If you did work, mark the day non-working and tick “Called in and worked anyway”.');
+    expect(dayOf('EMP004', '2026-08-13')).toBeUndefined();
+    expect(audits().length).toBe(before);
+    await userEvent.click(screen.getByTestId(tid.ts.nonWorking));
+    await userEvent.click(screen.getByTestId(tid.ts.workedAnyway));
+    expect(screen.getByTestId(tid.dayForm.field('start'))).toHaveValue('09:00');
+    await userEvent.click(screen.getByTestId(tid.dayForm.save));
+    expect(await screen.findByTestId(tid.toast.info)).toHaveTextContent('Draft saved · 08:00 · not submitted yet');
+    expect(dayOf('EMP004', '2026-08-13')).toMatchObject({ state: 'draft', entries: [{ start: '09:00', finish: '17:00' }] });
+  });
+  test('with leave not blocking capture the banner still shows and time saves', async () => {
+    leaveToday();
+    const cfg = store.coll<{ blocksTimesheet: boolean }>('leaveConfig').leaveConfig;
+    if (!cfg) throw new Error('no leave config');
+    cfg.blocksTimesheet = false;
+    store.save();
+    await openDay();
+    expect(screen.getByTestId(tid.ts.banner('absence'))).toHaveTextContent('Annual leave is recorded for this day');
+    set(tid.dayForm.field('start'), '09:00');
+    set(tid.dayForm.field('finish'), '17:00');
+    await userEvent.click(screen.getByTestId(tid.dayForm.save));
+    expect(await screen.findByTestId(tid.toast.info)).toHaveTextContent('Draft saved · 08:00 · not submitted yet');
+    expect(dayOf('EMP004', '2026-08-13')?.state).toBe('draft');
   });
 });
 

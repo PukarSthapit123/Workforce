@@ -6,7 +6,7 @@ import { useSubmitWeek } from '@/api/timesheets';
 import type { TimesheetWeek, WeekSubmitted } from '@/contract/timesheets';
 import { addDays, formatDay, isoWeek, periodStart, weekLayoutFor, weekModel } from '@/domain/timesheet';
 import { envOf, flagOn, hm, rotaShift, typeOf } from './capture';
-import { fillFromRota, gridAs, gridTotals, initialGrid, kindFor, weekBody, type GridState } from './week';
+import { fillFromRota, gridAs, gridTotals, initialGrid, kindFor, refusedDay, weekBody, type GridState } from './week';
 import { WeekGrid } from './WeekGrid';
 import { MultiWeek } from './MultiWeek';
 
@@ -51,7 +51,7 @@ export function WeekView({ week, today, onAnchor, personId }: {
   return (
     <>
       <WeekPanel key={signature} week={week} today={today} onAnchor={onAnchor} onSubmit={onSubmit} pending={pending} />
-      {submit.refusal && <FormWarn testId={tid.ts.banner('week-refusal')}>{submit.refusal.message} <span className="opacity-90">{submit.refusal.next}</span></FormWarn>}
+      {submit.refusal && <FormWarn testId={tid.ts.banner('week-refusal')}>{refusedDay(week, submit.refusal.field)}{submit.refusal.message} <span className="opacity-90">{submit.refusal.next}</span></FormWarn>}
       {shown && shown.held.length > 0 && <Banner testId={tid.ts.weekResult} tone="info" title={`${shown.held.length} day${shown.held.length === 1 ? '' : 's'} held back`}>
         {shown.held.map(h => <span key={h.date} className="block">{h.reason}</span>)}</Banner>}
       {flagOn(c, 'MULTIWEEK') && <MultiWeek week={week} personId={personId} />}

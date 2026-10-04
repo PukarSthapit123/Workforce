@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { tid } from '@/testids';
-import { Banner, Button, FormWarn, Modal, Seg, toastInfo, useNarrow } from '@/ui';
+import { Banner, Button, CheckboxField, CheckRow, FormWarn, Modal, Seg, toastInfo, useNarrow } from '@/ui';
 import { useSubmitWeek, useTimesheetWeek } from '@/api/timesheets';
 import type { DaySaved, TimesheetWeek, WeekDay, WeekSubmitted } from '@/contract/timesheets';
 import { formatDmy, isoWeek, periodStart, weekLayoutFor, weekModel } from '@/domain/timesheet';
@@ -8,7 +8,7 @@ import { todayIso } from '@/lib/format';
 import { envOf, flagOn, hm, typeOf } from './capture';
 import { DayFields } from './DayForm';
 import { DayChecks, holdFocus, useDayEntry } from './useDayEntry';
-import { fillFromRota, gridAs, initialGrid, kindFor, weekBody, type GridState } from './week';
+import { fillFromRota, gridAs, initialGrid, kindFor, refusedDay, weekBody, type GridState } from './week';
 import { WeekGrid } from './WeekGrid';
 
 /* Proxy entry: the prototype's proxyBox, proxy-submit and proxy-week-submit
@@ -65,11 +65,15 @@ function ProxyDay({ week, day, person, onDone }: { week: TimesheetWeek; day: Wee
       toastInfo(`Submitted for ${person.name} on their behalf · ${formatDmy(day.date)} · ${hm(c, res.record.minutes)} · attributed to you · ${first} notified`, flagged(res));
       onDone();
     } });
+  /* a day of leave or sickness takes time only as called in and worked anyway, while leave blocks capture (module 4 D8) */
+  const [anyway, setAnyway] = useState(false);
   return <>
     <DayFields {...entry.fields} which="all" single />
+    {day.absence && <CheckRow control={<CheckboxField testId={tid.leaveLink.proxyAnyway} checked={anyway} onCheckedChange={v => setAnyway(v === true)} />}>
+      {first} was called in and worked anyway on this day of {day.absence === 'leave' ? 'annual leave' : 'sickness'}</CheckRow>}
     <DayChecks checked={entry.checked} refusal={entry.refusal} />
     <Button testId={tid.proxy.submitDay} kind="primary" className="mt-[14px] w-full" disabled={day.locked} title={day.locked ? day.lockNote : undefined}
-      pending={entry.busy} onMouseDown={holdFocus} onClick={() => entry.attempt('submit')}>Submit day for approval</Button>
+      pending={entry.busy} onMouseDown={holdFocus} onClick={() => entry.attempt('submit', { workedAnyway: anyway })}>Submit day for approval</Button>
   </>;
 }
 
@@ -90,7 +94,7 @@ function ProxyWeek({ week, today, person, onDone }: { week: TimesheetWeek; today
   } });
   return <>
     <WeekGrid week={week} model={m} layout={layout} state={current} onChange={setState} today={today} who={first} />
-    {submit.refusal && <FormWarn testId={tid.proxy.refusal}>{submit.refusal.message} <span className="opacity-90">{submit.refusal.next}</span></FormWarn>}
+    {submit.refusal && <FormWarn testId={tid.proxy.refusal}>{refusedDay(week, submit.refusal.field)}{submit.refusal.message} <span className="opacity-90">{submit.refusal.next}</span></FormWarn>}
     <Button testId={tid.proxy.submitWeek} kind="primary" className="mt-md w-full" pending={submit.isPending(`${person.code}/week/${week.weekStart}`)}
       onClick={send}>Submit week for approval</Button>
   </>;

@@ -1,8 +1,7 @@
-import { useState, type TextareaHTMLAttributes } from 'react';
+import { useState } from 'react';
 import { tid } from '@/testids';
 import { cn } from '@/lib/utils';
-import { fieldControl } from '@/ui/shadcn/input';
-import { AddLine, CheckboxField, CheckRow, Empty, Field, FieldGrid, FormExpander, FormGroupLabel, SelectBox, TextInput, Tip } from '@/ui';
+import { AddLine, CheckboxField, CheckRow, Empty, Field, FieldGrid, FormExpander, FormGroupLabel, SelectBox, TextArea, TextInput, Tip } from '@/ui';
 import type { CaptureSetup } from '@/contract/timesheets';
 import { MAX_BREAKS, breakIndex, fieldOptions, formGroups, hm, isAllowance, varianceText, type DayStats as Stats, type FormField, type FormValues } from './capture';
 
@@ -19,9 +18,6 @@ export interface DayFieldsProps {
   which: 'open' | 'closed' | 'all'; single?: boolean; disabled?: boolean;
 }
 
-function TextArea({ testId, className, ...rest }: { testId: string } & TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return <textarea data-testid={testId} rows={2} {...rest} className={cn(fieldControl, 'h-auto resize-y py-[9px] leading-[1.5]', className)} />;
-}
 const INPUT: Record<string, { type: string; step?: string; min?: string; max?: string; inputMode?: 'decimal' }> = {
   time: { type: 'time', step: '300' },
   duration: { type: 'number', step: '0.25', min: '0', max: '24', inputMode: 'decimal' },
@@ -46,7 +42,7 @@ function Control({ f, p }: { f: FormField; p: DayFieldsProps }) {
     control = <SelectBox testId={id} options={fieldOptions(def, p.capture, p.values)} value={text || undefined} placeholder="Choose" disabled={p.disabled}
       onValueChange={x => p.onChange(code, x)} />;
   else if (def.input === 'textarea')
-    control = <TextArea testId={id} value={text} disabled={p.disabled} onChange={e => p.onChange(code, e.target.value)} onBlur={() => p.onBlur(code)} />;
+    control = <TextArea testId={id} rows={2} value={text} disabled={p.disabled} onChange={e => p.onChange(code, e.target.value)} onBlur={() => p.onBlur(code)} />;
   else {
     const a = (def.t && INPUT[def.t]) || { type: 'text' };
     control = <TextInput testId={id} {...a} value={text} disabled={p.disabled}

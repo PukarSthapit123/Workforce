@@ -3,7 +3,7 @@ import { tid } from '@/testids';
 import { FormWarn } from '@/ui';
 import { useSaveDay, useSubmitDay } from '@/api/timesheets';
 import type { Refusal } from '@/contract/common';
-import type { DaySaved, TimesheetWeek, WeekDay } from '@/contract/timesheets';
+import type { DayInput, DaySaved, TimesheetWeek, WeekDay } from '@/contract/timesheets';
 import { taskReset } from '@/domain/timesheet';
 import { breakIndex, breaksShown, checkDay, checkField, dayInputFrom, dayStats, rotaShift, serverField, valuesFromDay, type FormValues, type LocalCheck } from './capture';
 import type { DayFieldsProps } from './DayForm';
@@ -33,12 +33,13 @@ export function useDayEntry({ week, day, personId, onSaved, onSubmitted }: {
     setErrors(e => (problem ? { ...e, [code]: problem } : Object.fromEntries(Object.entries(e).filter(([k]) => k !== code))));
   };
   /* validateEntry before anything is sent: errors block, warnings travel with the save */
-  const attempt = (kind: 'save' | 'submit') => {
+  /* workedAnyway: the day is marked "Called in and worked anyway", so time on a leave or sickness day is accepted (module 4 D8) */
+  const attempt = (kind: 'save' | 'submit', extra: Pick<DayInput, 'workedAnyway'> = {}) => {
     const r = checkDay(values, c, day.date, week.now, rotaShift(day));
     setErrors(Object.fromEntries(r.errors.map(e => [e.field, e.message])));
     setChecked(r);
     if (r.errors.length) return;
-    const vars = { personId, date: day.date, version: day.version, body: dayInputFrom(values, c) };
+    const vars = { personId, date: day.date, version: day.version, body: { ...dayInputFrom(values, c), ...(extra.workedAnyway ? { workedAnyway: true } : {}) } };
     if (kind === 'save') save.mutate(vars, { onSuccess: onSaved });
     else submit.mutate(vars, { onSuccess: onSubmitted });
   };

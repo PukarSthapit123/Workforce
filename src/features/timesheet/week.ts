@@ -6,7 +6,7 @@
    holds lines per day, each with its own selects. Either becomes the same
    per-day entries for the one-request week submission. */
 import type { TimesheetWeek, WeekSubmit } from '@/contract/timesheets';
-import { dayMinutes, entryMinutes, toMin, type BreakInput, type WeekLayout, type WeekModel } from '@/domain/timesheet';
+import { dayMinutes, entryMinutes, formatDay, toMin, type BreakInput, type WeekLayout, type WeekModel } from '@/domain/timesheet';
 import { rotaShift } from './capture';
 
 /* A cell is one entry on one day. `breaks` and `extra` are what the day form
@@ -147,4 +147,11 @@ export function weekBody(week: TimesheetWeek, state: GridState, m: WeekModel): W
     return { ...asRead, entries, allowances: rec?.allowances ?? [], ...(shift ? { shift } : {}) };
   });
   return { days };
+}
+/* A week refusal about one day (field days.N, such as leave blocking capture,
+   module 4 D8) speaks of "this day", so the warning names the day first. */
+export function refusedDay(week: TimesheetWeek, field: string | undefined) {
+  const i = /^days\.(\d+)/.exec(field ?? '')?.[1];
+  const d = i === undefined ? undefined : week.days[Number(i)];
+  return d ? `${formatDay(d.date)}: ` : '';
 }

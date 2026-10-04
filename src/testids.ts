@@ -333,4 +333,23 @@ export const tid = {
     giveBack: 'tsick-give-back', gbPerson: 'tsick-gb-person', gbDay: (date: string) => k('tsick-gb-day', date), gbConfirm: 'tsick-gb-confirm',
     gbCancel: 'tsick-gb-cancel', gbWarn: 'tsick-gb-warn',
   },
+  /* module 4: Leave setup (mleave): leave types, policies, entitlement rules, the booking workflow, Leave and Rota, leavers, per-type policy */
+  mleave: {
+    error: 'mleave-error', loading: 'mleave-loading', off: 'mleave-off', warn: 'mleave-warn', save: 'mleave-save', cancel: 'mleave-cancel', dirty: 'mleave-dirty',
+    card: (key: string) => k('mleave-card', key), tip: (key: string) => k('mleave-tip', key), flag: (code: string) => k('mleave-flag', code),
+    type: (i: number) => k('mleave-type', i), typeName: (i: number) => k('mleave-type-name', i), typePolicy: (i: number) => k('mleave-type-policy', i),
+    typeUnit: (i: number) => k('mleave-type-unit', i), typeCount: (i: number) => k('mleave-type-count', i), typeActive: (i: number) => k('mleave-type-active', i),
+    typeAdd: 'mleave-type-add',
+    policy: (i: number) => k('mleave-policy', i), policyUnit: (i: number) => k('mleave-policy-unit', i),
+    policyNum: (i: number, key: string) => k('mleave-policy-num', i, key),
+    num: (key: string) => k('mleave-num', key), toggle: (key: string) => k('mleave-toggle', key), unit: 'mleave-unit', finYear: 'mleave-fin-year',
+    toilWindow: 'mleave-toil-window', escalateTo: 'mleave-escalate-to', rotaOff: 'mleave-rota-off',
+    stage: (i: number) => k('mleave-stage', i), stageWho: (i: number) => k('mleave-stage-who', i), stageAction: (i: number) => k('mleave-stage-action', i),
+    stageWait: (i: number) => k('mleave-stage-wait', i), stageChannel: (i: number) => k('mleave-stage-channel', i),
+    stageRemove: (i: number) => k('mleave-stage-remove', i), stageAdd: 'mleave-stage-add',
+    leavers: 'mleave-leavers', leaver: (code: string) => k('mleave-leaver', code),
+    empType: (code: string) => k('mleave-emp-type', code), tlPolicy: 'mleave-tl-policy', tlUnit: 'mleave-tl-unit', tlNote: 'mleave-tl-note',
+  },
+  /* module 4 links: proxy entry on a day of leave or sickness (D8) */
+  leaveLink: { proxyAnyway: 'proxy-worked-anyway' },
 } as const;
