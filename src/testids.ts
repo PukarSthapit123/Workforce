@@ -303,4 +303,34 @@ export const tid = {
     simNow: 'leave-sim-now', simHours: 'leave-sim-hours', simBefore: 'leave-sim-before', simAfter: 'leave-sim-after', simChange: 'leave-sim-change',
     simNote: 'leave-sim-note', simClose: 'leave-sim-close',
   },
+  /* module 4: Team leave (tleave): filters, the escalated banner, waiting requests with Approve and Decline, team balances, leaver reconciliation */
+  tleave: {
+    error: 'tleave-error', loading: 'tleave-loading', tip: 'tleave-tip', count: 'tleave-count', breached: 'tleave-breached',
+    search: 'tleave-search', type: 'tleave-type', short: 'tleave-short', empty: 'tleave-empty',
+    card: (id: string) => k('tleave-card', id), sla: (id: string) => k('tleave-sla', id), slaTip: (id: string) => k('tleave-sla-tip', id),
+    balance: (id: string) => k('tleave-balance', id), balanceTip: (id: string) => k('tleave-balance-tip', id), how: (id: string) => k('tleave-how', id),
+    cover: (id: string) => k('tleave-cover', id), stage: (id: string) => k('tleave-stage', id), note: (id: string) => k('tleave-note', id),
+    advisory: (id: string) => k('tleave-advisory', id), warn: (id: string) => k('tleave-warn', id),
+    approve: (id: string) => k('tleave-approve', id), decline: (id: string) => k('tleave-decline', id), rota: (id: string) => k('tleave-rota', id),
+    /* team balances */
+    balances: 'tleave-balances', balanceRow: (code: string) => k('tleave-balance-row', code), next: (code: string) => k('tleave-next', code),
+    ent: (code: string) => k('tleave-ent', code), entLoading: 'tleave-ent-loading',
+    /* leaver reconciliation (LV_LEAVER) */
+    leaversTip: 'tleave-leavers-tip', leaver: (code: string) => k('tleave-leaver', code), leaverVerdict: (code: string) => k('tleave-leaver-verdict', code),
+    leaverAction: (code: string) => k('tleave-leaver-action', code), leaverRow: (code: string, row: string) => k('tleave-leaver-row', code, row),
+    /* the decline dialog: the reason the colleague sees (D4) */
+    reason: 'tleave-reason', declineConfirm: 'tleave-decline-confirm', declineCancel: 'tleave-decline-cancel', declineWarn: 'tleave-decline-warn',
+  },
+  /* module 4: Sickness (tsick): the trigger banner, the Bradford table, recording an absence, and sickness during booked leave */
+  tsick: {
+    error: 'tsick-error', loading: 'tsick-loading', count: 'tsick-count', banner: 'tsick-banner', arrange: 'tsick-arrange', arranged: 'tsick-arranged',
+    search: 'tsick-search', triggers: 'tsick-triggers', table: 'tsick-table', scoreTip: 'tsick-score-tip', empty: 'tsick-empty',
+    row: (code: string) => k('tsick-row', code), score: (code: string) => k('tsick-score', code), next: (code: string) => k('tsick-next', code),
+    /* Record an absence */
+    record: 'tsick-record', who: 'tsick-who', from: 'tsick-from', to: 'tsick-to', reason: 'tsick-reason', save: 'tsick-save', warn: 'tsick-warn',
+    /* Sick during booked leave (D10) */
+    onLeave: 'tsick-on-leave', onLeaveTip: 'tsick-on-leave-tip', onLeaveDay: (code: string, date: string) => k('tsick-on-leave-day', code, date),
+    giveBack: 'tsick-give-back', gbPerson: 'tsick-gb-person', gbDay: (date: string) => k('tsick-gb-day', date), gbConfirm: 'tsick-gb-confirm',
+    gbCancel: 'tsick-gb-cancel', gbWarn: 'tsick-gb-warn',
+  },
 } as const;

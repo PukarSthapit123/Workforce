@@ -14,6 +14,9 @@ import { useTenant } from '@/shell/shellData';
    (qnipay-workforce-v15.html:7715-7836). */
 
 const firstName = (name: string) => name.split(/\s/)[0] ?? name;
+/* What the entitlement and simulation dialogs need: My leave for your own,
+   or a colleague's entitlement read (useEntitlement) on Team leave. */
+export type EntitlementOf = Pick<MyLeave, 'today' | 'entitlement' | 'balance' | 'facts'> & { person: { name: string } };
 const READ_ONLY = 'read-only:cursor-default read-only:bg-surface-tint read-only:text-text-secondary';
 const daysHours = (days: number, hours: number) => `${days} days · ${hours.toFixed(2)} hours`;
 
@@ -104,7 +107,7 @@ export function RequestDialog({ m, onClose }: { m: MyLeave; onClose: () => void 
 }
 
 /* entitlementModal (v15:7793-7820): the calculation shown, not just its result. */
-export function EntitlementDialog({ m, onClose, onSimulate }: { m: MyLeave; onClose: () => void; onSimulate?: () => void }) {
+export function EntitlementDialog({ m, onClose, onSimulate }: { m: EntitlementOf; onClose: () => void; onSimulate?: () => void }) {
   const e = m.entitlement, b = m.balance, pol = e.policy;
   return (
     <Modal open onOpenChange={o => { if (!o) onClose(); }} title={`How ${firstName(m.person.name)}’s entitlement was worked out`}
@@ -133,7 +136,7 @@ export function EntitlementDialog({ m, onClose, onSimulate }: { m: MyLeave; onCl
 /* proRataModal (v15:7822-7836) as a simulation (D3): Leave never edits the
    person record, so this works the new entitlement out on the screen and
    writes nothing. People owns contracted hours. */
-export function SimulateDialog({ m, onClose }: { m: MyLeave; onClose: () => void }) {
+export function SimulateDialog({ m, onClose }: { m: EntitlementOf; onClose: () => void }) {
   const [hours, setHours] = useState(String(m.facts.contractedHours >= 30 ? 22.5 : 37.5));
   const n = Number(hours), valid = hours.trim() !== '' && Number.isFinite(n) && n >= 0 && n <= 48;
   const facts = { contractedHours: m.facts.contractedHours, start: m.facts.start,
