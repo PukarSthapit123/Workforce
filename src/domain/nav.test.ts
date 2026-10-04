@@ -36,6 +36,11 @@ test('a manager also gets My Team, with Team Home and Approvals in the strip and
   expect(must(team.tabs.find(t => t.view === 'trota')).subProject).toBeUndefined();
   expect(must(team.tabs.find(t => t.view === 'tcover'))).toMatchObject({ built: true, path: '/team/tcover', group: 'Scheduling' });
   expect(must(team.tabs.find(t => t.view === 'tcover')).subProject).toBeUndefined();
+  /* module 4 builds Team leave and Sickness */
+  expect(must(team.tabs.find(t => t.view === 'tleave'))).toMatchObject({ built: true, path: '/team/tleave', group: 'Requests', label: 'Requests' });
+  expect(must(team.tabs.find(t => t.view === 'tleave')).subProject).toBeUndefined();
+  expect(must(team.tabs.find(t => t.view === 'tsick'))).toMatchObject({ built: true, path: '/team/tsick', group: 'Requests', label: 'Sickness' });
+  expect(must(team.tabs.find(t => t.view === 'tsick')).subProject).toBeUndefined();
 });
 test('a manager who builds the rota gets the Shift catalogue and Working patterns, built, in the prototype order', () => {
   const g = buildNav({ caps: caps('own_home', 'team_rota', 'team_cover', 'rota_shift', 'rota_pattern'), modules: ALL_MODULES, flags, onboarding: false });

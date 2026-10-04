@@ -21,7 +21,7 @@ const LATER: Record<string, string> = {
   home: 'Workforce core (plan 1c)', hours: 'Timesheet',
   docs: 'Workforce core (plan 1c)', notices: 'Workforce core (plan 1c)', onb: 'Onboarding',
   thome: 'Workforce core (plan 1c)', thours: 'Timesheet',
-  tleave: 'Leave', tsick: 'Leave', texc: 'Timesheet', tonb: 'Onboarding',
+  texc: 'Timesheet', tonb: 'Onboarding',
   tnotices: 'Workforce core (plan 1c)',
   aorg: 'Workforce core (plan 1c)', acal: 'Workforce core (plan 1c)', amods: 'Workforce core (plan 1c)',
   anotif: 'Workforce core (plan 1c)',
