@@ -19,6 +19,9 @@ test('an employee gets My Work only, in prototype order', () => {
   /* module 3 builds My shifts */
   expect(must(must(g[0]).tabs.find(t => t.view === 'shifts'))).toMatchObject({ built: true, path: '/work/shifts' });
   expect(must(must(g[0]).tabs.find(t => t.view === 'shifts')).subProject).toBeUndefined();
+  /* module 4 builds My leave */
+  expect(must(must(g[0]).tabs.find(t => t.view === 'leave'))).toMatchObject({ built: true, path: '/work/leave' });
+  expect(must(must(g[0]).tabs.find(t => t.view === 'leave')).subProject).toBeUndefined();
 });
 test('a manager also gets My Team, with Team Home and Approvals in the strip and the rest under headings', () => {
   const g = buildNav({ caps: caps('own_home', 'team_ts', 'team_rota', 'team_cover', 'team_leave', 'team_sick', 'team_hours', 'team_people', 'onb_track', 'notice_post'), modules: ALL_MODULES, flags, onboarding: false });
