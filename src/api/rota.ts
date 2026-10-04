@@ -7,6 +7,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { api } from './client';
 import { useRecordMutation } from './mutation';
 import { timesheetKeys } from './timesheets';
+import { notificationKeys } from './notifications';
 import {
   acceptRotaPlan, addPatternPeople, askAllCover, assignCover, claimCover, clearRotaWeek, confirmFilled, copyRotaWeek, createPattern,
   createShiftType, deletePattern, deleteShiftType, escalateCover, fillCover, generatePattern, getMyShifts, getRotaConfig, getRotaHome, getRotaWeek,
@@ -67,7 +68,9 @@ export const useRotaConfig = (enabled = true) => useQuery({ queryKey: rotaKeys.c
 /* --------------------------------------------------------------- writes */
 /* A rota write can change any week (repeat and generate reach forward), cover,
    my shifts, and the timesheet's rota line. */
-const AFTER = [rotaKeys.all, timesheetKeys.all] as const;
+/* a rota write can tell people (rt_* events), so the bell is read again too */
+const AFTER = [rotaKeys.all, timesheetKeys.all, notificationKeys.all] as const;
+const COVER = [rotaKeys.cover, notificationKeys.all] as const;
 export interface WeekRef { location: string; weekStart: string; version: number }
 const weekParams = (w: WeekRef) => ({ location: w.location, weekStart: w.weekStart });
 const weekKey = (w: WeekRef) => `rota/${w.location}/${w.weekStart}`;
@@ -138,17 +141,17 @@ export const useGeneratePattern = () => useRecordMutation({
 /* Cover. Assign, fill and claim write the rota week too, so they re-read everything rota. */
 type CoverRef = Pick<CoverView, 'id' | 'version'>;
 export const useOpenCover = () => useRecordMutation({
-  mutationFn: (body: OpenCover) => api(openCover, { body }), recordKey: b => `rota/cover/new/${b.location}/${b.date}/${b.shift}`, invalidates: [rotaKeys.cover],
+  mutationFn: (body: OpenCover) => api(openCover, { body }), recordKey: b => `rota/cover/new/${b.location}/${b.date}/${b.shift}`, invalidates: COVER,
 });
 export const useCoverReason = () => useRecordMutation({
   mutationFn: (v: { cover: CoverRef; reason: string }) => api(setCoverReason, { params: { id: v.cover.id }, body: { reason: v.reason }, ifMatch: v.cover.version }),
-  recordKey: v => `rota/cover/${v.cover.id}`, invalidates: [rotaKeys.cover],
+  recordKey: v => `rota/cover/${v.cover.id}`, invalidates: COVER,
 });
 export const useAskAllCover = () => useRecordMutation({
-  mutationFn: (c: CoverRef) => api(askAllCover, { params: { id: c.id }, ifMatch: c.version }), recordKey: c => `rota/cover/${c.id}`, invalidates: [rotaKeys.cover],
+  mutationFn: (c: CoverRef) => api(askAllCover, { params: { id: c.id }, ifMatch: c.version }), recordKey: c => `rota/cover/${c.id}`, invalidates: COVER,
 });
 export const useEscalateCover = () => useRecordMutation({
-  mutationFn: (c: CoverRef) => api(escalateCover, { params: { id: c.id }, ifMatch: c.version }), recordKey: c => `rota/cover/${c.id}`, invalidates: [rotaKeys.cover],
+  mutationFn: (c: CoverRef) => api(escalateCover, { params: { id: c.id }, ifMatch: c.version }), recordKey: c => `rota/cover/${c.id}`, invalidates: COVER,
 });
 export const useAssignCover = () => useRecordMutation({
   mutationFn: (v: { cover: CoverRef; personCode: string }) => api(assignCover, { params: { id: v.cover.id }, body: { personCode: v.personCode }, ifMatch: v.cover.version }),
@@ -162,7 +165,7 @@ export const useClaimShift = () => useRecordMutation({
   mutationFn: (c: Pick<OpenShift, 'id' | 'version'>) => api(claimCover, { params: { id: c.id }, ifMatch: c.version }), recordKey: c => `rota/cover/${c.id}`, invalidates: AFTER,
 });
 export const useConfirmFilled = () => useRecordMutation({
-  mutationFn: (f: Pick<FilledView, 'id' | 'version'>) => api(confirmFilled, { params: { id: f.id }, ifMatch: f.version }), recordKey: f => `rota/filled/${f.id}`, invalidates: [rotaKeys.cover],
+  mutationFn: (f: Pick<FilledView, 'id' | 'version'>) => api(confirmFilled, { params: { id: f.id }, ifMatch: f.version }), recordKey: f => `rota/filled/${f.id}`, invalidates: COVER,
 });
 
 /* Rota setup (mrota): applies on Save, versioned, one audit row. */

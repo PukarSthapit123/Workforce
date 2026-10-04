@@ -8,6 +8,7 @@ import { api } from './client';
 import { useRecordMutation } from './mutation';
 import { rotaKeys } from './rota';
 import { timesheetKeys } from './timesheets';
+import { notificationKeys } from './notifications';
 import {
   approveLeave, arrangeRtw, cancelLeave, declineLeave, getEntitlement, getLeaveConfig, getMyLeave, getSicknessBoard, getTeamBalances, giveDaysBack,
   listLeavers, listTeamLeave, recordSickness, requestLeave, updateLeaveConfig,
@@ -49,15 +50,17 @@ export const useLeaveConfig = (enabled = true) => useQuery({ queryKey: leaveKeys
 
 /* --------------------------------------------------------------- writes */
 /* A write that can reach the rota and the timesheet's absence. */
-const REACHES = [leaveKeys.all, rotaKeys.all, timesheetKeys.all] as const;
+const REACHES = [leaveKeys.all, rotaKeys.all, timesheetKeys.all, notificationKeys.all] as const;
+/* a request, decision or cancellation tells someone (lv_* events) */
+const TELLS = [leaveKeys.all, notificationKeys.all] as const;
 type RequestRef = Pick<LeaveRequestView, 'id' | 'version'>;
 
 export const useRequestLeave = () => useRecordMutation({
-  mutationFn: (body: RequestLeave) => api(requestLeave, { body }), recordKey: () => 'leave/request/new', invalidates: [leaveKeys.all],
+  mutationFn: (body: RequestLeave) => api(requestLeave, { body }), recordKey: () => 'leave/request/new', invalidates: TELLS,
 });
 export const useCancelLeave = () => useRecordMutation({
   mutationFn: (r: RequestRef) => api(cancelLeave, { params: { id: r.id }, ifMatch: r.version }),
-  recordKey: r => `leave/request/${r.id}`, invalidates: [leaveKeys.all],
+  recordKey: r => `leave/request/${r.id}`, invalidates: TELLS,
 });
 export const useApproveLeave = () => useRecordMutation({
   mutationFn: (r: RequestRef) => api(approveLeave, { params: { id: r.id }, ifMatch: r.version }),
@@ -65,14 +68,14 @@ export const useApproveLeave = () => useRecordMutation({
 });
 export const useDeclineLeave = () => useRecordMutation({
   mutationFn: (v: { request: RequestRef; reason: string }) => api(declineLeave, { params: { id: v.request.id }, body: { reason: v.reason }, ifMatch: v.request.version }),
-  recordKey: v => `leave/request/${v.request.id}`, invalidates: [leaveKeys.all],
+  recordKey: v => `leave/request/${v.request.id}`, invalidates: TELLS,
 });
 export const useRecordSickness = () => useRecordMutation({
   mutationFn: (body: RecordSickness) => api(recordSickness, { body }), recordKey: b => `leave/sickness/new/${b.personCode}`, invalidates: REACHES,
 });
 export const useArrangeRtw = () => useRecordMutation({
   mutationFn: (e: Pick<SickEpisodeRecord, 'id' | 'version'>) => api(arrangeRtw, { params: { id: e.id }, ifMatch: e.version }),
-  recordKey: e => `leave/sickness/${e.id}`, invalidates: [leaveKeys.all],
+  recordKey: e => `leave/sickness/${e.id}`, invalidates: TELLS,
 });
 export const useGiveDaysBack = () => useRecordMutation({
   mutationFn: (body: GiveDaysBack) => api(giveDaysBack, { body }), recordKey: b => `leave/give-back/${b.personCode}`, invalidates: REACHES,

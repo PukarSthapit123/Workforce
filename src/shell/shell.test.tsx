@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/api/query';
 import { ShellView, isHere, stripTabsFor } from './Shell';
+import { emptyInbox } from './Inbox';
 import { buildNav } from '@/domain/nav';
 import { expectTestIdCoverage } from '@/test/testid-coverage';
 import { tid } from '@/testids';
@@ -13,7 +14,7 @@ const menuAccount = (name: string): MenuAccount => ({ name, email: 'someone@exam
 test('the shell has full test id coverage for a manager', () => {
   const nav = buildNav({ caps: new Set(['own_home', 'team_ts', 'team_people', 'notice_post']), modules: { TS: true, A: true, CORE: true }, flags: { NOTICES: true }, onboarding: false });
   render(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={['/work/home']}>
-    <ShellView nav={nav} roleLabel="Manager" viewingAs={null} account={menuAccount('Rachel Hussain')} unread={2} onSignOut={() => {}} onEndViewAs={() => {}} /></MemoryRouter></QueryClientProvider>);
+    <ShellView nav={nav} roleLabel="Manager" viewingAs={null} account={menuAccount('Rachel Hussain')} inbox={emptyInbox(2)} onSignOut={() => {}} onEndViewAs={() => {}} /></MemoryRouter></QueryClientProvider>);
   expectTestIdCoverage();
 });
 
@@ -24,7 +25,7 @@ test('the shell has full test id coverage for a manager', () => {
 test('viewing as someone else shows a dashed role pill naming both people, a way back, and full test id coverage', () => {
   const nav = buildNav({ caps: new Set(['own_home']), modules: { CORE: true }, flags: {}, onboarding: false });
   render(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={['/work/home']}>
-    <ShellView nav={nav} roleLabel="Employee" viewingAs="Amara Okafor" account={menuAccount('Priya Shah')} unread={0} onSignOut={() => {}} onEndViewAs={() => {}} /></MemoryRouter></QueryClientProvider>);
+    <ShellView nav={nav} roleLabel="Employee" viewingAs="Amara Okafor" account={menuAccount('Priya Shah')} inbox={emptyInbox(0)} onSignOut={() => {}} onEndViewAs={() => {}} /></MemoryRouter></QueryClientProvider>);
   expect(screen.getByTestId(tid.shell.viewAsEnd)).toBeInTheDocument();
   expect(screen.getByText(/Amara Okafor/)).toBeInTheDocument();
   const pill = screen.getByTestId(tid.shell.rolePill);
@@ -38,7 +39,7 @@ test('viewing as someone else shows a dashed role pill naming both people, a way
 test('not viewing as anyone shows a plain role pill with no title and no dashed style', () => {
   const nav = buildNav({ caps: new Set(['own_home']), modules: { CORE: true }, flags: {}, onboarding: false });
   render(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={['/work/home']}>
-    <ShellView nav={nav} roleLabel="Employee" viewingAs={null} account={menuAccount('Priya Shah')} unread={0} onSignOut={() => {}} onEndViewAs={() => {}} /></MemoryRouter></QueryClientProvider>);
+    <ShellView nav={nav} roleLabel="Employee" viewingAs={null} account={menuAccount('Priya Shah')} inbox={emptyInbox(0)} onSignOut={() => {}} onEndViewAs={() => {}} /></MemoryRouter></QueryClientProvider>);
   const pill = screen.getByTestId(tid.shell.rolePill);
   expect(pill).not.toHaveAttribute('title');
   expect(pill.className).not.toMatch(/border-dashed/);
@@ -50,7 +51,7 @@ test('not viewing as anyone shows a plain role pill with no title and no dashed 
    (account menu, sign-out) stays reachable. */
 test('an account with no reachable capability sees a clear page, not an empty shell', () => {
   render(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={['/']}>
-    <ShellView nav={[]} roleLabel="Employee" viewingAs={null} account={menuAccount('Priya Shah')} unread={0} onSignOut={() => {}} onEndViewAs={() => {}} /></MemoryRouter></QueryClientProvider>);
+    <ShellView nav={[]} roleLabel="Employee" viewingAs={null} account={menuAccount('Priya Shah')} inbox={emptyInbox(0)} onSignOut={() => {}} onEndViewAs={() => {}} /></MemoryRouter></QueryClientProvider>);
   expect(screen.getByTestId(tid.page('none'))).toHaveTextContent(/administrator/i);
   expect(screen.getByTestId(tid.shell.account)).toBeInTheDocument();
   expectTestIdCoverage();
@@ -62,7 +63,7 @@ test('an account with no reachable capability sees a clear page, not an empty sh
 test('inside a setup section the strip shows a way back plus that section\'s pages, with full test id coverage', () => {
   const nav = buildNav({ caps: new Set(['perm_cfg', 'framework']), modules: { CORE: true }, flags: {}, onboarding: false });
   render(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={['/setup/aperm']}>
-    <ShellView nav={nav} roleLabel="Admin" viewingAs={null} account={menuAccount('Dee Fitzgerald')} unread={0} onSignOut={() => {}} onEndViewAs={() => {}} /></MemoryRouter></QueryClientProvider>);
+    <ShellView nav={nav} roleLabel="Admin" viewingAs={null} account={menuAccount('Dee Fitzgerald')} inbox={emptyInbox(0)} onSignOut={() => {}} onEndViewAs={() => {}} /></MemoryRouter></QueryClientProvider>);
   expect(screen.getByTestId(tid.nav.tab('asetup'))).toHaveTextContent(/All setup/);
   expect(screen.getByTestId(tid.nav.tab('aperm'))).toBeInTheDocument();
   expect(screen.getByTestId(tid.nav.tab('anotif'))).toBeInTheDocument();
@@ -94,7 +95,7 @@ test('the manager strip stays scannable: a handful of top-level items, not one p
     modules: { CORE: true, TS: true, A: true, R: true, L: true, ON: true }, flags: { NOTICES: true }, onboarding: false,
   });
   render(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={['/team/thome']}>
-    <ShellView nav={nav} roleLabel="Manager" viewingAs={null} account={menuAccount('Rachel Hussain')} unread={0} onSignOut={() => {}} onEndViewAs={() => {}} /></MemoryRouter></QueryClientProvider>);
+    <ShellView nav={nav} roleLabel="Manager" viewingAs={null} account={menuAccount('Rachel Hussain')} inbox={emptyInbox(0)} onSignOut={() => {}} onEndViewAs={() => {}} /></MemoryRouter></QueryClientProvider>);
   const strip = screen.getByRole('navigation', { name: 'Pages' });
   const topLevel = within(strip).getAllByTestId(/^nav-(tab|menu)-/);
   expect(topLevel.length).toBeLessThanOrEqual(7);
@@ -105,7 +106,7 @@ test('the manager strip stays scannable: a handful of top-level items, not one p
 test('a page inside a menu still marks its heading as current', () => {
   const nav = buildNav({ caps: new Set(['own_home', 'team_rota', 'rota_pattern', 'rota_shift']), modules: { CORE: true, R: true }, flags: {}, onboarding: false });
   render(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={['/team/trota']}>
-    <ShellView nav={nav} roleLabel="Manager" viewingAs={null} account={menuAccount('Rachel Hussain')} unread={0} onSignOut={() => {}} onEndViewAs={() => {}} /></MemoryRouter></QueryClientProvider>);
+    <ShellView nav={nav} roleLabel="Manager" viewingAs={null} account={menuAccount('Rachel Hussain')} inbox={emptyInbox(0)} onSignOut={() => {}} onEndViewAs={() => {}} /></MemoryRouter></QueryClientProvider>);
   expect(screen.getByTestId(tid.nav.menu('scheduling')).className).toMatch(/font-semibold/);
 });
 

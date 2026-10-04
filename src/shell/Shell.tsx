@@ -1,15 +1,19 @@
-import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
-import { Bell, Sun, TriangleAlert } from 'lucide-react';
-import { Navigate, Route, Routes, useLocation } from 'react-router';
+import { useEffect, useRef, useState, type ComponentType, type ReactNode } from 'react';
+import { Sun, TriangleAlert } from 'lucide-react';
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router';
 import type { NavGroup, NavTab } from '@/domain/nav';
 import { tid } from '@/testids';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/ui/shadcn/dropdown-menu';
-import { Modal, NavLink, Page, PageHead, Card } from '@/ui';
+import { Modal, NavLink, Page, PageHead, Card, toastInfo } from '@/ui';
 import { AccountMenu, type MenuAccount } from './AccountMenu';
 import { TopBar } from './TopBar';
+import { NotificationBell, type InboxState } from './Inbox';
+import { useMarkAllRead, useMarkRead, useMyNotifications } from '@/api/notifications';
 import { useShellData, ShellLoading, ShellError } from './shellData';
 import { NotBuilt } from '@/features/not-built/NotBuilt';
+import { PageUnavailable } from '@/features/not-built/PageUnavailable';
+import { NotificationsPage } from '@/features/notifications/NotificationsPage';
 import { SetupIndex } from '@/features/setup/SetupIndex';
 import { PermissionsPage } from '@/features/access/PermissionsPage';
 import { AuditPage } from '@/features/audit/AuditPage';
@@ -42,7 +46,7 @@ const BUILT: Record<string, ComponentType> = { asetup: SetupIndex, aperm: Permis
   aloc: DimensionsPage, acon: ContractsPage, atypes: EmployeeTypesPage, ts: TimesheetPage, tteam: TeamTimesheetsPage,
   mts: TimesheetSetupPage, trota: RotaPage, tshifts: ShiftsPage, tpat: PatternsPage,
   tcover: CoverPage, shifts: MyShiftsPage, mrota: RotaSetupPage, leave: LeavePage, tleave: TeamLeavePage, tsick: SicknessPage, mleave: LeaveSetupPage,
-  amods: ModulesPage, acal: CalendarPage, aorg: OrganisationPage };
+  amods: ModulesPage, acal: CalendarPage, aorg: OrganisationPage, anotif: NotificationsPage };
 const THEME_KEY = 'qnipay.theme';
 
 /* Avoids a non-null assertion on role[0]: charAt(0) is always defined, even
@@ -57,18 +61,41 @@ export function Shell() {
   /* the user type's display name (D11): a renamed role shows its new name */
   const role = session.viewingAs ? capitalise(session.viewingAs.userType) : session.account.roleName || capitalise(session.account.userType);
   return <ShellView nav={data.nav} roleLabel={role} viewingAs={session.viewingAs?.name ?? null}
-    account={session.account} canViewAs={session.capabilities.includes('perm_cfg')} unread={0}
+    account={session.account} canViewAs={session.capabilities.includes('perm_cfg')}
+    who={`${session.account.email}|${session.viewingAs?.personCode ?? ''}`}
     onSignOut={data.onSignOut} onViewAs={data.onViewAs} onEndViewAs={data.onEndViewAs} />;
+}
+
+/* The bell's inbox (D9): the reader's own items from the server. Opening one
+   marks it read (not while looking at the app as someone else, which changes
+   nothing) and goes where it points; the dot and the count change only once
+   the server has answered. */
+function useInbox(readOnly: boolean): InboxState {
+  const q = useMyNotifications(), markRead = useMarkRead(), markAll = useMarkAllRead();
+  return {
+    status: q.isPending ? 'loading' : q.isError ? 'error' : 'ready', items: q.data?.items ?? [], unread: q.data?.unread ?? 0,
+    readOnly, markAllPending: markAll.isPending('notifications/all'),
+    onOpen: n => {
+      if (!n.read && !readOnly) markRead.mutate({ id: n.id });
+      toastInfo(`Opened from your notifications: ${n.title}.`);
+    },
+    onMarkAll: () => { if (!readOnly) markAll.mutate(null); },
+  };
 }
 
 /* The shell chrome is shared: a module never restyles it. Top bar, then the
    tab strip (desktop) or the bottom bar (phone), both painted from the same
    array, then the routed page inside its own Page frame. */
-export function ShellView({ nav, roleLabel, viewingAs, account, canViewAs = false, unread, onSignOut, onViewAs = () => {}, onEndViewAs }: {
-  nav: NavGroup[]; roleLabel: string; viewingAs: string | null; account: MenuAccount; canViewAs?: boolean; unread: number;
+export function ShellView({ nav, roleLabel, viewingAs, account, canViewAs = false, inbox, who, onSignOut, onViewAs = () => {}, onEndViewAs }: {
+  nav: NavGroup[]; roleLabel: string; viewingAs: string | null; account: MenuAccount; canViewAs?: boolean;
+  /* the bell's inbox; read from the server when not given */
+  inbox?: InboxState;
+  /* who the app is showing: the account, and whoever it is viewing as */
+  who?: string;
   onSignOut(): void; onViewAs?(personCode: string): void; onEndViewAs(): void;
 }) {
   const { pathname, search } = useLocation();
+  useHomeOnSwitch(who, nav, pathname);
   const [theme, toggleTheme] = useTheme();
   const current = nav.find(g => pathname.startsWith(`/${g.key}/`)) ?? nav[0];
   const first = nav[0]?.tabs[0];
@@ -87,10 +114,7 @@ export function ShellView({ nav, roleLabel, viewingAs, account, canViewAs = fals
             className={cn('hidden shrink-0 items-center rounded-pill border border-accent-line px-[11px] py-xs text-xs font-bold tracking-[.05em] text-brand-accent uppercase md:inline-flex', viewingAs && 'border-dashed opacity-85')}
             title={viewingAs ? `Looking at the app as ${viewingAs} · your account is ${account.name}` : undefined}>{roleLabel}</span>
           <IconButton testId={tid.shell.theme} label={`${theme === 'dark' ? 'Light' : 'Dark'} theme`} onClick={toggleTheme}><Sun aria-hidden="true" /></IconButton>
-          <IconButton testId={tid.shell.bell} label={`Notifications, ${unread} unread`}>
-            <Bell aria-hidden="true" />
-            {unread > 0 && <span data-testid={tid.shell.bellCount} className="absolute top-px right-0 grid h-4 min-w-4 place-items-center rounded-pill bg-brand-accent px-xs text-xs leading-none font-bold text-text-on-accent max-md:top-[6px] max-md:right-[4px]">{unread}</span>}
-          </IconButton>
+          {inbox ? <NotificationBell inbox={inbox} /> : <ServerBell readOnly={viewingAs !== null} />}
           <AccountMenu account={account} viewingAs={viewingAs} canViewAs={canViewAs} onSignOut={onSignOut} onViewAs={onViewAs} onEndViewAs={onEndViewAs} />
         </div>
       </TopBar>
@@ -105,11 +129,29 @@ export function ShellView({ nav, roleLabel, viewingAs, account, canViewAs = fals
             const Built = BUILT[t.view];
             return <Route key={t.path} path={t.path} element={Built ? <Built /> : <NotBuilt tab={t} />} />;
           })}
-          <Route path="*" element={first ? <Navigate to={first.path} replace /> : <NothingAvailable />} />
+          <Route path="/" element={first ? <Navigate to={first.path} replace /> : <NothingAvailable />} />
+          <Route path="*" element={first ? <PageUnavailable path={pathname} home={first} /> : <NothingAvailable />} />
         </Routes>
       </main>
       {stripTabs.length > 0 && <BottomBar tabs={stripTabs} here={here} />}
     </div>);
+}
+
+function ServerBell({ readOnly }: { readOnly: boolean }) {
+  return <NotificationBell inbox={useInbox(readOnly)} />;
+}
+
+/* Switching account or who you view as starts from that person's first page
+   when the page on screen is not theirs; a link opened on purpose to a page
+   you cannot reach says so instead (PageUnavailable). */
+function useHomeOnSwitch(who: string | undefined, nav: NavGroup[], pathname: string) {
+  const navigate = useNavigate(), last = useRef(who);
+  useEffect(() => {
+    if (last.current === who) return;
+    last.current = who;
+    const first = nav[0]?.tabs[0];
+    if (first && !nav.some(g => g.tabs.some(t => t.path === pathname))) void navigate(first.path, { replace: true });
+  }, [who, nav, pathname, navigate]);
 }
 
 /* .modsw button (v15:287-301, 1527, 1560-1561): 14px/500 in the muted shell

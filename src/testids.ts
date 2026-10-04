@@ -386,4 +386,19 @@ export const tid = {
     nmw: 'aorg-nmw', bankHolidays: 'aorg-bank-holidays', payFrequency: 'aorg-pay-frequency', weekEnding: 'aorg-week-ending',
     firstPayDate: 'aorg-first-pay-date', cutoff: 'aorg-cutoff', cutoffLink: 'aorg-cutoff-link',
   },
+  /* 1c group 4: the bell's inbox panel (D9) */
+  inbox: {
+    panel: 'inbox-panel', markAll: 'inbox-mark-all', empty: 'inbox-empty', loading: 'inbox-loading', error: 'inbox-error',
+    item: (id: string) => k('inbox-item', id), dot: (id: string) => k('inbox-dot', id), dest: (id: string) => k('inbox-dest', id),
+  },
+  /* 1c: a link to a page that does not exist, or that this person cannot open (D9) */
+  unavailable: { root: 'unavailable', home: 'unavailable-home' },
+  /* 1c group 4: Notifications (anotif): the event x user type channel matrix */
+  anotif: {
+    error: 'anotif-error', loading: 'anotif-loading', tip: 'anotif-tip', table: 'anotif-table',
+    group: (module: string) => k('anotif-group', module), row: (code: string) => k('anotif-row', code),
+    cell: (code: string, persona: string) => k('anotif-cell', code, persona), never: (code: string, persona: string) => k('anotif-never', code, persona),
+    notConnected: 'anotif-not-connected', evidence: 'anotif-evidence', evidenceTip: 'anotif-evidence-tip', evidenceRow: (ref: string) => k('anotif-evidence-row', ref),
+    save: 'anotif-save', cancel: 'anotif-cancel',
+  },
 } as const;
