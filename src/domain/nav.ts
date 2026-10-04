@@ -25,7 +25,6 @@ const LATER: Record<string, string> = {
   thome: 'Workforce core (plan 1c)', thours: 'Timesheet',
   texc: 'Timesheet', tonb: 'Onboarding',
   tnotices: 'Workforce core (plan 1c)',
-  aorg: 'Workforce core (plan 1c)',
   anotif: 'Workforce core (plan 1c)',
   aappr: 'Workforce core (plan 1c)', mpay: 'Timesheet',
   ipay: 'Payroll and Business Central', ibc: 'Payroll and Business Central', iit: 'Rota',

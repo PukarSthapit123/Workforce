@@ -182,11 +182,12 @@ test('plan 1b builds the people, profile, dimensions, contracts and employee typ
   expect(tabs.filter(t => t.subProject?.includes('plan 1b'))).toEqual([]);
 });
 
-test('1c builds Modules & features and Calendar; Organisation still waits for its own group', () => {
+test('1c builds Modules & features, Calendar and Organisation', () => {
   const g = buildNav({ caps: caps('master_data', 'mod_cfg'), modules: ALL_MODULES, flags, onboarding: false });
   const tabs = g.flatMap(x => x.tabs);
   expect(tabs.find(t => t.view === 'amods')).toMatchObject({ built: true, path: '/setup/amods', section: 'Modules' });
   expect(tabs.find(t => t.view === 'amods')?.subProject).toBeUndefined();
   expect(tabs.find(t => t.view === 'acal')).toMatchObject({ built: true, path: '/setup/acal', section: 'Organisation' });
-  expect(tabs.find(t => t.view === 'aorg')).toMatchObject({ built: false, subProject: 'Workforce core (plan 1c)' });
+  expect(tabs.find(t => t.view === 'aorg')).toMatchObject({ built: true, path: '/setup/aorg', section: 'Organisation' });
+  expect(tabs.find(t => t.view === 'aorg')?.subProject).toBeUndefined();
 });

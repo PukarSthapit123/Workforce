@@ -373,4 +373,17 @@ export const tid = {
   roleNames: { open: 'role-names-open', field: (id: string) => k('role-names-field', id), save: 'role-names-save', cancel: 'role-names-cancel', warn: 'role-names-warn' },
   /* 1c D6: Timesheet setup points at the weekly grid's row in Modules & features */
   mtsPointer: { weekly: 'mts-weekly-pointer', link: 'mts-weekly-link' },
+  /* 1c: Organisation (aorg): the configuration spine, templates, company, compliance and pay periods */
+  aorg: {
+    error: 'aorg-error', loading: 'aorg-loading', card: (key: string) => k('aorg-card', key), tip: (key: string) => k('aorg-tip', key),
+    spine: 'aorg-spine', template: (key: string) => k('aorg-template', key), live: 'aorg-live',
+    saveOpen: 'aorg-save-open', importOpen: 'aorg-import-open', importFile: 'aorg-import-file',
+    saved: 'aorg-saved', savedRow: (key: string) => k('aorg-saved-row', key), noSaved: 'aorg-no-saved',
+    export: (key: string) => k('aorg-export', key), remove: (key: string) => k('aorg-remove', key),
+    saveName: 'aorg-save-name', saveDesc: 'aorg-save-desc', scope: (s: string) => k('aorg-scope', s), save: 'aorg-save', saveCancel: 'aorg-save-cancel', saveWarn: 'aorg-save-warn',
+    plan: (part: string) => k('aorg-plan', part), planLoading: 'aorg-plan-loading', planError: 'aorg-plan-error', apply: 'aorg-apply', applyCancel: 'aorg-apply-cancel',
+    name: 'aorg-name', registration: 'aorg-registration', address: 'aorg-address', country: 'aorg-country',
+    nmw: 'aorg-nmw', bankHolidays: 'aorg-bank-holidays', payFrequency: 'aorg-pay-frequency', weekEnding: 'aorg-week-ending',
+    firstPayDate: 'aorg-first-pay-date', cutoff: 'aorg-cutoff', cutoffLink: 'aorg-cutoff-link',
+  },
 } as const;
