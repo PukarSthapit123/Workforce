@@ -2,7 +2,7 @@ import {
   DEFAULT_ROTA_CONFIG, applyPattern, amendedAuditText, amendedNotice, assignCheck, claimRefusal, clearPreview, clearProblem,
   clearSummary, clearWrites, confirmProblem, confirmSummary, consecRun, copyProblem, copySummary, copyWeek, coverAskAllMove, coverClosed,
   coverEscalateMove, coverNext, coverReasonMove, coverage, coverageIssueNotice, emptyWeek, eligibility, gapDays, gapsAt, genLabel, genRange,
-  generateAuditText, generateSummary, hoursPosition, ineligibleMessage, isValidCell, itRequestFor, lineRestIssues, minFor, newCover,
+  generateActivates, generateAuditText, generateSummary, hoursPosition, ineligibleMessage, isValidCell, itRequestFor, lineRestIssues, minFor, newCover,
   normLine, onRoster, onShift, openCoverProblem, openShiftsFor, patternGenerateProblem, patternProblem, patternUsage, planSummary, planWeek,
   publishNotice, publishProblem, publishSummary, publishWeek, recalcShift, repeatProblem, repeatSummary, repeatWeek, resizeCycle,
   rotaCan, rotaConfigProblem, rotaDayOf, rotaDaysOf, rotaInputFor, rotaKeyCounts, rotaLive, rotaPolicyWithholds, rotaTransitionProblem, rotaVisible, rotaWeekId,
@@ -360,6 +360,10 @@ describe('pattern generation', () => {
     if (r.ok) {
       expect(generateSummary(r)).toBe('2 shift(s) written · 10/08/2026 – 16/08/2026 · 1 week(s) · 3 people · 1 cell(s) already filled, left alone'
         + ' · 1 skipped for leave or sickness · 1 published week(s) skipped. Amend those individually');
+      /* M1: a run from a draft that writes shifts makes it active, as P's save-pattern did, and says so */
+      expect(generateActivates({ active: false }, r)).toBe(true);
+      expect(generateActivates({ active: true }, r)).toBe(false);
+      expect(generateSummary(r, 'Early / Late, 5 over 7').endsWith(' · Early / Late, 5 over 7 was a draft and is now active')).toBe(true);
       expect(generateAuditText(small([]), r, null)).toBe('Early / Late, 5 over 7 · 10/08/2026 – 16/08/2026 · 2 shift(s) written across 1 week(s) · 3 person(s)'
         + ' · 1 cell(s) already filled and left alone · 1 published week(s) skipped');
     }

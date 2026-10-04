@@ -31,7 +31,7 @@ import {
   alreadyOnPattern, amendedAuditText, amendedNotice, applyPattern, assignCheck, claimRefusal, clearAuditText, clearProblem, clearSummary,
   clearWrites, confirmProblem, confirmSummary, copyAuditText, copyProblem, copySummary, copyWeek, coverAskAllMove, coverClosed,
   coverEscalateMove, coverFilledNotice, coverNext, coverReasonMove, coverage, coverageIssueNotice, eligibility, emptyLine, emptyWeek,
-  escalationNotice, gapDays, gapsAt, generateAuditText, generateSummary, hoursPosition, ineligibleMessage, isAbsence, isActive, isWorking,
+  escalationNotice, gapDays, gapsAt, generateActivates, generateAuditText, generateSummary, hoursPosition, ineligibleMessage, isAbsence, isActive, isWorking,
   itRequestFor, itRequestNotice, lineOf, lineRestIssues, minFor, newCover, onRoster, onShift, openCoverProblem, openShiftNotice,
   openShiftsFor, patternGenerateProblem, patternProblem, patternUsage, planSummary, planWeek, publishAuditText, publishNotice,
   publishProblem, publishSummary, publishWeek, recalcShift, renumberStages, repeatAuditText, repeatProblem, repeatSummary, repeatWeek,
@@ -731,14 +731,16 @@ export const rotaHandlers = [
     const r = applyPattern(run, { today: today(), scope, people: info, weekAt, locName, shifts: shiftList() });
     if (!r.ok) return invalid({ field: 'gen', message: r.message });
     if (!r.written && !r.occupied && !r.live && !r.absence) refuse(422, { code: 'NO_LANDING', field: 'days', message: NO_LANDING, next: 'Change the cycle or the start day, then generate again.' });
-    const counts = { written: r.written, occupied: r.occupied, absence: r.absence, weeks: r.weeks, live: r.live, rest: r.rest, range: r.range, people: r.people, summary: generateSummary(r) };
+    const counts = { written: r.written, occupied: r.occupied, absence: r.absence, weeks: r.weeks, live: r.live, rest: r.rest, range: r.range, people: r.people,
+      summary: generateSummary(r, generateActivates(p, r) ? p.name : undefined) };
     if (!r.written) return { ...counts, record: p, auditId: null };
     for (const w of r.writes) saveWeek({ ...weekCore(w.location, w.weekStart), lines: w.lines });
-    const changed = run.gen !== p.gen || run.genFrom !== p.genFrom || run.genTo !== p.genTo;
-    const record = changed ? bump(p, { gen: run.gen, genFrom: run.genFrom, genTo: run.genTo }) : p;
+    const activated = generateActivates(p, r);
+    const changed = activated || run.gen !== p.gen || run.genFrom !== p.genFrom || run.genTo !== p.genTo;
+    const record = changed ? bump(p, { gen: run.gen, genFrom: run.genFrom, genTo: run.genTo, ...(activated ? { active: true } : {}) }) : p;
     patternColl()[p.id] = record;
     const auditId = writeAudit({ who: actor(session), act: 'Working pattern generated', entity: 'pattern', entityId: p.id, before: null,
-      after: { written: r.written, occupied: r.occupied, absence: r.absence, live: r.live, weeks: r.writes.map(w => rotaWeekId(w.location, w.weekStart)),
+      after: { written: r.written, occupied: r.occupied, absence: r.absence, live: r.live, weeks: r.writes.map(w => rotaWeekId(w.location, w.weekStart)), activated,
         detail: generateAuditText(run, r, scope ? locName(scope) : null) } });
     return { ...counts, record, auditId };
   }),

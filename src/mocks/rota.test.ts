@@ -415,6 +415,15 @@ describe('generate, repeat, copy and clear never overwrite (Review Focus 4)', ()
     expect(second.week.changes[0]).toMatchObject({ personCode: 'CP-1402', to: '', afterPublish: true, version: 1 });
     expect(notes('CP-1402').map(n => n.title)).toEqual(['Rota amended', 'Rota amended']);
   });
+  test('generating from a draft pattern that writes shifts makes it active, and the summary says so (M1)', async () => {
+    const wp2 = store.coll<{ active: boolean }>('patterns')['pat_WP-02'];
+    if (wp2) wp2.active = false;
+    const r = PatternGenerated.parse((await (await as('manager'))('POST', '/api/v1/rota/patterns/WP-02/generate', { gen: '1w' }, 1)).body);
+    expect(r.written).toBeGreaterThan(0);
+    expect(r.record).toMatchObject({ active: true, version: 2 });
+    expect(r.summary.endsWith(' · Early / Late, 5 over 7 was a draft and is now active')).toBe(true);
+    expect(rotaAudits().at(-1)?.after).toMatchObject({ activated: true });
+  });
   test('a run that lands nothing is refused with NO_LANDING', async () => {
     const r = await (await as('admin'))('POST', '/api/v1/rota/patterns/WP-03/generate', { gen: '1w' }, 1);
     expect(r.status).toBe(422);

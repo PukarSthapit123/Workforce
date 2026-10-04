@@ -105,7 +105,7 @@ export function PatternEditor({ pattern, ctx, onClose, onAddPeople, onDelete, on
     set({ gen: g, ...(per.months ? { horizon: per.months } : {}), ...range });
   };
   const submit = () => save.mutate({ pattern, body }, { onSuccess: r =>
-    toastInfo(`${r.record.name} saved`, r.record.active ? 'The rota generates from it.' : 'It is a draft and generates nothing until it is active.') });
+    toastInfo(`${r.record.name} saved`, r.record.active ? 'The rota generates from it.' : 'It is a draft until you turn it on or generate the rota from it.') });
   const later = dirty ? 'Save your changes first' : undefined;
   return (
     <Modal open onOpenChange={o => { if (!o) onClose(); }} title={`${pattern.name} · ${pattern.code}`} width="wide"
@@ -131,7 +131,7 @@ export function PatternEditor({ pattern, ctx, onClose, onAddPeople, onDelete, on
         <SettingRow title="First day of the cycle" desc="Day 1 falls on this date, then it repeats">
           <SettingText testId={tid.tpat.starts} aria-label="First day of the cycle" type="date" className="max-w-[160px]" value={d.starts}
             aria-invalid={fe('starts') ? true : undefined} onChange={e => set({ starts: e.target.value })} /></SettingRow>
-        <SettingRow title="Active" desc="A draft pattern generates nothing until you turn it on">
+        <SettingRow title="Active" desc="A draft pattern turns on the first time you generate the rota from it">
           <SwitchField testId={tid.tpat.active} aria-label="Active" checked={d.active} onCheckedChange={v => set({ active: v })} /></SettingRow>
 
         <SubHead>The cycle <span className="font-normal text-text-muted">· tap a day to change what it is</span></SubHead>

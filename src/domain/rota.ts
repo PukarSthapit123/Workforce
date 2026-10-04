@@ -641,13 +641,17 @@ export function applyPattern(p: PatternCore, ctx: ApplyContext): ApplyResult {
     writes: [...writes.values()].filter(w => touched.has(rotaWeekId(w.location, w.weekStart))) };
 }
 /* The generate toast, from what was actually written. */
-export function generateSummary(r: Extract<ApplyResult, { ok: true }>) {
+/* P's save-pattern turned a draft active once a run wrote shifts. */
+export const generateActivates = (p: Pick<PatternCore, 'active'>, r: Pick<Extract<ApplyResult, { ok: true }>, 'written'>) => !p.active && r.written > 0;
+/* activated: the pattern's name when this run made a draft active. */
+export function generateSummary(r: Extract<ApplyResult, { ok: true }>, activated?: string) {
   if (!r.written) return `Nothing written · every target cell was already filled${r.live ? ' or in a published week' : ''}`;
   return `${r.written} shift(s) written · ${r.range} · ${r.weeks} week(s) · ${r.people} ${r.people === 1 ? 'person' : 'people'}`
     + (r.occupied ? ` · ${r.occupied} cell(s) already filled, left alone` : '')
     + (r.absence ? ` · ${r.absence} skipped for leave or sickness` : '')
     + (r.live ? ` · ${r.live} published week(s) skipped. Amend those individually` : '')
-    + (r.rest.length ? ` · ${r.rest.length} rest warning(s)` : '');
+    + (r.rest.length ? ` · ${r.rest.length} rest warning(s)` : '')
+    + (activated ? ` · ${activated} was a draft and is now active` : '');
 }
 export const generateAuditText = (p: PatternCore, r: Extract<ApplyResult, { ok: true }>, scopeName: string | null) =>
   `${p.name} · ${r.range} · ${r.written} shift(s) written across ${r.weeks} week(s) · ${r.people} person(s)`
