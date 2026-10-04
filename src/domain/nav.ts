@@ -1,6 +1,6 @@
 /* Ported from the prototype's NAV() (qnipay-workforce-v15.html, "function NAV()").
    Order is screen order; a run of tabs sharing `group` becomes one menu. */
-export interface NavInput { caps: Set<string>; modules: Record<string, boolean>; flags: Record<string, boolean>; onboarding: boolean }
+export interface NavInput { caps: Pick<ReadonlySet<string>, 'has'>; modules: Record<string, boolean>; flags: Record<string, boolean>; onboarding: boolean }
 export interface NavTab {
   view: string; label: string; path: string; built: boolean; subProject?: string;
   /* team tabs: a run sharing `group` becomes one dropdown menu in the strip.
@@ -115,4 +115,15 @@ export function buildNav({ caps, modules, flags, onboarding }: NavInput): NavGro
     { key: 'setup', label: 'Qnipay setup', tabs: onboarding || !setupTabs.length ? [] : [tab('setup', 'asetup', 'Qnipay setup'), ...setupTabs] },
   ];
   return groups.filter(g => g.tabs.length);
+}
+
+/* Every page the app knows, whoever can reach it: a link to anything else is
+   unknown, and a link to one of these that is not on your own nav is
+   unavailable to you (brief D9). */
+export function everyTab(): NavTab[] {
+  const all = { has: () => true };
+  const modules = { A: true, B: true, C: true, TS: true, R: true, L: true, ON: true, CORE: true };
+  const flags = { DOCS: true, NOTICES: true, FULFIL: true, ITACCESS: true };
+  const tabs = [true, false].flatMap(onboarding => buildNav({ caps: all, modules, flags, onboarding }).flatMap(g => g.tabs));
+  return tabs.filter((t, i) => tabs.findIndex(x => x.path === t.path) === i);
 }
