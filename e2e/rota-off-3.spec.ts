@@ -37,7 +37,8 @@ test('with Rota off (qnipay), the rota pages are gone from the nav and their add
   await page.keyboard.press('Escape');
   for (const path of ROTA_PAGES.filter(p => p.startsWith('/team'))) {
     await page.goto(path);
-    await expect(page, path).not.toHaveURL(new RegExp(`${path}$`));
+    /* the address says the page is not available (1c D9), rather than quietly sending you elsewhere */
+    await expect(page.getByTestId(tid.unavailable.root), path).toBeVisible();
     await expect(page.getByTestId(tid.page(path.split('/').pop() ?? ''))).toHaveCount(0);
   }
   for (const path of ['/api/v1/rota/home', '/api/v1/rota/weeks/MAN/2026-08-10', '/api/v1/rota/cover', '/api/v1/rota/patterns']) {
@@ -48,7 +49,8 @@ test('with Rota off (qnipay), the rota pages are gone from the nav and their add
   await signInEmail(page, BIGYAN);
   await expect(page.getByTestId(tid.nav.tab('shifts'))).toHaveCount(0);
   await page.goto('/work/shifts');
-  await expect(page).not.toHaveURL(/\/work\/shifts$/);
+  await expect(page.getByTestId(tid.unavailable.root)).toBeVisible();
+  await expect(page.getByTestId(tid.page('shifts'))).toHaveCount(0);
   expect((await api.get('/api/v1/rota/my-shifts')).status).toBeGreaterThanOrEqual(400);
   await page.goto('/work/ts');
   await page.getByTestId(tid.ts.view('day')).click();
@@ -63,7 +65,7 @@ test('with Rota off (qnipay), the rota pages are gone from the nav and their add
 
   await signInEmail(page, EDDIE);
   await page.goto('/setup/mrota');
-  await expect(page).not.toHaveURL(/\/setup\/mrota$/);
+  await expect(page.getByTestId(tid.unavailable.root)).toBeVisible();
   await expect(page.getByTestId(tid.page('mrota'))).toHaveCount(0);
   expect((await api.get('/api/v1/rota/config')).status).toBeGreaterThanOrEqual(400);
 });

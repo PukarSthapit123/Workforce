@@ -64,7 +64,7 @@ function InboxPanel({ inbox, onClose }: { inbox: InboxState; onClose(): void }) 
     </div>);
 }
 
-const ROW = 'flex items-start gap-[10px] border-b px-lg py-md text-sm last:border-b-0';
+const ROW = 'flex items-start gap-[10px] border-b px-lg py-md text-sm';
 function InboxRow({ n, onOpen }: { n: NotificationItem; onOpen(): void }) {
   const body = (
     <>
