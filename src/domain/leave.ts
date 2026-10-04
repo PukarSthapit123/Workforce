@@ -92,27 +92,27 @@ export function leaveConfigProblem(c: LeaveConfig, types: readonly LeaveType[], 
   if (!wholeIn(c.minNotice, 0, 365)) return bad('minNotice', 'Minimum notice is a whole number of days from 0 to 365.', 'Enter the notice a request should give.');
   if (!wholeIn(c.cancelWindow, 0, 365)) return bad('cancelWindow', 'The cancellation window is a whole number of days from 0 to 365.', 'Enter the days before leave starts.');
   const pcodes = policies.map(p => p.code);
-  for (const t of types) {
-    if (!t.name.trim()) return bad('types', `Leave type ${t.code} needs a name.`, 'Name every leave type.');
-    if (!pcodes.includes(t.policy)) return bad('types', `Leave type ${t.code} names a policy that does not exist.`, 'Pick a policy from the list.');
-    if (!(LEAVE_UNITS as readonly string[]).includes(t.unit)) return bad('types', `Leave type ${t.code} needs a unit of days, hours or weeks.`, 'Pick a unit.');
+  for (const [i, t] of types.entries()) {
+    if (!t.name.trim()) return bad(`types.${i}.name`, `Leave type ${t.code} needs a name.`, 'Name every leave type.');
+    if (!pcodes.includes(t.policy)) return bad(`types.${i}.policy`, `Leave type ${t.code} names a policy that does not exist.`, 'Pick a policy from the list.');
+    if (!(LEAVE_UNITS as readonly string[]).includes(t.unit)) return bad(`types.${i}.unit`, `Leave type ${t.code} needs a unit of days, hours or weeks.`, 'Pick a unit.');
   }
   if (new Set(types.map(t => t.code)).size !== types.length) return bad('types', 'Two leave types share a code.', 'Give each leave type its own code.');
-  for (const p of policies) {
+  for (const [i, p] of policies.entries()) {
     if (!numIn(p.base, 0, 400) || !numIn(p.carry, 0, 40) || !wholeIn(p.sla, 0, 60))
-      return bad('policies', `Policy ${p.name} needs a base from 0 to 400, carry-over from 0 to 40 and an SLA from 0 to 60 days.`, 'Correct the policy numbers.');
-    if (!(LEAVE_UNITS as readonly string[]).includes(p.unit)) return bad('policies', `Policy ${p.name} needs a unit of days, hours or weeks.`, 'Pick a unit.');
+      return bad(`policies.${i}`, `Policy ${p.name} needs a base from 0 to 400, carry-over from 0 to 40 and an SLA from 0 to 60 days.`, 'Correct the policy numbers.');
+    if (!(LEAVE_UNITS as readonly string[]).includes(p.unit)) return bad(`policies.${i}.unit`, `Policy ${p.name} needs a unit of days, hours or weeks.`, 'Pick a unit.');
   }
   if (stages.length < 2) return bad('stages', 'Keep the first two workflow stages.', 'The employee and line manager stages cannot be removed.');
-  for (const s of stages) {
-    if (!s.who.trim() || !s.action.trim()) return bad('stages', `Stage ${s.n} needs an approver and an action.`, 'Fill in every stage.');
-    if (!wholeIn(s.wait, 0, 60)) return bad('stages', `Stage ${s.n} waits a whole number of days from 0 to 60.`, 'Correct the wait.');
-    if (!(STAGE_CHANNELS as readonly string[]).includes(s.channel)) return bad('stages', `Choose how stage ${s.n} notifies from the list.`, 'Pick a channel.');
+  for (const [i, s] of stages.entries()) {
+    if (!s.who.trim() || !s.action.trim()) return bad(`stages.${i}`, `Stage ${s.n} needs an approver and an action.`, 'Fill in every stage.');
+    if (!wholeIn(s.wait, 0, 60)) return bad(`stages.${i}.wait`, `Stage ${s.n} waits a whole number of days from 0 to 60.`, 'Correct the wait.');
+    if (!(STAGE_CHANNELS as readonly string[]).includes(s.channel)) return bad(`stages.${i}.channel`, `Choose how stage ${s.n} notifies from the list.`, 'Pick a channel.');
   }
   for (const [k, v] of Object.entries(typeLeave)) {
-    if (!employeeTypes.includes(k)) return bad('typeLeave', `There is no employee type with the code ${k}.`, 'Set a leave policy on an existing employee type.');
-    if (!pcodes.includes(v.policy)) return bad('typeLeave', `The leave policy for ${k} does not exist.`, 'Pick a policy from the list.');
-    if (v.unit !== 'days' && v.unit !== 'hours') return bad('typeLeave', `The display unit for ${k} is days or hours.`, 'Pick days or hours.');
+    if (!employeeTypes.includes(k)) return bad(`typeLeave.${k}`, `There is no employee type with the code ${k}.`, 'Set a leave policy on an existing employee type.');
+    if (!pcodes.includes(v.policy)) return bad(`typeLeave.${k}.policy`, `The leave policy for ${k} does not exist.`, 'Pick a policy from the list.');
+    if (v.unit !== 'days' && v.unit !== 'hours') return bad(`typeLeave.${k}.unit`, `The display unit for ${k} is days or hours.`, 'Pick days or hours.');
   }
   return null;
 }

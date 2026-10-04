@@ -207,9 +207,12 @@ export const LeaveConfigRecord = RecordMeta.extend({
   ...LeaveConfigFields, types: z.array(LeaveTypeRecord), policies: z.array(LeavePolicy), stages: z.array(LeaveStage), typeLeave: z.record(z.string(), TypeLeave),
 });
 export type LeaveConfigRecord = z.infer<typeof LeaveConfigRecord>;
-/* The module flags are shown read-only: they change under Modules & features (D11). */
+/* The module flags are shown read-only: they change under Modules & features (D11). requestCounts: how
+   many requests name each leave type. leavers: the tenant's leaver reconciliation while LV_LEAVER is on
+   (an administrator holds no location, so it is the whole tenant), null otherwise. */
 export const LeaveSetup = z.object({
   config: LeaveConfigRecord, employeeTypes: z.array(Option), flags: z.record(z.string(), z.boolean()), rotaOn: z.boolean(),
+  requestCounts: z.record(z.string(), z.number().int()), leavers: Leavers.nullable(),
 });
 export type LeaveSetup = z.infer<typeof LeaveSetup>;
 /* Each key replaces the stored one, except typeLeave (merged by employee type code). Stages are renumbered by position. */

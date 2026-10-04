@@ -137,6 +137,20 @@ const ledgerView = (l: StoredLedger): LedgerView => ({ id: l.id, date: l.date, t
   ...(l.dates ? { dates: l.dates } : {}), qtyText: ledgerQty(l) });
 const newestFirst = <T extends { id: string }>(key: (x: T) => string) => (a: T, b: T) => key(b).localeCompare(key(a)) || b.id.localeCompare(a.id);
 const yearNow = () => leaveYear(today(), config().finYearStart);
+/* Leaver reconciliation in days and hours at the leaving date (D13), for the people `mine` lets through:
+   a manager's locations on Team leave, the whole tenant on Leave setup. */
+function leaversIn(mine: (p: StoredPerson) => boolean) {
+  const yr = yearNow();
+  const rows = Object.values(store.coll<StoredLeaver>('leavers')).flatMap(x => {
+    const p = personByCode(x.personCode);
+    if (!p || !mine(p)) return [];
+    const L = leaveOf(p), months = monthsWorked(yr.start, p.start, x.leaveDate);
+    const r = reconcileLeaver({ fullDays: L.ent.days, takenDays: L.bal.takenD, months, contractedHours: L.facts.contractedHours });
+    return [{ personCode: p.code, name: p.name, leaveDate: x.leaveDate, note: x.note, months, full: r.full, prorata: r.prorata, taken: r.taken,
+      diff: r.diff, hours: r.hours, verdict: r.verdict, tone: r.diff < 0 ? 'err' as const : r.diff > 0 ? 'warn' as const : 'ok' as const, action: r.action }];
+  });
+  return { rows, settled: SETTLED_IN_PAYROLL };
+}
 
 /* ------------------------------------------------------- the leave record */
 function requestFor(id: string): StoredRequest {
@@ -313,16 +327,7 @@ export const leaveHandlers = [
 
   serve(listLeavers, ({ session }) => {
     requireLeave(); requireFlag('LV_LEAVER', 'Leaver reconciliation');
-    const yr = yearNow(), mine = inMyScope(session);
-    const rows = Object.values(store.coll<StoredLeaver>('leavers')).flatMap(x => {
-      const p = personByCode(x.personCode);
-      if (!p || !mine(p)) return [];
-      const L = leaveOf(p), months = monthsWorked(yr.start, p.start, x.leaveDate);
-      const r = reconcileLeaver({ fullDays: L.ent.days, takenDays: L.bal.takenD, months, contractedHours: L.facts.contractedHours });
-      return [{ personCode: p.code, name: p.name, leaveDate: x.leaveDate, note: x.note, months, full: r.full, prorata: r.prorata, taken: r.taken,
-        diff: r.diff, hours: r.hours, verdict: r.verdict, tone: r.diff < 0 ? 'err' as const : r.diff > 0 ? 'warn' as const : 'ok' as const, action: r.action }];
-    });
-    return { rows, settled: SETTLED_IN_PAYROLL };
+    return leaversIn(inMyScope(session));
   }),
 
   /* -------------------------------------------------------------- sickness */
@@ -419,7 +424,10 @@ export const leaveHandlers = [
     requireLeave();
     const types = Object.values(store.coll<{ code: string; name: string }>('employeeTypes')).map(t => ({ code: t.code, name: t.name }));
     const lv = Object.fromEntries(Object.entries(flags()).filter(([k]) => k.startsWith('LV_')));
-    return { config: config(), employeeTypes: types, flags: lv, rotaOn: Boolean(tenant().modules.R) };
+    const requestCounts: Record<string, number> = {};
+    for (const r of Object.values(requests())) requestCounts[r.type] = (requestCounts[r.type] ?? 0) + 1;
+    return { config: config(), employeeTypes: types, flags: lv, rotaOn: Boolean(tenant().modules.R), requestCounts,
+      leavers: flagOn('LV_LEAVER') ? leaversIn(() => true) : null };
   }),
 
   serve(updateLeaveConfig, ({ session, body, checkVersion }) => {

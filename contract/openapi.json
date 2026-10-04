@@ -4523,13 +4523,119 @@
                     },
                     "rotaOn": {
                       "type": "boolean"
+                    },
+                    "requestCounts": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "leavers": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "rows": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "personCode": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "leaveDate": {
+                                    "type": "string",
+                                    "format": "date",
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                                  },
+                                  "note": {
+                                    "type": "string"
+                                  },
+                                  "months": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "full": {
+                                    "type": "number"
+                                  },
+                                  "prorata": {
+                                    "type": "number"
+                                  },
+                                  "taken": {
+                                    "type": "number"
+                                  },
+                                  "diff": {
+                                    "type": "number"
+                                  },
+                                  "hours": {
+                                    "type": "number"
+                                  },
+                                  "verdict": {
+                                    "type": "string"
+                                  },
+                                  "tone": {
+                                    "type": "string",
+                                    "enum": [
+                                      "warn",
+                                      "ok",
+                                      "err",
+                                      "neu"
+                                    ]
+                                  },
+                                  "action": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "personCode",
+                                  "name",
+                                  "leaveDate",
+                                  "note",
+                                  "months",
+                                  "full",
+                                  "prorata",
+                                  "taken",
+                                  "diff",
+                                  "hours",
+                                  "verdict",
+                                  "tone",
+                                  "action"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "settled": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "rows",
+                            "settled"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
                   "required": [
                     "config",
                     "employeeTypes",
                     "flags",
-                    "rotaOn"
+                    "rotaOn",
+                    "requestCounts",
+                    "leavers"
                   ],
                   "additionalProperties": false
                 }

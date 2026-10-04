@@ -93,7 +93,11 @@ describe('leave setup (D11)', () => {
     expect(run({ types: [type('AL', { name: ' ' })] })?.message).toBe('Leave type AL needs a name.');
     expect(run({ types: [type('AL', { policy: 'ZZ' })] })?.message).toBe('Leave type AL names a policy that does not exist.');
     expect(run({ types: [type('AL'), type('AL')] })?.message).toBe('Two leave types share a code.');
-    expect(run({ types: [type('AL')], policies: [{ ...STD, base: -1 }] })?.field).toBe('policies');
+    expect(run({ types: [type('AL')], policies: [{ ...STD, base: -1 }] })?.field).toBe('policies.0');
+    /* the field names the row, so the screen marks the control that holds it */
+    expect(run({ types: [type('AL'), type('TR', { name: '' })] })?.field).toBe('types.1.name');
+    expect(run({ stages: [...STAGES.slice(0, 2), { ...newLeaveStage(3), wait: 1.5 }] })?.field).toBe('stages.2.wait');
+    expect(run({ tl: { shift: { policy: 'ZZ', unit: 'days' } } })?.field).toBe('typeLeave.shift.policy');
     expect(run({ stages: STAGES.slice(0, 1) })).toMatchObject({ field: 'stages', message: 'Keep the first two workflow stages.' });
     expect(run({ stages: [...STAGES.slice(0, 2), { ...newLeaveStage(3), channel: 'Pigeon' }] })?.message).toBe('Choose how stage 3 notifies from the list.');
     expect(run({ stages: [...STAGES.slice(0, 2), { ...newLeaveStage(3), who: '' }] })?.message).toBe('Stage 3 needs an approver and an action.');
