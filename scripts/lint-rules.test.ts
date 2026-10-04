@@ -15,7 +15,7 @@ async function restricted(code: string, filePath: string): Promise<boolean> {
    out of whichever test happens to run first. */
 beforeAll(async () => {
   await eslint.lintText('export {};', { filePath: resolve(__dirname, '..', 'src/features/access/Example.tsx') });
-}, 60_000);
+}, 180_000); // type-aware lint start-up; slow while the full suite runs alongside
 
 test.each([
   ["import meta from '@/mocks/seed/meta.json';", 'src/features/access/Example.tsx'],
