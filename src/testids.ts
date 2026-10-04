@@ -283,4 +283,24 @@ export const tid = {
   },
   /* module 3: the rota on the timesheet: the rota banner's link to My shifts, and whose rota a week grid was seeded from */
   tsRota: { seeShift: 'ts-rota-see-shift', seeded: 'ts-rota-seeded' },
+  /* module 4: My leave (leave): balances, days to take, my requests with Cancel, history, the request, entitlement and simulation dialogs */
+  leave: {
+    error: 'leave-error', loading: 'leave-loading', offSick: 'leave-off-sick', offSickTip: 'leave-off-sick-tip', tellMgr: 'leave-tell-mgr',
+    cards: 'leave-cards', balances: 'leave-balances', balancesTip: 'leave-balances-tip', annual: 'leave-annual', other: 'leave-other-unit',
+    taken: 'leave-taken', pending: 'leave-pending', toil: 'leave-toil', toilTip: 'leave-toil-tip', carry: 'leave-carry', entShow: 'leave-ent-show',
+    toTake: 'leave-to-take', requests: 'leave-requests', requestsTip: 'leave-requests-tip', noRequests: 'leave-no-requests',
+    request: (id: string) => k('leave-request', id), state: (id: string) => k('leave-state', id), cancel: (id: string) => k('leave-cancel', id),
+    reason: (id: string) => k('leave-reason', id), history: 'leave-history', historyTip: 'leave-history-tip', noHistory: 'leave-no-history',
+    ledger: (id: string) => k('leave-ledger', id), requestOpen: 'leave-request-open',
+    /* the request dialog (leaveRequestModal) */
+    type: 'leave-type', from: 'leave-from', to: 'leave-to', part: 'leave-part', qty: 'leave-qty', note: 'leave-note', evidence: 'leave-evidence',
+    sla: 'leave-sla', formWarn: 'leave-form-warn', send: 'leave-send', sendCancel: 'leave-send-cancel',
+    /* the entitlement dialog (entitlementModal) */
+    entPolicy: 'leave-ent-policy', entLine: (i: number) => k('leave-ent-line', i), entEntitlement: 'leave-ent-entitlement', entTaken: 'leave-ent-taken',
+    entPending: 'leave-ent-pending', entRemaining: 'leave-ent-remaining', entStatutory: 'leave-ent-statutory', entService: 'leave-ent-service',
+    entCarry: 'leave-ent-carry', entBh: 'leave-ent-bh', entClose: 'leave-ent-close', simulate: 'leave-simulate',
+    /* the pro-rata simulation (proRataModal), which writes nothing */
+    simNow: 'leave-sim-now', simHours: 'leave-sim-hours', simBefore: 'leave-sim-before', simAfter: 'leave-sim-after', simChange: 'leave-sim-change',
+    simNote: 'leave-sim-note', simClose: 'leave-sim-close',
+  },
 } as const;
