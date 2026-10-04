@@ -12,12 +12,12 @@ export const useSavedData = () => useQuery({ queryKey: savedDataKeys.all, queryF
 
 const EVERYTHING = [[]] as const;
 export function useResetSavedData() {
-  return useRecordMutation<void, SavedData>({
+  return useRecordMutation<null, SavedData>({
     mutationFn: () => api(resetSavedData), recordKey: () => 'saved-data', invalidates: EVERYTHING, refreshesSession: true,
   });
 }
 export function useRestoreSavedData() {
-  return useRecordMutation<void, SavedData>({
+  return useRecordMutation<null, SavedData>({
     mutationFn: () => api(restoreSavedData), recordKey: () => 'saved-data', invalidates: EVERYTHING, refreshesSession: true,
   });
 }

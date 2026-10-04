@@ -104,7 +104,7 @@ export function createStore(seedFor: (tenant?: string) => Seed = defaultSeed, kn
       s.reset();
     },
     restoreBackup(): boolean {
-      let raw: string | null = null;
+      let raw: string | null;
       try { raw = localStorage.getItem(STORE_BACKUP_KEY); } catch { return false; }
       if (!raw) return false;
       let o: unknown;
