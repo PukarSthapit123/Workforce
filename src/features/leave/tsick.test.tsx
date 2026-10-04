@@ -62,6 +62,25 @@ describe('Sickness', () => {
     expect(acts()).toEqual(['Sickness recorded']);
   });
 
+  /* review I3: a day that bridges two absences joins them, so Bradford counts one spell */
+  test('back-filling the day between two absences joins them into one spell, and the score shows it', async () => {
+    store.coll('sickEpisodes').sk_099 = { id: 'sk_099', version: 1, updatedAt: '2026-08-13T09:00:00.000Z', personCode: 'CP-1088', from: '2026-08-13', to: '2026-08-13',
+      reason: 'Other', note: '', rtw: null };
+    store.save();
+    await open();
+    expect(screen.getByTestId(tid.tsick.score('CP-1088'))).toHaveTextContent('200');
+    await choose(tid.tsick.who, 'CP-1088');
+    set(tid.tsick.from, '2026-08-12');
+    set(tid.tsick.to, '2026-08-12');
+    await choose(tid.tsick.reason, 'Other');
+    await userEvent.click(screen.getByTestId(tid.tsick.save));
+    await expectToast(/^Sickness recorded\./);
+    await waitFor(() => expect(screen.getByTestId(tid.tsick.score('CP-1088'))).toHaveTextContent('144'));
+    expect(screen.getByTestId(tid.tsick.row('CP-1088'))).toHaveTextContent('11/08/2026 · 3 days');
+    expect(episodes().filter(e => e.personCode === 'CP-1088' && e.from >= '2026-08-01').map(e => [e.id, e.from, e.to])).toEqual([['sk_004', '2026-08-11', '2026-08-13']]);
+    expect(acts()).toEqual(['Sickness recorded']);
+  });
+
   test('Arrange it asks for a return-to-work meeting once, with its toast and one audit row', async () => {
     await open();
     await userEvent.click(screen.getByTestId(tid.tsick.arrange));

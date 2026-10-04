@@ -390,6 +390,21 @@ describe('sickness episodes and Bradford (D9)', () => {
     const open = recordSicknessPlan([ep('e2', '2026-08-10', '')], { from: '2026-08-13', to: '2026-08-13', reason: 'Other' }, TODAY);
     expect(open).toEqual({ ok: true, plan: { kind: 'extend', id: 'e2', from: '2026-08-10', to: '' } });
   });
+  /* review I3 */
+  test('a range that touches two episodes joins them into the earliest, open if either is', () => {
+    const eps = [ep('b', '2026-08-06', '2026-08-07'), ep('a', '2026-08-03', '2026-08-04')];
+    const r = (from: string, to: string, list = eps) => recordSicknessPlan(list, { from, to, reason: 'Other' }, TODAY);
+    const joined = { ok: true, plan: { kind: 'extend', id: 'a', from: '2026-08-03', to: '2026-08-07', absorbed: ['b'] } };
+    expect(r('2026-08-05', '2026-08-05')).toEqual(joined);
+    expect(r('2026-08-05', '2026-08-07')).toEqual(joined);
+    expect(r('2026-08-04', '2026-08-09')).toEqual({ ok: true, plan: { ...joined.plan, to: '2026-08-09' } });
+    expect(r('2026-08-05', '')).toEqual({ ok: true, plan: { ...joined.plan, to: '' } });
+    expect(r('2026-08-05', '2026-08-05', [ep('a', '2026-08-03', '2026-08-04'), ep('b', '2026-08-06', '')])).toEqual({ ok: true, plan: { ...joined.plan, to: '' } });
+    const three = [...eps, ep('c', '2026-08-09', '2026-08-09')];
+    expect(r('2026-08-05', '2026-08-08', three)).toEqual({ ok: true, plan: { ...joined.plan, to: '2026-08-09', absorbed: ['b', 'c'] } });
+    /* one spell of five days, not two of five or seven */
+    expect(bradford([ep('a', '2026-08-03', '2026-08-07')], TODAY, 100)).toMatchObject({ spells: 1, days: 5, score: 5 });
+  });
   test('recording refuses a missing day, a backwards range, an unknown reason, and a day already recorded', () => {
     expect(recordSicknessPlan([], { from: '', to: '', reason: 'Other' }, TODAY)).toMatchObject({ ok: false, problem: { field: 'from', message: 'Pick the first day off.' } });
     expect(recordSicknessPlan([], { from: '2026-08-12', to: '2026-08-11', reason: 'Other' }, TODAY)).toMatchObject({ ok: false, problem: { field: 'to', message: LAST_BEFORE_FIRST } });

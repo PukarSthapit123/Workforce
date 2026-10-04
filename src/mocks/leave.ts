@@ -365,9 +365,13 @@ export const leaveHandlers = [
     const planned = recordSicknessPlan(eps, { from: body.from, to: body.to, reason: body.reason }, now);
     if (!planned.ok) return refuseLeave(planned.problem);
     const plan = planned.plan, was = plan.kind === 'extend' ? eps.find(e => e.id === plan.id) : undefined;
+    /* review I3: the later episodes the range bridged join the earliest, which keeps its reason, note and return to work */
+    const merged = plan.kind === 'extend' ? eps.filter(e => plan.absorbed?.includes(e.id)) : [];
     let rec: StoredEpisode;
-    if (plan.kind === 'extend' && was) rec = bump(was, { from: plan.from, to: plan.to });
-    else {
+    if (plan.kind === 'extend' && was) {
+      rec = bump(was, { from: plan.from, to: plan.to });
+      for (const e of merged) Reflect.deleteProperty(episodesColl(), e.id);
+    } else {
       const id = nextNumId(episodesColl(), 'sk', 3);
       rec = { id, version: 1, updatedAt: store.now(), personCode: p.code, from: plan.from, to: plan.to, reason: body.reason, note: body.note?.trim() ?? '', rtw: null };
     }
@@ -379,7 +383,7 @@ export const leaveHandlers = [
     const range = leaveRange(body.from, body.to || body.from);
     notify([p.code], sicknessNotice(p.name, range));
     const auditId = writeAudit({ who: actor(session), act: 'Sickness recorded', entity: 'sickEpisode', entityId: rec.id,
-      before: was ? { from: was.from, to: was.to } : null,
+      before: was ? { from: was.from, to: was.to, ...(merged.length ? { merged: merged.map(e => ({ id: e.id, from: e.from, to: e.to })) } : {}) } : null,
       after: { from: rec.from, to: rec.to, reason: rec.reason, extended: !!was, detail: `${p.name} · ${range} · ${body.reason}`, ...rotaAfter(rota) } });
     const summary = rota.written ? sicknessToast(rota.covers.length > 0) : `Sickness recorded for ${p.name}.`;
     return { record: rec, extended: !!was, rota, summary, auditId };

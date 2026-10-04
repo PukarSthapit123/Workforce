@@ -351,6 +351,19 @@ describe('the timesheet reads leave records (Review Focus 5, D8)', () => {
 });
 
 describe('sickness episodes, Bradford and return to work (Review Focus 6, D9)', () => {
+  /* review I3: a range that bridges two episodes merges them, with both before-states on the one audit row */
+  test('a day between two episodes joins them into the earliest: the later one goes, Bradford counts one spell', async () => {
+    store.coll('sickEpisodes').sk_099 = { id: 'sk_099', version: 1, updatedAt: '2026-08-13T09:00:00.000Z', personCode: 'CP-1088', from: '2026-08-13', to: '2026-08-13',
+      reason: 'Other', note: 'Later note', rtw: { requestedAt: '2026-08-13T10:00:00.000Z', by: { personCode: 'CP-1001', name: 'Rachel Hussain' } } };
+    const call = await as('manager');
+    const r = SicknessRecorded.parse((await call('POST', '/api/v1/leave/sickness', { personCode: 'CP-1088', from: '2026-08-12', to: '2026-08-12', reason: 'Other' })).body);
+    expect(r).toMatchObject({ extended: true, record: { id: 'sk_004', from: '2026-08-11', to: '2026-08-13', reason: 'Mental health', rtw: null } });
+    expect(store.coll('sickEpisodes').sk_099).toBeUndefined();
+    expect(leaveAudits()).toEqual([expect.objectContaining({ act: 'Sickness recorded', entityId: 'sk_004',
+      before: { from: '2026-08-11', to: '2026-08-11', merged: [{ id: 'sk_099', from: '2026-08-13', to: '2026-08-13' }] } })]);
+    const b = SicknessBoard.parse((await call('GET', '/api/v1/leave/sickness')).body);
+    expect(b.rows.find(x => x.personCode === 'CP-1088')).toMatchObject({ spells: 4, days: 9, score: 144 });
+  });
   test('the board scores spells squared times days over 52 weeks and raises the trigger', async () => {
     const b = SicknessBoard.parse((await (await as('manager'))('GET', '/api/v1/leave/sickness')).body);
     expect(b.rows.find(r => r.personCode === 'CP-1088')).toMatchObject({ spells: 4, days: 7, score: 112, triggered: true, next: 'Return-to-work meeting due', latest: '11/08/2026 · 1 day' });

@@ -443,23 +443,27 @@ export interface SickEpisode { id: string; personCode: string; from: string; to:
 export const episodeEnd = (e: Pick<SickEpisode, 'from' | 'to'>, today: string) => e.to || (e.from > today ? e.from : today);
 export const episodeDays = (e: Pick<SickEpisode, 'from' | 'to'>, today: string) => daysBetween(e.from, episodeEnd(e, today)) + 1;
 export interface SickInput { from: string; to: string; reason: string }
-export type SickPlan = { kind: 'new'; from: string; to: string } | { kind: 'extend'; id: string; from: string; to: string };
+/* `absorbed`: later episodes the range also touched, merged into `id` and removed (review I3). */
+export type SickPlan = { kind: 'new'; from: string; to: string } | { kind: 'extend'; id: string; from: string; to: string; absorbed?: string[] };
 /* record-sick: a day next to an open or just-ended episode, or inside one,
-   extends it rather than starting a new spell. */
+   extends it rather than starting a new spell. A range that touches several
+   episodes joins them all into the earliest, from its first day to the
+   latest last day (open if any is), so Bradford counts one spell. */
 export function recordSicknessPlan(episodes: readonly Pick<SickEpisode, 'id' | 'from' | 'to'>[], input: SickInput, today: string): { ok: true; plan: SickPlan } | { ok: false; problem: LeaveRefusal } {
   if (!isIsoDate(input.from)) return { ok: false, problem: { code: 'VALIDATION', message: 'Pick the first day off.', next: 'Choose the day the absence began.', field: 'from' } };
   if (input.to && (!isIsoDate(input.to) || input.to < input.from)) return { ok: false, problem: { code: 'VALIDATION', message: LAST_BEFORE_FIRST, next: 'Correct the dates.', field: 'to' } };
   if (!(SICK_REASONS as readonly string[]).includes(input.reason)) return { ok: false, problem: { code: 'VALIDATION', message: 'Choose the reason given.', next: 'Pick a reason from the list.', field: 'reason' } };
   const newEnd = input.to || input.from;
-  for (const e of [...episodes].sort((a, b) => a.from.localeCompare(b.from))) {
-    const end = episodeEnd(e, today);
-    if (input.from > addDays(end, 1) || newEnd < addDays(e.from, -1)) continue;
-    if (e.to && input.to && input.from >= e.from && input.to <= e.to)
-      return { ok: false, problem: { code: 'ALREADY_RECORDED', message: `${formatDay(input.from)} is already recorded as sickness.`, next: 'Nothing more is needed.', field: 'from' } };
-    const open = !e.to || !input.to;
-    return { ok: true, plan: { kind: 'extend', id: e.id, from: input.from < e.from ? input.from : e.from, to: open ? '' : (newEnd > end ? newEnd : end) } };
-  }
-  return { ok: true, plan: { kind: 'new', from: input.from, to: input.to } };
+  const touched = [...episodes].sort((a, b) => a.from.localeCompare(b.from) || a.id.localeCompare(b.id))
+    .filter(e => !(input.from > addDays(episodeEnd(e, today), 1) || newEnd < addDays(e.from, -1)));
+  const [first, ...rest] = touched;
+  if (!first) return { ok: true, plan: { kind: 'new', from: input.from, to: input.to } };
+  if (!rest.length && first.to && input.to && input.from >= first.from && input.to <= first.to)
+    return { ok: false, problem: { code: 'ALREADY_RECORDED', message: `${formatDay(input.from)} is already recorded as sickness.`, next: 'Nothing more is needed.', field: 'from' } };
+  const open = !input.to || touched.some(e => !e.to);
+  const last = touched.reduce((m, e) => (e.to > m ? e.to : m), newEnd);
+  return { ok: true, plan: { kind: 'extend', id: first.id, from: input.from < first.from ? input.from : first.from, to: open ? '' : last,
+    ...(rest.length ? { absorbed: rest.map(e => e.id) } : {}) } };
 }
 /* Bradford: spells squared times days, over the 52 weeks to the clock. */
 export const BRADFORD_WEEKS = 52;
