@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { tid } from '@/testids';
 import { GuideButton, Page, PageHead, Seg } from '@/ui';
 import { useTimesheetWeek } from '@/api/timesheets';
 import { useCurrentSession } from '@/shell/SessionProvider';
 import { todayIso } from '@/lib/format';
 import { periodStart } from '@/domain/timesheet';
+import { isIsoDate } from '@/domain/time';
 import type { CaptureSetup } from '@/contract/timesheets';
 import { flagOn } from './capture';
 import { DayView } from './DayView';
@@ -15,15 +17,17 @@ import { WeekView } from './WeekView';
    week while WEEKLY is on (defaultTsView). The date is the server's: until
    the first week arrives the page asks for the week holding the browser's
    today, then follows the clock the server returned. Clocking (module B) and
-   indicative pay lines (money) are not part of this page. */
+   indicative pay lines (money) are not part of this page. A link from My
+   home's day dialog (?date=YYYY-MM-DD) opens on that day. */
 type View = 'day' | 'week';
 const defaultView = (c: CaptureSetup): View => (c.mode === 'grid' && flagOn(c, 'WEEKLY') ? 'week' : 'day');
 
 export function TimesheetPage() {
   const personId = useCurrentSession()?.account.personCode ?? '';
   const [serverToday, setServerToday] = useState<string | null>(null);
-  const [anchor, setAnchor] = useState<string | null>(null);
-  const [view, setView] = useState<View | null>(null);
+  const asked = useSearchParams()[0].get('date') ?? '';
+  const [anchor, setAnchor] = useState<string | null>(isIsoDate(asked) ? asked : null);
+  const [view, setView] = useState<View | null>(isIsoDate(asked) ? 'day' : null);
   const today = serverToday ?? todayIso();
   const date = anchor ?? today;
   const q = useTimesheetWeek(personId, periodStart(date), Boolean(personId));

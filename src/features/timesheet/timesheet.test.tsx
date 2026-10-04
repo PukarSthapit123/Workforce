@@ -64,6 +64,13 @@ describe('My timesheet, day view', () => {
     expect(await screen.findByTestId(tid.modal.title)).toHaveTextContent('How time capture works');
     expectTestIdCoverage(document.body);
   });
+  test('a link from My home’s day dialog (?date=) opens the day view on that day, even for a grid type', async () => {
+    renderPage(<TimesheetPage />, '/work/ts?date=2026-08-12');
+    await screen.findByTestId(tid.dayForm.field('start'));
+    expect(screen.getByTestId(tid.ts.dayLabel)).toHaveTextContent('Wed 12 Aug');
+    expect(screen.getByTestId(tid.ts.dayToday)).toBeEnabled();
+    expect(screen.getByTestId(tid.ts.view('day'))).toHaveAttribute('aria-pressed', 'true');
+  });
   test('saving a draft stores the day, says it is not submitted, and the form comes back from the server', async () => {
     await openDay();
     set(tid.dayForm.field('start'), '09:00');
