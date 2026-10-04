@@ -158,7 +158,7 @@ export function PatternEditor({ pattern, ctx, onClose, onAddPeople, onDelete, on
             <Field label="Locations it runs at" hint="Locations and their support level come from the HRIS through shared workforce data." error={fe('locations')}>
               <NativeSelect testId={tid.tpat.addLocation} value="" onChange={e => { if (e.target.value) set({ locations: [...d.locations, e.target.value] }); }}>
                 <option value="">{d.locations.length ? 'Add another location…' : 'Choose a location…'}</option>
-                {ctx.locations.filter(l => !d.locations.includes(l.code)).map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
+                {ctx.canCover.filter(l => !d.locations.includes(l.code)).map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
               </NativeSelect></Field>
             <Field label="Job profiles" hint="Only people on these job profiles can be put on the pattern." error={fe('jobProfiles')}>
               <NativeSelect testId={tid.tpat.addJob} value="" onChange={e => { if (e.target.value) set({ jobProfiles: [...d.jobProfiles, e.target.value] }); }}>

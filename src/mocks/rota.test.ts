@@ -120,6 +120,36 @@ describe('scope (Review Focus 1)', () => {
     Reflect.deleteProperty(store.coll('coverRequests'), 'cov_9');
     expect(snapshot(...WRITES)).toEqual(before);
   });
+  test('a manager cannot put another location\'s people or locations on a pattern, by create, update or copy (I1)', async () => {
+    const call = await as('manager'), before = snapshot(...WRITES);
+    const pats = store.coll<{ people: { personCode: string; offset: number }[]; locations: string[] }>('patterns');
+    const wp2 = pats['pat_WP-02']?.people ?? [];
+    const outsider = await call('PATCH', '/api/v1/rota/patterns/WP-02', { people: [...wp2, { personCode: 'EMP-2044', offset: 1 }] }, 1);
+    expect(outsider.status).toBe(403);
+    expect(refusal(outsider)).toMatchObject({ code: 'scope', field: 'people.5.personCode',
+      message: 'Adaeze Okafor does not work at Willow House. You can put your own team on a pattern only.' });
+    const body = { name: 'Spread', cycle: 7, locations: ['WH', 'LGW'], jobProfiles: [], costCentre: 'WH-CAM-01', starts: '2026-08-17', horizon: 1, gen: '4w' };
+    const create = await call('POST', '/api/v1/rota/patterns', body);
+    expect(create.status).toBe(403);
+    expect(refusal(create)).toMatchObject({ code: 'scope', field: 'locations', message: 'A manager can only build patterns for the location they manage.' });
+    const relocate = await call('PATCH', '/api/v1/rota/patterns/WP-01', { locations: ['WH', 'LGW'] }, 1);
+    expect(relocate.status).toBe(403);
+    expect(refusal(relocate)).toMatchObject({ code: 'scope', field: 'locations' });
+    const copy = await call('POST', '/api/v1/rota/patterns', { ...body, locations: ['WH'], base: 'WP-03' });
+    expect(copy.status).toBe(403);
+    expect(refusal(copy)).toMatchObject({ code: 'scope', field: 'base' });
+    expect(snapshot(...WRITES)).toEqual(before);
+    /* someone from another location already on a shared pattern stays there */
+    const wp1 = store.coll<{ people: { personCode: string; offset: number }[] }>('patterns')['pat_WP-01'];
+    if (wp1) wp1.people = [...wp1.people, { personCode: 'CP-1288', offset: 2 }];
+    const drop = await call('PATCH', '/api/v1/rota/patterns/WP-01', { people: wp1?.people.filter(x => x.personCode !== 'CP-1288') }, 1);
+    expect(drop.status).toBe(403);
+    expect(refusal(drop)).toMatchObject({ code: 'scope', message: expect.stringContaining('does not work at Willow House') });
+    /* an administrator is not limited to one location */
+    const admin = await as('admin');
+    expect((await admin('PATCH', '/api/v1/rota/patterns/WP-02', { people: [...wp2, { personCode: 'EMP-2044', offset: 1 }] }, 1)).status).toBe(200);
+    expect((await admin('POST', '/api/v1/rota/patterns', { ...body, base: 'WP-03' })).status).toBe(200);
+  });
   test('"Admins only" withholds patterns and shift types from managers on the server, not from admins', async () => {
     setCfg({ rotaBuiltBy: 'Admins only' });
     const m = await as('manager');

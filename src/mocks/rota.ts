@@ -291,11 +291,43 @@ const coverDetail = (c: Pick<CoverRecord, 'location' | 'date' | 'shift'>, name?:
 /* ------------------------------------------------------------- patterns */
 const patternColl = () => store.coll<PatternRecord>('patterns');
 const patternBy = (code: string) => recordAt(patternColl(), `pat_${code}`);
-function requirePatternScope(s: Signed, locs: readonly string[]) {
-  const sc = scopeOf(s);
+/* Patterns: an administrator (mod_cfg or master_data) builds for any location;
+   a manager for their own only, as P's patternBox and patternPersonBox did (D5). */
+function patternScope(s: Signed): { all: true } | { all: false; location: string } {
+  return s.caps.includes('mod_cfg') ? { all: true } : scopeOf(s);
+}
+function requirePatternScope(s: Signed, locs: readonly string[], field?: string) {
+  const sc = patternScope(s);
   if (sc.all || locs.includes(sc.location)) return;
-  refuse(403, { code: 'scope', message: `This pattern does not cover ${locName(sc.location)}. You can manage patterns for your own location only.`,
+  refuse(403, { code: 'scope', ...(field ? { field } : {}), message: `This pattern does not cover ${locName(sc.location)}. You can manage patterns for your own location only.`,
     next: 'Ask an administrator to change patterns at other locations.' });
+}
+/* P: "A manager can only build patterns for the location they manage. An admin can span several." */
+function requireOwnLocations(s: Signed, before: readonly string[], after: readonly string[]) {
+  const sc = patternScope(s);
+  if (sc.all) return;
+  const moved = [...after.filter(c => !before.includes(c)), ...before.filter(c => !after.includes(c))];
+  if (moved.some(c => c !== sc.location))
+    refuse(403, { code: 'scope', field: 'locations', message: 'A manager can only build patterns for the location they manage.',
+      next: `Keep the pattern to ${locName(sc.location)}, or ask an administrator to span several locations.` });
+}
+const notOurs = (name: string, loc: string) => `${name} does not work at ${locName(loc)}. You can put your own team on a pattern only.`;
+/* A manager adds and removes only their own people; anyone else already on a shared pattern stays as they are. */
+function requireOwnPeople(s: Signed, before: PatternRecord['people'], after: PatternRecord['people']) {
+  const sc = patternScope(s);
+  if (sc.all) return;
+  const had = new Set(before.map(x => x.personCode)), has = new Set(after.map(x => x.personCode));
+  after.forEach((x, i) => {
+    const q = personByCode(x.personCode);
+    if (!had.has(x.personCode) && q && q.location !== sc.location)
+      refuse(403, { code: 'scope', field: `people.${i}.personCode`, message: notOurs(q.name, sc.location), next: 'Ask an administrator to add people from other locations.' });
+  });
+  for (const x of before) {
+    const q = personByCode(x.personCode);
+    if (!has.has(x.personCode) && q && q.location !== sc.location)
+      refuse(403, { code: 'scope', field: 'people', message: `${q.name} does not work at ${locName(sc.location)}. You can take your own team off a pattern only.`,
+        next: 'Ask an administrator to change people from other locations.' });
+  }
 }
 function patternsGate(s: Signed) { requireRota(); requireFlag('PATTERNS', 'Working patterns'); requireBuilder(s, 'rota_pattern'); }
 function patternFor(s: Signed, code: string): PatternRecord {
@@ -601,7 +633,7 @@ export const rotaHandlers = [
   /* ------------------------------------------------------------ patterns */
   serve(listPatterns, ({ session }) => {
     patternsGate(session);
-    const sc = scopeOf(session);
+    const sc = patternScope(session);
     const items = Object.values(patternColl()).filter(p => sc.all || p.locations.includes(sc.location));
     const ppl = Object.values(people()).filter(p => isActive(p) && (sc.all || p.location === sc.location))
       .map(p => ({ code: p.code, name: p.name, location: p.location, jobProfile: p.jobProfile, category: p.category }));
@@ -611,6 +643,8 @@ export const rotaHandlers = [
   serve(createPattern, ({ session, body }) => {
     patternsGate(session);
     const base = body.base ? patternBy(body.base) ?? NOT_FOUND('working pattern to copy') : undefined;
+    if (base) requirePatternScope(session, base.locations, 'base');
+    requireOwnLocations(session, [], body.locations);
     const cycle = body.cycle;
     const days = body.days ?? (base ? resizeCycle(base, cycle).days : Array.from({ length: Math.max(0, Math.min(28, cycle)) }, () => ''));
     const draft = { code: nextPatternCode(), name: body.name.trim(), cycle, locations: body.locations, jobProfiles: body.jobProfiles,
@@ -633,11 +667,13 @@ export const rotaHandlers = [
     let next: PatternRecord = { ...p, ...body, ...(body.name !== undefined ? { name: body.name.trim() } : {}) };
     if (body.cycle !== undefined && body.days === undefined && body.cycle >= 1 && body.cycle <= 28) next = resizeCycle({ ...next, days: p.days, people: body.people ?? p.people }, body.cycle);
     if (body.active === true && !next.days.some(c => !!c)) refuse(422, { code: 'ACTIVATE_EMPTY', field: 'days', message: ACTIVATE_EMPTY, next: 'Put a shift on at least one day of the cycle.' });
+    requireOwnLocations(session, p.locations, next.locations);
     requirePatternScope(session, next.locations);
     checkPatternRefs(next);
+    requireOwnPeople(session, p.people, next.people);
     const problem = patternProblem(next, shiftList().map(s => s.code));
     if (problem) invalid(problem);
-    const keys = ['name', 'cycle', 'days', 'locations', 'jobProfiles', 'costCentre', 'starts', 'horizon', 'gen', 'genFrom', 'genTo', 'active', 'people'] as const;
+    const keys =['name', 'cycle', 'days', 'locations', 'jobProfiles', 'costCentre', 'starts', 'horizon', 'gen', 'genFrom', 'genTo', 'active', 'people'] as const;
     const { before, after } = diff(p, next, keys);
     if (!Object.keys(after).length) return { record: p, auditId: null };
     const saved = bump(p, next);
@@ -661,11 +697,11 @@ export const rotaHandlers = [
     const codes = [...new Set(body.personCodes)];
     if (!codes.length) invalid({ field: 'personCodes', message: TICK_SOMEONE });
     if (body.start > p.cycle) invalid({ field: 'start', message: `A starting day must be from 1 to ${p.cycle}.` });
-    const sc = scopeOf(session);
+    const sc = patternScope(session);
     const ppl = codes.map((code, i) => {
       const x = personByCode(code) ?? invalid({ field: `personCodes.${i}`, message: `There is no person with the employee ID ${code}.` });
       if (!sc.all && x.location !== sc.location)
-        refuse(403, { code: 'scope', field: `personCodes.${i}`, message: `${x.name} does not work at ${locName(sc.location)}. You can put your own team on a pattern only.`, next: 'Ask an administrator to add people from other locations.' });
+        refuse(403, { code: 'scope', field: `personCodes.${i}`, message: notOurs(x.name, sc.location), next: 'Ask an administrator to add people from other locations.' });
       return x;
     });
     const already = ppl.filter(x => p.people.some(y => y.personCode === x.code)).map(x => x.name);
@@ -683,7 +719,7 @@ export const rotaHandlers = [
     const p = patternFor(session, params.code);
     checkVersion(p);
     const run: PatternRecord = { ...p, gen: body.gen ?? p.gen, genFrom: body.genFrom ?? p.genFrom, genTo: body.genTo ?? p.genTo };
-    const sc = scopeOf(session), scope = sc.all ? null : sc.location;
+    const sc = patternScope(session), scope = sc.all ? null : sc.location;
     const problem = patternGenerateProblem(run, scope, locName);
     if (problem) invalid(problem);
     const c = config();
