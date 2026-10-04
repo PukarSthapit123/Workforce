@@ -77,6 +77,11 @@ describe('Cover requests', () => {
     if (!f) throw new Error('no filled shift');
     expect(store.coll<{ lines: Record<string, string[]> }>('rotaWeeks')['rw_WH_2026-08-10']?.lines[f.personCode]?.[4]).toBe('E');
 
+    /* a shift is confirmed as worked on or after its day (M2) */
+    await userEvent.click(await screen.findByTestId(tid.tcover.confirm(f.id)));
+    await expectToast('This shift is on Fri 14 Aug, so it cannot be confirmed as worked yet.', tid.toast.error);
+    expect(filled().find(x => x.id === f.id)).toMatchObject({ confirmed: false });
+    store.setClock('2026-08-14T18:00:00.000Z');
     await userEvent.click(await screen.findByTestId(tid.tcover.confirm(f.id)));
     await expectToast(/^Confirmed\. IT access request ITR-\d+ raised\./);
     expect(filled().find(x => x.id === f.id)).toMatchObject({ confirmed: true });

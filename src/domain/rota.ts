@@ -859,6 +859,14 @@ export const askFirstText = (firstName: string, wait: number) =>
 
 /* A filled shift waits for the manager to confirm it was worked. */
 export interface FilledCore { coverId: string; location: string; date: string; shift: string; personCode: string; name: string; confirmed: boolean; itRequest: string }
+/* Nobody confirms their own shift as worked (as module 2 refuses self-approval of a timesheet). */
+export const CONFIRM_SELF = 'You cannot confirm your own shift as worked.';
+export const confirmSelfProblem = (f: Pick<FilledCore, 'personCode'>, self: string): RotaRefusal | null =>
+  (f.personCode === self ? { code: 'SELF_APPROVAL', message: CONFIRM_SELF, next: 'Ask another manager at this location.' } : null);
+/* A shift is confirmed as worked on or after its day, never before. */
+export const confirmEarlyProblem = (f: Pick<FilledCore, 'date'>, today: string): RotaRefusal | null =>
+  (f.date > today ? { code: 'NOT_WORKED_YET', message: `This shift is on ${formatDay(f.date)}, so it cannot be confirmed as worked yet.`,
+    next: 'Confirm it on or after the day of the shift.' } : null);
 export const confirmProblem = (f: Pick<FilledCore, 'confirmed'>): RotaRefusal | null =>
   (f.confirmed ? { code: 'ALREADY_CONFIRMED', message: 'This shift is already confirmed as worked.', next: 'Nothing more is needed.' } : null);
 export interface ItRequestCore { ref: string; personCode: string; name: string; location: string; shift: string; date: string; worker: string; status: string; raisedAt: string; system: string }

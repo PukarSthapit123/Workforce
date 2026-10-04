@@ -29,7 +29,7 @@ import { addDays, dowMon, isoWeek, periodStart, weekDates, weekLabel } from '@/d
 import {
   COVER_REASONS, DEFAULT_ROTA_CONFIG, CLAIM_NOT_PERMITTED, NOBODY_ELIGIBLE, NO_LANDING, REASON_BEFORE_CLOSE, ACTIVATE_EMPTY, TICK_SOMEONE,
   alreadyOnPattern, amendedAuditText, amendedNotice, applyPattern, assignCheck, claimRefusal, clearAuditText, clearProblem, clearSummary,
-  clearWrites, confirmProblem, confirmSummary, copyAuditText, copyProblem, copySummary, copyWeek, coverAskAllMove, coverClosed,
+  clearWrites, confirmEarlyProblem, confirmProblem, confirmSelfProblem, confirmSummary, copyAuditText, copyProblem, copySummary, copyWeek, coverAskAllMove, coverClosed,
   coverEscalateMove, coverFilledNotice, coverNext, coverReasonMove, coverage, coverageIssueNotice, eligibility, emptyLine, emptyWeek,
   escalationNotice, gapDays, gapsAt, generateActivates, generateAuditText, generateSummary, hoursPosition, ineligibleMessage, isAbsence, isActive, isWorking,
   itRequestFor, itRequestNotice, lineOf, lineRestIssues, minFor, newCover, onRoster, onShift, openCoverProblem, openShiftNotice,
@@ -871,7 +871,9 @@ export const rotaHandlers = [
     const f = recordAt(filledColl(), params.id) ?? NOT_FOUND('filled shift');
     requireRotaScope(session, f.location);
     checkVersion(f);
-    const problem = confirmProblem(f);
+    const self = confirmSelfProblem(f, effectiveCode(session));
+    if (self) refuse(403, self);
+    const problem = confirmProblem(f) ?? confirmEarlyProblem(f, today());
     if (problem) refuse(409, problem);
     let it: ItRequest | null = null;
     if (flagOn('ITACCESS')) {

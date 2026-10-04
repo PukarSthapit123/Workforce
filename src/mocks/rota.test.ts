@@ -484,7 +484,22 @@ describe('cover flow (Review Focus 5)', () => {
     expect(notes('CP-1001').map(n => [n.title, n.body])).toEqual([['Cover request filled', 'Sana Iqbal has claimed Late on Fri 14 Aug']]);
     expect(auditActs()).toEqual(['Open shift claimed']);
   });
+  test('nobody confirms their own shift, and nobody confirms one before its day (M2)', async () => {
+    const call = await as('manager'), before = snapshot('filledShifts', 'itRequests', 'notifications', 'audit');
+    const early = await call('POST', '/api/v1/rota/filled/fil_1/confirm', undefined, 1);
+    expect(early.status).toBe(409);
+    expect(refusal(early)).toMatchObject({ code: 'NOT_WORKED_YET', message: 'This shift is on Sat 15 Aug, so it cannot be confirmed as worked yet.' });
+    expect(snapshot('filledShifts', 'itRequests', 'notifications', 'audit')).toEqual(before);
+    const f = store.coll<{ personCode: string; date: string }>('filledShifts').fil_1;
+    if (f) { f.personCode = accountOf('manager').personCode; f.date = '2026-08-13'; }
+    const own = await call('POST', '/api/v1/rota/filled/fil_1/confirm', undefined, 1);
+    expect(own.status).toBe(403);
+    expect(refusal(own)).toEqual({ code: 'SELF_APPROVAL', message: 'You cannot confirm your own shift as worked.', next: 'Ask another manager at this location.' });
+    expect(store.coll<{ confirmed: boolean }>('filledShifts').fil_1?.confirmed).toBe(false);
+    expect(snapshot('itRequests', 'notifications', 'audit')).toEqual({ itRequests: before.itRequests, notifications: before.notifications, audit: before.audit });
+  });
   test('confirm raises the IT request with ITACCESS on, and not with it off', async () => {
+    store.setClock('2026-08-15T09:00:00.000Z');
     const call = await as('manager');
     const r = FilledConfirmed.parse((await call('POST', '/api/v1/rota/filled/fil_1/confirm', undefined, 1)).body);
     expect(r.itRequest).toMatchObject({ ref: 'ITR-1007', personCode: 'CP-1310', worker: 'Bank', status: 'Raised' });
@@ -493,6 +508,7 @@ describe('cover flow (Review Focus 5)', () => {
     expect(notes(accountOf('admin').personCode).map(n => n.title)).toEqual(['IT access request raised']);
     expect(refusal(await call('POST', '/api/v1/rota/filled/fil_1/confirm', undefined, 2))).toMatchObject({ code: 'ALREADY_CONFIRMED' });
     resetTo('social');
+    store.setClock('2026-08-15T09:00:00.000Z');
     setFlag('ITACCESS', false);
     const off = FilledConfirmed.parse((await (await as('manager'))('POST', '/api/v1/rota/filled/fil_1/confirm', undefined, 1)).body);
     expect(off).toMatchObject({ itRequest: null, summary: 'Confirmed as worked.' });

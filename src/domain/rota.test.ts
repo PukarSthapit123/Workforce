@@ -1,6 +1,6 @@
 import {
   DEFAULT_ROTA_CONFIG, applyPattern, amendedAuditText, amendedNotice, assignCheck, claimRefusal, clearPreview, clearProblem,
-  clearSummary, clearWrites, confirmProblem, confirmSummary, consecRun, copyProblem, copySummary, copyWeek, coverAskAllMove, coverClosed,
+  clearSummary, clearWrites, confirmEarlyProblem, confirmProblem, confirmSelfProblem, confirmSummary, consecRun, copyProblem, copySummary, copyWeek, coverAskAllMove, coverClosed,
   coverEscalateMove, coverNext, coverReasonMove, coverage, coverageIssueNotice, emptyWeek, eligibility, gapDays, gapsAt, genLabel, genRange,
   generateActivates, generateAuditText, generateSummary, hoursPosition, ineligibleMessage, isValidCell, itRequestFor, lineRestIssues, minFor, newCover,
   normLine, onRoster, onShift, openCoverProblem, openShiftsFor, patternGenerateProblem, patternProblem, patternUsage, planSummary, planWeek,
@@ -490,6 +490,11 @@ describe('cover (D7)', () => {
     const f = { coverId: 'cov_1', location: 'WH', date: '2026-08-15', shift: 'E', personCode: 'CP-1310', name: 'Ellie Warren', confirmed: false, itRequest: '' };
     expect(confirmProblem(f)).toBeNull();
     expect(confirmProblem({ ...f, confirmed: true })?.message).toBe('This shift is already confirmed as worked.');
+    /* M2: never your own shift, never before its day */
+    expect(confirmSelfProblem(f, 'CP-1310')).toEqual({ code: 'SELF_APPROVAL', message: 'You cannot confirm your own shift as worked.', next: 'Ask another manager at this location.' });
+    expect(confirmSelfProblem(f, 'CP-1001')).toBeNull();
+    expect(confirmEarlyProblem(f, '2026-08-14')).toMatchObject({ code: 'NOT_WORKED_YET', message: 'This shift is on Sat 15 Aug, so it cannot be confirmed as worked yet.' });
+    expect(confirmEarlyProblem(f, '2026-08-15')).toBeNull();
     expect(itRequestFor(f, 0, 'Bank', AT, 'Willow House', SHIFTS)).toEqual({ ref: 'ITR-1007', personCode: 'CP-1310', name: 'Ellie Warren', location: 'Willow House',
       shift: 'Early · 07:00–15:00', date: '2026-08-15', worker: 'Bank', status: 'Raised', raisedAt: AT, system: 'IT service desk (simulated)' });
     expect([confirmSummary('ITR-1007'), confirmSummary('')]).toEqual(['Confirmed. IT access request ITR-1007 raised.', 'Confirmed as worked.']);

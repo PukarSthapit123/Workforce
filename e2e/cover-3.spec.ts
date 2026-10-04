@@ -9,7 +9,7 @@ import { DEE, RACHEL, W33, lineOf, openRota, rotaWeek, stored, type NoteRow } fr
    request with no reason; on Cover requests the reason moves it on a stage and
    brings up suggestions; assigning one writes the shift onto the published
    week as an amendment and closes the request; confirming it raises an IT
-   access request, because ITACCESS is on. */
+   access request, because ITACCESS is on, once the clock reaches the shift's day. */
 test.beforeEach(async ({ api }) => { await api.seed('social'); await api.setClock(FROZEN); });
 const info = (page: import('@playwright/test').Page, text: string | RegExp) => page.getByTestId(tid.toast.info).filter({ hasText: text });
 interface Board { requests: { id: string; date: string; shift: string; reason: string; stage: number; open: boolean }[]; filled: { id: string; coverId: string; personCode: string; name: string; confirmed: boolean; itRequest: string }[] }
@@ -53,6 +53,10 @@ test('a manager opens cover for a short day, gives the reason, assigns a suggest
   expect(week).toMatchObject({ state: 'amendment', gapDays: [] });
   expect(week.changes[0]).toMatchObject({ personCode: filled.personCode, to: 'E', afterPublish: true });
 
+  /* a shift is confirmed as worked on or after its day, so the clock moves on to Friday evening */
+  await page.getByTestId(tid.tcover.confirm(filled.id)).click();
+  await expect(page.getByTestId(tid.toast.error).filter({ hasText: 'This shift is on Fri 14 Aug, so it cannot be confirmed as worked yet.' })).toBeVisible();
+  await api.setClock('2026-08-14T18:00:00.000Z');
   await page.getByTestId(tid.tcover.confirm(filled.id)).click();
   await expect(info(page, /^Confirmed\. IT access request ITR-\d+ raised\./)).toBeVisible();
   await expect(page.getByTestId(tid.tcover.confirmed(filled.id))).toContainText('Confirmed');
