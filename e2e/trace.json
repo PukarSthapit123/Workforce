@@ -62,8 +62,8 @@
    "section": "BOOT",
    "text": "Rota is off for this tenant, so the calendar carries no shifts",
    "area": "rota",
-   "deferredTo": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/rota-off-3.spec.ts › with Rota off (qnipay), the rota pages are gone from the nav and their addresses, the server refuses them, and the timesheet shows no rota"
   },
   {
    "id": "IMP-001-A1-approval-QUEUES-rather-than-posts#1",
@@ -526,32 +526,32 @@
    "section": "IMP-005c — proxy grid seeds from the target employee",
    "text": "Night worker seeds night times",
    "area": "rota",
-   "status": "pending",
-   "deferredTo": "rota"
+   "status": "ported",
+   "test": "src/features/timesheet/rota.test.tsx › the grid seeds night times for a night worker and late times for a late worker, and says whose rota it came from"
   },
   {
    "id": "IMP-005c-proxy-grid-seeds-from-the-target-employee#5",
    "section": "IMP-005c — proxy grid seeds from the target employee",
    "text": "Late-shift worker seeds late times",
    "area": "rota",
-   "status": "pending",
-   "deferredTo": "rota"
+   "status": "ported",
+   "test": "src/features/timesheet/rota.test.tsx › the grid seeds night times for a night worker and late times for a late worker, and says whose rota it came from"
   },
   {
    "id": "IMP-005c-proxy-grid-seeds-from-the-target-employee#6",
    "section": "IMP-005c — proxy grid seeds from the target employee",
    "text": "Caption names whose rota it came from",
    "area": "rota",
-   "status": "pending",
-   "deferredTo": "rota"
+   "status": "ported",
+   "test": "src/features/timesheet/rota.test.tsx › the grid seeds night times for a night worker and late times for a late worker, and says whose rota it came from"
   },
   {
    "id": "IMP-005c-proxy-grid-seeds-from-the-target-employee#7",
    "section": "IMP-005c — proxy grid seeds from the target employee",
    "text": "Caption no longer says \"your rota\" in proxy",
    "area": "rota",
-   "status": "pending",
-   "deferredTo": "rota"
+   "status": "ported",
+   "test": "src/features/timesheet/rota.test.tsx › the grid seeds night times for a night worker and late times for a late worker, and says whose rota it came from"
   },
   {
    "id": "IMP-005c-proxy-grid-seeds-from-the-target-employee#8",
@@ -566,8 +566,8 @@
    "section": "IMP-005c — proxy grid seeds from the target employee",
    "text": "R-04 Your own grid says nothing about whose rota it is — it is yours",
    "area": "rota",
-   "status": "pending",
-   "deferredTo": "rota"
+   "status": "ported",
+   "test": "src/features/timesheet/rota.test.tsx › the classic grid fills each rota"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#1",
@@ -582,24 +582,24 @@
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A1 Proxy day form seeds the rota line from the target",
    "area": "rota",
-   "status": "pending",
-   "deferredTo": "rota"
+   "status": "ported",
+   "test": "src/features/timesheet/rota.test.tsx › the day form seeds the rota line and the times from the target, whichever shift they are on"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#3",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A1 Seeded line comes from that person, whichever shift they are on",
    "area": "rota",
-   "status": "pending",
-   "deferredTo": "rota"
+   "status": "ported",
+   "test": "src/features/timesheet/rota.test.tsx › the day form seeds the rota line and the times from the target, whichever shift they are on"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#4",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A1 Proxy day form seeds times from the target",
    "area": "rota",
-   "status": "pending",
-   "deferredTo": "rota"
+   "status": "ported",
+   "test": "src/features/timesheet/rota.test.tsx › the day form seeds the rota line and the times from the target, whichever shift they are on"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#5",
@@ -630,16 +630,16 @@
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A2 Fill-from-rota reports a real day count",
    "area": "rota",
-   "status": "pending",
-   "deferredTo": "rota"
+   "status": "ported",
+   "test": "src/features/timesheet/rota.test.tsx › the classic grid fills each rota"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#9",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A2 Grid actually repopulated",
    "area": "rota",
-   "status": "pending",
-   "deferredTo": "rota"
+   "status": "ported",
+   "test": "src/features/timesheet/rota.test.tsx › the classic grid fills each rota"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#10",
@@ -654,8 +654,8 @@
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A4 Rota copy-week control is disabled",
    "area": "rota",
-   "status": "pending",
-   "deferredTo": "rota"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › renders the published week: the week bar, the gap banner, the grid with its cover row and key, the day view and the history, with full test id coverage"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#12",
@@ -670,40 +670,40 @@
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A6 Mass upload declares itself simulated",
    "area": "rota",
-   "status": "pending",
-   "deferredTo": "rota"
+   "status": "ported",
+   "test": "src/features/rota/rota-setup.test.tsx › the pattern upload is simulated: Import writes nothing, and the failed rows download as a real CSV"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#14",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A6 Upload toast states no patterns were created",
    "area": "rota",
-   "status": "pending",
-   "deferredTo": "rota"
+   "status": "ported",
+   "test": "src/features/rota/rota-setup.test.tsx › the pattern upload is simulated: Import writes nothing, and the failed rows download as a real CSV"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#15",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A6 Audit row says simulated, not imported",
    "area": "rota",
-   "status": "pending",
-   "deferredTo": "rota"
+   "status": "ported",
+   "test": "src/features/rota/rota-setup.test.tsx › the pattern upload is simulated: Import writes nothing, and the failed rows download as a real CSV"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#16",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A7 Upload error report triggers a real download",
    "area": "rota",
-   "status": "pending",
-   "deferredTo": "rota"
+   "status": "ported",
+   "test": "src/features/rota/rota-setup.test.tsx › the pattern upload is simulated: Import writes nothing, and the failed rows download as a real CSV"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#17",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A7 Error toast reports counts",
    "area": "rota",
-   "status": "pending",
-   "deferredTo": "rota"
+   "status": "ported",
+   "test": "src/features/rota/rota-setup.test.tsx › the pattern upload is simulated: Import writes nothing, and the failed rows download as a real CSV"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#18",
@@ -734,8 +734,8 @@
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A9 Outlook action states it is not built",
    "area": "rota",
-   "status": "pending",
-   "deferredTo": "rota"
+   "status": "ported",
+   "test": "src/features/rota/my-shifts.test.tsx › a published week shows the next shift, the week, rest days and the open shifts to claim, with full test id coverage"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#22",
@@ -1030,28 +1030,32 @@
    "section": "CHUNK C — rota lifecycle and the week store",
    "text": "C Week bar no longer hard-codes Draft",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › publish is blocked while an empty draft week has gaps; it can be sent for review"
   },
   {
    "id": "CHUNK-C-rota-lifecycle-and-the-week-store#2",
    "section": "CHUNK C — rota lifecycle and the week store",
    "text": "C Seeded week shows as Published with a version",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › renders the published week: the week bar, the gap banner, the grid with its cover row and key, the day view and the history, with full test id coverage"
   },
   {
    "id": "CHUNK-C-rota-lifecycle-and-the-week-store#3",
    "section": "CHUNK C — rota lifecycle and the week store",
    "text": "C Publish is disabled while the week is already live",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › renders the published week: the week bar, the gap banner, the grid with its cover row and key, the day view and the history, with full test id coverage"
   },
   {
    "id": "CHUNK-C-rota-lifecycle-and-the-week-store#4",
    "section": "CHUNK C — rota lifecycle and the week store",
    "text": "C Version history card is rendered",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › renders the published week: the week bar, the gap banner, the grid with its cover row and key, the day view and the history, with full test id coverage"
   },
   {
    "id": "CHUNK-C-rota-lifecycle-and-the-week-store#5",
@@ -1065,119 +1069,136 @@
    "section": "CHUNK C — rota lifecycle and the week store",
    "text": "C Rota cells are reachable",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › renders the published week: the week bar, the gap banner, the grid with its cover row and key, the day view and the history, with full test id coverage"
   },
   {
    "id": "CHUNK-C-rota-lifecycle-and-the-week-store#7",
    "section": "CHUNK C — rota lifecycle and the week store",
    "text": "C A published shift can be amended",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › a shift assigned by the picker on a live week becomes an amendment, and republishing makes it live"
   },
   {
    "id": "CHUNK-C-rota-lifecycle-and-the-week-store#8",
    "section": "CHUNK C — rota lifecycle and the week store",
    "text": "C Changing a published week moves it to Amended",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › a shift assigned by the picker on a live week becomes an amendment, and republishing makes it live"
   },
   {
    "id": "CHUNK-C-rota-lifecycle-and-the-week-store#9",
    "section": "CHUNK C — rota lifecycle and the week store",
    "text": "C Unpublished change count is shown",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › a shift assigned by the picker on a live week becomes an amendment, and republishing makes it live"
   },
   {
    "id": "CHUNK-C-rota-lifecycle-and-the-week-store#10",
    "section": "CHUNK C — rota lifecycle and the week store",
    "text": "C The change is listed in version history against the published version",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › a shift assigned by the picker on a live week becomes an amendment, and republishing makes it live"
   },
   {
    "id": "CHUNK-C-rota-lifecycle-and-the-week-store#11",
    "section": "CHUNK C — rota lifecycle and the week store",
    "text": "C Publish button becomes Republish",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › a shift assigned by the picker on a live week becomes an amendment, and republishing makes it live"
   },
   {
    "id": "CHUNK-C-rota-lifecycle-and-the-week-store#12",
    "section": "CHUNK C — rota lifecycle and the week store",
    "text": "C The amendment is audited separately from the publication",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/manager-3.spec.ts › a manager"
   },
   {
    "id": "CHUNK-C-rota-lifecycle-and-the-week-store#13",
    "section": "CHUNK C — rota lifecycle and the week store",
    "text": "C Republish is correctly blocked while a coverage gap exists",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-3.spec.ts › an admin turns off “Coverage gaps block publishing” and a week with a gap republishes; turned back on, the republish is refused and nothing changes"
   },
   {
    "id": "CHUNK-C-rota-lifecycle-and-the-week-store#14",
    "section": "CHUNK C — rota lifecycle and the week store",
    "text": "C Republish increments the version to v2",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › a shift assigned by the picker on a live week becomes an amendment, and republishing makes it live"
   },
   {
    "id": "CHUNK-C-rota-lifecycle-and-the-week-store#15",
    "section": "CHUNK C — rota lifecycle and the week store",
    "text": "C Republish reports how many amendments it carried",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › a shift assigned by the picker on a live week becomes an amendment, and republishing makes it live"
   },
   {
    "id": "CHUNK-C-rota-lifecycle-and-the-week-store#16",
    "section": "CHUNK C — rota lifecycle and the week store",
    "text": "C After republishing the week is live again at v2",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › a shift assigned by the picker on a live week becomes an amendment, and republishing makes it live"
   },
   {
    "id": "CHUNK-C-rota-lifecycle-and-the-week-store#17",
    "section": "CHUNK C — rota lifecycle and the week store",
    "text": "C Week navigation moves the week",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › publish is blocked while an empty draft week has gaps; it can be sent for review"
   },
   {
    "id": "CHUNK-C-rota-lifecycle-and-the-week-store#18",
    "section": "CHUNK C — rota lifecycle and the week store",
    "text": "C A future week starts as Draft, not inheriting the published state",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › publish is blocked while an empty draft week has gaps; it can be sent for review"
   },
   {
    "id": "CHUNK-C-rota-lifecycle-and-the-week-store#19",
    "section": "CHUNK C — rota lifecycle and the week store",
    "text": "C An untouched week has no shifts (store is not shared)",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/manager-3.spec.ts › a manager generates the rota from a working pattern; the summary counts what was written and skipped, and a second run writes nothing"
   },
   {
    "id": "CHUNK-C-rota-lifecycle-and-the-week-store#20",
    "section": "CHUNK C — rota lifecycle and the week store",
    "text": "C Copy last week now copies real shifts",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › copy last week into an empty draft, then clear it after a confirmation that lists the shifts and colleagues"
   },
   {
    "id": "CHUNK-C-rota-lifecycle-and-the-week-store#21",
    "section": "CHUNK C — rota lifecycle and the week store",
    "text": "C Copy is audited",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › copy last week into an empty draft, then clear it after a confirmation that lists the shifts and colleagues"
   },
   {
    "id": "CHUNK-C-rota-lifecycle-and-the-week-store#22",
    "section": "CHUNK C — rota lifecycle and the week store",
    "text": "C Copied shifts persist on the target week",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › copy last week into an empty draft, then clear it after a confirmation that lists the shifts and colleagues"
   },
   {
    "id": "CHUNK-C-rota-lifecycle-and-the-week-store#23",
@@ -1553,105 +1574,120 @@
    "section": "IMP-031 — pattern generation writes real shifts",
    "text": "031 Working patterns has its own tab under Rota",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/rota-off-3.spec.ts › with Rota on, its pages are in the nav and the timesheet carries the rota"
   },
   {
    "id": "IMP-031-pattern-generation-writes-real-shifts#2",
    "section": "IMP-031 — pattern generation writes real shifts",
    "text": "031 A guide is offered as ? rather than a text button",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/ui-rules.spec.ts › G A ? guide button appears only where a guide is registered, once, and opens that guide"
   },
   {
    "id": "IMP-031-pattern-generation-writes-real-shifts#3",
    "section": "IMP-031 — pattern generation writes real shifts",
    "text": "031 Only patterns covering their location are listed",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/patterns.test.tsx › lists only the patterns covering the manager"
   },
   {
    "id": "IMP-031-pattern-generation-writes-real-shifts#4",
    "section": "IMP-031 — pattern generation writes real shifts",
    "text": "031 A New pattern control is offered to the manager",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/patterns.test.tsx › a new pattern starts as a draft; turning it on with an empty cycle is refused; people are staggered across its shift days"
   },
   {
    "id": "IMP-031-pattern-generation-writes-real-shifts#5",
    "section": "IMP-031 — pattern generation writes real shifts",
    "text": "031 Patterns can be opened for editing",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/patterns.test.tsx › lists only the patterns covering the manager"
   },
   {
    "id": "IMP-031-pattern-generation-writes-real-shifts#6",
    "section": "IMP-031 — pattern generation writes real shifts",
    "text": "031 The target week starts empty",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/manager-3.spec.ts › a manager generates the rota from a working pattern; the summary counts what was written and skipped, and a second run writes nothing"
   },
   {
    "id": "IMP-031-pattern-generation-writes-real-shifts#7",
    "section": "IMP-031 — pattern generation writes real shifts",
    "text": "031 A generate control is available",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/patterns.test.tsx › a saved run length generates the rota and reports what was written, skipping the published week"
   },
   {
    "id": "IMP-031-pattern-generation-writes-real-shifts#8",
    "section": "IMP-031 — pattern generation writes real shifts",
    "text": "031 Generation reports shifts WRITTEN, not projected",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/patterns.test.tsx › a saved run length generates the rota and reports what was written, skipping the published week"
   },
   {
    "id": "IMP-031-pattern-generation-writes-real-shifts#9",
    "section": "IMP-031 — pattern generation writes real shifts",
    "text": "031 It reports the week span and headcount",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/patterns.test.tsx › a saved run length generates the rota and reports what was written, skipping the published week"
   },
   {
    "id": "IMP-031-pattern-generation-writes-real-shifts#10",
    "section": "IMP-031 — pattern generation writes real shifts",
    "text": "031 It declares published weeks were skipped",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/patterns.test.tsx › a saved run length generates the rota and reports what was written, skipping the published week"
   },
   {
    "id": "IMP-031-pattern-generation-writes-real-shifts#11",
    "section": "IMP-031 — pattern generation writes real shifts",
    "text": "031 Shifts actually appear on the rota grid",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/manager-3.spec.ts › a manager generates the rota from a working pattern; the summary counts what was written and skipped, and a second run writes nothing"
   },
   {
    "id": "IMP-031-pattern-generation-writes-real-shifts#12",
    "section": "IMP-031 — pattern generation writes real shifts",
    "text": "031 The audit row records what was written, not a projection",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/rota.test.ts › generate skips the live week, leave and filled cells, reports true counts, one audit row"
   },
   {
    "id": "IMP-031-pattern-generation-writes-real-shifts#13",
    "section": "IMP-031 — pattern generation writes real shifts",
    "text": "031 Re-running does not overwrite or duplicate filled cells",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/manager-3.spec.ts › a manager generates the rota from a working pattern; the summary counts what was written and skipped, and a second run writes nothing"
   },
   {
    "id": "IMP-031-pattern-generation-writes-real-shifts#14",
    "section": "IMP-031 — pattern generation writes real shifts",
    "text": "031 It says cells were left alone",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/manager-3.spec.ts › a manager generates the rota from a working pattern; the summary counts what was written and skipped, and a second run writes nothing"
   },
   {
    "id": "IMP-031-pattern-generation-writes-real-shifts#15",
    "section": "IMP-031 — pattern generation writes real shifts",
    "text": "031 A published week is not rewritten by a generation run",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/manager-3.spec.ts › a manager generates the rota from a working pattern; the summary counts what was written and skipped, and a second run writes nothing"
   },
   {
    "id": "IMP-031-manager-scoping#1",
@@ -1679,14 +1715,16 @@
    "section": "IMP-031 — manager scoping",
    "text": "031 Working patterns appears as its own capability",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/permissions-3.spec.ts › “Admins only” on Rota setup withholds patterns and shift types from a manager on the server, and restoring it gives them back"
   },
   {
    "id": "IMP-031-manager-scoping#5",
    "section": "IMP-031 — manager scoping",
    "text": "031 It is separate from module configuration",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/permissions-3.spec.ts › “Admins only” on Rota setup withholds patterns and shift types from a manager on the server, and restoring it gives them back"
   },
   {
    "id": "GUIDE-AFFORDANCE-opens-i-only-hovers#1",
@@ -1789,8 +1827,8 @@
    "section": "MODAL SIZING + STRUCTURE",
    "text": "M The patterns table is a page, not a cramped modal",
    "area": "rota",
-   "deferredTo": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/patterns.test.tsx › lists only the patterns covering the manager"
   },
   {
    "id": "MODAL-SIZING-STRUCTURE#7",
@@ -1805,21 +1843,24 @@
    "section": "MULTI-PERSON ADD + STAGGER",
    "text": "MP An add-people control exists",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/patterns.test.tsx › a new pattern starts as a draft; turning it on with an empty cycle is refused; people are staggered across its shift days"
   },
   {
    "id": "MULTI-PERSON-ADD-STAGGER#2",
    "section": "MULTI-PERSON ADD + STAGGER",
    "text": "MP Several people can be ticked at once",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/patterns.test.tsx › a new pattern starts as a draft; turning it on with an empty cycle is refused; people are staggered across its shift days"
   },
   {
    "id": "MULTI-PERSON-ADD-STAGGER#3",
    "section": "MULTI-PERSON ADD + STAGGER",
    "text": "MP A stagger mode is offered",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/patterns.test.tsx › a new pattern starts as a draft; turning it on with an empty cycle is refused; people are staggered across its shift days"
   },
   {
    "id": "MULTI-PERSON-ADD-STAGGER#4",
@@ -1833,42 +1874,48 @@
    "section": "MULTI-PERSON ADD + STAGGER",
    "text": "MP Adding with nothing ticked is refused",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/patterns.test.tsx › a new pattern starts as a draft; turning it on with an empty cycle is refused; people are staggered across its shift days"
   },
   {
    "id": "MULTI-PERSON-ADD-STAGGER#6",
    "section": "MULTI-PERSON ADD + STAGGER",
    "text": "MP Multiple people are added in one go",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/patterns.test.tsx › a new pattern starts as a draft; turning it on with an empty cycle is refused; people are staggered across its shift days"
   },
   {
    "id": "MULTI-PERSON-ADD-STAGGER#7",
    "section": "MULTI-PERSON ADD + STAGGER",
    "text": "MP It reports how they were staggered",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/patterns.test.tsx › a new pattern starts as a draft; turning it on with an empty cycle is refused; people are staggered across its shift days"
   },
   {
    "id": "MULTI-PERSON-ADD-STAGGER#8",
    "section": "MULTI-PERSON ADD + STAGGER",
    "text": "MP Each person and their day is audited",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/patterns.test.tsx › a new pattern starts as a draft; turning it on with an empty cycle is refused; people are staggered across its shift days"
   },
   {
    "id": "WEEKLY-REPEAT-IMP-032#1",
    "section": "WEEKLY REPEAT (IMP-032)",
    "text": "W A repeat-forward control is offered",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › repeat forward shows the server"
   },
   {
    "id": "WEEKLY-REPEAT-IMP-032#2",
    "section": "WEEKLY REPEAT (IMP-032)",
    "text": "W It asks how many weeks",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › repeat forward shows the server"
   },
   {
    "id": "WEEKLY-REPEAT-IMP-032#3",
@@ -1882,49 +1929,56 @@
    "section": "WEEKLY REPEAT (IMP-032)",
    "text": "W It reports what was written or why nothing was",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › repeat forward shows the server"
   },
   {
    "id": "WEEKLY-REPEAT-IMP-032#5",
    "section": "WEEKLY REPEAT (IMP-032)",
    "text": "W The repeat is audited",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/manager-3.spec.ts › a manager repeats the week forward, publishes the next week, and clears the draft week after it"
   },
   {
    "id": "ROTA-POLICY-IS-SETUP-DRIVEN#1",
    "section": "ROTA POLICY IS SETUP-DRIVEN",
    "text": "P A \"who builds the rota\" policy exists",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/permissions-3.spec.ts › “Admins only” on Rota setup withholds patterns and shift types from a manager on the server, and restoring it gives them back"
   },
   {
    "id": "ROTA-POLICY-IS-SETUP-DRIVEN#2",
    "section": "ROTA POLICY IS SETUP-DRIVEN",
    "text": "P Changing it is audited",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/permissions-3.spec.ts › “Admins only” on Rota setup withholds patterns and shift types from a manager on the server, and restoring it gives them back"
   },
   {
    "id": "ROTA-POLICY-IS-SETUP-DRIVEN#3",
    "section": "ROTA POLICY IS SETUP-DRIVEN",
    "text": "P Admins-only withdraws patterns from the manager",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/permissions-3.spec.ts › “Admins only” on Rota setup withholds patterns and shift types from a manager on the server, and restoring it gives them back"
   },
   {
    "id": "ROTA-POLICY-IS-SETUP-DRIVEN#4",
    "section": "ROTA POLICY IS SETUP-DRIVEN",
    "text": "P The permission row still exists — policy sits above it, not instead of it",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/permissions-3.spec.ts › “Admins only” on Rota setup withholds patterns and shift types from a manager on the server, and restoring it gives them back"
   },
   {
    "id": "ROTA-POLICY-IS-SETUP-DRIVEN#5",
    "section": "ROTA POLICY IS SETUP-DRIVEN",
    "text": "P Restoring the policy gives it back",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/permissions-3.spec.ts › “Admins only” on Rota setup withholds patterns and shift types from a manager on the server, and restoring it gives them back"
   },
   {
    "id": "TOOLTIPS-escape-their-container-and-stay-on-screen#1",
@@ -3028,40 +3082,40 @@
    "section": "LEGENDS BECOME LIVE SUMMARIES",
    "text": "LG The rota key counts whatever shifts are on the week",
    "area": "rota",
-   "status": "pending",
-   "deferredTo": "rota"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › renders the published week: the week bar, the gap banner, the grid with its cover row and key, the day view and the history, with full test id coverage"
   },
   {
    "id": "LEGENDS-BECOME-LIVE-SUMMARIES#6",
    "section": "LEGENDS BECOME LIVE SUMMARIES",
    "text": "LG It reports how many cells are still unassigned",
    "area": "rota",
-   "status": "pending",
-   "deferredTo": "rota"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › renders the published week: the week bar, the gap banner, the grid with its cover row and key, the day view and the history, with full test id coverage"
   },
   {
    "id": "LEGENDS-BECOME-LIVE-SUMMARIES#7",
    "section": "LEGENDS BECOME LIVE SUMMARIES",
    "text": "LG It lists only shift types actually present",
    "area": "rota",
-   "status": "pending",
-   "deferredTo": "rota"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › publish is blocked while an empty draft week has gaps; it can be sent for review"
   },
   {
    "id": "LEGENDS-BECOME-LIVE-SUMMARIES#8",
    "section": "LEGENDS BECOME LIVE SUMMARIES",
    "text": "LG It is derived from the week shown, not a fixed list",
    "area": "rota",
-   "status": "pending",
-   "deferredTo": "rota"
+   "status": "ported",
+   "test": "src/domain/rota.test.ts › per-day shift counts and the live legend"
   },
   {
    "id": "LEGENDS-BECOME-LIVE-SUMMARIES#9",
    "section": "LEGENDS BECOME LIVE SUMMARIES",
    "text": "LG An empty week says so rather than listing every shift type",
    "area": "rota",
-   "status": "pending",
-   "deferredTo": "rota"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › publish is blocked while an empty draft week has gaps; it can be sent for review"
   },
   {
    "id": "LEGENDS-BECOME-LIVE-SUMMARIES#10",
@@ -3084,56 +3138,64 @@
    "section": "SHIFT PALETTE + DRAG AND DROP",
    "text": "DD The catalogue is shown graphically as chips",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › renders the published week: the week bar, the gap banner, the grid with its cover row and key, the day view and the history, with full test id coverage"
   },
   {
    "id": "SHIFT-PALETTE-DRAG-AND-DROP#2",
    "section": "SHIFT PALETTE + DRAG AND DROP",
    "text": "DD Each chip carries its code, name and times",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › renders the published week: the week bar, the gap banner, the grid with its cover row and key, the day view and the history, with full test id coverage"
   },
   {
    "id": "SHIFT-PALETTE-DRAG-AND-DROP#3",
    "section": "SHIFT PALETTE + DRAG AND DROP",
    "text": "DD Chips are draggable",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › a dragged shift lands through the same path, and a refused one says why and writes nothing"
   },
   {
    "id": "SHIFT-PALETTE-DRAG-AND-DROP#4",
    "section": "SHIFT PALETTE + DRAG AND DROP",
    "text": "DD Chips are keyboard reachable and labelled",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › the keyboard alone picks a shift up from the palette and puts it down on a cell (D11)"
   },
   {
    "id": "SHIFT-PALETTE-DRAG-AND-DROP#5",
    "section": "SHIFT PALETTE + DRAG AND DROP",
    "text": "DD Grid cells are drop targets",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › a dragged shift lands through the same path, and a refused one says why and writes nothing"
   },
   {
    "id": "SHIFT-PALETTE-DRAG-AND-DROP#6",
    "section": "SHIFT PALETTE + DRAG AND DROP",
    "text": "DD A manager can create a shift type from the palette",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/shifts.test.tsx › renders the palette and every shift type with its derived hours, midnight crossing and use, with full test id coverage"
   },
   {
    "id": "SHIFT-PALETTE-DRAG-AND-DROP#7",
    "section": "SHIFT PALETTE + DRAG AND DROP",
    "text": "DD There is an empty cell to drop onto",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › a dragged shift lands through the same path, and a refused one says why and writes nothing"
   },
   {
    "id": "SHIFT-PALETTE-DRAG-AND-DROP#8",
    "section": "SHIFT PALETTE + DRAG AND DROP",
    "text": "DD Picking a chip up marks it",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › the keyboard alone picks a shift up from the palette and puts it down on a cell (D11)"
   },
   {
    "id": "SHIFT-PALETTE-DRAG-AND-DROP#9",
@@ -3154,42 +3216,48 @@
    "section": "SHIFT PALETTE + DRAG AND DROP",
    "text": "DD Dropping assigns the shift and says what happened",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › a dragged shift lands through the same path, and a refused one says why and writes nothing"
   },
   {
    "id": "SHIFT-PALETTE-DRAG-AND-DROP#12",
    "section": "SHIFT PALETTE + DRAG AND DROP",
    "text": "DD The cell now holds a shift",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › the keyboard alone picks a shift up from the palette and puts it down on a cell (D11)"
   },
   {
    "id": "SHIFT-PALETTE-DRAG-AND-DROP#13",
    "section": "SHIFT PALETTE + DRAG AND DROP",
    "text": "DD The assignment is audited like any other rota change",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › a dragged shift lands through the same path, and a refused one says why and writes nothing"
   },
   {
    "id": "SHIFT-PALETTE-DRAG-AND-DROP#14",
    "section": "SHIFT PALETTE + DRAG AND DROP",
    "text": "DD A refused drop explains why rather than failing silently",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › a dragged shift lands through the same path, and a refused one says why and writes nothing"
   },
   {
    "id": "SHIFT-PALETTE-DRAG-AND-DROP#15",
    "section": "SHIFT PALETTE + DRAG AND DROP",
    "text": "DD Enter picks a shift up without a mouse",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › the keyboard alone picks a shift up from the palette and puts it down on a cell (D11)"
   },
   {
    "id": "SHIFT-PALETTE-DRAG-AND-DROP#16",
    "section": "SHIFT PALETTE + DRAG AND DROP",
    "text": "DD Enter on a cell puts it down",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › the keyboard alone picks a shift up from the palette and puts it down on a cell (D11)"
   },
   {
    "id": "MANAGER-NAV-GROUPED-BY-MODULE#1",
@@ -3698,21 +3766,24 @@
    "section": "CLEAR WEEK",
    "text": "CW A clear control exists on the week bar",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › renders the published week: the week bar, the gap banner, the grid with its cover row and key, the day view and the history, with full test id coverage"
   },
   {
    "id": "CLEAR-WEEK#2",
    "section": "CLEAR WEEK",
    "text": "CW It is disabled on a live rota, with a reason",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › renders the published week: the week bar, the gap banner, the grid with its cover row and key, the day view and the history, with full test id coverage"
   },
   {
    "id": "CLEAR-WEEK#3",
    "section": "CLEAR WEEK",
    "text": "CW It confirms before clearing, with counts",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › copy last week into an empty draft, then clear it after a confirmation that lists the shifts and colleagues"
   },
   {
    "id": "CLEAR-WEEK#4",
@@ -3733,21 +3804,24 @@
    "section": "CLEAR WEEK",
    "text": "CW Clearing reports what it removed and what to do next",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › copy last week into an empty draft, then clear it after a confirmation that lists the shifts and colleagues"
   },
   {
    "id": "CLEAR-WEEK#7",
    "section": "CLEAR WEEK",
    "text": "CW The week is now empty and ready to build on",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › copy last week into an empty draft, then clear it after a confirmation that lists the shifts and colleagues"
   },
   {
    "id": "CLEAR-WEEK#8",
    "section": "CLEAR WEEK",
    "text": "CW The clear is audited with a count",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › copy last week into an empty draft, then clear it after a confirmation that lists the shifts and colleagues"
   },
   {
    "id": "WEEKLY-VIEW-layouts#1",
@@ -4218,8 +4292,8 @@
    "section": "WEEKLY LAYOUT IS CONFIGURABLE",
    "text": "CL Fill-from-rota works in the list layout",
    "area": "rota",
-   "status": "pending",
-   "deferredTo": "rota"
+   "status": "ported",
+   "test": "src/features/timesheet/rota.test.tsx › the list layout gives each rota"
   },
   {
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#21",
@@ -5217,42 +5291,48 @@
    "section": "ROTA OFF EMPTIES THE CALENDAR",
    "text": "RO The calendar shows shifts while Rota is on",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/rota-off-3.spec.ts › with Rota on, its pages are in the nav and the timesheet carries the rota"
   },
   {
    "id": "ROTA-OFF-EMPTIES-THE-CALENDAR#2",
    "section": "ROTA OFF EMPTIES THE CALENDAR",
    "text": "RO Turning Rota off reports how many shifts it cleared",
-   "area": "rota",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "ROTA-OFF-EMPTIES-THE-CALENDAR#3",
    "section": "ROTA OFF EMPTIES THE CALENDAR",
    "text": "RO ... and the calendar is now empty of shifts",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/rota-off-3.spec.ts › with Rota off (qnipay), the rota pages are gone from the nav and their addresses, the server refuses them, and the timesheet shows no rota"
   },
   {
    "id": "ROTA-OFF-EMPTIES-THE-CALENDAR#4",
    "section": "ROTA OFF EMPTIES THE CALENDAR",
    "text": "RO Leave still shows, because it comes from Leave not Rota",
-   "area": "rota",
-   "status": "pending"
+   "area": "leave",
+   "status": "pending",
+   "deferredTo": "leave"
   },
   {
    "id": "ROTA-OFF-EMPTIES-THE-CALENDAR#5",
    "section": "ROTA OFF EMPTIES THE CALENDAR",
    "text": "RO Turning it back on reports how many it restored",
-   "area": "rota",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "ROTA-OFF-EMPTIES-THE-CALENDAR#6",
    "section": "ROTA OFF EMPTIES THE CALENDAR",
    "text": "RO ... and the calendar is populated again",
-   "area": "rota",
-   "status": "pending"
+   "area": "1c",
+   "status": "pending",
+   "deferredTo": "1c"
   },
   {
    "id": "TENANT-DATA-FROM-THE-BC-EXPORT#1",
@@ -6662,8 +6742,8 @@
    "section": "CONTROLS LOOK LIKE THEIR NEIGHBOURS",
    "text": "CT ... defaulting to a Monday",
    "area": "rota",
-   "deferredTo": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/patterns.test.tsx › a new pattern starts as a draft; turning it on with an empty cycle is refused; people are staggered across its shift days"
   },
   {
    "id": "CONTROLS-LOOK-LIKE-THEIR-NEIGHBOURS#5",
