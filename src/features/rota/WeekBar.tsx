@@ -1,7 +1,7 @@
 import { tid } from '@/testids';
 import { Button, CalNav, Pill } from '@/ui';
 import { formatDateTime } from '@/lib/format';
-import { rotaLive, rotaState } from '@/domain/rota';
+import { rotaLive, rotaState, rotaVisible } from '@/domain/rota';
 import type { RotaWeekView } from '@/contract/rota';
 import { weekRange } from './week';
 
@@ -9,13 +9,14 @@ import { weekRange } from './week';
    10662-10692, CSS 365-371 and 1542-1551). It sits under the tab strip, sticky
    at 100px (56px on a phone, where the strip becomes the bottom bar), and reads
    the week's own record: its state, its version and the changes made since it
-   was published. Publish is disabled while gaps block it or the week is live. */
+   was published. Publish is disabled while gaps block it or the week is live;
+   Copy and Clear while colleagues can see the week, amended included. */
 export interface WeekActions {
   onWeek: (step: -1 | 1 | 0) => void; onHorizon: () => void; onCopy: () => void; onRepeat: () => void; onClear: () => void;
   onReview: () => void; onAdhoc: () => void; onPublish: () => void;
 }
 export function WeekBar({ view, atCurrent, busy, actions }: { view: RotaWeekView; atCurrent: boolean; busy: boolean; actions: WeekActions }) {
-  const s = rotaState(view.state), live = rotaLive(view.state);
+  const s = rotaState(view.state), live = rotaLive(view.state), seen = rotaVisible(view.state);
   const amend = view.changes.filter(c => c.afterPublish && c.version === view.publishVersion).length;
   const blocked = view.rules.publishBlockOnGap && view.gapDays.length > 0;
   const note = live ? `Published ${view.publishedAt ? formatDateTime(view.publishedAt) : ''} · visible to colleagues`
@@ -33,11 +34,11 @@ export function WeekBar({ view, atCurrent, busy, actions }: { view: RotaWeekView
       <span data-testid={tid.trota.isoWeek} className="text-xs text-text-muted">Week {view.isoWeek}</span>
       <span className="ml-auto flex flex-wrap gap-sm">
         <Button testId={tid.trota.horizon} kind="ghost" small onClick={actions.onHorizon}>{view.rules.horizon}-month horizon</Button>
-        <Button testId={tid.trota.copy} kind="ghost" small pending={busy} disabled={live} onClick={actions.onCopy}
-          title={live ? 'This week is live. Copying over it would replace published shifts.' : undefined}>Copy last week</Button>
+        <Button testId={tid.trota.copy} kind="ghost" small pending={busy} disabled={seen} onClick={actions.onCopy}
+          title={seen ? `This week is ${s.label.toLowerCase()}. Copying over it would replace shifts colleagues can see.` : undefined}>Copy last week</Button>
         <Button testId={tid.trota.repeat} kind="ghost" small onClick={actions.onRepeat}>Repeat forward</Button>
-        <Button testId={tid.trota.clear} kind="ghost" small disabled={live} onClick={actions.onClear}
-          title={live ? 'This week is live. Clear it by amending the shifts you want removed.' : undefined}>Clear week</Button>
+        <Button testId={tid.trota.clear} kind="ghost" small disabled={seen} onClick={actions.onClear}
+          title={seen ? `This week is ${s.label.toLowerCase()}. Clear it by amending the shifts you want removed.` : undefined}>Clear week</Button>
         {view.state === 'draft' && <Button testId={tid.trota.review} kind="ghost" small pending={busy} onClick={actions.onReview}>Send for review</Button>}
         <Button testId={tid.trota.adhoc} kind="ghost" small onClick={actions.onAdhoc}>Add an extra shift</Button>
         <Button testId={tid.trota.publish} kind="primary" small pending={busy} disabled={blocked || live} onClick={actions.onPublish}

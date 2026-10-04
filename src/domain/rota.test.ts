@@ -141,7 +141,8 @@ describe('cell changes (rotaChange)', () => {
     expect(amendedAuditText('Willow House', live, r.change, SHIFTS)).toBe('Willow House · week 33 v1 · Amara Okafor · Early → nothing');
     expect(amendedNotice('2026-08-10', 1)).toEqual({ title: 'Rota amended', body: 'Week 33 · your shift on Tue has changed. Check your shifts.' });
     const again = setCell(r.week, { personCode: 'CP-1042', name: 'Amara Okafor', day: 2, to: 'L', by: ME, at: AT, why: 'Assigned' });
-    expect([again.week.state, again.change.afterPublish, again.week.changes.length]).toEqual(['amendment', false, 2]);
+    /* an amended week is still one colleagues can see: the next change is an amendment too (I3) */
+    expect([again.week.state, again.amended, again.change.afterPublish, again.week.changes.length]).toEqual(['amendment', true, true, 2]);
   });
   test('several writes as one request keep every change, newest first', () => {
     const r = setCells(week({ state: 'republished', publishVersion: 2 }), [
@@ -392,6 +393,14 @@ describe('pattern generation', () => {
 
 describe('repeat, copy and clear (D6)', () => {
   const src: WeekSlot = { state: 'published', lines: { A: line('E', 'E', '', '', '', 'V'), B: line('L'), X: line('N') } };
+  test('an amended week counts as live: repeat and generate skip it (I3)', () => {
+    const amended: WeekSlot = { state: 'amendment', lines: {} };
+    expect(repeatWeek('WH', '2026-08-10', src, ['A'], 1, () => amended)).toMatchObject({ written: 0, live: 1, weeks: 0 });
+    const p = pattern({ starts: '2026-08-10', gen: '1w', days: ['E', 'E', '', '', '', '', ''], people: [{ personCode: 'A', offset: 1 }] });
+    const r = applyPattern(p, { today: '2026-08-10', scope: null, people: new Map([['A', { code: 'A', name: 'A', location: 'WH', state: 'active', restNeed: 11 }]]),
+      weekAt: () => amended, locName: c => c, shifts: SHIFTS });
+    expect(r).toMatchObject({ ok: true, written: 0, live: 1 });
+  });
   test('repeatWeek writes forward into empty cells only, skipping live weeks and leave', () => {
     const weeks: Record<string, WeekSlot> = { '2026-08-24': { state: 'published', lines: {} }, '2026-08-31': { state: 'draft', lines: { A: line('V', 'L'), B: line() } } };
     const r = repeatWeek('WH', '2026-08-10', src, ['A', 'B'], 3, (_l, ws) => weeks[ws]);
@@ -415,6 +424,7 @@ describe('repeat, copy and clear (D6)', () => {
   test('copy refusals', () => {
     expect(copyProblem({ state: 'published', weekStart: '2026-08-10' }, src, ['A'])?.message)
       .toBe('Week 33 is published. Copying over a live rota would replace published shifts.');
+    expect(copyProblem({ state: 'amendment', weekStart: '2026-08-10' }, src, ['A'])?.code).toBe('WEEK_LIVE');
     expect(copyProblem({ state: 'draft', weekStart: '2026-08-17' }, undefined, ['A'])?.message).toBe('The previous week has no rota stored, so there is nothing to copy.');
     expect(copyProblem({ state: 'draft', weekStart: '2026-08-17' }, src, ['Z'])?.message).toBe('Nothing to copy. The previous week has no shifts for this location.');
   });
@@ -429,6 +439,7 @@ describe('repeat, copy and clear (D6)', () => {
   });
   test('clear refusals', () => {
     expect(clearProblem(week({ state: 'republished' }), [], 'Willow House')?.message).toBe('Week 33 is republished. Remove shifts individually so each change is recorded.');
+    expect(clearProblem(week({ state: 'amendment' }), [], 'Willow House')?.message).toBe('Week 33 is amended. Remove shifts individually so each change is recorded.');
     expect(clearProblem(week({ lines: { A: line('V') } }), ['A'], 'Willow House')?.message).toBe('Nothing to clear. This week has no shifts at Willow House.');
   });
 });

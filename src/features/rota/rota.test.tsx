@@ -92,6 +92,18 @@ describe('Team rota', () => {
     await waitFor(() => expect(screen.getByTestId(tid.trota.state)).toHaveTextContent('Republished · v2'));
   });
 
+  test('an amended week is protected as a published one: Copy and Clear are off and say why (I3)', async () => {
+    const w = week();
+    w.state = 'amendment';
+    await open();
+    expect(screen.getByTestId(tid.trota.state)).toHaveTextContent('Amended · v1');
+    expect(screen.getByTestId(tid.trota.copy)).toBeDisabled();
+    expect(screen.getByTestId(tid.trota.copy)).toHaveAttribute('title', 'This week is amended. Copying over it would replace shifts colleagues can see.');
+    expect(screen.getByTestId(tid.trota.clear)).toBeDisabled();
+    expect(screen.getByTestId(tid.trota.clear)).toHaveAttribute('title', 'This week is amended. Clear it by amending the shifts you want removed.');
+    expect(screen.getByTestId(tid.trota.publish)).toHaveTextContent('Republish');
+  });
+
   test('the keyboard alone picks a shift up from the palette and puts it down on a cell (D11)', async () => {
     await open();
     screen.getByTestId(tid.trota.pchip('E')).focus();

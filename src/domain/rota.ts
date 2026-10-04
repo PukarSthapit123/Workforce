@@ -203,9 +203,12 @@ export const ROTA_STATE: Record<RotaStateKey, RotaStateInfo> = {
 };
 export const isRotaState = (s: unknown): s is RotaStateKey => typeof s === 'string' && (ROTA_STATES as readonly string[]).includes(s);
 export const rotaState = (s: string): RotaStateInfo => (isRotaState(s) ? ROTA_STATE[s] : ROTA_STATE.draft);
-/* Live: colleagues can see it. */
+/* Published or republished: publishing again needs a change first. */
 export const rotaLive = (s: string) => s === 'published' || s === 'republished';
-/* My shifts shows a week only once it has been published (D14). */
+/* Colleagues can see it (D14): published, amended or republished. Every guard
+   that protects what staff see (a change recorded as an amendment, clear,
+   copy, repeat and generate) uses this, so an amended week is protected as a
+   published one is. */
 export const rotaVisible = (s: string) => rotaLive(s) || s === 'amendment';
 export const rotaCan = (from: string, to: string) => isRotaState(from) && isRotaState(to) && ROTA_STATE[from].next.includes(to);
 const article = (w: string) => (/^[aeiou]/i.test(w) ? 'An' : 'A');
@@ -239,13 +242,14 @@ export const lineOf = (week: Pick<RotaWeekCore, 'lines'> | undefined, personCode
 export const dayOf = (weekStart: string, date: string) => daysBetween(weekStart, date);
 export const weekStartOf = periodStart;
 
-/* rotaChange: every path that writes a cell records it. A change to a live week
-   is an amendment: it is marked afterPublish and moves the week to amendment. */
+/* rotaChange: every path that writes a cell records it. A change to a week
+   colleagues can see is an amendment: it is marked afterPublish and moves the
+   week to amendment (an amended week stays amended). */
 export interface CellWrite { personCode: string; name: string; day: number; to: string; by: RotaActor; at: string; why: string }
 export function setCell(week: RotaWeekCore, w: CellWrite): { week: RotaWeekCore; change: RotaChange; amended: boolean } {
   const line = lineOf(week, w.personCode), from = line[w.day] ?? '';
   line[w.day] = w.to;
-  const live = rotaLive(week.state);
+  const live = rotaVisible(week.state);
   const change: RotaChange = { at: w.at, by: w.by, personCode: w.personCode, name: w.name, date: addDays(week.weekStart, w.day),
     from, to: w.to, why: w.why, afterPublish: live, version: week.publishVersion };
   return { week: { ...week, lines: { ...week.lines, [w.personCode]: line }, state: live ? 'amendment' : week.state,
@@ -605,7 +609,7 @@ export function applyPattern(p: PatternCore, ctx: ApplyContext): ApplyResult {
     const dt = addDays(r.from, i), ws = periodStart(dt), dow = dowMon(dt);
     for (const { x, info } of on) {
       const key = rotaWeekId(info.location, ws), slot = weekAt(info.location, ws);
-      if (slot && rotaLive(slot.state)) { skipped.add(key); continue; }
+      if (slot && rotaVisible(slot.state)) { skipped.add(key); continue; }
       const code = p.days[cycleIndex({ starts: base, cycle: p.cycle }, x.offset, dt)];
       if (!code) continue;
       let w = writes.get(key);
@@ -703,7 +707,7 @@ export function repeatWeek(location: string, fromWeek: string, src: WeekSlot, ro
   let live = 0;
   for (let w = 1; w <= weeks; w++) {
     const ws = addDays(fromWeek, 7 * w), target = weekAt(location, ws);
-    if (target && rotaLive(target.state)) { live++; continue; }
+    if (target && rotaVisible(target.state)) { live++; continue; }
     const lines = copyLines(target);
     let any = false;
     for (const id of roster) {
@@ -732,7 +736,7 @@ export const repeatAuditText = (locName: string, weekStart: string, weeks: numbe
 /* copy-rota-week: last week's shifts into this one. The prototype overwrote
    filled cells; here, as with generate and repeat, they are left alone (D6). */
 export function copyProblem(target: Pick<RotaWeekCore, 'state' | 'weekStart'>, src: WeekSlot | undefined, roster: readonly string[]): RotaRefusal | null {
-  if (rotaLive(target.state))
+  if (rotaVisible(target.state))
     return { code: 'WEEK_LIVE', message: `Week ${isoWeek(target.weekStart)} is ${rotaState(target.state).label.toLowerCase()}. Copying over a live rota would replace published shifts.`,
       next: 'Change shifts one at a time, so each change is recorded.' };
   if (!src) return { code: 'NOTHING_TO_COPY', message: 'The previous week has no rota stored, so there is nothing to copy.', next: 'Build this week from the palette or a pattern.' };
@@ -767,7 +771,7 @@ export function clearPreview(lines: Readonly<Record<string, Line>>, roster: read
   return { shifts, absence, colleagues };
 }
 export function clearProblem(week: Pick<RotaWeekCore, 'state' | 'weekStart' | 'lines'>, roster: readonly string[], locName: string): RotaRefusal | null {
-  if (rotaLive(week.state))
+  if (rotaVisible(week.state))
     return { code: 'WEEK_LIVE', message: `Week ${isoWeek(week.weekStart)} is ${rotaState(week.state).label.toLowerCase()}. Remove shifts individually so each change is recorded.`,
       next: 'Remove shifts one at a time from the grid.' };
   if (!clearPreview(week.lines, roster).shifts)

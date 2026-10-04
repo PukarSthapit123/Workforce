@@ -396,6 +396,25 @@ describe('generate, repeat, copy and clear never overwrite (Review Focus 4)', ()
     expect(r.record).toMatchObject({ gen: '1w', version: 2 });
     expect(auditActs()).toEqual(['Working pattern generated']);
   });
+  test('an amended week is live too: clear and copy refuse it, repeat and generate skip it, and a second change is an amendment (I3)', async () => {
+    const call = await as('manager');
+    expect((await cell(call, WH, ASSIGN_LIVE)).status).toBe(200);
+    expect(week('WH', '2026-08-10')?.state).toBe('amendment');
+    const amended = structuredClone(week('WH', '2026-08-10'));
+    const before = snapshot(...WRITES);
+    expect(refusal(await call('POST', `${WH}/clear`, undefined, 2))).toMatchObject({ code: 'WEEK_LIVE', message: 'Week 33 is amended. Remove shifts individually so each change is recorded.' });
+    expect(refusal(await call('POST', `${WH}/copy`, undefined, 2))).toMatchObject({ code: 'WEEK_LIVE' });
+    expect(snapshot(...WRITES)).toEqual(before);
+    const rep = WeekRepeated.parse((await call('POST', '/api/v1/rota/weeks/WH/2026-08-03/repeat', { weeks: 2 }, 1)).body);
+    expect(rep).toMatchObject({ live: 1, weeks: 1 });
+    const gen = PatternGenerated.parse((await call('POST', '/api/v1/rota/patterns/WP-02/generate', { gen: '1w' }, 1)).body);
+    expect(gen.live).toBe(1);
+    expect(week('WH', '2026-08-10')).toEqual(amended);
+    const second = CellSaved.parse((await cell(call, WH, { personCode: 'CP-1402', day: 4, code: '' }, 2)).body);
+    expect(second.week.state).toBe('amendment');
+    expect(second.week.changes[0]).toMatchObject({ personCode: 'CP-1402', to: '', afterPublish: true, version: 1 });
+    expect(notes('CP-1402').map(n => n.title)).toEqual(['Rota amended', 'Rota amended']);
+  });
   test('a run that lands nothing is refused with NO_LANDING', async () => {
     const r = await (await as('admin'))('POST', '/api/v1/rota/patterns/WP-03/generate', { gen: '1w' }, 1);
     expect(r.status).toBe(422);
