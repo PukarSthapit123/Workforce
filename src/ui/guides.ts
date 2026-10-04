@@ -89,4 +89,22 @@ export const GUIDES: Readonly<Record<string, Guide>> = {
     ['Entitlement',
       'Calculated from the shared workforce record: policy, contracted hours and working pattern. Change any of the three and entitlement recalculates.'],
   ] },
+  notices: { label: 'How notices work', title: 'How notices work', sections: [
+    ['What you see here',
+      'Notices from your organisation and your location. Urgent and pinned notices come first. A notice moves to Expired after its end date.'],
+    ['Acknowledging',
+      'Some notices ask you to acknowledge them. That records that you read this version, with the date and time, and whoever posted it can see it.'],
+    ['When a notice changes',
+      'If the text changes after you acknowledged it, it becomes a new version and you are asked again. Your earlier acknowledgement stays on record.'],
+  ] },
+  tnotices: { label: 'How posting works', title: 'How posting works', sections: [
+    ['Who you can reach',
+      'A manager posts to the location they work at, or to a department within it. Posting to everyone, or to any location, needs Post notices to everyone.'],
+    ['Drafts, live and withdrawn',
+      'A draft is seen by nobody and can be deleted. Once live, a notice cannot be deleted. Withdraw it with a reason and it leaves colleagues’ view but stays on record.'],
+    ['Editing a live notice',
+      'Changing the title or text makes a new version and asks everyone to acknowledge again. Dates, pin and urgency change without a new version. The audience is fixed once live.'],
+    ['What is recorded',
+      'Posting, every edit, pinning, withdrawing and each acknowledgement go to the audit log with who, what and before and after.'],
+  ] },
 };

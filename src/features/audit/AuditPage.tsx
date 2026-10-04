@@ -27,11 +27,12 @@ const ENTITY_OPTIONS = [
   { value: 'tenant', label: 'Modules, features and tenant settings' },
   { value: 'savedData', label: 'Saved data' },
   { value: 'template', label: 'Templates' },
+  { value: 'notice', label: 'Notices' },
 ];
 const ENTITY_LABEL: Record<string, string> = { userType: 'Permission template', account: 'User account', session: 'Session',
   person: 'Person', profileChange: 'Profile change', employeeType: 'Employee type', location: 'Location', department: 'Department',
   costCentre: 'Cost centre', jobProfile: 'Job profile', project: 'Project', timesheetDay: 'Timesheet',
-  timesheetConfig: 'Timesheet setup', integrationAttempt: 'Business Central posting', tenant: 'Tenant', savedData: 'Saved data', template: 'Template' };
+  timesheetConfig: 'Timesheet setup', integrationAttempt: 'Business Central posting', tenant: 'Tenant', savedData: 'Saved data', template: 'Template', notice: 'Notice' };
 
 const whoLabel = (who: AuditEntry['who']) => (who.viewingAs ? `${who.name} (as ${who.viewingAs})` : who.name);
 const recordLabel = (e: AuditEntry) => `${ENTITY_LABEL[e.entity] ?? e.entity}: ${e.entityId}`;

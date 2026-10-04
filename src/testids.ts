@@ -421,4 +421,33 @@ export const tid = {
   },
   /* 1c group 5: the manager's "While you are away" card on Team leave (mgrLeave, v15:7907) */
   away: { card: 'away-card', tip: 'away-tip', cover: 'away-cover', row: (id: string) => k('away-row', id) },
+  /* 1c group 6: My work → Notices (essNotices, v15:5828) and its read dialog (noticeReadBox) */
+  notices: {
+    error: 'notices-error', loading: 'notices-loading', seg: (v: string) => k('notices-seg', v), table: 'notices-table', empty: 'notices-empty',
+    row: (id: string) => k('notices-row', id), you: (id: string) => k('notices-you', id), read: (id: string) => k('notices-read', id), ack: (id: string) => k('notices-ack', id),
+    readBody: 'notices-read-body', readMeta: 'notices-read-meta', readChanged: 'notices-read-changed', readAck: 'notices-read-ack', readState: 'notices-read-state',
+    readClose: 'notices-read-close',
+  },
+  /* 1c group 6: the Notices card on My home (noticeHomeCard, v15:5811) */
+  noticeHome: {
+    card: 'notice-home-card', owed: 'notice-home-owed', all: 'notice-home-all', row: (id: string) => k('notice-home-row', id),
+    ack: (id: string) => k('notice-home-ack', id), state: (id: string) => k('notice-home-state', id), more: 'notice-home-more',
+  },
+  /* 1c group 6: My team → Notices (mgrNotices, v15:5870) and its dialogs (noticeEditBox, noticeTrackBox, noticeWithdrawBox) */
+  tnotices: {
+    error: 'tnotices-error', loading: 'tnotices-loading', tip: 'tnotices-tip', add: 'tnotices-add', filter: (v: string) => k('tnotices-filter', v), table: 'tnotices-table',
+    empty: 'tnotices-empty', emptyAdd: 'tnotices-empty-add', row: (id: string) => k('tnotices-row', id), state: (id: string) => k('tnotices-state', id),
+    acks: (id: string) => k('tnotices-acks', id), open: (id: string) => k('tnotices-open', id), post: (id: string) => k('tnotices-post', id),
+    readOnly: (id: string) => k('tnotices-read-only', id),
+    title: 'tnotices-title', body: 'tnotices-body', scope: 'tnotices-scope', from: 'tnotices-from', until: 'tnotices-until',
+    mustAck: 'tnotices-must-ack', pinned: 'tnotices-pinned', urgent: 'tnotices-urgent', mustAckTip: 'tnotices-must-ack-tip', urgentTip: 'tnotices-urgent-tip',
+    resetWarn: 'tnotices-reset-warn', warn: 'tnotices-warn', saveDraft: 'tnotices-save-draft', postNow: 'tnotices-post-now', save: 'tnotices-save', cancel: 'tnotices-cancel',
+    trackMeta: 'tnotices-track-meta', trackBody: 'tnotices-track-body', trackWithdrawn: 'tnotices-track-withdrawn', trackAcks: 'tnotices-track-acks',
+    trackTable: 'tnotices-track-table', trackRow: (code: string) => k('tnotices-track-row', code), trackStatus: (code: string) => k('tnotices-track-status', code),
+    trackNobody: 'tnotices-track-nobody', history: 'tnotices-history', historyRow: (v: number) => k('tnotices-history-row', v), trail: 'tnotices-trail',
+    trailRow: (id: string) => k('tnotices-trail-row', id), trailEmpty: 'tnotices-trail-empty',
+    trackClose: 'tnotices-track-close', trackDelete: 'tnotices-track-delete', trackEdit: 'tnotices-track-edit', trackPost: 'tnotices-track-post',
+    trackWithdraw: 'tnotices-track-withdraw', trackPin: 'tnotices-track-pin',
+    reason: 'tnotices-reason', withdrawOk: 'tnotices-withdraw-ok', withdrawCancel: 'tnotices-withdraw-cancel', withdrawWarn: 'tnotices-withdraw-warn',
+  },
 } as const;

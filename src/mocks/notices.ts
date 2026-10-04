@@ -131,7 +131,7 @@ export const noticeHandlers = [
     return {
       items: all.filter(n => want === 'all' || statusOf(n) === want).map(n => posterView(n, scopes)), counts,
       scopes: scopes.map(s => ({ scope: s, key: scopeKey(s), label: labelOf(s) })), org: session.caps.includes('notice_org'),
-      location: me?.location ? nameOf('locations', me.location) : '',
+      location: me?.location ? nameOf('locations', me.location) : '', today: today(),
     };
   }),
 

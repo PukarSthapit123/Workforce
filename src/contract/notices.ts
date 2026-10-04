@@ -52,6 +52,8 @@ export const PostedNotices = z.object({
   counts: z.record(StatusFilter, z.number().int()),
   /* where this poster may post, and whether that is everyone (notice_org) or their own location */
   scopes: z.array(ScopeOption), org: z.boolean(), location: z.string(),
+  /* the server's date, which a new notice shows from unless another is chosen */
+  today: IsoDate,
 });
 export type PostedNotices = z.infer<typeof PostedNotices>;
 export const TrackRow = z.object({

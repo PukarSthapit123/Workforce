@@ -21,10 +21,9 @@ export interface NavGroup { key: 'work' | 'team' | 'setup'; label: string; tabs:
 /* which sub-project brings each view; a view not listed here is built in plan 1a */
 const LATER: Record<string, string> = {
   home: 'Workforce core (plan 1c)', hours: 'Timesheet',
-  docs: 'Workforce core (plan 1c)', notices: 'Workforce core (plan 1c)', onb: 'Onboarding',
+  docs: 'Workforce core (plan 1c)', onb: 'Onboarding',
   thome: 'Workforce core (plan 1c)', thours: 'Timesheet',
   texc: 'Timesheet', tonb: 'Onboarding',
-  tnotices: 'Workforce core (plan 1c)',
   mpay: 'Timesheet',
   ipay: 'Payroll and Business Central', ibc: 'Payroll and Business Central', iit: 'Rota',
 };

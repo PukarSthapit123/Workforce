@@ -3,7 +3,8 @@
    been read again. A poster's write sends the version it read as If-Match;
    an acknowledgement sends the textVersion the reader saw. Going live or a
    text change raises notifications, so those re-read the inbox too. */
-import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
 import { useRecordMutation } from './mutation';
 import { notificationKeys } from './notifications';
@@ -24,10 +25,16 @@ export const usePostedNotices = (status: StatusFilter) =>
 export const useNoticeTrack = (id: string) => useQuery({ queryKey: noticeKeys.track(id), queryFn: () => api(trackNotice, { params: { id } }) });
 
 const WRITES = [noticeKeys.all, notificationKeys.all] as const;
+/* A notice that changed or closed since it was read is read again, so the
+   reader sees the new words (or that it has gone) before trying again. */
 export function useAcknowledgeNotice() {
-  return useRecordMutation<{ id: string; textVersion: number }, Acknowledged>({
+  const qc = useQueryClient();
+  const m = useRecordMutation<{ id: string; textVersion: number }, Acknowledged>({
     mutationFn: v => api(acknowledgeNotice, { params: { id: v.id }, body: { textVersion: v.textVersion } }), recordKey: v => `notice/${v.id}`, invalidates: [noticeKeys.all],
   });
+  const code = m.refusal?.code;
+  useEffect(() => { if (code === 'CHANGED' || code === 'CLOSED') void qc.invalidateQueries({ queryKey: noticeKeys.all }); }, [code, qc]);
+  return m;
 }
 export function useCreateNotice() {
   return useRecordMutation<CreateNotice, NoticeSaved>({ mutationFn: body => api(createNotice, { body }), recordKey: () => 'notices/new', invalidates: WRITES });
