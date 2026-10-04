@@ -1,6 +1,6 @@
 export { Button } from './Button';
 export type { ButtonKind, ButtonProps } from './Button';
-export { Field, TextInput } from './Field';
+export { Field, TextInput, TextArea } from './Field';
 export { SelectBox } from './Select';
 export type { SelectOption, SelectBoxProps } from './Select';
 export { CheckboxField } from './Checkbox';
@@ -27,3 +27,4 @@ export { GUIDES } from './guides';
 export { useNarrow } from './useNarrow';
 export { SugCard, WhyList, SugPanel, RuledOutList, RuledOutRow } from './Suggest';
 export { EssCols, EssCard, EssBig, EssRow, EssButton } from './Ess';
+export { Meter } from './Meter';

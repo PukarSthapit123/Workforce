@@ -1,9 +1,7 @@
-import { useState, type TextareaHTMLAttributes } from 'react';
+import { useState } from 'react';
 import { tid } from '@/testids';
-import { cn } from '@/lib/utils';
-import { fieldControl } from '@/ui/shadcn/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
-import { Banner, Button, CheckboxField, CheckRow, Field, FormWarn, Modal, Row, Small, Stat, Stats, toastInfo } from '@/ui';
+import { Banner, Button, CheckboxField, CheckRow, Field, FormWarn, Modal, Row, Small, Stat, Stats, TextArea, toastInfo } from '@/ui';
 import { useBulkApprove, useDecideDay, type ApprovalQueue, type BulkApproved, type QueueRow } from '@/api/timesheets';
 import { formatDmy, returnReasonProblem } from '@/domain/timesheet';
 import { queueHours } from './team';
@@ -69,10 +67,6 @@ export function BulkApproveDialog({ queue, where, onClose, onDone }: {
       {warn && <FormWarn testId={tid.tteam.bulkWarn}>Tick the confirmation to continue.</FormWarn>}
       {bulk.refusal && <FormWarn testId={tid.tteam.refusal}>{bulk.refusal.message} <span className="opacity-90">{bulk.refusal.next}</span></FormWarn>}
     </Modal>);
-}
-
-function TextArea({ testId, className, ...rest }: { testId: string } & TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return <textarea data-testid={testId} rows={3} {...rest} className={cn(fieldControl, 'h-auto resize-y py-[9px] leading-[1.5]', className)} />;
 }
 
 /* returnBox (v15:10264-10272) and confirm-return (11904-11914). The row is

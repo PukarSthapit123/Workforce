@@ -1,6 +1,7 @@
-import { cloneElement, useId, type InputHTMLAttributes, type ReactElement } from 'react';
+import { cloneElement, useId, type InputHTMLAttributes, type ReactElement, type TextareaHTMLAttributes } from 'react';
 import { Label } from '@/ui/shadcn/label';
-import { Input } from '@/ui/shadcn/input';
+import { Input, fieldControl } from '@/ui/shadcn/input';
+import { cn } from '@/lib/utils';
 import { tid } from '@/testids';
 import { Tip } from './Affordances';
 
@@ -37,4 +38,9 @@ export function Field({ label, hint, error, required, tip, children }: {
 }
 export function TextInput({ testId, ...rest }: { testId: string } & InputHTMLAttributes<HTMLInputElement>) {
   return <Input data-testid={testId} {...rest} />;
+}
+/* A field's text box over several lines (.fld textarea): the input's look,
+   growing downwards, for a reason or a note someone else will read. */
+export function TextArea({ testId, className, rows = 3, ...rest }: { testId: string } & TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return <textarea data-testid={testId} rows={rows} {...rest} className={cn(fieldControl, 'h-auto resize-y py-[9px] leading-[1.5]', className)} />;
 }
