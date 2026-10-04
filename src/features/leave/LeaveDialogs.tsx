@@ -43,12 +43,13 @@ function recalc(m: MyLeave, input: { type: string; from: string; to: string; par
 /* leaveRequestModal (v15:7756-7791): the type and what it draws on, the
    dates, how much of each day, "Comes to", a note, the evidence the type asks
    for (upload is not built), and who decides and by when. */
-export function RequestDialog({ m, onClose }: { m: MyLeave; onClose: () => void }) {
+/* `day`: a day picked on My home's month, which the request starts on and ends on. */
+export function RequestDialog({ m, day, onClose }: { m: MyLeave; day?: string; onClose: () => void }) {
   const send = useRequestLeave();
   const tenant = useTenant().data;
   const [type, setType] = useState(m.types.find(t => t.code === 'AL')?.code ?? m.types[0]?.code ?? '');
-  const [from, setFrom] = useState(addDays(m.today, 21));
-  const [to, setTo] = useState(addDays(m.today, 22));
+  const [from, setFrom] = useState(day ?? addDays(m.today, 21));
+  const [to, setTo] = useState(day ?? addDays(m.today, 22));
   const [part, setPart] = useState<LeavePart>('full');
   const [note, setNote] = useState('');
   const t = m.types.find(x => x.code === type);

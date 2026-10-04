@@ -450,4 +450,21 @@ export const tid = {
     trackWithdraw: 'tnotices-track-withdraw', trackPin: 'tnotices-track-pin',
     reason: 'tnotices-reason', withdrawOk: 'tnotices-withdraw-ok', withdrawCancel: 'tnotices-withdraw-cancel', withdrawWarn: 'tnotices-withdraw-warn',
   },
+  /* 1c group 7: My home (essHome, v15:5323), its month and live key (calKey, 6244) and the day dialog (empDayBox, 5435) */
+  home: {
+    error: 'home-error', loading: 'home-loading', missing: 'home-missing', sentBack: 'home-sent-back', fixIt: 'home-fix-it',
+    next: 'home-next', today: 'home-today', week: 'home-week', balance: 'home-balance',
+    month: 'home-month', prev: 'home-prev', nextMonth: 'home-next-month', thisMonth: 'home-this-month', summary: 'home-summary', grid: 'home-grid',
+    day: (date: string) => k('home-day', date), key: 'home-key', keyItem: (kind: string, id: string | number) => k('home-key', kind, id), keyEmpty: 'home-key-empty',
+    dayState: 'home-day-state', dayShift: 'home-day-shift', dayLocation: 'home-day-location', daySource: 'home-day-source', dayBank: 'home-day-bank',
+    dayHours: 'home-day-hours', dayAgainst: 'home-day-against', dayLocked: 'home-day-locked', dayLeave: 'home-day-leave', dayLeaveDates: 'home-day-leave-dates',
+    dayClose: 'home-day-close', dayShifts: 'home-day-shifts', dayLeaveLink: 'home-day-leave-link', bookLeave: 'home-book-leave', recordHours: 'home-record-hours',
+  },
+  /* 1c group 7: My Team → Team Home (mgrTeamHome, v15:10555) */
+  thome: { tip: 'thome-tip', grid: 'thome-grid', card: (view: string) => k('thome-card', view), count: (view: string) => k('thome-count', view) },
+  /* 1c group 7: My work → Documents (essDocs, v15:5673) */
+  docs: {
+    error: 'docs-error', loading: 'docs-loading', card: 'docs-card', tip: 'docs-tip', source: 'docs-source', row: (id: string) => k('docs-row', id),
+    empty: 'docs-empty', openNote: 'docs-open-note', payroll: 'docs-payroll', payrollRow: (id: string) => k('docs-payroll-row', id), salary: 'docs-salary',
+  },
 } as const;
