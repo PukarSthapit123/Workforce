@@ -13,7 +13,7 @@ import {
 } from '@/domain/notifications';
 
 export interface StoredNotification {
-  id: string; personId: string; area: string; title: string; body: string; at: string; read: boolean;
+  id: string; version: number; updatedAt: string; personId: string; area: string; title: string; body: string; at: string; read: boolean;
   /* the catalogue event that raised it, the channel the matrix gave and what that channel did; a seeded row has none */
   event?: string; channel?: NotifChannel; delivery?: Delivery; ref?: string;
 }
@@ -51,7 +51,7 @@ export function notifyEvent(code: string, recipients: Iterable<string>, n: { tit
   const coll = notifications(), next = nextId(coll);
   return planned.map(d => {
     const id = next();
-    const row: StoredNotification = { id, personId: d.personCode, area: e.module, title: n.title, body: n.body, at: store.now(), read: false,
+    const row: StoredNotification = { id, version: 1, updatedAt: store.now(), personId: d.personCode, area: e.module, title: n.title, body: n.body, at: store.now(), read: false,
       event: e.code, channel: d.channel, delivery: d.delivery, ...(n.ref ? { ref: n.ref } : {}) };
     coll[id] = row;
     return row;

@@ -26,8 +26,9 @@ const refusal = (r: { body: unknown }) => Refusal.parse(r.body);
 const WRITES = ['leaveRequests', 'leaveLedger', 'sickEpisodes', 'leaveConfig', 'rotaWeeks', 'coverRequests', 'notifications', 'audit'];
 interface Week { id: string; version: number; state: string; lines: Record<string, string[]>; changes: { afterPublish: boolean; to: string; personCode: string; why: string; by: { personCode: string } }[] }
 const week = (loc: string, ws: string) => store.coll<Week>('rotaWeeks')[`rw_${loc}_${ws}`];
-interface Note { personId: string; title: string; body: string; area: string }
-const notes = (personId?: string) => Object.values(store.coll<Note>('notifications')).filter(n => !personId || n.personId === personId);
+interface Note { id: string; personId: string; title: string; body: string; area: string }
+/* the rows this test raised: the seeded feeds (1c) are left out */
+const notes = (personId?: string) => Object.values(store.coll<Note>('notifications')).filter(n => !n.id.startsWith('ntf_seed_') && (!personId || n.personId === personId));
 const titles = (personId: string) => notes(personId).map(n => n.title);
 /* the module's own rows: signing in writes one too */
 const leaveAudits = () => audits().filter(a => a.act !== 'Signed in');

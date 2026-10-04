@@ -160,8 +160,31 @@ function shape(tenantKey, data, PERMS_META, PERM_GROUPS, PROFILE_CHANGES, ref) {
   return { version: 'extracted', tenant: tenantKey, data: {
     people: byId(people), accounts: byId(accounts), userTypes: byId(userTypes), capabilities: byId(capabilities),
     capabilityGroups: byId(capabilityGroups), tenant: { tenant }, locations, departments, costCentres, jobProfiles, projects,
-    employeeTypes, profileChanges, personHistory: {}, notices: byId(notices), audit: {}, ...timesheets(data, people),
+    employeeTypes, profileChanges, personHistory: {}, notices: byId(notices), audit: {}, ...notificationSeed(data, accounts), ...timesheets(data, people),
     ...rotaData, ...leave(data, people, ref, rotaData.rotaWeeks) } };
+}
+
+/* ---- 1c group 4: notifications (brief D9) ----
+   The prototype keeps one feed per persona (seedNotifications, NOTIFS). Here a
+   row is addressed to a person, so each feed is copied to every account of
+   that user type. Its "ago" is read back against the frozen clock; u:0 is read.
+   NOTIF_EVIDENCE (never persisted) is the evidence table's retained rows, its
+   London times as instants; its channel is the matrix's "In-app + email", so
+   the screen says the email part is not connected. The matrix itself is not
+   seeded: until it is first saved it is the catalogue's defaults. */
+const AGO_MS = { m: 60e3, h: 3600e3, d: 86400e3, w: 7 * 86400e3 };
+const agoAt = ago => { const m = /^(\d+)([mhdw])$/.exec(String(ago || '')); return new Date(FROZEN.getTime() - (m ? Number(m[1]) * AGO_MS[m[2]] : 0)).toISOString(); };
+const londonSummer = s => { const m = /^(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2})$/.exec(s); return m ? new Date(Date.UTC(+m[3], +m[2] - 1, +m[1], +m[4] - 1, +m[5])).toISOString() : STAMP; };
+function notificationSeed(data, accounts) {
+  const ROLE = { emp: 'employee', mgr: 'manager', adm: 'admin' }, feeds = data.NOTIFS || {}, rows = [];
+  for (const [k, role] of Object.entries(ROLE))
+    for (const a of accounts.filter(x => x.userType === role))
+      for (const n of feeds[k] || []) rows.push({ personId: a.personCode, area: n.src || 'Workforce', title: n.t, body: n.d, at: agoAt(n.ago), read: !n.u });
+  /* numbered from the end, so a tie on time keeps the prototype's order (newest id first) */
+  const notifications = byId(rows.reverse().map((r, i) => meta({ id: `ntf_seed_${String(i + 1).padStart(4, '0')}`, ...r })));
+  const notifEvidence = byId(literalEvidence.map((e, i) => meta({ id: `nev_${i + 1}`, employee: e.emp, employeeId: e.eid, event: `${e.milestone} milestone`,
+    at: londonSummer(e.ts), recipient: e.to, channel: 'In-app + email', ref: e.ref })));
+  return { notifications, notifEvidence };
 }
 
 /* ---- 1c: tenant settings (brief D5-D7) ----
@@ -552,6 +575,7 @@ const literalAbsence = literal('ABSENCE');
 const literalFinYear = literal('FIN_YEAR');
 const literalBankHolidays = literal('BANK_HOLIDAYS');
 const literalRepeats = literal('REPEATS');
+const literalEvidence = literal('NOTIF_EVIDENCE');
 const leaveRules = await tsImport('../src/domain/leave.ts', import.meta.url);
 /* The capture field catalogue, less any money: the £ value on each allowance and the expenses-to-claim field. */
 const timesheetFields = literal('FIELDS').filter(f => !MONEY_FIELDS.has(f.c))

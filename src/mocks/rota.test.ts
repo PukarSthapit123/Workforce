@@ -24,8 +24,9 @@ const WH = '/api/v1/rota/weeks/WH/2026-08-10', NEXT = '/api/v1/rota/weeks/WH/202
 interface Week { id: string; version: number; state: string; publishVersion: number; lines: Record<string, string[]>; changes: { afterPublish: boolean; version: number; to: string; personCode: string }[] }
 const week = (loc: string, ws: string) => store.coll<Week>('rotaWeeks')[`rw_${loc}_${ws}`];
 const line = (loc: string, ws: string, code: string) => week(loc, ws)?.lines[code];
-interface Note { personId: string; title: string; body: string; area: string; read: boolean }
-const notes = (personId?: string) => Object.values(store.coll<Note>('notifications')).filter(n => !personId || n.personId === personId);
+interface Note { id: string; personId: string; title: string; body: string; area: string; read: boolean }
+/* the rows this test raised: the seeded feeds (1c) are left out */
+const notes = (personId?: string) => Object.values(store.coll<Note>('notifications')).filter(n => !n.id.startsWith('ntf_seed_') && (!personId || n.personId === personId));
 /* the rota's own rows: signing in writes one too */
 const rotaAudits = () => audits().filter(a => a.act !== 'Signed in');
 const auditActs = () => rotaAudits().map(a => a.act);

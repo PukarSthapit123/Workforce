@@ -14,5 +14,6 @@ import { rotaHandlers } from './rota';
 import { leaveHandlers } from './leave';
 import { savedDataHandlers } from './saved-data';
 import { templateHandlers } from './templates';
+import { notificationHandlers } from './notifications';
 /* Order matters: faults first, so they can pre-empt any endpoint. */
-export const handlers = [faultsHandler, ...devHandlers, ...sessionHandlers, ...tenantHandlers, ...accessHandlers, ...auditHandlers, ...peopleHandlers, ...transitionHandlers, ...dimensionHandlers, ...employeeTypeHandlers, ...profileHandlers, ...timesheetHandlers, ...rotaHandlers, ...leaveHandlers, ...savedDataHandlers, ...templateHandlers /* feature handlers appended by later tasks */];
+export const handlers = [faultsHandler, ...devHandlers, ...sessionHandlers, ...tenantHandlers, ...accessHandlers, ...auditHandlers, ...peopleHandlers, ...transitionHandlers, ...dimensionHandlers, ...employeeTypeHandlers, ...profileHandlers, ...timesheetHandlers, ...rotaHandlers, ...leaveHandlers, ...savedDataHandlers, ...templateHandlers, ...notificationHandlers /* feature handlers appended by later tasks */];
