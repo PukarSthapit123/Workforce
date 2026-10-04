@@ -8,7 +8,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import { ApiError } from '@/api/client';
 import { useDimension, type InUseRow } from '@/api/reference';
-import { useDeletePattern, usePatterns, useRotaConfig, useRotaHome, useSaveRotaConfig, useShiftCatalogue, type PatternRecord, type RotaSetup } from '@/api/rota';
+import { useDeletePattern, usePatterns, useRotaConfig, useSaveRotaConfig, useShiftCatalogue, type PatternRecord, type RotaSetup } from '@/api/rota';
 import { useTenant } from '@/shell/shellData';
 import { versionKey } from '@/lib/latest';
 import { FULFIL_AUDIENCES, FULFIL_CHANNELS, HORIZONS, ROTA_BUILT_BY, genLabel } from '@/domain/rota';
@@ -85,16 +85,18 @@ function CatalogueCard() {
 /* ------------------------------------------------------ working patterns */
 type Box = { k: 'edit' | 'people' | 'upload' | 'delete'; code: string; back?: boolean } | { k: 'new' } | { k: 'upload' } | null;
 function PatternsCard({ horizon }: { horizon: number }) {
-  const home = useRotaHome(), list = usePatterns(), cat = useShiftCatalogue(), del = useDeletePattern();
+  /* The list carries today and the locations this person may cover, so an
+     administrator without team_rota builds patterns here as P's admRota let them. */
+  const list = usePatterns(), cat = useShiftCatalogue(), del = useDeletePattern();
   const locs = useDimension('locations'), jobs = useDimension('job-profiles'), ccs = useDimension('cost-centres');
   const [box, setBox] = useState<Box>(null);
   const refused = list.error instanceof ApiError ? list.error.refusal : null;
   const nameIn = (rows: readonly { code: string; name: string }[] | undefined) => (c: string) => rows?.find(x => x.code === c)?.name ?? c;
-  const locName = nameIn(locs.data ?? home.data?.locations), jobName = nameIn(jobs.data);
-  const ready = home.data && list.data && cat.data;
+  const locName = nameIn(locs.data ?? list.data?.canCover), jobName = nameIn(jobs.data);
+  const ready = list.data && cat.data;
   const ctx: PatternCtx | null = ready ? {
-    shifts: cat.data.items, people: list.data.people, today: home.data.today, canCover: home.data.locations,
-    locations: (locs.data ?? home.data.locations).filter(l => !('active' in l) || l.active !== false).map(l => ({ code: l.code, name: l.name })),
+    shifts: cat.data.items, people: list.data.people, today: list.data.today, canCover: list.data.canCover,
+    locations: (locs.data ?? list.data.canCover).filter(l => !('active' in l) || l.active !== false).map(l => ({ code: l.code, name: l.name })),
     jobs: (jobs.data ?? []).map(j => ({ code: j.code, name: j.name })), costCentres: (ccs.data ?? []).map(c => ({ code: c.code, name: c.name })),
   } : null;
   const at = (code: string) => list.data?.items.find(p => p.code === code);
@@ -107,6 +109,8 @@ function PatternsCard({ horizon }: { horizon: number }) {
       desc="A pattern repeats on its cycle, keeps its cost centre, and is associated to locations and job profiles">
       {list.isError && <p data-testid={tid.mrota.patternsError} role="alert" className="text-err">
         {refused && refused.code !== 'network' ? `${refused.message} ${refused.next}` : 'Working patterns could not be loaded. Reload the page to try again.'}</p>}
+      {list.data && cat.isError && <p data-testid={tid.mrota.patternsBlocked} role="alert" className="text-err">
+        Patterns cannot be opened or added until the shift catalogue loads. Reload the page to try again.</p>}
       {list.data && (list.data.items.length
         ? <Table data-testid={tid.mrota.patterns}>
             <TableHeader><TableRow>

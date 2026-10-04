@@ -273,6 +273,7 @@ export const tid = {
     stageRemove: (i: number) => k('mrota-stage-remove', i), stageAdd: 'mrota-stage-add', safe: (key: string) => k('mrota-safe', key),
     type: (code: string) => k('mrota-type', code), typeShift: (code: string) => k('mrota-type-shift', code), typeNight: 'mrota-type-night',
     typeNum: (key: string) => k('mrota-type-num', key), typeFlexible: 'mrota-type-flexible',
+    patternsBlocked: 'mrota-patterns-blocked',
   },
   /* module 3: Upload working patterns (simulated): the validation preview, its error report and the import that writes nothing */
   patUpload: {

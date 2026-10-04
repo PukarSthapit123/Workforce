@@ -111,6 +111,26 @@ describe('Rota setup', () => {
     expect(snapshot('rotaConfig', 'audit')).toEqual(before);
   });
 
+  test('an administrator without team_rota opens, saves and creates working patterns here (I2)', async () => {
+    await open();
+    const openBtn = await screen.findByTestId(tid.mrota.patternOpen('WP-03'));
+    await waitFor(() => expect(openBtn).toBeEnabled());
+    await userEvent.click(openBtn);
+    await screen.findByTestId(tid.tpat.editor);
+    type(tid.tpat.name, 'Beacon nights');
+    await userEvent.click(screen.getByTestId(tid.tpat.save));
+    await expectToast(/^Beacon nights saved/);
+    expect(store.coll<{ name: string }>('patterns')['pat_WP-03']?.name).toBe('Beacon nights');
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByTestId(tid.tpat.editor)).toBeNull());
+    await userEvent.click(screen.getByTestId(tid.mrota.newPattern));
+    type(tid.tpat.newName, 'Twilights');
+    await userEvent.selectOptions(screen.getByTestId(tid.tpat.newLocs), ['BC', 'FS']);
+    await userEvent.click(screen.getByTestId(tid.tpat.newCreate));
+    await expectToast('Twilights created as a draft');
+    expect(Object.values(store.coll<{ name: string; locations: string[] }>('patterns')).find(p => p.name === 'Twilights')?.locations).toEqual(['BC', 'FS']);
+  });
+
   test('the pattern upload is simulated: Import writes nothing, and the failed rows download as a real CSV', async () => {
     await open();
     const before = snapshot('patterns', 'rotaWeeks', 'audit');

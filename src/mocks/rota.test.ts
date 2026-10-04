@@ -579,6 +579,14 @@ describe('shift types, patterns, my shifts and setup', () => {
     expect(store.coll<{ people: { personCode: string; offset: number }[] }>('patterns')['pat_WP-02']?.people.slice(-2)).toEqual([{ personCode: 'CP-1310', offset: 1 }, { personCode: 'CP-1455', offset: 2 }]);
     expect(refusal(await call('POST', '/api/v1/rota/patterns/WP-02/people', { personCodes: [], start: 1, mode: 'stagger' }, 2))).toMatchObject({ message: 'Tick at least one person.' });
   });
+  test('the pattern list carries today and the locations a pattern may cover, so an admin without team_rota can build (I2)', async () => {
+    expect((await (await as('admin'))('GET', '/api/v1/rota/home')).status).toBe(403);
+    const a = PatternList.parse((await (await as('admin'))('GET', '/api/v1/rota/patterns')).body);
+    expect(a.today).toBe('2026-08-13');
+    expect(a.canCover.map(l => l.code)).toEqual(expect.arrayContaining(['WH', 'BC', 'FS', 'LGW']));
+    const m = PatternList.parse((await (await as('manager'))('GET', '/api/v1/rota/patterns')).body);
+    expect(m.canCover).toEqual([{ code: 'WH', name: 'Willow House' }]);
+  });
   test('a new pattern starts as a draft; one with no name is refused', async () => {
     const call = await as('manager');
     const body = { name: 'Nights', cycle: 4, locations: ['WH'], jobProfiles: ['NS'], costCentre: 'WH-CAM-01', starts: '2026-08-17', horizon: 12, gen: '4w', base: 'WP-01' };

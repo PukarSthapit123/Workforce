@@ -637,7 +637,8 @@ export const rotaHandlers = [
     const items = Object.values(patternColl()).filter(p => sc.all || p.locations.includes(sc.location));
     const ppl = Object.values(people()).filter(p => isActive(p) && (sc.all || p.location === sc.location))
       .map(p => ({ code: p.code, name: p.name, location: p.location, jobProfile: p.jobProfile, category: p.category }));
-    return { items, people: ppl };
+    const canCover = locations().filter(l => (sc.all ? l.active !== false : l.code === sc.location)).map(l => ({ code: l.code, name: l.name }));
+    return { items, people: ppl, canCover, today: today() };
   }),
 
   serve(createPattern, ({ session, body }) => {
