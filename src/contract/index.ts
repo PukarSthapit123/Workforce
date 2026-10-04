@@ -16,3 +16,4 @@ export * from './saved-data';
 export * from './templates';
 export * from './notifications';
 export * from './approvals';
+export * from './notices';

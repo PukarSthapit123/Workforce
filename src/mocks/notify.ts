@@ -43,7 +43,9 @@ function nextId(coll: Record<string, unknown>): () => string {
 }
 
 /* Raises one catalogue event to the people named. Returns the rows written. */
-export function notifyEvent(code: string, recipients: Iterable<string>, n: { title: string; body: string; ref?: string }): StoredNotification[] {
+/* The row's area is the event's module unless the caller names a narrower one
+   (a notice is filed under Notices, so it opens the notice board and hides with it). */
+export function notifyEvent(code: string, recipients: Iterable<string>, n: { title: string; body: string; ref?: string; area?: string }): StoredNotification[] {
   const e = eventBy(code);
   if (!e) throw new Error(`There is no notification event "${code}".`);
   const { modules, flags } = switchesNow();
@@ -51,7 +53,7 @@ export function notifyEvent(code: string, recipients: Iterable<string>, n: { tit
   const coll = notifications(), next = nextId(coll);
   return planned.map(d => {
     const id = next();
-    const row: StoredNotification = { id, version: 1, updatedAt: store.now(), personId: d.personCode, area: e.module, title: n.title, body: n.body, at: store.now(), read: false,
+    const row: StoredNotification = { id, version: 1, updatedAt: store.now(), personId: d.personCode, area: n.area ?? e.module, title: n.title, body: n.body, at: store.now(), read: false,
       event: e.code, channel: d.channel, delivery: d.delivery, ...(n.ref ? { ref: n.ref } : {}) };
     coll[id] = row;
     return row;

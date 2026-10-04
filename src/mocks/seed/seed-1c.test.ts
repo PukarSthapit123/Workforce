@@ -60,3 +60,15 @@ test('social carries the prototype\'s delegation by employee code (D8); qnipay h
   expect((qnipay as unknown as SeedFile).data.delegations).toEqual({});
   for (const s of [social, qnipay]) expect((s as unknown as SeedFile).data.approvalChains).toBeUndefined();
 });
+test('both tenants carry the prototype\'s four notices with textVersion, ISO stamps and acknowledgements by employee code (D10)', () => {
+  for (const raw of [social, qnipay]) {
+    const seed = raw as unknown as SeedFile;
+    const notices = Object.values(seed.data.notices ?? {}) as { id: string; textVersion: number; at: string; acks: { personCode: string; textVersion: number; at: string }[]; history: { textVersion: number }[] }[];
+    const codes = new Set(Object.values(seed.data.people ?? {}).map(p => (p as { code: string }).code));
+    expect(notices.map(n => n.id)).toEqual(['NTC-0001', 'NTC-0002', 'NTC-0003', 'NTC-0004']);
+    expect(notices.map(n => n.textVersion)).toEqual([2, 1, 1, 1]);
+    expect(notices.flatMap(n => [n.at, ...n.acks.map(a => a.at)]).every(at => /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:00\.000Z$/.test(at))).toBe(true);
+    expect(notices.flatMap(n => n.acks).every(a => codes.has(a.personCode))).toBe(true);
+    expect(notices[0]?.history.map(h => h.textVersion)).toEqual([1]);
+  }
+});
