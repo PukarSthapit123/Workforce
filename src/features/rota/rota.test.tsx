@@ -4,7 +4,7 @@ import { store } from '@/mocks/store';
 import { tid } from '@/testids';
 import { expectTestIdCoverage } from '@/test/testid-coverage';
 import { renderPage, withFakeServer } from '@/test/render-page';
-import { audits, resetTo, signInAs } from '@/test/api-helpers';
+import { audits, resetTo, signInAs, snapshot } from '@/test/api-helpers';
 import { RotaPage } from './RotaPage';
 
 /* The social seed at the frozen clock (Thursday 13/08/2026). The manager runs
@@ -104,6 +104,87 @@ describe('Team rota', () => {
     expect(screen.getByTestId(tid.trota.publish)).toHaveTextContent('Republish');
   });
 
+  test('on a live week with no gaps, Publish, Copy and Clear are off and each says why', async () => {
+    const rosa = week().lines['CP-1402'];
+    if (!rosa) throw new Error('no line for Rosa');
+    rosa[4] = 'E';
+    await open();
+    expect(screen.getByTestId(tid.trota.covered)).toBeInTheDocument();
+    expect(screen.getByTestId(tid.trota.publish)).toBeDisabled();
+    expect(screen.getByTestId(tid.trota.publish)).toHaveAttribute('title', 'Already published at v1');
+    expect(screen.getByTestId(tid.trota.copy)).toBeDisabled();
+    expect(screen.getByTestId(tid.trota.copy)).toHaveAttribute('title', 'This week is published. Copying over it would replace shifts colleagues can see.');
+    expect(screen.getByTestId(tid.trota.clear)).toBeDisabled();
+    expect(screen.getByTestId(tid.trota.clear)).toHaveAttribute('title', 'This week is published. Clear it by amending the shifts you want removed.');
+  });
+
+  test('publishing a week lists it under Recent publications, and going back restores week 33\'s own state and version', async () => {
+    const w = week();
+    w.state = 'republished';
+    w.publishVersion = 3;
+    const cfg = store.coll<{ publishBlockOnGap: boolean }>('rotaConfig').rotaConfig;
+    if (!cfg) throw new Error('no rota config');
+    cfg.publishBlockOnGap = false;
+    await open();
+    expect(screen.getByTestId(tid.trota.state)).toHaveTextContent('Republished · v3');
+    expect(screen.queryByTestId(tid.trota.pub(0))).toBeNull();
+
+    await userEvent.click(screen.getByTestId(tid.trota.weekNext));
+    await waitFor(() => expect(screen.getByTestId(tid.trota.state)).toHaveTextContent('Draft'));
+    await waitFor(() => expect(screen.getByTestId(tid.trota.publish)).toBeEnabled());
+    await userEvent.click(screen.getByTestId(tid.trota.publish));
+    await expectToast(/^Rota published · v1/);
+    await waitFor(() => expect(screen.getByTestId(tid.trota.state)).toHaveTextContent('Published · v1'));
+    const pub = await screen.findByTestId(tid.trota.pub(0));
+    expect(pub).toHaveTextContent('Willow House');
+    expect(pub).toHaveTextContent('17/08/2026 – 23/08/2026');
+    expect(pub).toHaveTextContent('v1');
+    expect(screen.getByTestId(tid.trota.history)).toHaveTextContent('Recent publications');
+
+    await userEvent.click(screen.getByTestId(tid.trota.weekPrev));
+    await waitFor(() => expect(screen.getByTestId(tid.trota.isoWeek)).toHaveTextContent('Week 33'));
+    await waitFor(() => expect(screen.getByTestId(tid.trota.state)).toHaveTextContent('Republished · v3'));
+    expect(week()).toMatchObject({ state: 'republished', publishVersion: 3 });
+    await userEvent.click(screen.getByTestId(tid.trota.weekNext));
+    await waitFor(() => expect(screen.getByTestId(tid.trota.state)).toHaveTextContent('Published · v1'));
+  });
+
+  test('the horizon lists the months ahead, and publishing through it says it is simulated and writes nothing', async () => {
+    await open();
+    const before = snapshot('rotaWeeks', 'audit', 'notifications');
+    await userEvent.click(screen.getByTestId(tid.trota.horizon));
+    expect(await screen.findByTestId(tid.modal.title)).toHaveTextContent(/^Rota horizon · \d+ months$/);
+    expect(screen.getByTestId(tid.trota.horizonRow('2026-08'))).toHaveTextContent('August 2026');
+    await userEvent.click(screen.getByTestId(tid.trota.horizonPublish));
+    await expectToast('Simulated · horizon publishing is represented, not performed.');
+    await waitFor(() => expect(screen.queryByTestId(tid.modal.root)).toBeNull());
+    expect(snapshot('rotaWeeks', 'audit', 'notifications')).toEqual(before);
+  });
+
+  test('a picked-up shift marks every cell it can land on, and the cell under the pointer is highlighted; chips are draggable and labelled', async () => {
+    await open();
+    const chip = screen.getByTestId(tid.trota.pchip('E'));
+    expect(chip).toHaveAttribute('draggable', 'true');
+    expect(chip).toHaveAccessibleName('Early, 07:00 to 15:00. Drag onto a rota cell, or press Enter to pick it up');
+    expect(chip).toHaveTextContent('E Early07:00–15:00');
+    expect(screen.getByTestId(tid.trota.palette)).toHaveAccessibleName('Shift types. Drag onto the rota, or press Enter to pick one up.');
+    const target = screen.getByTestId(tid.trota.cell('CP-1402', 4)), other = screen.getByTestId(tid.trota.cell('CP-1042', 0));
+    expect(target).not.toHaveClass('outline-dashed');
+
+    fireEvent.dragStart(chip, { dataTransfer: { setData: () => {}, getData: () => 'E', effectAllowed: '' } });
+    await waitFor(() => expect(target).toHaveClass('outline-dashed'));
+    expect(other).toHaveClass('outline-dashed');
+    expect(target).not.toHaveClass('outline-brand');
+    fireEvent.dragOver(target, { dataTransfer: { dropEffect: '' } });
+    await waitFor(() => expect(target).toHaveClass('outline-brand'));
+    expect(other).not.toHaveClass('outline-brand');
+    fireEvent.dragLeave(target);
+    await waitFor(() => expect(target).not.toHaveClass('outline-brand'));
+    fireEvent.dragEnd(chip);
+    await waitFor(() => expect(target).not.toHaveClass('outline-dashed'));
+    expect(rotaActs()).toEqual([]);
+  });
+
   test('the keyboard alone picks a shift up from the palette and puts it down on a cell (D11)', async () => {
     await open();
     screen.getByTestId(tid.trota.pchip('E')).focus();
@@ -196,10 +277,33 @@ describe('Team rota', () => {
     expect(rotaActs()).toEqual(['Rota week copied', 'Rota week cleared']);
   });
 
+  test('clearing a draft week with leave and sickness on it warns it cannot be undone, says the absence is kept, and keeps it', async () => {
+    const id = 'rw_WH_2026-08-17';
+    store.coll('rotaWeeks')[id] = { id, version: 1, updatedAt: '2026-08-13T14:30:00.000Z', location: 'WH', weekStart: '2026-08-17', state: 'draft',
+      publishVersion: 0, publishedAt: '', publishedBy: null, changes: [],
+      lines: { 'CP-1042': ['E', 'E', '', '', '', '', ''], 'CP-1088': ['V', 'S', 'L', '', '', '', ''] } };
+    await open();
+    await userEvent.click(screen.getByTestId(tid.trota.weekNext));
+    await waitFor(() => expect(screen.getByTestId(tid.trota.state)).toHaveTextContent('Draft'));
+    await waitFor(() => expect(screen.getByTestId(tid.trota.clear)).toBeEnabled());
+    await userEvent.click(screen.getByTestId(tid.trota.clear));
+    const dialog = await screen.findByTestId(tid.modal.root);
+    expect(screen.getByTestId(tid.trota.fact('clear-shifts'))).toHaveTextContent('3');
+    expect(screen.getByTestId(tid.trota.fact('clear-people'))).toHaveTextContent('2');
+    expect(within(dialog).getByText('2 leave or sickness day(s) will be kept')).toBeInTheDocument();
+    expect(within(dialog).getByText('Approved absence is not a shift and is not removed by clearing.')).toBeInTheDocument();
+    expect(within(dialog).getByText('This cannot be undone from here')).toBeInTheDocument();
+    await userEvent.click(screen.getByTestId(tid.trota.clearConfirm));
+    await expectToast(/^3 shift\(s\) cleared · week 34/);
+    expect(week('2026-08-17').lines).toMatchObject({ 'CP-1042': ['', '', '', '', '', '', ''], 'CP-1088': ['V', 'S', '', '', '', '', ''] });
+  });
+
   test('repeat forward shows the server\'s summary', async () => {
     await open();
     await userEvent.click(screen.getByTestId(tid.trota.repeat));
     expect(await screen.findByTestId(tid.modal.title)).toHaveTextContent('Repeat week 33 forward');
+    expect(within(screen.getByTestId(tid.modal.root)).getByText('Published weeks are skipped')).toBeInTheDocument();
+    expect(within(screen.getByTestId(tid.modal.root)).getByText('Cells that already hold a shift, leave or sickness are left alone, exactly as pattern generation behaves.')).toBeInTheDocument();
     await pick(tid.trota.repeatWeeks, '2');
     await userEvent.click(screen.getByTestId(tid.trota.repeatConfirm));
     await expectToast(/^\d+ shift\(s\) written across 2 week\(s\)/);
