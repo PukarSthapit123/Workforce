@@ -83,4 +83,10 @@ export const GUIDES: Readonly<Record<string, Guide>> = {
     ['Reading the grid',
       'Each cell carries the shift code and its times. The key under the grid lists only the shifts actually on this week, with a count of each, plus leave, sickness and how many cells are still unassigned.'],
   ] },
+  mleave: { label: 'How leave reaches the rota', title: 'How leave reaches the rota', sections: [
+    ['Leave → Rota → Cover, in one chain',
+      'Approving a request marks the person unavailable, recalculates coverage for those days, and raises a cover request where the shortfall breaches minimum staffing.'],
+    ['Entitlement',
+      'Calculated from the shared workforce record: policy, contracted hours and working pattern. Change any of the three and entitlement recalculates.'],
+  ] },
 };
