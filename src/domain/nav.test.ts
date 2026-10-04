@@ -104,12 +104,13 @@ test('the module setup and integration pages the prototype\'s SETUP_NEED lists a
   expect(byView('iit')).toMatchObject({ built: false, subProject: 'Rota', section: 'Integrations' });
 });
 
-test('Notifications is built in 1c and gated on the framework capability; Approvals is still to come', () => {
+test('Notifications and Approvals are built in 1c and gated on the framework capability', () => {
   const g = buildNav({ caps: caps('framework'), modules: ALL_MODULES, flags, onboarding: false });
   const tabs = must(g.find((x): x is NavGroup => x.key === 'setup')).tabs;
   expect(tabs.find(t => t.view === 'anotif')).toMatchObject({ built: true, path: '/setup/anotif', section: 'Governance' });
   expect(tabs.find(t => t.view === 'anotif')?.subProject).toBeUndefined();
-  expect(tabs.find(t => t.view === 'aappr')).toMatchObject({ built: false, subProject: 'Workforce core (plan 1c)' });
+  expect(tabs.find(t => t.view === 'aappr')).toMatchObject({ built: true, path: '/setup/aappr', section: 'Governance' });
+  expect(tabs.find(t => t.view === 'aappr')?.subProject).toBeUndefined();
   expect(buildNav({ caps: caps('mod_cfg'), modules: ALL_MODULES, flags, onboarding: false }).flatMap(x => x.tabs).some(t => t.view === 'anotif')).toBe(false);
 });
 

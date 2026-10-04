@@ -401,4 +401,24 @@ export const tid = {
     notConnected: 'anotif-not-connected', evidence: 'anotif-evidence', evidenceTip: 'anotif-evidence-tip', evidenceRow: (ref: string) => k('anotif-evidence-row', ref),
     save: 'anotif-save', cancel: 'anotif-cancel',
   },
+  /* 1c group 5: Approvals (aappr): the chain per module, sign-off settings and delegations (D8) */
+  aappr: {
+    error: 'aappr-error', loading: 'aappr-loading', tip: 'aappr-tip',
+    chain: 'aappr-chain', chainTip: 'aappr-chain-tip', chainTable: 'aappr-chain-table', fixedTip: 'aappr-fixed-tip',
+    group: (module: string) => k('aappr-group', module), edit: (module: string) => k('aappr-edit', module),
+    row: (module: string, i: number) => k('aappr-row', module, i),
+    role: (i: number) => k('aappr-role', i), scope: (i: number) => k('aappr-scope', i), when: (i: number) => k('aappr-when', i),
+    slaN: (i: number) => k('aappr-sla-n', i), slaUnit: (i: number) => k('aappr-sla-unit', i), remove: (i: number) => k('aappr-remove', i),
+    layer: (i: number) => k('aappr-layer', i), add: 'aappr-add', dialogFixedTip: 'aappr-dialog-fixed-tip',
+    chainSave: 'aappr-chain-save', chainCancel: 'aappr-chain-cancel', chainWarn: 'aappr-chain-warn',
+    signOff: 'aappr-signoff', signOffTip: 'aappr-signoff-tip', methodTip: 'aappr-method-tip', method: 'aappr-method', methodLink: 'aappr-method-link',
+    cutoff: 'aappr-cutoff', cutoffLink: 'aappr-cutoff-link', enforceTip: 'aappr-enforce-tip', enforce: 'aappr-enforce', enforceLink: 'aappr-enforce-link',
+    current: 'aappr-current', previous: 'aappr-previous', reasonTip: 'aappr-reason-tip', reason: 'aappr-reason', reasonLink: 'aappr-reason-link',
+    deleg: 'aappr-deleg', delegTip: 'aappr-deleg-tip', delegTable: 'aappr-deleg-table', delegError: 'aappr-deleg-error', delegLoading: 'aappr-deleg-loading',
+    delegRow: (id: string) => k('aappr-deleg-row', id), delegRemove: (id: string) => k('aappr-deleg-remove', id), delegEmpty: 'aappr-deleg-empty',
+    delegAdd: 'aappr-deleg-add', who: 'aappr-deleg-who', to: 'aappr-deleg-to', from: 'aappr-deleg-from', until: 'aappr-deleg-until',
+    module: (m: string) => k('aappr-deleg-module', m), delegSave: 'aappr-deleg-save', delegCancel: 'aappr-deleg-cancel', delegWarn: 'aappr-deleg-warn',
+  },
+  /* 1c group 5: the manager's "While you are away" card on Team leave (mgrLeave, v15:7907) */
+  away: { card: 'away-card', tip: 'away-tip', cover: 'away-cover', row: (id: string) => k('away-row', id) },
 } as const;
