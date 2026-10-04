@@ -17,8 +17,9 @@
      pay rules: the prototype's company, tweaks.rules, tweaks.allow, payCodes
      and budget hours are left out of the shipped data, and an imported file
      that carries them has them listed as ignored.
-   - Approval chains have no store yet (sub-project 1c group 5 builds one), so
-     a template carries its chain and an apply says it is not applied.
+   - Approval chains (1c group 5): a template carries every module's chain;
+     applying it sets each chain it holds that passes the same checks as the
+     Approvals page, needs the approval framework, and leaves the others.
 
    Every function is pure: the tenant comes in as arguments, so the server
    refuses with exactly what the screen shows. Copy is the prototype's, with
@@ -27,6 +28,7 @@ import {
   FLAGS, FLAG_EXTRAS, MODULES, SWITCH_CODES, WEEK_GRIDS, WEEK_LAYOUTS, flagBy, moduleLive, roleNameProblem, subName,
   switchFlag, switchModule, type FlagChange, type FlagExtras, type ModuleState, type Refusal,
 } from './modules';
+import { CHAIN_MODULES, POSTING_ROLE, POSTING_STEP, chainProblem, chainText, isChainModule, type ChainModule, type ChainStep } from './approvals';
 
 /* ------------------------------------------------------------- shapes */
 export type TemplateScope = 'config' | 'structure';
@@ -36,8 +38,8 @@ export interface TemplateType {
   code: string; name: string; category: 'Contracted' | 'Bank' | 'Agency' | 'Salaried'; mode: 'form' | 'grid' | 'clock'; uom: 'hour' | 'day';
   capabilities: ('vehicle' | 'site' | 'project' | 'shift')[];
 }
-/* One stage of an approval chain, as the prototype's APPROVAL_CHAIN rows. */
-export interface ChainStep { module: string; role: string; scope: string; when: string; sla: string; fixed: boolean }
+/* One stage of an approval chain, as the prototype's APPROVAL_CHAIN rows (src/domain/approvals.ts). */
+export type { ChainStep };
 export interface TemplateLocation {
   code: string; name: string; area: string; department: string; costCentre: string; level: string; minPerShift: number; manager: string; address: string; active: boolean;
 }
@@ -150,7 +152,7 @@ export const SHIPPED_TEMPLATES: Readonly<Record<string, Template>> = {
     approvalChain: [
       { module: 'Timesheet', role: 'Line manager', scope: 'All departments', when: 'Every timesheet', sla: '24 hours', fixed: false },
       { module: 'Timesheet', role: 'Payroll', scope: 'All departments', when: 'Every timesheet', sla: '48 hours', fixed: false },
-      { module: 'Timesheet', role: 'Business Central', scope: '', when: 'Posts on final approval', sla: '', fixed: true },
+      { module: 'Timesheet', role: 'Business Central', scope: '—', when: 'Posts on final approval', sla: '—', fixed: true },
       { module: 'Profile', role: 'Line manager', scope: 'All departments', when: 'Every contact detail change', sla: '3 days', fixed: false },
       { module: 'Leave', role: 'Line manager', scope: 'All departments', when: 'Every leave request', sla: '5 days', fixed: false }],
     structure: {
@@ -239,6 +241,8 @@ export interface CaptureSource {
   modules: Readonly<Record<string, boolean>>; flags: Readonly<Record<string, boolean>>; extras: FlagExtras;
   labels: Readonly<Record<string, string>>; defaultLabels: Readonly<Record<string, string>>;
   employeeTypes: readonly TemplateType[]; roleNames: Record<RoleKey, string>;
+  /* every module's approval chain, in module order */
+  chain: readonly ChainStep[];
   structure: TemplateStructure;
 }
 /* captureTemplate: what the tenant has decided, not what it contains. Labels
@@ -253,6 +257,7 @@ export function captureTemplate(name: string, description: string, scope: Templa
     labels: Object.fromEntries(Object.entries(src.labels).filter(([c, l]) => l !== src.defaultLabels[c])),
     employeeTypes: src.employeeTypes.map(x => ({ code: x.code, name: x.name, category: x.category, mode: x.mode, uom: x.uom, capabilities: [...x.capabilities] })),
     roleNames: { ...src.roleNames },
+    approvalChain: src.chain.map(x => ({ ...x })),
   };
   if (scope === 'structure') t.structure = structuredClone(src.structure);
   return t;
@@ -336,6 +341,8 @@ export interface TenantState {
   labels: Readonly<Record<string, string>>;
   employeeTypes: readonly TemplateType[];
   roleNames: Record<RoleKey, string>;
+  /* each module's approval chain now */
+  chains: Readonly<Record<ChainModule, readonly ChainStep[]>>;
   /* the codes already held, per kind */
   structure: Readonly<Record<StructureKind, readonly string[]>>;
 }
@@ -349,6 +356,8 @@ export interface ApplySteps {
   labels: Record<string, string>;
   typesAdded: TemplateType[]; typesUpdated: { code: string; change: Partial<Omit<TemplateType, 'code'>> }[];
   roleNames: Partial<Record<RoleKey, string>>;
+  /* the chains to set, each whole */
+  chains: { module: ChainModule; steps: ChainStep[] }[];
   structure: TemplateStructure;
 }
 export interface ApplyPlan { changes: PlanLine[]; added: PlanLine[]; leftAlone: PlanLine[]; steps: ApplySteps }
@@ -388,10 +397,12 @@ function moduleSteps(t: Template, s: TenantState) {
    alone. Nothing here deletes or overwrites a person or a structure record,
    or renames the organisation; employee types the template does not have
    stay with the people who hold them. `mayRenameRoles` is false when the
-   caller lacks Permissions configuration: role names are then left alone. */
-export function planApply(t: Template, s: TenantState, opts: { mayRenameRoles: boolean }): ApplyPlan {
+   caller lacks Permissions configuration: role names are then left alone.
+   `mayChangeChains` is false without the approval framework: the chains are
+   then left alone. */
+export function planApply(t: Template, s: TenantState, opts: { mayRenameRoles: boolean; mayChangeChains: boolean }): ApplyPlan {
   const changes: PlanLine[] = [], added: PlanLine[] = [], leftAlone: PlanLine[] = [];
-  const steps: ApplySteps = { modules: [], finalModules: {}, finalRestore: {}, flags: [], labels: {}, typesAdded: [], typesUpdated: [], roleNames: {},
+  const steps: ApplySteps = { modules: [], finalModules: {}, finalRestore: {}, flags: [], labels: {}, typesAdded: [], typesUpdated: [], roleNames: {}, chains: [],
     structure: { departments: [], costCentres: [], locations: [], jobProfiles: [], contracts: [] } };
 
   /* modules */
@@ -478,9 +489,8 @@ export function planApply(t: Template, s: TenantState, opts: { mayRenameRoles: b
     }
   }
 
-  /* the approval chain has nowhere to go yet */
-  if (t.approvalChain?.length) leftAlone.push({ area: 'chain',
-    text: `The approval chain (${plural(t.approvalChain.length, 'stage')}) is kept in the template. Approvals are not set up in this build, so it is not applied.` });
+  /* approval chains: each module the template has, set whole once it passes the Approvals page's checks */
+  planChains(t, s, opts.mayChangeChains, changes, leftAlone, steps);
 
   /* structure: new codes are added, held codes stay exactly as they are */
   const held = Object.fromEntries(STRUCTURE_KINDS.map(k => [k, new Set(s.structure[k].map(x => x.toUpperCase()))])) as Record<StructureKind, Set<string>>;
@@ -509,6 +519,36 @@ export function planApply(t: Template, s: TenantState, opts: { mayRenameRoles: b
   leftAlone.push({ area: 'organisation', text: `${s.name} keeps its name, company details, compliance and pay periods.` });
   return { changes, added, leftAlone, steps };
 }
+/* A template's chain, per module. A posting step written before the
+   Approvals page existed (a blank scope and SLA) reads as the posting step. */
+function chainsOf(t: Template): { known: Map<ChainModule, ChainStep[]>; unknown: string[] } {
+  const known = new Map<ChainModule, ChainStep[]>(), unknown: string[] = [];
+  for (const x of t.approvalChain ?? []) {
+    if (!isChainModule(x.module)) { if (!unknown.includes(x.module)) unknown.push(x.module); continue; }
+    const step = x.fixed && x.role === POSTING_ROLE && x.module === 'Timesheet' ? { ...POSTING_STEP } : { ...x };
+    known.set(x.module, [...(known.get(x.module) ?? []), step]);
+  }
+  return { known, unknown };
+}
+const sameChain = (a: readonly ChainStep[], b: readonly ChainStep[]) => a.length === b.length &&
+  a.every((x, i) => { const y = b[i]; return y !== undefined && x.role === y.role && x.scope === y.scope && x.when === y.when && x.sla === y.sla && x.fixed === y.fixed; });
+function planChains(t: Template, s: TenantState, may: boolean, changes: PlanLine[], leftAlone: PlanLine[], steps: ApplySteps) {
+  if (!t.approvalChain?.length) return;
+  const { known, unknown } = chainsOf(t);
+  const differ = CHAIN_MODULES.filter(m => known.has(m) && !sameChain(known.get(m) ?? [], s.chains[m]));
+  if (differ.length && !may) { leftAlone.push({ area: 'chain', text: 'Approval chains stay as they are. Changing them needs the approval framework.' }); return; }
+  for (const m of differ) {
+    const want = known.get(m) ?? [];
+    const problem = chainProblem(m, want);
+    if (problem) { leftAlone.push({ area: 'chain', text: `The ${m} approval chain stays as it is. ${problem.message}` }); continue; }
+    steps.chains.push({ module: m, steps: want });
+    changes.push({ area: 'chain', text: `${m} approval chain: ${chainText(want)}` });
+  }
+  const without = CHAIN_MODULES.filter(m => !known.has(m));
+  if (without.length) leftAlone.push({ area: 'chain', text: `Approval chains the template does not have stay as they are: ${list(without)}.` });
+  if (unknown.length) leftAlone.push({ area: 'chain', text: `Approval chains for modules this tenant does not have are not used: ${list(unknown)}.` });
+}
+
 /* One line for the toast and the audit row. */
 export function planSummary(p: Pick<ApplyPlan, 'changes' | 'added'>): string {
   const parts = [p.changes.length ? plural(p.changes.length, 'change') : '', p.added.length ? `${p.added.length} added` : ''].filter(Boolean);

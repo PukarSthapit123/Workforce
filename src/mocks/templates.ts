@@ -15,6 +15,8 @@ import { writeAudit } from './audit';
 import { people, recordAt } from './world';
 import { rotaOff, rotaOn, saveTenant, sitesOff, tenantRec, tsConfig, view, type StoredTenant } from './tenant';
 import meta from './seed/meta.json';
+import { chainRecord, chainsNow, writeChain } from './approvals';
+import { CHAIN_MODULES, type ChainModule, type ChainStep } from '@/domain/approvals';
 import {
   Template as TemplateSchema, applyTemplate, exportTemplate, getTemplatePlan, importTemplate, listTemplates, removeTemplate, saveTemplate,
   type TemplatePlan, type TemplateRow,
@@ -74,6 +76,7 @@ function stateOf(t: StoredTenant): TenantState {
   return {
     name: t.name, people: Object.keys(people()).length, modules: t.modules, restore: t.restore ?? {}, flags: v.flags,
     extras: v.extras, labels: labelsNow(), employeeTypes: typesNow(), roleNames: roleNamesNow(),
+    chains: Object.fromEntries(CHAIN_MODULES.map(m => [m, chainRecord(m).steps])) as Record<ChainModule, ChainStep[]>,
     structure: Object.fromEntries(STRUCTURE_KINDS.map(k => [k, codes(k)])) as Record<StructureKind, string[]>,
   };
 }
@@ -130,6 +133,8 @@ function carryOut(t: StoredTenant, plan: ApplyPlan, key: string): StoredTenant {
     const ut = recordAt(userTypes, k);
     if (ut && name) userTypes[k] = bump(ut, { name });
   }
+  /* each chain whole, through the Approvals page's own store */
+  for (const c of s.chains) writeChain(c.module, c.steps);
   for (const kind of STRUCTURE_KINDS) {
     const coll = store.coll<Record<string, unknown>>(HOME[kind].coll);
     for (const row of s.structure[kind]) {
@@ -163,7 +168,7 @@ export const templateHandlers = [
     const t = tenantRec(), v = view(t);
     const template = captureTemplate(body.name, body.description || `Saved from ${t.name}`, body.scope, {
       modules: t.modules, flags: v.flags, extras: v.extras, labels: labelsNow(), defaultLabels: DEFAULT_LABELS,
-      employeeTypes: typesNow(), roleNames: roleNamesNow(), structure: structureNow(),
+      employeeTypes: typesNow(), roleNames: roleNamesNow(), chain: chainsNow(), structure: structureNow(),
     });
     const key = templateKey(template.name);
     const who = actor(session);
@@ -176,7 +181,7 @@ export const templateHandlers = [
 
   serve(getTemplatePlan, ({ session, params }) => {
     const template = templateAt(params.key);
-    return planView(params.key, template, planApply(template, stateOf(tenantRec()), { mayRenameRoles: session.caps.includes('perm_cfg') }));
+    return planView(params.key, template, planApply(template, stateOf(tenantRec()), { mayRenameRoles: session.caps.includes('perm_cfg'), mayChangeChains: session.caps.includes('framework') }));
   }),
 
   serve(applyTemplate, ({ session, params, checkVersion }) => {
@@ -184,7 +189,7 @@ export const templateHandlers = [
     checkVersion(t);
     const template = templateAt(params.key);
     if (hasStructure(template)) requireCapability(session, 'master_data');
-    const plan = planApply(template, stateOf(t), { mayRenameRoles: session.caps.includes('perm_cfg') });
+    const plan = planApply(template, stateOf(t), { mayRenameRoles: session.caps.includes('perm_cfg'), mayChangeChains: session.caps.includes('framework') });
     const pv = planView(params.key, template, plan);
     const message = `${template.name} applied. ${pv.summary}`;
     if (!plan.changes.length && !plan.added.length && t.template === params.key) return { record: view(t), auditId: null, plan: pv, message };

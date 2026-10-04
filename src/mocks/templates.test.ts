@@ -2,6 +2,7 @@ import { server } from './node';
 import { store } from './store';
 import { Refusal } from '@/contract/common';
 import { getTenant } from '@/contract/tenant';
+import { ApprovalSetup } from '@/contract/approvals';
 import { TemplateApplied, TemplateFile, TemplateImported, TemplateList, TemplatePlan } from '@/contract/templates';
 import { SHIPPED_TEMPLATES, TEMPLATE_NAME_SHIPPED } from '@/domain/templates';
 import { accountOf, audits, caller, fault, resetTo, snapshot, tokenFor, type Persona } from '@/test/api-helpers';
@@ -14,7 +15,8 @@ beforeEach(async () => { resetTo('social'); admin = await as('admin'); });
 const T = '/api/v1/templates';
 const PLAN = (k: string) => `${T}/${k}/plan`, APPLY = (k: string) => `${T}/${k}/apply`, EXPORT = (k: string) => `${T}/${k}/export`, ONE = (k: string) => `${T}/${k}`;
 const WRITES = ['tenant', 'templates', 'timesheetConfig', 'employeeTypes', 'userTypes', 'departments', 'costCentres', 'locations', 'jobProfiles',
-  'projects', 'projectTasks', 'rotaWeeks', 'rotaSetAside', 'people', 'audit'];
+  'projects', 'projectTasks', 'rotaWeeks', 'rotaSetAside', 'people', 'approvalChains', 'audit'];
+const chainOf = async (m: string) => ApprovalSetup.parse((await admin('GET', '/api/v1/approvals/chains')).body).chains.find(c => c.module === m);
 const tenantVer = () => store.coll<{ version: number }>('tenant').tenant?.version ?? -1;
 const savedVer = (k: string) => store.coll<{ version: number }>('templates')[k]?.version ?? -1;
 const revoke = (cap: string) => {
@@ -134,6 +136,13 @@ describe('applying (D1, Review Focus 3)', () => {
     expect(Object.values(store.coll<{ code: string }>('employeeTypes')).map(x => x.code).sort()).toEqual(['casual', 'driver', 'hourly', 'salaried', 'shift']);
     expect(store.coll('projects')['prj_CON-2451']).toMatchObject({ code: 'CON-2451', costCentre: 'CC-100', location: '', budgetHours: '' });
     expect(store.coll('projectTasks')['tsk_CON-2451_001']).toMatchObject({ projectCode: 'CON-2451', name: '4010 · Labour' });
+    /* the two-stage chain: line manager then payroll, every timesheet, all departments, then Business Central */
+    const ts = await chainOf('Timesheet');
+    expect(ts?.steps.map(x => [x.role, x.scope, x.when])).toEqual([['Line manager', 'All departments', 'Every timesheet'],
+      ['Payroll', 'All departments', 'Every timesheet'], ['Business Central', '—', 'Posts on final approval']]);
+    expect(ts?.version).toBe(1);
+    expect((await chainOf('Rota'))?.version).toBe(0);
+    expect(out.plan.changes).toEqual(expect.arrayContaining([{ area: 'chain', text: 'Timesheet approval chain: Line manager, then Payroll, then Business Central.' }]));
     /* one audit row carrying the summary */
     const rows = audits().filter(a => a.entity === 'template');
     expect(rows).toHaveLength(1);
@@ -148,6 +157,9 @@ describe('applying (D1, Review Focus 3)', () => {
     const back = TemplateApplied.parse((await call('POST', APPLY('tpl_care_as_it_was'), undefined, tenantVer())).body);
     expect(back.auditId).not.toBeNull();
     expect(labels()).toMatchObject({ project: 'Funded programme', job_task: 'Activity' });
+    /* the saved template captured the chains as they were, and puts them back */
+    expect(store.coll<{ template: { approvalChain?: unknown[] } }>('templates').tpl_care_as_it_was?.template.approvalChain).toHaveLength(8);
+    expect((await chainOf('Timesheet'))?.steps.map(x => x.when)).toEqual(['Every timesheet', 'Only above a premium threshold', 'Posts on final approval']);
     expect(store.coll<{ modules: Record<string, boolean>; template: string }>('tenant').tenant).toMatchObject({ modules: expect.objectContaining({ R: true }), template: 'tpl_care_as_it_was' });
     const n = audits().length;
     const again = TemplateApplied.parse((await call('POST', APPLY('tpl_care_as_it_was'), undefined, tenantVer())).body);
