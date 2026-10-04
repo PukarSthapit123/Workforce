@@ -1,5 +1,5 @@
 {
-  "completedAreas": ["1a", "ui", "1b", "timesheet", "rota"],
+  "completedAreas": ["1a", "ui", "1b", "timesheet", "rota", "leave"],
   "sections": {
     "BOOT": "1a", "SIGN IN / SIGN OUT": "1a", "IDENTITY AND SIGN-IN": "1a", "CONFIGURABLE ROLE NAMES": "1c",
     "MANAGER NAV GROUPED BY MODULE": "1a", "ADMIN LAYOUT": "1a",

@@ -742,24 +742,24 @@
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A10 Message action states nothing was sent",
    "area": "leave",
-   "status": "pending",
-   "deferredTo": "leave"
+   "status": "ported",
+   "test": "src/features/leave/leave.test.tsx › balances, days to take, my requests with Cancel on the waiting one, history and the request form, with full test id coverage"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#23",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A11 Return-to-work request confirms notification",
    "area": "leave",
-   "status": "pending",
-   "deferredTo": "leave"
+   "status": "ported",
+   "test": "e2e/links-4.spec.ts › recording sickness puts S on the rota and opens cover; a return to work is asked for once; days of leave are given back and turn to sickness"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#24",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A11 Return-to-work is audited",
    "area": "leave",
-   "status": "pending",
-   "deferredTo": "leave"
+   "status": "ported",
+   "test": "src/features/leave/tsick.test.tsx › Arrange it asks for a return-to-work meeting once, with its toast and one audit row"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#25",
@@ -3056,33 +3056,33 @@
    "id": "LEGENDS-BECOME-LIVE-SUMMARIES#1",
    "section": "LEGENDS BECOME LIVE SUMMARIES",
    "text": "LG The month key exists",
-   "area": "leave",
+   "area": "1c",
    "status": "pending",
-   "deferredTo": "leave"
+   "deferredTo": "1c"
   },
   {
    "id": "LEGENDS-BECOME-LIVE-SUMMARIES#2",
    "section": "LEGENDS BECOME LIVE SUMMARIES",
    "text": "LG It carries counts, not just names",
-   "area": "leave",
+   "area": "1c",
    "status": "pending",
-   "deferredTo": "leave"
+   "deferredTo": "1c"
   },
   {
    "id": "LEGENDS-BECOME-LIVE-SUMMARIES#3",
    "section": "LEGENDS BECOME LIVE SUMMARIES",
    "text": "LG It omits states not present this month",
-   "area": "leave",
+   "area": "1c",
    "status": "pending",
-   "deferredTo": "leave"
+   "deferredTo": "1c"
   },
   {
    "id": "LEGENDS-BECOME-LIVE-SUMMARIES#4",
    "section": "LEGENDS BECOME LIVE SUMMARIES",
    "text": "LG Its glyphs use the calendar’s own state colours",
-   "area": "leave",
+   "area": "1c",
    "status": "pending",
-   "deferredTo": "leave"
+   "deferredTo": "1c"
   },
   {
    "id": "LEGENDS-BECOME-LIVE-SUMMARIES#5",
@@ -3136,9 +3136,9 @@
    "id": "LEGENDS-BECOME-LIVE-SUMMARIES#11",
    "section": "LEGENDS BECOME LIVE SUMMARIES",
    "text": "LG Calendar cells carry one class attribute, not two",
-   "area": "leave",
+   "area": "1c",
    "status": "pending",
-   "deferredTo": "leave"
+   "deferredTo": "1c"
   },
   {
    "id": "SHIFT-PALETTE-DRAG-AND-DROP#1",
@@ -5326,8 +5326,8 @@
    "section": "ROTA OFF EMPTIES THE CALENDAR",
    "text": "RO Leave still shows, because it comes from Leave not Rota",
    "area": "leave",
-   "status": "pending",
-   "deferredTo": "leave"
+   "status": "ported",
+   "test": "e2e/employee-4.spec.ts › on a day of approved leave My timesheet shows the banner; saving time is refused until the day is marked called in and worked anyway"
   },
   {
    "id": "ROTA-OFF-EMPTIES-THE-CALENDAR#5",
