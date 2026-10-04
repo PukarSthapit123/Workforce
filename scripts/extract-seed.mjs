@@ -168,7 +168,7 @@ function shape(tenantKey, data, PERMS_META, PERM_GROUPS, PROFILE_CHANGES, ref) {
     people: byId(people), accounts: byId(accounts), userTypes: byId(userTypes), capabilities: byId(capabilities),
     capabilityGroups: byId(capabilityGroups), tenant: { tenant }, locations, departments, costCentres, jobProfiles, projects,
     employeeTypes, profileChanges, personHistory: {}, notices: byId(notices), audit: {}, ...notificationSeed(data, accounts), ...timesheets(data, people),
-    delegations: delegationSeed(people),
+    delegations: delegationSeed(people), ...documentSeed(accounts),
     ...rotaData, ...leave(data, people, ref, rotaData.rotaWeeks) } };
 }
 
@@ -193,6 +193,20 @@ function notificationSeed(data, accounts) {
   const notifEvidence = byId(literalEvidence.map((e, i) => meta({ id: `nev_${i + 1}`, employee: e.emp, employeeId: e.eid, event: `${e.milestone} milestone`,
     at: londonSummer(e.ts), recipient: e.to, channel: 'In-app + email', ref: e.ref })));
   return { notifications, notifEvidence };
+}
+
+/* ---- 1c group 7: documents (brief D12) ----
+   DOCUMENTS and PAYROLL_DOCS are never persisted, so they are read from the
+   prototype's source. The prototype shows its seven documents to whoever is
+   signed in; here they belong to one person, the tenant's first employee
+   account (the demo employee). Their dates become ISO. The payroll documents
+   are the tenant's, not a person's: they only ever read "Not yet connected". */
+function documentSeed(accounts) {
+  const demo = accounts.find(a => a.userType === 'employee');
+  const documents = demo ? literalDocuments.map((d, i) => meta({ id: `doc_${demo.personCode}_${i + 1}`, personCode: demo.personCode,
+    name: d.n, category: d.cat, date: iso(d.date), owner: d.owner, source: d.src })) : [];
+  const payrollDocuments = literalPayrollDocs.map((d, i) => meta({ id: `pdoc_${i + 1}`, name: d.n, category: d.cat, note: d.note }));
+  return { documents: byId(documents), payrollDocuments: byId(payrollDocuments) };
 }
 
 /* ---- 1c group 5: delegations (brief D8) ----
@@ -598,6 +612,8 @@ const literalBankHolidays = literal('BANK_HOLIDAYS');
 const literalRepeats = literal('REPEATS');
 const literalEvidence = literal('NOTIF_EVIDENCE');
 const literalDelegations = literal('DELEGATIONS');
+const literalDocuments = literal('DOCUMENTS');
+const literalPayrollDocs = literal('PAYROLL_DOCS');
 const leaveRules = await tsImport('../src/domain/leave.ts', import.meta.url);
 /* The capture field catalogue, less any money: the £ value on each allowance and the expenses-to-claim field. */
 const timesheetFields = literal('FIELDS').filter(f => !MONEY_FIELDS.has(f.c))

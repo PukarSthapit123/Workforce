@@ -72,3 +72,14 @@ test('both tenants carry the prototype\'s four notices with textVersion, ISO sta
     expect(notices[0]?.history.map(h => h.textVersion)).toEqual([1]);
   }
 });
+test('each tenant carries the prototype\'s seven documents for its first employee account, with ISO dates, and the three payroll documents (D12)', () => {
+  for (const [raw, owner] of [[social, 'CP-1042'], [qnipay, 'EMP002']] as const) {
+    const seed = raw as unknown as SeedFile;
+    const docs = Object.values(seed.data.documents ?? {}) as { personCode: string; name: string; date: string; source: string }[];
+    expect(docs.map(d => d.name)).toEqual(['Contract of employment', 'Job description · Support Worker', 'DBS certificate', 'Safeguarding L2 certificate',
+      'Medication competency', 'Working time opt-out', 'Annual leave statement 2026/27']);
+    expect(docs.every(d => d.personCode === owner && /^\d{4}-\d{2}-\d{2}$/.test(d.date))).toBe(true);
+    expect(Object.values(seed.data.payrollDocuments ?? {}).map(d => (d as { name: string }).name)).toEqual(['Payslips', 'P60 · 2025/26', 'P45']);
+    expect(JSON.stringify(seed.data.payrollDocuments)).not.toMatch(/£|amount|brateb/i);
+  }
+});
