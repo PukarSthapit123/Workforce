@@ -1,5 +1,5 @@
 import {
-  CANCELLED_TOAST, CHOOSE_TYPE, DEFAULT_LEAVE_CONFIG, DEFAULT_TYPE_LEAVE, LAST_BEFORE_FIRST, OVER_BALANCE, PICK_BOTH_DATES, REASON_REQUIRED, ROTA_OFF_IMPACT,
+  CANCELLED_TOAST, CHOOSE_TYPE, DEFAULT_LEAVE_CONFIG, DEFAULT_TYPE_LEAVE, LAST_BEFORE_FIRST, OVERLAPS, OVER_BALANCE, PICK_BOTH_DATES, REASON_REQUIRED, ROTA_OFF_IMPACT,
   RTW_ALREADY, RTW_TOAST, SELF_APPROVAL, SETTLED_IN_PAYROLL, absenceBlockedProblem, absenceHeldReason, absenceCellPlan, absenceCellWrites, bookedLeaveDates, datesCellPlan, sicknessDates, absenceMark, absenceOn, approvedNotice,
   approvedToast, balanceOf, balanceText, bradford, cancelTip, cancelWindowAdvisory, cancelledNotice, coverImpact, dailyHours, daysReturnedNotice,
   daysReturnedToast, daysToTakeText, declineReasonProblem, declinedNotice, declinedToast, entitlement, episodeDays, episodeEnd, escalationText,
@@ -237,6 +237,22 @@ describe('requests: shape and validation (D2)', () => {
     expect(al('2027-03-29', '2027-04-02')).toMatchObject({ ok: false, problem: { message: 'That is more than the 2.5 days you have left.' } });
     /* a year the caller holds no balance for is left to the server */
     expect(al('2028-04-03', '2028-04-04')).toMatchObject({ ok: true, hint: '' });
+  });
+  /* review M1 */
+  test('a request may not overlap the person\'s own waiting or approved leave; a morning and an afternoon do not clash', () => {
+    const booked = [rec({ from: '2026-09-14', to: '2026-09-15', state: 'pending' }), rec({ from: '2026-09-21', to: '2026-09-21', state: 'declined' }),
+      rec({ from: '2026-09-28', to: '2026-09-28', part: 'am' })];
+    const ctx = { types: TYPES, contractedHours: 37.5, checkBalance: false, today: TODAY, finYearStart: '01/04', leftIn: () => null, booked };
+    const ask = (from: string, to: string, part: 'full' | 'am' | 'pm' = 'full') => requestProblem({ type: 'AL', from, to, part }, ctx);
+    expect(ask('2026-09-15', '2026-09-16')).toEqual({ ok: false, problem: { code: 'OVERLAPS', message: OVERLAPS, field: 'from',
+      next: 'Your request for 14/09/2026 – 15/09/2026 already covers them. Pick other dates.' } });
+    expect(OVERLAPS).toBe('You already have leave booked on some of those days.');
+    expect(ask('2026-09-10', '2026-09-14').ok).toBe(false);
+    expect(ask('2026-09-16', '2026-09-18').ok).toBe(true);
+    expect(ask('2026-09-21', '2026-09-21').ok).toBe(true);
+    expect(ask('2026-09-28', '2026-09-28', 'pm').ok).toBe(true);
+    expect(ask('2026-09-28', '2026-09-28', 'am').ok).toBe(false);
+    expect(ask('2026-09-28', '2026-09-28').ok).toBe(false);
   });
   test('yearShares splits a request by leave year in calendar days', () => {
     expect(yearShares({ from: '2027-03-30', to: '2027-04-02' }, { days: 4, hours: 30 }, '01/04').map(s => [s.year.label, s.days, s.hours]))

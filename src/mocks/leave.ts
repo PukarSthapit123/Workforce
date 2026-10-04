@@ -93,7 +93,7 @@ const approversAt = (loc: string, except: string) => Object.values(accounts())
 const administrators = () => Object.values(accounts()).filter(a => capsFor(a).includes('mod_cfg')).map(a => a.personCode);
 
 /* A refusal from the domain, with the status its code carries. */
-const STATUS: Record<string, number> = { SELF_APPROVAL: 403, TRANSITION_NOT_ALLOWED: 409, ALREADY_RECORDED: 409, ALREADY_REQUESTED: 409, NO_ABSENCE: 409 };
+const STATUS: Record<string, number> = { SELF_APPROVAL: 403, TRANSITION_NOT_ALLOWED: 409, OVERLAPS: 409, ALREADY_RECORDED: 409, ALREADY_REQUESTED: 409, NO_ABSENCE: 409 };
 const refuseLeave = (p: LeaveRefusal): never =>
   refuse(STATUS[p.code] ?? 422, { ...p, code: p.code === 'VALIDATION' ? 'invalid' : p.code });
 
@@ -208,7 +208,7 @@ export const leaveHandlers = [
     /* the part is checked by requestProblem (isLeavePart), which refuses with the domain's sentence */
     const checked = requestProblem({ type: body.type, from: body.from, to: body.to, part: body.part as LeavePart },
       { types: c.types, contractedHours: L.facts.contractedHours, checkBalance: flagOn('LV_ENT'), today: today(), finYearStart: c.finYearStart,
-        leftIn: y => L.balIn(y).leftD });
+        leftIn: y => L.balIn(y).leftD, booked: L.mine });
     if (!checked.ok) return refuseLeave(checked.problem);
     const s = checked.shape, who = by(session), at = store.now();
     const impact = tenant().modules.R ? coverImpact(rotaCoverDays(p.code, datesBetween(s.from, s.to))) : { text: ROTA_OFF_IMPACT, short: false };

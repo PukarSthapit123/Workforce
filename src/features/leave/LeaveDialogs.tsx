@@ -3,7 +3,7 @@ import { tid } from '@/testids';
 import { Banner, Button, Fact, Field, FieldGrid, FormWarn, GroupLabel, Modal, SelectBox, Small, TextInput, toastInfo } from '@/ui';
 import { useRequestLeave, type MyLeave } from '@/api/leave';
 import {
-  CHOOSE_TYPE, LEAVE_PARTS, PART_LABEL, SIMULATION_NOTE, balanceCheck, isLeavePart, leaveShape, leaveWritesRota, proRataSimulation,
+  CHOOSE_TYPE, LEAVE_PARTS, PART_LABEL, SIMULATION_NOTE, balanceCheck, isLeavePart, leaveShape, leaveWritesRota, overlapProblem, proRataSimulation,
   type LeavePart,
 } from '@/domain/leave';
 import { addDays } from '@/domain/time';
@@ -28,6 +28,9 @@ function recalc(m: MyLeave, input: { type: string; from: string; to: string; par
   const s = leaveShape(input, t.unit, m.facts.contractedHours);
   if (!s.ok) return { qty: '—', msg: s.message, bad: true };
   const { label, note } = s.shape;
+  /* days already booked on a waiting or approved request of their own (review M1) */
+  const clash = overlapProblem(s.shape, m.requests);
+  if (clash) return { qty: label, msg: clash.message, bad: true };
   if (t.code === 'AL' && m.rules.entitlement) {
     /* each leave year the dates touch is checked against that year: this one and the next are known here, a later one is left to the server */
     const finYearStart = `${m.year.start.slice(8)}/${m.year.start.slice(5, 7)}`;

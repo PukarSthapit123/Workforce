@@ -86,6 +86,18 @@ describe('requesting leave (Review Focus 2)', () => {
     expect(refusal(r)).toMatchObject({ code: 'OVER_BALANCE', field: 'to', message: moreThanLeft(Number((left - 2).toFixed(1))) });
     expect(snapshot(...WRITES)).toEqual(before);
   });
+  /* review M1: the same day cannot be asked for twice, so it is never charged twice */
+  test('a request overlapping the employee\'s own waiting or approved leave is refused with OVERLAPS, and nothing is written', async () => {
+    const call = await as('employee');
+    const first = LeaveRequested.parse((await ask(call, { from: '2026-09-14', to: '2026-09-15' })).body).record;
+    const before = snapshot(...WRITES);
+    const r = await ask(call, { from: '2026-09-15', to: '2026-09-15' });
+    expect(r.status).toBe(409);
+    expect(refusal(r)).toMatchObject({ code: 'OVERLAPS', field: 'from', message: 'You already have leave booked on some of those days.' });
+    expect(snapshot(...WRITES)).toEqual(before);
+    LeaveMoved.parse((await cancel(call, first.id)).body);
+    expect((await ask(call, { from: '2026-09-15', to: '2026-09-15' })).status).toBe(200);
+  });
   /* review I2: leave in the next leave year is checked against that year and holds back that year's balance */
   test('requests in the next leave year are charged to it: each holds its days back there, and one too many is refused naming the year', async () => {
     const call = await as('employee'), was = await myLeave(call);

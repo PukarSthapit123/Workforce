@@ -58,6 +58,10 @@ describe('My leave', () => {
     await expectToast(tellManagerToast('Manish Nepal'), tid.toast.error);
     await openRequest();
     expect(screen.getByTestId(tid.leave.qty)).toHaveValue('2 days · 16.00 hours');
+    /* the form opens three weeks out, on 3-4 September, which lr_3 already books (review M1) */
+    expect(fieldOf(tid.leave.qty)).toHaveTextContent('You already have leave booked on some of those days.');
+    set(tid.leave.from, '2026-09-14');
+    set(tid.leave.to, '2026-09-15');
     expect(fieldOf(tid.leave.qty)).toHaveTextContent('10.5 days would remain.');
     expect(screen.getByTestId(tid.leave.sla)).toHaveTextContent('Manish Nepal has 5 days to decide, then it escalates to the');
     expect(screen.getByTestId(tid.leave.sla)).not.toHaveTextContent('rota');
@@ -112,6 +116,21 @@ describe('My leave', () => {
     await waitFor(() => expect(fieldOf(tid.leave.to)).toHaveTextContent(moreThanLeft(0.5)));
     expect(screen.getByTestId(tid.leave.send)).toBeInTheDocument();
     expect(Object.keys(store.coll('leaveRequests'))).not.toContain('lr_6');
+    expect(acts()).toEqual([]);
+  });
+
+  /* review M1: days already booked cannot be asked for again */
+  test('dates that overlap a waiting request are flagged as the form changes, and Send stays off', async () => {
+    await signInEmail(BIGYAN);
+    await open();
+    await openRequest();
+    set(tid.leave.from, '2026-09-04');
+    set(tid.leave.to, '2026-09-07');
+    expect(fieldOf(tid.leave.qty)).toHaveTextContent('You already have leave booked on some of those days.');
+    expect(screen.getByTestId(tid.leave.send)).toBeDisabled();
+    set(tid.leave.from, '2026-09-07');
+    expect(fieldOf(tid.leave.qty)).not.toHaveTextContent('already have leave booked');
+    expect(screen.getByTestId(tid.leave.send)).toBeEnabled();
     expect(acts()).toEqual([]);
   });
 

@@ -278,16 +278,28 @@ export function balanceCheck(shape: Pick<LeaveShape, 'from' | 'to' | 'days' | 'h
   }
   return { ok: true, hint: hints.join(' ') };
 }
-/* lv-send, server side (D2): a known active type, the shape, and the annual
-   leave balance while automatic entitlement is on. What `leftIn` returns
-   already holds back every other waiting request in that year. */
-export function requestProblem(input: RequestInput, ctx: BalanceCheckCtx & { types: readonly LeaveType[]; contractedHours: number; checkBalance: boolean }):
+/* Review M1: the same day cannot be booked twice, so the balance is charged
+   once. A morning and an afternoon of the same day do not clash. */
+export const OVERLAPS = 'You already have leave booked on some of those days.';
+type Booked = Pick<LeaveRecord, 'from' | 'to' | 'part' | 'state'>;
+const halves = (a: LeavePart, b: LeavePart) => (a === 'am' && b === 'pm') || (a === 'pm' && b === 'am');
+export function overlapProblem(input: Pick<LeaveRecord, 'from' | 'to' | 'part'>, booked: readonly Booked[]): LeaveRefusal | null {
+  const clash = booked.find(r => (r.state === 'pending' || r.state === 'approved') && r.from <= input.to && r.to >= input.from && !halves(r.part, input.part));
+  return clash ? { code: 'OVERLAPS', message: OVERLAPS, next: `Your request for ${leaveRange(clash.from, clash.to)} already covers them. Pick other dates.`, field: 'from' } : null;
+}
+/* lv-send, server side (D2): a known active type, the shape, no clash with
+   the person's own waiting or approved leave, and the annual leave balance
+   while automatic entitlement is on. What `leftIn` returns already holds back
+   every other waiting request in that year. */
+export function requestProblem(input: RequestInput, ctx: BalanceCheckCtx & { types: readonly LeaveType[]; contractedHours: number; checkBalance: boolean; booked?: readonly Booked[] }):
   { ok: true; shape: LeaveShape; hint: string } | { ok: false; problem: LeaveRefusal } {
   const t = leaveTypeBy(ctx.types, input.type);
   if (!t?.active) return { ok: false, problem: { code: 'VALIDATION', message: CHOOSE_TYPE, next: 'Pick one of the leave types offered.', field: 'type' } };
   if (!isLeavePart(input.part)) return { ok: false, problem: { code: 'VALIDATION', message: 'Choose how much of each day.', next: 'Pick full days, a morning, an afternoon or hours.', field: 'part' } };
   const s = leaveShape(input, t.unit, ctx.contractedHours);
   if (!s.ok) return { ok: false, problem: { code: 'VALIDATION', message: s.message, next: 'Correct the dates and send it again.', field: s.field } };
+  const clash = overlapProblem(s.shape, ctx.booked ?? []);
+  if (clash) return { ok: false, problem: clash };
   if (t.code === 'AL' && ctx.checkBalance) {
     const b = balanceCheck(s.shape, ctx);
     return b.ok ? { ok: true, shape: s.shape, hint: b.hint } : b;
