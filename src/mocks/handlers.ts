@@ -12,5 +12,6 @@ import { profileHandlers } from './profile';
 import { timesheetHandlers } from './timesheets';
 import { rotaHandlers } from './rota';
 import { leaveHandlers } from './leave';
+import { savedDataHandlers } from './saved-data';
 /* Order matters: faults first, so they can pre-empt any endpoint. */
-export const handlers = [faultsHandler, ...devHandlers, ...sessionHandlers, ...tenantHandlers, ...accessHandlers, ...auditHandlers, ...peopleHandlers, ...transitionHandlers, ...dimensionHandlers, ...employeeTypeHandlers, ...profileHandlers, ...timesheetHandlers, ...rotaHandlers, ...leaveHandlers /* feature handlers appended by later tasks */];
+export const handlers = [faultsHandler, ...devHandlers, ...sessionHandlers, ...tenantHandlers, ...accessHandlers, ...auditHandlers, ...peopleHandlers, ...transitionHandlers, ...dimensionHandlers, ...employeeTypeHandlers, ...profileHandlers, ...timesheetHandlers, ...rotaHandlers, ...leaveHandlers, ...savedDataHandlers /* feature handlers appended by later tasks */];

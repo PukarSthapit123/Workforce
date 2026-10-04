@@ -8,6 +8,9 @@ export const STORE_KEY = 'qnipay.app.store';
    the one it last saw before handling a request, so it never answers from a
    copy of the database that is older than what is persisted (see sync). */
 export const STORE_REV_KEY = STORE_KEY + '.rev';
+/* A session set aside, by a reset or because a newer build ships newer seed
+   data. It can be brought back once (acal's Saved data card, D14). */
+export const STORE_BACKUP_KEY = STORE_KEY + '.superseded';
 export type Collections = Record<string, Record<string, Record<string, unknown>>>;
 export interface Seed { version: string; tenant: string; data: Collections }
 /* What actually gets written to localStorage: a Seed plus the frozen clock, so
@@ -76,12 +79,42 @@ export function createStore(seedFor: (tenant?: string) => Seed = defaultSeed, kn
     /* Throws for a tenant this build has no seed for; _dev/seed refuses that
        with a 422 before it gets here. */
     reset(tenant?: string) { s.load(seedFor(tenant ?? s.tenant)); s.save(); },
+    /* False once a save has failed (storage full or blocked): the work still
+       runs in memory but does not survive a reload. */
+    saving: true,
+    /* What save() writes, as text. */
+    persisted: () => JSON.stringify({ version: SEED_VERSION, tenant: s.tenant, data: s.db, clock } satisfies PersistedState),
     save() {
       try {
-        localStorage.setItem(STORE_KEY, JSON.stringify({ version: SEED_VERSION, tenant: s.tenant, data: s.db, clock } satisfies PersistedState));
+        localStorage.setItem(STORE_KEY, s.persisted());
         rev = `${Date.now().toString(36)}.${(revSeq++).toString(36)}.${Math.random().toString(36).slice(2)}`;
         localStorage.setItem(STORE_REV_KEY, rev);
-      } catch { /* storage full or blocked: the session still works */ }
+        s.saving = true;
+      } catch { s.saving = false; /* storage full or blocked: the session still works */ }
+    },
+    /* The prototype's storeCard, resetState and restoreBackup (v15:4649-4671,
+       4935-4951). A reset keeps what was here as the set-aside session; a
+       restore loads the set-aside session whatever build wrote it, keeping the
+       clock, and then forgets it, so it comes back once. */
+    hasBackup(): boolean {
+      try { return localStorage.getItem(STORE_BACKUP_KEY) !== null; } catch { return false; }
+    },
+    resetKeepingBackup() {
+      try { localStorage.setItem(STORE_BACKUP_KEY, s.persisted()); } catch { /* nowhere to keep it */ }
+      s.reset();
+    },
+    restoreBackup(): boolean {
+      let raw: string | null = null;
+      try { raw = localStorage.getItem(STORE_BACKUP_KEY); } catch { return false; }
+      if (!raw) return false;
+      let o: unknown;
+      try { o = JSON.parse(raw); } catch { return false; }
+      const p = (o && typeof o === 'object' ? o : {}) as Partial<PersistedState>;
+      if (!knownTenant(p.tenant) || !p.data || typeof p.data !== 'object' || Array.isArray(p.data)) return false;
+      s.load({ version: SEED_VERSION, tenant: String(p.tenant), data: p.data });
+      try { localStorage.removeItem(STORE_BACKUP_KEY); } catch { /* it stays set aside */ }
+      s.save();
+      return true;
     },
     boot() {
       let raw: string | null = null;
@@ -91,7 +124,7 @@ export function createStore(seedFor: (tenant?: string) => Seed = defaultSeed, kn
       } catch { /* storage blocked: start from the seed */ }
       const o = raw ? readPersisted(raw, knownTenant) : null;
       if (o) { s.load(o); clock = o.clock; return; }
-      if (raw) { try { localStorage.setItem(STORE_KEY + '.superseded', raw); } catch { /* nowhere to keep it */ } }
+      if (raw) { try { localStorage.setItem(STORE_BACKUP_KEY, raw); } catch { /* nowhere to keep it */ } }
       s.reset(DEFAULT_TENANT);
     },
     /* Called before every request in the browser. Each tab runs its own copy
