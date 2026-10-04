@@ -86,6 +86,30 @@ describe('requesting leave (Review Focus 2)', () => {
     expect(refusal(r)).toMatchObject({ code: 'OVER_BALANCE', field: 'to', message: moreThanLeft(Number((left - 2).toFixed(1))) });
     expect(snapshot(...WRITES)).toEqual(before);
   });
+  /* review I2: leave in the next leave year is checked against that year and holds back that year's balance */
+  test('requests in the next leave year are charged to it: each holds its days back there, and one too many is refused naming the year', async () => {
+    const call = await as('employee'), was = await myLeave(call);
+    expect(was.nextYear).toMatchObject({ start: '2027-04-01', end: '2028-03-31', label: '2027/28' });
+    const nextLeft = was.nextYear.leftD;
+    expect((await ask(call, { from: '2027-04-05', to: '2027-04-16' })).status).toBe(200);
+    expect((await ask(call, { from: '2027-05-03', to: '2027-05-12' })).status).toBe(200);
+    const mid = await myLeave(call);
+    expect(mid.balance).toEqual(was.balance);
+    expect(mid.nextYear.leftD).toBe(nextLeft - 22);
+    const before = snapshot(...WRITES);
+    const r = await ask(call, { from: '2027-06-07', to: '2027-06-18' });
+    expect(r.status).toBe(422);
+    expect(refusal(r)).toMatchObject({ code: 'OVER_BALANCE', field: 'to', message: moreThanLeft(nextLeft - 22, '2027/28') });
+    expect(snapshot(...WRITES)).toEqual(before);
+  });
+  test('a request across the year end is split: this year holds back only its own days', async () => {
+    const call = await as('employee'), was = await myLeave(call);
+    const r = LeaveRequested.parse((await ask(call, { from: '2027-03-29', to: '2027-04-02' })).body);
+    expect(r.record.qty).toBe(5);
+    expect(r.hint).toBe(`${Number((was.balance.leftD - 3).toFixed(1))} days would remain. ${was.nextYear.leftD - 2} days would remain in the 2027/28 leave year.`);
+    const after = await myLeave(call);
+    expect([after.balance.pending - was.balance.pending, was.nextYear.leftD - after.nextYear.leftD]).toEqual([3, 2]);
+  });
   test('the approver sees short notice and a start inside the change window as advice, never a block', async () => {
     const r = LeaveRequested.parse((await ask(await as('employee'), { from: '2026-08-15', to: '2026-08-15' })).body);
     const q = TeamRequests.parse((await (await as('manager'))('GET', '/api/v1/leave/team/requests')).body);

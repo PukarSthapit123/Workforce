@@ -26,14 +26,14 @@ import {
 } from '@/contract/leave';
 import {
   CANCELLED_TOAST, LEAVE_STATE, NOT_YOUR_REQUEST, ROTA_OFF_IMPACT, RTW_TOAST, SETTLED_IN_PAYROLL, SICK_REASONS, TRIGGER_NOTE,
-  absenceMark, absenceOn, approvedNotice, approvedToast, balanceOf, balanceText, bookedLeaveDates, bradford, bradfordTip, cancelTip,
+  absenceMark, absenceOn, approvedNotice, approvedToast, balanceText, bookedLeaveDates, bradford, bradfordTip, cancelTip,
   cancelWindowAdvisory, cancelledNotice, coverImpact, daysReturnedNotice, daysReturnedToast, daysToTakeText, decidedAudit, declineReasonProblem,
   declinedNotice, declinedToast, entitlement, giveBackProblem, giveBackRow, isLeaveState, latestAbsenceText, leaveConfigProblem, leaveCoverReason,
   leaveRange, leaveTransitionProblem, leaveTypeName, leaveWritesRota, leaveYear, ledgerQty, monthsWorked, nextStepText, noticeAdvisory, policyBy,
   qtyText, reconcileLeaver, recordSicknessPlan, renumberLeaveStages, requestProblem, requestedAudit, requestedNotice, requestedToast,
   rtwNotices, rtwProblem, selfApprovalProblem, sentNotice, sickDuringLeave, sicknessDates, sicknessNotice, sicknessToast, slaBreachedText,
-  slaOf, slaPillText, stageText, triggerBannerText, typeBalanceText, typeLeaveFor,
-  type Balance, type BalanceUnit, type LeavePart, type Entitlement, type LeaveRefusal, type LedgerRow,
+  slaOf, slaPillText, stageText, triggerBannerText, typeBalanceText, typeLeaveFor, yearBalance,
+  type Balance, type LeaveYearSpan, type BalanceUnit, type LeavePart, type Entitlement, type LeaveRefusal, type LedgerRow,
 } from '@/domain/leave';
 import { SICK, isActive, type RotaActor } from '@/domain/rota';
 import { addDays, daysBetween } from '@/domain/time';
@@ -121,9 +121,11 @@ function leaveOf(p: StoredPerson) {
   const facts = { contractedHours, start: p.start, ...(stored?.accruedHours !== undefined ? { accruedHours: stored.accruedHours } : {}) };
   const ent = entitlement(facts, policy, today());
   const mine = requestsOf(p.code), ledger = ledgerOf(p.code);
-  const bal = balanceOf({ ent, base: { unit: base.unit, taken: base.taken, toil: base.toil, toilBy: base.toilBy }, contractedHours, requests: mine, ledger,
-    today: today(), finYearStart: c.finYearStart });
-  return { policy, unit: base.unit, facts, ent, bal, mine, ledger };
+  const input = { facts, policy, base: { unit: base.unit, taken: base.taken, toil: base.toil, toilBy: base.toilBy }, requests: mine, ledger,
+    today: today(), finYearStart: c.finYearStart };
+  const bal = yearBalance(input, leaveYear(today(), c.finYearStart));
+  /* any leave year's balance: a request is charged to the year(s) its days fall in (review I2) */
+  return { policy, unit: base.unit, facts, ent, bal, mine, ledger, balIn: (y: LeaveYearSpan) => yearBalance(input, y) };
 }
 const entitlementView = (e: Entitlement): EntitlementView => ({ days: e.days, hours: e.hours, years: e.years, policy: e.policy, lines: e.lines });
 const balanceView = (b: Balance): BalanceView => ({ unit: b.unit, takenD: b.takenD, takenH: b.takenH, pending: b.pending, pendingH: b.pendingH,
@@ -184,10 +186,12 @@ export const leaveHandlers = [
   serve(getMyLeave, ({ session }) => {
     requireLeave();
     const p = personOf(effectiveCode(session)), c = config(), L = leaveOf(p), yr = yearNow(), toilOn = flagOn('LV_TOIL');
+    const next = leaveYear(addDays(yr.end, 1), c.finYearStart);
     const al = L.unit === 'hours' ? `${L.bal.leftH} hours left` : `${L.bal.leftD} of ${L.ent.days} days left`;
     return {
       person: { code: p.code, name: p.name, manager: managerOf(p), employeeType: p.employeeType },
       today: today(), year: yr, entitlement: entitlementView(L.ent), balance: balanceView(L.bal), facts: L.facts,
+      nextYear: { ...next, leftD: L.balIn(next).leftD },
       daysToTake: L.bal.leftD > 0 ? daysToTakeText(L.bal, yr.end, toilOn) : '',
       types: c.types.filter(t => t.active).map(t => ({ code: t.code, name: t.name, unit: t.unit, evidence: t.evidence,
         hint: typeBalanceText(t, policyBy(c.policies, t.policy), al, { hours: L.bal.toil, useBy: L.bal.toilBy }) })),
@@ -203,7 +207,8 @@ export const leaveHandlers = [
     const p = personOf(effectiveCode(session)), c = config(), L = leaveOf(p);
     /* the part is checked by requestProblem (isLeavePart), which refuses with the domain's sentence */
     const checked = requestProblem({ type: body.type, from: body.from, to: body.to, part: body.part as LeavePart },
-      { types: c.types, contractedHours: L.facts.contractedHours, checkBalance: flagOn('LV_ENT'), leftD: L.bal.leftD });
+      { types: c.types, contractedHours: L.facts.contractedHours, checkBalance: flagOn('LV_ENT'), today: today(), finYearStart: c.finYearStart,
+        leftIn: y => L.balIn(y).leftD });
     if (!checked.ok) return refuseLeave(checked.problem);
     const s = checked.shape, who = by(session), at = store.now();
     const impact = tenant().modules.R ? coverImpact(rotaCoverDays(p.code, datesBetween(s.from, s.to))) : { text: ROTA_OFF_IMPACT, short: false };

@@ -57,7 +57,8 @@ for (const [name, raw] of Object.entries({ social, qnipay })) {
         expect(r.history.at(-1)?.to, r.id).toBe(r.state);
         if (r.decidedBy) expect([w.people.has(r.decidedBy.personCode), r.decidedBy.personCode === p.code], r.id).toEqual([true, false]);
         const others = w.requests.filter(x => x.personCode === p.code && x.id !== r.id);
-        const v = requestProblem(r, { types: w.cfg.types, contractedHours: p.contractedHours, checkBalance: true, leftD: w.balance(p, others).leftD });
+        const v = requestProblem(r, { types: w.cfg.types, contractedHours: p.contractedHours, checkBalance: true, today: TODAY, finYearStart: w.cfg.finYearStart,
+          leftIn: () => w.balance(p, others).leftD });
         expect(v.ok, r.id).toBe(true);
         if (v.ok) expect([v.shape.qty, v.shape.unit], r.id).toEqual([r.qty, r.unit]);
       }

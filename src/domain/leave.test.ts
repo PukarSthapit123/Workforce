@@ -7,7 +7,7 @@ import {
   leaveTransitionProblem, leaveTypeName, leaveWritesRota, leaveYear, ledgerQty, monthsWorked, moreThanLeft, newLeaveStage, newLeaveType, nextStepText,
   noticeAdvisory, policyBy, proRataSimulation, reconcileLeaver, recordSicknessPlan, renumberLeaveStages, requestDays, requestProblem, requestedNotice,
   requestedToast, rtwNotices, rtwProblem, selfApprovalProblem, sentNotice, serviceBonus, shortDays, sickDuringLeave, sicknessToast, slaBreachedText,
-  slaOf, slaPillText, stageText, tellManagerToast, triggerBannerText, typeBalanceText, typeLeaveFor, wouldRemain, yearsService,
+  slaOf, slaPillText, stageText, tellManagerToast, triggerBannerText, typeBalanceText, typeLeaveFor, wouldRemain, yearBalance, yearShares, yearsService,
   type LeavePolicy, type LeaveRecord, type LeaveStage, type LeaveType, type LedgerRow,
 } from './leave';
 import { emptyWeek, setCells } from './rota';
@@ -211,7 +211,7 @@ describe('requests: shape and validation (D2)', () => {
     expect(halfDaySingle('pm')).toBe('Afternoon only applies to a single day. Set both dates the same.');
   });
   test('requestProblem: an active type, the shape, and the annual leave balance when it is checked', () => {
-    const ctx = { types: TYPES, contractedHours: 37.5, checkBalance: true, leftD: 2.5 };
+    const ctx = { types: TYPES, contractedHours: 37.5, checkBalance: true, today: TODAY, finYearStart: '01/04', leftIn: () => 2.5 };
     const input = { type: 'AL', from: '2026-09-03', to: '2026-09-04', part: 'full' as const };
     expect(requestProblem(input, ctx)).toMatchObject({ ok: true, hint: '0.5 days would remain.' });
     expect(requestProblem({ ...input, to: '2026-09-05' }, ctx)).toEqual({ ok: false,
@@ -224,8 +224,29 @@ describe('requests: shape and validation (D2)', () => {
     expect(requestProblem({ ...input, from: '' }, ctx)).toMatchObject({ ok: false, problem: { code: 'VALIDATION', field: 'from', message: PICK_BOTH_DATES } });
     expect(requestProblem({ ...input, type: 'AL', part: 'hours' }, { ...ctx, checkBalance: false })).toMatchObject({ ok: true, hint: 'recorded in hours' });
   });
+  /* review I2: a request is charged to the leave year its days fall in */
+  test('requestProblem checks each leave year the request touches against that year, and names a year other than this one', () => {
+    const left: Record<string, number> = { '2026-04-01': 2.5, '2027-04-01': 20 };
+    const ctx = { types: TYPES, contractedHours: 37.5, checkBalance: true, today: TODAY, finYearStart: '01/04', leftIn: (y: { start: string }) => left[y.start] ?? null };
+    const al = (from: string, to: string) => requestProblem({ type: 'AL', from, to, part: 'full' }, ctx);
+    expect(al('2027-04-05', '2027-04-16')).toMatchObject({ ok: true, hint: '8 days would remain in the 2027/28 leave year.' });
+    expect(al('2027-04-05', '2027-04-30')).toMatchObject({ ok: false,
+      problem: { code: 'OVER_BALANCE', message: 'That is more than the 20 days you have left in the 2027/28 leave year.', field: 'to' } });
+    /* 30/03-02/04/2027: two days in this year, two in the next */
+    expect(al('2027-03-30', '2027-04-02')).toMatchObject({ ok: true, hint: '0.5 days would remain. 18 days would remain in the 2027/28 leave year.' });
+    expect(al('2027-03-29', '2027-04-02')).toMatchObject({ ok: false, problem: { message: 'That is more than the 2.5 days you have left.' } });
+    /* a year the caller holds no balance for is left to the server */
+    expect(al('2028-04-03', '2028-04-04')).toMatchObject({ ok: true, hint: '' });
+  });
+  test('yearShares splits a request by leave year in calendar days', () => {
+    expect(yearShares({ from: '2027-03-30', to: '2027-04-02' }, { days: 4, hours: 30 }, '01/04').map(s => [s.year.label, s.days, s.hours]))
+      .toEqual([['2026/27', 2, 15], ['2027/28', 2, 15]]);
+    expect(yearShares({ from: '2026-09-03', to: '2026-09-03' }, { days: 0.5, hours: 3.75 }, '01/04').map(s => [s.year.label, s.days])).toEqual([['2026/27', 0.5]]);
+  });
   test('the balance strings, verbatim but for the full stop', () => {
     expect(moreThanLeft(13.5)).toBe('That is more than the 13.5 days you have left.');
+    expect(moreThanLeft(4, '2027/28')).toBe('That is more than the 4 days you have left in the 2027/28 leave year.');
+    expect(wouldRemain(4, 1, '2027/28')).toBe('3 days would remain in the 2027/28 leave year.');
     expect(OVER_BALANCE).toBe('That is more than your remaining balance.');
     expect(wouldRemain(13.5, 2)).toBe('11.5 days would remain.');
     expect(wouldRemain(0.3, 0.1)).toBe('0.2 days would remain.');
@@ -250,6 +271,16 @@ describe('balance (D3): derived from base, requests and ledger', () => {
   test('declined, cancelled, other types and other leave years do not count', () => {
     const b = bal([rec({ state: 'declined' }), rec({ state: 'cancelled' }), rec({ type: 'COMP' }), rec({ from: '2026-03-30', to: '2026-03-31' })]);
     expect([b.takenD, b.pending, b.leftD]).toEqual([7.5, 0, 17.5]);
+  });
+  /* review I2 */
+  test('a request across the year end counts only its days in this year; the next year holds the rest', () => {
+    const across = rec({ from: '2027-03-30', to: '2027-04-02', qty: 4, state: 'pending' });
+    expect(bal([across]).pending).toBe(2);
+    const facts = { contractedHours: 37.5, start: '2022-02-14' }, o = { facts, policy: STD, base, requests: [across], ledger: [], today: TODAY, finYearStart: '01/04' };
+    const now = yearBalance(o, leaveYear(TODAY, '01/04')), next = yearBalance(o, leaveYear('2027-04-01', '01/04'));
+    expect([now.ent.days, now.takenD, now.pending, now.leftD]).toEqual([25, 7.5, 2, 15.5]);
+    /* next year: the same policy and hours, five years' service at 01/04/2027, nothing taken before it, no carry-over */
+    expect([next.ent.years, next.ent.days, next.takenD, next.pending, next.leftD]).toEqual([5, 25, 0, 2, 23]);
   });
   test('approving moves waiting to taken; cancelling releases it; each exactly once', () => {
     const waiting = bal([rec({ state: 'pending' })]), approved = bal([rec()]), cancelled = bal([rec({ state: 'cancelled' })]);

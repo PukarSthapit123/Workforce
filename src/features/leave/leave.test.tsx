@@ -115,6 +115,23 @@ describe('My leave', () => {
     expect(acts()).toEqual([]);
   });
 
+  /* review I2: next year's leave draws on next year's balance, not on what is left of this one */
+  test('leave in the next leave year is checked against that year, so a short balance this year does not stop it', async () => {
+    const lr3 = store.coll<Record<string, unknown>>('leaveRequests').lr_3;
+    store.coll('leaveRequests').lr_99 = { ...lr3, id: 'lr_99', from: '2026-10-05', to: '2026-10-16', qty: 12 };
+    store.save();
+    await signInEmail(BIGYAN);
+    await open();
+    await openRequest();
+    set(tid.leave.from, '2027-04-05');
+    set(tid.leave.to, '2027-04-06');
+    expect(fieldOf(tid.leave.qty)).toHaveTextContent(/days would remain in the 2027\/28 leave year\./);
+    expect(screen.getByTestId(tid.leave.send)).toBeEnabled();
+    await userEvent.click(screen.getByTestId(tid.leave.send));
+    await expectToast(/Annual leave requested · 2 days/);
+    expect(acts()).toEqual(['Leave requested']);
+  });
+
   test('a waiting request is cancelled, with its toast and one audit row', async () => {
     await signInEmail(BIGYAN);
     await open();

@@ -134,6 +134,19 @@ export function leaveYear(date: string, finYearStart: string) {
   return { start, end, label: `${start.slice(0, 4)}/${end.slice(2, 4)}` };
 }
 const inYear = (date: string, y: { start: string; end: string }) => date >= y.start && date <= y.end;
+export type LeaveYearSpan = ReturnType<typeof leaveYear>;
+export interface YearShare { year: LeaveYearSpan; days: number; hours: number }
+/* A request is charged to the leave year(s) its days fall in (review I2): its
+   days and hours shared out by the calendar days in each year, in date order. */
+export function yearShares(r: { from: string; to: string }, total: { days: number; hours: number }, finYearStart: string): YearShare[] {
+  if (!isIsoDate(r.from) || !isIsoDate(r.to) || r.to < r.from) return [];
+  const span = daysBetween(r.from, r.to) + 1, out: YearShare[] = [];
+  for (let y = leaveYear(r.from, finYearStart); y.start <= r.to; y = leaveYear(addDays(y.end, 1), finYearStart)) {
+    const n = daysBetween(r.from > y.start ? r.from : y.start, r.to < y.end ? r.to : y.end) + 1;
+    out.push({ year: y, days: round2(total.days * n / span), hours: round2(total.hours * n / span) });
+  }
+  return out;
+}
 
 /* -------------------------------------------------- entitlement (D3) */
 export interface PersonLeaveFacts { contractedHours: number; start: string; accruedHours?: number }
@@ -242,14 +255,33 @@ export function leaveShape(input: RequestInput, typeUnit: LeaveUnit, contractedH
   const unit: BalanceUnit = typeUnit === 'hours' ? 'hours' : 'days';
   return { ok: true, shape: { from, to, part, days, hours, span, label, note, qty: unit === 'hours' ? hours : days, unit } };
 }
-export const moreThanLeft = (leftD: number) => `That is more than the ${leftD} days you have left.`;
+/* `year` names a leave year other than the current one ("2027/28"). */
+const inLeaveYear = (year?: string) => (year ? ` in the ${year} leave year` : '');
+export const moreThanLeft = (leftD: number, year?: string) => `That is more than the ${leftD} days you have left${inLeaveYear(year)}.`;
 export const OVER_BALANCE = 'That is more than your remaining balance.';
-export const wouldRemain = (leftD: number, days: number) => `${round1(leftD - days)} days would remain.`;
+export const wouldRemain = (leftD: number, days: number, year?: string) => `${round1(leftD - days)} days would remain${inLeaveYear(year)}.`;
 export const CHOOSE_TYPE = 'Choose a type of leave.';
+/* What the annual leave balance says of a shaped request (review I2): each
+   leave year it touches is checked with its own share against what is left in
+   that year. `leftIn` returns null for a year the caller holds no balance for,
+   which is then left to the server. */
+export interface BalanceCheckCtx { today: string; finYearStart: string; leftIn: (year: LeaveYearSpan) => number | null }
+export function balanceCheck(shape: Pick<LeaveShape, 'from' | 'to' | 'days' | 'hours'>, ctx: BalanceCheckCtx): { ok: true; hint: string } | { ok: false; problem: LeaveRefusal } {
+  const current = leaveYear(ctx.today, ctx.finYearStart).start, hints: string[] = [];
+  for (const s of yearShares(shape, shape, ctx.finYearStart)) {
+    const left = ctx.leftIn(s.year);
+    if (left === null) continue;
+    const named = s.year.start === current ? undefined : s.year.label;
+    if (s.days > left)
+      return { ok: false, problem: { code: 'OVER_BALANCE', message: moreThanLeft(left, named), next: 'Ask for fewer days, or talk to your manager.', field: 'to' } };
+    hints.push(wouldRemain(left, s.days, named));
+  }
+  return { ok: true, hint: hints.join(' ') };
+}
 /* lv-send, server side (D2): a known active type, the shape, and the annual
-   leave balance while automatic entitlement is on. `leftD` already holds back
-   every other waiting request. */
-export function requestProblem(input: RequestInput, ctx: { types: readonly LeaveType[]; contractedHours: number; checkBalance: boolean; leftD: number }):
+   leave balance while automatic entitlement is on. What `leftIn` returns
+   already holds back every other waiting request in that year. */
+export function requestProblem(input: RequestInput, ctx: BalanceCheckCtx & { types: readonly LeaveType[]; contractedHours: number; checkBalance: boolean }):
   { ok: true; shape: LeaveShape; hint: string } | { ok: false; problem: LeaveRefusal } {
   const t = leaveTypeBy(ctx.types, input.type);
   if (!t?.active) return { ok: false, problem: { code: 'VALIDATION', message: CHOOSE_TYPE, next: 'Pick one of the leave types offered.', field: 'type' } };
@@ -257,9 +289,8 @@ export function requestProblem(input: RequestInput, ctx: { types: readonly Leave
   const s = leaveShape(input, t.unit, ctx.contractedHours);
   if (!s.ok) return { ok: false, problem: { code: 'VALIDATION', message: s.message, next: 'Correct the dates and send it again.', field: s.field } };
   if (t.code === 'AL' && ctx.checkBalance) {
-    if (s.shape.days > ctx.leftD)
-      return { ok: false, problem: { code: 'OVER_BALANCE', message: moreThanLeft(ctx.leftD), next: 'Ask for fewer days, or talk to your manager.', field: 'to' } };
-    return { ok: true, shape: s.shape, hint: wouldRemain(ctx.leftD, s.shape.days) };
+    const b = balanceCheck(s.shape, ctx);
+    return b.ok ? { ok: true, shape: s.shape, hint: b.hint } : b;
   }
   return { ok: true, shape: s.shape, hint: s.shape.note };
 }
@@ -295,13 +326,17 @@ export interface Balance { ent: Entitlement; unit: BalanceUnit; takenD: number; 
   toil: number; toilPending: number; toilLeft: number; toilBy: string }
 const sum = (xs: readonly number[]) => xs.reduce((a, b) => a + b, 0);
 /* balance: entitlement less what is taken and what is waiting. Annual leave
-   draws on it; TOIL draws on the TOIL bank, in hours. Only this leave year's
-   requests count. */
+   draws on it; TOIL draws on the TOIL bank, in hours. Only the days of each
+   request that fall in the leave year count (`year`, this one by default). */
 export function balanceOf(o: { ent: Entitlement; base: LeaveBase; contractedHours: number; requests: readonly LeaveRecord[]; ledger: readonly LedgerRow[];
-  today: string; finYearStart: string }): Balance {
-  const yr = leaveYear(o.today, o.finYearStart), day = dailyHours(o.contractedHours);
-  const mine = o.requests.filter(r => inYear(r.from, yr));
-  const al = (state: string) => mine.filter(r => r.type === 'AL' && r.state === state).map(r => requestDays(r, o.contractedHours));
+  today: string; finYearStart: string; year?: LeaveYearSpan }): Balance {
+  const yr = o.year ?? leaveYear(o.today, o.finYearStart), day = dailyHours(o.contractedHours);
+  const shareIn = (r: LeaveRecord) => yearShares(r, requestDays(r, o.contractedHours), o.finYearStart).find(s => s.year.start === yr.start);
+  const shares = (type: string, state: string) => o.requests.filter(r => r.type === type && r.state === state).flatMap(r => {
+    const s = shareIn(r);
+    return s ? [s] : [];
+  });
+  const al = (state: string) => shares('AL', state);
   const back = o.ledger.filter(l => l.counts && inYear(l.date, yr)).map(l => (l.unit === 'hours' ? { days: l.qty / day, hours: l.qty } : { days: l.qty, hours: l.qty * day }));
   const approved = al('approved'), waiting = al('pending');
   let takenD: number, takenH: number;
@@ -313,10 +348,22 @@ export function balanceOf(o: { ent: Entitlement; base: LeaveBase; contractedHour
     takenH = round2(takenD * day);
   }
   const pending = round2(sum(waiting.map(x => x.days))), pendingH = round2(sum(waiting.map(x => x.hours)));
-  const toilHours = (state: string) => sum(mine.filter(r => r.type === 'TOIL' && r.state === state).map(r => requestDays(r, o.contractedHours).hours));
+  const toilHours = (state: string) => sum(shares('TOIL', state).map(s => s.hours));
   const toil = round2(o.base.toil - toilHours('approved')), toilPending = round2(toilHours('pending'));
   return { ent: o.ent, unit: o.base.unit, takenD, takenH, pending, pendingH, leftD: round1(o.ent.days - takenD - pending),
     leftH: round2(o.ent.hours - takenH - pendingH), toil, toilPending, toilLeft: round2(toil - toilPending), toilBy: o.base.toilBy };
+}
+/* The balance of one leave year (review I2). This year's is entitlement at
+   the clock less the seeded base and this year's requests. Another year's
+   takes the same policy and contracted hours with service counted to that
+   year's start, nothing taken before it and no carry-over (LV-17 is out of
+   scope). */
+export interface YearBalanceInput { facts: PersonLeaveFacts; policy: LeavePolicy; base: LeaveBase; requests: readonly LeaveRecord[]; ledger: readonly LedgerRow[];
+  today: string; finYearStart: string }
+export function yearBalance(o: YearBalanceInput, year: LeaveYearSpan): Balance {
+  const current = inYear(o.today, year);
+  return balanceOf({ ent: entitlement(o.facts, o.policy, current ? o.today : year.start), base: current ? o.base : { ...o.base, taken: 0 },
+    contractedHours: o.facts.contractedHours, requests: o.requests, ledger: o.ledger, today: o.today, finYearStart: o.finYearStart, year });
 }
 /* What a balance reads as: "13.5 of 25 days left", or hours for a bank worker. */
 export const balanceText = (b: Balance) => (b.unit === 'hours' ? `${b.leftH} of ${b.ent.hours.toFixed(1)} hours left` : `${b.leftD} of ${b.ent.days} days left`);

@@ -75,6 +75,8 @@ export const LeaveFacts = z.object({ contractedHours: z.number(), start: DateOrB
 export const MyLeave = z.object({
   person: z.object({ code: z.string(), name: z.string(), manager: z.string(), employeeType: z.string() }),
   today: IsoDate, year: LeaveYear, entitlement: EntitlementView, balance: BalanceView, facts: LeaveFacts,
+  /* the next leave year and the annual leave days left in it, so the request form checks leave booked there against that year */
+  nextYear: LeaveYear.extend({ leftD: z.number() }),
   /* "13.5 days to take by 31/03/2027 · 6 hours TOIL expires 30/09/2026", or '' with nothing left */
   daysToTake: z.string(),
   types: z.array(LeaveTypeOption),

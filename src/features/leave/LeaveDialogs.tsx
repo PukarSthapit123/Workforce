@@ -3,7 +3,7 @@ import { tid } from '@/testids';
 import { Banner, Button, Fact, Field, FieldGrid, FormWarn, GroupLabel, Modal, SelectBox, Small, TextInput, toastInfo } from '@/ui';
 import { useRequestLeave, type MyLeave } from '@/api/leave';
 import {
-  CHOOSE_TYPE, LEAVE_PARTS, PART_LABEL, SIMULATION_NOTE, isLeavePart, leaveShape, leaveWritesRota, moreThanLeft, proRataSimulation, wouldRemain,
+  CHOOSE_TYPE, LEAVE_PARTS, PART_LABEL, SIMULATION_NOTE, balanceCheck, isLeavePart, leaveShape, leaveWritesRota, proRataSimulation,
   type LeavePart,
 } from '@/domain/leave';
 import { addDays } from '@/domain/time';
@@ -27,9 +27,12 @@ function recalc(m: MyLeave, input: { type: string; from: string; to: string; par
   if (!t) return { qty: '—', msg: CHOOSE_TYPE, bad: true };
   const s = leaveShape(input, t.unit, m.facts.contractedHours);
   if (!s.ok) return { qty: '—', msg: s.message, bad: true };
-  const { days, label, note } = s.shape;
+  const { label, note } = s.shape;
   if (t.code === 'AL' && m.rules.entitlement) {
-    return days > m.balance.leftD ? { qty: label, msg: moreThanLeft(m.balance.leftD), bad: true } : { qty: label, msg: wouldRemain(m.balance.leftD, days), bad: false };
+    /* each leave year the dates touch is checked against that year: this one and the next are known here, a later one is left to the server */
+    const finYearStart = `${m.year.start.slice(8)}/${m.year.start.slice(5, 7)}`;
+    const b = balanceCheck(s.shape, { today: m.today, finYearStart, leftIn: y => (y.start === m.year.start ? m.balance.leftD : y.start === m.nextYear.start ? m.nextYear.leftD : null) });
+    return b.ok ? { qty: label, msg: b.hint, bad: false } : { qty: label, msg: b.problem.message, bad: true };
   }
   return { qty: label, msg: note, bad: false };
 }
