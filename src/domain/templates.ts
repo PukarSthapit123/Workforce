@@ -1,0 +1,516 @@
+/* Templates. Ported from the prototype (qnipay-workforce-v15.html: TEMPLATES
+   2563-2793, TPL_SCOPES and captureTemplate 4565-4623, applyTemplate
+   2931-3012, and the tpl-save, tpl-export, tpl-delete and tpl-import cases
+   11979-12030). A template is data: what a tenant has decided, which can
+   start another tenant already configured.
+
+   Where the prototype and the brief part company, the brief wins:
+   - D1: applying one sets configuration (modules, features with their
+     extras, labels, the capture layout, employee types and role names) and
+     adds structure records whose codes are new. It never deletes or
+     overwrites people or structure already here, and never renames the
+     organisation. The prototype replaced the master data and reset the
+     company; here those are left alone and the plan says so.
+   - D2: two capture scopes. The prototype's third ("everything, including
+     people") is not offered.
+   - D3: no money. No currency, pay-code values, allowance amounts, rates or
+     pay rules: the prototype's company, tweaks.rules, tweaks.allow, payCodes
+     and budget hours are left out of the shipped data, and an imported file
+     that carries them has them listed as ignored.
+   - Approval chains have no store yet (sub-project 1c group 5 builds one), so
+     a template carries its chain and an apply says it is not applied.
+
+   Every function is pure: the tenant comes in as arguments, so the server
+   refuses with exactly what the screen shows. Copy is the prototype's, with
+   each "·" aside rewritten as its own sentence. */
+import {
+  FLAGS, FLAG_EXTRAS, MODULES, SWITCH_CODES, WEEK_GRIDS, WEEK_LAYOUTS, flagBy, moduleLive, roleNameProblem, subName,
+  switchFlag, switchModule, type FlagChange, type FlagExtras, type ModuleState, type Refusal,
+} from './modules';
+
+/* ------------------------------------------------------------- shapes */
+export type TemplateScope = 'config' | 'structure';
+export type RoleKey = 'employee' | 'manager' | 'admin';
+export const ROLE_KEYS: readonly RoleKey[] = ['employee', 'manager', 'admin'];
+export interface TemplateType {
+  code: string; name: string; category: 'Contracted' | 'Bank' | 'Agency' | 'Salaried'; mode: 'form' | 'grid' | 'clock'; uom: 'hour' | 'day';
+  capabilities: ('vehicle' | 'site' | 'project' | 'shift')[];
+}
+/* One stage of an approval chain, as the prototype's APPROVAL_CHAIN rows. */
+export interface ChainStep { module: string; role: string; scope: string; when: string; sla: string; fixed: boolean }
+export interface TemplateLocation {
+  code: string; name: string; area: string; department: string; costCentre: string; level: string; minPerShift: number; manager: string; address: string; active: boolean;
+}
+export interface TemplateDepartment { code: string; name: string; manager: string }
+export interface TemplateCostCentre { code: string; name: string }
+export interface TemplateJobProfile { code: string; name: string; night: boolean }
+export interface TemplateTask { name: string; group: string; billable: boolean }
+/* A project, which the prototype's templates call a contract. No budget: hours
+   booked against it belong to the tenant, not to a template. */
+export interface TemplateContract {
+  code: string; name: string; client: string; costCentre: string; manager: string; status: string; start: string; end: string;
+  billable: boolean; location: string; tasks: TemplateTask[];
+}
+export interface TemplateStructure {
+  departments: TemplateDepartment[]; costCentres: TemplateCostCentre[]; locations: TemplateLocation[];
+  jobProfiles: TemplateJobProfile[]; contracts: TemplateContract[];
+}
+export type StructureKind = keyof TemplateStructure;
+/* In the order they are added, so a location finds its department and cost
+   centre, and a contract its cost centre and location. */
+export const STRUCTURE_KINDS: readonly StructureKind[] = ['departments', 'costCentres', 'locations', 'jobProfiles', 'contracts'];
+export const STRUCTURE_LABEL: Readonly<Record<StructureKind, { many: string; one: string }>> = {
+  departments: { many: 'Departments', one: 'department' }, costCentres: { many: 'Cost centres', one: 'cost centre' },
+  locations: { many: 'Locations', one: 'location' }, jobProfiles: { many: 'Job profiles', one: 'job profile' },
+  contracts: { many: 'Contracts', one: 'contract' },
+};
+export interface Template {
+  name: string; description: string; scope: TemplateScope;
+  /* every switch: Workforce core, Timesheet and its capabilities, Rota, Leave, Onboarding */
+  modules: Record<string, boolean>;
+  flags: Record<string, boolean>;
+  /* the settings that hang off a feature (D6); the weekly grid's are the capture layout */
+  extras: Partial<FlagExtras>;
+  /* field code to the label this tenant reads it by */
+  labels: Record<string, string>;
+  employeeTypes: TemplateType[];
+  roleNames?: Record<RoleKey, string>;
+  approvalChain?: ChainStep[];
+  structure?: Partial<TemplateStructure>;
+}
+
+export const TEMPLATE_SCOPES: readonly { key: TemplateScope; label: string; note: string }[] = [
+  { key: 'config', label: 'Configuration only',
+    note: 'Modules, features, employee types, labels, the capture layout, the approval chain and role names. Nothing about this organisation’s structure or people.' },
+  { key: 'structure', label: 'Configuration and structure',
+    note: 'The above, plus locations, departments, cost centres, job profiles and contracts. Never its people.' },
+];
+export const scopeLabel = (s: TemplateScope) => TEMPLATE_SCOPES.find(x => x.key === s)?.label ?? s;
+
+/* ------------------------------------------------------ shipped templates */
+type Bit = 0 | 1;
+/* A template's switches from the prototype's capability map: Timesheet is
+   licensed when it gives any capability (buildConfig), Workforce core always. */
+function switches(m: { A: Bit; B: Bit; C: Bit; R: Bit; L: Bit; ON: Bit }): Record<string, boolean> {
+  return { CORE: true, TS: Boolean(m.A || m.B || m.C), A: Boolean(m.A), B: Boolean(m.B), C: Boolean(m.C), R: Boolean(m.R), L: Boolean(m.L), ON: Boolean(m.ON) };
+}
+const bools = (o: Record<string, Bit>) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, v === 1]));
+const ONB: Record<string, Bit> = { ONB_RTW: 1, ONB_CONV: 1, ONB_WTD: 1, ONB_QUAL: 1, ONB_POL: 1, ONB_SIGN: 1, ONB_VERIFY: 1, ONB_PORTAL: 1 };
+const type = (code: string, name: string, category: TemplateType['category'], mode: TemplateType['mode'], uom: TemplateType['uom'],
+  capabilities: TemplateType['capabilities']): TemplateType => ({ code, name, category, mode, uom, capabilities });
+/* dd/mm/yyyy, as the prototype writes a date, to ISO */
+const iso = (dmy: string) => { const [d = '', m = '', y = ''] = dmy.split('/'); return dmy ? `${y}-${m}-${d}` : ''; };
+const contract = (code: string, name: string, client: string, costCentre: string, manager: string, status: string, start: string, end: string,
+  billable: boolean, task: TemplateTask): TemplateContract =>
+  /* the prototype points these at sites (SPC, BRD, SQY) it never defines, so they carry no location */
+  ({ code, name, client, costCentre, manager, status, start: iso(start), end: iso(end), billable, location: '', tasks: [task] });
+
+export const SHIPPED_TEMPLATES: Readonly<Record<string, Template>> = {
+  /* QCIC / Dogma: professional services on Business Central Projects. Its
+     8 projects and 85 tasks are the tenant's own export and are seeded with
+     the qnipay tenant rather than carried here. */
+  qcic: {
+    name: 'Professional Services — Projects', scope: 'structure',
+    description: 'Consultants booking time to projects and project tasks, with resources mapped to Business Central. Weekly capture, no rota.',
+    modules: switches({ A: 1, B: 0, C: 1, R: 0, L: 1, ON: 1 }),
+    flags: bools({ ...ONB, AUTO_OT: 0, LATE_FINISH: 0, UNSOCIAL: 0, EMAIL_APPROVAL: 1, SHOW_PAY: 0, VEHICLE: 0, PROJECT: 1, SHIFT: 0,
+      BREAKS: 1, DOCS: 1, NOTICES: 1, SELF_EDIT: 1, DAILY: 1, WEEKLY: 1, MULTIWEEK: 1, GPS: 0, GEOFENCE: 0, PATTERNS: 0, MINSTAFF: 0, FULFIL: 0,
+      SAFEWORKER: 0, FLEXMON: 0, ITACCESS: 0, RESTRULE: 1, PREFS: 0, LV_ENT: 1, LV_PRORATA: 1, LV_LEAVER: 1, LV_SLA: 1, LV_ROTA: 0, LV_TOIL: 1 }),
+    extras: { weekGrid: 'times', weekLayout: 'classic' },
+    labels: { project: 'Project', job_task: 'Project task', cost_c: 'Cost centre', site: 'Office' },
+    employeeTypes: [type('salaried', 'Project Manager', 'Salaried', 'form', 'day', ['project']), type('hourly', 'Consultant', 'Contracted', 'grid', 'hour', ['project'])],
+    structure: {
+      locations: [
+        { code: 'MCR', name: 'Manchester', area: 'North West', department: 'DEL', costCentre: 'CC-100', level: 'Floating', minPerShift: 1, manager: 'Manish Nepal', address: '', active: true },
+        { code: 'REM', name: 'Remote', area: '', department: 'DEL', costCentre: 'CC-100', level: 'Floating', minPerShift: 1, manager: 'Manish Nepal', address: '', active: true }],
+      departments: [{ code: 'DEL', name: 'Delivery', manager: 'Manish Nepal' }, { code: 'ADM', name: 'Administration', manager: 'Manish Nepal' }],
+      costCentres: [{ code: 'CC-100', name: 'Delivery — Billable' }, { code: 'CC-900', name: 'Internal — Overhead' }],
+      jobProfiles: [{ code: 'CONS', name: 'Consultant', night: false }, { code: 'SCONS', name: 'Senior Consultant', night: false },
+        { code: 'PM', name: 'Project Manager', night: false }, { code: 'ADM', name: 'Administrator', night: false }],
+    },
+  },
+  /* Fusion III Ltd: M&E contracting. Two-level approval, contract-level
+     booking, no rota. Their six rates are pay rules and stay in Business
+     Central (D3). */
+  mne: {
+    name: 'M&E / Building Services', scope: 'structure',
+    description: 'Site engineers on contracts, with travel and overtime that follow the day and the hour. Time books to the contract, not to individual tasks.',
+    modules: switches({ A: 1, B: 1, C: 1, R: 0, L: 1, ON: 1 }),
+    flags: bools({ ...ONB, AUTO_OT: 1, LATE_FINISH: 0, UNSOCIAL: 0, EMAIL_APPROVAL: 1, SHOW_PAY: 0, VEHICLE: 1, PROJECT: 1, SHIFT: 0,
+      BREAKS: 1, DOCS: 1, NOTICES: 1, SELF_EDIT: 1, DAILY: 1, WEEKLY: 1, MULTIWEEK: 1, GPS: 0, GEOFENCE: 0, PATTERNS: 0, MINSTAFF: 0, FULFIL: 0,
+      SAFEWORKER: 0, FLEXMON: 0, ITACCESS: 0, RESTRULE: 1, PREFS: 0, LV_ENT: 0, LV_PRORATA: 0, LV_LEAVER: 0, LV_SLA: 0, LV_ROTA: 0, LV_TOIL: 0 }),
+    extras: { weekGrid: 'times', weekLayout: 'grid' },
+    /* their language: a contract, not a project */
+    labels: { project: 'Contract', job_task: 'Cost code', cost_c: 'Cost centre', site: 'Site', travel: 'Travel time' },
+    employeeTypes: [
+      type('driver', 'Site Engineer', 'Contracted', 'clock', 'hour', ['vehicle', 'project', 'site']),
+      type('salaried', 'Contracts Manager', 'Salaried', 'form', 'day', ['project']),
+      type('hourly', 'Office / Admin', 'Contracted', 'grid', 'hour', ['project'])],
+    /* two stages before anything reaches Business Central, and stage 2 applies to every timesheet */
+    approvalChain: [
+      { module: 'Timesheet', role: 'Line manager', scope: 'All departments', when: 'Every timesheet', sla: '24 hours', fixed: false },
+      { module: 'Timesheet', role: 'Payroll', scope: 'All departments', when: 'Every timesheet', sla: '48 hours', fixed: false },
+      { module: 'Timesheet', role: 'Business Central', scope: '', when: 'Posts on final approval', sla: '', fixed: true },
+      { module: 'Profile', role: 'Line manager', scope: 'All departments', when: 'Every contact detail change', sla: '3 days', fixed: false },
+      { module: 'Leave', role: 'Line manager', scope: 'All departments', when: 'Every leave request', sla: '5 days', fixed: false }],
+    structure: {
+      costCentres: [{ code: 'CC-100', name: 'Contracting — Fit-out' }, { code: 'CC-110', name: 'Contracting — Plant & Mechanical' },
+        { code: 'CC-120', name: 'Reactive & Maintenance' }, { code: 'CC-900', name: 'Overhead — Internal' }],
+      jobProfiles: [{ code: 'ENG', name: 'Site Engineer', night: true }, { code: 'SENG', name: 'Senior Engineer', night: true },
+        { code: 'CM', name: 'Contracts Manager', night: false }, { code: 'PAY', name: 'Payroll', night: false }, { code: 'ADM', name: 'Administrator', night: false }],
+      /* one task per contract, named as the income cost code: Business Central will not take a job journal line with a blank task */
+      contracts: [
+        contract('CON-2451', 'Spinnaker Court M&E Fit-out', 'Manchester Waterside Ltd', 'CC-100', 'Ben Lester', 'Active', '06/01/2026', '19/12/2026', true, { name: '4010 · Labour', group: 'Labour', billable: true }),
+        contract('CON-2478', 'Broadway Retail — Electrical 2nd Fix', 'Broadway Estates', 'CC-100', 'Ben Lester', 'Active', '02/03/2026', '30/10/2026', true, { name: '4010 · Labour', group: 'Labour', billable: true }),
+        contract('CON-2503', 'Salford Quays Plant Room Upgrade', 'Peel L&P', 'CC-110', 'Jack Manifold', 'Active', '11/05/2026', '26/02/2027', true, { name: '4010 · Labour', group: 'Labour', billable: true }),
+        contract('CON-2199', 'Reactive / Call-out', 'Various', 'CC-120', 'Jack Manifold', 'Always open', '01/01/2026', '', true, { name: '4020 · Reactive labour', group: 'Labour', billable: true }),
+        contract('CON-0001', 'Internal — Training, Yard, Vehicle checks', '', 'CC-900', 'Jack Manifold', 'Always open', '01/01/2026', '', false, { name: '8010 · Internal time', group: 'Overhead', billable: false })],
+    },
+  },
+  /* Brightpath Support Services: rota-based support work across services. */
+  social: {
+    name: 'Social Care & Charity', scope: 'config',
+    description: 'Rota-based support work across services. Sleep-ins, waking nights, on-call standby and time charged to the funder that pays for it.',
+    modules: switches({ A: 1, B: 1, C: 1, R: 1, L: 1, ON: 1 }),
+    flags: bools({ ...ONB, AUTO_OT: 1, LATE_FINISH: 0, UNSOCIAL: 1, EMAIL_APPROVAL: 1, SHOW_PAY: 0, VEHICLE: 0, PROJECT: 1, SHIFT: 1,
+      BREAKS: 1, DOCS: 1, NOTICES: 1, SELF_EDIT: 1, DAILY: 1, WEEKLY: 1, MULTIWEEK: 0, GPS: 0, GEOFENCE: 0, PATTERNS: 1, MINSTAFF: 1, FULFIL: 1,
+      SAFEWORKER: 1, FLEXMON: 1, ITACCESS: 1, RESTRULE: 1, PREFS: 1, LV_ENT: 1, LV_PRORATA: 1, LV_LEAVER: 1, LV_SLA: 1, LV_ROTA: 1, LV_TOIL: 1 }),
+    extras: { weekGrid: 'times', weekLayout: 'classic' },
+    labels: { site: 'Service', shift_code: 'Rota line', project: 'Funded programme', job_task: 'Activity', cost_c: 'Fund / grant code', travel: 'Travel between services' },
+    employeeTypes: [
+      type('shift', 'Support Worker', 'Contracted', 'clock', 'hour', ['shift', 'site', 'project']),
+      type('casual', 'Relief / Bank Worker', 'Bank', 'clock', 'hour', ['shift', 'site']),
+      type('salaried', 'Service Manager', 'Salaried', 'grid', 'day', ['project'])],
+  },
+};
+export const SHIPPED_KEYS = Object.keys(SHIPPED_TEMPLATES);
+export const isShipped = (key: string) => Object.hasOwn(SHIPPED_TEMPLATES, key);
+export const shippedTemplate = (key: string): Template | undefined => (isShipped(key) ? SHIPPED_TEMPLATES[key] : undefined);
+
+/* What a template card lists: its employee types, then the modules it turns on. */
+export function templateSummary(t: Template): { types: string[]; modules: string[] } {
+  return { types: t.employeeTypes.map(x => x.name), modules: MODULES.filter(m => moduleLive(t.modules, m)).map(m => m.name) };
+}
+
+/* -------------------------------------------------------------- refusals */
+export const TEMPLATE_NAME_MAX = 80;
+export const TEMPLATE_NAME_REQUIRED = 'A template needs a name.';
+export const TEMPLATE_NAME_SHIPPED = 'That name matches a template that ships with the app. Choose another.';
+export const NOT_A_TEMPLATE: Refusal = { status: 422, code: 'NOT_A_TEMPLATE', message: 'That file is not a Qnipay template.',
+  next: 'Choose a file that Qnipay exported as a template.' };
+export const UNREADABLE: Refusal = { status: 422, code: 'UNREADABLE', message: 'That file could not be read.',
+  next: 'Check it is the JSON file Qnipay exported, then try again.' };
+export const NO_SUCH_TEMPLATE: Refusal = { status: 404, code: 'not-found', message: 'That template no longer exists.', next: 'Reload the page.' };
+export const SHIPPED_REMOVE: Refusal = { status: 409, code: 'SHIPPED', message: 'A template that ships with the app cannot be removed.',
+  next: 'Remove a template saved here instead.' };
+export const IN_USE: Refusal = { status: 409, code: 'IN_USE', message: 'This tenant is running on that template.', next: 'Switch to another first.' };
+const nameTaken = (name: string): Refusal => ({ status: 409, code: 'NAME_TAKEN', field: 'name',
+  message: `A template called ${name} is already here. Nothing is replaced.`, next: 'Choose another name, or remove the one here first.' });
+
+/* tpl_ and the name in lower case, every run of anything else an underscore. */
+export const templateKey = (name: string) => `tpl_${name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')}`;
+const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+
+/* tpl-save's checks, and D4's: a name is needed, cannot be a shipped
+   template's, and cannot be one already saved here (the prototype replaced
+   it silently; here nothing is ever replaced). `saved` is every saved
+   template's name. */
+export function templateNameProblem(name: string, saved: readonly string[]): Refusal | null {
+  const v = name.trim();
+  if (!v) return { status: 422, code: 'invalid', field: 'name', message: TEMPLATE_NAME_REQUIRED, next: 'Give it a name, then save.' };
+  if (v.length > TEMPLATE_NAME_MAX) return { status: 422, code: 'invalid', field: 'name', message: `A template name can be at most ${TEMPLATE_NAME_MAX} characters.`, next: 'Shorten the name, then save.' };
+  const key = templateKey(v);
+  if (Object.entries(SHIPPED_TEMPLATES).some(([k, t]) => same(t.name, v) || same(k, v) || templateKey(t.name) === key))
+    return { status: 409, code: 'NAME_TAKEN', field: 'name', message: TEMPLATE_NAME_SHIPPED, next: 'Choose another name.' };
+  if (saved.some(s => same(s, v) || templateKey(s) === key)) return nameTaken(v);
+  return null;
+}
+
+/* tpl-delete: a shipped template stays, and so does the one this tenant runs on. */
+export function removeProblem(key: string, exists: boolean, inUse: string): Refusal | null {
+  if (isShipped(key)) return SHIPPED_REMOVE;
+  if (!exists) return NO_SUCH_TEMPLATE;
+  if (key === inUse) return IN_USE;
+  return null;
+}
+
+/* ---------------------------------------------------------------- capture */
+export interface CaptureSource {
+  modules: Readonly<Record<string, boolean>>; flags: Readonly<Record<string, boolean>>; extras: FlagExtras;
+  labels: Readonly<Record<string, string>>; defaultLabels: Readonly<Record<string, string>>;
+  employeeTypes: readonly TemplateType[]; roleNames: Record<RoleKey, string>;
+  structure: TemplateStructure;
+}
+/* captureTemplate: what the tenant has decided, not what it contains. Labels
+   are kept where they differ from the field's own name. The structure scope
+   adds the five dimensions; people are never kept (D2). */
+export function captureTemplate(name: string, description: string, scope: TemplateScope, src: CaptureSource): Template {
+  const t: Template = {
+    name: name.trim(), description: description.trim(), scope,
+    modules: Object.fromEntries(SWITCH_CODES.map(c => [c, src.modules[c] === true])),
+    flags: Object.fromEntries(FLAGS.map(f => [f.code, src.flags[f.code] === true])),
+    extras: { ...src.extras },
+    labels: Object.fromEntries(Object.entries(src.labels).filter(([c, l]) => l !== src.defaultLabels[c])),
+    employeeTypes: src.employeeTypes.map(x => ({ code: x.code, name: x.name, category: x.category, mode: x.mode, uom: x.uom, capabilities: [...x.capabilities] })),
+    roleNames: { ...src.roleNames },
+  };
+  if (scope === 'structure') t.structure = structuredClone(src.structure);
+  return t;
+}
+
+/* ------------------------------------------------------------- the file */
+export interface TemplateFile { kind: 'qnipay.template'; v: 1; key: string; template: Template }
+export const templateFile = (key: string, template: Template): TemplateFile => ({ kind: 'qnipay.template', v: 1, key, template });
+export const templateFileName = (key: string) => `qnipay-template-${key}.json`;
+
+/* The keys a template may hold, at each level. Anything else in a file is
+   left out and listed (D3): the prototype's company details, pay codes, pay
+   rules, allowances and roster among them. */
+const TOP = ['name', 'description', 'scope', 'modules', 'flags', 'extras', 'labels', 'employeeTypes', 'roleNames', 'approvalChain', 'structure'];
+const EXTRA_KEYS = ['weekGrid', 'weekLayout', 'breaksMax', 'vehiclesMax'];
+const ROW_KEYS: Record<string, readonly string[]> = {
+  employeeTypes: ['code', 'name', 'category', 'mode', 'uom', 'capabilities'],
+  approvalChain: ['module', 'role', 'scope', 'when', 'sla', 'fixed'],
+  departments: ['code', 'name', 'manager'], costCentres: ['code', 'name'], jobProfiles: ['code', 'name', 'night'],
+  locations: ['code', 'name', 'area', 'department', 'costCentre', 'level', 'minPerShift', 'manager', 'address', 'active'],
+  contracts: ['code', 'name', 'client', 'costCentre', 'manager', 'status', 'start', 'end', 'billable', 'location', 'tasks'],
+  tasks: ['name', 'group', 'billable'],
+};
+const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
+
+export type FileRead = { ok: false; refusal: Refusal } | { ok: true; template: Record<string, unknown>; ignored: string[] };
+/* tpl-import, before the shape is checked: the text must be JSON, must say it
+   is a Qnipay template, and keeps only what a template may hold. The
+   structure goes when the template says it keeps configuration only. */
+export function readTemplateFile(text: string): FileRead {
+  let o: unknown;
+  try { o = JSON.parse(text); } catch { return { ok: false, refusal: UNREADABLE }; }
+  if (!isObj(o) || o.kind !== 'qnipay.template' || !isObj(o.template)) return { ok: false, refusal: NOT_A_TEMPLATE };
+  const ignored = new Set<string>();
+  const keep = (obj: Record<string, unknown>, allowed: readonly string[], path: string) =>
+    Object.fromEntries(Object.entries(obj).filter(([k]) => {
+      if (allowed.includes(k)) return true;
+      ignored.add(path ? `${path}.${k}` : k);
+      return false;
+    }));
+  const rows = (v: unknown, kind: string, path: string) => (Array.isArray(v)
+    ? v.map(r => {
+      if (!isObj(r)) return r;
+      const row = keep(r, ROW_KEYS[kind] ?? [], path);
+      if (kind === 'contracts' && Array.isArray(row.tasks)) row.tasks = rows(row.tasks, 'tasks', `${path}.tasks`);
+      return row;
+    })
+    : v);
+  const t = keep(o.template, TOP, '');
+  if (isObj(t.modules)) t.modules = keep(t.modules, SWITCH_CODES, 'modules');
+  if (isObj(t.flags)) t.flags = keep(t.flags, FLAGS.map(f => f.code), 'flags');
+  if (isObj(t.extras)) t.extras = keep(t.extras, EXTRA_KEYS, 'extras');
+  if (isObj(t.roleNames)) t.roleNames = keep(t.roleNames, ROLE_KEYS, 'roleNames');
+  if ('employeeTypes' in t) t.employeeTypes = rows(t.employeeTypes, 'employeeTypes', 'employeeTypes');
+  if ('approvalChain' in t) t.approvalChain = rows(t.approvalChain, 'approvalChain', 'approvalChain');
+  if (isObj(t.structure)) {
+    if (t.scope !== 'structure') { ignored.add('structure'); delete t.structure; }
+    else {
+      const s = keep(t.structure, STRUCTURE_KINDS, 'structure');
+      for (const k of STRUCTURE_KINDS) if (k in s) s[k] = rows(s[k], k, `structure.${k}`);
+      t.structure = s;
+    }
+  }
+  return { ok: true, template: t, ignored: [...ignored].sort() };
+}
+/* A file's role names, checked together as the Rename roles dialog checks them. */
+export function roleNamesProblem(names: Readonly<Record<RoleKey, string>>): string | null {
+  for (const [i, k] of ROLE_KEYS.entries()) {
+    const p = roleNameProblem(names[k], ROLE_KEYS.slice(0, i).map(o => names[o]));
+    if (p) return p.message;
+  }
+  return null;
+}
+
+/* ------------------------------------------------------------ the plan */
+export interface TenantState {
+  name: string; people: number;
+  modules: Readonly<Record<string, boolean>>; restore: Readonly<Record<string, string[]>>; flags: Readonly<Record<string, boolean>>;
+  extras: FlagExtras;
+  /* field code to the label it reads by now; a field not here is not on this tenant */
+  labels: Readonly<Record<string, string>>;
+  employeeTypes: readonly TemplateType[];
+  roleNames: Record<RoleKey, string>;
+  /* the codes already held, per kind */
+  structure: Readonly<Record<StructureKind, readonly string[]>>;
+}
+export type PlanArea = 'modules' | 'features' | 'labels' | 'types' | 'roles' | 'chain' | 'structure' | 'people' | 'organisation';
+export interface PlanLine { area: PlanArea; text: string }
+export interface ApplySteps {
+  /* module switches in the order they run, and where they leave the tenant */
+  modules: { code: string; on: boolean }[]; finalModules: Record<string, boolean>; finalRestore: Record<string, string[]>;
+  /* feature switches and extras, each one switchFlag accepts against the final modules */
+  flags: { code: string; change: FlagChange }[];
+  labels: Record<string, string>;
+  typesAdded: TemplateType[]; typesUpdated: { code: string; change: Partial<Omit<TemplateType, 'code'>> }[];
+  roleNames: Partial<Record<RoleKey, string>>;
+  structure: TemplateStructure;
+}
+export interface ApplyPlan { changes: PlanLine[]; added: PlanLine[]; leftAlone: PlanLine[]; steps: ApplySteps }
+
+const list = (xs: readonly string[]) => xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1] ?? ''}`;
+const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+const TYPE_FIELDS = ['name', 'category', 'mode', 'uom', 'capabilities'] as const;
+const TYPE_FIELD_WORD: Record<(typeof TYPE_FIELDS)[number], string> = { name: 'name', category: 'category', mode: 'entry mode', uom: 'pay basis', capabilities: 'capabilities' };
+const sameSet = (a: readonly string[], b: readonly string[]) => a.length === b.length && a.every(x => b.includes(x));
+const gridWords = (k: string) => WEEK_GRIDS.find(([v]) => v === k)?.[1] ?? k;
+const layoutWords = (k: string) => (WEEK_LAYOUTS.find(([v]) => v === k)?.[1] ?? k).split(' · ')[0] ?? k;
+
+/* whether the template says anything about this switch */
+const says = (t: Template, code: string) => Object.hasOwn(t.modules, code);
+/* Module switches in an order switchModule accepts: the plain modules, then
+   Timesheet, then (while Timesheet is on) its capabilities. */
+function moduleSteps(t: Template, s: TenantState) {
+  let st: ModuleState = { modules: { ...s.modules }, restore: { ...s.restore } };
+  const steps: { code: string; on: boolean }[] = [];
+  const run = (code: string, on: boolean) => {
+    const r = switchModule(st, code, on);
+    if (r.ok && r.changed) { st = { modules: r.modules, restore: r.restore }; steps.push({ code, on }); }
+  };
+  const target = (c: string) => t.modules[c] === true;
+  for (const m of MODULES) if (!m.locked && !m.master && says(t, m.code)) run(m.code, target(m.code));
+  const ts = MODULES.find(m => m.master);
+  if (ts && says(t, ts.code)) {
+    if (target(ts.code)) {
+      run(ts.code, true);
+      for (const sub of ts.subs ?? []) if (says(t, sub)) run(sub, target(sub));
+    } else run(ts.code, false);
+  }
+  return { steps, modules: st.modules, restore: st.restore };
+}
+
+/* applyTemplate, as D1 has it: what changes, what is added, and what is left
+   alone. Nothing here deletes or overwrites a person or a structure record,
+   or renames the organisation; employee types the template does not have
+   stay with the people who hold them. `mayRenameRoles` is false when the
+   caller lacks Permissions configuration: role names are then left alone. */
+export function planApply(t: Template, s: TenantState, opts: { mayRenameRoles: boolean }): ApplyPlan {
+  const changes: PlanLine[] = [], added: PlanLine[] = [], leftAlone: PlanLine[] = [];
+  const steps: ApplySteps = { modules: [], finalModules: {}, finalRestore: {}, flags: [], labels: {}, typesAdded: [], typesUpdated: [], roleNames: {},
+    structure: { departments: [], costCentres: [], locations: [], jobProfiles: [], contracts: [] } };
+
+  /* modules */
+  const mods = moduleSteps(t, s);
+  steps.modules = mods.steps; steps.finalModules = mods.modules; steps.finalRestore = mods.restore;
+  for (const m of mods.steps) changes.push({ area: 'modules', text: m.code === 'R' && !m.on
+    ? 'Rota off. Its scheduled shifts are set aside, not deleted, and come back when Rota is turned on.'
+    : `${subName(m.code)} ${m.on ? 'on' : 'off'}.` });
+
+  /* features, then their extras, through switchFlag against the final modules */
+  const flags: Record<string, boolean> = { ...s.flags };
+  const offModule: string[] = [];
+  for (const f of FLAGS) {
+    if (!Object.hasOwn(t.flags, f.code)) continue;
+    const want = t.flags[f.code] === true;
+    if (Boolean(flags[f.code]) === want) continue;
+    const r = switchFlag(mods.modules, flags, f.code, { on: want });
+    if (!r.ok) { offModule.push(f.label); continue; }
+    flags[f.code] = want;
+    steps.flags.push({ code: f.code, change: { on: want } });
+    changes.push({ area: 'features', text: `${f.label} ${want ? 'on' : 'off'}.` });
+  }
+  if (offModule.length) leftAlone.push({ area: 'features', text: `Features of a module that is off stay as they are: ${list(offModule)}.` });
+  for (const [owner, keys] of Object.entries(FLAG_EXTRAS)) {
+    const change: FlagChange = {};
+    for (const k of keys) {
+      const v = t.extras[k];
+      if (v !== undefined && v !== s.extras[k]) Object.assign(change, { [k]: v });
+    }
+    if (!Object.keys(change).length) continue;
+    const f = flagBy(owner);
+    const r = switchFlag(mods.modules, flags, owner, change);
+    if (!r.ok || !f) { leftAlone.push({ area: 'features', text: `${f?.label ?? owner} settings stay as they are. ${r.ok ? '' : r.refusal.message}`.trim() }); continue; }
+    steps.flags.push({ code: owner, change });
+    if (change.weekGrid) changes.push({ area: 'features', text: `Weekly grid: ${gridWords(change.weekGrid).toLowerCase()}.` });
+    if (change.weekLayout) changes.push({ area: 'features', text: `Weekly view: ${layoutWords(change.weekLayout).toLowerCase()}.` });
+    if (change.breaksMax !== undefined) changes.push({ area: 'features', text: `Breaks per entry: ${change.breaksMax}.` });
+    if (change.vehiclesMax !== undefined) changes.push({ area: 'features', text: `Vehicles per entry: ${change.vehiclesMax}.` });
+  }
+
+  /* labels */
+  const unknownFields: string[] = [];
+  for (const [code, label] of Object.entries(t.labels)) {
+    const now = Object.hasOwn(s.labels, code) ? s.labels[code] : undefined;
+    if (now === undefined) { unknownFields.push(code); continue; }
+    if (now === label) continue;
+    steps.labels[code] = label;
+    changes.push({ area: 'labels', text: `${now} reads as ${label}.` });
+  }
+  if (unknownFields.length) leftAlone.push({ area: 'labels', text: `Labels for fields this tenant does not have are not used: ${list(unknownFields)}.` });
+
+  /* employee types: set or added, never removed. Sites off leaves no type with the site capability. */
+  const sitesOn = mods.modules.C === true;
+  for (const want of t.employeeTypes) {
+    const caps = sitesOn ? want.capabilities : want.capabilities.filter(x => x !== 'site');
+    const have = s.employeeTypes.find(x => x.code === want.code);
+    if (!have) {
+      steps.typesAdded.push({ ...want, capabilities: caps });
+      added.push({ area: 'types', text: `Employee type ${want.name} (${want.code}).` });
+      continue;
+    }
+    const next = { ...want, capabilities: caps };
+    const diff = TYPE_FIELDS.filter(k => (k === 'capabilities' ? !sameSet(have.capabilities, next.capabilities) : have[k] !== next[k]));
+    if (!diff.length) continue;
+    steps.typesUpdated.push({ code: want.code, change: Object.fromEntries(diff.map(k => [k, next[k]])) });
+    changes.push({ area: 'types', text: diff.includes('name')
+      ? `Employee type ${have.name} becomes ${next.name}${diff.length > 1 ? `, with a new ${list(diff.filter(k => k !== 'name').map(k => TYPE_FIELD_WORD[k]))}` : ''}.`
+      : `Employee type ${have.name}: new ${list(diff.map(k => TYPE_FIELD_WORD[k]))}.` });
+  }
+  const kept = s.employeeTypes.filter(x => !t.employeeTypes.some(w => w.code === x.code)).map(x => x.name);
+  if (kept.length) leftAlone.push({ area: 'types', text: `Employee types the template does not have stay, with everyone who holds them: ${list(kept)}.` });
+
+  /* role names: all three or none, checked together */
+  const names = t.roleNames;
+  if (names) {
+    const renamed = ROLE_KEYS.filter(k => names[k].trim() !== s.roleNames[k]);
+    const problem = roleNamesProblem(names);
+    if (renamed.length && !opts.mayRenameRoles) leftAlone.push({ area: 'roles', text: 'Role names stay as they are. Renaming roles needs Permissions configuration.' });
+    else if (renamed.length && problem) leftAlone.push({ area: 'roles', text: `Role names stay as they are. ${problem}` });
+    else for (const k of renamed) {
+      const v = names[k].trim();
+      steps.roleNames[k] = v;
+      changes.push({ area: 'roles', text: `The ${s.roleNames[k]} role is called ${v}.` });
+    }
+  }
+
+  /* the approval chain has nowhere to go yet */
+  if (t.approvalChain?.length) leftAlone.push({ area: 'chain',
+    text: `The approval chain (${plural(t.approvalChain.length, 'stage')}) is kept in the template. Approvals are not set up in this build, so it is not applied.` });
+
+  /* structure: new codes are added, held codes stay exactly as they are */
+  const held = Object.fromEntries(STRUCTURE_KINDS.map(k => [k, new Set(s.structure[k].map(x => x.toUpperCase()))])) as Record<StructureKind, Set<string>>;
+  const has = (k: StructureKind, code: string) => !code || held[k].has(code.toUpperCase());
+  for (const kind of STRUCTURE_KINDS) {
+    const rows = t.structure?.[kind] ?? [];
+    const stay: string[] = [];
+    for (const row of rows) {
+      if (held[kind].has(row.code.toUpperCase())) { stay.push(row.code); continue; }
+      const next = structuredClone(row) as typeof row & Record<string, unknown>;
+      const missing: string[] = [];
+      const ref = (field: 'department' | 'costCentre' | 'location', k: StructureKind) => {
+        const v = next[field];
+        if (typeof v === 'string' && !has(k, v)) { missing.push(`${STRUCTURE_LABEL[k].one} ${v}`); next[field] = ''; }
+      };
+      if (kind === 'locations') { ref('department', 'departments'); ref('costCentre', 'costCentres'); }
+      if (kind === 'contracts') { ref('costCentre', 'costCentres'); ref('location', 'locations'); }
+      (steps.structure[kind] as (typeof row)[]).push(next);
+      held[kind].add(row.code.toUpperCase());
+      added.push({ area: 'structure', text: `${STRUCTURE_LABEL[kind].one[0]?.toUpperCase() ?? ''}${STRUCTURE_LABEL[kind].one.slice(1)} ${row.code} ${row.name}${missing.length ? `, without the ${list(missing)}, which is not here` : ''}.` });
+    }
+    if (stay.length) leftAlone.push({ area: 'structure', text: `${STRUCTURE_LABEL[kind].many} already here stay exactly as they are: ${list(stay)}.` });
+  }
+
+  leftAlone.push({ area: 'people', text: `Nobody’s record changes. ${plural(s.people, 'person', 'people')} keep their details and their employee type.` });
+  leftAlone.push({ area: 'organisation', text: `${s.name} keeps its name, company details, compliance and pay periods.` });
+  return { changes, added, leftAlone, steps };
+}
+/* One line for the toast and the audit row. */
+export function planSummary(p: Pick<ApplyPlan, 'changes' | 'added'>): string {
+  const parts = [p.changes.length ? plural(p.changes.length, 'change') : '', p.added.length ? `${p.added.length} added` : ''].filter(Boolean);
+  return parts.length ? `${parts.join(', ')}. Nothing was deleted.` : 'Nothing needed to change. Nothing was deleted.';
+}
