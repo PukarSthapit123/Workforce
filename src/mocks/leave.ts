@@ -175,12 +175,12 @@ export const leaveHandlers = [
       person: { code: p.code, name: p.name, manager: managerOf(p), employeeType: p.employeeType },
       today: today(), year: yr, entitlement: entitlementView(L.ent), balance: balanceView(L.bal), facts: L.facts,
       daysToTake: L.bal.leftD > 0 ? daysToTakeText(L.bal, yr.end, toilOn) : '',
-      types: c.types.filter(t => t.active).map(t => ({ code: t.code, name: t.name, unit: t.unit,
+      types: c.types.filter(t => t.active).map(t => ({ code: t.code, name: t.name, unit: t.unit, evidence: t.evidence,
         hint: typeBalanceText(t, policyBy(c.policies, t.policy), al, { hours: L.bal.toil, useBy: L.bal.toilBy }) })),
       requests: [...L.mine].sort(newestFirst(r => r.raisedAt)).map(requestView),
       ledger: [...L.ledger].sort(newestFirst(l => l.date)).map(ledgerView),
       cancelTip: cancelTip(c.cancelWindow),
-      rules: { entitlement: flagOn('LV_ENT'), toil: toilOn, toilMax: c.toilMax, toilWindow: c.toilWindow, slaDays: c.slaDays },
+      rules: { entitlement: flagOn('LV_ENT'), toil: toilOn, toilMax: c.toilMax, toilWindow: c.toilWindow, slaDays: c.slaDays, escalateTo: c.escalateTo },
     };
   }),
 

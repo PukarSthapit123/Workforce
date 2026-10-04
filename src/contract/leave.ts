@@ -66,8 +66,8 @@ export const LedgerView = z.object({
 });
 export type LedgerView = z.infer<typeof LedgerView>;
 export const LeaveYear = z.object({ start: IsoDate, end: IsoDate, label: z.string() });
-/* A request form option: what the type draws on (typeBalanceText). */
-export const LeaveTypeOption = z.object({ code: z.string(), name: z.string(), unit: LeaveUnit, hint: z.string() });
+/* A request form option: what the type draws on (typeBalanceText), and whether it needs evidence (upload is not built). */
+export const LeaveTypeOption = z.object({ code: z.string(), name: z.string(), unit: LeaveUnit, hint: z.string(), evidence: z.boolean() });
 export type LeaveTypeOption = z.infer<typeof LeaveTypeOption>;
 /* The facts the entitlement comes from, for the client-side "Simulate an hours change" (it writes nothing, D3). */
 export const LeaveFacts = z.object({ contractedHours: z.number(), start: DateOrBlank, accruedHours: z.number().optional() });
@@ -82,7 +82,8 @@ export const MyLeave = z.object({
   requests: z.array(LeaveRequestView), ledger: z.array(LedgerView),
   /* "You can change or cancel up to 7 days before it starts." */
   cancelTip: z.string(),
-  rules: z.object({ entitlement: z.boolean(), toil: z.boolean(), toilMax: z.number(), toilWindow: z.number().int(), slaDays: z.number().int() }),
+  /* escalateTo: who a request goes to once the SLA is breached (the request form's banner) */
+  rules: z.object({ entitlement: z.boolean(), toil: z.boolean(), toilMax: z.number(), toilWindow: z.number().int(), slaDays: z.number().int(), escalateTo: z.string() }),
 });
 export type MyLeave = z.infer<typeof MyLeave>;
 
