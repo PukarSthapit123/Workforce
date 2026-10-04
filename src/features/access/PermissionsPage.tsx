@@ -9,6 +9,7 @@ import { useCapabilities, useCapabilityGroups, useUserTypes, useUsers, useSetTem
 import { useCurrentSession } from '@/shell/SessionProvider';
 import { useTenant } from '@/shell/shellData';
 import { UserExceptions } from './UserExceptions';
+import { RenameRolesDialog } from './RenameRoles';
 
 function exceptionsSummary(typeName: string, grants: readonly string[], revocations: readonly string[]): string {
   const n = grants.length + revocations.length;
@@ -38,6 +39,7 @@ export function PermissionsPage() {
   const onScreenType = session?.viewingAs?.userType ?? session?.account.userType;
   const setCap = useSetTemplateCapability(self);
   const [exceptionsForEmail, setExceptionsForEmail] = useState<string | null>(null);
+  const [renaming, setRenaming] = useState(false);
 
   if (capabilities.isPending || groups.isPending || userTypes.isPending || users.isPending) {
     return (
@@ -72,9 +74,13 @@ export function PermissionsPage() {
   return (
     <Page testId={tid.page('aperm')}>
       <PageHead {...HEAD} tipTestId={tid.head.tip('aperm')}
-        actions={/* Ported from the prototype's admPermissions caution (v15:8335). There
-            the checks ran in the browser; here the server enforces them. */
-          <Caution testId={tid.access.caution} text="These switches are live and apply to everyone at once. The server enforces each one, so hiding a control is never the only thing refusing the request, and every change is recorded in the audit log." />} />
+        actions={/* Ported from the prototype's admPermissions head (v15:8334-8335): Rename
+            roles, then the caution. There the checks ran in the browser; here the server enforces them. */
+          <>
+            <Button testId={tid.roleNames.open} kind="ghost" small onClick={() => setRenaming(true)}>Rename roles</Button>
+            <Caution testId={tid.access.caution} text="These switches are live and apply to everyone at once. The server enforces each one, so hiding a control is never the only thing refusing the request, and every change is recorded in the audit log." />
+          </>} />
+      {renaming && <RenameRolesDialog types={types} self={self} onClose={() => setRenaming(false)} />}
 
       <Table data-testid={tid.access.table} variant="matrix">
         <TableHeader>
