@@ -12,7 +12,7 @@ import { serve } from './serve';
 import { actor, capsFor } from './auth';
 import { writeAudit } from './audit';
 import { invalid } from './people';
-import { notify as notifyIn } from './notify';
+import { notifyEvent } from './notify';
 import {
   accountOfPerson, accounts, codesOf, effectiveCode, nameOf, people, personByCode, recordAt, scopeOf, today, type Signed, type StoredPerson,
 } from './world';
@@ -191,7 +191,6 @@ function weekView(s: Signed, l: StoredLocation, ws: string): RotaWeekView {
 }
 
 /* ------------------------------------------------------- notifications (D8) */
-const notify = (codes: Iterable<string>, n: { title: string; body: string }) => notifyIn(codes, n, 'Rota');
 const managersAt = (loc: string) => Object.values(accounts())
   .filter(a => personByCode(a.personCode)?.location === loc && capsFor(a).includes('team_rota')).map(a => a.personCode);
 const administrators = () => Object.values(accounts()).filter(a => capsFor(a).includes('mod_cfg')).map(a => a.personCode);
@@ -228,8 +227,8 @@ function placeShift(week: RotaWeekCore, p: StoredPerson, day: number, code: stri
 }
 /* The colleague's notice for one written cell: an amendment to a live week, or a new shift. */
 function noticeFor(p: StoredPerson, week: RotaWeekCore, day: number, code: string, amended: boolean) {
-  if (amended) notify([p.code], amendedNotice(week.weekStart, day));
-  else if (code) notify([p.code], shiftAssignedNotice(shiftList(), code, addDays(week.weekStart, day), locName(week.location)));
+  if (amended) notifyEvent('rt_pub', [p.code], amendedNotice(week.weekStart, day));
+  else if (code) notifyEvent('rt_assign', [p.code], shiftAssignedNotice(shiftList(), code, addDays(week.weekStart, day), locName(week.location)));
 }
 const cellField = (personCode: string, day: number) => `lines.${personCode}.${day}`;
 
@@ -253,8 +252,8 @@ function createCover(o: { location: string; date: string; shift: string; reason:
   const core = newCover(o, config().fulfilStages, store.now(), ok.length, locName(o.location));
   const id = nextNumId(covers(), 'cov'), rec: CoverRecord = { id, version: 1, updatedAt: store.now(), ...core };
   covers()[id] = rec;
-  notify(managersAt(o.location), coverageIssueNotice(locName(o.location), o.date, minAt(l)));
-  if (o.reason) notify(ok.map(x => x.worker.code), openShiftNotice(shiftList(), o.shift, o.date, locName(o.location)));
+  notifyEvent('rt_cov', managersAt(o.location), coverageIssueNotice(locName(o.location), o.date, minAt(l)));
+  if (o.reason) notifyEvent('rt_cover', ok.map(x => x.worker.code), openShiftNotice(shiftList(), o.shift, o.date, locName(o.location)));
   return rec;
 }
 function coverFor(s: Signed, id: string): CoverRecord {
@@ -422,7 +421,7 @@ export function writeAbsence(o: { personCode: string; dates: readonly string[]; 
     saveWeek(r.week);
     out.written += writes.length; out.weeks.push(plan.weekId); out.amended ||= r.amended;
     const first = writes[0];
-    if (r.amended && first) notify([p.code], amendedNotice(plan.weekStart, first.day));
+    if (r.amended && first) notifyEvent('rt_pub', [p.code], amendedNotice(plan.weekStart, first.day));
     if (!flagOn('FULFIL')) continue;
     const dropped = writes.filter(w => isWorking(line[w.day])).map(w => w.day);
     const lines = rosterOf(l.code, r.week).map(x => lineOf(r.week, x.code));
@@ -499,7 +498,7 @@ export const rotaHandlers = [
       if (problem) refuse(409, problem);
       const r = publishWeek(w, by(session), store.now());
       saveWeek(r.week);
-      notify(roster.map(p => p.code), publishNotice(l.name, ws, r.version, r.republished));
+      notifyEvent('rt_pub', roster.map(p => p.code), publishNotice(l.name, ws, r.version, r.republished));
       const auditId = writeAudit({ who: actor(session), act: r.republished ? 'Rota republished' : 'Rota published', entity: 'rotaWeek',
         entityId: rotaWeekId(l.code, ws), before: { state: w.state, version: w.publishVersion },
         after: { location: l.code, weekStart: ws, state: r.week.state, version: r.version, notified: roster.length, detail: publishAuditText(l.name, ws, r.version, r.amended) } });
@@ -823,7 +822,7 @@ export const rotaHandlers = [
     if (m.cover.reason === c.reason) return { record: coverView(c), auditId: null };
     const saved = bump(c, m.cover);
     covers()[c.id] = saved;
-    if (!c.reason) notify(ok.map(x => x.worker.code), openShiftNotice(shiftList(), c.shift, c.date, locName(c.location)));
+    if (!c.reason) notifyEvent('rt_cover', ok.map(x => x.worker.code), openShiftNotice(shiftList(), c.shift, c.date, locName(c.location)));
     const auditId = writeAudit({ who: actor(session), act: 'Cover reason set', entity: 'coverRequest', entityId: c.id,
       before: { reason: c.reason, stage: c.stage }, after: { reason: saved.reason, stage: saved.stage, detail: coverDetail(c) } });
     return { record: coverView(saved), auditId };
@@ -838,7 +837,7 @@ export const rotaHandlers = [
     if ('problem' in m) return refuseCover(m.problem);
     const saved = bump(c, m.cover);
     covers()[c.id] = saved;
-    notify(ok.map(x => x.worker.code), openShiftNotice(shiftList(), c.shift, c.date, locName(c.location)));
+    notifyEvent('rt_stage', ok.map(x => x.worker.code), openShiftNotice(shiftList(), c.shift, c.date, locName(c.location)));
     const auditId = writeAudit({ who: actor(session), act: 'Cover asked of every cleared worker', entity: 'coverRequest', entityId: c.id,
       before: { stage: c.stage }, after: { stage: saved.stage, sent: ok.length, detail: coverDetail(c) } });
     return { record: coverView(saved), auditId };
@@ -853,7 +852,7 @@ export const rotaHandlers = [
     const saved = bump(c, m.cover);
     covers()[c.id] = saved;
     const audience = stages.at(-1)?.audience ?? '';
-    notify(managersAt(c.location), escalationNotice(shiftList(), c.shift, c.date, audience));
+    notifyEvent('rt_esc', managersAt(c.location), escalationNotice(shiftList(), c.shift, c.date, audience));
     const auditId = writeAudit({ who: actor(session), act: 'Fulfilment escalated', entity: 'coverRequest', entityId: c.id,
       before: { stage: c.stage }, after: { stage: saved.stage, audience, detail: coverDetail(c) } });
     return { record: coverView(saved), auditId };
@@ -903,7 +902,7 @@ export const rotaHandlers = [
     const ex = ctx.safeWorker ? eligibility(worker(me), line, dowMon(c.date), c.shift, ctx)[0] : undefined;
     if (ex) refuse(422, { code: 'ROTA_INELIGIBLE', field: 'id', message: claimRefusal(ex), next: 'Choose another open shift.' });
     const r = fillWith(session, c, me, 'Claimed', false);
-    notify(managersAt(c.location), coverFilledNotice(me.name, shiftList(), c.shift, c.date));
+    notifyEvent('rt_assign', managersAt(c.location), coverFilledNotice(me.name, shiftList(), c.shift, c.date));
     const auditId = writeAudit({ who: actor(session), act: 'Open shift claimed', entity: 'coverRequest', entityId: c.id,
       before: { open: true }, after: { open: false, filled: r.filled.id, amended: r.placed.amended, detail: coverDetail(c, me.name) } });
     return { record: coverView(r.cover), filled: r.filled, summary: 'Shift claimed. Your manager will confirm it, and you can log time against it.', auditId };
@@ -923,7 +922,7 @@ export const rotaHandlers = [
       const id = nextNumId(itColl(), 'itr');
       it = { id, ...itRequestFor(f, Object.keys(itColl()).length, personByCode(f.personCode)?.category ?? '', store.now(), locName(f.location), shiftList()) };
       itColl()[id] = it;
-      notify(administrators(), itRequestNotice(it));
+      notifyEvent('rt_it', administrators(), { ...itRequestNotice(it), ref: it.ref });
     }
     const saved = bump(f, { confirmed: true, itRequest: it?.ref ?? '' });
     filledColl()[f.id] = saved;
