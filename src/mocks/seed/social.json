@@ -3604,13 +3604,13 @@
       "E"
      ],
      "CP-1088": [
-      "V",
+      "",
       "L",
       "L",
       "",
       "E",
       "",
-      "V"
+      ""
      ],
      "CP-1153": [
       "N",
@@ -4318,6 +4318,783 @@
       "flexible": false
      }
     }
+   }
+  },
+  "leaveConfig": {
+   "leaveConfig": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "leaveConfig",
+    "slaDays": 5,
+    "escalateTo": "Service Manager",
+    "unit": "Days and hours",
+    "carry": 5,
+    "toilMax": 24,
+    "toilWindow": 3,
+    "buySell": false,
+    "finYearStart": "01/04",
+    "bhPaid": true,
+    "absenceTrigger": 100,
+    "autoEntitlement": true,
+    "blocksTimesheet": true,
+    "affectsRota": true,
+    "minNotice": 7,
+    "cancelWindow": 7,
+    "types": [
+     {
+      "code": "AL",
+      "name": "Annual leave",
+      "icon": "☀",
+      "short": "Leave",
+      "policy": "STD",
+      "paid": true,
+      "evidence": false,
+      "unit": "days",
+      "active": true
+     },
+     {
+      "code": "TOIL",
+      "name": "Time off in lieu",
+      "icon": "⇄",
+      "short": "TOIL",
+      "policy": "TOIL",
+      "paid": true,
+      "evidence": false,
+      "unit": "hours",
+      "active": true
+     },
+     {
+      "code": "SICK",
+      "name": "Sickness",
+      "icon": "✚",
+      "short": "Sick",
+      "policy": "SICK",
+      "paid": true,
+      "evidence": true,
+      "unit": "days",
+      "active": true
+     },
+     {
+      "code": "COMP",
+      "name": "Compassionate leave",
+      "icon": "♡",
+      "short": "Compass.",
+      "policy": "FIX",
+      "paid": true,
+      "evidence": false,
+      "unit": "days",
+      "active": true
+     },
+     {
+      "code": "TRN",
+      "name": "Training leave",
+      "icon": "✎",
+      "short": "Training",
+      "policy": "FIX",
+      "paid": true,
+      "evidence": false,
+      "unit": "days",
+      "active": true
+     },
+     {
+      "code": "UNP",
+      "name": "Unpaid leave",
+      "icon": "∅",
+      "short": "Unpaid",
+      "policy": "NONE",
+      "paid": false,
+      "evidence": false,
+      "unit": "days",
+      "active": true
+     },
+     {
+      "code": "PAR",
+      "name": "Parental leave",
+      "icon": "⌂",
+      "short": "Parental",
+      "policy": "HRIS",
+      "paid": true,
+      "evidence": true,
+      "unit": "weeks",
+      "active": true
+     },
+     {
+      "code": "JURY",
+      "name": "Jury service",
+      "icon": "§",
+      "short": "Jury",
+      "policy": "HRIS",
+      "paid": true,
+      "evidence": true,
+      "unit": "days",
+      "active": true
+     }
+    ],
+    "policies": [
+     {
+      "code": "STD",
+      "name": "Standard annual leave",
+      "method": "Statutory + service",
+      "unit": "days",
+      "base": 24,
+      "statutory": 28,
+      "serviceRule": "+1 day per 3 years, capped at 5",
+      "prorata": "By contracted hours ÷ full-time hours",
+      "carry": 5,
+      "approval": true,
+      "sla": 5,
+      "escalate": true,
+      "bh": "On top of entitlement"
+     },
+     {
+      "code": "ACC",
+      "name": "Accrual (bank / flexible)",
+      "method": "12.07% of hours worked",
+      "unit": "hours",
+      "base": 0,
+      "statutory": 28,
+      "serviceRule": "Not applied",
+      "prorata": "Accrues as hours are worked",
+      "carry": 0,
+      "approval": true,
+      "sla": 5,
+      "escalate": true,
+      "bh": "Included in the accrual rate"
+     },
+     {
+      "code": "TOIL",
+      "name": "Time off in lieu",
+      "method": "Banked from approved overtime",
+      "unit": "hours",
+      "base": 0,
+      "statutory": 0,
+      "serviceRule": "Not applied",
+      "prorata": "Not applied",
+      "carry": 0,
+      "approval": true,
+      "sla": 3,
+      "escalate": false,
+      "bh": "Not applicable"
+     },
+     {
+      "code": "SICK",
+      "name": "Sickness absence",
+      "method": "Occupational scheme",
+      "unit": "days",
+      "base": 0,
+      "statutory": 0,
+      "serviceRule": "Scheme length by service",
+      "prorata": "Not applied",
+      "carry": 0,
+      "approval": false,
+      "sla": 1,
+      "escalate": false,
+      "bh": "Not applicable"
+     },
+     {
+      "code": "FIX",
+      "name": "Fixed allowance",
+      "method": "Fixed days per year",
+      "unit": "days",
+      "base": 5,
+      "statutory": 0,
+      "serviceRule": "Not applied",
+      "prorata": "Not applied",
+      "carry": 0,
+      "approval": true,
+      "sla": 5,
+      "escalate": true,
+      "bh": "Not applicable"
+     },
+     {
+      "code": "NONE",
+      "name": "No entitlement",
+      "method": "Unpaid, no balance",
+      "unit": "days",
+      "base": 0,
+      "statutory": 0,
+      "serviceRule": "Not applied",
+      "prorata": "Not applied",
+      "carry": 0,
+      "approval": true,
+      "sla": 5,
+      "escalate": false,
+      "bh": "Not applicable"
+     },
+     {
+      "code": "HRIS",
+      "name": "Held in the HRIS",
+      "method": "Statutory scheme, managed outside Workforce",
+      "unit": "weeks",
+      "base": 0,
+      "statutory": 0,
+      "serviceRule": "Per statute",
+      "prorata": "Per statute",
+      "carry": 0,
+      "approval": true,
+      "sla": 5,
+      "escalate": true,
+      "bh": "Per statute"
+     }
+    ],
+    "stages": [
+     {
+      "n": 1,
+      "who": "Employee",
+      "action": "Request submitted and validated against balance",
+      "wait": 0,
+      "channel": "In-app"
+     },
+     {
+      "n": 2,
+      "who": "Line manager",
+      "action": "Decision required",
+      "wait": 5,
+      "channel": "In-app + email"
+     },
+     {
+      "n": 3,
+      "who": "Service Manager",
+      "action": "Escalated. SLA breached",
+      "wait": 2,
+      "channel": "In-app + email"
+     },
+     {
+      "n": 4,
+      "who": "HR administrator",
+      "action": "Final escalation and manual resolution",
+      "wait": 2,
+      "channel": "Email"
+     }
+    ],
+    "typeLeave": {
+     "shift": {
+      "policy": "STD",
+      "unit": "days"
+     },
+     "casual": {
+      "policy": "ACC",
+      "unit": "hours"
+     },
+     "salaried": {
+      "policy": "STD",
+      "unit": "days"
+     }
+    }
+   }
+  },
+  "leaveRequests": {
+   "lr_1": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "lr_1",
+    "personCode": "CP-1201",
+    "type": "AL",
+    "from": "2026-08-24",
+    "to": "2026-08-28",
+    "part": "full",
+    "qty": 5,
+    "unit": "days",
+    "state": "pending",
+    "raisedAt": "2026-08-08T08:00:00.000Z",
+    "note": "Family visit",
+    "impact": "24 Aug drops to 3 of 4. Cover needed.",
+    "short": true,
+    "escalated": true,
+    "decidedAt": "",
+    "decidedBy": null,
+    "reason": "",
+    "history": [
+     {
+      "from": "",
+      "to": "pending",
+      "by": {
+       "personCode": "CP-1201",
+       "name": "Priya Shah"
+      },
+      "at": "2026-08-08T08:00:00.000Z",
+      "reason": ""
+     }
+    ]
+   },
+   "lr_2": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "lr_2",
+    "personCode": "CP-1402",
+    "type": "TOIL",
+    "from": "2026-08-21",
+    "to": "2026-08-21",
+    "part": "full",
+    "qty": 7.5,
+    "unit": "hours",
+    "state": "pending",
+    "raisedAt": "2026-08-11T08:00:00.000Z",
+    "note": "",
+    "impact": "Cover is met. 5 on shift.",
+    "short": false,
+    "escalated": false,
+    "decidedAt": "",
+    "decidedBy": null,
+    "reason": "",
+    "history": [
+     {
+      "from": "",
+      "to": "pending",
+      "by": {
+       "personCode": "CP-1402",
+       "name": "Rosa Mendes"
+      },
+      "at": "2026-08-11T08:00:00.000Z",
+      "reason": ""
+     }
+    ]
+   },
+   "lr_3": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "lr_3",
+    "personCode": "CP-1042",
+    "type": "AL",
+    "from": "2026-09-03",
+    "to": "2026-09-04",
+    "part": "full",
+    "qty": 2,
+    "unit": "days",
+    "state": "pending",
+    "raisedAt": "2026-08-12T08:00:00.000Z",
+    "note": "",
+    "impact": "Cover is met. 4 on shift.",
+    "short": false,
+    "escalated": false,
+    "decidedAt": "",
+    "decidedBy": null,
+    "reason": "",
+    "history": [
+     {
+      "from": "",
+      "to": "pending",
+      "by": {
+       "personCode": "CP-1042",
+       "name": "Amara Okafor"
+      },
+      "at": "2026-08-12T08:00:00.000Z",
+      "reason": ""
+     }
+    ]
+   },
+   "lr_4": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "lr_4",
+    "personCode": "CP-1088",
+    "type": "AL",
+    "from": "2026-08-10",
+    "to": "2026-08-11",
+    "part": "full",
+    "qty": 2,
+    "unit": "days",
+    "state": "approved",
+    "raisedAt": "2026-07-20T08:00:00.000Z",
+    "note": "",
+    "impact": "Approved · rota shows AL",
+    "short": false,
+    "escalated": false,
+    "decidedAt": "2026-07-22T08:00:00.000Z",
+    "decidedBy": {
+     "personCode": "CP-1001",
+     "name": "Rachel Hussain"
+    },
+    "reason": "",
+    "history": [
+     {
+      "from": "",
+      "to": "pending",
+      "by": {
+       "personCode": "CP-1088",
+       "name": "Marcus Reilly"
+      },
+      "at": "2026-07-20T08:00:00.000Z",
+      "reason": ""
+     },
+     {
+      "from": "pending",
+      "to": "approved",
+      "by": {
+       "personCode": "CP-1001",
+       "name": "Rachel Hussain"
+      },
+      "at": "2026-07-22T08:00:00.000Z",
+      "reason": ""
+     }
+    ]
+   },
+   "lr_5": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "lr_5",
+    "personCode": "CP-1042",
+    "type": "AL",
+    "from": "2026-08-17",
+    "to": "2026-08-18",
+    "part": "full",
+    "qty": 2,
+    "unit": "days",
+    "state": "approved",
+    "raisedAt": "2026-08-01T08:00:00.000Z",
+    "note": "",
+    "impact": "Approved",
+    "short": false,
+    "escalated": false,
+    "decidedAt": "2026-08-02T08:00:00.000Z",
+    "decidedBy": {
+     "personCode": "CP-1001",
+     "name": "Rachel Hussain"
+    },
+    "reason": "",
+    "history": [
+     {
+      "from": "",
+      "to": "pending",
+      "by": {
+       "personCode": "CP-1042",
+       "name": "Amara Okafor"
+      },
+      "at": "2026-08-01T08:00:00.000Z",
+      "reason": ""
+     },
+     {
+      "from": "pending",
+      "to": "approved",
+      "by": {
+       "personCode": "CP-1001",
+       "name": "Rachel Hussain"
+      },
+      "at": "2026-08-02T08:00:00.000Z",
+      "reason": ""
+     }
+    ]
+   }
+  },
+  "leaveLedger": {
+   "led_001": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "led_001",
+    "personCode": "CP-1042",
+    "date": "2026-04-01",
+    "type": "Opening entitlement",
+    "qty": 24,
+    "unit": "days",
+    "why": "Standard annual leave · 37.5h contract · 4 years service",
+    "by": null,
+    "counts": false
+   },
+   "led_002": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "led_002",
+    "personCode": "CP-1310",
+    "date": "2026-06-06",
+    "type": "Accrual opened",
+    "qty": 0,
+    "unit": "hours",
+    "why": "Bank worker · accrues at 12.07% of hours worked",
+    "by": null,
+    "counts": false
+   }
+  },
+  "leaveBases": {
+   "lb_CP-1042": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "lb_CP-1042",
+    "personCode": "CP-1042",
+    "year": "2026/27",
+    "unit": "days",
+    "taken": 7.5,
+    "toil": 6,
+    "toilBy": "2026-09-30"
+   },
+   "lb_CP-1088": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "lb_CP-1088",
+    "personCode": "CP-1088",
+    "year": "2026/27",
+    "unit": "days",
+    "taken": 13,
+    "toil": 2.5,
+    "toilBy": "2026-10-31"
+   },
+   "lb_CP-1153": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "lb_CP-1153",
+    "personCode": "CP-1153",
+    "year": "2026/27",
+    "unit": "days",
+    "taken": 11,
+    "toil": 0,
+    "toilBy": ""
+   },
+   "lb_CP-1201": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "lb_CP-1201",
+    "personCode": "CP-1201",
+    "year": "2026/27",
+    "unit": "days",
+    "taken": 9,
+    "toil": 0,
+    "toilBy": ""
+   },
+   "lb_CP-1266": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "lb_CP-1266",
+    "personCode": "CP-1266",
+    "year": "2026/27",
+    "unit": "days",
+    "taken": 6,
+    "toil": 3,
+    "toilBy": "2026-11-30"
+   },
+   "lb_CP-1402": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "lb_CP-1402",
+    "personCode": "CP-1402",
+    "year": "2026/27",
+    "unit": "days",
+    "taken": 8,
+    "toil": 11.5,
+    "toilBy": "2026-09-30"
+   },
+   "lb_CP-1310": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "lb_CP-1310",
+    "personCode": "CP-1310",
+    "year": "2026/27",
+    "unit": "hours",
+    "taken": 0,
+    "toil": 0,
+    "toilBy": "",
+    "accruedHours": 38.6
+   },
+   "lb_CP-1455": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "lb_CP-1455",
+    "personCode": "CP-1455",
+    "year": "2026/27",
+    "unit": "hours",
+    "taken": 7.5,
+    "toil": 0,
+    "toilBy": "",
+    "accruedHours": 52.1
+   },
+   "lb_CP-1377": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "lb_CP-1377",
+    "personCode": "CP-1377",
+    "year": "2026/27",
+    "unit": "hours",
+    "taken": 0,
+    "toil": 0,
+    "toilBy": "",
+    "accruedHours": 16.4
+   },
+   "lb_CP-1490": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "lb_CP-1490",
+    "personCode": "CP-1490",
+    "year": "2026/27",
+    "unit": "hours",
+    "taken": 0,
+    "toil": 0,
+    "toilBy": "",
+    "accruedHours": 24.2
+   },
+   "lb_CP-1001": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "lb_CP-1001",
+    "personCode": "CP-1001",
+    "year": "2026/27",
+    "unit": "days",
+    "taken": 12,
+    "toil": 0,
+    "toilBy": ""
+   },
+   "lb_CP-1002": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "lb_CP-1002",
+    "personCode": "CP-1002",
+    "year": "2026/27",
+    "unit": "days",
+    "taken": 5,
+    "toil": 0,
+    "toilBy": ""
+   },
+   "lb_CP-1288": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "lb_CP-1288",
+    "personCode": "CP-1288",
+    "year": "2026/27",
+    "unit": "days",
+    "taken": 16,
+    "toil": 0,
+    "toilBy": ""
+   },
+   "lb_EMP-2044": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "lb_EMP-2044",
+    "personCode": "EMP-2044",
+    "year": "2026/27",
+    "unit": "days",
+    "taken": 10,
+    "toil": 0,
+    "toilBy": ""
+   },
+   "lb_EMP-2062": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "lb_EMP-2062",
+    "personCode": "EMP-2062",
+    "year": "2026/27",
+    "unit": "days",
+    "taken": 7,
+    "toil": 0,
+    "toilBy": ""
+   },
+   "lb_EMP-2071": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "lb_EMP-2071",
+    "personCode": "EMP-2071",
+    "year": "2026/27",
+    "unit": "days",
+    "taken": 4,
+    "toil": 0,
+    "toilBy": ""
+   },
+   "lb_EMP-2088": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "lb_EMP-2088",
+    "personCode": "EMP-2088",
+    "year": "2026/27",
+    "unit": "days",
+    "taken": 9,
+    "toil": 0,
+    "toilBy": ""
+   },
+   "lb_CP-1501": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "lb_CP-1501",
+    "personCode": "CP-1501",
+    "year": "2026/27",
+    "unit": "days",
+    "taken": 0,
+    "toil": 0,
+    "toilBy": ""
+   },
+   "lb_CP-1502": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "lb_CP-1502",
+    "personCode": "CP-1502",
+    "year": "2026/27",
+    "unit": "days",
+    "taken": 0,
+    "toil": 0,
+    "toilBy": ""
+   }
+  },
+  "leavers": {
+   "lvr_CP-1288": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "lvr_CP-1288",
+    "personCode": "CP-1288",
+    "leaveDate": "2026-09-30",
+    "note": "Contract ended by mutual agreement"
+   }
+  },
+  "sickEpisodes": {
+   "sk_001": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "sk_001",
+    "personCode": "CP-1088",
+    "from": "2025-11-10",
+    "to": "2025-11-11",
+    "reason": "Cold or flu",
+    "note": "",
+    "rtw": null
+   },
+   "sk_002": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "sk_002",
+    "personCode": "CP-1088",
+    "from": "2026-02-09",
+    "to": "2026-02-10",
+    "reason": "Stomach upset",
+    "note": "",
+    "rtw": null
+   },
+   "sk_003": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "sk_003",
+    "personCode": "CP-1088",
+    "from": "2026-05-11",
+    "to": "2026-05-12",
+    "reason": "Musculoskeletal",
+    "note": "",
+    "rtw": null
+   },
+   "sk_004": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "sk_004",
+    "personCode": "CP-1088",
+    "from": "2026-08-11",
+    "to": "2026-08-11",
+    "reason": "Mental health",
+    "note": "",
+    "rtw": null
+   },
+   "sk_005": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "sk_005",
+    "personCode": "CP-1153",
+    "from": "2026-07-22",
+    "to": "2026-07-22",
+    "reason": "Other",
+    "note": "",
+    "rtw": null
+   },
+   "sk_006": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "sk_006",
+    "personCode": "CP-1266",
+    "from": "2026-06-02",
+    "to": "2026-06-13",
+    "reason": "Cold or flu",
+    "note": "Sick note held · 8-week check 28/08/2026",
+    "rtw": null
    }
   }
  }

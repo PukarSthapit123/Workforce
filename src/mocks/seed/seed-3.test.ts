@@ -51,7 +51,8 @@ describe('seed social for module 3', () => {
   test('the week on the clock keeps the prototype\'s lines, and the week before is each line a day on', () => {
     const now = seed.data.rotaWeeks?.['rw_WH_2026-08-10'] as Week | undefined, before = seed.data.rotaWeeks?.['rw_WH_2026-08-03'] as Week | undefined;
     expect(now?.lines['CP-1088']).toEqual(['V', 'V', 'L', 'L', '', 'E', '']);
-    expect(before?.lines['CP-1088']).toEqual(['V', 'L', 'L', '', 'E', '', 'V']);
+    /* the rotation's stray V cells are cleared: leave comes only from Leave's records (module 4 D7) */
+    expect(before?.lines['CP-1088']).toEqual(['', 'L', 'L', '', 'E', '', '']);
     expect(Object.keys(now?.lines ?? {})).not.toContain('CP-1288');
   });
   test('patterns name real shift codes, people, locations and job profiles', () => {

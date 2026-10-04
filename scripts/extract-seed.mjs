@@ -6,6 +6,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
 import { JSDOM } from 'jsdom';
+import { tsImport } from 'tsx/esm/api';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const SRC = process.env.PROTOTYPE_PATH || resolve(here, '../../Qnipay workforce cc/mockup/qnipay-workforce-v15.html');
@@ -111,7 +112,7 @@ const SENSITIVE = new Set(['bankAcc', 'bankSort']);
 const BANK_VERIFY = { c: 'bank_verify', g: 'team', label: 'Verify bank detail changes',
   gate: 'The bank detail queue on Qnipay setup → People', emp: 0, mgr: 0, adm: 1 };
 
-function shape(tenantKey, data, PERMS_META, PERM_GROUPS, PROFILE_CHANGES) {
+function shape(tenantKey, data, PERMS_META, PERM_GROUPS, PROFILE_CHANGES, ref) {
   const ROLE_OF = { emp: 'employee', mgr: 'manager', adm: 'admin' };
   const people = (data.PEOPLE || []).map(p => meta({
     id: `per_${p.id}`, code: p.id, name: p.nm, email: (p.email || '').toLowerCase(),
@@ -133,6 +134,7 @@ function shape(tenantKey, data, PERMS_META, PERM_GROUPS, PROFILE_CHANGES) {
     lockedFor: (p.lock || []).map(k => ROLE_OF[k]) }));
   /* The matrix's row groups, served through the contract so no feature has to import the seed. */
   const capabilityGroups = PERM_GROUPS.map((g, i) => meta({ id: g.k, label: g.label, description: g.desc, order: i }));
+  const rotaData = (data.CFG || {}).modules?.R ? rota(data, people) : {};
   const tenant = meta({ id: 'tenant', name: (data.TENANT || {}).name || tenantKey, template: (data.CFG || {}).template || tenantKey,
     modules: (data.CFG || {}).modules || {}, flags: (data.CFG || {}).flags || {} });
   const notices = (data.NOTICES || []).map(n => meta({ ...n }, { id: n.id }));
@@ -159,7 +161,156 @@ function shape(tenantKey, data, PERMS_META, PERM_GROUPS, PROFILE_CHANGES) {
     people: byId(people), accounts: byId(accounts), userTypes: byId(userTypes), capabilities: byId(capabilities),
     capabilityGroups: byId(capabilityGroups), tenant: { tenant }, locations, departments, costCentres, jobProfiles, projects,
     employeeTypes, profileChanges, personHistory: {}, notices: byId(notices), audit: {}, ...timesheets(data, people),
-    ...((data.CFG || {}).modules?.R ? rota(data, people) : {}) } };
+    ...rotaData, ...leave(data, people, ref, rotaData.rotaWeeks) } };
+}
+
+/* ---- module 4: leave (brief D1-D3, D7, D9, D10, D13, D14) ----
+   The rules come from src/domain/leave.ts itself (through tsx), so the seed is
+   built with the same cell plan, episode and balance maths the server uses.
+   The prototype's leave records name care ids (CP-1042...). Where the roster has
+   them (social) they are used as they are. Where it does not (qnipay), they go
+   to the people who report to the managing admin at the manager location, in
+   the order timesheets used (D10 of module 2): the signed-in employee's
+   records first. The leaver goes to the first of those reports who has left
+   (state leaver, else archived). */
+const LEAVE_ROLES = ['CP-1042', 'CP-1201', 'CP-1402', 'CP-1088', 'CP-1153', 'CP-1266'];
+const LEAVE_STATE = { Pending: 'pending', Approved: 'approved', Rejected: 'declined', Cancelled: 'cancelled' };
+const dayStamp = isoDate => `${isoDate}T08:00:00.000Z`;   // 09:00 in London summer time
+const floorHalf = n => Math.floor(n * 2) / 2;
+const mondayOf = isoDate => addIsoDays(isoDate, -((new Date(isoDate + 'T00:00:00Z').getUTCDay() + 6) % 7));
+function leave(data, people, ref, rotaWeeks) {
+  const R = leaveRules, CFG = data.CFG || {}, today = FROZEN.toISOString().slice(0, 10);
+  const byCode = new Map(people.map(p => [p.code, p]));
+  const norm = s => String(s || '').replace(/\s+/g, ' ').trim();
+  const accounts = Object.values(data.USERS || {});
+  const managers = new Set(accounts.filter(u => u.role === 'manager').map(u => u.eid));
+  /* Which person each prototype id becomes in this roster. */
+  const map = new Map();
+  if (LEAVE_ROLES.every(e => byCode.has(e))) for (const p of people) map.set(p.code, p.code);
+  else {
+    const lead = people.find(p => norm(p.name) === 'Manish Nepal');
+    if (!lead) throw new Error('extractor: leave needs Manish Nepal in the roster');
+    const reports = people.filter(p => norm(p.manager) === norm(lead.name) && p.location === lead.location && !managers.has(p.code));
+    const here = reports.filter(p => p.state === 'active');
+    if (here.length < LEAVE_ROLES.length) throw new Error(`extractor: leave needs ${LEAVE_ROLES.length} active reports to ${lead.name}`);
+    LEAVE_ROLES.forEach((e, i) => map.set(e, here[i].code));
+    const gone = reports.find(p => p.state === 'leaver') || reports.find(p => p.state === 'archived');
+    if (gone) for (const L of literalLeavers) map.set(L.eid, gone.code);
+  }
+  const mapped = eid => map.get(eid);
+  const refLv = eid => ((ref.PEOPLE || []).find(p => p.id === eid) || {}).lv;
+  const lvOf = code => { const src = [...map].find(([, c]) => c === code); return (src && refLv(src[0])) || ((data.PEOPLE || []).find(p => p.id === code) || {}).lv || {}; };
+  const actor = p => ({ personCode: p.code, name: p.name });
+  const deciderFor = (name, p) => people.find(x => norm(x.name) === norm(name))
+    || people.find(x => managers.has(x.code) && x.location === p.location);
+  const cfg = { ...literalLeaveCfg };
+  const typeLeave = Object.fromEntries(Object.entries(data.TYPES || {}).map(([k, t]) => [k, { policy: (t.leave || {}).policy || 'STD', unit: (t.leave || {}).unit || 'days' }]));
+  const types = (data.LEAVE_TYPES || []).map(t => ({ code: t.code, name: t.name, icon: t.icon, short: t.short, policy: t.policy, paid: !!t.paid,
+    evidence: !!t.evidence, unit: t.unit, active: t.active !== false }));
+  const policies = literalLeavePolicies.map(p => ({ ...p, method: plain(p.method) }));
+  const stages = literalLeaveStages.map(s => ({ n: s.n, who: s.who, action: plain(s.action), wait: s.wait, channel: s.ch }));
+  const leaveConfig = meta({ id: 'leaveConfig', ...cfg, types, policies, stages, typeLeave });
+  const rotaOn = R.leaveWritesRota(CFG.modules || {}, CFG.flags || {});
+
+  /* Requests: P's states, dates and SLA facts; the cover effect as P stored it at send. */
+  const requests = {};
+  for (const r of data.LEAVE_REQUESTS || []) {
+    const code = mapped(r.eid), p = code && byCode.get(code);
+    if (!p) continue;
+    const state = LEAVE_STATE[r.st] || 'pending', raisedAt = dayStamp(iso(r.raised));
+    const history = [{ from: '', to: 'pending', by: actor(p), at: raisedAt, reason: '' }];
+    let decidedAt = '', decidedBy = null;
+    if (state !== 'pending') {
+      const who = deciderFor(r.by, p);
+      if (!who) throw new Error('extractor: no decider for leave request ' + r.id);
+      decidedAt = dayStamp(iso(r.decided)); decidedBy = actor(who);
+      history.push({ from: 'pending', to: state, by: decidedBy, at: decidedAt, reason: '' });
+    }
+    const impact = rotaOn ? (plain(r.impact) !== r.impact ? plain(r.impact).replace(/([^.?!])$/, '$1.') : r.impact)
+      : state === 'pending' ? R.ROTA_OFF_IMPACT : 'Approved';
+    const id = `lr_${r.id}`;
+    requests[id] = meta({ id, personCode: code, type: r.type, from: iso(r.from), to: iso(r.to), part: 'full', qty: r.qty, unit: r.unit === 'hours' ? 'hours' : 'days',
+      state, raisedAt, note: r.note || '', impact, short: rotaOn && !!r.short, escalated: !!r.escalated, decidedAt, decidedBy, reason: '', history });
+  }
+  const reqsOf = code => Object.values(requests).filter(r => r.personCode === code);
+
+  /* The per-person base: what P stored as taken this leave year, less the seeded
+     approved annual leave (which the balance adds back), with the TOIL bank. Where
+     P's taken and waiting days pass the person's derived entitlement, the base is
+     lowered to the half day that fits, so no colleague starts over their balance. */
+  const leavers = new Set(literalLeavers.map(L => mapped(L.eid)).filter(Boolean));
+  const bases = {}, clamped = [];
+  for (const p of people) {
+    const lv = lvOf(p.code), unit = lv.unit === 'hours' ? 'hours' : 'days';
+    const tl = R.typeLeaveFor(typeLeave, p.employeeType), pol = R.policyBy(policies, tl.policy);
+    const facts = { contractedHours: p.contractedHours, start: p.start, accruedHours: lv.entH };
+    const ent = R.entitlement(facts, pol, today), mine = reqsOf(p.code).filter(r => r.type === 'AL');
+    const sumOf = (state, key) => mine.filter(r => r.state === state).reduce((a, r) => a + R.requestDays(r, p.contractedHours)[key], 0);
+    let taken = (unit === 'hours' ? lv.takenH || 0 : lv.taken || 0) - sumOf('approved', unit);
+    if (unit === 'days' && !leavers.has(p.code)) {
+      const room = floorHalf(ent.days - sumOf('pending', 'days') - sumOf('approved', 'days'));
+      if (taken > room) { clamped.push(`${p.code} ${taken}→${room}`); taken = room; }
+    }
+    const id = `lb_${p.code}`;
+    bases[id] = meta({ id, personCode: p.code, year: R.leaveYear(today, cfg.finYearStart).label, unit, taken: Math.max(0, Number(taken.toFixed(2))),
+      toil: lv.toil || 0, toilBy: iso(lv.toilBy), ...(unit === 'hours' ? { accruedHours: lv.entH || 0 } : {}) });
+  }
+  if (clamped.length) console.log('leave base lowered to fit the entitlement:', clamped.join(', '));
+
+  /* Ledger: P's rows, the opening line restated from the person it now belongs to. */
+  const ledger = {};
+  literalLeaveAdjustments.forEach((a, i) => {
+    const code = mapped(a.eid), p = code && byCode.get(code);
+    if (!p) return;
+    const m = /^([+-]?\d+(?:\.\d+)?)\s+(days|hours)$/.exec(a.qty);
+    if (!m) throw new Error('extractor: cannot read the ledger quantity ' + a.qty);
+    const pol = R.policyBy(policies, R.typeLeaveFor(typeLeave, p.employeeType).policy);
+    const why = a.type === 'Opening entitlement' ? `${pol.name} · ${p.contractedHours}h contract · ${R.yearsService(p.start, today)} years service` : plain(a.why);
+    const id = `led_${String(i + 1).padStart(3, '0')}`;
+    ledger[id] = meta({ id, personCode: code, date: iso(a.date), type: a.type, qty: Number(m[1]), unit: m[2], why, by: a.by === 'System' ? null : a.by, counts: false });
+  });
+
+  const leaverRows = byId(literalLeavers.filter(L => mapped(L.eid)).map(L => meta({ id: `lvr_${mapped(L.eid)}`, personCode: mapped(L.eid), leaveDate: iso(L.leave), note: L.note || '' })));
+
+  /* Sickness: P's ABSENCE summaries as dated episodes. The latest is P's date and
+     length; the other spells share the remaining days, each a Monday thirteen
+     weeks before the last, so the Bradford score is P's. */
+  const episodes = {};
+  let n = 0;
+  for (const a of literalAbsence) {
+    const code = mapped(a.eid);
+    if (!code || !byCode.get(code)) continue;
+    const m = /^(\d{2}\/\d{2}\/\d{4}) · (\d+) days?$/.exec(a.latest);
+    if (!m) throw new Error('extractor: cannot read the latest absence ' + a.latest);
+    const latestFrom = iso(m[1]), latestDays = Number(m[2]), rest = a.days - latestDays, others = a.spells - 1;
+    const spans = [];
+    for (let k = others; k >= 1; k--) {
+      const len = Math.floor(rest / others) + (others - k < rest % others ? 1 : 0);
+      spans.push([mondayOf(addIsoDays(latestFrom, -91 * k)), len]);
+    }
+    spans.push([latestFrom, latestDays]);
+    spans.forEach(([from, len], i) => {
+      const id = `sk_${String(++n).padStart(3, '0')}`, last = i === spans.length - 1;
+      episodes[id] = meta({ id, personCode: code, from, to: addIsoDays(from, len - 1), reason: R.SICK_REASONS[(n - 1) % R.SICK_REASONS.length],
+        note: last && !a.trig && a.stage !== 'No action' ? a.stage : '', rtw: null });
+    });
+  }
+
+  /* D7: with Rota and LV_ROTA on, the seeded weeks carry V for booked leave and S
+     for sickness, by the same cell plan; any other V or S cell (the week before
+     is each line rotated by a day) is cleared to rest. */
+  if (rotaOn && rotaWeeks) {
+    for (const w of Object.values(rotaWeeks)) for (const line of Object.values(w.lines)) line.forEach((c, i) => { if (c === 'V' || c === 'S') line[i] = ''; });
+    const put = (p, plan, mark) => { for (const pw of plan) { const w = rotaWeeks[pw.weekId]; if (!w) continue;
+      const line = w.lines[p.code] || (w.lines[p.code] = ['', '', '', '', '', '', '']); for (const d of pw.days) line[d] = mark; } };
+    for (const p of people) {
+      const mine = reqsOf(p.code), booked = R.bookedLeaveDates(mine, []);
+      for (const r of mine.filter(x => x.state === 'approved')) put(p, R.absenceCellPlan(p.location, r.from, r.to), R.absenceMark(r.type));
+      for (const e of Object.values(episodes).filter(x => x.personCode === p.code))
+        put(p, R.datesCellPlan(p.location, R.sicknessDates(e, today, booked)), 'S');
+    }
+  }
+  return { leaveConfig: { leaveConfig }, leaveRequests: requests, leaveLedger: ledger, leaveBases: bases, leavers: leaverRows, sickEpisodes: episodes };
 }
 
 /* ---- module 3: rota (brief D1, D9) ---- */
@@ -364,6 +515,14 @@ const literalTsMultiweek = literal('TS_MULTIWEEK');
 const literalCover = literal('COVER');
 const literalFilled = literal('FILLED');
 const literalFulfilStages = literal('FULFIL_STAGES');
+/* Leave's stores the prototype never persists (STORE_KEYS), so read from its source. */
+const literalLeaveCfg = literal('LEAVE_CFG');
+const literalLeaveStages = literal('LEAVE_STAGES');
+const literalLeavePolicies = literal('LEAVE_POLICIES');
+const literalLeaveAdjustments = literal('LEAVE_ADJUSTMENTS');
+const literalLeavers = literal('LEAVERS');
+const literalAbsence = literal('ABSENCE');
+const leaveRules = await tsImport('../src/domain/leave.ts', import.meta.url);
 /* The capture field catalogue, less any money: the £ value on each allowance and the expenses-to-claim field. */
 const timesheetFields = literal('FIELDS').filter(f => !MONEY_FIELDS.has(f.c))
   .map(f => Object.fromEntries(Object.entries(f).filter(([k]) => k !== 'amt')));
@@ -390,8 +549,8 @@ assertTenantChanged(qnipay, social, 'social');
    name). This app calls that tenant `qnipay`, so the rename is applied to the
    extracted JSON rather than by retyping any record. */
 const renameTenant = json => json.replace(/qcic/g, 'qnipay').replace(/QCIC/g, 'Qnipay');
-writeFileSync(resolve(OUT, 'qnipay.json'), renameTenant(JSON.stringify(shape('qnipay', qnipay, PERMS_META, PERM_GROUPS, PROFILE_CHANGES), null, 1)) + '\n');
-writeFileSync(resolve(OUT, 'social.json'), JSON.stringify(shape('social', social, PERMS_META, PERM_GROUPS, PROFILE_CHANGES), null, 1) + '\n');
+writeFileSync(resolve(OUT, 'qnipay.json'), renameTenant(JSON.stringify(shape('qnipay', qnipay, PERMS_META, PERM_GROUPS, PROFILE_CHANGES, social), null, 1)) + '\n');
+writeFileSync(resolve(OUT, 'social.json'), JSON.stringify(shape('social', social, PERMS_META, PERM_GROUPS, PROFILE_CHANGES, social), null, 1) + '\n');
 writeFileSync(resolve(OUT, 'meta.json'), JSON.stringify({
   flags: literal('FLAGS'), modules: literal('MODULES'), permGroups: literal('PERM_GROUPS'), empStates: literal('EMP_STATES'),
   supportLevels: literal('SUPPORT_LEVELS'), typeArchetypes, typeCapabilities: literal('CAPS'), selfFields: literal('SELF_FIELDS'),
