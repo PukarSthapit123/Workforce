@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { TriangleAlert } from 'lucide-react';
 import { tid } from '@/testids';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import {
@@ -79,7 +80,7 @@ function RequestCard({ r, slaDays, escalateTo, onDecline, onEntitlement }: {
         </div>
         <div className="ml-auto flex items-center">
           {r.sla.escalated
-            ? <Pill testId={tid.tleave.sla(r.id)} tone="err" glyph="⚠">{r.sla.text}</Pill>
+            ? <Pill testId={tid.tleave.sla(r.id)} tone="err" glyph={<TriangleAlert aria-hidden="true" />}>{r.sla.text}</Pill>
             : <><Pill testId={tid.tleave.sla(r.id)} tone={r.sla.tone} glyph="◷">{r.sla.text}</Pill>
                 <Tip testId={tid.tleave.slaTip(r.id)} text={`Then it escalates to the ${escalateTo}. The approval SLA is ${slaDays} days.`} /></>}
         </div>
@@ -179,7 +180,7 @@ function LeaverCard({ x, settled }: { x: LeaverRow; settled: string }) {
           <div className="text-sm font-semibold">{x.name} <span className="font-mono text-xs font-normal text-text-muted">{x.personCode}</span></div>
           <Small>Leaving {formatDmy(x.leaveDate)} · {x.months} months of the financial year worked{x.note ? ` · ${x.note}` : ''}</Small>
         </div>
-        <div className="ml-auto"><Pill testId={tid.tleave.leaverVerdict(x.personCode)} tone={x.tone} glyph={x.diff === 0 ? '✓' : '⚠'}>{x.verdict}</Pill></div>
+        <div className="ml-auto"><Pill testId={tid.tleave.leaverVerdict(x.personCode)} tone={x.tone} glyph={x.diff === 0 ? '✓' : <TriangleAlert aria-hidden="true" />}>{x.verdict}</Pill></div>
       </div>
       <div className="mt-md">
         <Table>

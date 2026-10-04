@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { Link2, RefreshCw, Repeat, Ruler, Tag, Upload, UsersRound } from 'lucide-react';
+import { Link2, RefreshCw, Repeat, Ruler, Tag, TriangleAlert, Upload, UsersRound } from 'lucide-react';
 import { tid } from '@/testids';
 import {
   ActionBar, AdminCard, Button, Card, Chip, ChipPicker, Empty, FormWarn, GuideButton, InlineInput, Page, PageHead, Pill, Row, SettingRow, SettingSelect,
@@ -199,7 +199,7 @@ function TypesCard({ setup, types, fe, onChange }: {
                   aria-invalid={invalid(at('policy'))} onChange={e => setType(i, { policy: e.target.value })}>
                   {names.map(p => <option key={p.code} value={p.code}>{p.name}</option>)}</SettingSelect><Err text={at('policy')} /></TableCell>
               <TableCell>{t.paid ? <Pill tone="ok" glyph="✓">Paid</Pill> : <Pill tone="neu" glyph="—">Unpaid</Pill>}</TableCell>
-              <TableCell>{t.evidence ? <Pill tone="warn" glyph="⚠">Yes</Pill> : <span className="text-xs text-text-muted">—</span>}</TableCell>
+              <TableCell>{t.evidence ? <Pill tone="warn" glyph={<TriangleAlert aria-hidden="true" />}>Yes</Pill> : <span className="text-xs text-text-muted">—</span>}</TableCell>
               <TableCell>
                 <SettingSelect testId={tid.mleave.typeUnit(i)} small aria-label={`Unit for ${t.name || t.code}`} value={t.unit}
                   aria-invalid={invalid(at('unit'))} onChange={e => { const u = leaveUnit(e.target.value); if (u) setType(i, { unit: u }); }}>
@@ -259,7 +259,7 @@ function PoliciesCard({ setup, policies, fe, onChange }: {
               {numCell('carry', 'd', 'Carry-over')}
               <TableCell>{p.approval ? <Pill tone="ok" glyph="✓">Yes</Pill> : <span className="text-xs text-text-muted">—</span>}</TableCell>
               {numCell('sla', 'd', 'SLA')}
-              <TableCell>{p.escalate ? <Pill tone="warn" glyph="⚠">Yes</Pill> : <span className="text-xs text-text-muted">—</span>}</TableCell>
+              <TableCell>{p.escalate ? <Pill tone="warn" glyph={<TriangleAlert aria-hidden="true" />}>Yes</Pill> : <span className="text-xs text-text-muted">—</span>}</TableCell>
               <TableCell className="text-xs">{p.bh}</TableCell>
             </Row>);
         })}</TableBody>
@@ -335,7 +335,7 @@ function LeaversCard({ leavers }: { leavers: NonNullable<LeaveSetup['leavers']> 
                 <TableCell className="text-right font-mono tabular-nums">{x.taken} d</TableCell>
                 <TableCell className={cn('text-right font-mono font-semibold tabular-nums', x.diff < 0 ? 'text-warn' : 'text-info')}>
                   {x.diff > 0 ? '+' : ''}{x.diff} d</TableCell>
-                <TableCell><Pill tone={x.tone} glyph={x.diff === 0 ? '✓' : '⚠'}>{x.verdict}</Pill><Small>{x.action}</Small></TableCell>
+                <TableCell><Pill tone={x.tone} glyph={x.diff === 0 ? '✓' : <TriangleAlert aria-hidden="true" />}>{x.verdict}</Pill><Small>{x.action}</Small></TableCell>
               </Row>))}</TableBody>
           </Table>
         : <Empty>Nobody is leaving with leave to reconcile.</Empty>}

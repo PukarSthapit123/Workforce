@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { TriangleAlert } from 'lucide-react';
 import { tid } from '@/testids';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import {
@@ -92,7 +93,7 @@ function EpisodeRow({ r }: { r: SicknessRow }) {
       <TableCell label="Days" className="text-right tabular-nums">{r.days}</TableCell>
       <TableCell label="Bradford score"><Meter testId={tid.tsick.score(r.personCode)} pct={r.score} tone={tone} strong={r.triggered}>{r.score}</Meter></TableCell>
       <TableCell label="Next step">
-        <span data-testid={tid.tsick.next(r.personCode)}>{r.triggered ? <Pill tone="err" glyph="⚠">{r.next}</Pill> : <span className="text-xs text-text-muted">{r.next}</span>}</span>
+        <span data-testid={tid.tsick.next(r.personCode)}>{r.triggered ? <Pill tone="err" glyph={<TriangleAlert aria-hidden="true" />}>{r.next}</Pill> : <span className="text-xs text-text-muted">{r.next}</span>}</span>
       </TableCell>
     </Row>);
 }
