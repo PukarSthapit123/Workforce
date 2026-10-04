@@ -12,6 +12,7 @@ import { serve } from './serve';
 import { actor, capsFor } from './auth';
 import { writeAudit } from './audit';
 import { invalid } from './people';
+import { notify as notifyIn } from './notify';
 import {
   accountOfPerson, accounts, codesOf, effectiveCode, nameOf, people, personByCode, recordAt, scopeOf, today, type Signed, type StoredPerson,
 } from './world';
@@ -41,6 +42,7 @@ import {
   type AssignMode, type AssignOutcome, type Candidate, type CellWrite, type PatternPersonInfo, type RotaActor, type RotaChange,
   type RotaDay, type RotaWeekCore, type RotaWorker, type RuleContext, type Suggestion, type WeekLookup,
 } from '@/domain/rota';
+import { absenceCellWrites, datesCellPlan, shortDays, type CoverDay } from '@/domain/leave';
 
 /* ------------------------------------------------------------- the world */
 interface Meta { id: string; version: number; updatedAt: string }
@@ -189,16 +191,7 @@ function weekView(s: Signed, l: StoredLocation, ws: string): RotaWeekView {
 }
 
 /* ------------------------------------------------------- notifications (D8) */
-const NTF = /^ntf_(\d{12})$/;
-function notify(codes: Iterable<string>, n: { title: string; body: string }) {
-  const coll = store.coll('notifications');
-  let max = 0;
-  for (const id of Object.keys(coll)) max = Math.max(max, Number(NTF.exec(id)?.[1] ?? 0));
-  for (const personId of new Set(codes)) {
-    const id = `ntf_${String(++max).padStart(12, '0')}`;
-    coll[id] = { id, personId, area: 'Rota', title: n.title, body: n.body, at: store.now(), read: false };
-  }
-}
+const notify = (codes: Iterable<string>, n: { title: string; body: string }) => notifyIn(codes, n, 'Rota');
 const managersAt = (loc: string) => Object.values(accounts())
   .filter(a => personByCode(a.personCode)?.location === loc && capsFor(a).includes('team_rota')).map(a => a.personCode);
 const administrators = () => Object.values(accounts()).filter(a => capsFor(a).includes('mod_cfg')).map(a => a.personCode);
@@ -394,6 +387,53 @@ export function rotaWeekDays(location: string, weekStart: string): Record<string
 }
 /* The catalogue as the timesheet's Rota line options, while the Rota module is on. */
 export const rotaLineOptions = () => (tenant().modules.R ? shiftList().map(s => ({ code: s.code, name: s.name, from: s.from, to: s.to })) : undefined);
+
+/* ------------------------------------------- leave and sickness (module 4 D7) */
+/* The effect on cover of someone being away on these dates: each day in a
+   stored week at their location, with how many are on shift, whether they are
+   one of them, and the minimum. A week not stored yet has nothing to say. */
+export function rotaCoverDays(personCode: string, dates: readonly string[]): CoverDay[] {
+  const p = personByCode(personCode), l = p ? locationBy(p.location) : undefined;
+  if (!p || !l) return [];
+  return dates.flatMap(date => {
+    const w = weekRec(l.code, periodStart(date));
+    if (!w) return [];
+    const day = dowMon(date), lines = rosterOf(l.code, w).map(x => lineOf(w, x.code));
+    return [{ date, onShift: onShift(lines, day), working: isWorking(lineOf(w, p.code)[day]), min: minAt(l) }];
+  });
+}
+export interface AbsenceWritten { written: number; weeks: string[]; amended: boolean; covers: string[] }
+/* Leave or sickness reaching the rota (module 4 D7) through the same week path
+   as every other cell write: setCells keeps the change log and moves a live
+   week to amendment, a week not stored yet is created as a draft, and the
+   colleague hears about an amended week. A day the person was working that now
+   falls below the minimum opens one cover request (FULFIL), deduplicated as
+   module 3 D7. The caller gates on Rota and LV_ROTA and writes the audit row. */
+export function writeAbsence(o: { personCode: string; dates: readonly string[]; mark: string; by: RotaActor; coverReason: string }): AbsenceWritten {
+  const out: AbsenceWritten = { written: 0, weeks: [], amended: false, covers: [] };
+  const p = personByCode(o.personCode), l = p ? locationBy(p.location) : undefined;
+  if (!p || !l) return out;
+  const sh = shiftList();
+  for (const plan of datesCellPlan(l.code, o.dates)) {
+    const week = weekCore(l.code, plan.weekStart), line = lineOf(week, p.code);
+    const writes = absenceCellWrites(plan, { code: p.code, name: p.name }, o.mark, o.by, store.now()).filter(w => line[w.day] !== o.mark);
+    if (!writes.length) continue;
+    const r = setCells(week, writes);
+    saveWeek(r.week);
+    out.written += writes.length; out.weeks.push(plan.weekId); out.amended ||= r.amended;
+    const first = writes[0];
+    if (r.amended && first) notify([p.code], amendedNotice(plan.weekStart, first.day));
+    if (!flagOn('FULFIL')) continue;
+    const dropped = writes.filter(w => isWorking(line[w.day])).map(w => w.day);
+    const lines = rosterOf(l.code, r.week).map(x => lineOf(r.week, x.code));
+    for (const day of shortDays(lines, dropped, minAt(l))) {
+      const date = addDays(plan.weekStart, day), code = thinnest(day, lines, sh);
+      if (!code || openCoverProblem(Object.values(covers()), l.code, date, code, sh)) continue;
+      out.covers.push(createCover({ location: l.code, date, shift: code, reason: o.coverReason, urgent: false }, l).id);
+    }
+  }
+  return out;
+}
 
 const r2 = (n: number) => Number(n.toFixed(2));
 
