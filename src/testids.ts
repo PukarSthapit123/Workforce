@@ -352,4 +352,25 @@ export const tid = {
   },
   /* module 4 links: proxy entry on a day of leave or sickness (D8) */
   leaveLink: { proxyAnyway: 'proxy-worked-anyway' },
+  /* 1c: Modules & features (amods): the index cards and the drill-in per module */
+  amods: {
+    error: 'amods-error', loading: 'amods-loading', search: 'amods-search', empty: 'amods-empty',
+    card: (code: string) => k('amods-card', code), cardState: (code: string) => k('amods-card-state', code), cardCounts: (code: string) => k('amods-card-counts', code),
+    offPill: 'amods-off-pill', moduleCard: 'amods-module-card', moduleTip: 'amods-module-tip', enableNote: 'amods-enable-note',
+    features: 'amods-features', featuresTip: 'amods-features-tip', offBanner: 'amods-off-banner', noFeatures: 'amods-no-features',
+    mod: (code: string) => k('amods-mod', code), flag: (code: string) => k('amods-flag', code), row: (code: string) => k('amods-row', code),
+    weekGrid: 'amods-week-grid', weekLayout: 'amods-week-layout',
+    stepDown: (key: string) => k('amods-step-down', key), stepUp: (key: string) => k('amods-step-up', key), stepValue: (key: string) => k('amods-step-value', key),
+  },
+  /* 1c: Calendar and saved data (acal) */
+  acal: {
+    error: 'acal-error', loading: 'acal-loading', card: (key: string) => k('acal-card', key), tip: (key: string) => k('acal-tip', key),
+    finYear: 'acal-fin-year', weekStart: 'acal-week-start', horizon: 'acal-horizon', holidays: 'acal-holidays',
+    holiday: (date: string) => k('acal-holiday', date), treatment: (date: string) => k('acal-treatment', date), noHolidays: 'acal-no-holidays',
+    saving: 'acal-saving', size: 'acal-size', export: 'acal-export', reset: 'acal-reset', restore: 'acal-restore', build: 'acal-build',
+  },
+  /* 1c: the Rename roles dialog on Permissions (D11) */
+  roleNames: { open: 'role-names-open', field: (id: string) => k('role-names-field', id), save: 'role-names-save', cancel: 'role-names-cancel', warn: 'role-names-warn' },
+  /* 1c D6: Timesheet setup points at the weekly grid's row in Modules & features */
+  mtsPointer: { weekly: 'mts-weekly-pointer', link: 'mts-weekly-link' },
 } as const;

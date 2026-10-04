@@ -32,12 +32,16 @@ import { LeavePage } from '@/features/leave/LeavePage';
 import { TeamLeavePage } from '@/features/leave/TeamLeavePage';
 import { SicknessPage } from '@/features/leave/SicknessPage';
 import { LeaveSetupPage } from '@/features/leave/LeaveSetupPage';
+import { ModulesPage } from '@/features/modules/ModulesPage';
+import { CalendarPage } from '@/features/calendar/CalendarPage';
+import { moduleBy } from '@/domain/modules';
 
 const BUILT: Record<string, ComponentType> = { asetup: SetupIndex, aperm: PermissionsPage, iaudit: AuditPage,
   apeople: AdminPeoplePage, tpeople: TeamPeoplePage, profile: ProfilePage,
   aloc: DimensionsPage, acon: ContractsPage, atypes: EmployeeTypesPage, ts: TimesheetPage, tteam: TeamTimesheetsPage,
   mts: TimesheetSetupPage, trota: RotaPage, tshifts: ShiftsPage, tpat: PatternsPage,
-  tcover: CoverPage, shifts: MyShiftsPage, mrota: RotaSetupPage, leave: LeavePage, tleave: TeamLeavePage, tsick: SicknessPage, mleave: LeaveSetupPage };
+  tcover: CoverPage, shifts: MyShiftsPage, mrota: RotaSetupPage, leave: LeavePage, tleave: TeamLeavePage, tsick: SicknessPage, mleave: LeaveSetupPage,
+  amods: ModulesPage, acal: CalendarPage };
 const THEME_KEY = 'qnipay.theme';
 
 /* Avoids a non-null assertion on role[0]: charAt(0) is always defined, even
@@ -49,8 +53,9 @@ export function Shell() {
   if (data.kind === 'loading') return <ShellLoading />;
   if (data.kind === 'error') return <ShellError onRetry={data.onRetry} onSignOut={data.onSignOut} />;
   const { session } = data;
-  const role = session.viewingAs?.userType ?? session.account.userType;
-  return <ShellView nav={data.nav} roleLabel={capitalise(role)} viewingAs={session.viewingAs?.name ?? null}
+  /* the user type's display name (D11): a renamed role shows its new name */
+  const role = session.viewingAs ? capitalise(session.viewingAs.userType) : session.account.roleName || capitalise(session.account.userType);
+  return <ShellView nav={data.nav} roleLabel={role} viewingAs={session.viewingAs?.name ?? null}
     account={session.account} canViewAs={session.capabilities.includes('perm_cfg')} unread={0}
     onSignOut={data.onSignOut} onViewAs={data.onViewAs} onEndViewAs={data.onEndViewAs} />;
 }
@@ -62,11 +67,12 @@ export function ShellView({ nav, roleLabel, viewingAs, account, canViewAs = fals
   nav: NavGroup[]; roleLabel: string; viewingAs: string | null; account: MenuAccount; canViewAs?: boolean; unread: number;
   onSignOut(): void; onViewAs?(personCode: string): void; onEndViewAs(): void;
 }) {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const [theme, toggleTheme] = useTheme();
   const current = nav.find(g => pathname.startsWith(`/${g.key}/`)) ?? nav[0];
   const first = nav[0]?.tabs[0];
-  const stripTabs = stripTabsFor(current, pathname);
+  const stripTabs = stripTabsFor(current, pathname, search);
+  const here = pathname + search;
   return (
     <div className="flex min-h-dvh flex-col">
       <TopBar>
@@ -90,7 +96,7 @@ export function ShellView({ nav, roleLabel, viewingAs, account, canViewAs = fals
       {viewingAs && <div role="status" className="flex flex-wrap items-center gap-md border-b border-warn bg-warn-surface px-xl py-sm text-sm text-warn max-lg:px-md">
         <span>Looking at the app as <b>{viewingAs}</b>. Your own account is unchanged.</span>
         <button type="button" data-testid={tid.shell.viewAsEnd} className="inline-flex min-h-touch items-center font-semibold underline" onClick={onEndViewAs}>Return to my account</button></div>}
-      {stripTabs.length > 0 && <TabStrip tabs={stripTabs} pathname={pathname} />}
+      {stripTabs.length > 0 && <TabStrip tabs={stripTabs} here={here} />}
       {/* the page reserves what the bottom bar occupies, home indicator included (v15:815-816) */}
       <main className={cn('flex-1 md:pb-10', stripTabs.length > 0 && 'max-md:pb-[calc(72px+env(safe-area-inset-bottom,0px))]')}>
         <Routes>
@@ -101,7 +107,7 @@ export function ShellView({ nav, roleLabel, viewingAs, account, canViewAs = fals
           <Route path="*" element={first ? <Navigate to={first.path} replace /> : <NothingAvailable />} />
         </Routes>
       </main>
-      {stripTabs.length > 0 && <BottomBar tabs={stripTabs} pathname={pathname} />}
+      {stripTabs.length > 0 && <BottomBar tabs={stripTabs} here={here} />}
     </div>);
 }
 
@@ -143,17 +149,33 @@ function firstTabPath(g: NavGroup): string {
    section it shows only that section's pages, plus a way back (ported from
    the prototype's SETUP_SECTIONS drill and its "‹ All setup" tab,
    qnipay-workforce-v15.html:4075). Work and My Team are unaffected: their
-   strip is just the group's tabs, as it always was. */
-export function stripTabsFor(current: NavGroup | undefined, pathname: string): NavTab[] {
+   strip is just the group's tabs, as it always was. Inside Modules, opening
+   a module (/setup/amods?m=<code>) drills in once more, as the prototype's
+   NAV() does (v15:4059-4076): a way back to the module list, the module's
+   features, and its setup page when this person can reach it. */
+export function stripTabsFor(current: NavGroup | undefined, pathname: string, search = ''): NavTab[] {
   if (!current) return [];
   if (current.key !== 'setup') return current.tabs;
   const index = current.tabs.find(t => t.view === 'asetup');
   const active = current.tabs.find(t => t.path === pathname);
   const section = active?.section;
   if (!section) return index && active === index ? [index] : [];
-  const back: NavTab = { view: 'asetup', label: '‹ All setup', path: index?.path ?? '/setup/asetup', built: true };
+  const m = active.view === 'amods' ? moduleBy(new URLSearchParams(search).get('m') ?? '') : undefined;
+  if (m) {
+    const own = current.tabs.find(t => t.view === m.setup);
+    return [
+      { view: 'amods', label: '‹ All modules', path: active.path, built: true, back: true },
+      { view: 'mfeat', label: `${m.name} features`, path: `${active.path}?m=${m.code}`, built: true },
+      ...(own && m.setupLabel ? [{ ...own, label: m.setupLabel }] : []),
+    ];
+  }
+  const back: NavTab = { view: 'asetup', label: '‹ All setup', path: index?.path ?? '/setup/asetup', built: true, back: true };
   return [back, ...current.tabs.filter(t => t.section === section)];
 }
+/* Whether a strip tab is the page on screen. A tab whose path carries a query
+   (a module's features) matches only with that query; any other matches its
+   path whatever the query, and a way back never does. */
+export const isHere = (t: NavTab, here: string) => !t.back && (t.path.includes('?') ? here === t.path : here.split('?')[0] === t.path);
 
 function useTheme(): ['light' | 'dark', () => void] {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -192,23 +214,23 @@ function menuKey(r: { group?: string; groupKey?: string }): string {
    you are on with a fill and an inset bar, never colour alone. */
 const TAB = 'relative inline-flex h-[43px] shrink-0 items-center border-b-2 border-transparent px-[13px] text-sm font-medium whitespace-nowrap text-text-secondary transition-colors duration-(--qp-duration-fast) hover:bg-surface-tint hover:text-text-primary';
 const TAB_ON = 'border-brand font-semibold text-brand hover:bg-transparent hover:text-brand dark:border-brand-accent dark:text-brand-accent dark:hover:text-brand-accent';
-function TabStrip({ tabs, pathname }: { tabs: NavTab[]; pathname: string }) {
+function TabStrip({ tabs, here }: { tabs: NavTab[]; here: string }) {
   const runs: { group?: string; groupKey?: string; tabs: NavTab[] }[] = [];
   tabs.forEach(t => { const last = runs[runs.length - 1]; if (t.group && last?.group === t.group) last.tabs.push(t); else runs.push({ group: t.group, groupKey: t.groupKey, tabs: [t] }); });
-  const link = (t: NavTab) => <NavLink key={t.view} to={t.path} testId={tid.nav.tab(t.view)} aria-current={pathname === t.path ? 'page' : undefined}
-    className={cn(TAB, pathname === t.path && TAB_ON)}>{t.label}</NavLink>;
+  const link = (t: NavTab) => <NavLink key={t.view} to={t.path} testId={tid.nav.tab(t.view)} aria-current={isHere(t, here) ? 'page' : undefined}
+    className={cn(TAB, isHere(t, here) && TAB_ON)}>{t.label}</NavLink>;
   return (
     <nav aria-label="Pages" className="sticky top-14 z-[60] hidden min-h-11 flex-wrap items-stretch gap-y-[2px] border-b bg-surface-card px-xl max-lg:px-md md:flex">
       {runs.map(r => !r.group ? r.tabs.map(link) : (
         <DropdownMenu key={r.group}>
           <DropdownMenuTrigger data-testid={tid.nav.menu(menuKey(r))}
-            className={cn(TAB, 'data-[state=open]:bg-surface-tint data-[state=open]:text-text-primary', r.tabs.some(t => t.path === pathname) && TAB_ON)}>
+            className={cn(TAB, 'data-[state=open]:bg-surface-tint data-[state=open]:text-text-primary', r.tabs.some(t => isHere(t, here)) && TAB_ON)}>
             {r.group}<span aria-hidden="true" className="ml-[5px] text-xs leading-none opacity-55">▾</span></DropdownMenuTrigger>
           <DropdownMenuContent align="start" sideOffset={-1} className="min-w-[212px] p-[5px] shadow-md">
             {r.tabs.map(t => <DropdownMenuItem key={t.view} asChild
               className={cn('h-9 px-[10px] py-0 font-medium whitespace-nowrap text-text-secondary focus:text-text-primary',
-                pathname === t.path && 'bg-brand-subtle font-semibold text-brand shadow-[inset_2px_0_0_var(--qp-color-brand-primary)] focus:bg-brand-subtle focus:text-brand dark:text-brand-accent dark:shadow-[inset_2px_0_0_var(--qp-color-brand-accent)] dark:focus:text-brand-accent')}>
-              <NavLink to={t.path} testId={tid.nav.tab(t.view)} aria-current={pathname === t.path ? 'page' : undefined}>{t.label}</NavLink>
+                isHere(t, here) && 'bg-brand-subtle font-semibold text-brand shadow-[inset_2px_0_0_var(--qp-color-brand-primary)] focus:bg-brand-subtle focus:text-brand dark:text-brand-accent dark:shadow-[inset_2px_0_0_var(--qp-color-brand-accent)] dark:focus:text-brand-accent')}>
+              <NavLink to={t.path} testId={tid.nav.tab(t.view)} aria-current={isHere(t, here) ? 'page' : undefined}>{t.label}</NavLink>
             </DropdownMenuItem>)}
           </DropdownMenuContent>
         </DropdownMenu>))}
@@ -239,7 +261,7 @@ const shortLabel = (label: string) => label.split(' ')[0] ?? label;
    setup" entry first). More opens a Dialog (Radix traps and restores focus,
    per Modal.tsx), a sheet from the bottom on a phone. Each destination there
    closes it on selection, so it never blocks reopening it for the next. */
-function BottomBar({ tabs, pathname }: { tabs: NavTab[]; pathname: string }) {
+function BottomBar({ tabs, here }: { tabs: NavTab[]; here: string }) {
   const [moreOpen, setMoreOpen] = useState(false);
   const overflow = tabs.length > 5;
   const destinations = overflow ? tabs.slice(0, 4) : tabs;
@@ -249,18 +271,18 @@ function BottomBar({ tabs, pathname }: { tabs: NavTab[]; pathname: string }) {
   return (
     <nav aria-label="Quick pages" className="fixed inset-x-0 bottom-0 z-[80] flex border-t bg-surface-card pb-[env(safe-area-inset-bottom,0px)] md:hidden">
       {destinations.map(t => <NavLink key={t.view} to={t.path} testId={tid.nav.bottom(t.view)} aria-label={t.label}
-        aria-current={pathname === t.path ? 'page' : undefined} className={cn(BAR_ITEM, on(pathname === t.path))}>
+        aria-current={isHere(t, here) ? 'page' : undefined} className={cn(BAR_ITEM, on(isHere(t, here)))}>
         {barGlyph(GLYPH[t.view] ?? '●')}<span className="max-w-full truncate">{shortLabel(t.label)}</span></NavLink>)}
       {remaining.length > 0 && <>
         <button type="button" data-testid={tid.nav.more} aria-haspopup="dialog" aria-label="More pages" onClick={() => setMoreOpen(true)}
-          className={cn(BAR_ITEM, on(remaining.some(t => t.path === pathname)))}>{barGlyph('⋯')}<span>More</span></button>
+          className={cn(BAR_ITEM, on(remaining.some(t => isHere(t, here))))}>{barGlyph('⋯')}<span>More</span></button>
         <Modal open={moreOpen} onOpenChange={setMoreOpen} title="More pages">
           <ul className="flex flex-col gap-xs">
             {remaining.map(t => <li key={t.view}>
               <NavLink to={t.path} testId={tid.nav.bottom(t.view)} onClick={() => setMoreOpen(false)}
-                aria-current={pathname === t.path ? 'page' : undefined}
+                aria-current={isHere(t, here) ? 'page' : undefined}
                 className={cn('flex min-h-touch items-center rounded-control border px-md text-sm font-semibold',
-                  pathname === t.path ? 'border-transparent bg-brand-subtle text-brand dark:text-brand-accent' : 'bg-surface-card')}>{t.label}</NavLink>
+                  isHere(t, here) ? 'border-transparent bg-brand-subtle text-brand dark:text-brand-accent' : 'bg-surface-card')}>{t.label}</NavLink>
             </li>)}
           </ul>
         </Modal>

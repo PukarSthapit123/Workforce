@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/api/query';
-import { ShellView, stripTabsFor } from './Shell';
+import { ShellView, isHere, stripTabsFor } from './Shell';
 import { buildNav } from '@/domain/nav';
 import { expectTestIdCoverage } from '@/test/testid-coverage';
 import { tid } from '@/testids';
@@ -107,4 +107,19 @@ test('a page inside a menu still marks its heading as current', () => {
   render(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={['/team/trota']}>
     <ShellView nav={nav} roleLabel="Manager" viewingAs={null} account={menuAccount('Rachel Hussain')} unread={0} onSignOut={() => {}} onEndViewAs={() => {}} /></MemoryRouter></QueryClientProvider>);
   expect(screen.getByTestId(tid.nav.menu('scheduling')).className).toMatch(/font-semibold/);
+});
+
+/* The module drill-in (v15:4059-4076, suite S:3051-3060): opening a module
+   gives a way back to the module list, the module's features, and its setup
+   page when this person can reach it; the way back is never the current page. */
+test('inside a module the strip reads All modules, then its features, then its setup page', () => {
+  const nav = buildNav({ caps: new Set(['mod_cfg']), modules: { CORE: true, TS: true, A: true, R: true, L: true }, flags: {}, onboarding: false });
+  const setup = nav.find(g => g.key === 'setup');
+  if (!setup) throw new Error('expected a setup group');
+  const strip = stripTabsFor(setup, '/setup/amods', '?m=R');
+  expect(strip.map(t => t.label)).toEqual(['‹ All modules', 'Rota features', 'Rota setup']);
+  expect(strip.map(t => t.path)).toEqual(['/setup/amods', '/setup/amods?m=R', '/setup/mrota']);
+  expect(strip.map(t => isHere(t, '/setup/amods?m=R'))).toEqual([false, true, false]);
+  expect(stripTabsFor(setup, '/setup/amods', '?m=CORE').map(t => t.label)).toEqual(['‹ All modules', 'Workforce core features']);
+  expect(stripTabsFor(setup, '/setup/amods').map(t => t.label)).toEqual(['‹ All setup', 'Modules & features', 'Timesheet', 'Rota', 'Leave']);
 });

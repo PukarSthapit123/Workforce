@@ -13,6 +13,8 @@ export interface NavTab {
   /* What the section configures, shown behind hover on its setup card
      (prototype SETUP_SECTIONS desc, html:3975-3991). */
   sectionDescription?: string;
+  /* a strip's way back ("‹ All setup", "‹ All modules"): never the page you are on */
+  back?: true;
 }
 export interface NavGroup { key: 'work' | 'team' | 'setup'; label: string; tabs: NavTab[] }
 
@@ -23,7 +25,7 @@ const LATER: Record<string, string> = {
   thome: 'Workforce core (plan 1c)', thours: 'Timesheet',
   texc: 'Timesheet', tonb: 'Onboarding',
   tnotices: 'Workforce core (plan 1c)',
-  aorg: 'Workforce core (plan 1c)', acal: 'Workforce core (plan 1c)', amods: 'Workforce core (plan 1c)',
+  aorg: 'Workforce core (plan 1c)',
   anotif: 'Workforce core (plan 1c)',
   aappr: 'Workforce core (plan 1c)', mpay: 'Timesheet',
   ipay: 'Payroll and Business Central', ibc: 'Payroll and Business Central', iit: 'Rota',

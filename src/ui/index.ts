@@ -28,3 +28,4 @@ export { useNarrow } from './useNarrow';
 export { SugCard, WhyList, SugPanel, RuledOutList, RuledOutRow } from './Suggest';
 export { EssCols, EssCard, EssBig, EssRow, EssButton } from './Ess';
 export { Meter } from './Meter';
+export { Stepper } from './Stepper';
