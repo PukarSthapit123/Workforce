@@ -93,12 +93,16 @@ function Board({ view, loading, thisWeek, initialPlan, onLocation, onWeek }: {
      rule's text; advisories come back with the saved week and never block. */
   const advisory = (r: Pick<CellSaved, 'advisories'>) =>
     (r.advisories.length ? `Advisory only: ${r.advisories.map(a => a.k.toLowerCase()).join(', ')}. Hours warnings do not block publishing.` : undefined);
-  const assign = (personCode: string, d: number, code: string, why: string, after?: () => void) => {
+  /* One cell write per week at a time: a further place while one is saving is
+     refused out loud, and a tapped or keyboard shift stays picked up to try again. */
+  const assign = (personCode: string, d: number, code: string, why: string, after?: () => void): boolean => {
     const name = rowOf(personCode)?.name ?? personCode;
-    write.mutate({ ...ref, body: { personCode, day: d, code, why } }, { onSuccess: r => {
+    const sent = write.mutate({ ...ref, body: { personCode, day: d, code, why } }, { onSuccess: r => {
       after?.();
       toastInfo(`${shiftName(shifts, code)} → ${name} · ${shortDay(view.weekStart, d)} · ${shiftTime(shifts, code)}`, advisory(r));
     } });
+    if (!sent) toastRefusal({ message: 'Still saving the last change.', next: 'Try again in a moment.' });
+    return sent;
   };
   const lift = (code: string, keyboard: boolean) => {
     const name = shiftName(shifts, code);
@@ -108,9 +112,7 @@ function Board({ view, loading, thisWeek, initialPlan, onLocation, onWeek }: {
   };
   const onCell = (r: RotaRow, d: number, keyboard: boolean) => {
     if (lifted) {
-      const code = lifted;
-      setLifted(null);
-      assign(r.personCode, d, code, keyboard ? 'Assigned by keyboard' : 'Assigned by touch');
+      if (assign(r.personCode, d, lifted, keyboard ? 'Assigned by keyboard' : 'Assigned by touch')) setLifted(null);
       return;
     }
     const code = r.line[d] ?? '';

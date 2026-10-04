@@ -143,6 +143,20 @@ describe('Team rota', () => {
     expect(week().changes[0]).toMatchObject({ why: 'Assigned by drag' });
   });
 
+  test('a second drop while the first is still saving is refused out loud, not dropped (M3)', async () => {
+    await open();
+    const drag = (code: string) => fireEvent.dragStart(screen.getByTestId(tid.trota.pchip(code)), { dataTransfer: { setData: () => {}, getData: () => code, effectAllowed: '' } });
+    drag('E');
+    fireEvent.drop(screen.getByTestId(tid.trota.cell('CP-1402', 4)), { dataTransfer: { getData: () => 'E' } });
+    drag('L');
+    fireEvent.drop(screen.getByTestId(tid.trota.cell('CP-1042', 2)), { dataTransfer: { getData: () => 'L' } });
+    await expectToast('Still saving the last change.', tid.toast.error);
+    await expectToast('Early → Rosa Mendes · Fri 14');
+    expect(week().lines['CP-1402']?.[4]).toBe('E');
+    expect(week().changes.map(c => c.why)).toEqual(['Assigned by drag']);
+    expect(rotaActs()).toEqual(['Published rota amended']);
+  });
+
   test('publish is blocked while an empty draft week has gaps; it can be sent for review', async () => {
     await open();
     await userEvent.click(screen.getByTestId(tid.trota.weekNext));
