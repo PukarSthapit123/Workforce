@@ -287,10 +287,10 @@ export const NOT_YOUR_REQUEST = 'You can cancel only your own requests.';
    accruedHours is the bank worker's accrual to date (ACC policy). */
 export interface LeaveBase { unit: BalanceUnit; taken: number; toil: number; toilBy: string; accruedHours?: number }
 export interface LeaveRecord { type: string; from: string; to: string; part: LeavePart; qty: number; unit: BalanceUnit; state: string }
-/* A ledger row. amount is signed, positive adds to the balance. `counts` marks
+/* A ledger row. qty is signed, positive adds to the balance. `counts` marks
    a row that moves what is taken (days returned); an informational row (opening
    entitlement, leave approved) does not, because the request itself counts. */
-export interface LedgerRow { date: string; type: string; amount: number; unit: BalanceUnit; why: string; counts: boolean; dates?: string[] }
+export interface LedgerRow { date: string; type: string; qty: number; unit: BalanceUnit; why: string; counts: boolean; dates?: string[] }
 export interface Balance { ent: Entitlement; unit: BalanceUnit; takenD: number; takenH: number; pending: number; pendingH: number; leftD: number; leftH: number;
   toil: number; toilPending: number; toilLeft: number; toilBy: string }
 const sum = (xs: readonly number[]) => xs.reduce((a, b) => a + b, 0);
@@ -302,7 +302,7 @@ export function balanceOf(o: { ent: Entitlement; base: LeaveBase; contractedHour
   const yr = leaveYear(o.today, o.finYearStart), day = dailyHours(o.contractedHours);
   const mine = o.requests.filter(r => inYear(r.from, yr));
   const al = (state: string) => mine.filter(r => r.type === 'AL' && r.state === state).map(r => requestDays(r, o.contractedHours));
-  const back = o.ledger.filter(l => l.counts && inYear(l.date, yr)).map(l => (l.unit === 'hours' ? { days: l.amount / day, hours: l.amount } : { days: l.amount, hours: l.amount * day }));
+  const back = o.ledger.filter(l => l.counts && inYear(l.date, yr)).map(l => (l.unit === 'hours' ? { days: l.qty / day, hours: l.qty } : { days: l.qty, hours: l.qty * day }));
   const approved = al('approved'), waiting = al('pending');
   let takenD: number, takenH: number;
   if (o.base.unit === 'hours') {
@@ -323,7 +323,7 @@ export const balanceText = (b: Balance) => (b.unit === 'hours' ? `${b.leftH} of 
 export const daysToTakeText = (b: Balance, yearEnd: string, toilOn: boolean) =>
   `${b.leftD} days to take by ${formatDmy(yearEnd)}${toilOn && b.toil ? ` · ${b.toil} hours TOIL expires ${formatDmy(b.toilBy)}` : ''}`;
 /* "+24 days", "-2 days", "0 hours". */
-export const ledgerQty = (l: Pick<LedgerRow, 'amount' | 'unit'>) => `${l.amount > 0 ? '+' : ''}${l.amount} ${l.unit}`;
+export const ledgerQty = (l: Pick<LedgerRow, 'qty' | 'unit'>) => `${l.qty > 0 ? '+' : ''}${l.qty} ${l.unit}`;
 
 /* ------------------------------------------- SLA and notice (D6) */
 export interface SlaState { daysLeft: number; escalated: boolean; stage: number; tone: 'warn' | 'err' }
@@ -460,7 +460,7 @@ export function giveBackProblem(picked: readonly string[], candidates: readonly 
 /* The one ledger row a give-back writes, in the person's display unit. */
 export function giveBackRow(picked: readonly string[], candidates: readonly { date: string; days: number }[], unit: BalanceUnit, contractedHours: number, today: string): LedgerRow {
   const days = round2(sum(candidates.filter(c => picked.includes(c.date)).map(c => c.days)));
-  return { date: today, type: 'Days returned', amount: unit === 'hours' ? round2(days * dailyHours(contractedHours)) : days, unit,
+  return { date: today, type: 'Days returned', qty: unit === 'hours' ? round2(days * dailyHours(contractedHours)) : days, unit,
     why: 'Sickness recorded across booked annual leave', counts: true, dates: [...picked].sort() };
 }
 export const SICK_ON_LEAVE_TIP = 'Where sickness falls across annual leave, those days go back to the colleague’s balance.';
@@ -488,16 +488,28 @@ export const absenceMark = (type: string) => (type === 'SICK' ? SICK : LEAVE);
 export const leaveRotaWhy = (mark: string) => (mark === SICK ? 'Sickness recorded' : 'Leave approved');
 export const leaveCoverReason = (mark: string) => (mark === SICK ? 'Sickness' : 'Annual leave cover');
 export interface CellPlanWeek { location: string; weekStart: string; weekId: string; days: number[] }
-/* Every day from `from` to `to`, grouped into the location's rota weeks (Monday first). */
-export function absenceCellPlan(location: string, from: string, to: string): CellPlanWeek[] {
+/* The dates grouped into the location's rota weeks (Monday first), in date order. */
+export function datesCellPlan(location: string, dates: readonly string[]): CellPlanWeek[] {
   const out: CellPlanWeek[] = [];
-  for (const d of datesOf(from, to)) {
+  for (const d of [...new Set(dates)].filter(isIsoDate).sort()) {
     const weekStart = periodStart(d), day = daysBetween(weekStart, d);
     const w = out.find(x => x.weekStart === weekStart);
     if (w) w.days.push(day); else out.push({ location, weekStart, weekId: rotaWeekId(location, weekStart), days: [day] });
   }
   return out;
 }
+/* Every day of a request, from `from` to `to`. */
+export const absenceCellPlan = (location: string, from: string, to: string) => datesCellPlan(location, datesOf(from, to));
+/* Days of approved leave still booked: not given back after sickness (D10). */
+export const bookedLeaveDates = (requests: readonly Pick<LeaveRecord, 'type' | 'from' | 'to' | 'state'>[], returned: readonly string[]) => {
+  const back = new Set(returned);
+  return new Set(requests.filter(r => r.state === 'approved' && r.type !== 'SICK').flatMap(r => datesOf(r.from, r.to)).filter(d => !back.has(d)));
+};
+/* A sickness episode's rota days. A day of booked annual leave stays leave (V)
+   until the manager gives it back; giving it back then writes S on exactly
+   those days (datesCellPlan over the returned dates). */
+export const sicknessDates = (e: Pick<SickEpisode, 'from' | 'to'>, today: string, booked: ReadonlySet<string>) =>
+  datesOf(e.from, episodeEnd(e, today)).filter(d => !booked.has(d));
 /* The cell writes for one planned week, for the module 3 week path (setCells). */
 export const absenceCellWrites = (w: CellPlanWeek, person: { code: string; name: string }, mark: string, by: RotaActor, at: string): CellWrite[] =>
   w.days.map(day => ({ personCode: person.code, name: person.name, day, to: mark, by, at, why: leaveRotaWhy(mark) }));
@@ -505,11 +517,14 @@ export const absenceCellWrites = (w: CellPlanWeek, person: { code: string; name:
 export const shortDays = (lines: readonly Line[], days: readonly number[], min: number) => days.filter(d => onShift(lines, d) < min);
 
 /* ------------------------------------------- leave to timesheet (D8) */
-/* What absence a day carries from leave records: approved leave (V) or a sickness episode (S); sickness wins. */
-export function absenceOn(date: string, requests: readonly Pick<LeaveRecord, 'type' | 'from' | 'to' | 'state'>[], episodes: readonly Pick<SickEpisode, 'from' | 'to'>[], today: string): '' | 'V' | 'S' {
-  if (episodes.some(e => date >= e.from && date <= episodeEnd(e, today))) return SICK;
-  const r = requests.find(x => x.state === 'approved' && date >= x.from && date <= x.to);
-  return r ? (absenceMark(r.type) as 'V' | 'S') : '';
+/* What absence a day carries from leave records, as the rota shows it: booked
+   leave (V), else a sickness episode (S). */
+export function absenceOn(date: string, requests: readonly Pick<LeaveRecord, 'type' | 'from' | 'to' | 'state'>[], episodes: readonly Pick<SickEpisode, 'from' | 'to'>[],
+  today: string, returned: readonly string[] = []): '' | 'V' | 'S' {
+  const back = new Set(returned);
+  const r = requests.find(x => x.state === 'approved' && date >= x.from && date <= x.to && (x.type === 'SICK' || !back.has(date)));
+  if (r) return r.type === 'SICK' ? SICK : LEAVE;
+  return episodes.some(e => date >= e.from && date <= episodeEnd(e, today)) ? SICK : '';
 }
 export const absenceBlockedProblem = (mark: string): LeaveRefusal => ({ code: 'ABSENCE_BLOCKED',
   message: `${mark === SICK ? 'Sickness' : 'Annual leave'} is recorded for this day. Approved absence blocks timesheet capture while “Leave blocks timesheet capture” is on.`,

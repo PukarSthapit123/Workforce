@@ -1,6 +1,6 @@
 import {
   CANCELLED_TOAST, CHOOSE_TYPE, DEFAULT_LEAVE_CONFIG, DEFAULT_TYPE_LEAVE, LAST_BEFORE_FIRST, OVER_BALANCE, PICK_BOTH_DATES, REASON_REQUIRED, ROTA_OFF_IMPACT,
-  RTW_ALREADY, RTW_TOAST, SELF_APPROVAL, SETTLED_IN_PAYROLL, absenceBlockedProblem, absenceCellPlan, absenceCellWrites, absenceMark, absenceOn, approvedNotice,
+  RTW_ALREADY, RTW_TOAST, SELF_APPROVAL, SETTLED_IN_PAYROLL, absenceBlockedProblem, absenceCellPlan, absenceCellWrites, bookedLeaveDates, datesCellPlan, sicknessDates, absenceMark, absenceOn, approvedNotice,
   approvedToast, balanceOf, balanceText, bradford, cancelTip, cancelWindowAdvisory, cancelledNotice, coverImpact, dailyHours, daysReturnedNotice,
   daysReturnedToast, daysToTakeText, declineReasonProblem, declinedNotice, declinedToast, entitlement, episodeDays, episodeEnd, escalationText,
   giveBackProblem, giveBackRow, halfDaySingle, latestAbsenceText, leaveCan, leaveConfigProblem, leaveCoverReason, leaveRange, leaveRotaWhy, leaveShape,
@@ -253,8 +253,8 @@ describe('balance (D3): derived from base, requests and ledger', () => {
     expect([waiting.pending, approved.pending, approved.takenD]).toEqual([2, 0, 9.5]);
   });
   test('a counted ledger row returns days; an informational one does not', () => {
-    const back: LedgerRow = { date: TODAY, type: 'Days returned', amount: 1, unit: 'days', why: '', counts: true };
-    const info: LedgerRow = { date: '2026-04-01', type: 'Opening entitlement', amount: 24, unit: 'days', why: '', counts: false };
+    const back: LedgerRow = { date: TODAY, type: 'Days returned', qty: 1, unit: 'days', why: '', counts: true };
+    const info: LedgerRow = { date: '2026-04-01', type: 'Opening entitlement', qty: 24, unit: 'days', why: '', counts: false };
     expect(bal([rec()], [back, info]).takenD).toBe(8.5);
   });
   test('TOIL draws on the TOIL bank in hours, and waiting TOIL is held back', () => {
@@ -264,7 +264,7 @@ describe('balance (D3): derived from base, requests and ledger', () => {
   test('a bank worker holds the balance in hours', () => {
     const e = entitlement({ contractedHours: 0, start: '2026-03-12', accruedHours: 52.1 }, ACC, TODAY);
     const b = balanceOf({ ent: e, base: { unit: 'hours', taken: 7.5, toil: 0, toilBy: '' }, contractedHours: 0, requests: [rec({ from: '2026-08-20', to: '2026-08-20', qty: 1 })],
-      ledger: [{ date: TODAY, type: 'Days returned', amount: 7.5, unit: 'hours', why: '', counts: true }], today: TODAY, finYearStart: '01/04' });
+      ledger: [{ date: TODAY, type: 'Days returned', qty: 7.5, unit: 'hours', why: '', counts: true }], today: TODAY, finYearStart: '01/04' });
     expect([b.takenH, b.takenD, b.leftH]).toEqual([7.5, 1, 44.6]);
     expect(balanceText(b)).toBe('44.6 of 52.1 hours left');
   });
@@ -272,7 +272,7 @@ describe('balance (D3): derived from base, requests and ledger', () => {
     const b = bal([rec()]);
     expect(daysToTakeText(b, '2027-03-31', true)).toBe('15.5 days to take by 31/03/2027 · 6 hours TOIL expires 30/09/2026');
     expect(daysToTakeText(b, '2027-03-31', false)).toBe('15.5 days to take by 31/03/2027');
-    expect([ledgerQty({ amount: 24, unit: 'days' }), ledgerQty({ amount: -2, unit: 'days' }), ledgerQty({ amount: 0, unit: 'hours' })]).toEqual(['+24 days', '-2 days', '0 hours']);
+    expect([ledgerQty({ qty: 24, unit: 'days' }), ledgerQty({ qty: -2, unit: 'days' }), ledgerQty({ qty: 0, unit: 'hours' })]).toEqual(['+24 days', '-2 days', '0 hours']);
   });
 });
 
@@ -409,9 +409,9 @@ describe('give days back (D10)', () => {
   });
   test('one ledger row returns exactly the picked days', () => {
     const c = sickDuringLeave(leave, sick, [], TODAY);
-    expect(giveBackRow(['2026-08-12', '2026-08-11'], c, 'days', 30, TODAY)).toEqual({ date: TODAY, type: 'Days returned', amount: 1.5, unit: 'days',
+    expect(giveBackRow(['2026-08-12', '2026-08-11'], c, 'days', 30, TODAY)).toEqual({ date: TODAY, type: 'Days returned', qty: 1.5, unit: 'days',
       why: 'Sickness recorded across booked annual leave', counts: true, dates: ['2026-08-11', '2026-08-12'] });
-    expect(giveBackRow(['2026-08-11'], c, 'hours', 30, TODAY)).toMatchObject({ amount: 6, unit: 'hours' });
+    expect(giveBackRow(['2026-08-11'], c, 'hours', 30, TODAY)).toMatchObject({ qty: 6, unit: 'hours' });
   });
 });
 
@@ -443,6 +443,16 @@ describe('leave to rota (D7)', () => {
       { location: 'WH', weekStart: '2026-08-10', weekId: 'rw_WH_2026-08-10', days: [5, 6] },
       { location: 'WH', weekStart: '2026-08-17', weekId: 'rw_WH_2026-08-17', days: [0, 1] }]);
     expect(absenceCellPlan('WH', '2026-08-12', '2026-08-11')).toEqual([]);
+    expect(datesCellPlan('BC', ['2026-08-18', '2026-08-11', '2026-08-11', 'x'])).toEqual([
+      { location: 'BC', weekStart: '2026-08-10', weekId: 'rw_BC_2026-08-10', days: [1] },
+      { location: 'BC', weekStart: '2026-08-17', weekId: 'rw_BC_2026-08-17', days: [1] }]);
+  });
+  test('sickness on a day of booked leave leaves the V until the day is given back', () => {
+    const reqs = [rec({ from: '2026-08-10', to: '2026-08-11' }), rec({ from: '2026-08-12', to: '2026-08-12', state: 'declined' })];
+    expect([...bookedLeaveDates(reqs, [])]).toEqual(['2026-08-10', '2026-08-11']);
+    expect([...bookedLeaveDates(reqs, ['2026-08-11'])]).toEqual(['2026-08-10']);
+    expect(sicknessDates({ from: '2026-08-11', to: '' }, TODAY, bookedLeaveDates(reqs, []))).toEqual(['2026-08-12', '2026-08-13']);
+    expect(sicknessDates({ from: '2026-08-11', to: '2026-08-11' }, TODAY, bookedLeaveDates(reqs, ['2026-08-11']))).toEqual(['2026-08-11']);
   });
   test('the writes go through the week path: a live week becomes an amendment, and a short day is found', () => {
     const [w] = absenceCellPlan('WH', '2026-08-10', '2026-08-11');
@@ -458,10 +468,12 @@ describe('leave to rota (D7)', () => {
 });
 
 describe('leave to timesheet (D8)', () => {
-  test('a day\'s absence comes from approved leave and sickness, sickness first', () => {
+  test('a day\'s absence comes from booked leave, then sickness; a day given back reads as sickness', () => {
     const reqs = [rec({ from: '2026-08-10', to: '2026-08-11' }), rec({ from: '2026-08-12', to: '2026-08-12', state: 'pending' })];
     const eps = [{ from: '2026-08-11', to: '2026-08-11' }];
-    expect(['2026-08-10', '2026-08-11', '2026-08-12', '2026-08-13'].map(d => absenceOn(d, reqs, eps, TODAY))).toEqual(['V', 'S', '', '']);
+    expect(['2026-08-10', '2026-08-11', '2026-08-12', '2026-08-13'].map(d => absenceOn(d, reqs, eps, TODAY))).toEqual(['V', 'V', '', '']);
+    expect(absenceOn('2026-08-11', reqs, eps, TODAY, ['2026-08-11'])).toBe('S');
+    expect(absenceOn('2026-08-12', [rec({ type: 'SICK', from: '2026-08-12', to: '2026-08-12' })], [], TODAY)).toBe('S');
   });
   test('the block refusal names the absence and the way through', () => {
     expect(absenceBlockedProblem('V')).toEqual({ code: 'ABSENCE_BLOCKED',
