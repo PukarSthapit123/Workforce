@@ -3,10 +3,11 @@ import { TriangleAlert } from 'lucide-react';
 import { tid } from '@/testids';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import {
-  Banner, Button, Card, ChipButton, Count, Empty, FilterBar, FormWarn, GroupLabel, NavLink, Page, PageHead, PersonName, Pill, Row, SearchFilter,
+  Banner, Button, Card, CardHead, ChipButton, Count, EssRow, Empty, FilterBar, FormWarn, GroupLabel, NavLink, Page, PageHead, PersonName, Pill, Row, SearchFilter,
   SectionHead, SelectFilter, Small, Tip, toastInfo,
 } from '@/ui';
 import { buttonVariants } from '@/ui/shadcn/button';
+import { useMyDelegations } from '@/api/approvals';
 import { useApproveLeave, useLeavers, useTeamBalances, useTeamLeave, type LeaverRow, type TeamBalanceRow, type TeamRequestView } from '@/api/leave';
 import { formatDmy } from '@/domain/time';
 import { latest } from '@/lib/latest';
@@ -20,8 +21,10 @@ import { DeclineDialog, PersonEntitlement } from './TeamLeaveDialogs';
    server leaves out their own, D5), each with the colleague's balance and how
    it was worked out, the effect on cover, the workflow stage and the SLA, and
    Approve or Decline with a reason (D4). Then the team's balances, and the
-   leaver reconciliation in days and hours when LV_LEAVER is on (D13). The
-   delegation card ("While you are away") belongs to approvals (1c). */
+   leaver reconciliation in days and hours when LV_LEAVER is on (D13). Last,
+   "While you are away" (v15:7907-7911): the delegations this manager gives
+   or covers, read-only; Set cover opens Approvals for whoever may set it
+   (1c D8). */
 const ALL = 'all';
 
 export function TeamLeavePage() {
@@ -58,6 +61,7 @@ export function TeamLeavePage() {
       </>}
       <TeamBalancesTable onEntitlement={setEntFor} />
       {!!flags.LV_LEAVER && <LeaverReconciliation />}
+      <AwayCard />
       {dec && <DeclineDialog key={dec.id} r={dec} onClose={() => setDeclining(null)} />}
       {entFor && <PersonEntitlement key={entFor} code={entFor} canSimulate={!!flags.LV_PRORATA} onClose={() => setEntFor(null)} />}
     </Page>);
@@ -199,5 +203,28 @@ function LeaverCard({ x, settled }: { x: LeaverRow; settled: string }) {
       <div className="mt-md [&>div]:mb-0">
         <Banner testId={tid.tleave.leaverAction(x.personCode)} tone={x.diff < 0 ? 'warn' : 'info'} title={x.action}>{settled}</Banner>
       </div>
+    </Card>);
+}
+
+/* "While you are away" (mgrLeave, v15:7907-7911). The prototype listed every
+   delegation and offered Set cover to anyone; here a manager sees the ones
+   they give or cover, and Set cover is offered only to someone who can open
+   Approvals (the approval framework). */
+function AwayCard() {
+  const caps = useCaps();
+  const mine = useMyDelegations(caps.has('team_leave'));
+  if (!mine.data) return null;
+  return (
+    <Card testId={tid.away.card}>
+      <CardHead title={<>While you are away<Tip testId={tid.away.tip} text="Someone else approves leave for your team. Their name is recorded against each decision." /></>}
+        actions={caps.has('framework')
+          ? <NavLink testId={tid.away.cover} to="/setup/aappr" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>Set cover</NavLink>
+          : undefined} />
+      {mine.data.map(d => (
+        <EssRow key={d.id} testId={tid.away.row(d.id)}>
+          <span><strong>{d.whoName}</strong> → {d.toName}</span>
+          <span className="text-xs text-text-muted tabular-nums">{formatDmy(d.from)} – {formatDmy(d.until)} · {d.modules.join(', ')}</span>
+        </EssRow>))}
+      {!caps.has('framework') && <Small className="mt-sm">Cover is set by an administrator in Qnipay setup, under Approvals.</Small>}
     </Card>);
 }

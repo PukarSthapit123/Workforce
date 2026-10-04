@@ -116,3 +116,16 @@ describe('Team leave on social (Rota and Leave to rota on)', () => {
     expect(acts()).toEqual(['Leave approved']);
   });
 });
+
+describe('While you are away (1c D8)', () => {
+  test('Rachel Hussain sees the cover she has set, read-only; Set cover is for whoever can open Approvals', async () => {
+    resetTo('social'); await signInAs('manager');
+    await open();
+    const card = await screen.findByTestId(tid.away.card);
+    expect(within(card).getByTestId(tid.away.row('dlg_1'))).toHaveTextContent('Rachel Hussain → Dee Fitzgerald');
+    expect(within(card).getByTestId(tid.away.row('dlg_1'))).toHaveTextContent('24/08/2026 – 31/08/2026 · Timesheet, Leave');
+    expect(within(card).queryByTestId(tid.away.cover)).toBeNull();
+    expect(card).toHaveTextContent('Cover is set by an administrator in Qnipay setup, under Approvals.');
+    expectTestIdCoverage(document.body);
+  });
+});
