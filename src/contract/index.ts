@@ -17,3 +17,4 @@ export * from './templates';
 export * from './notifications';
 export * from './approvals';
 export * from './notices';
+export * from './home';

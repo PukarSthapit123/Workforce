@@ -589,6 +589,16 @@ export function absenceOn(date: string, requests: readonly Pick<LeaveRecord, 'ty
   if (r) return r.type === 'SICK' ? SICK : LEAVE;
   return episodes.some(e => date >= e.from && date <= episodeEnd(e, today)) ? SICK : '';
 }
+/* The record behind absenceOn's answer, for My home's day dialog: the booked
+   leave covering the date, else the sickness episode, else null. */
+export function absenceRecordOn<R extends Pick<LeaveRecord, 'type' | 'from' | 'to' | 'state'>>(date: string, requests: readonly R[],
+  episodes: readonly Pick<SickEpisode, 'from' | 'to'>[], today: string, returned: readonly string[] = []): { type: string; from: string; to: string; state: string } | null {
+  const back = new Set(returned);
+  const r = requests.find(x => x.state === 'approved' && date >= x.from && date <= x.to && (x.type === 'SICK' || !back.has(date)));
+  if (r) return { type: r.type, from: r.from, to: r.to, state: r.state };
+  const e = episodes.find(x => date >= x.from && date <= episodeEnd(x, today));
+  return e ? { type: 'SICK', from: e.from, to: episodeEnd(e, today), state: e.to ? 'recorded' : 'open' } : null;
+}
 export const absenceBlockedProblem = (mark: string): LeaveRefusal => ({ code: 'ABSENCE_BLOCKED',
   message: `${mark === SICK ? 'Sickness' : 'Annual leave'} is recorded for this day. Approved absence blocks timesheet capture while “Leave blocks timesheet capture” is on.`,
   next: 'If you did work, mark the day non-working and tick “Called in and worked anyway”.' });

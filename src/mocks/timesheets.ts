@@ -76,8 +76,8 @@ const rulesCtx = (): Omit<CheckContext, 'date' | 'rota'> => {
    (module 2 D9, module 3 D13): their cell in their location's published week. */
 const rotaOn = (personCode: string, date: string) => rotaFor(tenant().modules, rotaInputOn(personCode, date));
 const ctxFor = (p: StoredPerson, date: string): CheckContext => ({ date, ...rulesCtx(), rota: rotaOn(p.code, date) });
-const isLocked = (date: string) => { const c = config(); return periodLocked(date, { enforceLock: c.rules.enforceLock, cutoff: c.cutoff }, now()); };
-const hm = (min: number) => formatMinutes(min, config().timeFormat);
+export const isLocked = (date: string) => { const c = config(); return periodLocked(date, { enforceLock: c.rules.enforceLock, cutoff: c.cutoff }, now()); };
+export const hm = (min: number) => formatMinutes(min, config().timeFormat);
 
 function attemptOf(d: StoredDay): StoredAttempt | undefined {
   return d.integrationAttemptId ? recordAt(attempts(), d.integrationAttemptId) : undefined;
@@ -250,7 +250,7 @@ function captureFor(p: StoredPerson) {
     ...(lines ? { rotaLines: lines } : {}),
   };
 }
-const daysOf = (code: string) => Object.values(days()).filter(d => d.personCode === code);
+export const daysOf = (code: string) => Object.values(days()).filter(d => d.personCode === code);
 /* Earlier weeks with time still to send (ready) or awaiting a decision (submitted), newest first. */
 function earlierWeeks(p: StoredPerson) {
   const current = periodStart(now().date), cutoff = config().cutoff;
@@ -271,7 +271,7 @@ function earlierWeeks(p: StoredPerson) {
 }
 /* The day's absence (module 4 D8): a V or S cell on the published rota, else
    approved leave or recorded sickness from the leave records, on any tenant. */
-function absenceOf(personCode: string, date: string): '' | 'V' | 'S' {
+export function absenceOf(personCode: string, date: string): '' | 'V' | 'S' {
   const cell = rotaDaysFor(personCode, periodStart(date))?.[dowMon(date)]?.code;
   return cell === 'V' || cell === 'S' ? cell : leaveAbsenceOn(personCode, date);
 }

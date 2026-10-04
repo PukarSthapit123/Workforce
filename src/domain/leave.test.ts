@@ -1,6 +1,6 @@
 import {
   CANCELLED_TOAST, CHOOSE_TYPE, DEFAULT_LEAVE_CONFIG, DEFAULT_TYPE_LEAVE, LAST_BEFORE_FIRST, OVERLAPS, OVER_BALANCE, PICK_BOTH_DATES, REASON_REQUIRED, ROTA_OFF_IMPACT,
-  RTW_ALREADY, RTW_TOAST, SELF_APPROVAL, SETTLED_IN_PAYROLL, absenceBlockedProblem, absenceHeldReason, absenceCellPlan, absenceCellWrites, bookedLeaveDates, datesCellPlan, sicknessDates, absenceMark, absenceOn, approvedNotice,
+  RTW_ALREADY, RTW_TOAST, SELF_APPROVAL, SETTLED_IN_PAYROLL, absenceBlockedProblem, absenceHeldReason, absenceCellPlan, absenceCellWrites, bookedLeaveDates, datesCellPlan, sicknessDates, absenceMark, absenceOn, absenceRecordOn, approvedNotice,
   approvedToast, balanceOf, balanceText, bradford, cancelTip, cancelWindowAdvisory, cancelledNotice, coverImpact, dailyHours, daysReturnedNotice,
   daysReturnedToast, daysToTakeText, declineReasonProblem, declinedNotice, declinedToast, entitlement, episodeDays, episodeEnd, escalationText,
   giveBackProblem, giveBackRow, halfDaySingle, latestAbsenceText, leaveCan, leaveConfigProblem, leaveCoverReason, leaveRange, leaveRotaWhy, leaveShape,
@@ -540,6 +540,13 @@ describe('leave to timesheet (D8)', () => {
     expect(['2026-08-10', '2026-08-11', '2026-08-12', '2026-08-13'].map(d => absenceOn(d, reqs, eps, TODAY))).toEqual(['V', 'V', '', '']);
     expect(absenceOn('2026-08-11', reqs, eps, TODAY, ['2026-08-11'])).toBe('S');
     expect(absenceOn('2026-08-12', [rec({ type: 'SICK', from: '2026-08-12', to: '2026-08-12' })], [], TODAY)).toBe('S');
+  });
+  test('the record behind a day\'s absence: the booked leave covering it, else the sickness episode (open runs to today), else none', () => {
+    const reqs = [rec({ from: '2026-08-10', to: '2026-08-11' }), rec({ from: '2026-08-12', to: '2026-08-12', state: 'pending' })];
+    const eps = [{ from: '2026-08-11', to: '' }];
+    expect(absenceRecordOn('2026-08-10', reqs, eps, TODAY)).toEqual({ type: 'AL', from: '2026-08-10', to: '2026-08-11', state: 'approved' });
+    expect(absenceRecordOn('2026-08-11', reqs, eps, TODAY, ['2026-08-11'])).toEqual({ type: 'SICK', from: '2026-08-11', to: TODAY, state: 'open' });
+    expect(absenceRecordOn('2026-09-01', reqs, eps, TODAY)).toBeNull();
   });
   test('the block refusal names the absence and the way through', () => {
     expect(absenceBlockedProblem('V')).toEqual({ code: 'ABSENCE_BLOCKED',

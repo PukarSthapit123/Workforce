@@ -377,6 +377,12 @@ export function rotaDaysFor(personCode: string, weekStart: string): RotaDay[] | 
   const p = personByCode(personCode), w = p ? visibleWeek(p.location, weekStart) : undefined;
   return p && w ? rotaDaysOf(lineOf(w, p.code), shiftList()) : undefined;
 }
+/* The tone a shift is painted in on My home's month (toneOf); a code no
+   longer in the catalogue reads as Early, as the prototype's toneOf does. */
+export function rotaToneOf(code: string): 'E' | 'L' | 'N' {
+  const t = shiftBy(shiftList(), code)?.tone;
+  return t === 'L' || t === 'N' ? t : 'E';
+}
 /* Everyone on a location's published week, by person code, for the approver's matrix. */
 export function rotaWeekDays(location: string, weekStart: string): Record<string, RotaDay[]> {
   const w = visibleWeek(location, weekStart);

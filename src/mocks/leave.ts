@@ -26,7 +26,7 @@ import {
 } from '@/contract/leave';
 import {
   CANCELLED_TOAST, LEAVE_STATE, NOT_YOUR_REQUEST, ROTA_OFF_IMPACT, RTW_TOAST, SETTLED_IN_PAYROLL, SICK_REASONS, TRIGGER_NOTE,
-  absenceMark, absenceOn, approvedNotice, approvedToast, balanceText, bookedLeaveDates, bradford, bradfordTip, cancelTip,
+  absenceMark, absenceOn, absenceRecordOn, approvedNotice, approvedToast, balanceText, bookedLeaveDates, bradford, bradfordTip, cancelTip,
   cancelWindowAdvisory, cancelledNotice, coverImpact, daysReturnedNotice, daysReturnedToast, daysToTakeText, decidedAudit, declineReasonProblem,
   declinedNotice, declinedToast, entitlement, giveBackProblem, giveBackRow, isLeaveState, latestAbsenceText, leaveConfigProblem, leaveCoverReason,
   leaveRange, leaveTransitionProblem, leaveTypeName, leaveWritesRota, leaveYear, ledgerQty, monthsWorked, nextStepText, noticeAdvisory, policyBy,
@@ -174,6 +174,18 @@ const rotaAfter = (r: AbsenceWritten) => (r.written ? { rotaWeeks: r.weeks, cell
 export function leaveAbsenceOn(personCode: string, date: string): '' | 'V' | 'S' {
   if (!tenant().modules.L) return '';
   return absenceOn(date, requestsOf(personCode), episodesOf(personCode), today(), returnedDates(personCode));
+}
+/* My home's day dialog (1c group 7): the leave record or sickness episode
+   behind leaveAbsenceOn's answer, and how the leave settings name a type. */
+export function leaveRecordOn(personCode: string, date: string) {
+  if (!tenant().modules.L) return null;
+  return absenceRecordOn(date, requestsOf(personCode), episodesOf(personCode), today(), returnedDates(personCode));
+}
+const TYPE_FALLBACK: Record<string, { name: string; short: string; icon: string }> = {
+  AL: { name: 'Annual leave', short: 'Leave', icon: '☀' }, SICK: { name: 'Sickness', short: 'Sick', icon: '✚' } };
+export function leaveTypeInfo(code: string): { name: string; short: string; icon: string } {
+  const t = recordAt(store.coll<LeaveConfigRecord>('leaveConfig'), 'leaveConfig')?.types.find(x => x.code === code);
+  return t ? { name: t.name, short: t.short || t.name, icon: t.icon } : TYPE_FALLBACK[code] ?? { name: code, short: code, icon: '☀' };
 }
 /* LEAVE_CFG.blocksTimesheet, while the Leave module is on. */
 export const leaveBlocksTimesheet = () => Boolean(tenant().modules.L) && Boolean(recordAt(store.coll<LeaveConfigRecord>('leaveConfig'), 'leaveConfig')?.blocksTimesheet);
