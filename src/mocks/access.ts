@@ -4,8 +4,9 @@ import { serve } from './serve';
 import { actor, personName, type Account } from './auth';
 import { writeAudit } from './audit';
 import { resolveCapabilities } from '@/domain/capabilities';
+import { roleNameProblem } from '@/domain/modules';
 import {
-  listCapabilities, listCapabilityGroups, listUserTypes, setTemplateCapability, listUsers, addException, removeException,
+  listCapabilities, listCapabilityGroups, listUserTypes, setTemplateCapability, listUsers, addException, removeException, renameUserType,
   type Capability, type CapabilityGroup, type UserType, type UserAccess,
 } from '@/contract/access';
 
@@ -58,6 +59,23 @@ export const accessHandlers = [
     types[t.id] = next;
     const auditId = writeAudit({ who: actor(session), act: 'Permission changed', entity: 'userType', entityId: t.id, before: { [c.id]: had }, after: { [c.id]: granted } });
     return { record: next, auditId };
+  }),
+  /* Configurable role names (D11): only the display name changes. The session's
+     roleName, the switcher and the matrix all read it from here. */
+  serve(renameUserType, ({ session, params, body: { name }, checkVersion }) => {
+    const types = store.coll<UserType>('userTypes');
+    const t = Object.hasOwn(types, params.id) ? types[params.id] : undefined;
+    if (!t) return refuse(404, { code: 'not-found', message: 'That user type no longer exists.', next: 'Reload the page.' });
+    checkVersion(t);
+    const problem = roleNameProblem(name, Object.values(types).filter(x => x.id !== t.id).map(x => x.name));
+    if (problem) return refuse(problem.taken ? 409 : 422, { code: problem.taken ? 'NAME_TAKEN' : 'invalid', field: problem.field, message: problem.message,
+      next: problem.taken ? 'Choose a name no other role uses.' : 'Correct the name and save again.' });
+    const next = name.trim();
+    if (next === t.name) return { record: t, auditId: null };
+    const saved = bump(t, { name: next });
+    types[t.id] = saved;
+    const auditId = writeAudit({ who: actor(session), act: 'Roles renamed', entity: 'userType', entityId: t.id, before: { name: t.name }, after: { name: next } });
+    return { record: saved, auditId };
   }),
   serve(listUsers, () => Object.values(store.coll<Account>('accounts')).map(userView)),
   serve(addException, ({ session, params, body: { capability, mode, reason }, checkVersion }) => {

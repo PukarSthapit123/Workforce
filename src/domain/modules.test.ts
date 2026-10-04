@@ -89,7 +89,7 @@ describe('switching a module', () => {
     expect(r.restore).toEqual({});
   });
   test('Timesheet on with nothing remembered defaults to manual entry', () => {
-    for (const restore of [{}, { TS: [] }]) {
+    for (const restore of [{}, { TS: [] }] as Record<string, string[]>[]) {
       const r = switchModule(state({ TS: false, A: false, B: false, C: false }, restore), 'TS', true);
       if (!r.ok || !r.changed) throw new Error('expected a change');
       expect(r.brought).toEqual(['A']);
