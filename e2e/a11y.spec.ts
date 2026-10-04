@@ -234,3 +234,55 @@ test.describe('module 3 pages', () => {
     }
   });
 });
+
+/* Module 4's pages on the social seed, where Leave, Rota and every LV_* flag
+   are on: My leave with its request and entitlement dialogs for Amara Okafor;
+   Team leave (with the escalated banner) with its decline, entitlement and
+   pro-rata simulation dialogs, and Sickness with its give-back dialog, for
+   Rachel Hussain; Leave setup for Dee Fitzgerald. */
+const PAGES_4: [string, Step[]][] = [
+  [AMARA, [
+    ['/work/leave', open('/work/leave', tid.leave.cards)],
+    ['request dialog', click(tid.leave.requestOpen, tid.leave.send)],
+    ['entitlement dialog', async page => { await escape(page); await click(tid.leave.entShow, tid.leave.entRemaining)(page); }],
+  ]],
+  [RACHEL, [
+    ['/team/tleave', async page => { await open('/team/tleave', tid.tleave.balances)(page); await page.getByTestId(tid.tleave.card('lr_1')).waitFor(); }],
+    ['decline dialog', click(tid.tleave.decline('lr_1'), tid.tleave.reason)],
+    ['colleague entitlement dialog', async page => { await escape(page); await click(tid.tleave.ent('CP-1042'), tid.leave.entRemaining)(page); }],
+    ['simulation dialog', click(tid.leave.simulate, tid.leave.simAfter)],
+    ['/team/tsick', open('/team/tsick', tid.tsick.table)],
+    ['give-back dialog', click(tid.tsick.giveBack, tid.tsick.gbConfirm)],
+  ]],
+  [DEE, [
+    ['/setup/mleave', async page => { await open('/setup/mleave', tid.mleave.card('rota'))(page); await page.getByTestId(tid.mleave.leavers).waitFor(); }],
+  ]],
+];
+test.describe('module 4 pages', () => {
+  test.beforeEach(async ({ api }) => { await api.seed('social'); await api.setClock(FROZEN); });
+  for (const theme of ['light', 'dark'] as const) {
+    test(`axe: leave pages and dialogs have no serious issues (${theme})`, async ({ page }) => {
+      test.setTimeout(150_000);
+      for (const [email, steps] of PAGES_4) {
+        await signInEmail(page, email);
+        for (const [where, go] of steps) {
+          await go(page);
+          await setTheme(page, theme);
+          const r = await new AxeBuilder({ page }).analyze();
+          expect(r.violations.filter(v => ['serious', 'critical'].includes(v.impact ?? '')).map(v => `${where} ${v.id}: ${v.nodes.length}`)).toEqual([]);
+        }
+      }
+    });
+  }
+  test('phone: leave pages and dialogs have no horizontal overflow at 390px', async ({ page }) => {
+    test.setTimeout(150_000);
+    await page.setViewportSize({ width: 390, height: 844 });
+    for (const [email, steps] of PAGES_4) {
+      await signInEmail(page, email);
+      for (const [where, go] of steps) {
+        await go(page);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), where).toBe(true);
+      }
+    }
+  });
+});
