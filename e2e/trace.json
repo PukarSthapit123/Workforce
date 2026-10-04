@@ -662,8 +662,8 @@
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A5 Horizon publish declares itself simulated",
    "area": "rota",
-   "status": "pending",
-   "deferredTo": "rota"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › the horizon lists the months ahead, and publishing through it says it is simulated and writes nothing"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#13",
@@ -1047,7 +1047,7 @@
    "text": "C Publish is disabled while the week is already live",
    "area": "rota",
    "status": "ported",
-   "test": "src/features/rota/rota.test.tsx › renders the published week: the week bar, the gap banner, the grid with its cover row and key, the day view and the history, with full test id coverage"
+   "test": "src/features/rota/rota.test.tsx › on a live week with no gaps, Publish, Copy and Clear are off and each says why"
   },
   {
    "id": "CHUNK-C-rota-lifecycle-and-the-week-store#4",
@@ -1062,7 +1062,8 @@
    "section": "CHUNK C — rota lifecycle and the week store",
    "text": "C Recent publications are surfaced (RECENT_PUBLISH was dead in v14)",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › publishing a week lists it under Recent publications, and going back restores week 33's own state and version"
   },
   {
    "id": "CHUNK-C-rota-lifecycle-and-the-week-store#6",
@@ -1118,7 +1119,7 @@
    "text": "C The amendment is audited separately from the publication",
    "area": "rota",
    "status": "ported",
-   "test": "e2e/manager-3.spec.ts › a manager"
+   "test": "e2e/manager-3.spec.ts › a manager’s refused assign says why; an assign by the picker amends the published week, which is republished at v2"
   },
   {
    "id": "CHUNK-C-rota-lifecycle-and-the-week-store#13",
@@ -1205,7 +1206,8 @@
    "section": "CHUNK C — rota lifecycle and the week store",
    "text": "C Returning to week 33 restores its own state and version",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › publishing a week lists it under Recent publications, and going back restores week 33's own state and version"
   },
   {
    "id": "ITEM-1-bulk-approval-guard-rails-IMP-008#1",
@@ -1591,7 +1593,7 @@
    "text": "031 Only patterns covering their location are listed",
    "area": "rota",
    "status": "ported",
-   "test": "src/features/rota/patterns.test.tsx › lists only the patterns covering the manager"
+   "test": "src/features/rota/patterns.test.tsx › lists only the patterns covering the manager's location, and the editor shows the cycle, the run and the people, with full test id coverage"
   },
   {
    "id": "IMP-031-pattern-generation-writes-real-shifts#4",
@@ -1607,7 +1609,7 @@
    "text": "031 Patterns can be opened for editing",
    "area": "rota",
    "status": "ported",
-   "test": "src/features/rota/patterns.test.tsx › lists only the patterns covering the manager"
+   "test": "src/features/rota/patterns.test.tsx › lists only the patterns covering the manager's location, and the editor shows the cycle, the run and the people, with full test id coverage"
   },
   {
    "id": "IMP-031-pattern-generation-writes-real-shifts#6",
@@ -1663,7 +1665,7 @@
    "text": "031 The audit row records what was written, not a projection",
    "area": "rota",
    "status": "ported",
-   "test": "src/mocks/rota.test.ts › generate skips the live week, leave and filled cells, reports true counts, one audit row"
+   "test": "src/features/rota/patterns.test.tsx › a saved run length generates the rota and reports what was written, skipping the published week"
   },
   {
    "id": "IMP-031-pattern-generation-writes-real-shifts#13",
@@ -1694,21 +1696,24 @@
    "section": "IMP-031 — manager scoping",
    "text": "031 Manager pattern creator offers only their location",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/patterns.test.tsx › a manager's new pattern offers only their own location, already chosen; the hint says how to choose more than one, and the cycle start is a date"
   },
   {
    "id": "IMP-031-manager-scoping#2",
    "section": "IMP-031 — manager scoping",
    "text": "031 Their location is pre-selected",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/patterns.test.tsx › a manager's new pattern offers only their own location, already chosen; the hint says how to choose more than one, and the cycle start is a date"
   },
   {
    "id": "IMP-031-manager-scoping#3",
    "section": "IMP-031 — manager scoping",
    "text": "031 Admin still sees every location",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota-setup.test.tsx › an administrator's new pattern offers every active location, with none chosen for them"
   },
   {
    "id": "IMP-031-manager-scoping#4",
@@ -1828,15 +1833,15 @@
    "text": "M The patterns table is a page, not a cramped modal",
    "area": "rota",
    "status": "ported",
-   "test": "src/features/rota/patterns.test.tsx › lists only the patterns covering the manager"
+   "test": "src/features/rota/patterns.test.tsx › lists only the patterns covering the manager's location, and the editor shows the cycle, the run and the people, with full test id coverage"
   },
   {
    "id": "MODAL-SIZING-STRUCTURE#7",
    "section": "MODAL SIZING + STRUCTURE",
    "text": "M The pattern editor is still wide after the openBox change",
    "area": "rota",
-   "deferredTo": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/dialogs-3.spec.ts › the pattern editor opens wide, and the add-people dialog is wide enough for its two columns side by side"
   },
   {
    "id": "MULTI-PERSON-ADD-STAGGER#1",
@@ -1867,7 +1872,8 @@
    "section": "MULTI-PERSON ADD + STAGGER",
    "text": "MP The dialog is wide enough for two columns",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/dialogs-3.spec.ts › the pattern editor opens wide, and the add-people dialog is wide enough for its two columns side by side"
   },
   {
    "id": "MULTI-PERSON-ADD-STAGGER#5",
@@ -1907,7 +1913,7 @@
    "text": "W A repeat-forward control is offered",
    "area": "rota",
    "status": "ported",
-   "test": "src/features/rota/rota.test.tsx › repeat forward shows the server"
+   "test": "src/features/rota/rota.test.tsx › repeat forward shows the server's summary"
   },
   {
    "id": "WEEKLY-REPEAT-IMP-032#2",
@@ -1915,14 +1921,15 @@
    "text": "W It asks how many weeks",
    "area": "rota",
    "status": "ported",
-   "test": "src/features/rota/rota.test.tsx › repeat forward shows the server"
+   "test": "src/features/rota/rota.test.tsx › repeat forward shows the server's summary"
   },
   {
    "id": "WEEKLY-REPEAT-IMP-032#3",
    "section": "WEEKLY REPEAT (IMP-032)",
    "text": "W It warns that published weeks are skipped",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › repeat forward shows the server's summary"
   },
   {
    "id": "WEEKLY-REPEAT-IMP-032#4",
@@ -1930,7 +1937,7 @@
    "text": "W It reports what was written or why nothing was",
    "area": "rota",
    "status": "ported",
-   "test": "src/features/rota/rota.test.tsx › repeat forward shows the server"
+   "test": "src/features/rota/rota.test.tsx › repeat forward shows the server's summary"
   },
   {
    "id": "WEEKLY-REPEAT-IMP-032#5",
@@ -3155,7 +3162,7 @@
    "text": "DD Chips are draggable",
    "area": "rota",
    "status": "ported",
-   "test": "src/features/rota/rota.test.tsx › a dragged shift lands through the same path, and a refused one says why and writes nothing"
+   "test": "src/features/rota/rota.test.tsx › a picked-up shift marks every cell it can land on, and the cell under the pointer is highlighted; chips are draggable and labelled"
   },
   {
    "id": "SHIFT-PALETTE-DRAG-AND-DROP#4",
@@ -3163,7 +3170,7 @@
    "text": "DD Chips are keyboard reachable and labelled",
    "area": "rota",
    "status": "ported",
-   "test": "src/features/rota/rota.test.tsx › the keyboard alone picks a shift up from the palette and puts it down on a cell (D11)"
+   "test": "src/features/rota/rota.test.tsx › a picked-up shift marks every cell it can land on, and the cell under the pointer is highlighted; chips are draggable and labelled"
   },
   {
    "id": "SHIFT-PALETTE-DRAG-AND-DROP#5",
@@ -3202,14 +3209,16 @@
    "section": "SHIFT PALETTE + DRAG AND DROP",
    "text": "DD ... and the grid shows where it can land",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › a picked-up shift marks every cell it can land on, and the cell under the pointer is highlighted; chips are draggable and labelled"
   },
   {
    "id": "SHIFT-PALETTE-DRAG-AND-DROP#10",
    "section": "SHIFT PALETTE + DRAG AND DROP",
    "text": "DD Hovering a cell highlights it",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › a picked-up shift marks every cell it can land on, and the cell under the pointer is highlighted; chips are draggable and labelled"
   },
   {
    "id": "SHIFT-PALETTE-DRAG-AND-DROP#11",
@@ -3775,7 +3784,7 @@
    "text": "CW It is disabled on a live rota, with a reason",
    "area": "rota",
    "status": "ported",
-   "test": "src/features/rota/rota.test.tsx › renders the published week: the week bar, the gap banner, the grid with its cover row and key, the day view and the history, with full test id coverage"
+   "test": "src/features/rota/rota.test.tsx › on a live week with no gaps, Publish, Copy and Clear are off and each says why"
   },
   {
    "id": "CLEAR-WEEK#3",
@@ -3790,14 +3799,16 @@
    "section": "CLEAR WEEK",
    "text": "CW It warns the action cannot be undone",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › clearing a draft week with leave and sickness on it warns it cannot be undone, says the absence is kept, and keeps it"
   },
   {
    "id": "CLEAR-WEEK#5",
    "section": "CLEAR WEEK",
    "text": "CW It states leave and sickness are kept",
    "area": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › clearing a draft week with leave and sickness on it warns it cannot be undone, says the absence is kept, and keeps it"
   },
   {
    "id": "CLEAR-WEEK#6",
@@ -6726,16 +6737,16 @@
    "section": "CONTROLS LOOK LIKE THEIR NEIGHBOURS",
    "text": "CT ... and says how to choose more than one",
    "area": "rota",
-   "deferredTo": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/patterns.test.tsx › a manager's new pattern offers only their own location, already chosen; the hint says how to choose more than one, and the cycle start is a date"
   },
   {
    "id": "CONTROLS-LOOK-LIKE-THEIR-NEIGHBOURS#3",
    "section": "CONTROLS LOOK LIKE THEIR NEIGHBOURS",
    "text": "CT A cycle start is a date control",
    "area": "rota",
-   "deferredTo": "rota",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/patterns.test.tsx › a manager's new pattern offers only their own location, already chosen; the hint says how to choose more than one, and the cycle start is a date"
   },
   {
    "id": "CONTROLS-LOOK-LIKE-THEIR-NEIGHBOURS#4",
