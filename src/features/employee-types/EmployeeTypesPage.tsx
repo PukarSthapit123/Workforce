@@ -7,6 +7,7 @@ import { buttonVariants } from '@/ui/shadcn/button';
 import { cn } from '@/lib/utils';
 import { useDimension, useEmployeeTypes } from '@/api/reference';
 import { useRemoveType, useTypeLibrary, useUpdateType } from '@/api/employee-types';
+import { useShellData } from '@/shell/shellData';
 import { CATEGORIES, MODES, NewTypeModal, UOMS, pick } from './NewTypeModal';
 
 const SUB = 'mt-lg mb-sm border-b pb-xs text-xs font-[650] tracking-normal text-text-secondary first:mt-0';
@@ -80,7 +81,7 @@ function TypeDetail({ type, onRemoved }: { type: EmployeeTypeRow; onRemoved(): v
           <SwitchField testId={tid.types.cap(c.code)} aria-label={c.label} checked={v.capabilities.includes(c.code)} onCheckedChange={() => toggle(c.code)} />
         </SettingRow>))}
       <h3 className={SUB}>Capture fields, rota eligibility and leave policy</h3>
-      <Small>Which fields this type fills in is set in Timesheet setup. What it may be rota’d to, with its hours, rest and night limits, is set in Rota setup under Rota eligibility by employee type. Its leave policy belongs to the Leave module, which is not built yet.</Small>
+      <SetupPointers />
       {refusal && <FormWarn testId={tid.types.warn}>{refusal.usedBy ? `${refusal.message} ${refusal.next}` : refusal.message}</FormWarn>}
       <div className="mt-lg flex flex-wrap items-center justify-end gap-sm">
         <span data-testid={tid.types.heldBy} className="mr-auto text-xs text-text-muted">Held by {type.inUse} {type.inUse === 1 ? 'person' : 'people'} · code <span className="tabular-nums">{type.code}</span></span>
@@ -88,4 +89,16 @@ function TypeDetail({ type, onRemoved }: { type: EmployeeTypeRow; onRemoved(): v
         <Button testId={tid.types.save} kind="primary" small pending={busy} onClick={save}>Save changes</Button>
       </div>
     </div>);
+}
+
+/* Suite ADMIN LAYOUT: "it says where the fields went". Each module's setup
+   page is named, and is a link while this person can reach it. */
+function SetupPointers() {
+  const data = useShellData();
+  const at = (view: string, label: string) => data.kind === 'ready' && data.nav.some(g => g.tabs.some(t => t.view === view))
+    ? <NavLink testId={tid.types.setupLink(view)} to={`/setup/${view}`} className={buttonVariants({ variant: 'link', size: null })}>{label}</NavLink>
+    : label;
+  return (
+    <Small>Which fields this type fills in is set in {at('mts', 'Timesheet setup')}. What it may be rota’d to, with its hours, rest and night limits,
+      is set in {at('mrota', 'Rota setup')} under Rota eligibility by employee type. Its leave policy is set in {at('mleave', 'Leave setup')}.</Small>);
 }

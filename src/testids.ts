@@ -107,6 +107,8 @@ export const tid = {
     remove: 'types-remove', warn: 'types-warn', jobs: 'types-jobs', jobsLink: 'types-jobs-link', tip: 'types-tip',
     newField: (key: string) => k('types-new', key), newSave: 'types-new-save', newCancel: 'types-new-cancel', newWarn: 'types-new-warn',
     error: 'types-error', heldBy: 'types-held-by',
+    /* 1c group 8: where a type's capture fields, rota eligibility and leave policy are set */
+    setupLink: (view: string) => k('types-setup-link', view),
   },
   /* A Field's own ids come from the control it wraps, so a form never types one by hand. */
   field: { root: (controlTestId: string) => `${controlTestId}-field`, tip: (controlTestId: string) => `${controlTestId}-field-tip` },

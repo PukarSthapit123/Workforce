@@ -29,6 +29,11 @@ test('AD Employee types is no longer the densest page in the admin, and it says 
   expect(detail.querySelectorAll('[role="switch"]').length).toBeLessThanOrEqual(6);
   expect(detail).toHaveTextContent('set in Timesheet setup');
   expect(detail).toHaveTextContent('is set in Rota setup under Rota eligibility by employee type');
+  expect(detail).toHaveTextContent('Its leave policy is set in Leave setup.');
+  /* each is a link to that module's setup page while the admin can reach it */
+  expect(await screen.findByTestId(tid.types.setupLink('mts'))).toHaveAttribute('href', '/setup/mts');
+  expect(screen.getByTestId(tid.types.setupLink('mrota'))).toHaveAttribute('href', '/setup/mrota');
+  expect(screen.getByTestId(tid.types.setupLink('mleave'))).toHaveAttribute('href', '/setup/mleave');
   expectTestIdCoverage(document.body);
 });
 test('ET A New employee type control exists, and the new-type form has full test id coverage', async () => {
