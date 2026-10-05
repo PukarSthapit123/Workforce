@@ -47,7 +47,7 @@ export function Caution({ testId, text }: { testId: string; text: string }) {
   return (
     <TooltipProvider delayDuration={400}><Tooltip>
       <TooltipTrigger asChild>
-        <span data-testid={testId} role="note" tabIndex={0}
+        <span data-testid={testId} role="note" tabIndex={0} aria-label="Caution"
           className="relative inline-grid size-8 shrink-0 cursor-help place-items-center rounded-full border border-warn bg-warn-surface text-warn before:absolute before:-inset-[6px]">
           <TriangleAlert aria-hidden="true" className="size-4" /><span className="sr-only">{text}</span>
         </span>
