@@ -38,7 +38,7 @@ export function SetupIndex() {
   return (
     <Page testId={tid.page('asetup')}>
       <PageHead title="Qnipay setup" tip="Everything that decides how this workforce runs, grouped by what it decides." tipTestId={tid.head.tip('asetup')}
-        actions={<Caution testId={tid.head.caution('asetup')} text="Changes here apply immediately, to everyone. A setting is live for the whole organisation the moment it is changed, and the change is recorded in the audit log." />} />
+        actions={<Caution testId={tid.head.caution('asetup')} text="Changes here apply immediately, to everyone. There is no draft, no approval and no scheduled release in this build. A setting is live for the whole organisation the moment it is changed, and the change is recorded in the audit log." />} />
       <TooltipProvider delayDuration={400}>
         <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,320px),1fr))] gap-md">
           {sections.map(s => {

@@ -296,5 +296,5 @@ test('the page carries its security caveat as a standing caution', async () => {
   const caution = await screen.findByTestId(tid.access.caution);
   expect(caution).toHaveAttribute('role', 'note');
   expect(caution).toHaveTextContent(/apply to everyone at once/);
-  expect(caution).toHaveTextContent(/server enforces/);
+  expect(caution).toHaveTextContent(/API enforces/);
 });

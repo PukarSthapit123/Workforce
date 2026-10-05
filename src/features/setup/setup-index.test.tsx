@@ -30,4 +30,12 @@ test('each setup card keeps what its section configures behind hover, and says i
   /* SETUP_SECTIONS: Modules lists only Modules & features; each module's own
      setup page is reached through that module's drill-in */
   expect(screen.getByTestId(tid.setup.card('mods'))).toHaveAccessibleName('Modules Modules & features 1 page');
+  /* HEADER PILLS REMOVED, WARNING RELOCATED: the caution is behind a warning
+     icon a keyboard reaches, carries the whole of it, and is not printed */
+  const caution = screen.getByTestId(tid.head.caution('asetup'));
+  expect(caution).toHaveAttribute('tabindex', '0');
+  expect(caution).toHaveAttribute('role', 'note');
+  expect(caution).toHaveTextContent(/no draft, no approval and no scheduled release/);
+  expect(caution.tagName).not.toBe('BUTTON');
+  expect(screen.getByTestId(tid.page('asetup'))).not.toHaveTextContent(/Applies immediately/);
 });

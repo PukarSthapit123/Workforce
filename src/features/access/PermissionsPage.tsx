@@ -78,7 +78,7 @@ export function PermissionsPage() {
             roles, then the caution. There the checks ran in the browser; here the server enforces them. */
           <>
             <Button testId={tid.roleNames.open} kind="ghost" small onClick={() => setRenaming(true)}>Rename roles</Button>
-            <Caution testId={tid.access.caution} text="These switches are live and apply to everyone at once. The server enforces each one, so hiding a control is never the only thing refusing the request, and every change is recorded in the audit log." />
+            <Caution testId={tid.access.caution} text="These switches are live and apply to everyone at once. The API enforces each one, so hiding a control is never the only thing refusing the request, and every change is recorded in the audit log." />
             <GuideButton view="aperm" />
           </>} />
       {renaming && <RenameRolesDialog types={types} self={self} onClose={() => setRenaming(false)} />}
