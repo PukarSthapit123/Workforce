@@ -7433,7 +7433,7 @@
    "text": "NB An admin can post to Everyone",
    "area": "1c",
    "status": "ported",
-   "test": "src/mocks/notices.test.ts › an admin posts to everyone; the matrix leaves admins Off and tells the rest"
+   "test": "src/mocks/notices.test.ts › an admin posts to everyone; everyone in the audience is told in the Employee column, admins too (I3)"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#55",
