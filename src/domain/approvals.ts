@@ -152,6 +152,8 @@ export interface DelegationContext {
   approver: (code: string) => string | undefined;
   /* any person's name, for a sentence */
   nameOf: (code: string) => string;
+  /* the access a module's stages need that `who` holds and `to` lacks, by its label (a Profile delegate must be able to decide the stage) */
+  lacks?: (who: string, to: string, m: ChainModule) => readonly string[];
 }
 const overlaps = (a: { from: string; until: string }, b: { from: string; until: string }) => a.from <= b.until && b.from <= a.until;
 const shared = (a: readonly ChainModule[], b: readonly ChainModule[]) => CHAIN_MODULES.filter(m => a.includes(m) && b.includes(m));
@@ -186,6 +188,11 @@ export function delegationProblem(d: DelegationDraft, existing: readonly Delegat
   if (d.until < d.from) return invalid('until', 'The last day cannot be before the first day.', 'Change the dates, then save.');
   if (d.until < ctx.today) return invalid('until', 'That delegation would already have ended.', 'Choose dates from today on.');
   if (!d.modules.length) return invalid('modules', 'Choose at least one module to delegate.', 'Tick the modules whose approvals are covered.');
+  for (const m of d.modules) {
+    const missing = ctx.lacks?.(d.who, d.to, m) ?? [];
+    if (missing.length) return invalid('to', `${toName} cannot cover ${whoName}’s ${m} approvals without ${list(missing.map(x => `"${x}"`))}.`,
+      `Choose someone who has ${missing.length > 1 ? 'them' : 'it'} in Permissions, or leave ${m} out.`);
+  }
   const clash = existing.find(e => e.who === d.who && overlaps(e, d) && shared(e.modules, d.modules).length);
   if (clash) return { status: 409, code: 'OVERLAP', field: 'from',
     message: `${whoName} already delegates ${list(shared(clash.modules, d.modules))} to ${ctx.nameOf(clash.to)} from ${formatDmy(clash.from)} to ${formatDmy(clash.until)}.`,

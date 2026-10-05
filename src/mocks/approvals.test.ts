@@ -107,6 +107,23 @@ describe('delegations (Review Focus 6)', () => {
     expect(snapshot(...WRITES)).toEqual(before);
     expect(own()).toEqual([]);
   });
+  test('a Profile delegate must hold the access the stage needs; nothing is kept otherwise (M1)', async () => {
+    const call = await as('admin'), before = snapshot(...WRITES);
+    const r = await call('POST', '/api/v1/approvals/delegations', { who: 'CP-1001', to: 'CP-1002', from: '2026-09-01', until: '2026-09-07', modules: ['Profile'] });
+    expect([r.status, refusal(r)]).toEqual([422, expect.objectContaining({ code: 'invalid', field: 'to',
+      message: 'Dee Fitzgerald cannot cover Rachel Hussain’s Profile approvals without "Approve profile changes".' })]);
+    expect(snapshot(...WRITES)).toEqual(before);
+  });
+  test('while a Profile delegation is in force, the delegate and the approver they cover are both told of a request (M1)', async () => {
+    const dee = store.coll<{ personCode: string; grants: string[] }>('accounts')['acc_dee.fitzgerald@brightpath.org'];
+    if (!dee) throw new Error('no Dee');
+    dee.grants = [...dee.grants, 'profile_appr'];
+    const call = await as('admin');
+    expect((await call('POST', '/api/v1/approvals/delegations', { who: 'CP-1001', to: 'CP-1002', from: '2026-08-13', until: '2026-08-20', modules: ['Profile'] })).status).toBe(200);
+    expect((await (await as('employee'))('POST', '/api/v1/profile-changes', { changes: [{ field: 'phone', to: '07700 900111' }], note: '' })).status).toBe(200);
+    const told = Object.values(store.coll<{ personId: string; event?: string; channel?: string }>('notifications')).filter(n => n.event === 'pf_req');
+    expect(told.map(n => [n.personId, n.channel]).sort()).toEqual([['CP-1001', 'In-app + email'], ['CP-1002', 'In-app + email']]);
+  });
   test('removing one needs If-Match and writes one audit row; a fault leaves it', async () => {
     const call = await as('admin');
     await fault('DELETE', '/api/v1/approvals/delegations/dlg_1');

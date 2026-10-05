@@ -107,6 +107,13 @@ describe('delegations (D8)', () => {
     expect(delegationProblem(draft({ from: '2026-08-01', until: '2026-08-12' }), [], ctx)).toMatchObject({ field: 'until', message: 'That delegation would already have ended.' });
     expect(delegationProblem(draft({ modules: [] }), [], ctx)).toMatchObject({ field: 'modules' });
   });
+  test('a delegate without the access a Profile stage needs cannot cover it (M1)', () => {
+    const lacks = (_who: string, to: string, m: string) => (m === 'Profile' && to === 'O' ? ['Approve profile changes'] : []);
+    expect(delegationProblem(draft({ modules: ['Leave', 'Profile'] }), [], { ...ctx, lacks })).toEqual({ status: 422, code: 'invalid', field: 'to',
+      message: 'Owen Clarke cannot cover Dee Fitzgerald’s Profile approvals without "Approve profile changes".',
+      next: 'Choose someone who has it in Permissions, or leave Profile out.' });
+    expect(delegationProblem(draft({ modules: ['Leave'] }), [], { ...ctx, lacks })).toBeNull();
+  });
 });
 
 describe('who decides', () => {

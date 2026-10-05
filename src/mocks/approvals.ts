@@ -20,6 +20,7 @@ import {
   delegationText, type ApproverWorld, type ChainModule, type ChainStep, type Delegation,
 } from '@/domain/approvals';
 import type { Refusal as DomainRefusal } from '@/domain/modules';
+import { STAGE_CAPABILITY, STAGE_CAPABILITY_LABEL, type Stage } from '@/domain/selfService';
 import { addDays, clockFromIso, periodStart } from '@/domain/time';
 import { DEFAULT_RULES, periodLocked } from '@/domain/timesheet';
 
@@ -76,13 +77,21 @@ export function approverWorld(): ApproverWorld {
   };
 }
 const delegationList = (): StoredDelegation[] => Object.values(delegations()).sort((a, b) => a.from.localeCompare(b.from) || a.id.localeCompare(b.id));
-/* Who acts today for one role of a module's chain, for one person: the
-   people the role names, each replaced by their delegate while one is in
-   force. Used to address notifications. */
+/* Who is told today for one role of a module's chain, for one person: the
+   people the role names and, while a delegation is in force, their delegate
+   as well, so the approver they cover still hears of it. Used to address
+   notifications. */
 export function decidersToday(m: ChainModule, role: string, scope: string, personCode: string): string[] {
   const list = delegationList(), day = today();
-  return [...new Set(approversFor(role, scope, personCode, approverWorld()).map(a => actingFor(a, m, day, list)))];
+  return [...new Set(approversFor(role, scope, personCode, approverWorld()).flatMap(a => { const act = actingFor(a, m, day, list); return act === a ? [a] : [act, a]; }))];
 }
+/* A Profile delegate must hold the access each stage the approver decides needs. */
+const PROFILE_STAGES: readonly Stage[] = ['manager', 'payroll'];
+const lacks = (who: string, to: string, m: ChainModule): string[] => {
+  if (m !== 'Profile') return [];
+  const mine = capsOf(who), theirs = capsOf(to);
+  return PROFILE_STAGES.filter(s => mine.includes(STAGE_CAPABILITY[s]) && !theirs.includes(STAGE_CAPABILITY[s])).map(s => STAGE_CAPABILITY_LABEL[s]);
+};
 
 /* ----------------------------------------------------------- delegations */
 const delegationView = (d: StoredDelegation): DelegationView => ({ id: d.id, version: d.version, updatedAt: d.updatedAt, who: d.who, whoName: nameOf(d.who),
@@ -130,7 +139,7 @@ export const approvalHandlers = [
 
   serve(createDelegation, ({ session, body }) => {
     const draft = { who: body.who, to: body.to, from: body.from, until: body.until, modules: CHAIN_MODULES.filter(m => body.modules.includes(m)) };
-    const problem = delegationProblem(draft, delegationList(), { today: today(), approver: c => (canApprove(c) ? nameOf(c) : undefined), nameOf });
+    const problem = delegationProblem(draft, delegationList(), { today: today(), approver: c => (canApprove(c) ? nameOf(c) : undefined), nameOf, lacks });
     if (problem) return refuseWith(problem);
     const id = nextDelegationId();
     const rec: StoredDelegation = { id, version: 1, updatedAt: store.now(), ...draft };
