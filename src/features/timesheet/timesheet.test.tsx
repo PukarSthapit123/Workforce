@@ -410,6 +410,19 @@ describe('My timesheet, time is captured as time', () => {
     }
     expect([...kinds]).toEqual(expect.arrayContaining(['time', 'select', 'textarea']));
   });
+  /* Suite FUSION3: "The entry line carries a Rate type field" and "Its options
+     come from the configured pay codes": only the codes marked as work
+     types, by their readable names. */
+  test('the entry line carries a Rate type field whose options are the configured pay codes that are work types', async () => {
+    await openDay();
+    const rate = screen.getByTestId(tid.dayForm.field('work_type'));
+    expect(rate).toHaveAccessibleName(/^Rate type/);
+    await userEvent.click(rate);
+    const options = (await screen.findAllByRole('option')).map(o => o.textContent ?? '');
+    expect(options).toEqual(expect.arrayContaining(['Standard time', 'Overtime — Saturday', 'Overtime — Sunday', 'Night work', 'Travel time']));
+    expect(options).not.toContain('Day rate');
+    expect(options).not.toContain('Statutory sick pay');
+  });
 });
 
 /* trace WK#20 and WK#22-33: the grid layout, one section per allocation */
