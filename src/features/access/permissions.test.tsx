@@ -298,3 +298,27 @@ test('the page carries its security caveat as a standing caution', async () => {
   expect(caution).toHaveTextContent(/apply to everyone at once/);
   expect(caution).toHaveTextContent(/API enforces/);
 });
+
+/* Suite NOTICE BOARD: "Three capabilities sit in the permission matrix". */
+test('the notice board’s three capabilities sit in the matrix: reading, posting and posting to everyone', async () => {
+  mount();
+  await screen.findByTestId(tid.access.table);
+  for (const c of ['own_notices', 'notice_post', 'notice_org']) expect(screen.getByTestId(tid.access.capRow(c))).toBeInTheDocument();
+  expect(screen.getByTestId(tid.access.cell('notice_org', 'admin'))).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.getByTestId(tid.access.cell('notice_org', 'manager'))).toHaveAttribute('aria-pressed', 'false');
+});
+
+/* Suite REVIEW RUN: "The permission matrix stays a scrolling matrix, not
+   cards" and "... while the exceptions list beside it becomes cards": the
+   matrix is a matrix table, the people list a record list whose cells are
+   labelled for their phone card, its name the card's title. */
+test('the matrix stays a matrix, while the people list beside it is a record list with labelled cells', async () => {
+  mount();
+  const matrix = await screen.findByTestId(tid.access.table);
+  expect(matrix).toHaveAttribute('data-variant', 'matrix');
+  const people = screen.getByTestId(tid.access.usersTable);
+  expect(people).toHaveAttribute('data-variant', 'records');
+  const row = within(people).getAllByRole('row')[1];
+  if (!row) throw new Error('no people row');
+  expect([...row.querySelectorAll('td')].map(td => td.getAttribute('data-l'))).toEqual([null, 'Employee ID', 'Persona', 'Exceptions', null]);
+});

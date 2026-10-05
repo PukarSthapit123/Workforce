@@ -87,3 +87,47 @@ test.each(UNGUIDED)('the %s page has no guide in the prototype, so it shows no ?
   await waitFor(() => expect(screen.queryByText(/^Loading/)).toBeNull());
   expect(screen.queryAllByTestId(/^guide-open/)).toHaveLength(0);
 });
+
+/* Suite GUIDES: "Its explainer banner is gone from the page" (People,
+   Dimensions, Contracts, Permissions) and "Its read-only-pay banner is gone"
+   (Profile): what the guide explains is not printed on the page as well, and
+   the page carries no explainer banner. */
+test.each(GUIDED)('the %s page prints none of what its guide explains, and has no explainer banner', async (view, persona, Page, path) => {
+  await signInAs(persona);
+  renderPage(<Page />, path);
+  const page = await screen.findByTestId(tid.page(view));
+  await waitFor(() => expect(screen.queryByText(/^Loading/)).toBeNull());
+  /* the standing caution keeps its own words, as a note, not a banner */
+  const CAUTION = '[data-testid^="head-caution"], [data-testid="access-caution"]';
+  const shown = page.cloneNode(true) as HTMLElement;
+  shown.querySelectorAll(CAUTION).forEach(n => n.remove());
+  const text = shown.textContent ?? '';
+  for (const [h, b] of GUIDES[view]?.sections ?? []) {
+    expect(text, h).not.toContain(h);
+    expect(text, h).not.toContain(b);
+  }
+  expect(text).not.toMatch(/read-only outputs/);
+  expect([...page.querySelectorAll('[role="note"]')].filter(n => !n.matches(CAUTION))).toEqual([]);
+});
+
+/* Suite GUIDES: "But its live state pill stayed on the page": Permissions
+   keeps saying how far the matrix is from the defaults, and says it again
+   once a cell has changed. */
+test('Permissions keeps its live state pill on the page: at defaults, then one changed from default', async () => {
+  await signInAs('admin');
+  renderPage(<PermissionsPage />, '/setup/aperm');
+  expect(await screen.findByTestId(tid.accessState.pill)).toHaveTextContent('At defaults');
+  await userEvent.click(screen.getByTestId(tid.access.cell('proxy', 'employee')));
+  await waitFor(() => expect(screen.getByTestId(tid.accessState.pill)).toHaveTextContent('1 changed from default'));
+  expect(screen.getByTestId(tid.accessState.pill)).toHaveAttribute('data-tone', 'warn');
+});
+
+/* Suite GUIDES: "State banners stay on the page — simulation is still
+   declared". The explainers moved behind ?, but a banner stating what this
+   build does not do stays where it applies: Notifications says Email and SMS
+   are not connected. */
+test('a state banner declaring what is simulated stays on its page', async () => {
+  await signInAs('admin');
+  renderPage(<NotificationsPage />, '/setup/anotif');
+  expect(await screen.findByTestId(tid.anotif.notConnected)).toHaveTextContent('Email and SMS are not connected yet.');
+});
