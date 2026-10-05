@@ -15,6 +15,9 @@ export interface NavTab {
   sectionDescription?: string;
   /* a strip's way back ("‹ All setup", "‹ All modules"): never the page you are on */
   back?: true;
+  /* a module's own setup page (mts, mrota, mleave): the code of the module
+     whose drill-in reaches it, so it is not listed with its section's pages */
+  module?: string;
 }
 export interface NavGroup { key: 'work' | 'team' | 'setup'; label: string; tabs: NavTab[] }
 
@@ -34,10 +37,10 @@ const tab = (group: NavGroup['key'], view: string, label: string, extra: Partial
    fixed order and grouping an administrator sees setup in. Its "Modules"
    section there only lists 'amods'; mts/mrota/mleave are reached one level
    deeper, after choosing a specific module (its MODULE_SEC drill-down, e.g.
-   "Timesheet features" -> "Timesheet setup"). This plan does not build that
-   extra level, so they sit directly under Modules instead — still gated
-   exactly as the prototype's SETUP_NEED (html:4002-4011) gates them, still
-   reachable, still named correctly by a later sub-project when opened. */
+   "Timesheet features" -> "Timesheet setup"). They are routes of the
+   Modules section here, gated exactly as the prototype's SETUP_NEED
+   (html:4002-4011) gates them, and carry `module` so the strip and the
+   setup index leave them to their module's drill-in (Shell.tsx stripTabsFor). */
 function setupSections(can: (c: string) => boolean, on: (m: string) => boolean, flag: (f: string) => boolean, ts: boolean) {
   const sec = (key: string, label: string, description: string, pages: [boolean, NavTab][]) => ({ key, label, description, pages });
   return [
@@ -47,9 +50,9 @@ function setupSections(can: (c: string) => boolean, on: (m: string) => boolean, 
     ]),
     sec('mods', 'Modules', 'What this tenant runs, the features inside each module, and how each behaves', [
       [can('mod_cfg'), tab('setup', 'amods', 'Modules & features')],
-      [can('mod_cfg') && ts, tab('setup', 'mts', 'Timesheet')],
-      [can('mod_cfg') && on('R'), tab('setup', 'mrota', 'Rota')],
-      [can('mod_cfg') && on('L'), tab('setup', 'mleave', 'Leave')],
+      [can('mod_cfg') && ts, tab('setup', 'mts', 'Timesheet', { module: 'TS' })],
+      [can('mod_cfg') && on('R'), tab('setup', 'mrota', 'Rota', { module: 'R' })],
+      [can('mod_cfg') && on('L'), tab('setup', 'mleave', 'Leave', { module: 'L' })],
     ]),
     sec('people', 'People', 'The canonical employee record, what each person is, and the structure work is costed to', [
       [can('master_data'), tab('setup', 'apeople', 'People')],

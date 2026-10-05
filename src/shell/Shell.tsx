@@ -208,7 +208,10 @@ function firstTabPath(g: NavGroup): string {
    strip is just the group's tabs, as it always was. Inside Modules, opening
    a module (/setup/amods?m=<code>) drills in once more, as the prototype's
    NAV() does (v15:4059-4076): a way back to the module list, the module's
-   features, and its setup page when this person can reach it. */
+   features, and its setup page when this person can reach it. A module's
+   setup page (mts, mrota, mleave) sits inside that drill-in, never on the
+   Modules section's own strip (suite ADMIN LAYOUT: "‹ All modules |
+   Timesheet features | Timesheet setup"). */
 export function stripTabsFor(current: NavGroup | undefined, pathname: string, search = ''): NavTab[] {
   if (!current) return [];
   if (current.key !== 'setup') return current.tabs;
@@ -216,17 +219,18 @@ export function stripTabsFor(current: NavGroup | undefined, pathname: string, se
   const active = current.tabs.find(t => t.path === pathname);
   const section = active?.section;
   if (!section) return index && active === index ? [index] : [];
-  const m = active.view === 'amods' ? moduleBy(new URLSearchParams(search).get('m') ?? '') : undefined;
-  if (m) {
+  const m = moduleBy(active.module ?? (active.view === 'amods' ? new URLSearchParams(search).get('m') ?? '' : ''));
+  const amods = current.tabs.find(t => t.view === 'amods');
+  if (m && amods) {
     const own = current.tabs.find(t => t.view === m.setup);
     return [
-      { view: 'amods', label: '‹ All modules', path: active.path, built: true, back: true },
-      { view: 'mfeat', label: `${m.name} features`, path: `${active.path}?m=${m.code}`, built: true },
+      { view: 'amods', label: '‹ All modules', path: amods.path, built: true, back: true },
+      { view: 'mfeat', label: `${m.name} features`, path: `${amods.path}?m=${m.code}`, built: true },
       ...(own && m.setupLabel ? [{ ...own, label: m.setupLabel }] : []),
     ];
   }
   const back: NavTab = { view: 'asetup', label: '‹ All setup', path: index?.path ?? '/setup/asetup', built: true, back: true };
-  return [back, ...current.tabs.filter(t => t.section === section)];
+  return [back, ...current.tabs.filter(t => t.section === section && !t.module)];
 }
 /* Whether a strip tab is the page on screen. A tab whose path carries a query
    (a module's features) matches only with that query; any other matches its

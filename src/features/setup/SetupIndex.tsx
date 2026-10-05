@@ -26,7 +26,8 @@ export function SetupIndex() {
   if (data.kind === 'loading') return <ShellLoading />;
   if (data.kind === 'error') return <ShellError onRetry={data.onRetry} onSignOut={data.onSignOut} />;
   const setup = data.nav.find(g => g.key === 'setup');
-  const pages = setup ? setup.tabs.filter(t => t.view !== 'asetup') : [];
+  /* a module's own setup page is reached through its module, not listed here */
+  const pages = setup ? setup.tabs.filter(t => t.view !== 'asetup' && !t.module) : [];
   const sections: Section[] = [];
   pages.forEach(t => {
     if (!t.sectionKey || !t.section) return; // every setup page except asetup itself carries a section

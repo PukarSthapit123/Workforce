@@ -123,7 +123,35 @@ test('inside a module the strip reads All modules, then its features, then its s
   expect(strip.map(t => t.path)).toEqual(['/setup/amods', '/setup/amods?m=R', '/setup/mrota']);
   expect(strip.map(t => isHere(t, '/setup/amods?m=R'))).toEqual([false, true, false]);
   expect(stripTabsFor(setup, '/setup/amods', '?m=CORE').map(t => t.label)).toEqual(['‹ All modules', 'Workforce core features']);
-  expect(stripTabsFor(setup, '/setup/amods').map(t => t.label)).toEqual(['‹ All setup', 'Modules & features', 'Timesheet', 'Rota', 'Leave']);
+  expect(stripTabsFor(setup, '/setup/amods').map(t => t.label)).toEqual(['‹ All setup', 'Modules & features']);
+});
+
+/* ADMIN LAYOUT (suite S:3051-3060): a module's setup page is inside its drill-in,
+   "‹ All modules | Timesheet features | Timesheet setup", the setup page the
+   one on screen, and the way back returns to the module list. */
+test('on a module setup page (mts, mrota, mleave) the strip is that module’s drill-in, with the setup page current', () => {
+  const nav = buildNav({ caps: new Set(['mod_cfg']), modules: { CORE: true, TS: true, A: true, R: true, L: true }, flags: {}, onboarding: false });
+  const setup = nav.find(g => g.key === 'setup');
+  if (!setup) throw new Error('expected a setup group');
+  const cases = [['/setup/mts', 'TS', ['‹ All modules', 'Timesheet features', 'Timesheet setup']],
+    ['/setup/mrota', 'R', ['‹ All modules', 'Rota features', 'Rota setup']],
+    ['/setup/mleave', 'L', ['‹ All modules', 'Leave & absence features', 'Leave setup']]] as const;
+  for (const [path, code, labels] of cases) {
+    const strip = stripTabsFor(setup, path);
+    expect(strip.map(t => t.label)).toEqual(labels);
+    expect(strip.map(t => t.path)).toEqual(['/setup/amods', `/setup/amods?m=${code}`, path]);
+    expect(strip.map(t => isHere(t, path))).toEqual([false, false, true]);
+  }
+});
+
+test('the strip on a module setup page renders the drill-in tabs, the setup page marked current', () => {
+  const nav = buildNav({ caps: new Set(['mod_cfg']), modules: { CORE: true, TS: true, A: true, R: true, L: true }, flags: {}, onboarding: false });
+  render(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={['/setup/amods?m=R']}>
+    <ShellView nav={nav} roleLabel="Admin" viewingAs={null} account={menuAccount('Dee Fitzgerald')} inbox={emptyInbox(0)} onSignOut={() => {}} onEndViewAs={() => {}} /></MemoryRouter></QueryClientProvider>);
+  const strip = screen.getByRole('navigation', { name: 'Pages' });
+  expect(within(strip).getAllByRole('link').map(a => a.textContent)).toEqual(['‹ All modules', 'Rota features', 'Rota setup']);
+  expect(within(strip).getByRole('link', { name: 'Rota setup' })).toHaveAttribute('href', '/setup/mrota');
+  expect(within(strip).getByRole('link', { name: 'Rota features' })).toHaveAttribute('aria-current', 'page');
 });
 
 /* 1c follow-up from group 2 (D11): the role pill shows the renamed role,

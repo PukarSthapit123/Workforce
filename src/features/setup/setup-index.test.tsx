@@ -27,4 +27,7 @@ test('each setup card keeps what its section configures behind hover, and says i
   expect(card).toHaveAccessibleDescription('Who may do what, who is told, and who signs it off');
   expect(screen.getByTestId(tid.setup.cardDescription('gov'))).toHaveClass('sr-only');
   expect(card).not.toHaveTextContent('Who may do what');
+  /* SETUP_SECTIONS: Modules lists only Modules & features; each module's own
+     setup page is reached through that module's drill-in */
+  expect(screen.getByTestId(tid.setup.card('mods'))).toHaveAccessibleName('Modules Modules & features 1 page');
 });
