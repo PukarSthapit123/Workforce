@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router';
 import { Banknote, Building, Check, Folder, Minus, ShieldCheck, Users } from 'lucide-react';
 import { tid } from '@/testids';
 import { DIMENSIONS, DIMENSION_KINDS, type DimensionKind } from '@/contract/dimensions';
-import { Button, Card, Empty, Page, PageHead, Pill, Row, SetupCardButton, Small, Tip } from '@/ui';
+import { Button, Card, Empty, GuideButton, Page, PageHead, Pill, Row, SetupCardButton, Small, Tip } from '@/ui';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import { useDimension, type InUseRow } from '@/api/reference';
 import { latest, versionKey } from '@/lib/latest';
@@ -39,7 +39,7 @@ function DimensionCard({ kind, onOpen }: { kind: DimensionKind; onOpen(k: Dimens
 function DimensionIndex({ onOpen }: { onOpen(k: DimensionKind): void }) {
   return (<>
     <PageHead title="Dimensions" crumb="Qnipay setup · Dimensions" tipTestId={tid.head.tip('aloc')}
-      tip="What every rota entry and timesheet line carries: where the work happened, who owns it, what it is costed to, and who did it." />
+      tip="What every rota entry and timesheet line carries: where the work happened, who owns it, what it is costed to, and who did it." actions={<GuideButton view="aloc" />} />
     {DIM_GROUPS.map(g => (
       <section key={g.key} className="mt-lg mb-sm border-t pt-sm first-of-type:mt-0">
         <h2 className="mt-lg mb-md text-base">{g.label}<Tip testId={tid.dims.groupTip(g.key)} text={g.note} /></h2>
@@ -65,7 +65,7 @@ function DimensionTable({ kind, onBack }: { kind: DimensionKind; onBack(): void 
     <PageHead title={spec.label} crumb={`Qnipay setup · ${spec.label}`} tip={spec.desc} tipTestId={tid.head.tip(`aloc-${kind}`)}
       actions={<>
         <Button testId={tid.dims.back} kind="ghost" small onClick={onBack}>‹ All dimensions</Button>
-        <Button testId={tid.dims.add} kind="primary" small onClick={() => setForm({})}>New {DIMENSIONS[kind].singular}</Button></>} />
+        <Button testId={tid.dims.add} kind="primary" small onClick={() => setForm({})}>New {DIMENSIONS[kind].singular}</Button><GuideButton view="aloc" /></>} />
     {list.isPending && <p className="text-text-secondary">Loading&hellip;</p>}
     {list.isError && <p data-testid={tid.dims.error} role="alert" className="text-err">This list could not be loaded, so nothing here is current. Reload the page.</p>}
     {list.data && list.data.length > 0 && (

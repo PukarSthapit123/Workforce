@@ -107,4 +107,48 @@ export const GUIDES: Readonly<Record<string, Guide>> = {
     ['What is recorded',
       'Posting, every edit, pinning, withdrawing and each acknowledgement go to the audit log with who, what and before and after.'],
   ] },
+  /* 1c group 8: the 1b and 1c pages the prototype gives a guide (v15:9931-10058) */
+  apeople: { label: 'How the workforce record works', title: 'How the workforce record works', sections: [
+    ['One record per person, used by every module',
+      'Employee ID, employee type, job profile, department, location, contracted hours and clearance are held once here. Timesheet entries, rota shifts and leave requests reference this record; they never copy it.'],
+    ['What that means in practice',
+      'Move somebody to another location and the rota, coverage and eligibility follow on the next screen. There is no second list to keep in step.'],
+  ] },
+  aloc: { label: 'How dimensions are shared', title: 'How dimensions are shared', sections: [
+    ['One job profile list, three consumers',
+      'Held once here and referenced by every module. There is no second copy anywhere.'],
+    ['Locations, departments and cost centres',
+      'The same rule applies. A location carries its support level and minimum staffing, which the rota reads directly when it calculates coverage.'],
+  ] },
+  acon: { label: 'How contracted hours are used', title: 'How contracted hours are used', sections: [
+    ['Contracted hours are shared, not module-specific',
+      'Rota compares scheduled hours against them, Timesheet compares actual hours against them, and Leave pro-rates entitlement from them. Changing one here changes all three.'],
+    ['Bank and zero-hours colleagues',
+      'A colleague with no contracted baseline is measured against a maximum rather than a target, so the hours position shows a ceiling instead of a variance.'],
+  ] },
+  /* The prototype's second section said its checks ran in the browser; here
+     the server refuses every request a capability does not allow, so the
+     section says that, and keeps its heading. */
+  aperm: { label: 'How permissions work', title: 'How permissions work', sections: [
+    ['These switches are live',
+      'The navigation is rendered from this matrix. Revoke a capability and the surface it names disappears for that persona, and the action behind it is refused.'],
+    ['UI visibility is not security',
+      'Hiding a button is not the same as refusing the request behind it. The server checks every capability as well, so a request the matrix does not allow is refused even when it does not come from this screen.'],
+    ['Tenant policy can sit above the matrix',
+      'A capability can also be withheld by a tenant setting, such as “Who builds the rota” under Rota. Where both apply, both must agree.'],
+  ] },
+  docs: { label: 'Where documents come from', title: 'Where documents come from', sections: [
+    ['Read-only outputs from payroll',
+      'Payslips, P45 and P60 are produced by payroll in Business Central. Workforce shows them when the payroll integration is live; it never generates or alters them.'],
+    ['Everything else',
+      'Contracts, policies and certificates are held here and can carry an expiry. An expiring compliance document surfaces as an exception for your manager before it lapses.'],
+  ] },
+  profile: { label: 'What is held where', title: 'What is held where', sections: [
+    ['Pay and payroll documents are read-only outputs',
+      'Salary, payslips, P45 and P60 are owned by payroll in Business Central. Workforce shows them when the payroll integration is live; it never sets a monetary value.'],
+    ['What you can change yourself',
+      'Contact, emergency and bank details are yours to propose. Everything above them is set by HR and comes from the shared workforce record.'],
+    ['A change is a request',
+      'It is approved before it takes effect, and the old value is kept in the audit trail.'],
+  ] },
 };

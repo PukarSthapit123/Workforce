@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { tid } from '@/testids';
 import type { Person } from '@/contract/people';
-import { Button, Field, FormWarn, Modal, Page, PageHead, Row, UnitInput, toastInfo } from '@/ui';
+import { Button, Field, FormWarn, GuideButton, Modal, Page, PageHead, Row, UnitInput, toastInfo } from '@/ui';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import { usePeople, useUpdatePerson } from '@/api/people';
 import { formatDate } from '@/lib/format';
@@ -24,7 +24,7 @@ export function ContractsPage() {
   return (
     <Page testId={tid.page('acon')}>
       <PageHead title="Contracts" crumb="Qnipay setup · Contracts" tipTestId={tid.head.tip('acon')}
-        tip="Contracted hours: the common baseline for every comparison Timesheet and Rota make." />
+        tip="Contracted hours: the common baseline for every comparison Timesheet and Rota make." actions={<GuideButton view="acon" />} />
       {people.isPending && <p className="text-text-secondary">Loading&hellip;</p>}
       {people.isError && <p data-testid={tid.contracts.error} role="alert" className="text-err">The contracts could not be loaded, so nothing here is current. Reload the page.</p>}
       {people.data && (

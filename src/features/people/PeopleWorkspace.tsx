@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { tid } from '@/testids';
 import type { Person } from '@/contract/people';
-import { Button, Page, PageHead } from '@/ui';
+import { Button, GuideButton, Page, PageHead } from '@/ui';
 import { usePeople } from '@/api/people';
 import { useCaps } from '@/shell/useCaps';
 import { useCurrentSession } from '@/shell/SessionProvider';
@@ -39,7 +39,7 @@ export function PeopleWorkspace({ variant, view, crumb, tip, above }: {
   return (
     <Page testId={tid.page(view)}>
       {above}
-      <PageHead title="People" crumb={crumb} tip={tip} tipTestId={tid.head.tip(view)} actions={add || undefined} />
+      <PageHead title="People" crumb={crumb} tip={tip} tipTestId={tid.head.tip(view)} actions={<>{add}<GuideButton view={view} /></>} />
       <PeopleList variant={variant} total={everyone.data?.length} onOpen={p => setOpen(p.id)}
         actions={crud ? p => <Button testId={tid.people.edit(p.code)} kind="ghost" small onClick={() => setForm({ person: p })}>Edit</Button> : undefined} />
       {open && <PersonRecord personId={open} onClose={() => setOpen(null)} actions={crud || proxyOk ? p => <>

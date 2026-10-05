@@ -3,7 +3,7 @@ import { Eye, Lock } from 'lucide-react';
 import { tid } from '@/testids';
 import { cn } from '@/lib/utils';
 import { buildNav } from '@/domain/nav';
-import { AdminCard, Button, Caution, Page, PageHead, Pill, Row, ScopeBadge, SectionHead } from '@/ui';
+import { AdminCard, Button, Caution, GuideButton, Page, PageHead, Pill, Row, ScopeBadge, SectionHead } from '@/ui';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import { useCapabilities, useCapabilityGroups, useUserTypes, useUsers, useSetTemplateCapability, type Capability, type Self, type UserType } from '@/api/access';
 import { useCurrentSession } from '@/shell/SessionProvider';
@@ -79,6 +79,7 @@ export function PermissionsPage() {
           <>
             <Button testId={tid.roleNames.open} kind="ghost" small onClick={() => setRenaming(true)}>Rename roles</Button>
             <Caution testId={tid.access.caution} text="These switches are live and apply to everyone at once. The server enforces each one, so hiding a control is never the only thing refusing the request, and every change is recorded in the audit log." />
+            <GuideButton view="aperm" />
           </>} />
       {renaming && <RenameRolesDialog types={types} self={self} onClose={() => setRenaming(false)} />}
 
