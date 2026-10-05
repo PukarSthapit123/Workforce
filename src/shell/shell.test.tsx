@@ -234,3 +234,23 @@ test('admin: inside a setup section the bar holds the way back and that sectionâ
   expect(screen.getByTestId(tid.nav.bottom('ipay'))).toHaveAttribute('aria-current', 'page');
   expect(screen.queryByTestId(tid.nav.more)).toBeNull();
 });
+
+/* MOBILE FOUNDATION: "The strip and the bar agree on the current tab". Both
+   are painted from one array: on a page the bar has room for, the same view
+   is current in both; on one it has no room for, the bar marks none of its
+   destinations and lights More instead. */
+test('the tab strip and the bottom bar agree on the page on screen', async () => {
+  const nav = buildNav({ caps: new Set(['own_home', 'own_ts', 'own_shifts', 'own_leave', 'own_hours', 'own_notices']),
+    modules: { CORE: true, TS: true, A: true, R: true, L: true }, flags: { DOCS: true, NOTICES: true }, onboarding: false });
+  const current = (testIds: RegExp) => screen.getAllByTestId(testIds).filter(a => a.getAttribute('aria-current') === 'page')
+    .map(a => (a.getAttribute('data-testid') ?? '').replace(/^nav-(tab|bottom)-/, ''));
+  const view = renderAt(nav, '/work/leave');
+  expect(current(/^nav-tab-/)).toEqual(['leave']);
+  expect(current(/^nav-bottom-/)).toEqual(['leave']);
+  expect(screen.getByTestId(tid.nav.more).className).not.toMatch(/text-brand/);
+  view.unmount();
+  renderAt(nav, '/work/notices');
+  expect(current(/^nav-tab-/)).toEqual(['notices']);
+  expect(current(/^nav-bottom-/)).toEqual([]);
+  expect(screen.getByTestId(tid.nav.more).className).toMatch(/text-brand/);
+});
