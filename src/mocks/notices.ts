@@ -78,16 +78,19 @@ const viewFor = (s: Signed, n: StoredNotice) => posterView(n, scopesFor(s));
 /* --------------------------------------------------------------- writing */
 const audit = (s: Signed, act: string, n: StoredNotice, detail: string, before: Record<string, unknown> | null, after: Record<string, unknown> | null) =>
   writeAudit({ who: actor(s), act, entity: 'notice', entityId: n.id, before, after: after ? { ...after, detail } : { detail } });
-/* Tells the audience: the event's matrix decides each person's channel. */
-function tell(n: StoredNotice, updated: boolean) {
-  const note = postedNote(n, labelOf(n.scope), updated);
-  notifyEvent('notice_posted', 'subject', audienceOf(n, everyone()).map(p => p.code), { ...note, area: 'Notices', ref: n.id });
+/* Tells the audience: the event's matrix decides each person's channel. The
+   poster is not told of their own notice, though they still count in its
+   audience (main-session ruling). */
+function tell(s: Signed, n: StoredNotice, updated: boolean) {
+  const note = postedNote(n, labelOf(n.scope), updated), poster = s.account.personCode;
+  const told = audienceOf(n, everyone()).map(p => p.code).filter(c => c !== poster);
+  notifyEvent('notice_posted', 'subject', told, { ...note, area: 'Notices', ref: n.id });
 }
 /* Sends a notice live and returns how many it reaches (noticeGoLive). */
-function goLive(n: StoredNotice): StoredNotice {
+function goLive(s: Signed, n: StoredNotice): StoredNotice {
   const live = { ...n, state: 'live' as const };
   notices()[n.id] = live;
-  tell(live, false);
+  tell(s, live, false);
   return live;
 }
 const posted = (n: StoredNotice) => postedToast(n.title, audienceOf(n, everyone()).length, labelOf(n.scope), noticeStatus(n, today()) === 'scheduled' ? n.from : null);
@@ -171,7 +174,7 @@ export const noticeHandlers = [
       const auditId = audit(session, 'Notice drafted', draft, `new → draft · ${draft.title}`, null, { state: 'draft', title: draft.title, scope: labelOf(draft.scope) });
       return { record: viewFor(session, draft), auditId, message: DRAFT_SAVED };
     }
-    const live = goLive(draft);
+    const live = goLive(session, draft);
     const k = audienceOf(live, everyone()).length;
     const auditId = audit(session, 'Notice posted', live, `new → live · ${labelOf(live.scope)} · ${k} people`, null,
       { state: 'live', title: live.title, scope: labelOf(live.scope), audience: k });
@@ -202,13 +205,13 @@ export const noticeHandlers = [
     let saved = bump(n, { ...(plan?.next ?? {}), scope });
     notices()[n.id] = saved;
     if (body.post) {
-      saved = goLive(saved);
+      saved = goLive(session, saved);
       const k = audienceOf(saved, everyone()).length;
       const auditId = audit(session, 'Notice posted', saved, [`draft → live · ${labelOf(saved.scope)} · ${k} people`, ...changes].join(' · '),
         { state: 'draft' }, { state: 'live', audience: k });
       return { record: viewFor(session, saved), auditId, message: posted(saved) };
     }
-    if (plan?.textChanged && saved.state === 'live') tell(saved, true);
+    if (plan?.textChanged && saved.state === 'live') tell(session, saved, true);
     const detail = changes.join(' · ');
     const before = { textVersion: n.textVersion, title: n.title, mustAck: n.mustAck, urgent: n.urgent, pinned: n.pinned, from: n.from, until: n.until };
     const after = { textVersion: saved.textVersion, title: saved.title, mustAck: saved.mustAck, urgent: saved.urgent, pinned: saved.pinned, from: saved.from, until: saved.until };
@@ -238,7 +241,7 @@ export const noticeHandlers = [
     checkVersion(n);
     requireMine(session, n);
     if (n.state !== 'draft') return refuseWith(n.state === 'withdrawn' ? WITHDRAWN : ALREADY_POSTED);
-    const live = goLive(bump(n, {}));
+    const live = goLive(session, bump(n, {}));
     const k = audienceOf(live, everyone()).length;
     const auditId = audit(session, 'Notice posted', live, `draft → live · ${labelOf(live.scope)} · ${k} people`, { state: 'draft' }, { state: 'live', audience: k });
     return { record: viewFor(session, live), auditId, message: posted(live) };

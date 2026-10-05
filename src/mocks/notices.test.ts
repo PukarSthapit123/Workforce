@@ -3,7 +3,7 @@ import { store } from './store';
 import { Acknowledged, MyNotices, NoticeDeleted, NoticeSaved, NoticeTrack, PostedNotices, ScopeKind } from '@/contract/notices';
 import { Refusal } from '@/contract/common';
 import { SCOPE_KINDS } from '@/domain/notices';
-import { audits, caller, fault, resetTo, snapshot, tokenFor, type Persona } from '@/test/api-helpers';
+import { accountOf, audits, caller, fault, resetTo, snapshot, tokenFor, type Persona } from '@/test/api-helpers';
 import type { StoredNotice } from './notices';
 import type { StoredNotification } from './notify';
 
@@ -101,15 +101,20 @@ describe('posting (notice_post, notice_org; Review Focus 1, 5)', () => {
     expect(s.message).toBe(`Posted. Hand hygiene audit next week. ${k} people in Willow House.`);
     expect(s.record).toMatchObject({ id: 'NTC-0005', state: 'live', status: 'current', textVersion: 1, version: 1, audience: k, acknowledged: 0, mine: true, by: 'Rachel Hussain' });
     expect(own().map(a => [a.act, a.entityId])).toEqual([['Notice posted', 'NTC-0005']]);
-    expect(told().map(t => t.personId).sort()).toEqual(activeAt('WH').map(p => p.code).sort());
+    const poster = accountOf('manager').personCode;
+    expect(activeAt('WH').some(p => p.code === poster)).toBe(true);
+    expect(told().map(t => t.personId).sort()).toEqual(activeAt('WH').map(p => p.code).filter(c => c !== poster).sort());
     expect(told().every(t => t.area === 'Notices' && t.ref === 'NTC-0005' && t.title === 'Notice: Hand hygiene audit next week' && t.channel === 'In-app')).toBe(true);
   });
-  test('an admin posts to everyone; everyone in the audience is told in the Employee column, admins too (I3)', async () => {
+  test('an admin posts to everyone; everyone in the audience but the poster is told in the Employee column, the manager too (I3)', async () => {
     const r = await (await as('admin'))('POST', '/api/v1/notices', { ...NEW, scope: ALL, urgent: true });
     expect(r.status).toBe(200);
     const people = Object.values(store.coll<{ code: string; state: string }>('people')).filter(p => p.state === 'active');
-    expect(told().some(t => t.personId === 'CP-1002')).toBe(true);
-    expect(told()).toHaveLength(people.length);
+    const poster = accountOf('admin').personCode;
+    expect(told().some(t => t.personId === accountOf('manager').personCode)).toBe(true);
+    expect(told().some(t => t.personId === poster)).toBe(false);
+    expect(told().map(t => t.personId).sort()).toEqual(people.map(p => p.code).filter(c => c !== poster).sort());
+    expect(NoticeSaved.parse(r.body).record.audience).toBe(people.length);
     expect(told()[0]?.title).toBe('Urgent notice: Hand hygiene audit next week');
   });
   test('a manager cannot reach everyone or another location, even by forcing the scope; nothing is created', async () => {
@@ -143,7 +148,7 @@ describe('posting (notice_post, notice_org; Review Focus 1, 5)', () => {
     expect(told()).toEqual([]);
     const p = await mgr('POST', `/api/v1/notices/${d.record.id}/post`, undefined, 1);
     expect(NoticeSaved.parse(p.body).record.state).toBe('live');
-    expect(told().length).toBe(activeAt('WH').length);
+    expect(told().length).toBe(activeAt('WH').length - 1);
     expect((await mgr('POST', `/api/v1/notices/${d.record.id}/post`, undefined, 2)).status).toBe(409);
     expect(own().map(a => a.act)).toEqual(['Notice drafted', 'Notice posted']);
   });
