@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { server } from '@/mocks/node';
@@ -80,4 +80,39 @@ describe('My team · People, as a manager', () => {
     expect(pill).toHaveAttribute('tabindex', '0');
     expect(pill).toHaveTextContent(LIFECYCLE.active.note);
   });
+});
+
+/* Suite ITEM 4: "A person deep link opens the record" (the prototype's
+   #/people/<id>; here ?person=<employee ID>). Closing it drops the link, so
+   the record does not open again. */
+test('a person deep link opens their record, and closing it drops the link', async () => {
+  await signInAs('admin');
+  const p = personOf('CP-1042') as { name?: unknown };
+  renderPage(<AdminPeoplePage />, '/setup/apeople?person=CP-1042');
+  const box = await screen.findByTestId(tid.modal.root);
+  await waitFor(() => expect(within(box).getByTestId(tid.modal.title)).toHaveTextContent(String(p.name)));
+  expect(await within(box).findByTestId(tid.person.fact('contractedHours'))).toHaveTextContent('37.5 h per week');
+  await userEvent.click(within(box).getByTestId(tid.modal.close));
+  await waitFor(() => expect(screen.queryByTestId(tid.modal.root)).toBeNull());
+  await new Promise(r => setTimeout(r, 50));
+  expect(screen.queryByTestId(tid.modal.root)).toBeNull();
+});
+
+/* Suite REVIEW RUN: "People is a record list" and "... and a leading icon
+   column is not treated as the title": on My team · People each row is a
+   record whose title is the person's name (their initials sit inside it, not
+   in a column of their own), and every other cell but the actions is labelled
+   for its phone card. */
+test('My team · People is a record list whose title is the name, not the avatar', async () => {
+  await signInAs('manager');
+  renderPage(<TeamPeoplePage />);
+  const table = await screen.findByTestId(tid.people.table);
+  expect(table).toHaveAttribute('data-variant', 'records');
+  const row = within(table).getAllByRole('row')[1];
+  if (!row) throw new Error('no row');
+  const cells = [...row.querySelectorAll('td')];
+  const title = cells[0];
+  expect(title?.getAttribute('data-l')).toBeNull();
+  expect(title?.querySelector('strong')?.textContent).toMatch(/^[A-Z][a-z]+ [A-Z]/);
+  expect(cells.slice(1, -1).every(c => c.getAttribute('data-l'))).toBe(true);
 });
