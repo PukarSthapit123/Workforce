@@ -347,3 +347,22 @@ describe('Team rota', () => {
     expect(snapshot('rotaWeeks', 'audit')).toEqual(before);
   });
 });
+
+/* Suite REVIEW RUN, density (rows moved to rota, D15): "Rota no longer stacks
+   three banners", "The day view shows cover as a status line, not a banner"
+   and "... the Fill action is offered once, not twice". Friday 14/08 is the
+   short day of week 33: the page carries the gap banner (and the over-maximum
+   one at most), and the day view says the shortfall in its head, with one Fill. */
+test('the rota stacks at most two banners, and the day view says cover in a status pill with one Fill, not a banner', async () => {
+  await open();
+  const page = screen.getByTestId(tid.page('trota'));
+  const banners = [...page.querySelectorAll('[role="note"]')].filter(n => !n.closest('[data-testid^="head-caution"]'));
+  expect(banners.length).toBeGreaterThan(0);
+  expect(banners.length).toBeLessThanOrEqual(2);
+  const dayview = screen.getByTestId(tid.trota.dayview);
+  await userEvent.click(within(dayview).getByTestId(tid.trota.day(4)));
+  expect(within(dayview).getByTestId(tid.trota.dayPill)).toHaveTextContent('3 of 4');
+  expect(dayview.querySelectorAll('[role="note"]')).toHaveLength(0);
+  expect(within(dayview).getAllByRole('button', { name: /^Fill/ })).toHaveLength(1);
+  expect(screen.getAllByTestId(tid.trota.dayFill)).toHaveLength(1);
+});
