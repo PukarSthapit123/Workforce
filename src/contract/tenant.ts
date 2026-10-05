@@ -36,6 +36,8 @@ export const ModuleEffect = z.object({
   /* records left exactly as they were, by kind */
   kept: z.array(z.object({ what: z.string(), count: z.number().int().nonnegative() })),
   shiftsSetAside: z.number().int().nonnegative(), shiftsRestored: z.number().int().nonnegative(),
+  /* kept shifts not put back because the person is on leave or off sick that day */
+  shiftsNotRestored: z.number().int().nonnegative(),
   /* capture methods Timesheet brought back (on) or remembered (off) */
   capturesRestored: z.array(z.string()), capturesRemembered: z.array(z.string()),
   /* employee types Sites off took the site capability from */

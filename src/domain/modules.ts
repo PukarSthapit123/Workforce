@@ -249,7 +249,11 @@ export function switchFlag(modules: Switches, flags: Readonly<Record<string, unk
 /* rotaShiftsOff: every shift that is not leave or sickness leaves the
    calendar; the lines as they were are kept so turning Rota back on puts
    them back. rotaShiftsOn: a kept shift returns only to a cell that is still
-   empty, so leave or sickness recorded in the meantime wins. Both count cells. */
+   empty, so leave or sickness recorded in the meantime wins. With Rota off,
+   approving leave or recording sickness writes nothing to the rota, so
+   `absent` says what absence the leave records give that day ('V', 'S' or
+   ''): such a shift is held back with its mark, for the caller to write (or
+   leave empty) as module 4 D7 has it. Both count cells. */
 export type WeekLines = Record<string, string[]>;
 export function setAsideShifts(weeks: Readonly<Record<string, WeekLines>>): { cleared: Record<string, WeekLines>; kept: Record<string, WeekLines>; count: number } {
   const cleared: Record<string, WeekLines> = {}, kept: Record<string, WeekLines> = {};
@@ -266,8 +270,10 @@ export function setAsideShifts(weeks: Readonly<Record<string, WeekLines>>): { cl
   }
   return { cleared, kept, count };
 }
-export function restoreShifts(weeks: Readonly<Record<string, WeekLines>>, kept: Readonly<Record<string, WeekLines>>): { restored: Record<string, WeekLines>; count: number } {
-  const restored: Record<string, WeekLines> = {};
+export interface HeldShift { week: string; person: string; day: number; mark: string }
+export function restoreShifts(weeks: Readonly<Record<string, WeekLines>>, kept: Readonly<Record<string, WeekLines>>,
+  absent: (week: string, person: string, day: number) => string = () => ''): { restored: Record<string, WeekLines>; count: number; held: HeldShift[] } {
+  const restored: Record<string, WeekLines> = {}, held: HeldShift[] = [];
   let count = 0;
   for (const [id, was] of Object.entries(kept)) {
     const now = weeks[id];
@@ -277,23 +283,31 @@ export function restoreShifts(weeks: Readonly<Record<string, WeekLines>>, kept: 
     for (const [person, line] of Object.entries(was)) {
       const cur = next[person];
       if (!cur) continue;
-      line.forEach((c, i) => { if (c && !isAbsence(c) && !cur[i]) { cur[i] = c; count++; touched = true; } });
+      line.forEach((c, i) => {
+        if (!c || isAbsence(c) || cur[i]) return;
+        const mark = absent(id, person, i);
+        if (mark) { held.push({ week: id, person, day: i, mark }); return; }
+        cur[i] = c; count++; touched = true;
+      });
     }
     if (touched) restored[id] = next;
   }
-  return { restored, count };
+  return { restored, count, held };
 }
 
 /* ------------------------------------------------------------- outcomes */
 const shifts = (n: number) => `${n} scheduled ${n === 1 ? 'shift' : 'shifts'}`;
 const types = (n: number) => `${n} employee ${n === 1 ? 'type' : 'types'}`;
-export interface SwitchOutcome { cleared?: number; restored?: number; sitesRemovedFrom?: number; brought?: readonly string[] }
+export interface SwitchOutcome { cleared?: number; restored?: number; notRestored?: number; sitesRemovedFrom?: number; brought?: readonly string[] }
+/* How many kept shifts stayed off because the person is absent that day (I2). */
+export const notRestoredText = (n: number) => (n
+  ? `${n} ${n === 1 ? 'shift was' : 'shifts were'} not put back because the person is on leave or off sick that day.` : '');
 /* The toast after a module switch, as the prototype words it. */
 export function moduleSwitchText(code: string, on: boolean, o: SwitchOutcome = {}): string {
   const name = subName(code), live = 'It is live for everyone now.';
   if (on) {
     const head = o.brought?.length ? `${name} turned on with ${o.brought.map(subName).join(', ')}.` : `${name} turned on.`;
-    return [head, live, o.restored ? `${shifts(o.restored)} restored to the calendar.` : ''].filter(Boolean).join(' ');
+    return [head, live, o.restored ? `${shifts(o.restored)} restored to the calendar.` : '', notRestoredText(o.notRestored ?? 0)].filter(Boolean).join(' ');
   }
   return [`${name} turned off.`, live,
     o.cleared ? `${shifts(o.cleared)} cleared from the calendar and kept to restore.` : '',

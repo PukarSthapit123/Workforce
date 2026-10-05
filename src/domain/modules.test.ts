@@ -169,6 +169,17 @@ describe('Rota off and back on', () => {
     expect(r.count).toBe(2);
     expect(r.restored.w1?.p1).toEqual(['V', 'V', '', 'L', 'S', 'N', '']);
   });
+  test('a kept shift on a day the person is now absent is held back with its mark, not restored, and not counted (I2)', () => {
+    const off = setAsideShifts(weeks);
+    const now = { ...weeks, ...off.cleared };
+    const r = restoreShifts(now, off.kept, (week, person, day) => (week === 'w1' && person === 'p1' && day === 3 ? 'V' : day === 5 ? 'S' : ''));
+    expect(r.count).toBe(1);
+    expect(r.restored.w1?.p1).toEqual(['E', 'V', '', '', 'S', '', '']);
+    expect(r.held).toEqual([{ week: 'w1', person: 'p1', day: 3, mark: 'V' }, { week: 'w1', person: 'p1', day: 5, mark: 'S' }]);
+    expect(moduleSwitchText('R', true, { restored: 1, notRestored: 2 })).toBe('Rota turned on. It is live for everyone now. 1 scheduled shift restored to the calendar. '
+      + '2 shifts were not put back because the person is on leave or off sick that day.');
+    expect(moduleSwitchText('R', true, { notRestored: 1 })).toBe('Rota turned on. It is live for everyone now. 1 shift was not put back because the person is on leave or off sick that day.');
+  });
   test('the toast counts shifts cleared and restored, and the capture methods brought back', () => {
     expect(moduleSwitchText('R', false, { cleared: 12 })).toBe('Rota turned off. It is live for everyone now. 12 scheduled shifts cleared from the calendar and kept to restore.');
     expect(moduleSwitchText('R', true, { restored: 1 })).toBe('Rota turned on. It is live for everyone now. 1 scheduled shift restored to the calendar.');

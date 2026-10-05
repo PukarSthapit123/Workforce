@@ -13,7 +13,7 @@ import { serve } from './serve';
 import { actor, requireCapability } from './auth';
 import { writeAudit } from './audit';
 import { people, recordAt } from './world';
-import { rotaOff, rotaOn, saveTenant, sitesOff, tenantRec, tsConfig, view, type StoredTenant } from './tenant';
+import { rotaActor, rotaOff, rotaOn, saveTenant, sitesOff, tenantRec, tsConfig, view, type StoredTenant } from './tenant';
 import meta from './seed/meta.json';
 import { chainRecord, chainsNow, writeChain } from './approvals';
 import { CHAIN_MODULES, type ChainModule, type ChainStep } from '@/domain/approvals';
@@ -24,7 +24,8 @@ import {
 import type { TimesheetConfig } from '@/contract/timesheets';
 import type { EmployeeType } from '@/contract/employee-types';
 import type { UserType } from '@/contract/access';
-import type { Refusal as DomainRefusal } from '@/domain/modules';
+import { notRestoredText, type Refusal as DomainRefusal } from '@/domain/modules';
+import type { RotaActor } from '@/domain/rota';
 import {
   NOT_A_TEMPLATE, NO_SUCH_TEMPLATE, ROLE_KEYS, SHIPPED_KEYS, STRUCTURE_KINDS, captureTemplate, isShipped, planApply, planSummary, readTemplateFile,
   removeProblem, roleNamesProblem, shippedTemplate, templateFile, templateKey, templateNameProblem, templateSummary,
@@ -96,11 +97,12 @@ const planView = (key: string, t: Template, p: ApplyPlan): TemplatePlan =>
   ({ key, name: t.name, changes: p.changes, added: p.added, leftAlone: p.leftAlone, summary: planSummary(p) });
 
 /* ----------------------------------------------------- the tenant, written */
-function carryOut(t: StoredTenant, plan: ApplyPlan, key: string): StoredTenant {
+function carryOut(t: StoredTenant, plan: ApplyPlan, key: string, by: RotaActor): { tenant: StoredTenant; notRestored: number } {
   const s = plan.steps;
-  /* what a module switch does beyond the switch, as group 1's handler does it */
+  /* what a module switch does beyond the switch, as group 1's handler does it;
+     Rota on waits for the saved tenant, so its absence write sees Rota live */
   for (const m of s.modules) {
-    if (m.code === 'R') { if (m.on) rotaOn(); else rotaOff(); }
+    if (m.code === 'R' && !m.on) rotaOff();
     if (m.code === 'C' && !m.on) sitesOff();
   }
   const flags = { ...t.flags };
@@ -149,7 +151,9 @@ function carryOut(t: StoredTenant, plan: ApplyPlan, key: string): StoredTenant {
       } else coll[id] = { ...row, id, version: 1, updatedAt: store.now() };
     }
   }
-  return saveTenant(t, { modules: s.finalModules, restore: s.finalRestore, flags, extras, template: key });
+  const saved = saveTenant(t, { modules: s.finalModules, restore: s.finalRestore, flags, extras, template: key });
+  const notRestored = s.modules.some(m => m.code === 'R' && m.on) ? rotaOn(by).notRestored : 0;
+  return { tenant: saved, notRestored };
 }
 
 export const templateHandlers = [
@@ -193,11 +197,12 @@ export const templateHandlers = [
     const pv = planView(params.key, template, plan);
     const message = `${template.name} applied. ${pv.summary}`;
     if (!plan.changes.length && !plan.added.length && t.template === params.key) return { record: view(t), auditId: null, plan: pv, message };
-    const done = carryOut(t, plan, params.key);
+    const { tenant: done, notRestored } = carryOut(t, plan, params.key, rotaActor(session));
+    const held = notRestoredText(notRestored);
     const auditId = writeAudit({ who: actor(session), act: 'Template applied', entity: 'template', entityId: params.key,
-      before: { template: t.template }, after: { template: params.key, name: template.name, detail: pv.summary,
+      before: { template: t.template }, after: { template: params.key, name: template.name, detail: [pv.summary, held].filter(Boolean).join(' '),
         changed: plan.changes.map(l => l.text), added: plan.added.map(l => l.text), leftAlone: plan.leftAlone.map(l => l.text) } });
-    return { record: view(done), auditId, plan: pv, message };
+    return { record: view(done), auditId, plan: pv, message: [message, held].filter(Boolean).join(' ') };
   }),
 
   serve(exportTemplate, ({ params }) => templateFile(params.key, templateAt(params.key))),

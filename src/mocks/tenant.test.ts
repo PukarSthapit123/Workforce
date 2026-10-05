@@ -175,6 +175,38 @@ describe('modules (Review Focus 2)', () => {
     expect(on.effect.shiftsRestored).toBe(shifts - 1);
     expect(store.coll<Week>('rotaWeeks')[id]?.lines[person]?.[day]).toBe('V');
   });
+  /* I2: with Rota off, approving leave and recording sickness write nothing to the rota, so the cell is empty on restore */
+  const AMARA_WEEK = 'rw_WH_2026-08-10';
+  const amaraLine = () => store.coll<Week>('rotaWeeks')[AMARA_WEEK]?.lines['CP-1042'];
+  async function offThenAbsent() {
+    const admin = await as('admin'), mgr = await as('manager'), emp = await as('employee');
+    expect(amaraLine()).toEqual(['E', 'E', '', 'N', 'N', '', '']);
+    const shifts = shiftCells(weeks());
+    await admin('PATCH', MOD('R'), { on: false }, ver());
+    const asked = await emp('POST', '/api/v1/leave/requests', { type: 'AL', part: 'full', from: '2026-08-14', to: '2026-08-14' });
+    expect(asked.status).toBe(200);
+    const id = (asked.body as { record: { id: string } }).record.id;
+    expect((await mgr('POST', `/api/v1/leave/requests/${id}/approve`, undefined, 1)).status).toBe(200);
+    expect((await mgr('POST', '/api/v1/leave/sickness', { personCode: 'CP-1042', from: '2026-08-11', to: '2026-08-11', reason: 'Other' })).status).toBe(200);
+    return { admin, shifts };
+  }
+  test('Rota on never puts a set-aside shift back over approved leave or sickness: the cell takes V or S with LV_ROTA on, and the count says so (I2)', async () => {
+    const { admin, shifts } = await offThenAbsent();
+    const on = ModuleSwitched.parse((await admin('PATCH', MOD('R'), { on: true }, ver())).body);
+    expect(amaraLine()).toEqual(['E', 'S', '', 'N', 'V', '', '']);
+    expect([on.effect.shiftsRestored, on.effect.shiftsNotRestored]).toEqual([shifts - 2, 2]);
+    expect(on.effect.message).toBe(`Rota turned on. It is live for everyone now. ${shifts - 2} scheduled shifts restored to the calendar. `
+      + '2 shifts were not put back because the person is on leave or off sick that day.');
+    expect(audits().filter(a => a.id === on.auditId)).toHaveLength(1);
+  });
+  test('without LV_ROTA, a set-aside shift on an absence day stays empty on restore (I2)', async () => {
+    const t = tenant();
+    t.flags.LV_ROTA = false;
+    const { admin, shifts } = await offThenAbsent();
+    const on = ModuleSwitched.parse((await admin('PATCH', MOD('R'), { on: true }, ver())).body);
+    expect(amaraLine()).toEqual(['E', '', '', 'N', '', '', '']);
+    expect([on.effect.shiftsRestored, on.effect.shiftsNotRestored]).toEqual([shifts - 2, 2]);
+  });
   test('Sites off takes the site capability off every employee type and says which; on does not put it back (as the prototype)', async () => {
     const call = await as('admin'), before = typeCaps();
     expect(Object.values(before).filter(c => c.includes('site')).length).toBe(2);

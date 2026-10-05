@@ -7,13 +7,18 @@
    timesheetConfig and the rota horizon on rotaConfig, so a write here goes
    through to that record and module 2 and 3 keep reading one source. Turning
    Rota off sets every scheduled shift aside in its own collection and turning
-   it on puts them back (rotaShiftsOff / rotaShiftsOn). */
+   it on puts them back (rotaShiftsOff / rotaShiftsOn), except on a day the
+   person is now on leave or off sick: that cell takes the absence mark through
+   module 3's week path when leave reaches the rota (module 4 D7), else it
+   stays empty. */
 import { store } from './store';
 import { bump, refuse } from './http';
 import { serve } from './serve';
 import { actor } from './auth';
 import { writeAudit } from './audit';
 import { recordAt } from './world';
+import { leaveAbsenceOn } from './leave';
+import { writeAbsence } from './rota';
 import { getTenant, setFlag, setModule, updateTenantSettings, type ModuleEffect, type Tenant } from '@/contract/tenant';
 import type { TimesheetConfig } from '@/contract/timesheets';
 import type { RotaConfigRecord } from '@/contract/rota';
@@ -21,14 +26,16 @@ import {
   DEFAULT_EXTRAS, flagBy, flagChangeText, moduleSwitchText, restoreShifts, setAsideShifts, subName, switchFlag, switchModule,
   type Refusal as DomainRefusal, type WeekLines,
 } from '@/domain/modules';
-import { DEFAULT_ROTA_CONFIG } from '@/domain/rota';
+import { DEFAULT_ROTA_CONFIG, type RotaActor } from '@/domain/rota';
+import { leaveCoverReason, leaveWritesRota } from '@/domain/leave';
+import { addDays } from '@/domain/time';
 
 interface Meta { id: string; version: number; updatedAt: string }
 /* What the tenant record holds. rotaHorizon, weekGrid, weekLayout and
    rotaSetAside are read from their own homes into the view. */
 export type StoredTenant = Omit<Tenant, 'rotaHorizon' | 'extras' | 'rotaSetAside'> & { extras: { breaksMax: number; vehiclesMax: number } };
 interface SetAside extends Meta { weeks: Record<string, WeekLines>; count: number }
-interface StoredWeek extends Meta { lines: WeekLines }
+interface StoredWeek extends Meta { weekStart: string; lines: WeekLines }
 interface StoredType extends Meta { code: string; name: string; capabilities: string[] }
 
 const NO_TENANT = { code: 'not-found', message: 'This tenant has no settings loaded.', next: 'Reload the page. If it keeps happening, report it.' };
@@ -56,6 +63,7 @@ export function view(t: StoredTenant): Tenant {
     rotaSetAside: setAside()?.count ?? 0,
   };
 }
+export const rotaActor = (s: Parameters<typeof actor>[0]): RotaActor => { const w = actor(s); return { personCode: w.personCode, name: w.name }; };
 const refuseWith = (r: DomainRefusal): never =>
   refuse(r.status, { code: r.code, message: r.message, next: r.next, ...(r.field ? { field: r.field } : {}) });
 
@@ -71,17 +79,30 @@ export function rotaOff(): number {
   store.coll<SetAside>(SET_ASIDE)[SET_ASIDE] = { id: SET_ASIDE, version: (was?.version ?? 0) + 1, updatedAt: store.now(), weeks: r.kept, count: r.count };
   return r.count;
 }
-export function rotaOn(): number {
+/* Called once the tenant record has Rota on, so the absence write sees the module live. */
+export function rotaOn(by: RotaActor): { restored: number; notRestored: number } {
   const kept = setAside();
-  if (!kept) return 0;
+  if (!kept) return { restored: 0, notRestored: 0 };
   const weeks = store.coll<StoredWeek>('rotaWeeks');
-  const r = restoreShifts(Object.fromEntries(Object.values(weeks).map(w => [w.id, w.lines])), kept.weeks);
+  const dateOf = (id: string, day: number) => { const w = recordAt(weeks, id); return w ? addDays(w.weekStart, day) : ''; };
+  const r = restoreShifts(Object.fromEntries(Object.values(weeks).map(w => [w.id, w.lines])), kept.weeks,
+    (id, person, day) => { const date = dateOf(id, day); return date ? leaveAbsenceOn(person, date) : ''; });
   for (const [id, lines] of Object.entries(r.restored)) {
     const w = recordAt(weeks, id);
     if (w) weeks[id] = bump(w, { lines });
   }
   store.db[SET_ASIDE] = {};
-  return r.count;
+  const t = tenantRec();
+  if (leaveWritesRota(t.modules, Object.fromEntries(Object.entries(t.flags).map(([k, v]) => [k, Boolean(v)])))) {
+    const byMark = new Map<string, { personCode: string; mark: string; dates: string[] }>();
+    for (const h of r.held) {
+      const key = `${h.person}|${h.mark}`, at = byMark.get(key) ?? { personCode: h.person, mark: h.mark, dates: [] };
+      at.dates.push(dateOf(h.week, h.day));
+      byMark.set(key, at);
+    }
+    for (const x of byMark.values()) writeAbsence({ personCode: x.personCode, dates: x.dates, mark: x.mark, by, coverReason: leaveCoverReason(x.mark) });
+  }
+  return { restored: r.count, notRestored: r.held.length };
 }
 /* Sites off takes the site capability from every employee type (the prototype's mod-off). */
 export function sitesOff(): string[] {
@@ -112,10 +133,12 @@ export const tenantHandlers = [
     checkVersion(t);
     const r = switchModule({ modules: t.modules, restore: t.restore ?? {} }, params.code, body.on);
     if (!r.ok) return refuseWith(r.refusal);
-    const effect: ModuleEffect = { message: '', kept: [], shiftsSetAside: 0, shiftsRestored: 0, capturesRestored: [], capturesRemembered: [], siteRemovedFrom: [] };
+    const effect: ModuleEffect = { message: '', kept: [], shiftsSetAside: 0, shiftsRestored: 0, shiftsNotRestored: 0, capturesRestored: [], capturesRemembered: [], siteRemovedFrom: [] };
     if (!r.changed) return { record: view(t), auditId: null, effect: { ...effect, message: `${subName(params.code)} is already ${body.on ? 'on' : 'off'}.` } };
+    /* saved first, so what the switch does sees the module as it now is */
+    const saved = saveTenant(t, { modules: r.modules, restore: r.restore });
     if (params.code === 'R') {
-      if (body.on) effect.shiftsRestored = rotaOn();
+      if (body.on) ({ restored: effect.shiftsRestored, notRestored: effect.shiftsNotRestored } = rotaOn(rotaActor(session)));
       else effect.shiftsSetAside = rotaOff();
     }
     if (params.code === 'C' && !body.on) effect.siteRemovedFrom = sitesOff();
@@ -123,8 +146,7 @@ export const tenantHandlers = [
     effect.capturesRestored = r.brought;
     effect.capturesRemembered = r.remembered;
     effect.message = moduleSwitchText(params.code, body.on,
-      { cleared: effect.shiftsSetAside, restored: effect.shiftsRestored, sitesRemovedFrom: effect.siteRemovedFrom.length, brought: r.brought });
-    const saved = saveTenant(t, { modules: r.modules, restore: r.restore });
+      { cleared: effect.shiftsSetAside, restored: effect.shiftsRestored, notRestored: effect.shiftsNotRestored, sitesRemovedFrom: effect.siteRemovedFrom.length, brought: r.brought });
     const touched = Object.keys(r.modules).filter(k => t.modules[k] !== r.modules[k]);
     const auditId = writeAudit({ who: actor(session), act: body.on ? 'Module turned on' : 'Module turned off', entity: 'tenant', entityId: params.code,
       before: Object.fromEntries(touched.map(k => [k, Boolean(t.modules[k])])),

@@ -176,6 +176,17 @@ describe('applying (D1, Review Focus 3)', () => {
     const again = TemplateApplied.parse((await call('POST', APPLY('tpl_care_as_it_was'), undefined, tenantVer())).body);
     expect([again.auditId, again.message, audits().length]).toEqual([null, 'Care as it was applied. Nothing needed to change. Nothing was deleted.', n]);
   });
+  test('a template that turns Rota back on never restores a shift over leave approved while it was off, and says so (I2)', async () => {
+    const line = () => store.coll<{ lines: Record<string, string[]> }>('rotaWeeks')['rw_WH_2026-08-10']?.lines['CP-1042'];
+    expect(line()).toEqual(['E', 'E', '', 'N', 'N', '', '']);
+    expect((await admin('POST', APPLY('mne'), undefined, tenantVer())).status).toBe(200);
+    const emp = await as('employee'), mgr = await as('manager');
+    const asked = await emp('POST', '/api/v1/leave/requests', { type: 'AL', part: 'full', from: '2026-08-14', to: '2026-08-14' });
+    expect((await mgr('POST', `/api/v1/leave/requests/${(asked.body as { record: { id: string } }).record.id}/approve`, undefined, 1)).status).toBe(200);
+    const back = TemplateApplied.parse((await admin('POST', APPLY('social'), undefined, tenantVer())).body);
+    expect(line()).toEqual(['E', 'E', '', 'N', 'V', '', '']);
+    expect(back.message).toMatch(/ 1 shift was not put back because the person is on leave or off sick that day\.$/);
+  });
   test('the tenant\'s version is needed: missing is 428, stale is 412, and nothing changes', async () => {
     const call = admin, before = snapshot(...WRITES);
     expect((await call('POST', APPLY('mne'))).status).toBe(428);
