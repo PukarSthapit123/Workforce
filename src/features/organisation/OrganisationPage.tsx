@@ -17,6 +17,7 @@ import {
 } from '@/api/templates';
 import { useCaps } from '@/shell/useCaps';
 import { downloadText } from '@/lib/download';
+import { formatDateTime } from '@/lib/format';
 import { formatDmy } from '@/domain/time';
 import { MODULES, moduleLive } from '@/domain/modules';
 import { TEMPLATE_SCOPES, scopeLabel, templateFileName, type TemplateScope } from '@/domain/templates';
@@ -182,7 +183,7 @@ function TemplateActions() {
                     <TableCell kind="title"><b>{t.name}</b><span className="block text-xs text-text-muted">{t.description}</span></TableCell>
                     <TableCell label="Keeps" className="text-xs text-text-muted">{scopeLabel(t.scope)}</TableCell>
                     <TableCell label="Saved" className="text-xs text-text-muted">
-                      {t.savedAt ? `${formatDmy(t.savedAt.slice(0, 10))} · ${t.savedAt.slice(11, 16)}` : ''}
+                      {t.savedAt ? formatDateTime(t.savedAt) : ''}
                       <span className="block">{t.source === 'imported' ? `Imported by ${t.savedBy ?? ''}` : t.savedBy}</span></TableCell>
                     <TableCell kind="foot" className="text-right whitespace-nowrap">
                       <span className="inline-flex gap-sm">
