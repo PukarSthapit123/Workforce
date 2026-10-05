@@ -106,7 +106,11 @@ function LeaveBalance() {
 /* ----------------------------------------------------------------- a day */
 /* .calc and .calc.sh-* (v15:1312-1343, 1357-1358): the shift paints the cell
    in the rota's own tones, leave and sickness take a heavier bar, today is
-   ringed in the brand, a day still to come is dimmed. The state is one glyph. */
+   ringed in the brand, a day still to come is dimmed. The prototype dims the whole cell to .74
+   and the recorded time to .75, which takes the shift, leave and muted inks
+   below AA; here a day to come has its number in the muted ink and the
+   recorded time is in the secondary ink, both at full strength. The state is
+   one glyph. */
 const PAINT = {
   E: 'bg-(--qp-rota-early-surface) border-l-(color:--qp-rota-early-ink)',
   L: 'bg-(--qp-rota-late-surface) border-l-(color:--qp-rota-late-ink)',
@@ -140,11 +144,11 @@ function DayCell({ d, onOpen }: { d: HomeDay; onOpen: () => void }) {
   const g = d.glyph ? GLYPHS[d.glyph] : null;
   return (
     <button type="button" data-testid={tid.home.day(d.date)} data-paint={paint ?? undefined} data-glyph={d.glyph ?? undefined}
-      aria-label={cellLabel(d)} title={g?.label} onClick={onOpen}
+      data-future={d.future || undefined} aria-label={cellLabel(d)} title={g?.label} onClick={onOpen}
       className={cn('flex min-h-14 cursor-pointer flex-col items-stretch gap-[2px] rounded-sm border border-l-3 border-l-transparent bg-surface-card px-[6px] py-[5px] text-left text-xs',
         'hover:border-y-brand hover:border-r-brand dark:hover:border-y-brand-accent dark:hover:border-r-brand-accent',
-        paint && PAINT[paint], d.future && 'opacity-[.74]', d.today && 'border-2 border-brand dark:border-brand-accent')}>
-      <span className="text-xs font-bold">{parseIso(d.date).getUTCDate()}</span>
+        paint && PAINT[paint], d.today && 'border-2 border-brand dark:border-brand-accent')}>
+      <span className={cn('text-xs font-bold', d.future && 'text-text-muted')}>{parseIso(d.date).getUTCDate()}</span>
       {d.absence
         ? <span className={cn('flex items-center gap-[6px] text-xs leading-[1.25] font-semibold', INK[d.absence.mark])}>
             <span aria-hidden="true" className={cn('text-base leading-none', ICON_FIT)}>{glyphOf(d.absence.icon)}</span>{d.absence.short || d.absence.name}</span>
@@ -154,7 +158,7 @@ function DayCell({ d, onOpen }: { d: HomeDay; onOpen: () => void }) {
           : d.bankHoliday && <span className="text-xs leading-[1.25] text-text-muted">Bank holiday</span>}
       {(g || d.ts?.text) && <span className={cn('mt-auto flex items-center gap-xs text-xs font-bold', GLYPH_INK[g?.tone ?? 'mut'])}>
         {g && <span aria-hidden="true" className={ICON_FIT}>{glyphOf(g.glyph)}</span>}
-        {d.ts?.text && <span className="font-semibold tabular-nums opacity-75">{d.ts.text}</span>}</span>}
+        {d.ts?.text && <span className="font-semibold tabular-nums text-text-secondary">{d.ts.text}</span>}</span>}
     </button>);
 }
 

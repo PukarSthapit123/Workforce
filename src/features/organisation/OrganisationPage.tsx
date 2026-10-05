@@ -79,7 +79,8 @@ function TemplatesCard({ tenant }: { tenant: Tenant }) {
   return (
     <AdminCard testId={tid.aorg.card('templates')} icon={<Factory />} title="Industry template" tipTestId={tid.aorg.tip('templates')}
       tip="A template is data, not code: it seeds this tenant and stays editable afterwards.">
-      {/* .tplgrid of .tpl (v15:1469-1476) */}
+      {/* .tplgrid of .tpl (v15:1469-1476). The types and modules lines drop the
+          prototype's .85 and .7 opacity, which took the muted ink below AA. */}
       <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,238px),1fr))] gap-md">
         {rows.map(t => (
           <button key={t.key} type="button" data-testid={tid.aorg.template(t.key)} aria-pressed={t.inUse}
@@ -88,8 +89,8 @@ function TemplatesCard({ tenant }: { tenant: Tenant }) {
               t.inUse && 'border-[1.5px] border-brand bg-brand-subtle dark:border-brand-accent')}>
             <span className="block font-[family-name:var(--qp-font-display)] text-sm font-semibold">{t.name}</span>
             <span className="mt-[3px] block text-xs leading-[1.45] text-text-muted">{t.description}</span>
-            <span className="mt-[6px] block text-xs leading-[1.45] text-text-muted opacity-85">{t.types.join(' · ')}</span>
-            <span className="mt-xs block text-xs leading-[1.45] text-text-muted opacity-70">{t.modules.join(' · ')}</span>
+            <span className="mt-[6px] block text-xs leading-[1.45] text-text-muted">{t.types.join(' · ')}</span>
+            <span className="mt-xs block text-xs leading-[1.45] text-text-muted">{t.modules.join(' · ')}</span>
           </button>))}
       </div>
       {list.isError && <p role="alert" className="mt-md text-xs text-err">Templates could not be loaded. Reload the page.</p>}

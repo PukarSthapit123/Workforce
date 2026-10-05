@@ -35,7 +35,8 @@ test('social: the greeting, the who-line, the month painted from the rota, leave
   expect(cell('2026-08-17')).toHaveAttribute('data-paint', 'V');
   expect(cell('2026-08-17')).toHaveTextContent('17Leave');
   expect(cell('2026-08-17').querySelector('svg.lucide-sun')).not.toBeNull(); // the sun from the icon set, never the emoji
-  expect(cell('2026-08-20').className).toMatch(/opacity-/);
+  expect(cell('2026-08-20')).toHaveAttribute('data-future', 'true');
+  expect(cell('2026-08-20').className).not.toMatch(/opacity-/); // dimming the whole cell takes its inks below AA
   expect(cell('2026-08-31')).toHaveTextContent('Bank holiday');
   expect(cell('2026-08-31')).toHaveAttribute('aria-label', '31 Aug: Rest day, Summer bank holiday');
   expect(screen.getByTestId(tid.home.summary).textContent).toMatch(/^8 shifts · \d+\.\dh recorded · 2 days leave$/);
