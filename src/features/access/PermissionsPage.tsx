@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Eye, Lock } from 'lucide-react';
+import { CircleCheck, Eye, Lock, TriangleAlert } from 'lucide-react';
 import { tid } from '@/testids';
 import { cn } from '@/lib/utils';
 import { buildNav } from '@/domain/nav';
@@ -58,6 +58,9 @@ export function PermissionsPage() {
 
   const caps = capabilities.data;
   const types = userTypes.data;
+  /* The live state pill (admPermissions, v15:8324-8336): how many capabilities
+     some user type holds differently from the tenant's defaults. */
+  const changed = caps.filter(c => types.some(t => t.capabilities.includes(c.id) !== t.defaults.includes(c.id))).length;
   const typeName = (id: string) => types.find(t => t.id === id)?.name ?? id;
 
   /* The guard is here as well as in the hook: a pending cell keeps focus
@@ -79,6 +82,9 @@ export function PermissionsPage() {
           <>
             <Button testId={tid.roleNames.open} kind="ghost" small onClick={() => setRenaming(true)}>Rename roles</Button>
             <Caution testId={tid.access.caution} text="These switches are live and apply to everyone at once. The API enforces each one, so hiding a control is never the only thing refusing the request, and every change is recorded in the audit log." />
+            {changed
+              ? <Pill testId={tid.accessState.pill} tone="warn" glyph={<TriangleAlert />}>{changed} changed from default</Pill>
+              : <Pill testId={tid.accessState.pill} tone="ok" glyph={<CircleCheck />}>At defaults</Pill>}
             <GuideButton view="aperm" />
           </>} />
       {renaming && <RenameRolesDialog types={types} self={self} onClose={() => setRenaming(false)} />}

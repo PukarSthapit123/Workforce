@@ -42654,6 +42654,12 @@
                           "items": {
                             "type": "string"
                           }
+                        },
+                        "defaults": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
                         }
                       },
                       "required": [
@@ -42662,7 +42668,8 @@
                         "updatedAt",
                         "name",
                         "description",
-                        "capabilities"
+                        "capabilities",
+                        "defaults"
                       ],
                       "additionalProperties": false
                     },
@@ -42852,6 +42859,12 @@
                           "items": {
                             "type": "string"
                           }
+                        },
+                        "defaults": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
                         }
                       },
                       "required": [
@@ -42860,7 +42873,8 @@
                         "updatedAt",
                         "name",
                         "description",
-                        "capabilities"
+                        "capabilities",
+                        "defaults"
                       ],
                       "additionalProperties": false
                     },
@@ -43007,6 +43021,12 @@
                         "items": {
                           "type": "string"
                         }
+                      },
+                      "defaults": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
                       }
                     },
                     "required": [
@@ -43015,7 +43035,8 @@
                       "updatedAt",
                       "name",
                       "description",
-                      "capabilities"
+                      "capabilities",
+                      "defaults"
                     ],
                     "additionalProperties": false
                   }

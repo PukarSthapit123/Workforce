@@ -21,6 +21,9 @@ interface PersistedState extends Seed { clock: string | null }
 
 const SEEDS: Record<string, { data: Collections }> = { social: socialSeed as { data: Collections }, qnipay: qnipaySeed as { data: Collections } };
 export const TENANTS = Object.keys(SEEDS);
+/* One collection as a tenant's seed ships it, untouched by anything since:
+   what "the default" means for a setting the seed configures. */
+export const seededCollection = (tenant: string, coll: string): Record<string, Record<string, unknown>> => SEEDS[tenant]?.data[coll] ?? {};
 export const DEFAULT_TENANT = 'social';
 export const isTenant = (t: unknown): t is string => typeof t === 'string' && Object.hasOwn(SEEDS, t);
 

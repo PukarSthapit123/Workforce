@@ -473,4 +473,6 @@ export const tid = {
     error: 'docs-error', loading: 'docs-loading', card: 'docs-card', tip: 'docs-tip', source: 'docs-source', row: (id: string) => k('docs-row', id),
     empty: 'docs-empty', openNote: 'docs-open-note', payroll: 'docs-payroll', payrollRow: (id: string) => k('docs-payroll-row', id), salary: 'docs-salary',
   },
+  /* 1c fix B: the live state pill on Permissions (admPermissions, v15:8336) */
+  accessState: { pill: 'access-state-pill' },
 } as const;

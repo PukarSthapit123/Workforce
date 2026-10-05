@@ -5,7 +5,9 @@ import { RecordMeta, mutation } from './common';
 export const Capability = RecordMeta.extend({ group: z.enum(['own', 'team', 'cfg']), label: z.string(), gate: z.string(), lockedFor: z.array(z.string()) });
 /* A row group in the matrix. order is the position the prototype shows it in. */
 export const CapabilityGroup = RecordMeta.extend({ label: z.string(), description: z.string(), order: z.number().int() });
-export const UserType = RecordMeta.extend({ name: z.string(), description: z.string(), capabilities: z.array(z.string()) });
+/* defaults: the capabilities the tenant's seed gives this user type, so the
+   matrix can say how far it has moved from them (the prototype's PERM_DEFAULTS). */
+export const UserType = RecordMeta.extend({ name: z.string(), description: z.string(), capabilities: z.array(z.string()), defaults: z.array(z.string()) });
 export const UserAccess = RecordMeta.extend({ email: z.string(), name: z.string(), personCode: z.string(), userType: z.string(), grants: z.array(z.string()), revocations: z.array(z.string()) });
 export const SetTemplateCapability = z.object({ granted: z.boolean() });
 /* The display name only (D11): what each user type may do is the matrix. Length,

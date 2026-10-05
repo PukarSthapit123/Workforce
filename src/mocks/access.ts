@@ -1,4 +1,4 @@
-import { store } from './store';
+import { seededCollection, store } from './store';
 import { bump, refuse } from './http';
 import { serve } from './serve';
 import { actor, personName, type Account } from './auth';
@@ -15,6 +15,7 @@ import {
    last one and nobody, anywhere, can reach this page to put it back. */
 const PERM_CAP = 'perm_cfg';
 const SELF_NEXT = 'Ask another administrator to make this change.';
+type StoredUserType = Omit<UserType, 'defaults'>;
 const capBy = (id: string) => store.coll<Capability>('capabilities')[id] ?? refuse(404, { code: 'not-found', message: `There is no capability "${id}".`, next: 'Reload the page.' });
 const accountKey = (email: string) => `acc_${email.toLowerCase()}`;
 const accountAt = (email: string) => {
@@ -29,15 +30,21 @@ const userView = (a: Account): UserAccess => ({
 /* Whether any account, across the whole tenant, would still effectively hold
    `capId` under the given (possibly simulated) templates and accounts. Used
    to refuse a change before it happens, never to undo one after. */
-const holderExists = (capId: string, types: Record<string, UserType>, accounts: Record<string, Account>): boolean =>
+const holderExists = (capId: string, types: Record<string, StoredUserType>, accounts: Record<string, Account>): boolean =>
   Object.values(accounts).some(a => resolveCapabilities(types[a.userType]?.capabilities ?? [], a.grants, a.revocations).includes(capId));
+
+/* A user type as the API gives it: with the capabilities its seed gave it. */
+const typeView = (t: StoredUserType): UserType => {
+  const seeded = seededCollection(store.tenant, 'userTypes')[t.id]?.capabilities;
+  return { ...t, defaults: Array.isArray(seeded) ? seeded.filter((c): c is string => typeof c === 'string') : t.capabilities };
+};
 
 export const accessHandlers = [
   serve(listCapabilities, () => Object.values(store.coll<Capability>('capabilities'))),
   serve(listCapabilityGroups, () => Object.values(store.coll<CapabilityGroup>('capabilityGroups')).sort((a, b) => a.order - b.order)),
-  serve(listUserTypes, () => Object.values(store.coll<UserType>('userTypes'))),
+  serve(listUserTypes, () => Object.values(store.coll<StoredUserType>('userTypes')).map(typeView)),
   serve(setTemplateCapability, ({ session, params, body: { granted }, checkVersion }) => {
-    const types = store.coll<UserType>('userTypes');
+    const types = store.coll<StoredUserType>('userTypes');
     const t = Object.hasOwn(types, params.id) ? types[params.id] : undefined;
     if (!t) return refuse(404, { code: 'not-found', message: 'That user type no longer exists.', next: 'Reload the page.' });
     const c = capBy(params.capability);
@@ -54,16 +61,16 @@ export const accessHandlers = [
       if (!holderExists(PERM_CAP, simulatedTypes, store.coll<Account>('accounts')))
         return refuse(409, { code: 'locked', message: `Removing "${c.label}" from ${t.name} would leave nobody able to configure permissions.`, next: 'Grant it to another user type or account first, if you need to change who holds it.' });
     }
-    if (had === granted) return { record: t, auditId: null };
+    if (had === granted) return { record: typeView(t), auditId: null };
     const next = bump(t, { capabilities: granted ? [...t.capabilities, c.id].sort() : t.capabilities.filter(x => x !== c.id) });
     types[t.id] = next;
     const auditId = writeAudit({ who: actor(session), act: 'Permission changed', entity: 'userType', entityId: t.id, before: { [c.id]: had }, after: { [c.id]: granted } });
-    return { record: next, auditId };
+    return { record: typeView(next), auditId };
   }),
   /* Configurable role names (D11): only the display name changes. The session's
      roleName, the switcher and the matrix all read it from here. */
   serve(renameUserType, ({ session, params, body: { name }, checkVersion }) => {
-    const types = store.coll<UserType>('userTypes');
+    const types = store.coll<StoredUserType>('userTypes');
     const t = Object.hasOwn(types, params.id) ? types[params.id] : undefined;
     if (!t) return refuse(404, { code: 'not-found', message: 'That user type no longer exists.', next: 'Reload the page.' });
     checkVersion(t);
@@ -71,11 +78,11 @@ export const accessHandlers = [
     if (problem) return refuse(problem.taken ? 409 : 422, { code: problem.taken ? 'NAME_TAKEN' : 'invalid', field: problem.field, message: problem.message,
       next: problem.taken ? 'Choose a name no other role uses.' : 'Correct the name and save again.' });
     const next = name.trim();
-    if (next === t.name) return { record: t, auditId: null };
+    if (next === t.name) return { record: typeView(t), auditId: null };
     const saved = bump(t, { name: next });
     types[t.id] = saved;
     const auditId = writeAudit({ who: actor(session), act: 'Roles renamed', entity: 'userType', entityId: t.id, before: { name: t.name }, after: { name: next } });
-    return { record: saved, auditId };
+    return { record: typeView(saved), auditId };
   }),
   serve(listUsers, () => Object.values(store.coll<Account>('accounts')).map(userView)),
   serve(addException, ({ session, params, body: { capability, mode, reason }, checkVersion }) => {
@@ -83,7 +90,7 @@ export const accessHandlers = [
     const a = accountAt(params.email), key = accountKey(params.email);
     checkVersion(a);
     const c = capBy(capability);
-    const types = store.coll<UserType>('userTypes');
+    const types = store.coll<StoredUserType>('userTypes');
     const template = types[a.userType];
     const templateName = template?.name ?? a.userType;
     const templateHas = !!template?.capabilities.includes(c.id);
@@ -125,7 +132,7 @@ export const accessHandlers = [
     if (c.id === PERM_CAP && a.email === session.account.email && a.grants.includes(c.id))
       return refuse(409, { code: 'locked', message: `You cannot remove "${c.label}" from yourself. It is your way back to this page.`, next: SELF_NEXT });
     const simulated: Account = { ...a, grants: a.grants.filter(x => x !== c.id), revocations: a.revocations.filter(x => x !== c.id) };
-    if (c.id === PERM_CAP && !holderExists(PERM_CAP, store.coll<UserType>('userTypes'), { ...accounts, [key]: simulated }))
+    if (c.id === PERM_CAP && !holderExists(PERM_CAP, store.coll<StoredUserType>('userTypes'), { ...accounts, [key]: simulated }))
       return refuse(409, { code: 'locked', message: `Removing "${c.label}" from ${a.email} would leave nobody able to configure permissions.`, next: 'Grant it to another account first, if you need to change who holds it.' });
     const next = bump(a, { grants: simulated.grants, revocations: simulated.revocations });
     accounts[key] = next;
