@@ -1554,7 +1554,8 @@
    "section": "ITEM 4 — actionable notifications and deep links",
    "text": "4 A person deep link opens the record",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/people/people.test.tsx › a person deep link opens their record, and closing it drops the link"
   },
   {
    "id": "ITEM-4-actionable-notifications-and-deep-links#8",
@@ -2169,7 +2170,8 @@
    "section": "MODULES — index, then drill in (mirrors Qnipay setup)",
    "text": "MI Each card says what the module is about",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › each card says what its module is about, and clearing the search brings every module back"
   },
   {
    "id": "MODULES-index-then-drill-in-mirrors-Qnipay-setup#4",
@@ -2344,7 +2346,8 @@
    "section": "MODULES — index, then drill in (mirrors Qnipay setup)",
    "text": "MI Clearing restores every module",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › each card says what its module is about, and clearing the search brings every module back"
   },
   {
    "id": "GUIDES-explanation-moved-off-the-page#1",
@@ -2359,7 +2362,8 @@
    "section": "GUIDES — explanation moved off the page",
    "text": "G2 Its explainer banner is gone from the page",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/guides.test.tsx › the %s page prints none of what its guide explains, and has no explainer banner"
   },
   {
    "id": "GUIDES-explanation-moved-off-the-page#3",
@@ -2406,7 +2410,8 @@
    "section": "GUIDES — explanation moved off the page",
    "text": "G2 But its live state pill stayed on the page",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/guides.test.tsx › Permissions keeps its live state pill on the page: at defaults, then one changed from default"
   },
   {
    "id": "GUIDES-explanation-moved-off-the-page#9",
@@ -2429,7 +2434,8 @@
    "section": "GUIDES — explanation moved off the page",
    "text": "G2 Its read-only-pay banner is gone",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/guides.test.tsx › the %s page prints none of what its guide explains, and has no explainer banner"
   },
   {
    "id": "GUIDES-explanation-moved-off-the-page#12",
@@ -2444,7 +2450,8 @@
    "section": "GUIDES — explanation moved off the page",
    "text": "G2 State banners stay on the page — simulation is still declared",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/guides.test.tsx › a state banner declaring what is simulated stays on its page"
   },
   {
    "id": "ONE-HOME-PER-PAGE#1",
@@ -2604,7 +2611,7 @@
    "text": "TS Its features tab lists the three capture methods as switches",
    "area": "timesheet",
    "status": "ported",
-   "test": "src/domain/modules.test.ts › matches the prototype's MODULES and FLAGS (codes, owners, capabilities, setup pages)"
+   "test": "src/features/modules/modules.test.tsx › Workforce core shows only its own features, and Timesheet shows its capture methods and all thirteen of its features"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#5",
@@ -2619,16 +2626,16 @@
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS Its enable row is the same shape as every other module’s",
    "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › every module page is the same shape: one enable row, then the features, grouped only where the module has capabilities"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#7",
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS And there is no bespoke \"Module state\" row any more",
    "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › every module page is the same shape: one enable row, then the features, grouped only where the module has capabilities"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#8",
@@ -2636,7 +2643,7 @@
    "text": "TS Its features are grouped by the capability they belong to",
    "area": "timesheet",
    "status": "ported",
-   "test": "src/domain/modules.test.ts › matches the prototype's MODULES and FLAGS (codes, owners, capabilities, setup pages)"
+   "test": "src/features/modules/modules.test.tsx › Workforce core shows only its own features, and Timesheet shows its capture methods and all thirteen of its features"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#9",
@@ -2644,23 +2651,23 @@
    "text": "TS It now holds the capture features that were filed under Workforce core",
    "area": "timesheet",
    "status": "ported",
-   "test": "src/domain/modules.test.ts › matches the prototype's MODULES and FLAGS (codes, owners, capabilities, setup pages)"
+   "test": "src/features/modules/modules.test.tsx › Workforce core shows only its own features, and Timesheet shows its capture methods and all thirteen of its features"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#10",
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS Module-level features come before capability ones",
    "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › every module page is the same shape: one enable row, then the features, grouped only where the module has capabilities"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#11",
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS Turning a capture method off asks first",
    "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › turning a capture method off asks first, and keeping it changes nothing"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#12",
@@ -2675,8 +2682,8 @@
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS Employee timesheet still reachable with one method on",
    "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "status": "ported",
+   "test": "src/shell/module-nav.test.tsx › the employee keeps Timesheet with one capture method on, loses it with none, and has it back when a method returns"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#14",
@@ -2691,16 +2698,16 @@
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS And the employee Timesheet tab disappears",
    "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "status": "ported",
+   "test": "src/shell/module-nav.test.tsx › the employee keeps Timesheet with one capture method on, loses it with none, and has it back when a method returns"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#16",
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS Restoring a method brings the tab back",
    "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "status": "ported",
+   "test": "src/shell/module-nav.test.tsx › the employee keeps Timesheet with one capture method on, loses it with none, and has it back when a method returns"
   },
   {
    "id": "HEADER-PILLS-REMOVED-WARNING-RELOCATED#1",
@@ -2708,7 +2715,7 @@
    "text": "PL The \"applies immediately\" pill is gone from page headers",
    "area": "1c",
    "status": "ported",
-   "test": "src/ui/ui.test.tsx › Page and PageHead render the crumb, one h1 with its tip, and the actions"
+   "test": "scripts/ui-source.test.ts › no page carries an \"Applies immediately\" pill"
   },
   {
    "id": "HEADER-PILLS-REMOVED-WARNING-RELOCATED#2",
@@ -2716,7 +2723,7 @@
    "text": "PL It is gone from every admin page, not just this one",
    "area": "1c",
    "status": "ported",
-   "test": "src/ui/ui.test.tsx › Page and PageHead render the crumb, one h1 with its tip, and the actions"
+   "test": "scripts/ui-source.test.ts › no page carries an \"Applies immediately\" pill"
   },
   {
    "id": "HEADER-PILLS-REMOVED-WARNING-RELOCATED#3",
@@ -2739,8 +2746,8 @@
    "section": "HEADER PILLS REMOVED, WARNING RELOCATED",
    "text": "PL And is reachable by keyboard with a label",
    "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › the modules index caution is reached by keyboard and is labelled"
   },
   {
    "id": "HEADER-PILLS-REMOVED-WARNING-RELOCATED#6",
@@ -2835,14 +2842,16 @@
    "section": "TIMESHEET IS LICENSABLE, CORE IS THE BASE APP",
    "text": "LIC The employee loses Timesheet entirely",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/module-nav.test.tsx › Timesheet off takes Timesheet from the employee and Approvals from the manager, and on gives the employee it back"
   },
   {
    "id": "TIMESHEET-IS-LICENSABLE-CORE-IS-THE-BASE-APP#8",
    "section": "TIMESHEET IS LICENSABLE, CORE IS THE BASE APP",
    "text": "LIC The manager loses Team timesheets",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/module-nav.test.tsx › Timesheet off takes Timesheet from the employee and Approvals from the manager, and on gives the employee it back"
   },
   {
    "id": "TIMESHEET-IS-LICENSABLE-CORE-IS-THE-BASE-APP#9",
@@ -2873,7 +2882,8 @@
    "section": "TIMESHEET IS LICENSABLE, CORE IS THE BASE APP",
    "text": "LIC The employee has Timesheet back",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/module-nav.test.tsx › Timesheet off takes Timesheet from the employee and Approvals from the manager, and on gives the employee it back"
   },
   {
    "id": "FEATURE-OWNERSHIP#1",
@@ -2881,7 +2891,7 @@
    "text": "FO Workforce core no longer holds capture features",
    "area": "1c",
    "status": "ported",
-   "test": "src/domain/modules.test.ts › matches the prototype's MODULES and FLAGS (codes, owners, capabilities, setup pages)"
+   "test": "src/features/modules/modules.test.tsx › Workforce core shows only its own features, and Timesheet shows its capture methods and all thirteen of its features"
   },
   {
    "id": "FEATURE-OWNERSHIP#2",
@@ -2889,7 +2899,7 @@
    "text": "FO It keeps only the self-service and pay-visibility ones",
    "area": "1c",
    "status": "ported",
-   "test": "src/domain/modules.test.ts › matches the prototype's MODULES and FLAGS (codes, owners, capabilities, setup pages)"
+   "test": "src/features/modules/modules.test.tsx › Workforce core shows only its own features, and Timesheet shows its capture methods and all thirteen of its features"
   },
   {
    "id": "FEATURE-OWNERSHIP#3",
@@ -2897,7 +2907,7 @@
    "text": "FO Timesheet now owns all eight that moved",
    "area": "1c",
    "status": "ported",
-   "test": "src/domain/modules.test.ts › matches the prototype's MODULES and FLAGS (codes, owners, capabilities, setup pages)"
+   "test": "src/features/modules/modules.test.tsx › Workforce core shows only its own features, and Timesheet shows its capture methods and all thirteen of its features"
   },
   {
    "id": "FEATURE-OWNERSHIP#4",
@@ -2905,35 +2915,39 @@
    "text": "FO And still owns its own capability features",
    "area": "1c",
    "status": "ported",
-   "test": "src/domain/modules.test.ts › matches the prototype's MODULES and FLAGS (codes, owners, capabilities, setup pages)"
+   "test": "src/features/modules/modules.test.tsx › Workforce core shows only its own features, and Timesheet shows its capture methods and all thirteen of its features"
   },
   {
    "id": "MODULE-PAGES-ARE-THE-SAME-SHAPE#1",
    "section": "MODULE PAGES ARE THE SAME SHAPE",
    "text": "SH Every module page is two cards",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › every module page is the same shape: one enable row, then the features, grouped only where the module has capabilities"
   },
   {
    "id": "MODULE-PAGES-ARE-THE-SAME-SHAPE#2",
    "section": "MODULE PAGES ARE THE SAME SHAPE",
    "text": "SH The first card is exactly one row on every module",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › every module page is the same shape: one enable row, then the features, grouped only where the module has capabilities"
   },
   {
    "id": "MODULE-PAGES-ARE-THE-SAME-SHAPE#3",
    "section": "MODULE PAGES ARE THE SAME SHAPE",
    "text": "SH And it is always the same row",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › every module page is the same shape: one enable row, then the features, grouped only where the module has capabilities"
   },
   {
    "id": "MODULE-PAGES-ARE-THE-SAME-SHAPE#4",
    "section": "MODULE PAGES ARE THE SAME SHAPE",
    "text": "SH Capability switches live in the Features card, not the first one",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › every module page is the same shape: one enable row, then the features, grouped only where the module has capabilities"
   },
   {
    "id": "MODULE-PAGES-ARE-THE-SAME-SHAPE#5",
@@ -2956,21 +2970,24 @@
    "section": "MODULE PAGES ARE THE SAME SHAPE",
    "text": "SH Groups appear in a sensible order",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › every module page is the same shape: one enable row, then the features, grouped only where the module has capabilities"
   },
   {
    "id": "MODULE-PAGES-ARE-THE-SAME-SHAPE#8",
    "section": "MODULE PAGES ARE THE SAME SHAPE",
    "text": "SH Rota shows no groups and no nesting, because it has neither",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › every module page is the same shape: one enable row, then the features, grouped only where the module has capabilities"
   },
   {
    "id": "MODULE-PAGES-ARE-THE-SAME-SHAPE#9",
    "section": "MODULE PAGES ARE THE SAME SHAPE",
    "text": "SH No module page carries a bespoke state row",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › every module page is the same shape: one enable row, then the features, grouped only where the module has capabilities"
   },
   {
    "id": "ICONS-CRUMBS-AND-REDUNDANT-COUNTS#1",
@@ -3017,8 +3034,8 @@
    "section": "ICONS, CRUMBS AND REDUNDANT COUNTS",
    "text": "CR And is dropped where it would only repeat the title",
    "area": "1c",
-   "deferredTo": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/setup/setup-index.test.tsx › the setup index has no crumb that would only repeat its title"
   },
   {
    "id": "ICONS-CRUMBS-AND-REDUNDANT-COUNTS#7",
@@ -3441,7 +3458,8 @@
    "section": "MOBILE FOUNDATION",
    "text": "MOB A viewport meta tag is set",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/mobile-1c.spec.ts › MOB a viewport is declared, the tab strip gives way to the bottom bar, the area switcher scrolls, and the bar keeps clear of the home indicator"
   },
   {
    "id": "MOBILE-FOUNDATION#4",
@@ -3528,49 +3546,56 @@
    "section": "MOBILE FOUNDATION",
    "text": "MOB The strip and the bar agree on the current tab",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/shell.test.tsx › the tab strip and the bottom bar agree on the page on screen"
   },
   {
    "id": "MOBILE-FOUNDATION#15",
    "section": "MOBILE FOUNDATION",
    "text": "MOB The horizontal tab strip is hidden on a phone",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/mobile-1c.spec.ts › MOB a viewport is declared, the tab strip gives way to the bottom bar, the area switcher scrolls, and the bar keeps clear of the home indicator"
   },
   {
    "id": "MOBILE-FOUNDATION#16",
    "section": "MOBILE FOUNDATION",
    "text": "MOB The rota week grid gives way to the day view",
-   "area": "1c",
-   "status": "pending"
+   "area": "rota",
+   "status": "ported",
+   "test": "e2e/mobile-1c.spec.ts › MOB the rota week grid gives way to the day view on a phone, and says why"
   },
   {
    "id": "MOBILE-FOUNDATION#17",
    "section": "MOBILE FOUNDATION",
    "text": "MOB ... and the swap is explained, not silent",
-   "area": "1c",
-   "status": "pending"
+   "area": "rota",
+   "status": "ported",
+   "test": "e2e/mobile-1c.spec.ts › MOB the rota week grid gives way to the day view on a phone, and says why"
   },
   {
    "id": "MOBILE-FOUNDATION#18",
    "section": "MOBILE FOUNDATION",
    "text": "MOB Tables scroll with the first column pinned",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/mobile-1c.spec.ts › MOB a table pins its first column, a matrix keeps scrolling, and a record list keeps its headers for screen readers"
   },
   {
    "id": "MOBILE-FOUNDATION#19",
    "section": "MOBILE FOUNDATION",
    "text": "MOB Modals become bottom sheets",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/mobile-1c.spec.ts › MOB a dialog becomes a bottom sheet, full width, resting on the foot of the screen"
   },
   {
    "id": "MOBILE-FOUNDATION#20",
    "section": "MOBILE FOUNDATION",
    "text": "MOB Safe-area insets are respected",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/mobile-1c.spec.ts › MOB a viewport is declared, the tab strip gives way to the bottom bar, the area switcher scrolls, and the bar keeps clear of the home indicator"
   },
   {
    "id": "MOBILE-FOUNDATION#21",
@@ -3585,21 +3610,24 @@
    "section": "MOBILE FOUNDATION",
    "text": "MOB A switch keeps its shape and gains a hit area rather than stretching",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/mobile-1c.spec.ts › MOB a switch keeps its shape and gains a 44px hit area; a grown button grows its padding too"
   },
   {
    "id": "MOBILE-FOUNDATION#23",
    "section": "MOBILE FOUNDATION",
    "text": "MOB A grown button grows its padding too, not only its height",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/mobile-1c.spec.ts › MOB a switch keeps its shape and gains a 44px hit area; a grown button grows its padding too"
   },
   {
    "id": "MOBILE-FOUNDATION#24",
    "section": "MOBILE FOUNDATION",
    "text": "MOB Inputs are 16px so iOS does not zoom on focus",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/mobile-1c.spec.ts › MOB every input, select and text box is 16px on a phone, so iOS does not zoom on focus"
   },
   {
    "id": "MOBILE-FOUNDATION#25",
@@ -3614,7 +3642,8 @@
    "section": "MOBILE FOUNDATION",
    "text": "MOB Matrices are still exempt, and there are some",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/mobile-1c.spec.ts › MOB a table pins its first column, a matrix keeps scrolling, and a record list keeps its headers for screen readers"
   },
   {
    "id": "MOBILE-FOUNDATION#27",
@@ -3629,42 +3658,48 @@
    "section": "MOBILE FOUNDATION",
    "text": "MOB One helper decides what counts as a phone",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "scripts/ui-source.test.ts › one helper decides what counts as a phone"
   },
   {
    "id": "MOBILE-FOUNDATION#29",
    "section": "MOBILE FOUNDATION",
    "text": "MOB Crossing the breakpoint re-renders, so a rotation is not left behind",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/ui/useNarrow.test.tsx › crossing the phone breakpoint re-renders, both ways, and stops listening once gone"
   },
   {
    "id": "MOBILE-FOUNDATION#30",
    "section": "MOBILE FOUNDATION",
    "text": "MOB Own hours is a record list, so it becomes cards rather than scrolling",
-   "area": "1c",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "MOBILE-FOUNDATION#31",
    "section": "MOBILE FOUNDATION",
    "text": "MOB The clock card stacks rather than crowding one line",
-   "area": "1c",
-   "status": "pending"
+   "area": "clocking",
+   "status": "pending",
+   "deferredTo": "clocking"
   },
   {
    "id": "MOBILE-FOUNDATION#32",
    "section": "MOBILE FOUNDATION",
    "text": "MOB The module switcher scrolls rather than wrapping",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/mobile-1c.spec.ts › MOB a viewport is declared, the tab strip gives way to the bottom bar, the area switcher scrolls, and the bar keeps clear of the home indicator"
   },
   {
    "id": "MOBILE-FOUNDATION#33",
    "section": "MOBILE FOUNDATION",
    "text": "MOB Employee cards use one responsive column flow",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/mobile-1c.spec.ts › MOB the employee cards are one column flow: one column on a phone, several on a desktop"
   },
   {
    "id": "MOBILE-FOUNDATION#34",
@@ -4239,8 +4274,8 @@
    "section": "WEEKLY VIEW — layouts",
    "text": "WK Switching back restores classic, the default",
    "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › switching the weekly layout back restores classic, and from the list back restores the grid, on My timesheet too"
   },
   {
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#1",
@@ -4415,8 +4450,8 @@
    "section": "WEEKLY LAYOUT IS CONFIGURABLE",
    "text": "CL Switching back restores the grid",
    "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › switching the weekly layout back restores classic, and from the list back restores the grid, on My timesheet too"
   },
   {
    "id": "EMPLOYEE-CRUD-LIFECYCLE-IMP-013#1",
@@ -4935,7 +4970,8 @@
    "section": "FUSION3 CONFIGURED THROUGH THE TEMPLATE",
    "text": "F3 ... and keeps timesheet approvals",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/module-nav.test.tsx › after the Fusion3 template turns Rota off, the manager keeps timesheet approvals"
   },
   {
    "id": "FUSION3-CONFIGURED-THROUGH-THE-TEMPLATE#9",
@@ -4989,15 +5025,17 @@
    "id": "FUSION3-CONFIGURED-THROUGH-THE-TEMPLATE#15",
    "section": "FUSION3 CONFIGURED THROUGH THE TEMPLATE",
    "text": "F3 The entry line carries a Rate type field",
-   "area": "1c",
-   "status": "pending"
+   "area": "timesheet",
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › the entry line carries a Rate type field whose options are the configured pay codes that are work types"
   },
   {
    "id": "FUSION3-CONFIGURED-THROUGH-THE-TEMPLATE#16",
    "section": "FUSION3 CONFIGURED THROUGH THE TEMPLATE",
    "text": "F3 Its options come from the configured pay codes",
-   "area": "1c",
-   "status": "pending"
+   "area": "timesheet",
+   "status": "ported",
+   "test": "src/features/timesheet/timesheet.test.tsx › the entry line carries a Rate type field whose options are the configured pay codes that are work types"
   },
   {
    "id": "FUSION3-CONFIGURED-THROUGH-THE-TEMPLATE#17",
@@ -5060,7 +5098,8 @@
    "section": "REVIEW RUN: SYSTEM, MOBILE, DENSITY, AFFORDANCES",
    "text": "RV Native title only on disabled controls",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "scripts/ui-source.test.ts › a native title is only ever on a control that can be disabled, saying why it is"
   },
   {
    "id": "REVIEW-RUN-SYSTEM-MOBILE-DENSITY-AFFORDANCES#3",
@@ -5099,7 +5138,8 @@
    "section": "REVIEW RUN: SYSTEM, MOBILE, DENSITY, AFFORDANCES",
    "text": "RV Headers are kept for screen readers, not deleted",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/mobile-1c.spec.ts › MOB a table pins its first column, a matrix keeps scrolling, and a record list keeps its headers for screen readers"
   },
   {
    "id": "REVIEW-RUN-SYSTEM-MOBILE-DENSITY-AFFORDANCES#8",
@@ -5130,49 +5170,56 @@
    "section": "REVIEW RUN: SYSTEM, MOBILE, DENSITY, AFFORDANCES",
    "text": "RV People is a record list",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/people/people.test.tsx › My team · People is a record list whose title is the name, not the avatar"
   },
   {
    "id": "REVIEW-RUN-SYSTEM-MOBILE-DENSITY-AFFORDANCES#12",
    "section": "REVIEW RUN: SYSTEM, MOBILE, DENSITY, AFFORDANCES",
    "text": "RV ... and a leading icon column is not treated as the title",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/people/people.test.tsx › My team · People is a record list whose title is the name, not the avatar"
   },
   {
    "id": "REVIEW-RUN-SYSTEM-MOBILE-DENSITY-AFFORDANCES#13",
    "section": "REVIEW RUN: SYSTEM, MOBILE, DENSITY, AFFORDANCES",
    "text": "RV The permission matrix stays a scrolling matrix, not cards",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/access/permissions.test.tsx › the matrix stays a matrix, while the people list beside it is a record list with labelled cells"
   },
   {
    "id": "REVIEW-RUN-SYSTEM-MOBILE-DENSITY-AFFORDANCES#14",
    "section": "REVIEW RUN: SYSTEM, MOBILE, DENSITY, AFFORDANCES",
    "text": "RV ... while the exceptions list beside it becomes cards",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/access/permissions.test.tsx › the matrix stays a matrix, while the people list beside it is a record list with labelled cells"
   },
   {
    "id": "REVIEW-RUN-SYSTEM-MOBILE-DENSITY-AFFORDANCES#15",
    "section": "REVIEW RUN: SYSTEM, MOBILE, DENSITY, AFFORDANCES",
    "text": "RV Rota no longer stacks three banners",
-   "area": "1c",
-   "status": "pending"
+   "area": "rota",
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › the rota stacks at most two banners, and the day view says cover in a status pill with one Fill, not a banner"
   },
   {
    "id": "REVIEW-RUN-SYSTEM-MOBILE-DENSITY-AFFORDANCES#16",
    "section": "REVIEW RUN: SYSTEM, MOBILE, DENSITY, AFFORDANCES",
    "text": "RV The day view shows cover as a status line, not a banner",
-   "area": "1c",
-   "status": "pending"
+   "area": "rota",
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › the rota stacks at most two banners, and the day view says cover in a status pill with one Fill, not a banner"
   },
   {
    "id": "REVIEW-RUN-SYSTEM-MOBILE-DENSITY-AFFORDANCES#17",
    "section": "REVIEW RUN: SYSTEM, MOBILE, DENSITY, AFFORDANCES",
    "text": "RV ... and the Fill action is offered once, not twice",
-   "area": "1c",
-   "status": "pending"
+   "area": "rota",
+   "status": "ported",
+   "test": "src/features/rota/rota.test.tsx › the rota stacks at most two banners, and the day view says cover in a status pill with one Fill, not a banner"
   },
   {
    "id": "REVIEW-RUN-SYSTEM-MOBILE-DENSITY-AFFORDANCES#18",
@@ -6026,7 +6073,7 @@
    "text": "PS Reset asks first and says it cannot be undone",
    "area": "1c",
    "status": "ported",
-   "test": "src/features/calendar/calendar.test.tsx › reset asks first, then returns to the seed and offers to bring the earlier session back"
+   "test": "src/features/calendar/calendar.test.tsx › reset asks first, saying what it clears and that what is here is set aside to be brought back once"
   },
   {
    "id": "PERSISTENCE-AND-ACCOUNTS#11",
@@ -6137,7 +6184,8 @@
    "section": "SAVING A TENANT AS A TEMPLATE",
    "text": "TP ... with who saved it and when",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/organisation/organisation.test.tsx › a saved template says who saved it and when, in London time"
   },
   {
    "id": "SAVING-A-TENANT-AS-A-TEMPLATE#10",
@@ -6192,8 +6240,8 @@
    "section": "A NEWER BUILD SUPERSEDES A SAVED SESSION",
    "text": "SV ... and the person is told why the app reset",
    "area": "1c",
-   "deferredTo": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/calendar/calendar.test.tsx › after a newer build sets the saved session aside, Saved data says why and offers it back"
   },
   {
    "id": "A-NEWER-BUILD-SUPERSEDES-A-SAVED-SESSION#4",
@@ -6639,14 +6687,16 @@
    "section": "SETUP CONTROLS DO ONE THING",
    "text": "SC A click inside a select does not toggle the switch beside it",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › a click inside a feature row’s select leaves its switch and its value alone"
   },
   {
    "id": "SETUP-CONTROLS-DO-ONE-THING#2",
    "section": "SETUP CONTROLS DO ONE THING",
    "text": "SC ... so clicking a dropdown leaves its value alone",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › a click inside a feature row’s select leaves its switch and its value alone"
   },
   {
    "id": "COPY-IS-NOT-PADDED#1",
@@ -7022,7 +7072,8 @@
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB Three capabilities sit in the permission matrix",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/access/permissions.test.tsx › the notice board’s three capabilities sit in the matrix: reading, posting and posting to everyone"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#3",
@@ -7110,7 +7161,7 @@
    "text": "NB The demo employee works where the manager posted, so the reader checks run",
    "area": "1c",
    "status": "ported",
-   "test": "e2e/notices-1c.spec.ts › a notice is posted and acknowledged, its words changed so it is acknowledged again, and then withdrawn with a reason, staying on record"
+   "test": "src/mocks/notices.test.ts › the demo employee works where the manager posted, and their own notices list the new location notice, owed"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#14",
@@ -7118,7 +7169,7 @@
    "text": "NB My work → Notices lists the location notice for someone there",
    "area": "1c",
    "status": "ported",
-   "test": "e2e/notices-1c.spec.ts › a notice is posted and acknowledged, its words changed so it is acknowledged again, and then withdrawn with a reason, staying on record"
+   "test": "src/mocks/notices.test.ts › the demo employee works where the manager posted, and their own notices list the new location notice, owed"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#15",
@@ -7397,35 +7448,40 @@
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB Turning it back on restores the tab",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/module-nav.test.tsx › the Notices tab goes with the notice board flag or the own_notices capability, and comes back with either"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#50",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB Revoking own_notices for employees is recorded",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/notices.test.ts › revoking own_notices for employees is recorded, Acknowledge is then refused and nothing is written, and granting it back restores it"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#51",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB ... the tab is gone",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/module-nav.test.tsx › the Notices tab goes with the notice board flag or the own_notices capability, and comes back with either"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#52",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB ... and Acknowledge is refused in the action layer",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/notices.test.ts › revoking own_notices for employees is recorded, Acknowledge is then refused and nothing is written, and granting it back restores it"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#53",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB Granting it back restores it",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/notices.test.ts › revoking own_notices for employees is recorded, Acknowledge is then refused and nothing is written, and granting it back restores it"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#54",

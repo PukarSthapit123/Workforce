@@ -1,5 +1,5 @@
 {
-  "completedAreas": ["1a", "ui", "1b", "timesheet", "rota", "leave"],
+  "completedAreas": ["1a", "ui", "1b", "timesheet", "rota", "leave", "1c"],
   "sections": {
     "BOOT": "1a", "SIGN IN / SIGN OUT": "1a", "IDENTITY AND SIGN-IN": "1a", "CONFIGURABLE ROLE NAMES": "1c",
     "MANAGER NAV GROUPED BY MODULE": "1a", "ADMIN LAYOUT": "1a",
@@ -24,6 +24,7 @@
     "IMP-031 — pattern generation writes real shifts": "rota", "IMP-031 — manager scoping": "rota", "MULTI-PERSON ADD + STAGGER": "rota",
     "WEEKLY REPEAT (IMP-032)": "rota", "ROTA OFF EMPTIES THE CALENDAR": "rota", "CLEAR WEEK": "rota",
     "ITEM 3 — payroll readiness (IMP-016)": "payroll", "PAY CODE CRUD": "timesheet",
+    "CLOCKING (no suite section of its own: the clock card rows deferred here)": "clocking",
     "LEAVE AND SICKNESS (module 4, deferred rows from timesheet)": "leave",
     "REGRESSION (baseline register)": "prototype-only", "RESULT": "prototype-only"
   },
