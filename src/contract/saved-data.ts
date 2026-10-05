@@ -14,6 +14,8 @@ export const SavedData = z.object({
   saving: z.boolean(),
   /* a session set aside by a reset or by a newer build, which can be brought back */
   setAside: z.boolean(),
+  /* why it was set aside, so the person is told (null when nothing is) */
+  setAsideBecause: z.enum(['reset', 'newer-build']).nullable(),
 });
 export type SavedData = z.infer<typeof SavedData>;
 /* The export file: every collection except the sign-in sessions. */

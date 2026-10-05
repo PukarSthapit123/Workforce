@@ -475,4 +475,6 @@ export const tid = {
   },
   /* 1c fix B: the live state pill on Permissions (admPermissions, v15:8336) */
   accessState: { pill: 'access-state-pill' },
+  /* 1c fix B: why the Saved data card has a session set aside (D14) */
+  acalSetAside: { why: 'acal-set-aside-why' },
 } as const;

@@ -14,7 +14,7 @@ import { exportSavedData, getSavedData, resetSavedData, restoreSavedData, type S
 
 const SESSIONS = 'sessions';
 function status(): SavedData {
-  return { version: SEED_VERSION, sizeKb: Math.max(1, Math.round(store.persisted().length / 1024)), saving: store.saving, setAside: store.hasBackup() };
+  return { version: SEED_VERSION, sizeKb: Math.max(1, Math.round(store.persisted().length / 1024)), saving: store.saving, setAside: store.hasBackup(), setAsideBecause: store.backupReason() };
 }
 /* Runs a whole-store change and puts the sign-in sessions back afterwards. */
 function keepingSessions(change: () => void) {

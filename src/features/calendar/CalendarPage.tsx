@@ -133,7 +133,9 @@ function SavedDataCard() {
       <SettingRow title="Start again" desc="Clear everything and return to the data the app ships with. The cleared session is kept until the next reset, so it can be brought back once.">
         <Button testId={tid.acal.reset} kind="ghost" small pending={busy} onClick={() => setAsk('reset')}>Reset</Button>
       </SettingRow>
-      {s?.setAside && <SettingRow title="Set aside earlier" desc="A previous session was set aside, either by a reset or because this version ships newer sample data. It can be brought back.">
+      {s?.setAside && <SettingRow title="Set aside earlier" desc={<span data-testid={tid.acalSetAside.why}>{s.setAsideBecause === 'newer-build'
+        ? 'This version ships newer sample data, so the session saved in this browser was set aside. It can be brought back.'
+        : 'A reset set the previous session aside. It can be brought back.'}</span>}>
         <Button testId={tid.acal.restore} kind="ghost" small pending={busy} onClick={() => setAsk('restore')}>Bring it back</Button>
       </SettingRow>}
       {s && <SettingRow title="Build" desc={`Sample data version ${s.version}. A new version supersedes a saved session rather than hiding behind it.`}>

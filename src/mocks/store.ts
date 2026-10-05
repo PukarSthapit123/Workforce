@@ -11,6 +11,10 @@ export const STORE_REV_KEY = STORE_KEY + '.rev';
 /* A session set aside, by a reset or because a newer build ships newer seed
    data. It can be brought back once (acal's Saved data card, D14). */
 export const STORE_BACKUP_KEY = STORE_KEY + '.superseded';
+/* Why the session in STORE_BACKUP_KEY was set aside: a reset, or a newer build. */
+const STORE_BACKUP_WHY_KEY = STORE_BACKUP_KEY + '.why';
+export type SetAsideBecause = 'reset' | 'newer-build';
+const setAsideBecause = (why: SetAsideBecause) => { try { localStorage.setItem(STORE_BACKUP_WHY_KEY, why); } catch { /* the reason is lost, the session is not */ } };
 export type Collections = Record<string, Record<string, Record<string, unknown>>>;
 export interface Seed { version: string; tenant: string; data: Collections }
 /* What actually gets written to localStorage: a Seed plus the frozen clock, so
@@ -102,8 +106,15 @@ export function createStore(seedFor: (tenant?: string) => Seed = defaultSeed, kn
     hasBackup(): boolean {
       try { return localStorage.getItem(STORE_BACKUP_KEY) !== null; } catch { return false; }
     },
+    /* Why the session set aside was set aside, or null when nothing is. */
+    backupReason(): SetAsideBecause | null {
+      if (!s.hasBackup()) return null;
+      let why: string | null = null;
+      try { why = localStorage.getItem(STORE_BACKUP_WHY_KEY); } catch { /* unreadable: treated as a reset */ }
+      return why === 'newer-build' ? 'newer-build' : 'reset';
+    },
     resetKeepingBackup() {
-      try { localStorage.setItem(STORE_BACKUP_KEY, s.persisted()); } catch { /* nowhere to keep it */ }
+      try { localStorage.setItem(STORE_BACKUP_KEY, s.persisted()); setAsideBecause('reset'); } catch { /* nowhere to keep it */ }
       s.reset();
     },
     restoreBackup(): boolean {
@@ -115,7 +126,7 @@ export function createStore(seedFor: (tenant?: string) => Seed = defaultSeed, kn
       const p = (o && typeof o === 'object' ? o : {}) as Partial<PersistedState>;
       if (!knownTenant(p.tenant) || !p.data || typeof p.data !== 'object' || Array.isArray(p.data)) return false;
       s.load({ version: SEED_VERSION, tenant: String(p.tenant), data: p.data });
-      try { localStorage.removeItem(STORE_BACKUP_KEY); } catch { /* it stays set aside */ }
+      try { localStorage.removeItem(STORE_BACKUP_KEY); localStorage.removeItem(STORE_BACKUP_WHY_KEY); } catch { /* it stays set aside */ }
       s.save();
       return true;
     },
@@ -127,7 +138,7 @@ export function createStore(seedFor: (tenant?: string) => Seed = defaultSeed, kn
       } catch { /* storage blocked: start from the seed */ }
       const o = raw ? readPersisted(raw, knownTenant) : null;
       if (o) { s.load(o); clock = o.clock; return; }
-      if (raw) { try { localStorage.setItem(STORE_BACKUP_KEY, raw); } catch { /* nowhere to keep it */ } }
+      if (raw) { try { localStorage.setItem(STORE_BACKUP_KEY, raw); setAsideBecause('newer-build'); } catch { /* nowhere to keep it */ } }
       s.reset(DEFAULT_TENANT);
     },
     /* Called before every request in the browser. Each tab runs its own copy
