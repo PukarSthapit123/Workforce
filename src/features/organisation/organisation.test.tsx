@@ -138,3 +138,16 @@ test('import a file: it is listed, with what was left out; a file that is not JS
   await userEvent.upload(screen.getByTestId(tid.aorg.importFile), new File(['{nope'], 'broken.json', { type: 'application/json' }), { applyAccept: false });
   expect(await screen.findByText('That file could not be read.')).toBeInTheDocument();
 });
+
+/* Suite SAVING A TENANT AS A TEMPLATE: "... with who saved it and when". The
+   clock is frozen at 14:30 UTC on 13/08/2026, 15:30 in London, where every
+   time is shown. */
+test('a saved template says who saved it and when, in London time', async () => {
+  await open();
+  await saveAs('Care, two-stage approval');
+  const row = await screen.findByTestId(tid.aorg.savedRow('tpl_care_two_stage_approval'));
+  const admin = Object.values(store.coll<{ userType: string; personCode: string }>('accounts')).find(a => a.userType === 'admin');
+  const name = Object.values(store.coll<{ code: string; name: string }>('people')).find(p => p.code === admin?.personCode)?.name;
+  expect(name).toBeTruthy();
+  expect(within(row).getAllByRole('cell')[2]).toHaveTextContent(`13/08/2026 15:30${name ?? ''}`);
+});
