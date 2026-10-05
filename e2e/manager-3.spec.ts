@@ -46,7 +46,8 @@ test('a manager’s refused assign says why; an assign by the picker amends the 
   expect(lineOf(amended, 'CP-1402')[4]).toBe('E');
   expect(amended.changes[0]).toMatchObject({ personCode: 'CP-1402', to: 'E', afterPublish: true, version: 1 });
   const notes = await stored<NoteRow>(page, 'notifications');
-  expect(notes.filter(n => n.personId === 'CP-1402' && n.area === 'Rota')).toHaveLength(1);
+  /* the one new Rota item (1c seeds each person's inbox with a few more, ntf_seed_*) */
+  expect(notes.filter(n => n.personId === 'CP-1402' && n.area === 'Rota' && !n.id.startsWith('ntf_seed_')).map(n => n.title)).toEqual(['Rota amended']);
 
   await expect(page.getByTestId(tid.trota.publish)).toContainText('Republish');
   await page.getByTestId(tid.trota.publish).click();

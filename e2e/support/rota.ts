@@ -38,7 +38,7 @@ export const shiftsOn = (w: RotaWeekRead) => w.rows.flatMap(r => r.line).filter(
 
 /* Notifications have no read endpoint in this module (the inbox is 1c's), so a
    journey reads them where the fake server keeps them: its persisted store. */
-export interface NoteRow { personId: string; area: string; title: string; body: string }
+export interface NoteRow { id: string; personId: string; area: string; title: string; body: string }
 export const stored = <T>(page: Page, coll: string): Promise<T[]> =>
   page.evaluate(c => {
     const raw = localStorage.getItem('qnipay.app.store');
