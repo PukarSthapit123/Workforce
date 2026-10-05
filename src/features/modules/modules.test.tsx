@@ -1,10 +1,12 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { store } from '@/mocks/store';
 import { tid } from '@/testids';
 import { expectTestIdCoverage } from '@/test/testid-coverage';
 import { renderPage, withFakeServer } from '@/test/render-page';
 import { audits, resetTo, signInAs } from '@/test/api-helpers';
+import { setToken } from '@/api/session-token';
+import { TimesheetPage } from '@/features/timesheet/TimesheetPage';
 import { ModulesPage } from './ModulesPage';
 
 /* The social seed runs every module; LATE_FINISH, VEHICLE and GPS are off.
@@ -142,4 +144,146 @@ test('a module’s features page names the module in its crumb, and its head has
   const head = screen.getByRole('heading', { level: 1, name: /Rota features/ }).parentElement?.parentElement;
   expect(head).not.toHaveTextContent(/\d+ of \d+ on/);
   expect(screen.getAllByTestId(/^amods-flag-/).length).toBeGreaterThan(0);
+});
+
+/* Suite MODULES: "Each card says what the module is about" and "Clearing
+   restores every module". */
+test('each card says what its module is about, and clearing the search brings every module back', async () => {
+  await open();
+  expect(screen.getByTestId(tid.amods.card('R'))).toHaveTextContent('Shift catalogue, working patterns, coverage and the shift fulfilment workflow.');
+  const cards = () => screen.getAllByRole('link').map(a => a.getAttribute('data-testid'));
+  const all = ['CORE', 'TS', 'R', 'L', 'ON'].map(c => tid.amods.card(c));
+  expect(cards()).toEqual(all);
+  await userEvent.type(screen.getByTestId(tid.amods.search), 'zzzznothing');
+  expect(screen.queryAllByRole('link')).toEqual([]);
+  await userEvent.clear(screen.getByTestId(tid.amods.search));
+  expect(cards()).toEqual(all);
+});
+
+/* Suite MODULE PAGES ARE THE SAME SHAPE and TIMESHEET AS ONE MODULE: every
+   drill-in is two cards; the first holds exactly one row, the enable row,
+   the same on every module; the capture methods and capabilities are
+   switches in the Features card, grouped in a sensible order with the
+   module-level features last; Rota has neither groups nor nesting; no page
+   carries a bespoke "Module state" row. */
+test('every module page is the same shape: one enable row, then the features, grouped only where the module has capabilities', async () => {
+  const shape = async (code: string) => {
+    cleanup();
+    const card = await open(code);
+    const page = screen.getByTestId(tid.page('mfeat'));
+    const features = screen.getByTestId(tid.amods.features);
+    return {
+      cards: page.querySelectorAll('section').length,
+      rows: [...card.querySelectorAll('[data-slot="setting-row"] b')].map(b => b.textContent),
+      switchesInFirst: within(card).getAllByRole('switch').map(s => s.getAttribute('data-testid')),
+      subSwitches: within(features).queryAllByTestId(/^amods-mod-/).map(s => s.getAttribute('data-testid')),
+      groups: [...features.querySelectorAll('[data-slot="subhead"]')].map(g => g.textContent),
+      nested: features.querySelectorAll('[data-nested]').length,
+      moduleState: /Module state/.test(page.textContent ?? ''),
+    };
+  };
+  const core = await shape('CORE'), ts = await shape('TS'), r = await shape('R'), l = await shape('L');
+  for (const [s, code] of [[core, 'CORE'], [ts, 'TS'], [r, 'R'], [l, 'L']] as const) {
+    expect(s.cards, code).toBe(2);
+    expect(s.rows, code).toEqual([code === 'CORE' ? 'Always on' : 'Module enabled']);
+    expect(s.switchesInFirst, code).toEqual([tid.amods.mod(code)]);
+    expect(s.moduleState, code).toBe(false);
+  }
+  expect(ts.subSwitches).toEqual(['A', 'B', 'C'].map(c => tid.amods.mod(c)));
+  expect(ts.groups).toEqual(['Capture methods', 'Capabilities', 'Across all capture methods']);
+  expect(ts.nested).toBeGreaterThan(0);
+  expect([r.groups, r.nested, r.subSwitches]).toEqual([[], 0, []]);
+});
+
+/* Suite FEATURE OWNERSHIP and TIMESHEET AS ONE MODULE, on the page itself:
+   Workforce core keeps the self-service and pay-visibility features and none
+   of capture's; Timesheet holds the three capture methods as switches, the
+   eight features that moved to it and its own capability features, thirteen
+   in all, grouped by the capability they belong to. */
+test('Workforce core shows only its own features, and Timesheet shows its capture methods and all thirteen of its features', async () => {
+  const shown = () => screen.getAllByTestId(/^amods-flag-/).map(b => b.getAttribute('data-testid'));
+  const flagsOn = () => { const ids = shown(); return (codes: string[]) => codes.filter(c => ids.includes(tid.amods.flag(c))); };
+  await open('CORE');
+  const core = flagsOn();
+  expect(core(['DOCS', 'SELF_EDIT', 'SHOW_PAY'])).toEqual(['DOCS', 'SELF_EDIT', 'SHOW_PAY']);
+  expect(core(['AUTO_OT', 'LATE_FINISH', 'UNSOCIAL', 'VEHICLE', 'PROJECT', 'SHIFT', 'BREAKS', 'EMAIL_APPROVAL'])).toEqual([]);
+  cleanup();
+  await open('TS');
+  expect(shown()).toHaveLength(13);
+  const own = ['AUTO_OT', 'LATE_FINISH', 'UNSOCIAL', 'VEHICLE', 'PROJECT', 'SHIFT', 'BREAKS', 'EMAIL_APPROVAL', 'DAILY', 'WEEKLY', 'GPS'];
+  expect(flagsOn()(own)).toEqual(own);
+  const features = screen.getByTestId(tid.amods.features);
+  for (const c of ['A', 'B', 'C']) expect(within(features).getByTestId(tid.amods.mod(c))).toHaveAttribute('role', 'switch');
+  expect(features.querySelectorAll('[data-slot="subhead"]').length).toBeGreaterThanOrEqual(2);
+});
+
+/* Suite TIMESHEET AS ONE MODULE: "Turning a capture method off asks first". */
+test('turning a capture method off asks first, and keeping it changes nothing', async () => {
+  await open('TS');
+  await userEvent.click(screen.getByTestId(tid.amods.mod('B')));
+  const box = await screen.findByTestId(tid.modal.root);
+  expect(within(box).getByTestId(tid.modal.title)).toHaveTextContent('Turn off Clock in / out?');
+  expect(box).toHaveTextContent('This applies to everyone immediately.');
+  await userEvent.click(within(box).getByTestId(tid.modal.cancel));
+  expect(tenant().modules.B).toBe(true);
+  expect(tenantAudits()).toEqual([]);
+});
+
+/* Suite SETUP CONTROLS DO ONE THING: a click inside a feature row's select
+   neither toggles the switch beside it nor changes the select's value. */
+test('a click inside a feature row’s select leaves its switch and its value alone', async () => {
+  await open('TS');
+  const before = weekLayout();
+  await userEvent.click(screen.getByTestId(tid.amods.weekLayout));
+  await userEvent.click(screen.getByTestId(tid.amods.weekGrid));
+  expect(screen.getByTestId(tid.amods.flag('WEEKLY'))).toHaveAttribute('aria-checked', 'true');
+  expect(tenant().flags.WEEKLY).toBe(true);
+  expect(screen.getByTestId(tid.amods.weekLayout)).toHaveValue(before);
+  expect(weekLayout()).toBe(before);
+  expect(tenantAudits()).toEqual([]);
+});
+
+/* Suite HEADER PILLS REMOVED: "And is reachable by keyboard with a label". */
+test('the modules index caution is reached by keyboard and is labelled', async () => {
+  await open();
+  const caution = screen.getByTestId(tid.head.caution('amods'));
+  expect(caution).toHaveAttribute('tabindex', '0');
+  expect(caution).toHaveAccessibleName('Caution');
+  await userEvent.tab(); await userEvent.tab();
+  expect(caution).toHaveFocus();
+});
+
+/* Suites WEEKLY VIEW (WK) and WEEKLY LAYOUT IS CONFIGURABLE (CL): "Switching
+   back restores classic, the default" and "Switching back restores the
+   grid", switched on the weekly grid's row (D6) and read on My timesheet. On
+   the qnipay seed Bigyan Poudel (a Consultant) is a grid type. */
+test('switching the weekly layout back restores classic, and from the list back restores the grid, on My timesheet too', async () => {
+  resetTo('qnipay'); await signInAs('admin');
+  const choose = async (v: string, toast: RegExp) => {
+    fireEvent.change(screen.getByTestId(tid.amods.weekLayout), { target: { value: v } });
+    expect(await screen.findByText(toast)).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId(tid.amods.weekLayout)).toHaveValue(v));
+  };
+  const week = async () => {
+    cleanup();
+    const r = await fetch('/api/v1/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: 'bigyan.poudel@dogmagroup.co.uk', password: 'Qnipay@123' }) });
+    setToken(((await r.json()) as { token: string }).token);
+    renderPage(<TimesheetPage />);
+    return screen.findByTestId(tid.week.grid);
+  };
+  await open('TS');
+  await choose('grid', /^Weekly view: grid\./);
+  await choose('classic', /^Weekly view: classic\./);
+  expect(weekLayout()).toBe('classic');
+  const grid = await week();
+  expect(within(grid).getAllByRole('columnheader').some(h => h.textContent?.startsWith('Allocation'))).toBe(true);
+  expect(screen.queryByTestId(tid.week.allocRow(0))).toBeNull();
+
+  cleanup(); await signInAs('admin'); await open('TS');
+  await choose('days', /^Weekly view: list\./);
+  await choose('grid', /^Weekly view: grid\./);
+  expect(weekLayout()).toBe('grid');
+  await week();
+  expect(screen.getByTestId(tid.week.allocRow(0))).toHaveTextContent('Allocation 1');
+  expect(screen.queryByTestId(tid.week.day(6))).toBeNull();
 });

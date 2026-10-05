@@ -119,5 +119,5 @@ export function SettingText({ testId, className, ...rest }: { testId: string } &
 }
 /* .wtsub (v15:1503-1506): a sub-heading inside a card, 12px/650 secondary ink over a rule. */
 export function SubHead({ children }: { children: ReactNode }) {
-  return <div className="mt-lg mb-sm border-b pb-xs text-xs font-[650] tracking-normal text-text-secondary first:mt-0">{children}</div>;
+  return <div data-slot="subhead" className="mt-lg mb-sm border-b pb-xs text-xs font-[650] tracking-normal text-text-secondary first:mt-0">{children}</div>;
 }

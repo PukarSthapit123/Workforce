@@ -201,5 +201,5 @@ function ModuleFeatures({ m, tenant }: { m: ModuleDef; tenant: Tenant }) {
 /* .arow.sub (v15:676-678): a feature that belongs to a capability sits under
    it, indented 22px with a 2px rule down its left. */
 function Nested({ sub, testId, children }: { sub?: boolean; testId: string; children: ReactNode }) {
-  return <div data-testid={testId} className={cn('border-b last:border-b-0', sub && 'relative pl-[22px] before:absolute before:inset-y-0 before:left-sm before:w-[2px] before:bg-border')}>{children}</div>;
+  return <div data-testid={testId} data-nested={sub || undefined} className={cn('border-b last:border-b-0', sub && 'relative pl-[22px] before:absolute before:inset-y-0 before:left-sm before:w-[2px] before:bg-border')}>{children}</div>;
 }

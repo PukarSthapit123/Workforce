@@ -113,7 +113,7 @@ export function CardNote({ children }: { children: ReactNode }) {
    left, its control on the right; on a phone the control drops under it. */
 export function SettingRow({ title, desc, children }: { title: ReactNode; desc?: ReactNode; children: ReactNode }) {
   return (
-    <div className="flex flex-wrap items-center gap-md border-b py-[11px] last:border-b-0">
+    <div data-slot="setting-row" className="flex flex-wrap items-center gap-md border-b py-[11px] last:border-b-0">
       <div className="min-w-[190px] flex-1">
         <b className="block text-sm font-semibold">{title}</b>
         {desc && <span className="mt-px block text-xs text-text-muted">{desc}</span>}
