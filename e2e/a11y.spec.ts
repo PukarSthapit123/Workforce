@@ -286,3 +286,98 @@ test.describe('module 4 pages', () => {
     }
   });
 });
+
+/* 1c's pages on the social seed, each with its dialogs: Organisation with
+   the template apply preview, the save dialog, a file imported and the remove
+   confirm; Calendar and saved data with the reset confirm; Modules & features
+   (the list, and Rota's drill-in with its impact confirm); Notifications;
+   Approvals with the chain and delegation editors; the Rename roles dialog
+   and a guide on Permissions, for Dee Fitzgerald. Team Home, team Notices
+   with the notice editor, tracker and withdraw dialog, the inbox panel and
+   the page-unavailable page for Rachel Hussain. My home with its day dialog,
+   Notices with the read dialog, and Documents for Amara Okafor. */
+const TEMPLATE_FILE = JSON.stringify({ kind: 'qnipay.template', v: 1, key: 'tpl_x', template: {
+  name: 'From a file', description: 'Brought in', scope: 'config', modules: { R: true }, flags: {}, extras: {}, labels: {}, employeeTypes: [] } });
+const PAGES_1C: [string, Step[]][] = [
+  [DEE, [
+    ['/setup/aorg', async page => { await open('/setup/aorg', tid.aorg.spine)(page); await page.getByTestId(tid.aorg.noSaved).waitFor(); }],
+    ['template apply dialog', click(tid.aorg.template('mne'), tid.aorg.plan('changes'))],
+    ['template save dialog', async page => { await escape(page); await click(tid.aorg.saveOpen, tid.aorg.saveName)(page); }],
+    ['template imported', async page => {
+      await escape(page);
+      await page.getByTestId(tid.aorg.importFile).setInputFiles({ name: 'from-a-file.json', mimeType: 'application/json', buffer: Buffer.from(TEMPLATE_FILE) });
+      await page.getByTestId(tid.aorg.savedRow('tpl_from_a_file')).waitFor();
+    }],
+    ['template remove confirm', click(tid.aorg.remove('tpl_from_a_file'), tid.modal.confirm)],
+    ['/setup/acal', async page => { await escape(page); await open('/setup/acal', tid.acal.card('saved'))(page); await page.getByTestId(tid.acal.holidays).waitFor(); }],
+    ['saved data reset confirm', click(tid.acal.reset, tid.modal.confirm)],
+    ['/setup/amods', async page => { await escape(page); await open('/setup/amods', tid.amods.card('TS'))(page); }],
+    ['/setup/amods?m=R', open('/setup/amods?m=R', tid.amods.features)],
+    ['module impact confirm', click(tid.amods.mod('R'), tid.modal.confirm)],
+    ['/setup/anotif', async page => { await escape(page); await open('/setup/anotif', tid.anotif.table)(page); }],
+    ['/setup/aappr', async page => { await open('/setup/aappr', tid.aappr.chainTable)(page); await page.getByTestId(tid.aappr.delegTable).waitFor(); }],
+    ['chain editor', click(tid.aappr.edit('Leave'), tid.aappr.chainSave)],
+    ['delegation editor', async page => { await escape(page); await click(tid.aappr.delegAdd, tid.aappr.delegSave)(page); }],
+    ['rename roles dialog', async page => { await escape(page); await open('/setup/aperm', tid.access.table)(page); await click(tid.roleNames.open, tid.roleNames.save)(page); }],
+    ['a guide dialog', async page => { await escape(page); await click(tid.guide.open('aperm'), tid.guide.close)(page); }],
+  ]],
+  [RACHEL, [
+    ['/team/thome', async page => { await escape(page); await open('/team/thome', tid.thome.grid)(page); }],
+    ['/team/tnotices', open('/team/tnotices', tid.tnotices.table)],
+    ['notice editor', click(tid.tnotices.add, tid.tnotices.title)],
+    ['notice tracker', async page => { await escape(page); await click(tid.tnotices.open('NTC-0002'), tid.tnotices.trackBody)(page); }],
+    ['notice withdraw dialog', click(tid.tnotices.trackWithdraw, tid.tnotices.reason)],
+    ['inbox panel', async page => { await escape(page); await click(tid.shell.bell, tid.inbox.item('ntf_seed_0006'))(page); }],
+    ['page unavailable', async page => { await page.keyboard.press('Escape'); await open('/team/no-such-page', tid.unavailable.root)(page); }],
+  ]],
+  [AMARA, [
+    ['/work/home', async page => { await open('/work/home', tid.home.grid)(page); await page.getByTestId(tid.noticeHome.card).waitFor(); }],
+    ['home day dialog', click(tid.home.day('2026-08-13'), tid.home.dayClose)],
+    ['/work/notices', async page => { await escape(page); await open('/work/notices', tid.notices.table)(page); }],
+    ['notice read dialog', click(tid.notices.read('NTC-0002'), tid.notices.readAck)],
+    ['/work/docs', async page => { await escape(page); await open('/work/docs', tid.docs.card)(page); }],
+  ]],
+];
+test.describe('1c pages', () => {
+  test.beforeEach(async ({ api }) => { await api.seed('social'); await api.setClock(FROZEN); });
+  const serious = async (page: Page, where: string, theme: 'light' | 'dark') => {
+    await setTheme(page, theme);
+    const r = await new AxeBuilder({ page }).analyze();
+    expect(r.violations.filter(v => ['serious', 'critical'].includes(v.impact ?? '')).map(v => `${where} ${v.id}: ${v.nodes.length}`)).toEqual([]);
+  };
+  for (const theme of ['light', 'dark'] as const) {
+    test(`axe: 1c pages and dialogs have no serious issues (${theme})`, async ({ page }) => {
+      test.setTimeout(240_000);
+      for (const [email, steps] of PAGES_1C) {
+        await signInEmail(page, email);
+        for (const [where, go] of steps) {
+          await go(page);
+          await serious(page, where, theme);
+        }
+      }
+    });
+    /* the phone's Go to sheet behind More exists only below the md breakpoint */
+    test(`axe: My home and the Go to sheet at 390px have no serious issues (${theme})`, async ({ page }) => {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await signInEmail(page, AMARA);
+      await open('/work/home', tid.home.grid)(page);
+      await serious(page, '/work/home at 390px', theme);
+      await click(tid.nav.more, tid.nav.goToList)(page);
+      await serious(page, 'Go to sheet', theme);
+    });
+  }
+  test('phone: 1c pages and dialogs have no horizontal overflow at 390px', async ({ page }) => {
+    test.setTimeout(240_000);
+    await page.setViewportSize({ width: 390, height: 844 });
+    const fits = async (where: string) => expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), where).toBe(true);
+    for (const [email, steps] of PAGES_1C) {
+      await signInEmail(page, email);
+      for (const [where, go] of steps) {
+        await go(page);
+        await fits(where);
+      }
+    }
+    await click(tid.nav.more, tid.nav.goToList)(page);
+    await fits('Go to sheet');
+  });
+});
