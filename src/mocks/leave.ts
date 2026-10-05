@@ -229,8 +229,8 @@ export const leaveHandlers = [
       decidedAt: '', decidedBy: null, reason: '', history: [{ from: '', to: 'pending', by: who, at, reason: '' }] };
     requests()[id] = rec;
     const typeName = leaveTypeName(c.types, rec.type), range = leaveRange(rec.from, rec.to);
-    notifyEvent('lv_req', approversAt(p.location, p.code), requestedNotice(p.name, typeName, range, s.label, c.slaDays));
-    notifyEvent('lv_req', [p.code], sentNotice(range, s.label, managerOf(p)));
+    notifyEvent('lv_req', 'actor', approversAt(p.location, p.code), requestedNotice(p.name, typeName, range, s.label, c.slaDays));
+    notifyEvent('lv_req', 'subject', [p.code], sentNotice(range, s.label, managerOf(p)));
     const auditId = writeAudit({ who: actor(session), act: 'Leave requested', entity: 'leaveRequest', entityId: id, before: null,
       after: { state: 'pending', type: rec.type, from: rec.from, to: rec.to, qty: rec.qty, unit: rec.unit, detail: requestedAudit(typeName, range, s.label) } });
     return { record: requestView(rec), hint: checked.hint, summary: requestedToast(typeName, s.label, managerOf(p)), auditId };
@@ -247,7 +247,7 @@ export const leaveHandlers = [
     const p = personOf(r.personCode);
     const saved = bump(r, moved(r, 'cancelled', by(session)));
     requests()[r.id] = saved;
-    notifyEvent('lv_req', approversAt(p.location, p.code), cancelledNotice(p.name, r.from));
+    notifyEvent('lv_req', 'actor', approversAt(p.location, p.code), cancelledNotice(p.name, r.from));
     const auditId = writeAudit({ who: actor(session), act: 'Leave request cancelled', entity: 'leaveRequest', entityId: r.id,
       before: { state: r.state }, after: { state: 'cancelled', detail: decidedAudit(p.name, r.from) } });
     return { record: requestView(saved), summary: CANCELLED_TOAST, auditId };
@@ -290,7 +290,7 @@ export const leaveHandlers = [
     const who = by(session), c = config();
     const saved = bump(r, { ...moved(r, 'approved', who), decidedAt: store.now(), decidedBy: who });
     requests()[r.id] = saved;
-    notifyEvent('lv_ok', [p.code], approvedNotice(leaveRange(r.from, r.to), leaveTypeName(c.types, r.type)));
+    notifyEvent('lv_ok', 'subject', [p.code], approvedNotice(leaveRange(r.from, r.to), leaveTypeName(c.types, r.type)));
     const mark = absenceMark(r.type);
     const rota = rotaLinked() ? writeAbsence({ personCode: p.code, dates: datesBetween(r.from, r.to), mark, by: who, coverReason: leaveCoverReason(mark) }) : NO_ROTA;
     const auditId = writeAudit({ who: actor(session), act: 'Leave approved', entity: 'leaveRequest', entityId: r.id,
@@ -312,7 +312,7 @@ export const leaveHandlers = [
     const who = by(session);
     const saved = bump(r, { ...moved(r, 'declined', who, reason), decidedAt: store.now(), decidedBy: who, reason });
     requests()[r.id] = saved;
-    notifyEvent('lv_no', [p.code], declinedNotice(leaveRange(r.from, r.to), reason));
+    notifyEvent('lv_no', 'subject', [p.code], declinedNotice(leaveRange(r.from, r.to), reason));
     const auditId = writeAudit({ who: actor(session), act: 'Leave declined', entity: 'leaveRequest', entityId: r.id,
       before: { state: r.state }, after: { state: 'declined', detail: decidedAudit(p.name, r.from) }, reason });
     return { record: requestView(saved), summary: declinedToast(firstName(p.name)), auditId };
@@ -392,7 +392,7 @@ export const leaveHandlers = [
         coverReason: leaveCoverReason(SICK) })
       : NO_ROTA;
     const range = leaveRange(body.from, body.to || body.from);
-    notifyEvent('lv_ent', [p.code], sicknessNotice(p.name, range));
+    notifyEvent('lv_ent', 'subject', [p.code], sicknessNotice(p.name, range));
     const auditId = writeAudit({ who: actor(session), act: 'Sickness recorded', entity: 'sickEpisode', entityId: rec.id,
       before: was ? { from: was.from, to: was.to, ...(merged.length ? { merged: merged.map(e => ({ id: e.id, from: e.from, to: e.to })) } : {}) } : null,
       after: { from: rec.from, to: rec.to, reason: rec.reason, extended: !!was, detail: `${p.name} · ${range} · ${body.reason}`, ...rotaAfter(rota) } });
@@ -411,8 +411,8 @@ export const leaveHandlers = [
     const who = by(session), saved = bump(e, { rtw: { requestedAt: store.now(), by: who } });
     episodesColl()[e.id] = saved;
     const n = rtwNotices(who.name, locName(p.location));
-    notifyEvent('lv_esc', [p.code], n.employee);
-    notifyEvent('lv_esc', administrators(), n.admin);
+    notifyEvent('lv_esc', 'subject', [p.code], n.employee);
+    notifyEvent('lv_esc', 'backOffice', administrators(), n.admin);
     const auditId = writeAudit({ who: actor(session), act: 'Return-to-work meeting requested', entity: 'sickEpisode', entityId: e.id,
       before: { rtw: null }, after: { rtw: saved.rtw, detail: `${p.name} · ${locName(p.location)}` } });
     return { record: saved, summary: RTW_TOAST, auditId };
@@ -433,7 +433,7 @@ export const leaveHandlers = [
     ledgerColl()[id] = rec;
     /* the returned days are sickness now, not leave: S over exactly those days (D10) */
     const rota = rotaLinked() ? writeAbsence({ personCode: p.code, dates: row.dates ?? [], mark: SICK, by: who, coverReason: leaveCoverReason(SICK) }) : NO_ROTA;
-    notifyEvent('lv_ent', [p.code], daysReturnedNotice(days));
+    notifyEvent('lv_ent', 'subject', [p.code], daysReturnedNotice(days));
     const auditId = writeAudit({ who: actor(session), act: 'Days returned', entity: 'leaveLedger', entityId: id, before: null,
       after: { qty: rec.qty, unit: rec.unit, dates: rec.dates, detail: daysReturnedToast(days, p.name), ...rotaAfter(rota) } });
     return { record: ledgerView(rec), rota, summary: daysReturnedToast(days, p.name), auditId };

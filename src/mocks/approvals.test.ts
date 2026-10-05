@@ -145,7 +145,17 @@ describe('profile routing follows the Profile chain (D8)', () => {
     expect(queue.filter(c => c.personCode === 'CP-1042').map(c => [c.field, c.stage])).toEqual([['phone', 'payroll'], ['bankAccount', 'payroll']]);
     const mgr = ProfileChange.array().parse((await (await as('manager'))('GET', '/api/v1/profile-changes')).body);
     expect(mgr.filter(c => c.personCode === 'CP-1042' && ['phone', 'bankAccount'].includes(c.field) && c.raisedAt === store.now())).toEqual([]);
-    /* pf_req reaches an admin only when the matrix's admin column is on (it is Off by default), so nothing is delivered to Dee */
-    expect(Object.values(store.coll<{ event?: string }>('notifications')).filter(n => n.event === 'pf_req')).toEqual([]);
+    /* the payroll decider is acting on the request, so takes the Manager column whatever her account type (I3): Dee is told of both */
+    const told = Object.values(store.coll<{ personId: string; event?: string; channel?: string }>('notifications')).filter(n => n.event === 'pf_req');
+    expect(told.map(n => [n.personId, n.channel])).toEqual([['CP-1002', 'In-app + email'], ['CP-1002', 'In-app + email']]);
+  });
+  test('at the defaults, a bank-detail change that passes the manager stage reaches the payroll decider (I3)', async () => {
+    const [bank] = await propose('bankAccount', '11112222');
+    expect(bank).toMatchObject({ route: ['manager', 'payroll'], stage: 'manager' });
+    if (!bank) throw new Error('no change');
+    const ok = await (await as('manager'))('POST', `/api/v1/profile-changes/${bank.id}/decision`, { decision: 'approve', reason: '' }, bank.version);
+    expect([ok.status, (ok.body as { record: { stage: string } }).record.stage]).toEqual([200, 'payroll']);
+    const told = Object.values(store.coll<{ personId: string; event?: string }>('notifications')).filter(n => n.event === 'pf_req').map(n => n.personId);
+    expect(told).toEqual(['CP-1001', 'CP-1002']);
   });
 });

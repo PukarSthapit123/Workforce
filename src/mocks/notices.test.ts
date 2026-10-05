@@ -104,12 +104,12 @@ describe('posting (notice_post, notice_org; Review Focus 1, 5)', () => {
     expect(told().map(t => t.personId).sort()).toEqual(activeAt('WH').map(p => p.code).sort());
     expect(told().every(t => t.area === 'Notices' && t.ref === 'NTC-0005' && t.title === 'Notice: Hand hygiene audit next week' && t.channel === 'In-app')).toBe(true);
   });
-  test('an admin posts to everyone; the matrix leaves admins Off and tells the rest', async () => {
+  test('an admin posts to everyone; everyone in the audience is told in the Employee column, admins too (I3)', async () => {
     const r = await (await as('admin'))('POST', '/api/v1/notices', { ...NEW, scope: ALL, urgent: true });
     expect(r.status).toBe(200);
     const people = Object.values(store.coll<{ code: string; state: string }>('people')).filter(p => p.state === 'active');
-    expect(told().some(t => t.personId === 'CP-1002')).toBe(false);
-    expect(told()).toHaveLength(people.length - 1);
+    expect(told().some(t => t.personId === 'CP-1002')).toBe(true);
+    expect(told()).toHaveLength(people.length);
     expect(told()[0]?.title).toBe('Urgent notice: Hand hygiene audit next week');
   });
   test('a manager cannot reach everyone or another location, even by forcing the scope; nothing is created', async () => {

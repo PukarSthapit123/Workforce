@@ -33,7 +33,7 @@ function stageDeciders(stage: Stage, personCode: string): string[] {
 }
 /* pf_req, as the prototype's pf-send raises it: the person, the fields, awaiting approval. */
 function raiseRequested(stage: Stage, person: StoredPerson, labels: readonly string[]) {
-  notifyEvent('pf_req', stageDeciders(stage, person.code), { title: 'Profile change requested',
+  notifyEvent('pf_req', 'actor', stageDeciders(stage, person.code), { title: 'Profile change requested',
     body: `${person.name} (${person.code}). ${labels.join(', ')}. Awaiting approval.` });
 }
 /* A counter one past the highest stored (the seed's own ids are pfc_9001 and
@@ -123,7 +123,7 @@ export const profileHandlers = [
     /* pf_done to the person once it is decided, as the prototype's data-pfok and
        data-pfno raise it; pf_req to the next stage's approvers when it moves on */
     if (out.status === 'pending' && out.stage !== 'done') raiseRequested(out.stage, person, [label]);
-    else notifyEvent('pf_done', [person.code], { title: `Profile change ${out.status}`,
+    else notifyEvent('pf_done', 'subject', [person.code], { title: `Profile change ${out.status}`,
       body: `${label}. ${out.status === 'approved' ? masked(c.field, c.to) : `Left as ${masked(c.field, c.from) || 'it was'}`}. Decided by ${who.name}.` });
     const act = out.status === 'approved' ? 'Profile change approved' : out.status === 'declined' ? 'Profile change declined' : 'Profile change passed to payroll';
     const auditId = writeAudit({ who, act, entity: 'profileChange', entityId: c.id,

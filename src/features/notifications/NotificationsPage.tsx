@@ -9,7 +9,8 @@ import { clockFromIso, formatDmy } from '@/domain/time';
 
 /* Notifications: the prototype's admNotifications (qnipay-workforce-v15.html:
    8370-8403). One row per event this tenant can raise, grouped "<Module>
-   events", one channel select per user type; a dash where the event never
+   events", one channel select per column (Employee, Manager, Admin: the
+   recipient's part in the event, not their account type); a dash where the event never
    applies. Changes are held on the page and saved together with Save
    (If-Match, one audit row), where the prototype applied each select at once.
    Only In-app is delivered: an email or SMS channel is marked not connected

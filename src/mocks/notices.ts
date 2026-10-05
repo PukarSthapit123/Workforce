@@ -81,7 +81,7 @@ const audit = (s: Signed, act: string, n: StoredNotice, detail: string, before: 
 /* Tells the audience: the event's matrix decides each person's channel. */
 function tell(n: StoredNotice, updated: boolean) {
   const note = postedNote(n, labelOf(n.scope), updated);
-  notifyEvent('notice_posted', audienceOf(n, everyone()).map(p => p.code), { ...note, area: 'Notices', ref: n.id });
+  notifyEvent('notice_posted', 'subject', audienceOf(n, everyone()).map(p => p.code), { ...note, area: 'Notices', ref: n.id });
 }
 /* Sends a notice live and returns how many it reaches (noticeGoLive). */
 function goLive(n: StoredNotice): StoredNotice {

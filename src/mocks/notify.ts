@@ -1,15 +1,16 @@
 /* Notifications are stored rows in one collection (module 3 D8, module 4 D12),
    each addressed to a person. 1c group 4 (brief D9): every module raises an
    event from the catalogue (src/domain/notifications.ts) through notifyEvent,
-   which reads the channel matrix for each recipient's user type and the
-   tenant's modules. An Off channel stores nothing; Email and SMS are recorded
+   which reads the channel matrix in the column of each recipient's part in
+   the event (subject, actor or back office; PART_COLUMN) and the tenant's
+   modules. An Off channel stores nothing; Email and SMS are recorded
    on the row as not connected and never delivered; nothing is raised while
    the event's module is off. Ids are a zero-padded counter one past the
    highest stored, so they sort in write order under the frozen clock. */
 import { store } from './store';
 import { recordAt } from './world';
 import {
-  DEFAULT_MATRIX, eventBy, isNotifPersona, plannedDeliveries, type Delivery, type EventMatrix, type NotifChannel, type NotifPersona,
+  DEFAULT_MATRIX, PART_COLUMN, eventBy, isNotifPersona, plannedDeliveries, type Delivery, type EventMatrix, type NotifChannel, type NotifPart, type NotifPersona,
 } from '@/domain/notifications';
 
 export interface StoredNotification {
@@ -29,7 +30,7 @@ export const switchesNow = (): TenantSwitches => {
   return { modules: t?.modules ?? {}, flags: t?.flags ?? {} };
 };
 interface Acc { personCode: string; userType: string }
-/* A person without an account is told as an employee would be. */
+/* The account's user type, for where an item opens. A person without an account is an employee. */
 export const personaOf = (code: string): NotifPersona => {
   const t = Object.values(store.coll<Acc>('accounts')).find(a => a.personCode === code)?.userType;
   return isNotifPersona(t) ? t : 'employee';
@@ -42,14 +43,15 @@ function nextId(coll: Record<string, unknown>): () => string {
   return () => `ntf_${String(++max).padStart(12, '0')}`;
 }
 
-/* Raises one catalogue event to the people named. Returns the rows written. */
+/* Raises one catalogue event to the people named, each taking the matrix
+   column of the part the caller says they play. Returns the rows written. */
 /* The row's area is the event's module unless the caller names a narrower one
    (a notice is filed under Notices, so it opens the notice board and hides with it). */
-export function notifyEvent(code: string, recipients: Iterable<string>, n: { title: string; body: string; ref?: string; area?: string }): StoredNotification[] {
+export function notifyEvent(code: string, part: NotifPart, recipients: Iterable<string>, n: { title: string; body: string; ref?: string; area?: string }): StoredNotification[] {
   const e = eventBy(code);
   if (!e) throw new Error(`There is no notification event "${code}".`);
   const { modules, flags } = switchesNow();
-  const planned = plannedDeliveries(e, [...recipients].map(personCode => ({ personCode, persona: personaOf(personCode) })), matrixNow(), modules, flags);
+  const planned = plannedDeliveries(e, [...recipients].map(personCode => ({ personCode, persona: PART_COLUMN[part] })), matrixNow(), modules, flags);
   const coll = notifications(), next = nextId(coll);
   return planned.map(d => {
     const id = next();

@@ -26,7 +26,7 @@ const refusal = (r: { body: unknown }) => Refusal.parse(r.body);
 const WRITES = ['leaveRequests', 'leaveLedger', 'sickEpisodes', 'leaveConfig', 'rotaWeeks', 'coverRequests', 'notifications', 'audit'];
 interface Week { id: string; version: number; state: string; lines: Record<string, string[]>; changes: { afterPublish: boolean; to: string; personCode: string; why: string; by: { personCode: string } }[] }
 const week = (loc: string, ws: string) => store.coll<Week>('rotaWeeks')[`rw_${loc}_${ws}`];
-interface Note { id: string; personId: string; title: string; body: string; area: string }
+interface Note { id: string; personId: string; title: string; body: string; area: string; event?: string; channel?: string }
 /* the rows this test raised: the seeded feeds (1c) are left out */
 const notes = (personId?: string) => Object.values(store.coll<Note>('notifications')).filter(n => !n.id.startsWith('ntf_seed_') && (!personId || n.personId === personId));
 const titles = (personId: string) => notes(personId).map(n => n.title);
@@ -161,6 +161,14 @@ describe('scope and self (Review Focus 1)', () => {
     }
     expect(TeamRequests.parse((await call('GET', '/api/v1/leave/team/requests')).body).requests.map(x => x.id)).not.toContain(mine.id);
     expect(snapshot(...WRITES)).toEqual(before);
+  });
+  test('a manager whose own leave an administrator approves is told, in the Employee column (I3)', async () => {
+    const admin = store.coll<{ capabilities: string[] }>('userTypes').admin;
+    if (!admin) throw new Error('no admin type');
+    admin.capabilities = [...admin.capabilities, 'team_leave'];
+    const mine = LeaveRequested.parse((await ask(await as('manager'), { from: '2026-09-21', to: '2026-09-22' })).body).record;
+    expect((await approve(await as('admin'), mine.id)).status).toBe(200);
+    expect(notes('CP-1001').filter(n => n.event === 'lv_ok').map(n => n.channel)).toEqual(['In-app + email']);
   });
   test('an employee cancels only their own requests, and cannot decide or read the team', async () => {
     const call = await as('employee'), before = snapshot(...WRITES);

@@ -1,6 +1,6 @@
 import { buildNav, everyTab } from './nav';
 import {
-  DEFAULT_MATRIX, NOTIF_CHANNELS, NOTIF_EVENTS, ageText, applyMatrixChange, areaLive, channelFor, channelLabel, deliveryOf, deliveryText, eventBy,
+  DEFAULT_MATRIX, NOTIF_CHANNELS, NOTIF_EVENTS, PART_COLUMN, ageText, applyMatrixChange, areaLive, channelFor, channelLabel, deliveryOf, deliveryText, eventBy,
   eventShown, inboxOf, linkFor, plannedDeliveries, targetView, unreadOf, type InboxRow, type LiveContext,
 } from './notifications';
 
@@ -58,7 +58,14 @@ describe('delivery (Review Focus 4)', () => {
     expect(deliveryText(deliveryOf('In-app + email'))).toBe('In-app, email not connected.');
     expect(deliveryText(deliveryOf('Email'))).toBe('Email not connected.');
   });
-  test('the matrix is read per recipient\'s user type, and a change to it is respected', () => {
+  test('a recipient\'s part in the event picks the column: subject Employee, actor Manager, back office Admin (I3)', () => {
+    expect(PART_COLUMN).toEqual({ subject: 'employee', actor: 'manager', backOffice: 'admin' });
+    /* an administrator deciding a request is told in the Manager column; a manager who is the subject in the Employee column */
+    expect(plannedDeliveries(ev('pf_req'), [{ personCode: 'A1', persona: PART_COLUMN.actor }], DEFAULT_MATRIX, ALL, FLAGS).map(d => d.channel)).toEqual(['In-app + email']);
+    expect(plannedDeliveries(ev('lv_ok'), [{ personCode: 'M1', persona: PART_COLUMN.subject }], DEFAULT_MATRIX, ALL, FLAGS).map(d => d.channel)).toEqual(['In-app + email']);
+    expect(plannedDeliveries(ev('rt_it'), [{ personCode: 'A1', persona: PART_COLUMN.backOffice }], DEFAULT_MATRIX, ALL, FLAGS).map(d => d.channel)).toEqual(['In-app + email']);
+  });
+  test('the matrix is read per column, and a change to it is respected', () => {
     const people = [{ personCode: 'E1', persona: 'employee' as const }, { personCode: 'M1', persona: 'manager' as const }, { personCode: 'A1', persona: 'admin' as const }];
     expect(plannedDeliveries(ev('lv_ok'), people, DEFAULT_MATRIX, ALL, FLAGS).map(d => [d.personCode, d.channel])).toEqual([['E1', 'In-app + email']]);
     const off = { ...DEFAULT_MATRIX, lv_ok: { employee: 'Off' as const, manager: 'In-app' as const, admin: 'Off' as const } };

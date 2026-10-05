@@ -113,7 +113,16 @@ export function deliveryText(d: Delivery | null): string {
 export const channelLabel = (c: NotifChannel) => (c === 'Email' ? 'Email (not connected)' : c === 'In-app + email' ? 'In-app + email (not connected)'
   : c === 'In-app + email + SMS' ? 'In-app + email + SMS (not connected)' : c);
 
-/* Who an event reaches: each recipient whose user type's channel is not Off,
+/* A recipient's part in the event picks the matrix column, whatever their
+   account type (the prototype's employee, manager and admin inboxes): the
+   person the event is about takes the Employee column, an approver or manager
+   acting on it (a delegate too) the Manager column, and the back office told
+   for oversight (HR, IT, administrators) the Admin column. */
+export const NOTIF_PARTS = ['subject', 'actor', 'backOffice'] as const;
+export type NotifPart = typeof NOTIF_PARTS[number];
+export const PART_COLUMN: Readonly<Record<NotifPart, NotifPersona>> = { subject: 'employee', actor: 'manager', backOffice: 'admin' };
+
+/* Who an event reaches: each recipient whose column's channel is not Off,
    with what that channel delivers (notifyEvent). Nothing at all while the
    event's module is off. */
 export interface Recipient { personCode: string; persona: NotifPersona }
