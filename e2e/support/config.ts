@@ -33,14 +33,15 @@ export interface AuditStored { act: string; entity: string; entityId: string; be
 export const auditRows = async (page: Page, ...entities: string[]) =>
   (await stored<AuditStored>(page, 'audit')).filter(a => !entities.length || entities.includes(a.entity));
 
-/* Everything the fake server holds but the sessions, which a sign-in writes:
-   a write that was refused must leave all of it exactly as it was. */
+/* Everything the fake server holds but the sessions, which a sign-in writes,
+   and the empty collections a read brings into being: a write that was
+   refused must leave all of it exactly as it was. */
 export const wholeStore = (page: Page): Promise<Record<string, unknown>> =>
   page.evaluate(() => {
     const raw = localStorage.getItem('qnipay.app.store');
     const db = raw ? (JSON.parse(raw) as { data: Record<string, unknown> }).data : {};
     delete db.sessions;
-    return db;
+    return Object.fromEntries(Object.entries(db).filter(([, v]) => !(v && typeof v === 'object' && !Object.keys(v).length)));
   });
 
 /* an info toast, found by its words (never by its position) */
