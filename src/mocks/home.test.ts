@@ -80,7 +80,9 @@ test('turning Rota off reports the shifts cleared and empties the calendar of sh
   expect(before.totals.shifts).toBe(8);
   const off = await admin('PATCH', '/api/v1/tenant/modules/R', { on: false }, tenantVersion());
   expect(off.status).toBe(200);
-  expect((off.body as { effect: { message: string; shiftsSetAside: number } }).effect.message).toMatch(/scheduled shifts cleared from the calendar and kept to restore/);
+  const offEffect = (off.body as { effect: { message: string; shiftsSetAside: number } }).effect;
+  expect(offEffect.shiftsSetAside).toBeGreaterThan(0);
+  expect(offEffect.message).toContain(`${offEffect.shiftsSetAside} scheduled shifts cleared from the calendar and kept to restore`);
   const during = month(await me('GET', '/api/v1/home'));
   expect(during.totals.shifts).toBe(0);
   expect(during.days.every(d => d.shift === null)).toBe(true);
@@ -88,7 +90,9 @@ test('turning Rota off reports the shifts cleared and empties the calendar of sh
   expect(dayOf(during, '2026-08-17')?.absence?.name).toBe('Annual leave');
   const on = await admin('PATCH', '/api/v1/tenant/modules/R', { on: true }, tenantVersion());
   expect(on.status).toBe(200);
-  expect((on.body as { effect: { message: string } }).effect.message).toMatch(/restored to the calendar/);
+  const onEffect = (on.body as { effect: { message: string; shiftsRestored: number } }).effect;
+  expect(onEffect.shiftsRestored).toBe(offEffect.shiftsSetAside);
+  expect(onEffect.message).toContain(`${onEffect.shiftsRestored} scheduled shifts restored to the calendar`);
   const after = month(await me('GET', '/api/v1/home'));
   expect(after.totals).toEqual(before.totals);
   expect(after.days.map(d => d.shift?.code ?? '')).toEqual(before.days.map(d => d.shift?.code ?? ''));
