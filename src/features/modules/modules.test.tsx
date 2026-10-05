@@ -123,3 +123,23 @@ test('the weekly grid’s layout and the break limit are set on their feature ro
   expect(await screen.findByText('Breaks per entry: 4. It is live for everyone now.')).toBeInTheDocument();
   expect(tenantAudits().map(a => a.act)).toEqual(['Feature changed', 'Feature changed']);
 });
+
+/* Suite ICONS, CRUMBS AND REDUNDANT COUNTS and HEADER PILLS REMOVED: each
+   module card has its own icon from the shared set and says its count in
+   words; the index carries no crumb claiming Modules sits under Qnipay setup. */
+test('each module card carries its own icon and says its count in words, under no Qnipay setup crumb', async () => {
+  await open();
+  const icons = ['CORE', 'TS', 'R', 'L', 'ON'].map(c => screen.getByTestId(tid.amods.card(c)).querySelector('svg')?.innerHTML ?? '');
+  expect(icons.every(Boolean)).toBe(true);
+  expect(new Set(icons).size).toBe(5);
+  expect(screen.getByTestId(tid.amods.cardCounts('L'))).toHaveTextContent(/\d+ of \d+ features/);
+  expect(screen.getByTestId(tid.page('amods'))).not.toHaveTextContent(/Qnipay setup · Modules/);
+});
+
+test('a module’s features page names the module in its crumb, and its head has no N of M on pill', async () => {
+  await open('R');
+  expect(screen.getByText('Modules · Rota · Rota features')).toBeInTheDocument();
+  const head = screen.getByRole('heading', { level: 1, name: /Rota features/ }).parentElement?.parentElement;
+  expect(head).not.toHaveTextContent(/\d+ of \d+ on/);
+  expect(screen.getAllByTestId(/^amods-flag-/).length).toBeGreaterThan(0);
+});
