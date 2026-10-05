@@ -21,6 +21,10 @@ setToken(null);
 store.setClock(null);
 store.reset('social');
 queryClient.clear();
+/* and the address a fresh worker starts at: a file that renders the whole
+   App (a BrowserRouter) and follows a link would otherwise leave the next
+   file's App on that page, which may not be on the next account's nav */
+if (typeof window !== 'undefined') window.history.replaceState(null, '', '/');
 
 /* Testing Library registers its own afterEach cleanup when it is first
    imported, which in a shared worker is once, for the first file only. */
