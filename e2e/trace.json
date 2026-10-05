@@ -38,8 +38,8 @@
    "section": "BOOT",
    "text": "It boots on the tenant’s own data",
    "area": "1c",
-   "deferredTo": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/home.test.ts › qnipay (Rota off): it boots on the tenant's own data, with no shifts, but leave and the recorded days still show"
   },
   {
    "id": "BOOT#6",
@@ -1506,42 +1506,48 @@
    "section": "ITEM 4 — actionable notifications and deep links",
    "text": "4 Notifications are clickable",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/inbox.test.tsx › opening an item marks it read and goes to its page; the count follows the server"
   },
   {
    "id": "ITEM-4-actionable-notifications-and-deep-links#2",
    "section": "ITEM 4 — actionable notifications and deep links",
    "text": "4 Each shows where it will take you",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/links-1c.spec.ts › a notification opens the page it points at and is marked read; an unknown or unreachable address lands on the page-unavailable page"
   },
   {
    "id": "ITEM-4-actionable-notifications-and-deep-links#3",
    "section": "ITEM 4 — actionable notifications and deep links",
    "text": "4 Clicking navigates somewhere",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/inbox.test.tsx › opening an item marks it read and goes to its page; the count follows the server"
   },
   {
    "id": "ITEM-4-actionable-notifications-and-deep-links#4",
    "section": "ITEM 4 — actionable notifications and deep links",
    "text": "4 The panel closes on navigation",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/inbox.test.tsx › opening an item marks it read and goes to its page; the count follows the server"
   },
   {
    "id": "ITEM-4-actionable-notifications-and-deep-links#5",
    "section": "ITEM 4 — actionable notifications and deep links",
    "text": "4 The clicked item is marked read",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/inbox.test.tsx › opening an item marks it read and goes to its page; the count follows the server"
   },
   {
    "id": "ITEM-4-actionable-notifications-and-deep-links#6",
    "section": "ITEM 4 — actionable notifications and deep links",
    "text": "4 The URL reflects the current view",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/links-1c.spec.ts › a notification opens the page it points at and is marked read; an unknown or unreachable address lands on the page-unavailable page"
   },
   {
    "id": "ITEM-4-actionable-notifications-and-deep-links#7",
@@ -1555,21 +1561,24 @@
    "section": "ITEM 4 — actionable notifications and deep links",
    "text": "4 A link to a view this persona cannot reach is refused",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/inbox.test.tsx › a link to a page I cannot open, or to no page at all, says so in the page frame"
   },
   {
    "id": "ITEM-4-actionable-notifications-and-deep-links#9",
    "section": "ITEM 4 — actionable notifications and deep links",
    "text": "4 The same link works for a persona that may reach it",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/notifications.test.ts › each area opens its page for each user type; an unknown area opens the Workforce one"
   },
   {
    "id": "ITEM-4-actionable-notifications-and-deep-links#10",
    "section": "ITEM 4 — actionable notifications and deep links",
    "text": "4 An unknown link is reported, not silently ignored",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/inbox.test.tsx › a link to a page I cannot open, or to no page at all, says so in the page frame"
   },
   {
    "id": "IMP-031-pattern-generation-writes-real-shifts#1",
@@ -1736,32 +1745,32 @@
    "section": "GUIDE AFFORDANCE — ? opens, i only hovers",
    "text": "G The ? button is present on a page that has a guide",
    "area": "1c",
-   "deferredTo": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/guides.test.tsx › the %s page offers a ? that opens its guide, section by section"
   },
   {
    "id": "GUIDE-AFFORDANCE-opens-i-only-hovers#2",
    "section": "GUIDE AFFORDANCE — ? opens, i only hovers",
    "text": "G It carries an accessible label",
    "area": "1c",
-   "deferredTo": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/guides.test.tsx › the %s page offers a ? that opens its guide, section by section"
   },
   {
    "id": "GUIDE-AFFORDANCE-opens-i-only-hovers#3",
    "section": "GUIDE AFFORDANCE — ? opens, i only hovers",
    "text": "G It uses the helpbtn class, not the tip class",
    "area": "1c",
-   "deferredTo": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/ui/ui.test.tsx › Tip, HelpButton and Caution render with their test ids"
   },
   {
    "id": "GUIDE-AFFORDANCE-opens-i-only-hovers#4",
    "section": "GUIDE AFFORDANCE — ? opens, i only hovers",
    "text": "G Clicking it opens the guide",
    "area": "1c",
-   "deferredTo": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/guides.test.tsx › the %s page offers a ? that opens its guide, section by section"
   },
   {
    "id": "GUIDE-AFFORDANCE-opens-i-only-hovers#5",
@@ -1784,8 +1793,8 @@
    "section": "GUIDE AFFORDANCE — ? opens, i only hovers",
    "text": "G Tip icons still exist and open nothing",
    "area": "1c",
-   "deferredTo": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/ui/ui.test.tsx › Tip exposes its own text to assistive tech via aria-describedby, not just a generic label"
   },
   {
    "id": "MODAL-SIZING-STRUCTURE#1",
@@ -2144,14 +2153,16 @@
    "section": "MODULES — index, then drill in (mirrors Qnipay setup)",
    "text": "MI The index is a card grid, one per module",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › the index is a card per module with its state and counts, a caution, a search, and full test id coverage"
   },
   {
    "id": "MODULES-index-then-drill-in-mirrors-Qnipay-setup#2",
    "section": "MODULES — index, then drill in (mirrors Qnipay setup)",
    "text": "MI It uses the same card pattern as Qnipay setup",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › the index is a card per module with its state and counts, a caution, a search, and full test id coverage"
   },
   {
    "id": "MODULES-index-then-drill-in-mirrors-Qnipay-setup#3",
@@ -2165,147 +2176,168 @@
    "section": "MODULES — index, then drill in (mirrors Qnipay setup)",
    "text": "MI Each card previews its features and its setup page",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › the index is a card per module with its state and counts, a caution, a search, and full test id coverage"
   },
   {
    "id": "MODULES-index-then-drill-in-mirrors-Qnipay-setup#5",
    "section": "MODULES — index, then drill in (mirrors Qnipay setup)",
    "text": "MI The page carries no tenant-wide roll-up — each card states its own",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › each module card carries its own icon and says its count in words, under no Qnipay setup crumb"
   },
   {
    "id": "MODULES-index-then-drill-in-mirrors-Qnipay-setup#6",
    "section": "MODULES — index, then drill in (mirrors Qnipay setup)",
    "text": "MI No feature rows on the index — it is an index",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › the index is a card per module with its state and counts, a caution, a search, and full test id coverage"
   },
   {
    "id": "MODULES-index-then-drill-in-mirrors-Qnipay-setup#7",
    "section": "MODULES — index, then drill in (mirrors Qnipay setup)",
    "text": "MI A search is offered",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › the index is a card per module with its state and counts, a caution, a search, and full test id coverage"
   },
   {
    "id": "MODULES-index-then-drill-in-mirrors-Qnipay-setup#8",
    "section": "MODULES — index, then drill in (mirrors Qnipay setup)",
    "text": "MD Drilling in gives a back tab plus two tabs",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/nav.spec.ts › NV The Modules card opens the module list; each module drills in to its features and setup, and ‹ All modules returns"
   },
   {
    "id": "MODULES-index-then-drill-in-mirrors-Qnipay-setup#9",
    "section": "MODULES — index, then drill in (mirrors Qnipay setup)",
    "text": "MD The tabs are named after the module",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/nav.spec.ts › NV The Modules card opens the module list; each module drills in to its features and setup, and ‹ All modules returns"
   },
   {
    "id": "MODULES-index-then-drill-in-mirrors-Qnipay-setup#10",
    "section": "MODULES — index, then drill in (mirrors Qnipay setup)",
    "text": "MD It lands on the features tab",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/nav.spec.ts › NV The Modules card opens the module list; each module drills in to its features and setup, and ‹ All modules returns"
   },
   {
    "id": "MODULES-index-then-drill-in-mirrors-Qnipay-setup#11",
    "section": "MODULES — index, then drill in (mirrors Qnipay setup)",
    "text": "MD The features tab shows only that module’s features",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/modules.test.ts › a flag sits on its own module's drill-in, or under the capability it belongs to"
   },
   {
    "id": "MODULES-index-then-drill-in-mirrors-Qnipay-setup#12",
    "section": "MODULES — index, then drill in (mirrors Qnipay setup)",
    "text": "MD The enable switch lives inside the module",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › turning a module off asks first with its impact, and the toast says what was kept"
   },
   {
    "id": "MODULES-index-then-drill-in-mirrors-Qnipay-setup#13",
    "section": "MODULES — index, then drill in (mirrors Qnipay setup)",
    "text": "MD It explains that a licence decides this in the product",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/modules.test.ts › the enable note says what the switch does, in sentences"
   },
   {
    "id": "MODULES-index-then-drill-in-mirrors-Qnipay-setup#14",
    "section": "MODULES — index, then drill in (mirrors Qnipay setup)",
    "text": "MD The crumb says where you are",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › a module’s features page names the module in its crumb, and its head has no N of M on pill"
   },
   {
    "id": "MODULES-index-then-drill-in-mirrors-Qnipay-setup#15",
    "section": "MODULES — index, then drill in (mirrors Qnipay setup)",
    "text": "MD The setup tab renders the real Rota setup page",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/nav.spec.ts › NV The Modules card opens the module list; each module drills in to its features and setup, and ‹ All modules returns"
   },
   {
    "id": "MODULES-index-then-drill-in-mirrors-Qnipay-setup#16",
    "section": "MODULES — index, then drill in (mirrors Qnipay setup)",
    "text": "MD Its crumb is rewritten for this route",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/rota-setup.test.tsx › every card renders with the module switches shown as they stand, and full test id coverage"
   },
   {
    "id": "MODULES-index-then-drill-in-mirrors-Qnipay-setup#17",
    "section": "MODULES — index, then drill in (mirrors Qnipay setup)",
    "text": "MD Turning it off still asks first, with its impact",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › turning a module off asks first with its impact, and the toast says what was kept"
   },
   {
    "id": "MODULES-index-then-drill-in-mirrors-Qnipay-setup#18",
    "section": "MODULES — index, then drill in (mirrors Qnipay setup)",
    "text": "MD An off module says its features are inert, not hidden",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › turning a module off asks first with its impact, and the toast says what was kept"
   },
   {
    "id": "MODULES-index-then-drill-in-mirrors-Qnipay-setup#19",
    "section": "MODULES — index, then drill in (mirrors Qnipay setup)",
    "text": "MD Its feature toggles are disabled",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › turning a module off asks first with its impact, and the toast says what was kept"
   },
   {
    "id": "MODULES-index-then-drill-in-mirrors-Qnipay-setup#20",
    "section": "MODULES — index, then drill in (mirrors Qnipay setup)",
    "text": "MD Turning it back on re-enables them",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/modules.test.ts › a flag is live only while its module is on, and CORE flags whenever they are on"
   },
   {
    "id": "MODULES-index-then-drill-in-mirrors-Qnipay-setup#21",
    "section": "MODULES — index, then drill in (mirrors Qnipay setup)",
    "text": "MI The back tab returns to the index",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/nav.spec.ts › NV The Modules card opens the module list; each module drills in to its features and setup, and ‹ All modules returns"
   },
   {
    "id": "MODULES-index-then-drill-in-mirrors-Qnipay-setup#22",
    "section": "MODULES — index, then drill in (mirrors Qnipay setup)",
    "text": "MI An off module is marked on its card",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › an off module is marked on its card, with its features counted but not as on"
   },
   {
    "id": "MODULES-index-then-drill-in-mirrors-Qnipay-setup#23",
    "section": "MODULES — index, then drill in (mirrors Qnipay setup)",
    "text": "MI Searching a feature narrows the modules shown",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › the index is a card per module with its state and counts, a caution, a search, and full test id coverage"
   },
   {
    "id": "MODULES-index-then-drill-in-mirrors-Qnipay-setup#24",
    "section": "MODULES — index, then drill in (mirrors Qnipay setup)",
    "text": "MI No matches says so",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › the index is a card per module with its state and counts, a caution, a search, and full test id coverage"
   },
   {
    "id": "MODULES-index-then-drill-in-mirrors-Qnipay-setup#25",
@@ -2319,7 +2351,8 @@
    "section": "GUIDES — explanation moved off the page",
    "text": "G2 People page offers a ?",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/guides.test.tsx › the %s page offers a ? that opens its guide, section by section"
   },
   {
    "id": "GUIDES-explanation-moved-off-the-page#2",
@@ -2333,35 +2366,40 @@
    "section": "GUIDES — explanation moved off the page",
    "text": "G2 The explanation is in the guide",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/guides.test.tsx › the %s page offers a ? that opens its guide, section by section"
   },
   {
    "id": "GUIDES-explanation-moved-off-the-page#4",
    "section": "GUIDES — explanation moved off the page",
    "text": "G2 The guide is structured, not one blob",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/guides.test.tsx › the %s page offers a ? that opens its guide, section by section"
   },
   {
    "id": "GUIDES-explanation-moved-off-the-page#5",
    "section": "GUIDES — explanation moved off the page",
    "text": "G2 Dimensions explainer moved too",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/guides.test.tsx › the %s page offers a ? that opens its guide, section by section"
   },
   {
    "id": "GUIDES-explanation-moved-off-the-page#6",
    "section": "GUIDES — explanation moved off the page",
    "text": "G2 Contracts explainer moved too",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/guides.test.tsx › the %s page offers a ? that opens its guide, section by section"
   },
   {
    "id": "GUIDES-explanation-moved-off-the-page#7",
    "section": "GUIDES — explanation moved off the page",
    "text": "G2 Permissions explainer moved too",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/guides.test.tsx › the %s page offers a ? that opens its guide, section by section"
   },
   {
    "id": "GUIDES-explanation-moved-off-the-page#8",
@@ -2375,14 +2413,16 @@
    "section": "GUIDES — explanation moved off the page",
    "text": "G2 The permissions guide keeps the security caveat",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/guides.test.tsx › the permissions guide keeps the security caveat, and the guides read as sentences, not dashed asides"
   },
   {
    "id": "GUIDES-explanation-moved-off-the-page#10",
    "section": "GUIDES — explanation moved off the page",
    "text": "G2 Employee profile offers a ?",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/guides.test.tsx › the %s page offers a ? that opens its guide, section by section"
   },
   {
    "id": "GUIDES-explanation-moved-off-the-page#11",
@@ -2396,7 +2436,8 @@
    "section": "GUIDES — explanation moved off the page",
    "text": "G2 The documents link survived the banner removal",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/profile/profile.test.tsx › Open documents goes to My documents while the Document centre is on, and is gone while it is off"
   },
   {
    "id": "GUIDES-explanation-moved-off-the-page#13",
@@ -2410,152 +2451,168 @@
    "section": "ONE HOME PER PAGE",
    "text": "H Setup holds Modules as a section, so there is one place called setup",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/nav.test.ts › setup pages are grouped into the prototype's five sections (SETUP_SECTIONS), in order"
   },
   {
    "id": "ONE-HOME-PER-PAGE#2",
    "section": "ONE HOME PER PAGE",
    "text": "H Five sections, in the order of the configuration spine",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/nav.test.ts › setup pages are grouped into the prototype's five sections (SETUP_SECTIONS), in order"
   },
   {
    "id": "ONE-HOME-PER-PAGE#3",
    "section": "ONE HOME PER PAGE",
    "text": "H Modules is no longer a second top-level group",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/nav.test.ts › an admin capability set produces exactly one top-level group: setup, not two"
   },
   {
    "id": "ONE-HOME-PER-PAGE#4",
    "section": "ONE HOME PER PAGE",
    "text": "H Timesheet setup is not under Organisation",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/nav.test.ts › setup pages are grouped into the prototype's five sections (SETUP_SECTIONS), in order"
   },
   {
    "id": "ONE-HOME-PER-PAGE#5",
    "section": "ONE HOME PER PAGE",
    "text": "H Timesheet setup is not under People",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/nav.test.ts › setup pages are grouped into the prototype's five sections (SETUP_SECTIONS), in order"
   },
   {
    "id": "ONE-HOME-PER-PAGE#6",
    "section": "ONE HOME PER PAGE",
    "text": "H Timesheet setup is not under Governance",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/nav.test.ts › setup pages are grouped into the prototype's five sections (SETUP_SECTIONS), in order"
   },
   {
    "id": "ONE-HOME-PER-PAGE#7",
    "section": "ONE HOME PER PAGE",
    "text": "H Timesheet setup is not under Integrations",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/nav.test.ts › setup pages are grouped into the prototype's five sections (SETUP_SECTIONS), in order"
   },
   {
    "id": "ONE-HOME-PER-PAGE#8",
    "section": "ONE HOME PER PAGE",
    "text": "H It is reachable through its module",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/nav.spec.ts › NV The Modules card opens the module list; each module drills in to its features and setup, and ‹ All modules returns"
   },
   {
    "id": "ONE-HOME-PER-PAGE#9",
    "section": "ONE HOME PER PAGE",
    "text": "H Pay codes moved to Integrations",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/nav.test.ts › setup pages are grouped into the prototype's five sections (SETUP_SECTIONS), in order"
   },
   {
    "id": "ONE-HOME-PER-PAGE#10",
    "section": "ONE HOME PER PAGE",
    "text": "H The Pay codes page still renders",
-   "area": "1c",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "ONE-HOME-PER-PAGE#11",
    "section": "ONE HOME PER PAGE",
    "text": "H Dimensions sits with People, the other master data",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/nav.test.ts › setup pages are grouped into the prototype's five sections (SETUP_SECTIONS), in order"
   },
   {
    "id": "ONE-HOME-PER-PAGE#12",
    "section": "ONE HOME PER PAGE",
    "text": "H Organisation is identity and the template, not a dumping ground",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/organisation/organisation.test.tsx › the page shows the spine, every template with the live one marked, the company, compliance and pay periods, with full test id coverage"
   },
   {
    "id": "ONE-HOME-PER-PAGE#13",
    "section": "ONE HOME PER PAGE",
    "text": "H Sites & locations is no longer a top-level module",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › the index is a card per module with its state and counts, a caution, a search, and full test id coverage"
   },
   {
    "id": "ONE-HOME-PER-PAGE#14",
    "section": "ONE HOME PER PAGE",
    "text": "H A deep link to a module setup page still resolves",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/nav.spec.ts › NV The Modules card opens the module list; each module drills in to its features and setup, and ‹ All modules returns"
   },
   {
    "id": "ONE-HOME-PER-PAGE#15",
    "section": "ONE HOME PER PAGE",
    "text": "H And it opens the owning module, so the crumb agrees",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/shell.test.tsx › on a module setup page (mts, mrota, mleave) the strip is that module’s drill-in, with the setup page current"
   },
   {
    "id": "ONE-HOME-PER-PAGE#16",
    "section": "ONE HOME PER PAGE",
    "text": "H The tab strip shows the module, not the setup index",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/shell.test.tsx › on a module setup page (mts, mrota, mleave) the strip is that module’s drill-in, with the setup page current"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#1",
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS Modules are Core, Timesheet, Rota, Leave, Onboarding",
-   "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "area": "timesheet",
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › the index is a card per module with its state and counts, a caution, a search, and full test id coverage"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#2",
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS Manual entry, clocking and sites are no longer peers of Rota",
-   "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "area": "timesheet",
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › the index is a card per module with its state and counts, a caution, a search, and full test id coverage"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#3",
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS The Timesheet card counts its capture methods",
-   "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "area": "timesheet",
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › the index is a card per module with its state and counts, a caution, a search, and full test id coverage"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#4",
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS Its features tab lists the three capture methods as switches",
-   "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "area": "timesheet",
+   "status": "ported",
+   "test": "src/domain/modules.test.ts › matches the prototype's MODULES and FLAGS (codes, owners, capabilities, setup pages)"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#5",
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS The module has a master switch you can licence off",
-   "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "area": "timesheet",
+   "status": "ported",
+   "test": "src/mocks/tenant.test.ts › Timesheet off remembers its capture methods, a capture method then refuses MODULE_OFF, and on restores exactly them"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#6",
@@ -2577,17 +2634,17 @@
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#8",
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS Its features are grouped by the capability they belong to",
-   "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "area": "timesheet",
+   "status": "ported",
+   "test": "src/domain/modules.test.ts › matches the prototype's MODULES and FLAGS (codes, owners, capabilities, setup pages)"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#9",
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS It now holds the capture features that were filed under Workforce core",
-   "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "area": "timesheet",
+   "status": "ported",
+   "test": "src/domain/modules.test.ts › matches the prototype's MODULES and FLAGS (codes, owners, capabilities, setup pages)"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#10",
@@ -2609,9 +2666,9 @@
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#12",
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS The module stays on while manual entry remains",
-   "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "area": "timesheet",
+   "status": "ported",
+   "test": "src/domain/modules.test.ts › Timesheet is live only while it is on and manual entry or the clock is on; Sites alone does not count"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#13",
@@ -2625,9 +2682,9 @@
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#14",
    "section": "TIMESHEET AS ONE MODULE WITH CAPTURE METHODS",
    "text": "TS With every method off it says so on the enable row",
-   "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "area": "timesheet",
+   "status": "ported",
+   "test": "src/domain/modules.test.ts › the enable note says what the switch does, in sentences"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#15",
@@ -2650,32 +2707,32 @@
    "section": "HEADER PILLS REMOVED, WARNING RELOCATED",
    "text": "PL The \"applies immediately\" pill is gone from page headers",
    "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "status": "ported",
+   "test": "src/ui/ui.test.tsx › Page and PageHead render the crumb, one h1 with its tip, and the actions"
   },
   {
    "id": "HEADER-PILLS-REMOVED-WARNING-RELOCATED#2",
    "section": "HEADER PILLS REMOVED, WARNING RELOCATED",
    "text": "PL It is gone from every admin page, not just this one",
    "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "status": "ported",
+   "test": "src/ui/ui.test.tsx › Page and PageHead render the crumb, one h1 with its tip, and the actions"
   },
   {
    "id": "HEADER-PILLS-REMOVED-WARNING-RELOCATED#3",
    "section": "HEADER PILLS REMOVED, WARNING RELOCATED",
    "text": "PL It is behind a warning icon, not a banner",
    "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "status": "ported",
+   "test": "src/ui/ui.test.tsx › Caution is a standing note, not a button, and clicking it opens nothing"
   },
   {
    "id": "HEADER-PILLS-REMOVED-WARNING-RELOCATED#4",
    "section": "HEADER PILLS REMOVED, WARNING RELOCATED",
    "text": "PL The icon carries the full caution",
    "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › the index is a card per module with its state and counts, a caution, a search, and full test id coverage"
   },
   {
    "id": "HEADER-PILLS-REMOVED-WARNING-RELOCATED#5",
@@ -2690,82 +2747,88 @@
    "section": "HEADER PILLS REMOVED, WARNING RELOCATED",
    "text": "PL The modules index carries the same affordance",
    "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › the index is a card per module with its state and counts, a caution, a search, and full test id coverage"
   },
   {
    "id": "HEADER-PILLS-REMOVED-WARNING-RELOCATED#7",
    "section": "HEADER PILLS REMOVED, WARNING RELOCATED",
    "text": "PL The \"N of M on\" pill is gone from the features page header",
    "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › a module’s features page names the module in its crumb, and its head has no N of M on pill"
   },
   {
    "id": "HEADER-PILLS-REMOVED-WARNING-RELOCATED#8",
    "section": "HEADER PILLS REMOVED, WARNING RELOCATED",
    "text": "PL The toggles it summarised are right there anyway",
    "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › a module’s features page names the module in its crumb, and its head has no N of M on pill"
   },
   {
    "id": "HEADER-PILLS-REMOVED-WARNING-RELOCATED#9",
    "section": "HEADER PILLS REMOVED, WARNING RELOCATED",
    "text": "PL The count is kept on the index card, where features are not visible",
    "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › the index is a card per module with its state and counts, a caution, a search, and full test id coverage"
   },
   {
    "id": "HEADER-PILLS-REMOVED-WARNING-RELOCATED#10",
    "section": "HEADER PILLS REMOVED, WARNING RELOCATED",
    "text": "PL Changing a feature says it is live for everyone now",
    "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › a feature switch writes once, with one audit row, and the toast is the server’s message"
   },
   {
    "id": "TIMESHEET-IS-LICENSABLE-CORE-IS-THE-BASE-APP#1",
    "section": "TIMESHEET IS LICENSABLE, CORE IS THE BASE APP",
    "text": "LIC Timesheet has its own licence switch",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/modules.test.ts › Timesheet off remembers which of A, B and C were on and switches them all off"
   },
   {
    "id": "TIMESHEET-IS-LICENSABLE-CORE-IS-THE-BASE-APP#2",
    "section": "TIMESHEET IS LICENSABLE, CORE IS THE BASE APP",
    "text": "LIC Turning it off asks first and states the impact",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/modules.test.ts › the off confirm carries the impact text and says it applies to everyone at once"
   },
   {
    "id": "TIMESHEET-IS-LICENSABLE-CORE-IS-THE-BASE-APP#3",
    "section": "TIMESHEET IS LICENSABLE, CORE IS THE BASE APP",
    "text": "LIC Its capture methods go with it",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/modules.test.ts › Timesheet off remembers which of A, B and C were on and switches them all off"
   },
   {
    "id": "TIMESHEET-IS-LICENSABLE-CORE-IS-THE-BASE-APP#4",
    "section": "TIMESHEET IS LICENSABLE, CORE IS THE BASE APP",
    "text": "LIC They are disabled while unlicensed",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/modules.test.ts › a capture method can only be switched while Timesheet is licensed (MODULE_OFF)"
   },
   {
    "id": "TIMESHEET-IS-LICENSABLE-CORE-IS-THE-BASE-APP#5",
    "section": "TIMESHEET IS LICENSABLE, CORE IS THE BASE APP",
    "text": "LIC The module reads as not licensed",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/modules.test.ts › the enable note says what the switch does, in sentences"
   },
   {
    "id": "TIMESHEET-IS-LICENSABLE-CORE-IS-THE-BASE-APP#6",
    "section": "TIMESHEET IS LICENSABLE, CORE IS THE BASE APP",
    "text": "LIC Its features are inert",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/modules.test.ts › a feature of a module that is not live is refused (MODULE_OFF), even a Timesheet one while only Sites is on"
   },
   {
    "id": "TIMESHEET-IS-LICENSABLE-CORE-IS-THE-BASE-APP#7",
@@ -2786,21 +2849,24 @@
    "section": "TIMESHEET IS LICENSABLE, CORE IS THE BASE APP",
    "text": "LIC But Rota and Leave are untouched",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/modules.test.ts › a plain module switches on its own and leaves the others alone"
   },
   {
    "id": "TIMESHEET-IS-LICENSABLE-CORE-IS-THE-BASE-APP#10",
    "section": "TIMESHEET IS LICENSABLE, CORE IS THE BASE APP",
    "text": "LIC Turning it back on restores the methods it had, and says which",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/modules.test.ts › Timesheet on restores exactly what it remembered, and forgets it"
   },
   {
    "id": "TIMESHEET-IS-LICENSABLE-CORE-IS-THE-BASE-APP#11",
    "section": "TIMESHEET IS LICENSABLE, CORE IS THE BASE APP",
    "text": "LIC Sites & locations came back too, because it was on before",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/modules.test.ts › Timesheet on restores exactly what it remembered, and forgets it"
   },
   {
    "id": "TIMESHEET-IS-LICENSABLE-CORE-IS-THE-BASE-APP#12",
@@ -2814,28 +2880,32 @@
    "section": "FEATURE OWNERSHIP",
    "text": "FO Workforce core no longer holds capture features",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/modules.test.ts › matches the prototype's MODULES and FLAGS (codes, owners, capabilities, setup pages)"
   },
   {
    "id": "FEATURE-OWNERSHIP#2",
    "section": "FEATURE OWNERSHIP",
    "text": "FO It keeps only the self-service and pay-visibility ones",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/modules.test.ts › matches the prototype's MODULES and FLAGS (codes, owners, capabilities, setup pages)"
   },
   {
    "id": "FEATURE-OWNERSHIP#3",
    "section": "FEATURE OWNERSHIP",
    "text": "FO Timesheet now owns all eight that moved",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/modules.test.ts › matches the prototype's MODULES and FLAGS (codes, owners, capabilities, setup pages)"
   },
   {
    "id": "FEATURE-OWNERSHIP#4",
    "section": "FEATURE OWNERSHIP",
    "text": "FO And still owns its own capability features",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/modules.test.ts › matches the prototype's MODULES and FLAGS (codes, owners, capabilities, setup pages)"
   },
   {
    "id": "MODULE-PAGES-ARE-THE-SAME-SHAPE#1",
@@ -2870,14 +2940,16 @@
    "section": "MODULE PAGES ARE THE SAME SHAPE",
    "text": "SH A capability’s own features are nested under it",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/modules.test.ts › a flag sits on its own module's drill-in, or under the capability it belongs to"
   },
   {
    "id": "MODULE-PAGES-ARE-THE-SAME-SHAPE#6",
    "section": "MODULE PAGES ARE THE SAME SHAPE",
    "text": "SH Cross-cutting features are not nested",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/modules.test.ts › a flag sits on its own module's drill-in, or under the capability it belongs to"
   },
   {
    "id": "MODULE-PAGES-ARE-THE-SAME-SHAPE#7",
@@ -2905,8 +2977,8 @@
    "section": "ICONS, CRUMBS AND REDUNDANT COUNTS",
    "text": "IC Every module has its own icon",
    "area": "1c",
-   "deferredTo": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › each module card carries its own icon and says its count in words, under no Qnipay setup crumb"
   },
   {
    "id": "ICONS-CRUMBS-AND-REDUNDANT-COUNTS#2",
@@ -2929,16 +3001,16 @@
    "section": "ICONS, CRUMBS AND REDUNDANT COUNTS",
    "text": "IC The count badge is gone — the card says it in words",
    "area": "1c",
-   "deferredTo": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › each module card carries its own icon and says its count in words, under no Qnipay setup crumb"
   },
   {
    "id": "ICONS-CRUMBS-AND-REDUNDANT-COUNTS#5",
    "section": "ICONS, CRUMBS AND REDUNDANT COUNTS",
    "text": "CR The crumb no longer claims Modules sits under Qnipay setup",
    "area": "1c",
-   "deferredTo": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › each module card carries its own icon and says its count in words, under no Qnipay setup crumb"
   },
   {
    "id": "ICONS-CRUMBS-AND-REDUNDANT-COUNTS#6",
@@ -2961,8 +3033,8 @@
    "section": "ICONS, CRUMBS AND REDUNDANT COUNTS",
    "text": "CR Drilling into a module names the module in the crumb",
    "area": "1c",
-   "deferredTo": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › a module’s features page names the module in its crumb, and its head has no N of M on pill"
   },
   {
    "id": "TOOLTIP-APPEARANCE#1",
@@ -3001,24 +3073,24 @@
    "section": "AFFORDANCE CONVENTION: ⚠ / ? / i",
    "text": "AF The three affordances never double up on one element",
    "area": "1c",
-   "deferredTo": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/ui-rules.spec.ts › G A ? guide button appears only where a guide is registered, once, and opens that guide"
   },
   {
    "id": "AFFORDANCE-CONVENTION-i#4",
    "section": "AFFORDANCE CONVENTION: ⚠ / ? / i",
    "text": "AF ? is a button that opens a modal",
    "area": "1c",
-   "deferredTo": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/guides.test.tsx › the %s page offers a ? that opens its guide, section by section"
   },
   {
    "id": "AFFORDANCE-CONVENTION-i#5",
    "section": "AFFORDANCE CONVENTION: ⚠ / ? / i",
    "text": "AF ... and it opened one",
    "area": "1c",
-   "deferredTo": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/guides.test.tsx › the %s page offers a ? that opens its guide, section by section"
   },
   {
    "id": "AFFORDANCE-CONVENTION-i#6",
@@ -3049,40 +3121,40 @@
    "section": "AFFORDANCE CONVENTION: ⚠ / ? / i",
    "text": "AF Guides exist on the pages that need one, not on every page",
    "area": "1c",
-   "deferredTo": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/guides.test.tsx › the %s page has no guide in the prototype, so it shows no ?"
   },
   {
    "id": "LEGENDS-BECOME-LIVE-SUMMARIES#1",
    "section": "LEGENDS BECOME LIVE SUMMARIES",
    "text": "LG The month key exists",
    "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "status": "ported",
+   "test": "src/features/home/home.test.tsx › the key counts what the month holds, omits what it does not, uses the calendar’s own state colours, and says so when the month is empty"
   },
   {
    "id": "LEGENDS-BECOME-LIVE-SUMMARIES#2",
    "section": "LEGENDS BECOME LIVE SUMMARIES",
    "text": "LG It carries counts, not just names",
    "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "status": "ported",
+   "test": "src/features/home/home.test.tsx › the key counts what the month holds, omits what it does not, uses the calendar’s own state colours, and says so when the month is empty"
   },
   {
    "id": "LEGENDS-BECOME-LIVE-SUMMARIES#3",
    "section": "LEGENDS BECOME LIVE SUMMARIES",
    "text": "LG It omits states not present this month",
    "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "status": "ported",
+   "test": "src/features/home/home.test.tsx › the key counts what the month holds, omits what it does not, uses the calendar’s own state colours, and says so when the month is empty"
   },
   {
    "id": "LEGENDS-BECOME-LIVE-SUMMARIES#4",
    "section": "LEGENDS BECOME LIVE SUMMARIES",
    "text": "LG Its glyphs use the calendar’s own state colours",
    "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "status": "ported",
+   "test": "src/features/home/home.test.tsx › the key counts what the month holds, omits what it does not, uses the calendar’s own state colours, and says so when the month is empty"
   },
   {
    "id": "LEGENDS-BECOME-LIVE-SUMMARIES#5",
@@ -3137,8 +3209,8 @@
    "section": "LEGENDS BECOME LIVE SUMMARIES",
    "text": "LG Calendar cells carry one class attribute, not two",
    "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "status": "n/a",
+   "reason": "replaced by React rendering: a cell is one element with one className prop, so a second class attribute cannot be written"
   },
   {
    "id": "SHIFT-PALETTE-DRAG-AND-DROP#1",
@@ -3353,14 +3425,16 @@
    "section": "MOBILE FOUNDATION",
    "text": "MOB The simulated phone frame is gone",
    "area": "1c",
-   "status": "pending"
+   "status": "n/a",
+   "reason": "prototype-only: the simulated phone frame was the prototype’s own device mock-up; the real viewport drives the layout here and no frame exists"
   },
   {
    "id": "MOBILE-FOUNDATION#2",
    "section": "MOBILE FOUNDATION",
    "text": "MOB The device toggle is gone — the real viewport drives the layout",
    "area": "1c",
-   "status": "pending"
+   "status": "n/a",
+   "reason": "prototype-only: the prototype’s device toggle switched its simulated frame; the real viewport drives the layout here and there is no toggle"
   },
   {
    "id": "MOBILE-FOUNDATION#3",
@@ -3374,70 +3448,80 @@
    "section": "MOBILE FOUNDATION",
    "text": "MOB There is a mobile breakpoint with real rules",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/nav.spec.ts › NV At 390px the header and bottom bar fit with no horizontal overflow and 44px touch targets"
   },
   {
    "id": "MOBILE-FOUNDATION#5",
    "section": "MOBILE FOUNDATION",
    "text": "MOB A bottom tab bar exists",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/shell.test.tsx › employee: four destinations with their glyphs and short names, then More, which is lit on a page the bar has no room for"
   },
   {
    "id": "MOBILE-FOUNDATION#6",
    "section": "MOBILE FOUNDATION",
    "text": "MOB It is painted from the same nav model as the strip",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/shell.test.tsx › More opens Go to, listing every page of the strip with Current against the one on screen, and choosing one closes it"
   },
   {
    "id": "MOBILE-FOUNDATION#7",
    "section": "MOBILE FOUNDATION",
    "text": "MOB It holds at most five destinations plus More",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/shell.test.tsx › employee: four destinations with their glyphs and short names, then More, which is lit on a page the bar has no room for"
   },
   {
    "id": "MOBILE-FOUNDATION#8",
    "section": "MOBILE FOUNDATION",
    "text": "MOB It marks the current destination for assistive tech",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/shell.test.tsx › admin: inside a setup section the bar holds the way back and that section’s pages, with no More when they fit"
   },
   {
    "id": "MOBILE-FOUNDATION#9",
    "section": "MOBILE FOUNDATION",
    "text": "MOB Employee has more tabs than fit, so More is offered",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/shell.test.tsx › employee: four destinations with their glyphs and short names, then More, which is lit on a page the bar has no room for"
   },
   {
    "id": "MOBILE-FOUNDATION#10",
    "section": "MOBILE FOUNDATION",
    "text": "MOB More opens a sheet listing every section",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/shell.test.tsx › More opens Go to, listing every page of the strip with Current against the one on screen, and choosing one closes it"
   },
   {
    "id": "MOBILE-FOUNDATION#11",
    "section": "MOBILE FOUNDATION",
    "text": "MOB ... and it lists them all",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/shell.test.tsx › More opens Go to, listing every page of the strip with Current against the one on screen, and choosing one closes it"
   },
   {
    "id": "MOBILE-FOUNDATION#12",
    "section": "MOBILE FOUNDATION",
    "text": "MOB ... and marks where you already are",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/shell.test.tsx › More opens Go to, listing every page of the strip with Current against the one on screen, and choosing one closes it"
   },
   {
    "id": "MOBILE-FOUNDATION#13",
    "section": "MOBILE FOUNDATION",
    "text": "MOB Choosing one navigates and closes the sheet",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/shell.test.tsx › More opens Go to, listing every page of the strip with Current against the one on screen, and choosing one closes it"
   },
   {
    "id": "MOBILE-FOUNDATION#14",
@@ -3493,7 +3577,8 @@
    "section": "MOBILE FOUNDATION",
    "text": "MOB Touch targets reach 44px",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/nav.spec.ts › NV At 390px the header and bottom bar fit with no horizontal overflow and 44px touch targets"
   },
   {
    "id": "MOBILE-FOUNDATION#22",
@@ -3521,7 +3606,8 @@
    "section": "MOBILE FOUNDATION",
    "text": "MOB Every record list is labelled, so none of them scrolls sideways",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/ui/ui.test.tsx › a records table labels each cell for its phone card, but not the title or the foot"
   },
   {
    "id": "MOBILE-FOUNDATION#26",
@@ -3534,8 +3620,9 @@
    "id": "MOBILE-FOUNDATION#27",
    "section": "MOBILE FOUNDATION",
    "text": "MOB A phone gets the day list, not a 700px week",
-   "area": "1c",
-   "status": "pending"
+   "area": "timesheet",
+   "status": "ported",
+   "test": "src/domain/timesheet.test.ts › a narrow screen always gets the day list"
   },
   {
    "id": "MOBILE-FOUNDATION#28",
@@ -3584,7 +3671,8 @@
    "section": "MOBILE FOUNDATION",
    "text": "MOB No hand-split column markup remains",
    "area": "1c",
-   "status": "pending"
+   "status": "n/a",
+   "reason": "replaced by the shared Tailwind grid and Table components: no hand-split column markup exists in this build, so there is nothing to check"
   },
   {
    "id": "SIGN-IN-SIGN-OUT#1",
@@ -3719,56 +3807,64 @@
    "section": "CONFIGURABLE ROLE NAMES",
    "text": "RN A rename control exists",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/access/rename-roles.test.tsx › renaming saves each changed name on its user type, one audit row each, and the matrix follows; capabilities do not change"
   },
   {
    "id": "CONFIGURABLE-ROLE-NAMES#2",
    "section": "CONFIGURABLE ROLE NAMES",
    "text": "RN It offers a field per role",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/access/rename-roles.test.tsx › renaming saves each changed name on its user type, one audit row each, and the matrix follows; capabilities do not change"
   },
   {
    "id": "CONFIGURABLE-ROLE-NAMES#3",
    "section": "CONFIGURABLE ROLE NAMES",
    "text": "RN It says renaming does not change what they may do",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/access/rename-roles.test.tsx › renaming saves each changed name on its user type, one audit row each, and the matrix follows; capabilities do not change"
   },
   {
    "id": "CONFIGURABLE-ROLE-NAMES#4",
    "section": "CONFIGURABLE ROLE NAMES",
    "text": "RN Two roles cannot share a name",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/access/rename-roles.test.tsx › two roles cannot share a name: refused on the field before anything is sent, and a clash on the server lands on its field too"
   },
   {
    "id": "CONFIGURABLE-ROLE-NAMES#5",
    "section": "CONFIGURABLE ROLE NAMES",
    "text": "RN Saving reports the new names",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-1c.spec.ts › renamed roles show in the view-as switcher, the role pill (also while viewing as someone), the permission matrix and the audit log; what each may do is unchanged"
   },
   {
    "id": "CONFIGURABLE-ROLE-NAMES#6",
    "section": "CONFIGURABLE ROLE NAMES",
    "text": "RN The matrix headers follow the new names",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/access/rename-roles.test.tsx › renaming saves each changed name on its user type, one audit row each, and the matrix follows; capabilities do not change"
   },
   {
    "id": "CONFIGURABLE-ROLE-NAMES#7",
    "section": "CONFIGURABLE ROLE NAMES",
    "text": "RN The account menu shows the renamed role",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-1c.spec.ts › renamed roles show in the view-as switcher, the role pill (also while viewing as someone), the permission matrix and the audit log; what each may do is unchanged"
   },
   {
    "id": "CONFIGURABLE-ROLE-NAMES#8",
    "section": "CONFIGURABLE ROLE NAMES",
    "text": "RN The rename is audited",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-1c.spec.ts › renamed roles show in the view-as switcher, the role pill (also while viewing as someone), the permission matrix and the audit log; what each may do is unchanged"
   },
   {
    "id": "CLEAR-WEEK#1",
@@ -4150,41 +4246,41 @@
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#1",
    "section": "WEEKLY LAYOUT IS CONFIGURABLE",
    "text": "CL A layout setting sits on the weekly-grid feature",
-   "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "area": "timesheet",
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › the weekly grid’s layout and the break limit are set on their feature rows"
   },
   {
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#2",
    "section": "WEEKLY LAYOUT IS CONFIGURABLE",
    "text": "CL It offers both layouts by name",
-   "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "area": "timesheet",
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › the weekly grid’s layout and the break limit are set on their feature rows"
   },
   {
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#3",
    "section": "WEEKLY LAYOUT IS CONFIGURABLE",
    "text": "CL Switching to the list layout is confirmed and audited",
-   "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "area": "timesheet",
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › the weekly grid’s layout and the break limit are set on their feature rows"
   },
   {
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#4",
    "section": "WEEKLY LAYOUT IS CONFIGURABLE",
    "text": "CL ... and says what changed",
-   "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "area": "timesheet",
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › the weekly grid’s layout and the break limit are set on their feature rows"
   },
   {
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#5",
    "section": "WEEKLY LAYOUT IS CONFIGURABLE",
    "text": "CL ... and is recorded",
-   "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "area": "timesheet",
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › the weekly grid’s layout and the break limit are set on their feature rows"
   },
   {
    "id": "WEEKLY-LAYOUT-IS-CONFIGURABLE#6",
@@ -4783,49 +4879,56 @@
    "section": "FUSION3 CONFIGURED THROUGH THE TEMPLATE",
    "text": "F3 An M&E template exists alongside the others",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/templates.test.ts › are the three the brief names, each with every switch and every feature"
   },
   {
    "id": "FUSION3-CONFIGURED-THROUGH-THE-TEMPLATE#2",
    "section": "FUSION3 CONFIGURED THROUGH THE TEMPLATE",
    "text": "F3 It sets the tenant name",
    "area": "1c",
-   "status": "pending"
+   "status": "n/a",
+   "reason": "prototype-only: the prototype’s template overwrote the tenant name, registration number and address; the brief (D1) keeps company details out of template content and an apply never renames the organisation"
   },
   {
    "id": "FUSION3-CONFIGURED-THROUGH-THE-TEMPLATE#3",
    "section": "FUSION3 CONFIGURED THROUGH THE TEMPLATE",
    "text": "F3 ... the registration number and address",
    "area": "1c",
-   "status": "pending"
+   "status": "n/a",
+   "reason": "prototype-only: the prototype’s template overwrote the tenant name, registration number and address; the brief (D1) keeps company details out of template content and an apply never renames the organisation"
   },
   {
    "id": "FUSION3-CONFIGURED-THROUGH-THE-TEMPLATE#4",
    "section": "FUSION3 CONFIGURED THROUGH THE TEMPLATE",
    "text": "F3 ... the pay frequency, week end and cut-off",
    "area": "1c",
-   "status": "pending"
+   "status": "n/a",
+   "reason": "prototype-only: the pay frequency, week end and cut-off were set from the prototype’s template; the brief (D1, D3) keeps company and pay-period settings out of template content, and Organisation shows them read-only"
   },
   {
    "id": "FUSION3-CONFIGURED-THROUGH-THE-TEMPLATE#5",
    "section": "FUSION3 CONFIGURED THROUGH THE TEMPLATE",
    "text": "F3 Rota is switched off, because it was not requested",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/templates.test.ts › Fusion III is M&E / Building Services: Rota off, a contract and a cost code, start and finish on a grid, two approval stages"
   },
   {
    "id": "FUSION3-CONFIGURED-THROUGH-THE-TEMPLATE#6",
    "section": "FUSION3 CONFIGURED THROUGH THE TEMPLATE",
    "text": "F3 Timesheet and Leave stay on",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/templates.test.ts › Fusion III is M&E / Building Services: Rota off, a contract and a cost code, start and finish on a grid, two approval stages"
   },
   {
    "id": "FUSION3-CONFIGURED-THROUGH-THE-TEMPLATE#7",
    "section": "FUSION3 CONFIGURED THROUGH THE TEMPLATE",
    "text": "F3 ... so the manager loses the whole Rota group",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/nav.test.ts › a module switched off removes its tabs"
   },
   {
    "id": "FUSION3-CONFIGURED-THROUGH-THE-TEMPLATE#8",
@@ -4839,42 +4942,48 @@
    "section": "FUSION3 CONFIGURED THROUGH THE TEMPLATE",
    "text": "F3 The six rates are configured as pay codes",
    "area": "1c",
-   "status": "pending"
+   "status": "n/a",
+   "reason": "prototype-only: the prototype’s template configured pay codes and rates; the brief (D3) keeps pay codes, rates and money out of templates, and pay codes are Business Central’s"
   },
   {
    "id": "FUSION3-CONFIGURED-THROUGH-THE-TEMPLATE#10",
    "section": "FUSION3 CONFIGURED THROUGH THE TEMPLATE",
    "text": "F3 Each carries a readable name, not just a code",
    "area": "1c",
-   "status": "pending"
+   "status": "n/a",
+   "reason": "prototype-only: the prototype’s template configured pay codes and rates; the brief (D3) keeps pay codes, rates and money out of templates, and pay codes are Business Central’s"
   },
   {
    "id": "FUSION3-CONFIGURED-THROUGH-THE-TEMPLATE#11",
    "section": "FUSION3 CONFIGURED THROUGH THE TEMPLATE",
    "text": "F3 Work types are marked as such",
    "area": "1c",
-   "status": "pending"
+   "status": "n/a",
+   "reason": "prototype-only: the prototype’s template configured pay codes and rates; the brief (D3) keeps pay codes, rates and money out of templates, and pay codes are Business Central’s"
   },
   {
    "id": "FUSION3-CONFIGURED-THROUGH-THE-TEMPLATE#12",
    "section": "FUSION3 CONFIGURED THROUGH THE TEMPLATE",
    "text": "F3 The chain has a line-manager stage then payroll",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/templates.test.ts › Fusion III sets its two-stage Timesheet chain, every timesheet, all departments, ending in the posting step"
   },
   {
    "id": "FUSION3-CONFIGURED-THROUGH-THE-TEMPLATE#13",
    "section": "FUSION3 CONFIGURED THROUGH THE TEMPLATE",
    "text": "F3 Payroll applies to every timesheet, not just premium ones",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/templates.test.ts › Fusion III sets its two-stage Timesheet chain, every timesheet, all departments, ending in the posting step"
   },
   {
    "id": "FUSION3-CONFIGURED-THROUGH-THE-TEMPLATE#14",
    "section": "FUSION3 CONFIGURED THROUGH THE TEMPLATE",
    "text": "F3 Both stages are scoped to all departments",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/templates.test.ts › Fusion III sets its two-stage Timesheet chain, every timesheet, all departments, ending in the posting step"
   },
   {
    "id": "FUSION3-CONFIGURED-THROUGH-THE-TEMPLATE#15",
@@ -4894,50 +5003,57 @@
    "id": "FUSION3-CONFIGURED-THROUGH-THE-TEMPLATE#17",
    "section": "FUSION3 CONFIGURED THROUGH THE TEMPLATE",
    "text": "F3 A rate is derived and shown beside the hours",
-   "area": "1c",
-   "status": "pending"
+   "area": "timesheet",
+   "status": "ported",
+   "test": "src/domain/timesheet.test.ts › first matching rule wins, and returns the rule it matched"
   },
   {
    "id": "FUSION3-CONFIGURED-THROUGH-THE-TEMPLATE#18",
    "section": "FUSION3 CONFIGURED THROUGH THE TEMPLATE",
    "text": "F3 ... with the reason it was applied",
-   "area": "1c",
-   "status": "pending"
+   "area": "timesheet",
+   "status": "ported",
+   "test": "src/domain/timesheet.test.ts › first matching rule wins, and returns the rule it matched"
   },
   {
    "id": "FUSION3-CONFIGURED-THROUGH-THE-TEMPLATE#19",
    "section": "FUSION3 CONFIGURED THROUGH THE TEMPLATE",
    "text": "F3 The derivation reads the rules table, not hardcoded dates",
-   "area": "1c",
-   "status": "pending"
+   "area": "timesheet",
+   "status": "ported",
+   "test": "src/domain/timesheet.test.ts › else is the fallback wherever it sits"
   },
   {
    "id": "FUSION3-CONFIGURED-THROUGH-THE-TEMPLATE#20",
    "section": "FUSION3 CONFIGURED THROUGH THE TEMPLATE",
    "text": "F3 The night window and daily threshold are capture rules",
-   "area": "1c",
-   "status": "pending"
+   "area": "timesheet",
+   "status": "ported",
+   "test": "src/domain/timesheet.test.ts › each trigger"
   },
   {
    "id": "FUSION3-CONFIGURED-THROUGH-THE-TEMPLATE#21",
    "section": "FUSION3 CONFIGURED THROUGH THE TEMPLATE",
    "text": "F3 Project reads as Contract in their template",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/templates.test.ts › Fusion III makes the tenant read through the template: start and finish on a grid, Contract and Cost code, Rota off"
   },
   {
    "id": "FUSION3-CONFIGURED-THROUGH-THE-TEMPLATE#22",
    "section": "FUSION3 CONFIGURED THROUGH THE TEMPLATE",
    "text": "F3 Switching template back restores the care tenant",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/templates.test.ts › a saved template brings its configuration back, and applying the one in force again writes nothing"
   },
   {
    "id": "REVIEW-RUN-SYSTEM-MOBILE-DENSITY-AFFORDANCES#1",
    "section": "REVIEW RUN: SYSTEM, MOBILE, DENSITY, AFFORDANCES",
    "text": "RV No emoji card icons remain",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/ui-rules.spec.ts › IC Icons come from the shared icon set, and no built page renders an emoji"
   },
   {
    "id": "REVIEW-RUN-SYSTEM-MOBILE-DENSITY-AFFORDANCES#2",
@@ -4951,28 +5067,32 @@
    "section": "REVIEW RUN: SYSTEM, MOBILE, DENSITY, AFFORDANCES",
    "text": "RV The dead phone-frame CSS is gone",
    "area": "1c",
-   "status": "pending"
+   "status": "n/a",
+   "reason": "prototype-only: the dead phone-frame CSS belonged to the prototype’s simulated device; this build has no phone frame and no such rules"
   },
   {
    "id": "REVIEW-RUN-SYSTEM-MOBILE-DENSITY-AFFORDANCES#4",
    "section": "REVIEW RUN: SYSTEM, MOBILE, DENSITY, AFFORDANCES",
    "text": "RV Unused utility classes removed",
    "area": "1c",
-   "status": "pending"
+   "status": "n/a",
+   "reason": "replaced by Tailwind’s on-demand utilities: only the classes the components use are generated, so unused ones cannot accumulate"
   },
   {
    "id": "REVIEW-RUN-SYSTEM-MOBILE-DENSITY-AFFORDANCES#5",
    "section": "REVIEW RUN: SYSTEM, MOBILE, DENSITY, AFFORDANCES",
    "text": "RV A record-list primitive exists",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/ui/ui.test.tsx › a records table labels each cell for its phone card, but not the title or the foot"
   },
   {
    "id": "REVIEW-RUN-SYSTEM-MOBILE-DENSITY-AFFORDANCES#6",
    "section": "REVIEW RUN: SYSTEM, MOBILE, DENSITY, AFFORDANCES",
    "text": "RV Its labels come from the column headers at runtime",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/ui/ui.test.tsx › a records table labels each cell for its phone card, but not the title or the foot"
   },
   {
    "id": "REVIEW-RUN-SYSTEM-MOBILE-DENSITY-AFFORDANCES#7",
@@ -4986,21 +5106,24 @@
    "section": "REVIEW RUN: SYSTEM, MOBILE, DENSITY, AFFORDANCES",
    "text": "RV Approvals is a record list",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/approvals/approvals.test.tsx › the chain per module with the posting step locked, the sign-off settings as pointers and the delegations, with full test id coverage"
   },
   {
    "id": "REVIEW-RUN-SYSTEM-MOBILE-DENSITY-AFFORDANCES#9",
    "section": "REVIEW RUN: SYSTEM, MOBILE, DENSITY, AFFORDANCES",
    "text": "RV ... whose rows carry a title cell and labelled cells when there are rows",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/approvals/approvals.test.tsx › the chain per module with the posting step locked, the sign-off settings as pointers and the delegations, with full test id coverage"
   },
   {
    "id": "REVIEW-RUN-SYSTEM-MOBILE-DENSITY-AFFORDANCES#10",
    "section": "REVIEW RUN: SYSTEM, MOBILE, DENSITY, AFFORDANCES",
    "text": "RV ... and labels carry no tooltip artefacts",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/approvals/approvals.test.tsx › the chain per module with the posting step locked, the sign-off settings as pointers and the delegations, with full test id coverage"
   },
   {
    "id": "REVIEW-RUN-SYSTEM-MOBILE-DENSITY-AFFORDANCES#11",
@@ -5056,14 +5179,16 @@
    "section": "REVIEW RUN: SYSTEM, MOBILE, DENSITY, AFFORDANCES",
    "text": "RV Documents now explains itself",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/guides.test.tsx › the %s page offers a ? that opens its guide, section by section"
   },
   {
    "id": "REVIEW-RUN-SYSTEM-MOBILE-DENSITY-AFFORDANCES#19",
    "section": "REVIEW RUN: SYSTEM, MOBILE, DENSITY, AFFORDANCES",
    "text": "RV Exceptions explains how severity is ordered",
-   "area": "1c",
-   "status": "pending"
+   "area": "payroll",
+   "status": "pending",
+   "deferredTo": "payroll"
   },
   {
    "id": "PAY-CODE-CRUD#1",
@@ -5310,8 +5435,8 @@
    "section": "ROTA OFF EMPTIES THE CALENDAR",
    "text": "RO Turning Rota off reports how many shifts it cleared",
    "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "status": "ported",
+   "test": "src/mocks/home.test.ts › turning Rota off reports the shifts cleared and empties the calendar of shifts while leave stays; turning it on restores the same calendar"
   },
   {
    "id": "ROTA-OFF-EMPTIES-THE-CALENDAR#3",
@@ -5334,24 +5459,24 @@
    "section": "ROTA OFF EMPTIES THE CALENDAR",
    "text": "RO Turning it back on reports how many it restored",
    "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "status": "ported",
+   "test": "src/mocks/home.test.ts › turning Rota off reports the shifts cleared and empties the calendar of shifts while leave stays; turning it on restores the same calendar"
   },
   {
    "id": "ROTA-OFF-EMPTIES-THE-CALENDAR#6",
    "section": "ROTA OFF EMPTIES THE CALENDAR",
    "text": "RO ... and the calendar is populated again",
    "area": "1c",
-   "status": "pending",
-   "deferredTo": "1c"
+   "status": "ported",
+   "test": "src/mocks/home.test.ts › turning Rota off reports the shifts cleared and empties the calendar of shifts while leave stays; turning it on restores the same calendar"
   },
   {
    "id": "TENANT-DATA-FROM-THE-BC-EXPORT#1",
    "section": "TENANT DATA FROM THE BC EXPORT",
    "text": "TD A professional-services template exists",
    "area": "1c",
-   "deferredTo": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/templates.test.ts › qcic is Dogma's professional services with no rota; social is Brightpath's care setup"
   },
   {
    "id": "TENANT-DATA-FROM-THE-BC-EXPORT#2",
@@ -5414,8 +5539,8 @@
    "section": "TENANT DATA FROM THE BC EXPORT",
    "text": "TD Switching template back restores the care tenant",
    "area": "1c",
-   "deferredTo": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/templates.test.ts › a saved template brings its configuration back, and applying the one in force again writes nothing"
   },
   {
    "id": "ONBOARDING-MODULE#1",
@@ -5884,24 +6009,24 @@
    "section": "PERSISTENCE AND ACCOUNTS",
    "text": "PS It can be exported",
    "area": "1c",
-   "deferredTo": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/calendar/calendar.test.tsx › export downloads everything held as one JSON file named after the organisation"
   },
   {
    "id": "PERSISTENCE-AND-ACCOUNTS#9",
    "section": "PERSISTENCE AND ACCOUNTS",
    "text": "PS ... and reset",
    "area": "1c",
-   "deferredTo": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/calendar/calendar.test.tsx › reset asks first, then returns to the seed and offers to bring the earlier session back"
   },
   {
    "id": "PERSISTENCE-AND-ACCOUNTS#10",
    "section": "PERSISTENCE AND ACCOUNTS",
    "text": "PS Reset asks first and says it cannot be undone",
    "area": "1c",
-   "deferredTo": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/calendar/calendar.test.tsx › reset asks first, then returns to the seed and offers to bring the earlier session back"
   },
   {
    "id": "PERSISTENCE-AND-ACCOUNTS#11",
@@ -5948,56 +6073,64 @@
    "section": "SAVING A TENANT AS A TEMPLATE",
    "text": "TP An administrator can save the current setup",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/organisation/organisation.test.tsx › save a template: a name is needed, then it is listed as saved here with what it keeps"
   },
   {
    "id": "SAVING-A-TENANT-AS-A-TEMPLATE#2",
    "section": "SAVING A TENANT AS A TEMPLATE",
    "text": "TP ... and import one from a file",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/organisation/organisation.test.tsx › import a file: it is listed, with what was left out; a file that is not JSON could not be read"
   },
   {
    "id": "SAVING-A-TENANT-AS-A-TEMPLATE#3",
    "section": "SAVING A TENANT AS A TEMPLATE",
    "text": "TP The dialog asks what to keep",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/organisation/organisation.test.tsx › save a template: a name is needed, then it is listed as saved here with what it keeps"
   },
   {
    "id": "SAVING-A-TENANT-AS-A-TEMPLATE#4",
    "section": "SAVING A TENANT AS A TEMPLATE",
    "text": "TP ... and warns that a roster is rarely worth reusing",
    "area": "1c",
-   "status": "pending"
+   "status": "n/a",
+   "reason": "prototype-only: the warning belonged to the prototype’s third scope, everything including people; the brief (D2) drops that scope, so a roster can never be saved and the dialog offers two scopes only"
   },
   {
    "id": "SAVING-A-TENANT-AS-A-TEMPLATE#5",
    "section": "SAVING A TENANT AS A TEMPLATE",
    "text": "TP A name is required",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/organisation/organisation.test.tsx › save a template: a name is needed, then it is listed as saved here with what it keeps"
   },
   {
    "id": "SAVING-A-TENANT-AS-A-TEMPLATE#6",
    "section": "SAVING A TENANT AS A TEMPLATE",
    "text": "TP A named template saves",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/organisation/organisation.test.tsx › save a template: a name is needed, then it is listed as saved here with what it keeps"
   },
   {
    "id": "SAVING-A-TENANT-AS-A-TEMPLATE#7",
    "section": "SAVING A TENANT AS A TEMPLATE",
    "text": "TP ... and says what it kept",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/organisation/organisation.test.tsx › save a template: a name is needed, then it is listed as saved here with what it keeps"
   },
   {
    "id": "SAVING-A-TENANT-AS-A-TEMPLATE#8",
    "section": "SAVING A TENANT AS A TEMPLATE",
    "text": "TP It is listed as saved on this device",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/organisation/organisation.test.tsx › save a template: a name is needed, then it is listed as saved here with what it keeps"
   },
   {
    "id": "SAVING-A-TENANT-AS-A-TEMPLATE#9",
@@ -6011,28 +6144,32 @@
    "section": "SAVING A TENANT AS A TEMPLATE",
    "text": "TP It appears as a template that can be chosen",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-1c.spec.ts › a template is saved from this tenant, another is previewed and applied, and the saved one applied back: one audit row each, people untouched, the name kept"
   },
   {
    "id": "SAVING-A-TENANT-AS-A-TEMPLATE#11",
    "section": "SAVING A TENANT AS A TEMPLATE",
    "text": "TP A shipped template cannot be removed",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/organisation/organisation.test.tsx › remove asks first; the template in use is refused with the server's words, and a shipped one has no Remove"
   },
   {
    "id": "SAVING-A-TENANT-AS-A-TEMPLATE#12",
    "section": "SAVING A TENANT AS A TEMPLATE",
    "text": "TP Applying a saved template restores its configuration",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-1c.spec.ts › a template is saved from this tenant, another is previewed and applied, and the saved one applied back: one audit row each, people untouched, the name kept"
   },
   {
    "id": "SAVING-A-TENANT-AS-A-TEMPLATE#13",
    "section": "SAVING A TENANT AS A TEMPLATE",
    "text": "TP A saved template can be removed once it is not in use",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/organisation/organisation.test.tsx › remove asks first; the template in use is refused with the server's words, and a shipped one has no Remove"
   },
   {
    "id": "A-NEWER-BUILD-SUPERSEDES-A-SAVED-SESSION#1",
@@ -6063,16 +6200,16 @@
    "section": "A NEWER BUILD SUPERSEDES A SAVED SESSION",
    "text": "SV What was set aside can be brought back",
    "area": "1c",
-   "deferredTo": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/calendar/calendar.test.tsx › reset asks first, then returns to the seed and offers to bring the earlier session back"
   },
   {
    "id": "A-NEWER-BUILD-SUPERSEDES-A-SAVED-SESSION#5",
    "section": "A NEWER BUILD SUPERSEDES A SAVED SESSION",
    "text": "SV Reset lives with the data it clears, not in the account menu",
    "area": "1c",
-   "deferredTo": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/calendar/calendar.test.tsx › reset asks first, then returns to the seed and offers to bring the earlier session back"
   },
   {
    "id": "A-NEWER-BUILD-SUPERSEDES-A-SAVED-SESSION#6",
@@ -6103,24 +6240,24 @@
    "section": "ADMIN LAYOUT",
    "text": "AD A module still drills in from inside setup",
    "area": "1c",
-   "deferredTo": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/nav.spec.ts › NV The Modules card opens the module list; each module drills in to its features and setup, and ‹ All modules returns"
   },
   {
    "id": "ADMIN-LAYOUT#4",
    "section": "ADMIN LAYOUT",
    "text": "AD Backing out returns to the module list, not the setup index",
    "area": "1c",
-   "deferredTo": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/nav.spec.ts › NV The Modules card opens the module list; each module drills in to its features and setup, and ‹ All modules returns"
   },
   {
    "id": "ADMIN-LAYOUT#5",
    "section": "ADMIN LAYOUT",
    "text": "AD Capture fields moved to the module that owns them",
    "area": "1c",
-   "deferredTo": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › the weekly grid’s layout and the break limit are set on their feature rows"
   },
   {
    "id": "ADMIN-LAYOUT#6",
@@ -6143,24 +6280,24 @@
    "section": "ADMIN LAYOUT",
    "text": "AD Organisation is identity and template, not everything",
    "area": "1c",
-   "deferredTo": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/organisation/organisation.test.tsx › the page shows the spine, every template with the live one marked, the company, compliance and pay periods, with full test id coverage"
   },
   {
    "id": "ADMIN-LAYOUT#9",
    "section": "ADMIN LAYOUT",
    "text": "AD The calendar and the saved data have their own page",
    "area": "1c",
-   "deferredTo": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/calendar/calendar.test.tsx › the calendar shows the year, the week start, the bank holidays with each module’s treatment, and the saved data, with full test id coverage"
   },
   {
    "id": "ADMIN-LAYOUT#10",
    "section": "ADMIN LAYOUT",
    "text": "AD Appearance is stated once, on Organisation",
    "area": "1c",
-   "deferredTo": "1c",
-   "status": "pending"
+   "status": "n/a",
+   "reason": "prototype-only: appearance there meant the prototype’s brand and theme editor; the brief rules brand and theme editing out of scope, and the theme toggle is in the account menu"
   },
   {
    "id": "ONBOARDING-STEPS-ARE-CONFIGURABLE#1",
@@ -6307,21 +6444,24 @@
    "section": "A MODULE THAT IS OFF SAYS NOTHING",
    "text": "NF Notifications are filtered by whether the module exists",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/notifications.test.ts › an event is hidden while its module is off, Timesheet while neither capture method is on"
   },
   {
    "id": "A-MODULE-THAT-IS-OFF-SAYS-NOTHING#2",
    "section": "A MODULE THAT IS OFF SAYS NOTHING",
    "text": "NF Turning Rota off removes its notifications",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/links-1c.spec.ts › while Rota is off its notifications are hidden and not counted, then come back unchanged when it is on again"
   },
   {
    "id": "A-MODULE-THAT-IS-OFF-SAYS-NOTHING#3",
    "section": "A MODULE THAT IS OFF SAYS NOTHING",
    "text": "NF ... and turning it back on restores them",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/links-1c.spec.ts › while Rota is off its notifications are hidden and not counted, then come back unchanged when it is on again"
   },
   {
    "id": "POLICIES-ARE-DOCUMENTS-AN-ADMIN-UPLOADS#1",
@@ -6874,7 +7014,8 @@
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB The board is seeded from the loaded tenant",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/seed/seed-1c.test.ts › both tenants carry the prototype's four notices with textVersion, ISO stamps and acknowledgements by employee code (D10)"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#2",
@@ -6888,322 +7029,368 @@
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB Only an admin may post to everyone by default",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/notices.test.ts › a manager cannot reach everyone or another location, even by forcing the scope; nothing is created"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#4",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB Notice posted is an event on the notification framework",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/notices.test.ts › a manager posts to their location: live at v1, a new id, one audit row, and the audience told per the matrix"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#5",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB Notice board is listed under Workforce core features",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/modules/modules.test.tsx › Workforce core has no off control"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#6",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB My team → Notices renders for a manager",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/notices/tnotices.test.tsx › the notices she manages, draft first, organisation ones read-only, with counts per state, and full test id coverage"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#7",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB A manager can target only their own location and departments within it",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/notices.test.ts › a manager gets their location and the departments of the people there"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#8",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB Posting creates a live record scoped to that location",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/notices.test.ts › a manager posts to their location: live at v1, a new id, one audit row, and the audience told per the matrix"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#9",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB ... with a new, unique identifier",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/notices.test.ts › a manager posts to their location: live at v1, a new id, one audit row, and the audience told per the matrix"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#10",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB ... and colleagues are told through the framework",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/notices.test.ts › a manager posts to their location: live at v1, a new id, one audit row, and the audience told per the matrix"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#11",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB ... and the posting is audited, draft → live",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/notices.test.ts › a manager posts to their location: live at v1, a new id, one audit row, and the audience told per the matrix"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#12",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB A manager posting to Everyone is refused in the action layer and nothing is created",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/notices.test.ts › a manager cannot reach everyone or another location, even by forcing the scope; nothing is created"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#13",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB The demo employee works where the manager posted, so the reader checks run",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/notices-1c.spec.ts › a notice is posted and acknowledged, its words changed so it is acknowledged again, and then withdrawn with a reason, staying on record"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#14",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB My work → Notices lists the location notice for someone there",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/notices-1c.spec.ts › a notice is posted and acknowledged, its words changed so it is acknowledged again, and then withdrawn with a reason, staying on record"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#15",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB The audience is only people at that location",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/notices.test.ts › everyone, a location, a department within a location or at every location; only active people count"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#16",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB The employee can be moved to another location",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/notices.test.ts › a mover sees what their new place sees, and the notice is untouched"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#17",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB After the move the old location’s notice is gone from their list",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/notices.test.ts › a mover sees what their new place sees, and the notice is untouched"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#18",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB ... and the notice itself did not change",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/notices.test.ts › a mover sees what their new place sees, and the notice is untouched"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#19",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB ... and moving them back restores it",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/notices.test.ts › a mover sees what their new place sees, and the notice is untouched"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#20",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB The Home card offers the notice for acknowledgement",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/notices/notices.test.tsx › the My home card: up to three live notices, how many to acknowledge, and Acknowledge inline"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#21",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB Acknowledging writes one record at the current version",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/notices.test.ts › one record at the textVersion read, one audit row; a repeat is ALREADY_ACKNOWLEDGED and adds nothing"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#22",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB Acknowledging twice adds nothing",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/notices.test.ts › one record at the textVersion read, one audit row; a repeat is ALREADY_ACKNOWLEDGED and adds nothing"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#23",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB The acknowledgement is audited",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/notices.test.ts › one record at the textVersion read, one audit row; a repeat is ALREADY_ACKNOWLEDGED and adds nothing"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#24",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB The tracker shows who acknowledged which version",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/notices.test.ts › the tracker: who acknowledged which version among the people the poster can see, and the trail"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#25",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB Editing warns how many will be asked again",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/notices/tnotices.test.tsx › editing the words of a live notice makes v2 and asks those who acknowledged again"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#26",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB The audience cannot change once live",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/notices.test.ts › dates and pin change without a new version; the audience is fixed once live; a stale version is 412"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#27",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB The edit is v2 and v1 is kept in history",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/notices.test.ts › a text edit bumps the textVersion, keeps the old words in history and the old acknowledgement on record"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#28",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB The v1 acknowledgement stays on record",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/notices.test.ts › a text edit bumps the textVersion, keeps the old words in history and the old acknowledgement on record"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#29",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB ... but it does not count for v2",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/notices.test.ts › a text edit in between is CHANGED; the new version asks again and the old acknowledgement stays"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#30",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB The colleague is told it changed and asked again",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/notices/notices.test.tsx › after the text changes, I am asked again and the read dialog says why"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#31",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB The edit is audited v1 → v2",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/notices-1c.spec.ts › a notice is posted and acknowledged, its words changed so it is acknowledged again, and then withdrawn with a reason, staying on record"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#32",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB Pinning does not make a new version",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/notices/tnotices.test.tsx › pinning from the tracker keeps the version and moves the notice up"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#33",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB A live notice cannot be deleted",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/notices/tnotices.test.tsx › a live notice cannot be deleted and says to withdraw it; a draft can"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#34",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB ... and the refusal says to withdraw it instead",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/notices/tnotices.test.tsx › a live notice cannot be deleted and says to withdraw it; a draft can"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#35",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB The seeded draft is in the manager’s scope",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/notices.test.ts › the poster list: draft first, organisation notices read-only, counts per status and the scopes offered"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#36",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB A draft can be deleted",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/notices/tnotices.test.tsx › a live notice cannot be deleted and says to withdraw it; a draft can"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#37",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB ... and the deletion is audited",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/notices.test.ts › only a draft can be deleted; a live one says to withdraw it instead"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#38",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB Withdrawing without a reason is refused and it stays live",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/notices.test.ts › withdrawing needs a reason; it keeps the record and its acknowledgements, and colleagues stop seeing it"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#39",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB With a reason it is withdrawn and the reason is kept",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/notices.test.ts › withdrawing needs a reason; it keeps the record and its acknowledgements, and colleagues stop seeing it"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#40",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB ... its acknowledgements survive",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/notices.test.ts › withdrawing needs a reason; it keeps the record and its acknowledgements, and colleagues stop seeing it"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#41",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB ... it stays on the poster’s list",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/notices/tnotices.test.tsx › withdrawing needs a reason, then the notice stays on her list as withdrawn"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#42",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB ... colleagues no longer see it",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/notices.test.ts › withdrawing needs a reason; it keeps the record and its acknowledgements, and colleagues stop seeing it"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#43",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB ... and the withdrawal is audited with its reason",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/notices.test.ts › withdrawing needs a reason; it keeps the record and its acknowledgements, and colleagues stop seeing it"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#44",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB A notice past its end date is under Expired",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/notices.test.ts › draft and withdrawn are stored; expired, scheduled and current come from the dates"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#45",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB ... and not under Current",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/notices.test.ts › draft and withdrawn are stored; expired, scheduled and current come from the dates"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#46",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB ... nor on the Home card",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/notices/notices.test.tsx › the My home card: up to three live notices, how many to acknowledge, and Acknowledge inline"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#47",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB With the flag off there is no Notices tab and no Home card",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/notices/notices.test.tsx › the home card stays away while the notice board is off"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#48",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB ... and the notices are kept",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/notices.test.ts › with the notice board off every surface refuses with the prototype's words and the notices are kept"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#49",
@@ -7245,49 +7432,56 @@
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB An admin can post to Everyone",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/notices.test.ts › an admin posts to everyone; the matrix leaves admins Off and tells the rest"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#55",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB Save draft keeps it as a draft",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/notices.test.ts › a draft is saved, nobody sees it, and posting it later tells the audience"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#56",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB ... that nobody sees",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/notices.test.ts › a draft is saved, nobody sees it, and posting it later tells the audience"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#57",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB Posting the draft makes it live",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/notices.test.ts › a draft is saved, nobody sees it, and posting it later tells the audience"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#58",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB ... for everyone",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/notices.test.ts › a draft is saved, nobody sees it, and posting it later tells the audience"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#59",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB A notice starting later is live but shown to posters as Scheduled",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/notices.test.ts › draft and withdrawn are stored; expired, scheduled and current come from the dates"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#60",
    "section": "NOTICE BOARD (Workforce core)",
    "text": "NB ... and colleagues do not see it before its start date",
    "area": "1c",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/notices.test.ts › the reader sees current and expired notices aimed at them, never drafts, scheduled or withdrawn"
   },
   {
    "id": "REGRESSION-baseline-register#1",
