@@ -33,7 +33,8 @@ test('social: the greeting, the who-line, the month painted from the rota, leave
   expect(cell('2026-08-12')).toHaveAttribute('data-glyph', 'pend');
   expect(cell('2026-08-13').className).toMatch(/border-2/);
   expect(cell('2026-08-17')).toHaveAttribute('data-paint', 'V');
-  expect(cell('2026-08-17')).toHaveTextContent('17☀Leave');
+  expect(cell('2026-08-17')).toHaveTextContent('17Leave');
+  expect(cell('2026-08-17').querySelector('svg.lucide-sun')).not.toBeNull(); // the sun from the icon set, never the emoji
   expect(cell('2026-08-20').className).toMatch(/opacity-/);
   expect(cell('2026-08-31')).toHaveTextContent('Bank holiday');
   expect(cell('2026-08-31')).toHaveAttribute('aria-label', '31 Aug: Rest day, Summer bank holiday');
@@ -68,7 +69,8 @@ test('the key counts what the month holds, omits what it does not, uses the cale
   expect(within(key).queryByTestId(tid.home.keyItem('tone', 'L'))).toBeNull();
   expect(within(key).getByTestId(tid.home.keyItem('leave', 0))).toHaveTextContent('Annual leave 2');
   expect(within(key).getByTestId(tid.home.keyItem('state', 'pend'))).toHaveTextContent('◷ Submitted 1');
-  expect(within(key).getByTestId(tid.home.keyItem('state', 'none'))).toHaveTextContent('⚠ Nothing recorded');
+  expect(within(key).getByTestId(tid.home.keyItem('state', 'none'))).toHaveTextContent('Nothing recorded');
+  expect(within(key).getByTestId(tid.home.keyItem('state', 'none')).querySelector('svg.lucide-triangle-alert')).not.toBeNull();
   expect(key).not.toHaveTextContent(/Sent back|Approved|Time off in lieu/);
   /* the key's glyph and the day's glyph are painted by the same class */
   const keyInk = within(key).getByTestId(tid.home.keyItem('state', 'pend')).querySelector('b')?.className ?? '';

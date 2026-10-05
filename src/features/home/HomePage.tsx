@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
+import { Sun, TriangleAlert } from 'lucide-react';
 import { tid } from '@/testids';
 import { cn } from '@/lib/utils';
 import { Banner, Card, CalNav, NavLink, Page, PageHead, Stat, Stats } from '@/ui';
@@ -55,9 +56,10 @@ function Home({ m, onMonth }: { m: HomeMonth; onMonth: (month: string) => void }
             back={{ testId: tid.home.thisMonth, label: 'This month', current: 'This month', atCurrent: m.month === m.thisMonth, onClick: () => onMonth(m.thisMonth) }} />
           {m.summary && <span data-testid={tid.home.summary} className="ml-auto text-xs text-text-muted">{m.summary}</span>}
         </div>
-        {/* .calm: seven columns, Monday first */}
+        {/* .calm: seven columns, Monday first; the day heads are column heads in
+            capitals as the prototype's (data-caps: capitals on purpose) */}
         <div data-testid={tid.home.grid} className="grid grid-cols-7 gap-xs">
-          {DOW_SHORT.map(d => <div key={d} aria-hidden="true" className="pb-xs text-center text-xs font-bold tracking-[.04em] text-text-muted uppercase">{d}</div>)}
+          {DOW_SHORT.map(d => <div key={d} aria-hidden="true" data-caps className="pb-xs text-center text-xs font-bold tracking-[.04em] text-text-muted uppercase">{d}</div>)}
           {Array.from({ length: m.leadingBlanks }, (_, i) => <div key={`blank-${i}`} aria-hidden="true" />)}
           {m.days.map(d => <DayCell key={d.date} d={d} onOpen={() => setOpen(d)} />)}
         </div>
@@ -118,6 +120,12 @@ const INK = {
 } as const;
 /* .cst.ok/.pend/.draft/.att/.mut (v15:1336-1340), and the key's .cst-i (1350-1355): one set, so a glyph cannot drift from its key */
 const GLYPH_INK = { ok: 'text-ok', pend: 'text-info', draft: 'text-warn', att: 'text-err', mut: 'text-text-muted' } as const;
+/* Two of the prototype's characters (the sun on a day of leave, the warning
+   on a day with nothing recorded) are emoji code points that render in
+   colour; they come from the shared icon set instead, at the text's size. */
+const AS_ICON: Record<string, ReactNode> = { '☀': <Sun />, '⚠': <TriangleAlert /> };
+const glyphOf = (c: string): ReactNode => AS_ICON[c] ?? c;
+const ICON_FIT = 'inline-flex items-center [&_svg]:size-[1em]';
 
 /* What a cell says to a screen reader: "13 Aug: Night 22:00–07:00, Approved, 7h 30m recorded". */
 function cellLabel(d: HomeDay): string {
@@ -139,13 +147,13 @@ function DayCell({ d, onOpen }: { d: HomeDay; onOpen: () => void }) {
       <span className="text-xs font-bold">{parseIso(d.date).getUTCDate()}</span>
       {d.absence
         ? <span className={cn('flex items-center gap-[6px] text-xs leading-[1.25] font-semibold', INK[d.absence.mark])}>
-            <span aria-hidden="true" className="text-base leading-none">{d.absence.icon}</span>{d.absence.short || d.absence.name}</span>
+            <span aria-hidden="true" className={cn('text-base leading-none', ICON_FIT)}>{glyphOf(d.absence.icon)}</span>{d.absence.short || d.absence.name}</span>
         : d.shift
           ? <span className={cn('text-xs leading-[1.25] font-semibold', INK[d.shift.tone])}>
               <span className="font-[family-name:var(--qp-font-display)] font-bold">{d.shift.code}</span> {d.shift.time}</span>
           : d.bankHoliday && <span className="text-xs leading-[1.25] text-text-muted">Bank holiday</span>}
       {(g || d.ts?.text) && <span className={cn('mt-auto flex items-center gap-xs text-xs font-bold', GLYPH_INK[g?.tone ?? 'mut'])}>
-        {g && <span aria-hidden="true">{g.glyph}</span>}
+        {g && <span aria-hidden="true" className={ICON_FIT}>{glyphOf(g.glyph)}</span>}
         {d.ts?.text && <span className="font-semibold tabular-nums opacity-75">{d.ts.text}</span>}</span>}
     </button>);
 }
@@ -167,8 +175,8 @@ function MonthKeyLine({ m }: { m: HomeMonth }) {
       {k.tones.map(t => <span key={t.tone} data-testid={tid.home.keyItem('tone', t.tone)} className={item}>
         <i aria-hidden="true" className={cn('h-[11px] w-[14px] rounded-[3px] border-l-3', SWATCH[t.tone])} />{t.label} {n(t.count)}</span>)}
       {k.leave.map((l, i) => <span key={l.name} data-testid={tid.home.keyItem('leave', i)} className={item}>
-        <b aria-hidden="true" className="text-base leading-none">{l.icon}</b> {l.name} {n(l.count)}</span>)}
+        <b aria-hidden="true" className={cn('text-base leading-none', ICON_FIT)}>{glyphOf(l.icon)}</b> {l.name} {n(l.count)}</span>)}
       {k.states.map(s => <span key={s.key} data-testid={tid.home.keyItem('state', s.key)} className={item}>
-        <b aria-hidden="true" className={cn('font-bold', GLYPH_INK[s.tone])}>{s.glyph}</b> {s.label} {n(s.count)}</span>)}
+        <b aria-hidden="true" className={cn('font-bold', ICON_FIT, GLYPH_INK[s.tone])}>{glyphOf(s.glyph)}</b> {s.label} {n(s.count)}</span>)}
     </div>);
 }
