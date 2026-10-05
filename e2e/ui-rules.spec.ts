@@ -11,25 +11,34 @@ import { tid } from '../src/testids';
    employee, Team rota, Shift catalogue, Working patterns and Cover requests
    for the manager, and Rota setup for the admin; and module 4's: My leave
    for the employee, Team leave and Sickness for the manager, and Leave setup
-   for the admin. */
+   for the admin; and 1c's: My home, Profile, Documents and Notices for the
+   employee, Team Home and team Notices for the manager, and Organisation,
+   Calendar, Modules & features (the list and a module's drill-in),
+   Notifications and Approvals for the admin. */
 type Persona = 'employee' | 'manager' | 'admin';
 const BUILT = ['/setup/asetup', '/setup/aperm', '/setup/iaudit', '/setup/apeople', '/setup/aloc', '/setup/aloc?d=locations', '/setup/acon', '/setup/atypes',
-  '/setup/mts', '/setup/mrota', '/setup/mleave'];
-const BUILT_AS: [Persona, string][] = [['employee', '/work/ts'], ['employee', '/work/shifts'], ['employee', '/work/leave'], ['manager', '/team/tteam'],
-  ['manager', '/team/trota'], ['manager', '/team/tshifts'], ['manager', '/team/tpat'], ['manager', '/team/tcover'], ['manager', '/team/tleave'],
-  ['manager', '/team/tsick']];
+  '/setup/mts', '/setup/mrota', '/setup/mleave',
+  '/setup/aorg', '/setup/acal', '/setup/amods', '/setup/amods?m=TS', '/setup/anotif', '/setup/aappr'];
+const BUILT_AS: [Persona, string][] = [['employee', '/work/ts'], ['employee', '/work/shifts'], ['employee', '/work/leave'], ['employee', '/work/home'],
+  ['employee', '/work/profile'], ['employee', '/work/docs'], ['employee', '/work/notices'], ['manager', '/team/tteam'], ['manager', '/team/trota'],
+  ['manager', '/team/tshifts'], ['manager', '/team/tpat'], ['manager', '/team/tcover'], ['manager', '/team/tleave'], ['manager', '/team/tsick'],
+  ['manager', '/team/thome'], ['manager', '/team/tnotices']];
 const READY: Record<string, string> = { '/setup/asetup': tid.page('asetup'), '/setup/aperm': tid.access.table, '/setup/iaudit': tid.page('iaudit'),
   '/setup/apeople': tid.people.table, '/setup/aloc': tid.dims.card('locations'), '/setup/aloc?d=locations': tid.dims.table,
   '/setup/acon': tid.contracts.table, '/setup/atypes': tid.types.detail, '/setup/mts': tid.mts.card('rules'),
   '/work/ts': tid.ts.view('day'), '/team/tteam': tid.tteam.table, '/setup/mrota': tid.mrota.card('staffing'), '/work/shifts': tid.shifts.cards,
   '/team/trota': tid.trota.grid, '/team/tshifts': tid.tshifts.catalogue, '/team/tpat': tid.tpat.list, '/team/tcover': tid.tcover.stages,
-  '/work/leave': tid.leave.cards, '/team/tleave': tid.tleave.balances, '/team/tsick': tid.tsick.table, '/setup/mleave': tid.mleave.card('rota') };
+  '/work/leave': tid.leave.cards, '/team/tleave': tid.tleave.balances, '/team/tsick': tid.tsick.table, '/setup/mleave': tid.mleave.card('rota'),
+  '/setup/aorg': tid.aorg.spine, '/setup/acal': tid.acal.card('saved'), '/setup/amods': tid.amods.card('TS'), '/setup/amods?m=TS': tid.amods.features,
+  '/setup/anotif': tid.anotif.table, '/setup/aappr': tid.aappr.chainTable, '/work/home': tid.home.grid, '/work/profile': tid.profile.state,
+  '/work/docs': tid.docs.card, '/work/notices': tid.notices.table, '/team/thome': tid.thome.grid, '/team/tnotices': tid.tnotices.table };
 /* The pages that register a guide (src/ui/guides.ts), by path, with the view it is registered under */
 const GUIDED: Record<string, string> = { '/work/ts': 'ts', '/team/tteam': 'tteam', '/setup/mts': 'mts', '/team/trota': 'trota', '/team/tshifts': 'tshifts',
-  '/team/tpat': 'tpat', '/setup/mrota': 'mrota', '/setup/mleave': 'mleave' };
+  '/team/tpat': 'tpat', '/setup/mrota': 'mrota', '/setup/mleave': 'mleave', '/work/notices': 'notices', '/team/tnotices': 'tnotices',
+  '/setup/apeople': 'apeople', '/setup/aloc': 'aloc', '/setup/aloc?d=locations': 'aloc', '/setup/acon': 'acon', '/setup/aperm': 'aperm', '/work/docs': 'docs', '/work/profile': 'profile' };
 
 async function eachBuiltPage(page: Page, signInAs: (p: Persona) => Promise<void>, check: (path: string) => Promise<void>) {
-  test.setTimeout(240_000); // three sign-ins and twenty-two pages
+  test.setTimeout(360_000); // three sign-ins and thirty-eight pages
   await check('sign-in');
   const visit = async (path: string) => {
     await page.goto(path);
@@ -47,8 +56,9 @@ async function eachBuiltPage(page: Page, signInAs: (p: Persona) => Promise<void>
 
 /* GUIDE AFFORDANCE #5 "No ? appears where no guide is registered" and #6
    "Admin pages without a guide show no ?". My timesheet, Team timesheets,
-   Timesheet setup, Team rota, Shift catalogue, Working patterns, Rota setup
-   and Leave setup register a guide, so each shows exactly one ?, the one that
+   Timesheet setup, Team rota, Shift catalogue, Working patterns, Rota setup,
+   Leave setup, Notices (both), People, Dimensions, Contracts, Permissions,
+   Documents and My profile register a guide, so each shows exactly one ?, the one that
    opens it; every other built page shows none, never a hollow one. */
 test('G A ? guide button appears only where a guide is registered, once, and opens that guide', async ({ page, signInAs }) => {
   const helpButtons = () => page.evaluate(() => [...document.querySelectorAll('button')].filter(b => b.textContent?.trim() === '?' || b.hasAttribute('data-guide')).length);
