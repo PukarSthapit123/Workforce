@@ -33745,12 +33745,16 @@
                             "manager",
                             "admin"
                           ]
+                        },
+                        "roleName": {
+                          "type": "string"
                         }
                       },
                       "required": [
                         "personCode",
                         "name",
-                        "userType"
+                        "userType",
+                        "roleName"
                       ],
                       "additionalProperties": false
                     },
@@ -33894,12 +33898,16 @@
                             "manager",
                             "admin"
                           ]
+                        },
+                        "roleName": {
+                          "type": "string"
                         }
                       },
                       "required": [
                         "personCode",
                         "name",
-                        "userType"
+                        "userType",
+                        "roleName"
                       ],
                       "additionalProperties": false
                     },
@@ -34086,12 +34094,16 @@
                             "manager",
                             "admin"
                           ]
+                        },
+                        "roleName": {
+                          "type": "string"
                         }
                       },
                       "required": [
                         "personCode",
                         "name",
-                        "userType"
+                        "userType",
+                        "roleName"
                       ],
                       "additionalProperties": false
                     },
@@ -34236,12 +34248,16 @@
                             "manager",
                             "admin"
                           ]
+                        },
+                        "roleName": {
+                          "type": "string"
                         }
                       },
                       "required": [
                         "personCode",
                         "name",
-                        "userType"
+                        "userType",
+                        "roleName"
                       ],
                       "additionalProperties": false
                     },
