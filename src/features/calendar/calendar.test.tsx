@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { store, STORE_BACKUP_KEY } from '@/mocks/store';
+import { store, STORE_BACKUP_KEY, STORE_KEY } from '@/mocks/store';
 import { tid } from '@/testids';
 import { expectTestIdCoverage } from '@/test/testid-coverage';
 import { renderPage, withFakeServer } from '@/test/render-page';
@@ -83,4 +83,30 @@ test('reset asks first, then returns to the seed and offers to bring the earlier
   expect(await screen.findByText('Earlier session brought back')).toBeInTheDocument();
   expect(tenantName()).toBe('Changed in this session');
   await waitFor(() => expect(screen.queryByTestId(tid.acal.restore)).toBeNull());
+});
+
+/* Suite PERSISTENCE AND ACCOUNTS: "Reset asks first". The prototype's
+   confirm said it cannot be undone; this build sets the cleared session aside
+   so it can be brought back once (D14), and the confirm says exactly that. */
+test('reset asks first, saying what it clears and that what is here is set aside to be brought back once', async () => {
+  await open();
+  await userEvent.click(screen.getByTestId(tid.acal.reset));
+  const box = await screen.findByTestId(tid.modal.root);
+  expect(within(box).getByTestId(tid.modal.title)).toHaveTextContent('Reset everything?');
+  expect(box).toHaveTextContent('Every change made in this browser is removed and the app returns to the data it ships with.');
+  expect(box).toHaveTextContent('What is here now is set aside until the next reset, so it can be brought back once.');
+  await userEvent.click(within(box).getByTestId(tid.modal.confirm));
+  expect(await screen.findByTestId(tid.acalSetAside.why)).toHaveTextContent('A reset set the previous session aside. It can be brought back.');
+});
+
+/* Suite A NEWER BUILD SUPERSEDES A SAVED SESSION: "... and the person is told
+   why the app reset". A store written by an older build is set aside at boot,
+   and Saved data says that is why, and offers it back. */
+test('after a newer build sets the saved session aside, Saved data says why and offers it back', async () => {
+  localStorage.setItem(STORE_KEY, JSON.stringify({ version: '2026-09-25.1a', tenant: 'social', data: { tenant: {} }, clock: null }));
+  store.boot();
+  resetTo('social'); await signInAs('admin');
+  await open();
+  expect(await screen.findByTestId(tid.acalSetAside.why)).toHaveTextContent('This version ships newer sample data, so the session saved in this browser was set aside. It can be brought back.');
+  expect(screen.getByTestId(tid.acal.restore)).toBeEnabled();
 });
