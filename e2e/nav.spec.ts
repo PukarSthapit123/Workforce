@@ -28,6 +28,52 @@ const checkCurrentPage = async (page: import('@playwright/test').Page) => {
   expect(result).toEqual({ dup: [], missing: 0 });
 };
 
+/* A module's setup page (mts, mrota, mleave) sits one level below Modules &
+   features (brief D6; v15:4059-4076): open each module card from the list,
+   then every page of its drill-in strip ("‹ All modules | X features |
+   X setup", on the tab strip or, on a phone, the bottom bar), then
+   "‹ All modules" back to the list. Starts and ends on the module list. */
+async function walkModules(page: import('@playwright/test').Page, via: 'tab' | 'bottom') {
+  const link = via === 'tab' ? tid.nav.tab : tid.nav.bottom;
+  const strip = via === 'tab' ? 'nav[aria-label="Pages"] a[data-testid^="nav-tab-"]' : 'nav[aria-label="Quick pages"] > a[data-testid^="nav-bottom-"]';
+  const cards = page.locator('main a[data-testid^="amods-card-"]');
+  const n = await cards.count();
+  expect(n).toBeGreaterThan(0);
+  for (let c = 0; c < n; c++) {
+    await cards.nth(c).click();
+    await checkCurrentPage(page);
+    const others = page.locator(`${strip}:not([data-testid="${link('amods')}"])`);
+    const count = await others.count();
+    for (let i = 0; i < count; i++) { await others.nth(i).click(); await checkCurrentPage(page); }
+    await page.getByTestId(link('amods')).click(); // "‹ All modules"
+    await expect(page.getByTestId(tid.page('amods'))).toBeVisible();
+  }
+}
+
+/* The Modules card opens Modules & features; a module card drills in to
+   "‹ All modules | X features | X setup"; its setup tab opens the module's
+   setup page under the same strip; "‹ All modules" returns to the list. */
+test('NV The Modules card opens the module list; each module drills in to its features and setup, and ‹ All modules returns', async ({ page, signInAs }) => {
+  await signInAs('admin');
+  await page.getByTestId(tid.nav.group('setup')).click();
+  await page.getByTestId(tid.setup.card('mods')).click();
+  await expect(page.getByTestId(tid.page('amods'))).toBeVisible();
+  const strip = page.locator('nav[aria-label="Pages"] a[data-testid^="nav-tab-"]');
+  for (const [code, name, view, setup] of [['TS', 'Timesheet', 'mts', 'Timesheet setup'], ['R', 'Rota', 'mrota', 'Rota setup'], ['L', 'Leave & absence', 'mleave', 'Leave setup']] as const) {
+    await page.getByTestId(tid.amods.card(code)).click();
+    await expect(page.getByTestId(tid.page('mfeat'))).toBeVisible();
+    await expect(strip).toHaveText(['‹ All modules', `${name} features`, setup]);
+    await expect(page.getByTestId(tid.nav.tab('mfeat'))).toHaveAttribute('aria-current', 'page');
+    await page.getByTestId(tid.nav.tab(view)).click();
+    await expect(page.getByTestId(tid.page(view))).toBeVisible();
+    await expect(strip).toHaveText(['‹ All modules', `${name} features`, setup]);
+    await expect(page.getByTestId(tid.nav.tab(view))).toHaveAttribute('aria-current', 'page');
+    await page.getByTestId(tid.nav.tab('amods')).click();
+    await expect(page.getByTestId(tid.page('amods'))).toBeVisible();
+    await expect(strip).toHaveText(['‹ All setup', 'Modules & features']);
+  }
+});
+
 /* Visits every page an admin can reach: every plain tab in the strip, every
    item inside every grouped dropdown menu, and (setup being sectioned, not
    one flat strip) every section card from the index plus every page inside
@@ -78,6 +124,7 @@ test('NV Every page an admin can reach has full test id coverage', async ({ page
         await page.locator(cardSel).nth(c).click(); // -> the section's first page
         await checkCurrentPage(page);
         await visitPlainTabs(tid.nav.tab('asetup')); // the rest of that section, excluding "‹ All setup"
+        if (await page.getByTestId(tid.page('amods')).count()) await walkModules(page, 'tab'); // mts, mrota, mleave sit one level down
         await page.getByTestId(tid.nav.tab('asetup')).click(); // back to the index for the next section
         await checkCurrentPage(page);
       }
@@ -158,6 +205,7 @@ test('NV At 390px every destination is reachable from the bottom bar and More al
           await page.locator(cardSel).nth(c).click(); // -> the section's first page; no bottom bar at the index itself
           await checkCurrentPage(page);
           await visitBottomBar(tid.nav.bottom('asetup')); // the rest of that section, excluding "‹ All setup"
+          if (await page.getByTestId(tid.page('amods')).count()) await walkModules(page, 'bottom'); // mts, mrota, mleave sit one level down
           await page.getByTestId(tid.nav.group('setup')).click(); // back to the index for the next section
           await checkCurrentPage(page);
         }
