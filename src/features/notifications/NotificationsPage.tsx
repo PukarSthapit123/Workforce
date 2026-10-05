@@ -103,17 +103,17 @@ function Evidence({ rows }: { rows: NonNullable<NotificationMatrix['evidence']> 
     <AdminCard testId={tid.anotif.evidence} icon={<Receipt />} title="Notification evidence" tipTestId={tid.anotif.evidenceTip}
       tip="Retained for audit: employee, milestone, timestamp, recipient, channel and reference."
       desc="Evidence retained for flexible-worker milestones and IT access requests">
-      <Table>
+      <Table variant="records">
         <TableHeader><TableRow>
           {['Employee', 'Employee ID', 'Event', 'Timestamp', 'Recipient', 'Channel', 'Reference'].map(h => <TableHead key={h}>{h}</TableHead>)}
         </TableRow></TableHeader>
         <TableBody>
           {rows.map(r => (
             <TableRow key={r.ref} data-testid={tid.anotif.evidenceRow(r.ref)}>
-              <TableCell>{r.employee}</TableCell><TableCell className="tabular-nums">{r.employeeId}</TableCell>
-              <TableCell>{r.event}</TableCell><TableCell className="text-xs tabular-nums">{when(r.at)}</TableCell>
-              <TableCell className="text-xs">{r.recipient}</TableCell><TableCell className="text-xs">{r.channel}</TableCell>
-              <TableCell className="text-xs tabular-nums">{r.ref}</TableCell>
+              <TableCell kind="title">{r.employee}</TableCell><TableCell label="Employee ID" className="tabular-nums">{r.employeeId}</TableCell>
+              <TableCell label="Event">{r.event}</TableCell><TableCell label="Timestamp" className="text-xs tabular-nums">{when(r.at)}</TableCell>
+              <TableCell label="Recipient" className="text-xs">{r.recipient}</TableCell><TableCell label="Channel" className="text-xs">{r.channel}</TableCell>
+              <TableCell label="Reference" className="text-xs tabular-nums">{r.ref}</TableCell>
             </TableRow>))}
         </TableBody>
       </Table>

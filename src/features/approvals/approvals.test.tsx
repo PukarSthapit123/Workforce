@@ -31,6 +31,11 @@ test('the chain per module with the posting step locked, the sign-off settings a
   expect(screen.getByTestId(tid.aappr.delegRow('dlg_1'))).toHaveTextContent('Dee Fitzgerald');
   expect(screen.getByTestId(tid.aappr.delegRow('dlg_1'))).toHaveTextContent('24/08/2026');
   expect(screen.getByTestId(tid.aappr.delegRow('dlg_1'))).toHaveTextContent('Timesheet, Leave');
+  /* MOBILE FOUNDATION: a record list, so on a phone each layer is a card of
+     labelled lines under its module rather than a table scrolled sideways */
+  expect(screen.getByTestId(tid.aappr.chainTable)).toHaveAttribute('data-variant', 'records');
+  expect([...screen.getByTestId(tid.aappr.row('Leave', 1)).querySelectorAll('td')].map(td => td.getAttribute('data-l')))
+    .toEqual(['Layer', 'Module', 'Approver role', 'Scope', 'When it applies', 'SLA', null]);
   expectTestIdCoverage(document.body);
 });
 

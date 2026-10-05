@@ -41,7 +41,9 @@ function ChainCard({ chains }: { chains: ApprovalChain[] }) {
   return (
     <AdminCard testId={tid.aappr.chain} icon={<Link2 />} title="Approval chain" tip={CHAIN_TIP} tipTestId={tid.aappr.chainTip}
       desc="Who signs off, in what order, and when each layer is required">
-      <Table data-testid={tid.aappr.chainTable}>
+      {/* a record list (table.rec): on a phone each layer is a card of labelled
+          lines under its module, never a table scrolled sideways (MOBILE FOUNDATION) */}
+      <Table data-testid={tid.aappr.chainTable} variant="records">
         <TableHeader><TableRow>
           <TableHead className="w-[52px]">Layer</TableHead><TableHead>Module</TableHead><TableHead>Approver role</TableHead>
           <TableHead>Scope</TableHead><TableHead>When it applies</TableHead><TableHead>SLA</TableHead><TableHead><span className="sr-only">Actions</span></TableHead>
@@ -50,22 +52,22 @@ function ChainCard({ chains }: { chains: ApprovalChain[] }) {
           {chains.map(c => (
             <Fragment key={c.module}>
               <Row testId={tid.aappr.group(c.module)}>
-                <TableCell colSpan={6} className={GROUP_CELL}>{c.module}</TableCell>
-                <TableCell className="pt-lg pb-xs text-right">
+                <TableCell colSpan={6} kind="title" className={GROUP_CELL}>{c.module}</TableCell>
+                <TableCell kind="foot" className="pt-lg pb-xs text-right">
                   <Button testId={tid.aappr.edit(c.module)} kind="ghost" small aria-label={`Edit the ${c.module} chain`} onClick={() => setEditing(c.module)}>Edit</Button>
                 </TableCell>
               </Row>
               {c.steps.map((s, i) => (
                 <Row key={i} testId={tid.aappr.row(c.module, i)}>
-                  <TableCell><Pill tone={s.fixed ? 'neu' : 'ok'}>{i + 1}</Pill></TableCell>
-                  <TableCell className="text-xs text-text-muted">{c.module}</TableCell>
-                  <TableCell>{s.fixed
+                  <TableCell label="Layer"><Pill tone={s.fixed ? 'neu' : 'ok'}>{i + 1}</Pill></TableCell>
+                  <TableCell label="Module" className="text-xs text-text-muted">{c.module}</TableCell>
+                  <TableCell label="Approver role">{s.fixed
                     ? <span className="inline-flex items-center gap-xs">{s.role}<Lock aria-hidden="true" className="size-[13px] text-text-muted" /><Tip testId={tid.aappr.fixedTip} text={FIXED_TIP} /></span>
                     : s.role}</TableCell>
-                  <TableCell className={s.fixed ? 'text-xs text-text-muted' : undefined}>{s.scope}</TableCell>
-                  <TableCell className={s.fixed ? 'text-xs text-text-muted' : undefined}>{s.when}</TableCell>
-                  <TableCell className={s.fixed ? 'text-xs text-text-muted' : 'tabular-nums'}>{s.sla}</TableCell>
-                  <TableCell />
+                  <TableCell label="Scope" className={s.fixed ? 'text-xs text-text-muted' : undefined}>{s.scope}</TableCell>
+                  <TableCell label="When it applies" className={s.fixed ? 'text-xs text-text-muted' : undefined}>{s.when}</TableCell>
+                  <TableCell label="SLA" className={s.fixed ? 'text-xs text-text-muted' : 'tabular-nums'}>{s.sla}</TableCell>
+                  <TableCell empty />
                 </Row>))}
             </Fragment>))}
         </TableBody>

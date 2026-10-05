@@ -26,6 +26,9 @@ test('the matrix groups events by module, marks email and SMS not connected, sho
   expect(screen.getByTestId(tid.anotif.evidenceRow('AWR-9-CP1310-0807'))).toHaveTextContent('Ellie Warren');
   expect(screen.getByTestId(tid.anotif.evidenceRow('AWR-9-CP1310-0807'))).toHaveTextContent('07/08/2026 06:00');
   expect(screen.getByTestId(tid.anotif.evidence)).toHaveTextContent('In-app, email not connected.');
+  /* a record list on a phone: the employee heads each card, every other value is labelled */
+  expect([...screen.getByTestId(tid.anotif.evidenceRow('AWR-9-CP1310-0807')).querySelectorAll('td')].map(td => td.getAttribute('data-l')))
+    .toEqual([null, 'Employee ID', 'Event', 'Timestamp', 'Recipient', 'Channel', 'Reference']);
   expect(screen.getByTestId(tid.anotif.save)).toBeDisabled();
   expectTestIdCoverage(document.body);
 });
