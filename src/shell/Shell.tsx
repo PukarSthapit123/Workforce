@@ -6,6 +6,7 @@ import type { Session } from '@/contract/session';
 import { tid } from '@/testids';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/ui/shadcn/dropdown-menu';
+import { buttonVariants } from '@/ui/shadcn/button';
 import { Modal, NavLink, Page, PageHead, Card, toastInfo } from '@/ui';
 import { AccountMenu, type MenuAccount } from './AccountMenu';
 import { TopBar } from './TopBar';
@@ -318,9 +319,10 @@ const shortLabel = (label: string) => label.split(' ')[0] ?? label;
    most five items: five destinations, or four and More for the rest, from
    the same array the strip uses (v15:10654-10661; `tabs` here is Shell's
    `stripTabs`, so setup already arrives section-scoped with its "back to
-   setup" entry first). More opens a Dialog (Radix traps and restores focus,
-   per Modal.tsx), a sheet from the bottom on a phone. Each destination there
-   closes it on selection, so it never blocks reopening it for the next. */
+   setup" entry first). More is lit while the page on screen is one the bar
+   has no room for, and opens the Go to sheet listing every page (GoToSheet):
+   a Dialog (Radix traps and restores focus, per Modal.tsx), a sheet from the
+   bottom on a phone, closed by choosing a page. */
 function BottomBar({ tabs, here }: { tabs: NavTab[]; here: string }) {
   const [moreOpen, setMoreOpen] = useState(false);
   const overflow = tabs.length > 5;
@@ -334,18 +336,32 @@ function BottomBar({ tabs, here }: { tabs: NavTab[]; here: string }) {
         aria-current={isHere(t, here) ? 'page' : undefined} className={cn(BAR_ITEM, on(isHere(t, here)))}>
         {barGlyph(GLYPH[t.view] ?? '●')}<span className="max-w-full truncate">{shortLabel(t.label)}</span></NavLink>)}
       {remaining.length > 0 && <>
-        <button type="button" data-testid={tid.nav.more} aria-haspopup="dialog" aria-label="More pages" onClick={() => setMoreOpen(true)}
+        <button type="button" data-testid={tid.nav.more} aria-haspopup="dialog" aria-label="More sections" onClick={() => setMoreOpen(true)}
           className={cn(BAR_ITEM, on(remaining.some(t => isHere(t, here))))}>{barGlyph('⋯')}<span>More</span></button>
-        <Modal open={moreOpen} onOpenChange={setMoreOpen} title="More pages">
-          <ul className="flex flex-col gap-xs">
-            {remaining.map(t => <li key={t.view}>
-              <NavLink to={t.path} testId={tid.nav.bottom(t.view)} onClick={() => setMoreOpen(false)}
-                aria-current={isHere(t, here) ? 'page' : undefined}
-                className={cn('flex min-h-touch items-center rounded-control border px-md text-sm font-semibold',
-                  isHere(t, here) ? 'border-transparent bg-brand-subtle text-brand dark:text-brand-accent' : 'bg-surface-card')}>{t.label}</NavLink>
-            </li>)}
-          </ul>
-        </Modal>
+        <GoToSheet tabs={tabs} here={here} open={moreOpen} onOpenChange={setMoreOpen} />
       </>}
     </nav>);
+}
+
+/* The prototype's more-tabs sheet (v15:12072-12080): "Go to", every page of
+   the strip in its order, one .att row each (the name, then on the right
+   Current for the page you are on, Open for the rest). Choosing one goes
+   there and closes the sheet. */
+function GoToSheet({ tabs, here, open, onOpenChange }: { tabs: NavTab[]; here: string; open: boolean; onOpenChange(o: boolean): void }) {
+  return (
+    <Modal open={open} onOpenChange={onOpenChange} title="Go to">
+      <ul data-testid={tid.nav.goToList} className="overflow-hidden rounded-card border bg-surface-card">
+        {tabs.map(t => {
+          const current = isHere(t, here);
+          return (
+            <li key={t.view} className="flex items-center gap-md border-b px-md py-[10px] text-sm last:border-b-0">
+              <span className="min-w-0">{t.label}</span>
+              <NavLink to={t.path} testId={tid.nav.goTo(t.view)} onClick={() => onOpenChange(false)}
+                aria-current={current ? 'page' : undefined} aria-label={current ? `Current: ${t.label}` : `Open ${t.label}`}
+                className={cn(buttonVariants({ variant: current ? 'secondary' : 'ghost', size: 'sm' }), 'ml-auto shrink-0')}>
+                {current ? 'Current' : 'Open'}</NavLink>
+            </li>);
+        })}
+      </ul>
+    </Modal>);
 }

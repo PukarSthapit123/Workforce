@@ -1,4 +1,5 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/api/query';
@@ -161,4 +162,75 @@ test('the role pill shows the renamed role, the viewed person\'s while viewing a
   expect(roleLabelOf({ account })).toBe('Administrator');
   expect(roleLabelOf({ account, viewingAs: { personCode: 'CP-0002', name: 'Amara Okafor', userType: 'employee', roleName: 'Colleague' } })).toBe('Colleague');
   expect(roleLabelOf({ account: { ...account, roleName: '' } })).toBe('Admin');
+});
+
+/* MOBILE FOUNDATION (suite S:1739-1790) and the bar itself (v15:10648-10661):
+   the phone's bottom bar is painted from the strip's own array, at most five
+   items, four destinations and More when there are more, each a glyph over
+   the first word of its name; More is lit while the page on screen is one the
+   bar has no room for, and opens "Go to", every page of the strip with
+   Current against the one you are on. */
+const renderAt = (nav: ReturnType<typeof buildNav>, path: string) =>
+  render(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={[path]}>
+    <ShellView nav={nav} roleLabel="Employee" viewingAs={null} account={menuAccount('Amara Okafor')} inbox={emptyInbox(0)} onSignOut={() => {}} onEndViewAs={() => {}} /></MemoryRouter></QueryClientProvider>);
+const bar = () => screen.getByRole('navigation', { name: 'Quick pages' });
+const barItems = () => within(bar()).getAllByRole('link').concat(within(bar()).queryAllByRole('button'));
+
+test('employee: four destinations with their glyphs and short names, then More, which is lit on a page the bar has no room for', () => {
+  const nav = buildNav({ caps: new Set(['own_home', 'own_ts', 'own_shifts', 'own_leave', 'own_hours', 'own_notices']),
+    modules: { CORE: true, TS: true, A: true, R: true, L: true }, flags: { DOCS: true, NOTICES: true }, onboarding: false });
+  renderAt(nav, '/work/hours');
+  const links = within(bar()).getAllByRole('link');
+  expect(links.map(a => a.getAttribute('aria-label'))).toEqual(['Home', 'Timesheet', 'Shifts', 'Leave']);
+  expect(links.map(a => a.textContent)).toEqual(['⌂Home', '◷Timesheet', '▦Shifts', 'Leave']);
+  expect(within(links[3] as HTMLElement).getByText('Leave').previousElementSibling?.querySelector('svg')).not.toBeNull();
+  expect(barItems()).toHaveLength(5);
+  const more = screen.getByTestId(tid.nav.more);
+  expect(more).toHaveAccessibleName('More sections');
+  expect(more.className).toMatch(/text-brand/);
+  expect(links.every(a => !a.hasAttribute('aria-current'))).toBe(true);
+});
+
+test('More opens Go to, listing every page of the strip with Current against the one on screen, and choosing one closes it', async () => {
+  const nav = buildNav({ caps: new Set(['own_home', 'own_ts', 'own_shifts', 'own_leave', 'own_hours', 'own_notices']),
+    modules: { CORE: true, TS: true, A: true, R: true, L: true }, flags: { DOCS: true, NOTICES: true }, onboarding: false });
+  renderAt(nav, '/work/hours');
+  await userEvent.click(screen.getByTestId(tid.nav.more));
+  const sheet = await screen.findByRole('dialog');
+  expect(within(sheet).getByTestId(tid.modal.title)).toHaveTextContent('Go to');
+  const rows = within(screen.getByTestId(tid.nav.goToList)).getAllByRole('listitem');
+  const work = nav.find(g => g.key === 'work')?.tabs ?? [];
+  expect(rows.map(r => r.firstChild?.textContent)).toEqual(work.map(t => t.label));
+  expect(rows.map(r => r.firstChild?.textContent)).toEqual(['Home', 'Timesheet', 'Shifts', 'Leave', 'Hours', 'Profile', 'Documents', 'Notices']);
+  expect(screen.getByTestId(tid.nav.goTo('hours'))).toHaveTextContent('Current');
+  expect(screen.getByTestId(tid.nav.goTo('hours'))).toHaveAttribute('aria-current', 'page');
+  expect(screen.getByTestId(tid.nav.goTo('docs'))).toHaveTextContent('Open');
+  expect(screen.getByTestId(tid.nav.goTo('docs'))).toHaveAccessibleName('Open Documents');
+  expectTestIdCoverage();
+  await userEvent.click(screen.getByTestId(tid.nav.goTo('profile')));
+  await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  expect(screen.getByTestId(tid.nav.bottom('home'))).not.toHaveAttribute('aria-current');
+  await userEvent.click(screen.getByTestId(tid.nav.more));
+  expect(await screen.findByTestId(tid.nav.goTo('profile'))).toHaveTextContent('Current');
+});
+
+test('manager: Team Home first with the home glyph, the 1c Notices page in Go to with the rest', async () => {
+  const nav = buildNav({ caps: new Set(['own_home', 'team_ts', 'team_hours', 'team_rota', 'team_leave', 'team_sick', 'team_people', 'notice_post']),
+    modules: { CORE: true, TS: true, A: true, R: true, L: true }, flags: { NOTICES: true }, onboarding: false });
+  renderAt(nav, '/team/texc');
+  expect(within(bar()).getAllByRole('link').map(a => a.textContent)).toEqual(['⌂Team', '◷Approvals', '◴Hours', '▦Rota']);
+  await userEvent.click(screen.getByTestId(tid.nav.more));
+  const rows = within(await screen.findByTestId(tid.nav.goToList)).getAllByRole('listitem');
+  expect(rows.map(r => r.firstChild?.textContent)).toEqual(['Team Home', 'Approvals', 'Hours position', 'Rota', 'Requests', 'Sickness', 'Exceptions', 'People', 'Notices']);
+  expect(screen.getByTestId(tid.nav.goTo('texc'))).toHaveTextContent('Current');
+});
+
+test('admin: inside a setup section the bar holds the way back and that section’s pages, with no More when they fit', () => {
+  const nav = buildNav({ caps: new Set(['integration', 'mod_cfg']), modules: { CORE: true }, flags: {}, onboarding: false });
+  renderAt(nav, '/setup/ipay');
+  const links = within(bar()).getAllByRole('link');
+  expect(links.map(a => a.getAttribute('aria-label'))).toEqual(['‹ All setup', 'Payroll readiness', 'Pay codes', 'Business Central', 'Audit log']);
+  expect(links.map(a => a.textContent)).toEqual(['●‹', '●Payroll', '●Pay', '●Business', '●Audit']);
+  expect(screen.getByTestId(tid.nav.bottom('ipay'))).toHaveAttribute('aria-current', 'page');
+  expect(screen.queryByTestId(tid.nav.more)).toBeNull();
 });

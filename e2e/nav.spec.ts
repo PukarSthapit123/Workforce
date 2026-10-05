@@ -124,7 +124,8 @@ test('NV At 390px every destination is reachable from the bottom bar and More al
       ? `nav[aria-label="Quick pages"] > a[data-testid^="nav-bottom-"]:not([data-testid="${excludeTestId}"])`
       : 'nav[aria-label="Quick pages"] > a[data-testid^="nav-bottom-"]';
   const moreButton = () => page.getByTestId(tid.nav.more);
-  const moreItemSel = `[data-testid="${tid.modal.root}"] a[data-testid^="nav-bottom-"]`;
+  /* Go to lists every page of the strip; the way back to the setup index is left out, as it is from the bar walk */
+  const moreItemSel = `[data-testid="${tid.modal.root}"] a[data-testid^="nav-goto-"]:not([data-testid="${tid.nav.goTo('asetup')}"])`;
 
   const visitBottomBar = async (excludeTestId?: string) => {
     const sel = directSel(excludeTestId);

@@ -18,6 +18,8 @@ export const tid = {
     menu: (group: string) => k('nav-menu', group),
     bottom: (view: string) => k('nav-bottom', view),
     more: 'nav-bottom-more',
+    /* 1c group 8: the phone's Go to sheet behind More (v15:12072) */
+    goToList: 'nav-goto-list', goTo: (view: string) => k('nav-goto', view),
   },
   shell: {
     rolePill: 'shell-role-pill', bell: 'shell-bell', bellCount: 'shell-bell-count', theme: 'shell-theme',
