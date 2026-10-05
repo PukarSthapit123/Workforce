@@ -25,6 +25,12 @@ test('an employee gets My Work only, in prototype order', () => {
   /* 1c group 6 builds My work → Notices */
   expect(must(must(g[0]).tabs.find(t => t.view === 'notices'))).toMatchObject({ built: true, path: '/work/notices' });
   expect(must(must(g[0]).tabs.find(t => t.view === 'notices')).subProject).toBeUndefined();
+  /* 1c group 7 builds My home and Documents */
+  for (const view of ['home', 'docs']) {
+    expect(must(must(g[0]).tabs.find(t => t.view === view)), view).toMatchObject({ built: true, path: `/work/${view}` });
+    expect(must(must(g[0]).tabs.find(t => t.view === view)).subProject).toBeUndefined();
+  }
+  expect(g.flatMap(x => x.tabs).filter(t => t.subProject?.includes('plan 1c'))).toEqual([]);
 });
 test('a manager also gets My Team, with Team Home and Approvals in the strip and the rest under headings', () => {
   const g = buildNav({ caps: caps('own_home', 'team_ts', 'team_rota', 'team_cover', 'team_leave', 'team_sick', 'team_hours', 'team_people', 'onb_track', 'notice_post'), modules: ALL_MODULES, flags, onboarding: false });
@@ -47,6 +53,9 @@ test('a manager also gets My Team, with Team Home and Approvals in the strip and
   /* 1c group 6 builds My team → Notices, under People */
   expect(must(team.tabs.find(t => t.view === 'tnotices'))).toMatchObject({ built: true, path: '/team/tnotices', group: 'People', label: 'Notices' });
   expect(must(team.tabs.find(t => t.view === 'tnotices')).subProject).toBeUndefined();
+  /* 1c group 7 builds Team Home */
+  expect(must(team.tabs.find(t => t.view === 'thome'))).toMatchObject({ built: true, path: '/team/thome' });
+  expect(must(team.tabs.find(t => t.view === 'thome')).subProject).toBeUndefined();
 });
 test('a manager who builds the rota gets the Shift catalogue and Working patterns, built, in the prototype order', () => {
   const g = buildNav({ caps: caps('own_home', 'team_rota', 'team_cover', 'rota_shift', 'rota_pattern'), modules: ALL_MODULES, flags, onboarding: false });
@@ -60,6 +69,11 @@ test('a module switched off removes its tabs', () => {
   const g = buildNav({ caps: caps('own_home', 'own_shifts', 'own_leave'), modules: { ...ALL_MODULES, R: false, L: false }, flags, onboarding: false });
   expect(must(g[0]).tabs.map(t => t.label)).not.toContain('Shifts');
   expect(must(g[0]).tabs.map(t => t.label)).not.toContain('Leave');
+});
+test('the DOCS flag switched off removes Documents from My work', () => {
+  const g = buildNav({ caps: caps('own_home', 'own_ts'), modules: ALL_MODULES, flags: { ...flags, DOCS: false }, onboarding: false });
+  expect(must(g[0]).tabs.map(t => t.view)).not.toContain('docs');
+  expect(must(g[0]).tabs.map(t => t.view)).toContain('home');
 });
 test('someone still onboarding sees onboarding and nothing else', () => {
   const g = buildNav({ caps: caps('own_home', 'own_onb', 'own_ts'), modules: ALL_MODULES, flags, onboarding: true });
