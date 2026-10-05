@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import { useSearchParams } from 'react-router';
 import { tid } from '@/testids';
 import type { Person } from '@/contract/people';
 import { Button, GuideButton, Page, PageHead } from '@/ui';
@@ -26,6 +27,16 @@ export function PeopleWorkspace({ variant, view, crumb, tip, above }: {
   const [proxy, setProxy] = useState<ProxyTarget | null>(null);
   const everyone = usePeople(variant === 'admin' ? 'all' : 'here', '');
   const [open, setOpen] = useState<string | null>(null);
+  /* A person deep link (?person=<employee ID>, the prototype's #/people/<id>)
+     opens that record, when the person is on this list; closing it drops the link. */
+  const [params, setParams] = useSearchParams();
+  const linked = params.get('person');
+  const linkedId = linked ? everyone.data?.find(p => p.code === linked)?.id ?? null : null;
+  const shown = open ?? linkedId;
+  const close = () => {
+    setOpen(null);
+    if (linked) setParams(prev => { const next = new URLSearchParams(prev); next.delete('person'); return next; }, { replace: true });
+  };
   const [form, setForm] = useState<{ person?: Person } | null>(null);
   const [moving, setMoving] = useState<Person | null>(null);
   /* a manager adds people at their own location, so the form starts there */
@@ -42,11 +53,11 @@ export function PeopleWorkspace({ variant, view, crumb, tip, above }: {
       <PageHead title="People" crumb={crumb} tip={tip} tipTestId={tid.head.tip(view)} actions={<>{add}<GuideButton view={view} /></>} />
       <PeopleList variant={variant} total={everyone.data?.length} onOpen={p => setOpen(p.id)}
         actions={crud ? p => <Button testId={tid.people.edit(p.code)} kind="ghost" small onClick={() => setForm({ person: p })}>Edit</Button> : undefined} />
-      {open && <PersonRecord personId={open} onClose={() => setOpen(null)} actions={crud || proxyOk ? p => <>
-        {crud && <Button testId={tid.person.changeState} kind="ghost" onClick={() => { setOpen(null); setMoving(p); }}>Change state</Button>}
+      {shown && <PersonRecord personId={shown} onClose={close} actions={crud || proxyOk ? p => <>
+        {crud && <Button testId={tid.person.changeState} kind="ghost" onClick={() => { close(); setMoving(p); }}>Change state</Button>}
         {proxyOk && p.code !== self && <Button testId={tid.proxy.open} kind={crud ? 'secondary' : 'primary'}
-          onClick={() => { setOpen(null); setProxy({ code: p.code, name: p.name }); }}>Enter time on their behalf</Button>}
-        {crud && <Button testId={tid.person.edit} kind="primary" onClick={() => { setOpen(null); setForm({ person: p }); }}>Edit</Button>}</> : undefined} />}
+          onClick={() => { close(); setProxy({ code: p.code, name: p.name }); }}>Enter time on their behalf</Button>}
+        {crud && <Button testId={tid.person.edit} kind="primary" onClick={() => { close(); setForm({ person: p }); }}>Edit</Button>}</> : undefined} />}
       {proxy && <ProxyEntry person={proxy} onClose={() => setProxy(null)} />}
       {form && <PersonForm key={editing ? versionKey(editing) : 'new'} person={editing} defaultLocation={defaultLocation} onClose={() => setForm(null)}
         onChangeState={p => { setForm(null); setMoving(p); }} />}
