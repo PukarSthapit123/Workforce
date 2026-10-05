@@ -75,6 +75,8 @@ export const tid = {
     pendingCount: 'profile-pending-count', field: (key: string) => k('profile-field', key), payroll: (key: string) => k('profile-payroll', key),
     note: 'profile-note', send: 'profile-send', cancel: 'profile-cancel', warn: 'profile-warn', fact: (key: string) => k('profile-fact', key),
     off: 'profile-off', state: 'profile-state', error: 'profile-error', managedTip: 'profile-managed-tip', detailsTip: 'profile-details-tip',
+    /* 1c group 8: the way to My documents under the profile (essProfile, v15:5647) */
+    docs: 'profile-docs',
   },
   queue: {
     root: (stage: string) => k('profile-queue', stage), row: (id: string) => k('profile-queue-row', id),

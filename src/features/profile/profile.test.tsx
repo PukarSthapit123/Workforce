@@ -1,10 +1,12 @@
-import { fireEvent, screen } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { store } from '@/mocks/store';
 import { tid } from '@/testids';
 import { expectTestIdCoverage } from '@/test/testid-coverage';
 import { renderPage, withFakeServer } from '@/test/render-page';
 import { accountOf, caller, fault, personOf, resetTo, signInAs, snapshot, tokenFor } from '@/test/api-helpers';
+import { queryClient } from '@/api/query';
+import { tenantKeys } from '@/api/tenant';
 import { ProfilePage } from './ProfilePage';
 
 withFakeServer();
@@ -63,4 +65,20 @@ test('with self-service switched off, the page says so and offers no change', as
   renderPage(<ProfilePage />);
   expect(await screen.findByTestId(tid.profile.off)).toHaveTextContent('switched off');
   expect(screen.queryByTestId(tid.profile.propose)).toBeNull();
+});
+
+/* Suite GUIDES: "The documents link survived the banner removal" (essProfile,
+   v15:5647): Open documents goes to My documents while the Document centre is
+   on, and is not offered while it is off. */
+test('Open documents goes to My documents while the Document centre is on, and is gone while it is off', async () => {
+  const view = renderPage(<ProfilePage />);
+  expect(await screen.findByTestId(tid.profile.docs)).toHaveAttribute('href', '/work/docs');
+  view.unmount();
+  const t = store.coll<{ flags: Record<string, unknown> }>('tenant').tenant;
+  if (!t) throw new Error('no tenant');
+  t.flags = { ...t.flags, DOCS: false };
+  renderPage(<ProfilePage />);
+  await screen.findByTestId(tid.profile.value('phone'));
+  await waitFor(() => expect(queryClient.getQueryState(tenantKeys.all)?.status).toBe('success'));
+  expect(screen.queryByTestId(tid.profile.docs)).toBeNull();
 });

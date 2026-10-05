@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { Clock } from 'lucide-react';
 import { tid } from '@/testids';
-import { Avatar, Button, Card, CardHead, Fact, Page, PageHead, Pill, Small, Tip } from '@/ui';
+import { Avatar, Button, Card, CardHead, Fact, GuideButton, NavLink, Page, PageHead, Pill, Small, Tip } from '@/ui';
 import { useProfile } from '@/api/profile';
+import { useTenant } from '@/api/tenant';
+import { flagOn } from '@/domain/modules';
+import { buttonVariants } from '@/ui/shadcn/button';
 import { useNames } from '@/api/reference';
 import { formatDate } from '@/lib/format';
 import { StatePill } from '@/features/people/StatePill';
@@ -14,12 +17,13 @@ import { ProposeChange } from './ProposeChange';
    details, which you may propose changes to. The rota and leave cards belong
    to modules not built yet. */
 export function ProfilePage() {
-  const profile = useProfile(), names = useNames();
+  const profile = useProfile(), names = useNames(), tenant = useTenant();
+  const docs = tenant.data ? flagOn(tenant.data.modules, tenant.data.flags, 'DOCS') : false;
   const [proposing, setProposing] = useState(false);
   const data = profile.data, p = data?.person;
   return (
     <Page testId={tid.page('profile')}>
-      <PageHead title="My profile" crumb="My work · Profile" />
+      <PageHead title="My profile" crumb="My work · Profile" actions={<GuideButton view="profile" />} />
       {profile.isPending && <p className="text-text-secondary">Loading your profile&hellip;</p>}
       {profile.isError && <p data-testid={tid.profile.error} role="alert" className="text-err">Your profile could not be loaded. Reload the page to try again.</p>}
       {data && p && <>
@@ -61,6 +65,8 @@ export function ProfilePage() {
               </Fact>);
           })}
         </Card>
+        {/* the way to the documents, while the Document centre is on (v15:5647) */}
+        {docs && <div className="mt-md"><NavLink testId={tid.profile.docs} to="/work/docs" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>Open documents</NavLink></div>}
         {proposing && <ProposeChange profile={data} onClose={() => setProposing(false)} />}
       </>}
     </Page>);
