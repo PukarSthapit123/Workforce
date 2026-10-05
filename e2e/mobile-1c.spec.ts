@@ -36,7 +36,7 @@ test('MOB a viewport is declared, the tab strip gives way to the bottom bar, the
   expect(await rulesMatching(page, 'nav[aria-label="Quick pages"]', 'safe-area-inset-bottom')).not.toEqual([]);
 });
 
-test('MOB a dialog becomes a bottom sheet, full width, its foot clear of the home indicator', async ({ page, signInAs }) => {
+test('MOB a dialog becomes a bottom sheet, full width, resting on the foot of the screen', async ({ page, signInAs }) => {
   await signInAs('employee');
   await page.goto('/work/home');
   await page.getByTestId(tid.nav.more).click();
