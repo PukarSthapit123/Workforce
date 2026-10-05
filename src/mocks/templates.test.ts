@@ -4,7 +4,7 @@ import { Refusal } from '@/contract/common';
 import { getTenant } from '@/contract/tenant';
 import { ApprovalSetup } from '@/contract/approvals';
 import { TemplateApplied, TemplateFile, TemplateImported, TemplateList, TemplatePlan } from '@/contract/templates';
-import { SHIPPED_TEMPLATES, TEMPLATE_NAME_SHIPPED } from '@/domain/templates';
+import { SHIPPED_TEMPLATES, TEMPLATE_NAME_SHIPPED, TYPES_LEFT_ALONE } from '@/domain/templates';
 import { accountOf, audits, caller, fault, resetTo, snapshot, tokenFor, type Persona } from '@/test/api-helpers';
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' })); afterAll(() => server.close());
@@ -74,6 +74,17 @@ describe('who may (Review Focus 1, D4)', () => {
     const r = TemplateApplied.parse((await (await as('admin'))('POST', APPLY('tpl_renamed'), undefined, tenantVer())).body);
     expect(r.plan.leftAlone.map(l => l.text)).toContain('Role names stay as they are. Renaming roles needs Permissions configuration.');
     expect(store.coll<{ name: string }>('userTypes').employee?.name).toBe('Employee');
+  });
+  test('without Employee types and configuration, an apply leaves employee types alone and says so (I1)', async () => {
+    revoke('type_cfg');
+    const before = snapshot('employeeTypes');
+    const call = await as('admin');
+    expect((await call('POST', '/api/v1/employee-types', {})).status).toBe(403);
+    const r = await call('POST', APPLY('mne'), undefined, tenantVer());
+    expect(r.status).toBe(200);
+    const done = TemplateApplied.parse(r.body);
+    expect(done.plan.leftAlone.map(l => l.text)).toContain(TYPES_LEFT_ALONE);
+    expect(snapshot('employeeTypes')).toEqual(before);
   });
 });
 

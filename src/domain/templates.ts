@@ -399,8 +399,11 @@ function moduleSteps(t: Template, s: TenantState) {
    stay with the people who hold them. `mayRenameRoles` is false when the
    caller lacks Permissions configuration: role names are then left alone.
    `mayChangeChains` is false without the approval framework: the chains are
-   then left alone. */
-export function planApply(t: Template, s: TenantState, opts: { mayRenameRoles: boolean; mayChangeChains: boolean }): ApplyPlan {
+   then left alone. `mayChangeTypes` is false without Employee types and
+   configuration: employee types are then left alone (Sites off still takes the
+   site capability away, as the module switch does). */
+export const TYPES_LEFT_ALONE = 'Employee types stay as they are. Changing them needs Employee types and configuration.';
+export function planApply(t: Template, s: TenantState, opts: { mayRenameRoles: boolean; mayChangeChains: boolean; mayChangeTypes: boolean }): ApplyPlan {
   const changes: PlanLine[] = [], added: PlanLine[] = [], leftAlone: PlanLine[] = [];
   const steps: ApplySteps = { modules: [], finalModules: {}, finalRestore: {}, flags: [], labels: {}, typesAdded: [], typesUpdated: [], roleNames: {}, chains: [],
     structure: { departments: [], costCentres: [], locations: [], jobProfiles: [], contracts: [] } };
@@ -456,21 +459,27 @@ export function planApply(t: Template, s: TenantState, opts: { mayRenameRoles: b
 
   /* employee types: set or added, never removed. Sites off leaves no type with the site capability. */
   const sitesOn = mods.modules.C === true;
+  const typeAdds: ApplySteps['typesAdded'] = [], typeUpdates: ApplySteps['typesUpdated'] = [], typeAdded: PlanLine[] = [], typeChanges: PlanLine[] = [];
   for (const want of t.employeeTypes) {
     const caps = sitesOn ? want.capabilities : want.capabilities.filter(x => x !== 'site');
     const have = s.employeeTypes.find(x => x.code === want.code);
     if (!have) {
-      steps.typesAdded.push({ ...want, capabilities: caps });
-      added.push({ area: 'types', text: `Employee type ${want.name} (${want.code}).` });
+      typeAdds.push({ ...want, capabilities: caps });
+      typeAdded.push({ area: 'types', text: `Employee type ${want.name} (${want.code}).` });
       continue;
     }
     const next = { ...want, capabilities: caps };
     const diff = TYPE_FIELDS.filter(k => (k === 'capabilities' ? !sameSet(have.capabilities, next.capabilities) : have[k] !== next[k]));
     if (!diff.length) continue;
-    steps.typesUpdated.push({ code: want.code, change: Object.fromEntries(diff.map(k => [k, next[k]])) });
-    changes.push({ area: 'types', text: diff.includes('name')
+    typeUpdates.push({ code: want.code, change: Object.fromEntries(diff.map(k => [k, next[k]])) });
+    typeChanges.push({ area: 'types', text: diff.includes('name')
       ? `Employee type ${have.name} becomes ${next.name}${diff.length > 1 ? `, with a new ${list(diff.filter(k => k !== 'name').map(k => TYPE_FIELD_WORD[k]))}` : ''}.`
       : `Employee type ${have.name}: new ${list(diff.map(k => TYPE_FIELD_WORD[k]))}.` });
+  }
+  if (!opts.mayChangeTypes && (typeAdds.length || typeUpdates.length)) leftAlone.push({ area: 'types', text: TYPES_LEFT_ALONE });
+  else if (opts.mayChangeTypes) {
+    steps.typesAdded = typeAdds; steps.typesUpdated = typeUpdates;
+    added.push(...typeAdded); changes.push(...typeChanges);
   }
   const kept = s.employeeTypes.filter(x => !t.employeeTypes.some(w => w.code === x.code)).map(x => x.name);
   if (kept.length) leftAlone.push({ area: 'types', text: `Employee types the template does not have stay, with everyone who holds them: ${list(kept)}.` });

@@ -3,7 +3,7 @@ import { FLAGS, SWITCH_CODES, ROLE_NAME_TAKEN, switchFlag, type FlagExtras } fro
 import {
   IN_USE, NOT_A_TEMPLATE, NO_SUCH_TEMPLATE, SHIPPED_KEYS, SHIPPED_REMOVE, SHIPPED_TEMPLATES, TEMPLATE_NAME_REQUIRED, TEMPLATE_NAME_SHIPPED,
   TEMPLATE_SCOPES, UNREADABLE, captureTemplate, planApply, planSummary, readTemplateFile, removeProblem, templateFile, templateKey,
-  templateNameProblem, templateSummary, type CaptureSource, type Template, type TenantState, type TemplateStructure,
+  TYPES_LEFT_ALONE, templateNameProblem, templateSummary, type CaptureSource, type Template, type TenantState, type TemplateStructure,
 } from './templates';
 import { CHAIN_MODULES, DEFAULT_CHAIN, defaultChainFor, type ChainModule, type ChainStep } from './approvals';
 
@@ -104,7 +104,7 @@ describe('capture by scope (D2)', () => {
 
 describe('the apply plan (D1)', () => {
   test('Fusion III on the care tenant: Rota off with its shifts set aside, start and finish on a grid, Contract and Cost code', () => {
-    const p = planApply(shipped('mne'), socialState(), { mayRenameRoles: true, mayChangeChains: true });
+    const p = planApply(shipped('mne'), socialState(), { mayRenameRoles: true, mayChangeChains: true, mayChangeTypes: true });
     expect(p.steps.modules).toEqual([{ code: 'R', on: false }]);
     expect(p.steps.finalModules.R).toBe(false);
     expect(p.changes.map(l => l.text)).toEqual(expect.arrayContaining([
@@ -116,7 +116,7 @@ describe('the apply plan (D1)', () => {
     expect(p.steps.typesAdded.map(x => x.code)).toEqual(['driver', 'hourly']);
   });
   test('never deletes or overwrites: held structure codes and employee types the template lacks are left alone, with the people', () => {
-    const p = planApply(shipped('mne'), socialState(), { mayRenameRoles: true, mayChangeChains: true });
+    const p = planApply(shipped('mne'), socialState(), { mayRenameRoles: true, mayChangeChains: true, mayChangeTypes: true });
     expect(p.steps.structure.costCentres.map(c => c.code)).toEqual(['CC-110', 'CC-120', 'CC-900']);
     expect(p.steps.structure.jobProfiles.map(c => c.code)).toEqual(['ENG', 'SENG', 'CM', 'PAY']);
     expect(p.added.map(l => l.text)).toContain('Employee type Site Engineer (driver).');
@@ -134,43 +134,51 @@ describe('the apply plan (D1)', () => {
   test('a contract pointing at something not here is added without it, and says so', () => {
     const t: Template = { ...shipped('social'), scope: 'structure',
       structure: { contracts: [{ code: 'NEW-1', name: 'New', client: '', costCentre: 'CC-404', manager: '', status: 'Active', start: '', end: '', billable: true, location: 'WH', tasks: [] }] } };
-    const p = planApply(t, socialState(), { mayRenameRoles: true, mayChangeChains: true });
+    const p = planApply(t, socialState(), { mayRenameRoles: true, mayChangeChains: true, mayChangeTypes: true });
     expect(p.steps.structure.contracts[0]).toMatchObject({ code: 'NEW-1', costCentre: '', location: 'WH' });
     expect(p.added.map(l => l.text)).toContain('Contract NEW-1 New, without the cost centre CC-404, which is not here.');
   });
   test('a feature of a module that ends up off is left alone, through switchFlag', () => {
-    const p = planApply(shipped('qcic'), socialState({ flags: { ...shipped('social').flags, RESTRULE: false } }), { mayRenameRoles: true, mayChangeChains: true });
+    const p = planApply(shipped('qcic'), socialState({ flags: { ...shipped('social').flags, RESTRULE: false } }), { mayRenameRoles: true, mayChangeChains: true, mayChangeTypes: true });
     expect(p.steps.flags.find(f => f.code === 'RESTRULE')).toBeUndefined();
     expect(p.leftAlone.find(l => l.area === 'features')?.text).toMatch(/^Features of a module that is off stay as they are: .*Minimum rest checking/);
     for (const f of p.steps.flags) expect(switchFlag(p.steps.finalModules, { ...shipped('qcic').flags }, f.code, f.change).ok, f.code).toBe(true);
   });
   test('Timesheet goes off and comes back through switchModule, remembering its capture methods', () => {
     const off: Template = { ...shipped('social'), modules: { ...shipped('social').modules, TS: false, A: false, B: false, C: false } };
-    const p = planApply(off, socialState(), { mayRenameRoles: true, mayChangeChains: true });
+    const p = planApply(off, socialState(), { mayRenameRoles: true, mayChangeChains: true, mayChangeTypes: true });
     expect(p.steps.modules).toEqual([{ code: 'TS', on: false }]);
     expect(p.steps.finalRestore.TS).toEqual(['A', 'B', 'C']);
-    const back = planApply(shipped('qcic'), socialState({ modules: p.steps.finalModules, restore: p.steps.finalRestore }), { mayRenameRoles: true, mayChangeChains: true });
+    const back = planApply(shipped('qcic'), socialState({ modules: p.steps.finalModules, restore: p.steps.finalRestore }), { mayRenameRoles: true, mayChangeChains: true, mayChangeTypes: true });
     expect(back.steps.modules).toEqual([{ code: 'R', on: false }, { code: 'TS', on: true }, { code: 'B', on: false }]);
     expect(back.steps.finalModules).toMatchObject({ TS: true, A: true, B: false, C: true });
   });
   test('Sites off leaves no new or changed type with the site capability', () => {
     const t: Template = { ...shipped('mne'), modules: { ...shipped('mne').modules, C: false } };
-    const p = planApply(t, socialState(), { mayRenameRoles: true, mayChangeChains: true });
+    const p = planApply(t, socialState(), { mayRenameRoles: true, mayChangeChains: true, mayChangeTypes: true });
     expect(p.steps.typesAdded.find(x => x.code === 'driver')?.capabilities).toEqual(['vehicle', 'project']);
+  });
+  test('employee types change only for a caller who may configure employee types (I1)', () => {
+    const no = planApply(shipped('mne'), socialState(), { mayRenameRoles: true, mayChangeChains: true, mayChangeTypes: false });
+    expect([no.steps.typesAdded, no.steps.typesUpdated]).toEqual([[], []]);
+    expect([...no.changes, ...no.added].filter(l => l.area === 'types')).toEqual([]);
+    expect(no.leftAlone.map(l => l.text)).toContain(TYPES_LEFT_ALONE);
+    const same = planApply(shipped('social'), socialState(), { mayRenameRoles: true, mayChangeChains: true, mayChangeTypes: false });
+    expect(same.leftAlone.map(l => l.text)).not.toContain(TYPES_LEFT_ALONE);
   });
   test('role names change only for a caller who may rename roles, and only as a valid set', () => {
     const t: Template = { ...shipped('social'), roleNames: { employee: 'Support Worker', manager: 'Service Manager', admin: 'Admin' } };
-    const yes = planApply(t, socialState(), { mayRenameRoles: true, mayChangeChains: true });
+    const yes = planApply(t, socialState(), { mayRenameRoles: true, mayChangeChains: true, mayChangeTypes: true });
     expect(yes.steps.roleNames).toEqual({ employee: 'Support Worker', manager: 'Service Manager' });
     expect(yes.changes.map(l => l.text)).toContain('The Employee role is called Support Worker.');
-    const no = planApply(t, socialState(), { mayRenameRoles: false, mayChangeChains: true });
+    const no = planApply(t, socialState(), { mayRenameRoles: false, mayChangeChains: true, mayChangeTypes: true });
     expect(no.steps.roleNames).toEqual({});
     expect(no.leftAlone.map(l => l.text)).toContain('Role names stay as they are. Renaming roles needs Permissions configuration.');
-    const clash = planApply({ ...t, roleNames: { employee: 'Staff', manager: 'staff', admin: 'Admin' } }, socialState(), { mayRenameRoles: true, mayChangeChains: true });
+    const clash = planApply({ ...t, roleNames: { employee: 'Staff', manager: 'staff', admin: 'Admin' } }, socialState(), { mayRenameRoles: true, mayChangeChains: true, mayChangeTypes: true });
     expect(clash.leftAlone.map(l => l.text)).toContain(`Role names stay as they are. ${ROLE_NAME_TAKEN}`);
   });
   test('applying the template a tenant already matches changes nothing', () => {
-    const p = planApply(shipped('social'), socialState(), { mayRenameRoles: true, mayChangeChains: true });
+    const p = planApply(shipped('social'), socialState(), { mayRenameRoles: true, mayChangeChains: true, mayChangeTypes: true });
     expect([p.changes, p.added]).toEqual([[], []]);
     expect(planSummary(p)).toBe('Nothing needed to change. Nothing was deleted.');
     expect(planSummary({ changes: [{ area: 'modules', text: 'x' }, { area: 'modules', text: 'y' }], added: [{ area: 'types', text: 'z' }] }))
@@ -229,7 +237,7 @@ describe('the file', () => {
 
 describe('approval chains in a template (1c group 5)', () => {
   test('Fusion III sets its two-stage Timesheet chain, every timesheet, all departments, ending in the posting step', () => {
-    const p = planApply(shipped('mne'), socialState(), { mayRenameRoles: true, mayChangeChains: true });
+    const p = planApply(shipped('mne'), socialState(), { mayRenameRoles: true, mayChangeChains: true, mayChangeTypes: true });
     const ts = p.steps.chains.find(c => c.module === 'Timesheet')?.steps ?? [];
     expect(ts.map(s => [s.role, s.scope, s.when])).toEqual([
       ['Line manager', 'All departments', 'Every timesheet'], ['Payroll', 'All departments', 'Every timesheet'],
@@ -239,10 +247,10 @@ describe('approval chains in a template (1c group 5)', () => {
       'Timesheet approval chain: Line manager, then Payroll, then Business Central.', 'Profile approval chain: Line manager.', 'Leave approval chain: Line manager.']);
   });
   test('a chain already held is no change; without the approval framework the chains stay', () => {
-    const fusion = planApply(shipped('mne'), socialState(), { mayRenameRoles: true, mayChangeChains: true });
+    const fusion = planApply(shipped('mne'), socialState(), { mayRenameRoles: true, mayChangeChains: true, mayChangeTypes: true });
     const held = Object.fromEntries(CHAIN_MODULES.map(m => [m, fusion.steps.chains.find(c => c.module === m)?.steps ?? defaultChainFor(m)])) as Record<ChainModule, ChainStep[]>;
-    expect(planApply(shipped('mne'), socialState({ chains: held }), { mayRenameRoles: true, mayChangeChains: true }).steps.chains).toEqual([]);
-    const no = planApply(shipped('mne'), socialState(), { mayRenameRoles: true, mayChangeChains: false });
+    expect(planApply(shipped('mne'), socialState({ chains: held }), { mayRenameRoles: true, mayChangeChains: true, mayChangeTypes: true }).steps.chains).toEqual([]);
+    const no = planApply(shipped('mne'), socialState(), { mayRenameRoles: true, mayChangeChains: false, mayChangeTypes: true });
     expect(no.steps.chains).toEqual([]);
     expect(no.leftAlone.map(l => l.text)).toContain('Approval chains stay as they are. Changing them needs the approval framework.');
   });
@@ -252,7 +260,7 @@ describe('approval chains in a template (1c group 5)', () => {
       { module: 'Timesheet', role: 'Line manager', scope: 'All departments', when: 'Every timesheet', sla: '12 hours', fixed: false },
       { module: 'Timesheet', role: 'Business Central', scope: '', when: 'Posts on final approval', sla: '', fixed: true },
       { module: 'Payroll', role: 'Payroll', scope: 'All departments', when: 'Every timesheet', sla: '1 day', fixed: false }] };
-    const p = planApply(t, socialState(), { mayRenameRoles: true, mayChangeChains: true });
+    const p = planApply(t, socialState(), { mayRenameRoles: true, mayChangeChains: true, mayChangeTypes: true });
     expect(p.steps.chains.map(c => c.module)).toEqual(['Timesheet']);
     expect(p.leftAlone.map(l => l.text)).toEqual(expect.arrayContaining([
       'The Profile approval chain stays as it is. The Profile chain can only have a line manager and payroll.',

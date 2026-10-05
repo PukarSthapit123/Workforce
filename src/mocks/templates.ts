@@ -181,7 +181,7 @@ export const templateHandlers = [
 
   serve(getTemplatePlan, ({ session, params }) => {
     const template = templateAt(params.key);
-    return planView(params.key, template, planApply(template, stateOf(tenantRec()), { mayRenameRoles: session.caps.includes('perm_cfg'), mayChangeChains: session.caps.includes('framework') }));
+    return planView(params.key, template, planApply(template, stateOf(tenantRec()), { mayRenameRoles: session.caps.includes('perm_cfg'), mayChangeChains: session.caps.includes('framework'), mayChangeTypes: session.caps.includes('type_cfg') }));
   }),
 
   serve(applyTemplate, ({ session, params, checkVersion }) => {
@@ -189,7 +189,7 @@ export const templateHandlers = [
     checkVersion(t);
     const template = templateAt(params.key);
     if (hasStructure(template)) requireCapability(session, 'master_data');
-    const plan = planApply(template, stateOf(t), { mayRenameRoles: session.caps.includes('perm_cfg'), mayChangeChains: session.caps.includes('framework') });
+    const plan = planApply(template, stateOf(t), { mayRenameRoles: session.caps.includes('perm_cfg'), mayChangeChains: session.caps.includes('framework'), mayChangeTypes: session.caps.includes('type_cfg') });
     const pv = planView(params.key, template, plan);
     const message = `${template.name} applied. ${pv.summary}`;
     if (!plan.changes.length && !plan.added.length && t.template === params.key) return { record: view(t), auditId: null, plan: pv, message };
