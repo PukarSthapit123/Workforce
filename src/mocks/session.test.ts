@@ -223,3 +223,18 @@ test('view-as of yourself is refused with 422 in plain words, and nothing is rec
   expect(auditRows().some(x => x.act === 'View-as started')).toBe(false);
   expect((await (await fetch('/api/v1/session', { headers: { Authorization: `Bearer ${token as string}` } })).json()).viewingAs).toBeUndefined();
 });
+
+/* 1c D11: a renamed role shows its new name everywhere, the role pill while
+   viewing as someone included, so the session carries the viewed person's
+   role name as well as their user type. */
+test('viewing as someone whose role was renamed carries the new role name', async () => {
+  const { token } = await viewingAsEmployee();
+  const r = await fetch('/api/v1/session', { headers: { Authorization: `Bearer ${token}` } });
+  expect((await r.json()).viewingAs).toMatchObject({ userType: 'employee', roleName: 'Employee' });
+  const types = store.coll<{ name: string }>('userTypes');
+  const employee = types.employee;
+  if (!employee) throw new Error('no seeded employee user type');
+  employee.name = 'Colleague';
+  const again = await fetch('/api/v1/session', { headers: { Authorization: `Bearer ${token}` } });
+  expect((await again.json()).viewingAs).toMatchObject({ userType: 'employee', roleName: 'Colleague' });
+});

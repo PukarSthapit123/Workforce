@@ -7,7 +7,9 @@ export const SessionAccount = z.object({ email: z.string(), userType: z.enum(['e
 export const SessionAccountView = SessionAccount.extend({ roleName: z.string(), roleDescription: z.string(), locationName: z.string() });
 export const Session = z.object({
   token: z.string(), account: SessionAccountView, capabilities: z.array(z.string()),
-  viewingAs: z.object({ personCode: z.string(), name: z.string(), userType: SessionAccount.shape.userType }).optional(),
+  /* roleName: the display name of the viewed person's user type (D11), so
+     the role pill shows a renamed role while viewing as someone */
+  viewingAs: z.object({ personCode: z.string(), name: z.string(), userType: SessionAccount.shape.userType, roleName: z.string() }).optional(),
   simulated: z.literal(true),   // honest label: this sign-in is not Entra ID yet
 });
 export type Session = z.infer<typeof Session>;

@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/api/query';
-import { ShellView, isHere, stripTabsFor } from './Shell';
+import { ShellView, isHere, roleLabelOf, stripTabsFor } from './Shell';
 import { emptyInbox } from './Inbox';
 import { buildNav } from '@/domain/nav';
 import { expectTestIdCoverage } from '@/test/testid-coverage';
@@ -124,4 +124,13 @@ test('inside a module the strip reads All modules, then its features, then its s
   expect(strip.map(t => isHere(t, '/setup/amods?m=R'))).toEqual([false, true, false]);
   expect(stripTabsFor(setup, '/setup/amods', '?m=CORE').map(t => t.label)).toEqual(['‹ All modules', 'Workforce core features']);
   expect(stripTabsFor(setup, '/setup/amods').map(t => t.label)).toEqual(['‹ All setup', 'Modules & features', 'Timesheet', 'Rota', 'Leave']);
+});
+
+/* 1c follow-up from group 2 (D11): the role pill shows the renamed role,
+   the viewed person's own while viewing as someone, never the raw user type. */
+test('the role pill shows the renamed role, the viewed person\'s while viewing as someone', () => {
+  const account = { email: 'a@example.org', userType: 'admin' as const, personCode: 'CP-0001', name: 'Dee', roleName: 'Administrator', roleDescription: '', locationName: '' };
+  expect(roleLabelOf({ account })).toBe('Administrator');
+  expect(roleLabelOf({ account, viewingAs: { personCode: 'CP-0002', name: 'Amara Okafor', userType: 'employee', roleName: 'Colleague' } })).toBe('Colleague');
+  expect(roleLabelOf({ account: { ...account, roleName: '' } })).toBe('Admin');
 });

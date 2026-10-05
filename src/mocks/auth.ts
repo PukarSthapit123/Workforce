@@ -52,7 +52,7 @@ export function sessionView(s: ServerSession): Session {
     account: { email: a.email, userType: a.userType, personCode: a.personCode, name: p?.name ?? a.email,
       roleName: roleNameOf(a), roleDescription: userTypeOf(a)?.description ?? '', locationName: locationNameOf(p) },
     capabilities: capsFor(viewingAs?.va ?? a),
-    ...(viewingAs ? { viewingAs: { personCode: viewingAs.vp.code, name: viewingAs.vp.name, userType: viewingAs.va.userType } } : {}) };
+    ...(viewingAs ? { viewingAs: { personCode: viewingAs.vp.code, name: viewingAs.vp.name, userType: viewingAs.va.userType, roleName: roleNameOf(viewingAs.va) } } : {}) };
 }
 
 /* View-as is a preview. While a session is viewing as someone, the only

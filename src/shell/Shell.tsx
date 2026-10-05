@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ComponentType, type ReactNode } from 
 import { Sun, TriangleAlert } from 'lucide-react';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router';
 import type { NavGroup, NavTab } from '@/domain/nav';
+import type { Session } from '@/contract/session';
 import { tid } from '@/testids';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/ui/shadcn/dropdown-menu';
@@ -60,14 +61,19 @@ const THEME_KEY = 'qnipay.theme';
    for an empty string, so this needs no unsafe indexing. */
 const capitalise = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
+/* The role pill's text: the user type's display name (D11), so a renamed
+   role shows its new name; while viewing as someone, the viewed person's. */
+export function roleLabelOf(session: Pick<Session, 'account' | 'viewingAs'>): string {
+  const on = session.viewingAs ?? session.account;
+  return on.roleName || capitalise(on.userType);
+}
+
 export function Shell() {
   const data = useShellData();
   if (data.kind === 'loading') return <ShellLoading />;
   if (data.kind === 'error') return <ShellError onRetry={data.onRetry} onSignOut={data.onSignOut} />;
   const { session } = data;
-  /* the user type's display name (D11): a renamed role shows its new name */
-  const role = session.viewingAs ? capitalise(session.viewingAs.userType) : session.account.roleName || capitalise(session.account.userType);
-  return <ShellView nav={data.nav} roleLabel={role} viewingAs={session.viewingAs?.name ?? null}
+  return <ShellView nav={data.nav} roleLabel={roleLabelOf(session)} viewingAs={session.viewingAs?.name ?? null}
     account={session.account} canViewAs={session.capabilities.includes('perm_cfg')}
     who={`${session.account.email}|${session.viewingAs?.personCode ?? ''}`}
     onSignOut={data.onSignOut} onViewAs={data.onViewAs} onEndViewAs={data.onEndViewAs} />;
