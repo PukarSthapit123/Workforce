@@ -90,6 +90,25 @@ describe('acknowledging (D10)', () => {
     /* Marcus acknowledged v1: asked again, his v1 record kept */
     expect(ntc('NTC-0002')?.acks.filter(x => x.personCode === 'CP-1088').map(x => x.textVersion)).toEqual([1]);
   });
+  /* Suite NOTICE BOARD 11: revoking own_notices for employees is recorded,
+     Acknowledge is then refused by the server for a session already signed
+     in, and granting it back lets them acknowledge again. */
+  test('revoking own_notices for employees is recorded, Acknowledge is then refused and nothing is written, and granting it back restores it', async () => {
+    const emp = await as('employee'), adm = await as('admin');
+    const employeeType = () => store.coll<{ version: number; capabilities: string[] }>('userTypes').employee;
+    const revoke = await adm('PUT', '/api/v1/user-types/employee/capabilities/own_notices', { granted: false }, employeeType()?.version);
+    expect(revoke.status).toBe(200);
+    expect(employeeType()?.capabilities).not.toContain('own_notices');
+    expect(own().map(a => [a.act, a.entityId, a.after])).toEqual([['Permission changed', 'employee', { own_notices: false }]]);
+    const before = snapshot(...WRITES);
+    const refused = await emp('POST', '/api/v1/notices/NTC-0002/acknowledge', { textVersion: 1 });
+    expect(refused.status).toBe(403);
+    expect(refusal(refused)).toMatchObject({ code: 'capability', message: expect.stringMatching(/which your access does not include.$/) });
+    expect(snapshot(...WRITES)).toEqual(before);
+    expect((await adm('PUT', '/api/v1/user-types/employee/capabilities/own_notices', { granted: true }, employeeType()?.version)).status).toBe(200);
+    expect(employeeType()?.capabilities).toContain('own_notices');
+    expect((await emp('POST', '/api/v1/notices/NTC-0002/acknowledge', { textVersion: 1 })).status).toBe(200);
+  });
 });
 
 describe('posting (notice_post, notice_org; Review Focus 1, 5)', () => {
@@ -105,6 +124,16 @@ describe('posting (notice_post, notice_org; Review Focus 1, 5)', () => {
     expect(activeAt('WH').some(p => p.code === poster)).toBe(true);
     expect(told().map(t => t.personId).sort()).toEqual(activeAt('WH').map(p => p.code).filter(c => c !== poster).sort());
     expect(told().every(t => t.area === 'Notices' && t.ref === 'NTC-0005' && t.title === 'Notice: Hand hygiene audit next week' && t.channel === 'In-app')).toBe(true);
+  });
+  /* Suite NOTICE BOARD 3: the demo employee works where the manager posts,
+     so My work → Notices lists the location notice for someone there. */
+  test('the demo employee works where the manager posted, and their own notices list the new location notice, owed', async () => {
+    const emp = accountOf('employee').personCode;
+    expect(activeAt('WH').some(p => p.code === emp)).toBe(true);
+    expect((await (await as('manager'))('POST', '/api/v1/notices', NEW)).status).toBe(200);
+    const mine = MyNotices.parse((await (await as('employee'))('GET', '/api/v1/notices/mine')).body);
+    expect(mine.items.find(n => n.id === 'NTC-0005')).toMatchObject({ title: 'Hand hygiene audit next week', scopeLabel: 'Willow House', status: 'current', you: 'owed' });
+    expect(mine.owed).toBe(2);
   });
   test('an admin posts to everyone; everyone in the audience but the poster is told in the Employee column, the manager too (I3)', async () => {
     const r = await (await as('admin'))('POST', '/api/v1/notices', { ...NEW, scope: ALL, urgent: true });
