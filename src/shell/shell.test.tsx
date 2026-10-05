@@ -94,7 +94,8 @@ test('the manager strip stays scannable: a handful of top-level items, not one p
     caps: new Set(['own_home', 'team_ts', 'team_hours', 'team_rota', 'rota_pattern', 'rota_shift', 'team_leave', 'team_sick', 'team_people', 'onb_track', 'notice_post']),
     modules: { CORE: true, TS: true, A: true, R: true, L: true, ON: true }, flags: { NOTICES: true }, onboarding: false,
   });
-  render(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={['/team/thome']}>
+  /* on a page not built yet (Exceptions): the strip is the subject, and Team Home now reads the session */
+  render(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={['/team/texc']}>
     <ShellView nav={nav} roleLabel="Manager" viewingAs={null} account={menuAccount('Rachel Hussain')} inbox={emptyInbox(0)} onSignOut={() => {}} onEndViewAs={() => {}} /></MemoryRouter></QueryClientProvider>);
   const strip = screen.getByRole('navigation', { name: 'Pages' });
   const topLevel = within(strip).getAllByTestId(/^nav-(tab|menu)-/);

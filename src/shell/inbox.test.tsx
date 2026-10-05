@@ -4,7 +4,7 @@ import { store } from '@/mocks/store';
 import { tid } from '@/testids';
 import { expectTestIdCoverage } from '@/test/testid-coverage';
 import { renderPage, withFakeServer } from '@/test/render-page';
-import { audits, resetTo, signInAs } from '@/test/api-helpers';
+import { accountOf, audits, resetTo, signInAs } from '@/test/api-helpers';
 import { Shell } from './Shell';
 
 /* The bell and its inbox (brief D9, Review Focus 4), on the social seed: the
@@ -49,12 +49,14 @@ test('opening an item marks it read and goes to its page; the count follows the 
 });
 
 test('an item whose page I cannot reach is shown without a link; Mark all read clears the count', async () => {
-  await signInAs('employee');
-  /* the employee's Workforce destination, My home, is not built yet */
-  store.coll('notifications').ntf_test_home = { id: 'ntf_test_home', version: 1, updatedAt: '2026-08-13T14:30:00.000Z', personId: 'CP-1042', area: 'Workforce',
+  await signInAs('admin');
+  const admin = accountOf('admin').personCode;
+  /* the admin's Timesheet destination, Payroll (ipay), is not built yet */
+  store.coll('notifications').ntf_test_home = { id: 'ntf_test_home', version: 1, updatedAt: '2026-08-13T14:30:00.000Z', personId: admin, area: 'Timesheet',
     title: 'Approval delegated to you', body: 'Covering Rachel Hussain', at: '2026-08-13T14:00:00.000Z', read: false };
-  renderPage(<Shell />, '/work/ts');
-  expect(await screen.findByTestId(tid.shell.bellCount)).toHaveTextContent('3');
+  const unread = rows(admin).filter(n => !n.read).length;
+  renderPage(<Shell />, '/setup/asetup');
+  expect(await screen.findByTestId(tid.shell.bellCount)).toHaveTextContent(String(unread));
   const panel = await openBell();
   const plain = await within(panel).findByTestId(tid.inbox.item('ntf_test_home'));
   expect(plain.tagName).toBe('DIV');
@@ -62,7 +64,7 @@ test('an item whose page I cannot reach is shown without a link; Mark all read c
   expect(within(panel).getAllByRole('link').every(a => a.getAttribute('href') !== null)).toBe(true);
   await userEvent.click(within(panel).getByTestId(tid.inbox.markAll));
   await waitFor(() => expect(screen.queryByTestId(tid.shell.bellCount)).toBeNull());
-  expect(rows('CP-1042').every(n => n.read)).toBe(true);
+  expect(rows(admin).every(n => n.read)).toBe(true);
   expect(within(panel).getByTestId(tid.inbox.markAll)).toBeDisabled();
 });
 

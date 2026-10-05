@@ -88,6 +88,9 @@ test('a 5xx answering a request after the shell is up keeps the token', async ()
 
   render(<App />);
   await screen.findByTestId(tid.shell.rolePill);
+  /* and the landing page (My home) has settled: a part of it mounting later
+     would read the failed tenant afresh and refetch it, racing the error state */
+  await screen.findByTestId(tid.home.grid);
 
   await fetch('/api/_dev/faults', {
     method: 'POST', body: JSON.stringify({ method: 'GET', path: '/api/v1/tenant', status: 500, times: 1 }),

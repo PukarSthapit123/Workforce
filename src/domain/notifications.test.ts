@@ -86,7 +86,8 @@ describe('deep links (NOTIF_TARGETS, notifReachable)', () => {
     expect(linkFor('Rota', 'manager', nav('team_rota'))).toEqual({ view: 'trota', path: '/team/trota', label: 'Rota' });
     expect(linkFor('Rota', 'manager', nav('team_ts'))).toBeNull();
     expect(linkFor('Timesheet', 'admin', nav('integration'))).toBeNull(); // ipay is not built yet
-    expect(linkFor('Workforce', 'employee', nav('own_home'))).toBeNull(); // home is not built yet
+    expect(linkFor('Workforce', 'employee', nav('own_home'))).toEqual({ view: 'home', path: '/work/home', label: 'Home' }); // built in 1c group 7
+    expect(linkFor('Workforce', 'employee', nav('own_ts'))).toBeNull(); // not on the nav without own_home
     expect(linkFor('Workforce', 'admin', nav('mod_cfg'))).toEqual({ view: 'asetup', path: '/setup/asetup', label: 'Qnipay setup' });
   });
   test('every page the app knows is listed once, whoever reaches it', () => {
