@@ -31,7 +31,6 @@ export function Palette({ shifts, lifted, onLift, onDragStart, onDragEnd, canMak
       {shifts.map(s => (
         <button key={s.code} type="button" draggable data-testid={tid.trota.pchip(s.code)} aria-pressed={lifted === s.code}
           aria-label={`${s.name}, ${s.from} to ${s.to}. Drag onto a rota cell, or press Enter to pick it up`}
-          title={`${s.name} · ${s.from}–${s.to} · ${s.hours}h${s.breakMinutes ? ` · ${s.breakMinutes}m break` : ''}`}
           onClick={(e: MouseEvent) => onLift(s.code, e.detail === 0)} onDragStart={start(s.code)} onDragEnd={onDragEnd}
           className={cn('inline-flex cursor-grab items-center gap-[6px] rounded-[7px] border-l-3 px-[10px] py-[6px] text-xs font-semibold select-none',
             'transition-shadow duration-(--qp-duration-fast) ease-qp hover:shadow-sm focus-visible:shadow-focus active:cursor-grabbing',

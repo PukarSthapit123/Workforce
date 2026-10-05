@@ -144,7 +144,7 @@ function DayCell({ d, onOpen }: { d: HomeDay; onOpen: () => void }) {
   const g = d.glyph ? GLYPHS[d.glyph] : null;
   return (
     <button type="button" data-testid={tid.home.day(d.date)} data-paint={paint ?? undefined} data-glyph={d.glyph ?? undefined}
-      data-future={d.future || undefined} aria-label={cellLabel(d)} title={g?.label} onClick={onOpen}
+      data-future={d.future || undefined} aria-label={cellLabel(d)} onClick={onOpen}
       className={cn('flex min-h-14 cursor-pointer flex-col items-stretch gap-[2px] rounded-sm border border-l-3 border-l-transparent bg-surface-card px-[6px] py-[5px] text-left text-xs',
         'hover:border-y-brand hover:border-r-brand dark:hover:border-y-brand-accent dark:hover:border-r-brand-accent',
         paint && PAINT[paint], d.today && 'border-2 border-brand dark:border-brand-accent')}>

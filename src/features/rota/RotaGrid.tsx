@@ -78,7 +78,7 @@ export function RotaGrid({ view, rows, handlers }: { view: RotaWeekView; rows: r
                             warned && 'shadow-[inset_0_0_0_2px_var(--qp-rota-gap-border)]')}>
                           <span aria-hidden="true" className="flex-none text-sm font-bold">{shiftLetter(code)}</span>
                           <span aria-hidden="true" className="text-xs leading-[1.25] tabular-nums">{shiftShortTime(shifts, code)}</span>
-                          {warned && <span aria-hidden="true" title={`Under ${view.rules.restHours} hours rest`} className="ml-auto inline-flex [&_svg]:size-[13px]"><TriangleAlert /></span>}
+                          {warned && <span aria-hidden="true" className="ml-auto inline-flex [&_svg]:size-[13px]"><TriangleAlert /></span>}
                         </button>
                       : <button type="button" data-testid={tid.trota.add(r.personCode, day)} onClick={click(r, day)}
                           aria-label={`Add a shift for ${r.name} on ${shortDay(ws, day)}`}
