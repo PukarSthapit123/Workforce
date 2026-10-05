@@ -9,6 +9,8 @@ import { cn } from "@/lib/utils"
    - matrix: a table read by comparing rows (the permissions matrix). On a
      phone it keeps scrolling sideways, at least 560px wide, with its first
      column pinned so each row stays identifiable.
+   - plain on a phone pins its first column too, as the prototype's .tw does
+     (v15:942-944), keeping the even rows' sunken surface under it.
    - plain and matrix on a phone: the .tw scroll shades (scroll-shade in
      src/index.css) mark the edge that has more to show.
    - records: table.rec. On a phone each row becomes a card: the header row
@@ -110,7 +112,7 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
       data-slot="table-head"
       className={cn(
         "border-b bg-surface-card px-md py-[10px] text-left align-middle text-xs font-bold tracking-[.04em] whitespace-nowrap text-text-muted uppercase",
-        variant === "matrix" && "max-md:first:sticky max-md:first:left-0 max-md:first:z-[2]",
+        variant !== "records" && "max-md:first:sticky max-md:first:left-0 max-md:first:z-[2]",
         className
       )}
       {...props}
@@ -144,7 +146,8 @@ function TableCell({ className, label, kind, empty, ...props }: React.ComponentP
       data-empty={variant === "records" && empty ? "" : undefined}
       className={cn(
         "border-b px-md py-[10px] align-middle text-[length:var(--qp-density-text)]",
-        variant === "matrix" && "max-md:first:sticky max-md:first:left-0 max-md:first:z-[1] max-md:first:bg-surface-card",
+        variant !== "records" && "max-md:first:sticky max-md:first:left-0 max-md:first:z-[1] max-md:first:bg-surface-card",
+        variant === "plain" && "max-md:[tr:nth-child(even)>&]:first:bg-surface-sunken",
         variant === "records" && RECORD_CELL,
         variant === "records" && (kind ? RECORD_KIND[kind] : label && RECORD_LABEL),
         className

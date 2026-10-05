@@ -40,7 +40,7 @@ function SelectTrigger({
       data-size={size}
       className={cn(
         size === "filter"
-          ? cn(filterControl, "w-fit gap-xs px-[10px] text-xs max-md:text-sm")
+          ? cn(filterControl, "w-fit gap-xs px-[10px] text-xs max-md:text-base")
           : cn(fieldControl, "gap-sm"),
         "flex items-center justify-between whitespace-nowrap disabled:cursor-not-allowed data-[placeholder]:text-text-muted *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-text-muted",
         className
