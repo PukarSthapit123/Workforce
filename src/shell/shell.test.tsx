@@ -130,13 +130,14 @@ test('inside a module the strip reads All modules, then its features, then its s
 /* ADMIN LAYOUT (suite S:3051-3060): a module's setup page is inside its drill-in,
    "‹ All modules | Timesheet features | Timesheet setup", the setup page the
    one on screen, and the way back returns to the module list. */
-test('on a module setup page (mts, mrota, mleave) the strip is that module’s drill-in, with the setup page current', () => {
-  const nav = buildNav({ caps: new Set(['mod_cfg']), modules: { CORE: true, TS: true, A: true, R: true, L: true }, flags: {}, onboarding: false });
+test('on a module setup page (mts, mrota, mleave, monb) the strip is that module’s drill-in, with the setup page current', () => {
+  const nav = buildNav({ caps: new Set(['mod_cfg', 'onb_cfg']), modules: { CORE: true, TS: true, A: true, R: true, L: true, ON: true }, flags: {}, onboarding: false });
   const setup = nav.find(g => g.key === 'setup');
   if (!setup) throw new Error('expected a setup group');
   const cases = [['/setup/mts', 'TS', ['‹ All modules', 'Timesheet features', 'Timesheet setup']],
     ['/setup/mrota', 'R', ['‹ All modules', 'Rota features', 'Rota setup']],
-    ['/setup/mleave', 'L', ['‹ All modules', 'Leave & absence features', 'Leave setup']]] as const;
+    ['/setup/mleave', 'L', ['‹ All modules', 'Leave & absence features', 'Leave setup']],
+    ['/setup/monb', 'ON', ['‹ All modules', 'Onboarding features', 'Onboarding setup']]] as const;
   for (const [path, code, labels] of cases) {
     const strip = stripTabsFor(setup, path);
     expect(strip.map(t => t.label)).toEqual(labels);

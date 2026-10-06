@@ -52,6 +52,8 @@ function setupSections(can: (c: string) => boolean, on: (m: string) => boolean, 
       [can('mod_cfg') && ts, tab('setup', 'mts', 'Timesheet', { module: 'TS' })],
       [can('mod_cfg') && on('R'), tab('setup', 'mrota', 'Rota', { module: 'R' })],
       [can('mod_cfg') && on('L'), tab('setup', 'mleave', 'Leave', { module: 'L' })],
+      /* Onboarding setup is gated on Configure onboarding, as the prototype's cap row says (v15:2232) */
+      [can('onb_cfg') && on('ON'), tab('setup', 'monb', 'Onboarding', { module: 'ON' })],
     ]),
     sec('people', 'People', 'The canonical employee record, what each person is, and the structure work is costed to', [
       [can('master_data'), tab('setup', 'apeople', 'People')],

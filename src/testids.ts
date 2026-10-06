@@ -532,4 +532,19 @@ export const tid = {
     /* the not-ready dialog (onb-activate) */
     notReady: 'tonb-not-ready', blocker: (i: number) => k('tonb-blocker', i), notReadyClose: 'tonb-not-ready-close', chase: 'tonb-chase',
   },
+  /* module 5: Qnipay setup → Modules → Onboarding → Onboarding setup (admOnboarding, v15:4672) */
+  monb: {
+    error: 'monb-error', loading: 'monb-loading', off: 'monb-off', warn: 'monb-warn', save: 'monb-save', cancel: 'monb-cancel', dirty: 'monb-dirty',
+    card: (key: string) => k('monb-card', key), tip: (key: string) => k('monb-tip', key), stepsCount: 'monb-steps-count',
+    step: (id: string) => k('monb-step', id), stepSwitch: (id: string) => k('monb-step-switch', id), stepOn: (id: string) => k('monb-step-on', id),
+    stepNeeds: (id: string) => k('monb-step-needs', id), stepError: (id: string) => k('monb-step-error', id),
+    docs: 'monb-docs', doc: (id: string) => k('monb-doc', id), docReq: (id: string) => k('monb-doc-req', id), docVerify: (id: string) => k('monb-doc-verify', id),
+    docBlocks: (id: string) => k('monb-doc-blocks', id), docExpiry: (id: string) => k('monb-doc-expiry', id),
+    policies: 'monb-policies', polCount: 'monb-pol-count', polsEmpty: 'monb-pols-empty', pol: (id: string) => k('monb-pol', id),
+    polVer: (id: string) => k('monb-pol-ver', id), polFile: (id: string) => k('monb-pol-file', id), polAcks: (id: string) => k('monb-pol-acks', id),
+    polUpload: (id: string) => k('monb-pol-upload', id), polEdit: (id: string) => k('monb-pol-edit', id), polRemove: (id: string) => k('monb-pol-remove', id),
+    polAdd: 'monb-pol-add', filePick: 'monb-file-pick',
+    /* the add and edit dialog (pol-add, pol-edit) */
+    polName: 'monb-pol-name', polVersion: 'monb-pol-version', polSum: 'monb-pol-sum', polWarn: 'monb-pol-warn', polCancel: 'monb-pol-cancel', polSave: 'monb-pol-save',
+  },
 } as const;

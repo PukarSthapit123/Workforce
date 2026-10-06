@@ -111,9 +111,9 @@ export function CardNote({ children }: { children: ReactNode }) {
 
 /* .arow (v15:1449-1456, 954): one setting, its name and what it does on the
    left, its control on the right; on a phone the control drops under it. */
-export function SettingRow({ title, desc, children }: { title: ReactNode; desc?: ReactNode; children: ReactNode }) {
+export function SettingRow({ title, desc, testId, children }: { title: ReactNode; desc?: ReactNode; testId?: string; children: ReactNode }) {
   return (
-    <div data-slot="setting-row" className="flex flex-wrap items-center gap-md border-b py-[11px] last:border-b-0">
+    <div data-slot="setting-row" data-testid={testId} className="flex flex-wrap items-center gap-md border-b py-[11px] last:border-b-0">
       <div className="min-w-[190px] flex-1">
         <b className="block text-sm font-semibold">{title}</b>
         {desc && <span className="mt-px block text-xs text-text-muted">{desc}</span>}
