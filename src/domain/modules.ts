@@ -23,7 +23,8 @@ export interface ModuleDef {
   setup?: string; setupLabel?: string;
 }
 export interface SubDef { code: SubCode; name: string; kind: 'method' | 'capability'; description: string }
-export interface FlagDef { code: string; label: string; mod: string; description: string }
+/* notBuilt: a switch with no behaviour behind it yet; its row says so (2b D7) */
+export interface FlagDef { code: string; label: string; mod: string; description: string; notBuilt?: true }
 
 export const MODULES: readonly ModuleDef[] = [
   { code: 'CORE', name: 'Workforce core', icon: 'users', description: 'People, employee types, approvals, notifications and the Business Central hand-off.', locked: true },
@@ -62,8 +63,8 @@ export const FLAGS: readonly FlagDef[] = [
   { code: 'DAILY', label: 'Daily entry', mod: 'A', description: 'The day form.' },
   { code: 'WEEKLY', label: 'Weekly grid', mod: 'A', description: 'Seven-day grid capture.' },
   { code: 'MULTIWEEK', label: 'Multi-week submit', mod: 'A', description: 'Catch up on earlier unsubmitted weeks in one action.' },
-  { code: 'GPS', label: 'Location check on clock', mod: 'B', description: 'Capture coordinates when a shift starts.' },
-  { code: 'GEOFENCE', label: 'Geofence radius per site', mod: 'C', description: 'Warn when a clock-in falls outside the site radius.' },
+  { code: 'GPS', label: 'Location check on clock', mod: 'B', description: 'Capture coordinates when a shift starts.', notBuilt: true },
+  { code: 'GEOFENCE', label: 'Geofence radius per site', mod: 'C', description: 'Warn when a clock-in falls outside the site radius.', notBuilt: true },
   { code: 'PATTERNS', label: 'Working patterns', mod: 'R', description: 'Generate the rota from repeating cycles up to the configured horizon.' },
   { code: 'MINSTAFF', label: 'Minimum staffing', mod: 'R', description: 'Coverage is checked against each location’s support level.' },
   { code: 'FULFIL', label: 'Shift fulfilment workflow', mod: 'R', description: 'Timed, staged cover requests with escalation.' },

@@ -287,3 +287,14 @@ test('switching the weekly layout back restores classic, and from the list back 
   expect(screen.getByTestId(tid.week.allocRow(0))).toHaveTextContent('Allocation 1');
   expect(screen.queryByTestId(tid.week.day(6))).toBeNull();
 });
+
+/* module 2b D7: GPS and geofence have no behaviour yet; their rows say so and still switch */
+test('the GPS and geofence rows say Not built yet and still switch', async () => {
+  await open('TS');
+  for (const c of ['GPS', 'GEOFENCE']) {
+    expect(within(screen.getByTestId(tid.amods.row(c))).getByTestId(tid.clock.notBuilt(c))).toHaveTextContent('Not built yet');
+  }
+  expect(screen.queryByTestId(tid.clock.notBuilt('BREAKS'))).toBeNull();
+  await userEvent.click(screen.getByTestId(tid.amods.flag('GPS')));
+  await waitFor(() => expect(tenant().flags.GPS).toBe(true));
+});

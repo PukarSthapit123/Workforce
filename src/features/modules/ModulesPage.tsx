@@ -162,7 +162,9 @@ function ModuleFeatures({ m, tenant }: { m: ModuleDef; tenant: Tenant }) {
      disabled and the banner above says why. */
   const featRow = (f: FlagDef, sub: boolean) => (
     <Nested key={f.code} sub={sub} testId={tid.amods.row(f.code)}>
-      <SettingRow title={f.label} desc={f.description}>
+      <SettingRow title={f.notBuilt
+        ? <span className="inline-flex flex-wrap items-center gap-sm">{f.label}<Pill testId={tid.clock.notBuilt(f.code)} tone="neu" glyph="—">Not built yet</Pill></span>
+        : f.label} desc={f.description}>
         {extra(f)}
         <SwitchField testId={tid.amods.flag(f.code)} aria-label={`Turn ${f.label} ${tenant.flags[f.code] ? 'off' : 'on'}`}
           checked={tenant.flags[f.code] === true} disabled={!on || busy} onCheckedChange={v => change(f, { on: v })} />
