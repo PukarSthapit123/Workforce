@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { AlarmClock, History } from 'lucide-react';
 import { tid } from '@/testids';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import { Avatar, Button, ChipButton, Empty, FilterBar, FormWarn, Pill, Row, SearchFilter, Small, Tip, toastInfo } from '@/ui';
@@ -50,7 +51,10 @@ export function TeamQueue({ returnReasonRequired }: { returnReasonRequired: bool
               <Row key={r.id} testId={tid.tteam.row(r.id)}>
                 <TableCell kind="title">
                   <span className="flex items-center gap-[9px]"><Avatar name={r.personName} /><strong className="font-semibold">{r.personName}</strong>
-                    {r.captureSource === 'proxy' && <Pill testId={tid.tteam.proxyPill(r.id)} tone="neu">Proxy</Pill>}</span>
+                    {r.captureSource === 'proxy' && <Pill testId={tid.tteam.proxyPill(r.id)} tone="neu">Proxy</Pill>}
+                    {/* a clocked day: a late first clock in (2b D5), a forgotten clock closed later (D6) */}
+                    {r.clock?.late && <Pill testId={tid.clock.queueLate(r.id)} tone="warn" glyph={<AlarmClock />}>Late</Pill>}
+                    {r.clock?.closedLate && <Pill testId={tid.clock.queueClosedLate(r.id)} tone="neu" glyph={<History />}>Closed later</Pill>}</span>
                 </TableCell>
                 <TableCell label="Date" className="tabular-nums">{formatDmy(r.date)}</TableCell>
                 <TableCell label="Rota line">{rotaLine(r)}</TableCell>

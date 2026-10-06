@@ -56,6 +56,10 @@
   --qp-color-scrim: rgba(10,36,16,.55);          /* .scrim, 574 */
   --qp-color-brand-primary-subtle-hover: #CFEFC2;/* .btn.sec:hover, 438 */
   --qp-ring-invalid: 0 0 0 3px rgba(138,44,32,.15); /* .fld.bad, 506 */
+  --qp-color-ring-track: rgba(255,255,255,.16);  /* .ring .rt, 1231 */
+  --qp-color-glass: rgba(255,255,255,.14);       /* .btn.glass, 1252 */
+  --qp-color-glass-line: rgba(255,255,255,.22);  /* .btn.glass border, 1252 */
+  --qp-color-glass-hover: rgba(255,255,255,.22); /* .btn.glass:hover, 1253 */
 }
 
 /* Dark theme re-points shadcn's primary alias to the lime accent, not to a
@@ -114,6 +118,10 @@
   --color-accent-line: var(--qp-color-accent-line);
   --color-scrim: var(--qp-color-scrim);
   --color-text-on-inverse: var(--qp-color-text-on-inverse);
+  --color-ring-track: var(--qp-color-ring-track);
+  --color-glass: var(--qp-color-glass);
+  --color-glass-line: var(--qp-color-glass-line);
+  --color-glass-hover: var(--qp-color-glass-hover);
   /* Stable text for a fixed-colour surface, unlike --color-*-foreground above:
      those track --foreground/--primary-foreground, which each flip meaning
      between themes for reasons of their own (page background legibility;

@@ -1,11 +1,13 @@
 import { useState, type ReactNode } from 'react';
-import { CalendarDays, Check, Clock, Lock, Minus, RotateCw, X } from 'lucide-react';
+import { AlarmClock, CalendarDays, Check, Clock, History, Lock, Minus, RotateCw, X } from 'lucide-react';
 import { tid } from '@/testids';
 import { Banner, Button, CalNav, Card, CardHead, CheckboxField, CheckRow, Field, NavLink, Pill, SelectBox, Small, SwitchField, TextInput, Tip, toastInfo, type Tone } from '@/ui';
 import { buttonVariants } from '@/ui/shadcn/button';
+import { useMyClock, type ClockRecord, type MyClock } from '@/api/clock';
 import type { DaySaved, TimesheetWeek, WeekDay } from '@/contract/timesheets';
 import { addDays, dowMon, formatDay, formatDmy } from '@/domain/timesheet';
 import { NON_WORKING_REASONS, formGroups, hm, rotaShift, valuesFromDay, valuesFromRota, varianceText } from './capture';
+import { ClockCard, ForgottenClock, clockedStart } from './ClockCard';
 import { DayFields, DayStatsCard, hasClosedGroups } from './DayForm';
 import { DayChecks, holdFocus, useDayEntry } from './useDayEntry';
 
@@ -32,26 +34,35 @@ export function dayChip(day: WeekDay) {
 
 /* The day view: tsDayView (qnipay-workforce-v15.html:6277-6336). The panel
    is keyed by the day and its version, so after a save the form starts again
-   from what the server stored, never from what was typed (no optimistic updates). */
+   from what the server stored, never from what was typed (no optimistic
+   updates); a clock out writes the day, so its times appear the same way.
+   A clock-mode type (module 2b) reads its own clock: the card shows on the
+   day the clock acts on while the server's gates allow it (D4), and a clock
+   left open on an earlier day shows its close banner (D6). */
+export interface DayClock { card: MyClock | null; readAt: number; open: ClockRecord | null }
 export function DayView({ week, date, today, onDate, personId }: {
   week: TimesheetWeek; date: string; today: string; onDate: (d: string) => void; personId: string;
 }) {
+  const q = useMyClock(week.capture.mode === 'clock'), c = q.data;
   const day = week.days.find(d => d.date === date);
   if (!day) return null;
-  return <DayPanel key={`${date}:${day.version}`} week={week} day={day} today={today} onDate={onDate} personId={personId} />;
+  const clockDay = c ? c.current?.date ?? c.now.date : null;
+  const clock: DayClock = { card: c?.gates.show && date === clockDay ? c : null, readAt: q.dataUpdatedAt,
+    open: c?.gates.live && c.gates.mode === 'clock' ? c.open : null };
+  return <DayPanel key={`${date}:${day.version}`} week={week} day={day} today={today} onDate={onDate} personId={personId} clock={clock} />;
 }
 
-function entryTip(week: TimesheetWeek) {
+function entryTip(week: TimesheetWeek, clocking: boolean) {
   const c = week.capture;
-  const first = c.mode === 'clock' ? 'Clock in when you start and out when you finish.'
+  const first = c.mode === 'clock' && clocking ? 'Clock in when you start and out when you finish.'
     : c.mode === 'grid' ? 'Enter this day here, or switch to Week to fill the whole week at once.'
       : 'Enter your start and finish times for this day.';
   const mand = formGroups(c).some(g => g.fields.some(f => f.setting.mand));
   return mand ? `${first} Fields marked required are required for ${week.person.typeName}.` : first;
 }
 
-function DayPanel({ week, day, today, onDate, personId }: {
-  week: TimesheetWeek; day: WeekDay; today: string; onDate: (d: string) => void; personId: string;
+function DayPanel({ week, day, today, onDate, personId, clock }: {
+  week: TimesheetWeek; day: WeekDay; today: string; onDate: (d: string) => void; personId: string; clock: DayClock;
 }) {
   const c = week.capture, rec = day.record, mgr = week.person.manager.trim() || 'your manager';
   const flagged = (r: DaySaved) => (r.warnings.length ? `Flagged: ${r.warnings.join(' ')}` : undefined);
@@ -67,6 +78,14 @@ function DayPanel({ week, day, today, onDate, personId }: {
   const [reason, setReason] = useState(() => savedReason.split(' · ')[0] || NON_WORKING_REASONS[0]);
   const [notes, setNotes] = useState(() => savedReason.split(' · ').slice(1).join(' · '));
   const [worked, setWorked] = useState(savedAnyway);
+  /* lockShiftTimes: while the shift runs the start is the clock's first clock in, and start and finish are read-only */
+  const clockStart = clockedStart(clock.card?.current);
+  const [filled, setFilled] = useState<string | null>(null);
+  if (clockStart && clockStart !== filled) {
+    setFilled(clockStart);
+    if (entry.fields.values.start !== clockStart) entry.fill({ start: clockStart });
+  }
+  const locked = clockStart ? ['start', 'finish'] : undefined;
   const { busy, fields, stats } = entry, chip = dayChip(day);
   /* the times below go as "called in and worked anyway", which a leave or sickness day needs while leave blocks capture */
   const anyway = { workedAnyway: nonwork && worked };
@@ -102,10 +121,13 @@ function DayPanel({ week, day, today, onDate, personId }: {
               <SwitchField testId={tid.ts.nonWorking} aria-label="Mark as a non-working day" checked={nonwork}
                 onCheckedChange={v => { setNonwork(v); setWorked(false); }} /></label>
             <Button testId={tid.ts.copyDay} kind="ghost" small onClick={copyYesterday}>Copy yesterday</Button>
+            {day.clock?.late && <Pill testId={tid.clock.late} tone="warn" glyph={<AlarmClock />}>Late</Pill>}
+            {day.clock?.closedLate && <Pill testId={tid.clock.closedLate} tone="neu" glyph={<History />}>Closed later</Pill>}
             <Pill testId={tid.ts.dayState} tone={chip.tone} glyph={chip.glyph}>{chip.label}</Pill>
           </div>
         </div>
       </Card>
+      {clock.open && <ForgottenClock key={`${clock.open.date}:${clock.open.version}`} open={clock.open} />}
       {line && <Banner testId={tid.ts.banner('rota')} tone="info" icon={<CalendarDays />}
         title={`Scheduled on the rota · ${line.name} ${line.time} · ${line.hours} hours`}
         actions={<NavLink testId={tid.tsRota.seeShift} to="/work/shifts" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>See the shift</NavLink>}>
@@ -135,9 +157,10 @@ function DayPanel({ week, day, today, onDate, personId }: {
       </Card>}
       {(!nonwork || worked) && <div className="grid grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] items-start gap-lg max-lg:grid-cols-1">
         <div>
+          {clock.card && <ClockCard clock={clock.card} readAt={clock.readAt} />}
           <Card>
-            <CardHead title={<>Timesheet entry<Tip testId={tid.ts.entryTip} text={entryTip(week)} /></>} />
-            <DayFields {...fields} which={side ? 'open' : 'all'} />
+            <CardHead title={<>Timesheet entry<Tip testId={tid.ts.entryTip} text={entryTip(week, Boolean(clock.card))} /></>} />
+            <DayFields {...fields} readOnly={locked} which={side ? 'open' : 'all'} />
             <DayChecks checked={entry.checked} refusal={entry.refusal} />
             <div className="mt-lg flex flex-wrap justify-end gap-sm">
               <Button testId={tid.dayForm.save} kind="ghost" disabled={day.locked} title={lockedTitle} pending={busy} onMouseDown={holdFocus} onClick={() => entry.attempt('save', anyway)}>Save draft</Button>
@@ -149,7 +172,7 @@ function DayPanel({ week, day, today, onDate, personId }: {
           <DayStatsCard capture={c} stats={stats} scheduled={line?.hours} />
           {side && <Card>
             <CardHead title="Shift details" actions={<span className="text-xs text-text-muted">Add only what applies</span>} />
-            <DayFields {...fields} which="closed" />
+            <DayFields {...fields} readOnly={locked} which="closed" />
           </Card>}
           {day.state === 'back' && <Banner testId={tid.ts.banner('back')} tone="err" icon={<X />} title="Sent back for correction">
             {rec?.returnReason}<br />Correct the entry and submit again. It will go back to {mgr} as a resubmission.</Banner>}

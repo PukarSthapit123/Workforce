@@ -17,6 +17,8 @@ export interface DayFieldsProps {
   onChange: (code: string, value: string | boolean) => void; onBlur: (code: string) => void;
   breaks: number; onAddBreak: () => void;
   which: 'open' | 'closed' | 'all'; single?: boolean; disabled?: boolean;
+  /* fields the clock owns while a shift runs (lockShiftTimes, v15:6920-6926): shown, read-only */
+  readOnly?: readonly string[];
 }
 
 const INPUT: Record<string, { type: string; step?: string; min?: string; max?: string; inputMode?: 'decimal' }> = {
@@ -46,7 +48,9 @@ function Control({ f, p }: { f: FormField; p: DayFieldsProps }) {
     control = <TextArea testId={id} rows={2} value={text} disabled={p.disabled} onChange={e => p.onChange(code, e.target.value)} onBlur={() => p.onBlur(code)} />;
   else {
     const a = (def.t && INPUT[def.t]) || { type: 'text' };
-    control = <TextInput testId={id} {...a} value={text} disabled={p.disabled}
+    const ro = p.readOnly?.includes(code) === true;
+    control = <TextInput testId={id} {...a} value={text} disabled={p.disabled} readOnly={ro}
+      className={ro ? 'cursor-default bg-surface-tint text-text-secondary' : undefined}
       onChange={e => p.onChange(code, e.target.value)} onBlur={() => p.onBlur(code)} />;
   }
   return (

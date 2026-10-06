@@ -477,4 +477,14 @@ export const tid = {
   accessState: { pill: 'access-state-pill' },
   /* 1c fix B: why the Saved data card has a session set aside (D14) */
   acalSetAside: { why: 'acal-set-aside-why' },
+  /* module 2b: the clock card on My timesheet's day view (.clockcard, v15:6382-6386), the forgotten clock-out
+     banner, the Late and Closed later pills on the day and in Team timesheets, and the not-built feature rows */
+  clock: {
+    card: 'clock-card', ring: 'clock-ring', ringPct: 'clock-ring-pct', timer: 'clock-timer', status: 'clock-status',
+    clockIn: 'clock-in', again: 'clock-again', breakStart: 'clock-break-start', resume: 'clock-resume', clockOut: 'clock-out', refusal: 'clock-refusal',
+    forgotten: 'clock-forgotten', finish: 'clock-finish', close: 'clock-close', closeRefusal: 'clock-close-refusal',
+    late: 'clock-late', closedLate: 'clock-closed-late',
+    queueLate: (id: string) => k('clock-queue-late', id), queueClosedLate: (id: string) => k('clock-queue-closed-late', id),
+    notBuilt: (code: string) => k('clock-not-built', code),
+  },
 } as const;
