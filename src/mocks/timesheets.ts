@@ -78,6 +78,7 @@ const rotaOn = (personCode: string, date: string) => rotaFor(tenant().modules, r
 const ctxFor = (p: StoredPerson, date: string): CheckContext => ({ date, ...rulesCtx(), rota: rotaOn(p.code, date) });
 export const isLocked = (date: string) => { const c = config(); return periodLocked(date, { enforceLock: c.rules.enforceLock, cutoff: c.cutoff }, now()); };
 export const hm = (min: number) => formatMinutes(min, config().timeFormat);
+export const captureRules = () => config().rules;
 
 function attemptOf(d: StoredDay): StoredAttempt | undefined {
   return d.integrationAttemptId ? recordAt(attempts(), d.integrationAttemptId) : undefined;
@@ -91,6 +92,8 @@ function personFor(personId: string): StoredPerson {
   return personByCode(personId) ?? refuse(404, { code: 'not-found', message: 'That person record no longer exists.', next: 'Reload the page.' });
 }
 type Mode = 'self' | 'proxy';
+/* Who captured the day: the person, a manager as proxy, or the clock (2b D3). */
+type Source = Mode | 'clock';
 /* Your own timesheet needs own_ts. Anyone else's needs team_ts and your
    location (D5, D6); entering time for them needs proxy as well. */
 function access(s: Signed, p: StoredPerson, write: boolean): Mode {
@@ -152,7 +155,7 @@ function checkDay(p: StoredPerson, date: string, input: DayInput): DayCheck {
   return { errors, warnings, minutes };
 }
 const LOCK_NEXT = (p: StoredPerson) => `Ask ${managerOf(p)} to raise an amendment.`;
-function refuseLocked(p: StoredPerson, date: string): never {
+export function refuseLocked(p: StoredPerson, date: string): never {
   return refuse(409, { code: 'PERIOD_LOCKED', field: 'date', message: `${lockNote(date, config().cutoff)}.`, next: LOCK_NEXT(p) });
 }
 function refuseDay(p: StoredPerson, date: string, errors: readonly Problem[]): never {
@@ -173,7 +176,7 @@ const blankDay = (p: StoredPerson, date: string): StoredDay => ({
 /* A type with no usable rule falls back to standard time, as every prototype submission did ("STD 7.5h"). */
 const BASE_WORK_TYPE = 'STD';
 /* The day as the input leaves it, with the derived work type and whoever entered it. */
-function applyInput(p: StoredPerson, base: StoredDay, input: DayInput, check: DayCheck, s: Signed, mode: Mode): Partial<StoredDay> {
+function applyInput(p: StoredPerson, base: StoredDay, input: DayInput, check: DayCheck, s: Signed, mode: Source): Partial<StoredDay> {
   const c = config();
   const derived = deriveWorkType(typeOf(p)?.rules ?? [], { date: base.date, start: firstStart(input.entries), net: check.minutes,
     travel: input.entries.some(e => Boolean(e.fields?.travel)) }, c.rules, payCodes());
@@ -194,6 +197,22 @@ const save = (base: StoredDay, changes: Partial<StoredDay>): StoredDay => {
   return rec;
 };
 const stateAct = (to: TsState) => `Timesheet ${TS_STATE[to].label.toLowerCase()}`;
+
+/* The day save path (D3), shared with the clock (2b D3): a decided day is
+   refused, then the absence, lock and capture checks run, then the draft is
+   written. The caller checks the version between the two and writes the one
+   audit row, so a clock out records one event, not two. */
+export function draftBase(p: StoredPerson, date: string): { existing: StoredDay | undefined; base: StoredDay } {
+  const existing = recordAt(days(), dayId(p.code, date));
+  if (existing && existing.state !== 'draft' && existing.state !== 'back') alreadySubmitted(existing);
+  return { existing, base: existing ?? blankDay(p, date) };
+}
+export function writeDraft(s: Signed, p: StoredPerson, base: StoredDay, input: DayInput, source: Source): { rec: StoredDay; check: DayCheck } {
+  refuseAbsence(p.code, base.date, input, 'date');
+  const check = checkDay(p, base.date, input);
+  if (check.errors.length) refuseDay(p, base.date, check.errors);
+  return { rec: save(base, applyInput(p, base, input, check, s, source)), check };
+}
 
 /* A counter one past the highest stored, as audit ids are. */
 const INT = /^int_(\d{12})$/;
@@ -281,6 +300,9 @@ function blockingAbsence(personCode: string, date: string, input: Pick<DayInput,
   if (!input.entries.length || input.workedAnyway || !leaveBlocksTimesheet()) return '';
   return absenceOf(personCode, date);
 }
+/* The clock's gate (2b D4): an absence day blocks clocking in unless the day is marked worked anyway. */
+export const absenceBlocks = (personCode: string, date: string, workedAnyway: boolean): '' | 'V' | 'S' =>
+  workedAnyway || !leaveBlocksTimesheet() ? '' : absenceOf(personCode, date);
 function refuseAbsence(personCode: string, date: string, input: Pick<DayInput, 'entries' | 'workedAnyway'>, field: string) {
   const mark = blockingAbsence(personCode, date, input);
   if (mark) refuse(409, { ...absenceBlockedProblem(mark), field });
@@ -304,7 +326,7 @@ function requireMonday(weekStart: string, field = 'weekStart') {
 interface Planned { date: string; input: DayInput | null; existing: StoredDay | undefined; check: DayCheck | null; unchanged: boolean }
 /* What the request names for each day: new entries, or null for "as it was read". */
 type Sent = ReadonlyMap<string, DayInput | null>;
-const asStored = (d: StoredDay): DayInput => ({ entries: d.entries, allowances: d.allowances, shift: d.shift, nonWorkingReason: d.nonWorkingReason,
+export const asStored = (d: StoredDay): DayInput => ({ entries: d.entries, allowances: d.allowances, shift: d.shift, nonWorkingReason: d.nonWorkingReason,
   ...(d.workedAnyway ? { workedAnyway: true } : {}) });
 /* Only the days in `sent` are planned; `'stored'` plans every stored day as it is (multi-week catch-up). */
 function planWeek(p: StoredPerson, weekStart: string, sent: Sent | 'stored') {
@@ -386,14 +408,9 @@ export const timesheetHandlers = [
 
   serve(saveTimesheetDay, ({ session, params, body, checkVersion }) => {
     const p = personFor(params.personId), mode = access(session, p, true);
-    const existing = recordAt(days(), dayId(p.code, params.date));
-    if (existing && existing.state !== 'draft' && existing.state !== 'back') alreadySubmitted(existing);
-    const base = existing ?? blankDay(p, params.date);
+    const { existing, base } = draftBase(p, params.date);
     checkVersion(base);
-    refuseAbsence(p.code, params.date, body, 'date');
-    const check = checkDay(p, params.date, body);
-    if (check.errors.length) refuseDay(p, params.date, check.errors);
-    const rec = save(base, applyInput(p, base, body, check, session, mode));
+    const { rec, check } = writeDraft(session, p, base, body, mode);
     const auditId = writeAudit({ who: actor(session), act: mode === 'proxy' ? 'Proxy timesheet saved' : 'Timesheet draft saved',
       entity: 'timesheetDay', entityId: rec.id, before: existing ? { minutes: dayMinutes(existing.entries) } : null,
       after: { state: rec.state, minutes: dayMinutes(rec.entries), ...(mode === 'proxy' ? { enteredFor: `${p.name} (${p.code})` } : {}) } });

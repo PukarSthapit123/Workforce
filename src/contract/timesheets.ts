@@ -29,7 +29,7 @@ export const PostingState = z.enum(['none', 'queued', 'posted', 'failed']);
 export const TimesheetDay = RecordMeta.extend({
   personCode: z.string(), date: IsoDate, state: TsState, entries: z.array(TimeEntry), workType: z.string(),
   allowances: z.array(z.string()), shift: z.string(), nonWorkingReason: z.string(),
-  captureSource: z.enum(['self', 'proxy']), enteredBy: z.string(), enteredByName: z.string(),
+  captureSource: z.enum(['self', 'proxy', 'clock']), enteredBy: z.string(), enteredByName: z.string(),
   submittedAt: z.union([IsoDateTime, z.literal('')]), returnReason: z.string(), warnings: z.array(z.string()),
   history: z.array(TsHistory), integrationAttemptId: z.string(),
   /* "Called in and worked anyway", stored with the day so a later week submit

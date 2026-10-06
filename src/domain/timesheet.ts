@@ -477,7 +477,7 @@ export const returnReasonProblem = (reason: string, required: boolean): Problem 
 /* Why a row is flagged for the approver (GUIDES.tteam and bulkApprovalSet). Never blocks. */
 export type FlagCode = 'long' | 'variance' | 'rest' | 'proxy' | 'resub' | 'locked';
 export interface AdvisoryFlag { code: FlagCode; text: string }
-export interface FlagInput { date: string; minutes: number; state: string; captureSource: 'self' | 'proxy' }
+export interface FlagInput { date: string; minutes: number; state: string; captureSource: 'self' | 'proxy' | 'clock' }
 export function advisoryFlags(day: FlagInput, ctx: Omit<CheckContext, 'date'>): AdvisoryFlag[] {
   const { rules } = ctx, out: AdvisoryFlag[] = [];
   if (day.minutes / 60 > rules.warnDaily) out.push({ code: 'long', text: `${formatMinutes(day.minutes, ctx.timeFormat)} in one day` });
