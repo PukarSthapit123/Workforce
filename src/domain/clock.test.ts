@@ -1,6 +1,6 @@
 import {
   ALREADY_IN, ALREADY_ON_BREAK, BREAK_ENDED, BREAK_LIMIT, BREAK_STARTED, BREAKS_OFF, CLOCK_STATUS, NOT_CLOCKED_IN, NOT_ON_BREAK, ON_BREAK_NOW,
-  breaksUsed, clockEntry, clockState, clockedBreaks, clockedInToast, clockedOutToast, closeFirst, elapsedSeconds, eventsFor, forgottenMessage,
+  breaksUsed, clockEntry, clockInAgainProblem, clockState, clockedBreaks, clockedInToast, clockedOutToast, closeFirst, elapsedSeconds, eventsFor, forgottenMessage,
   formatElapsed, isForgotten, isLate, lateNotices, mergeBreaks, moveProblem, ringTarget, type ClockEvent,
 } from './clock';
 
@@ -30,10 +30,19 @@ describe('state comes from the events (D1)', () => {
 });
 
 describe('the events become the day (D3)', () => {
-  test('start from the first clock in, finish from the last clock out, clocked breaks as pairs', () => {
+  test('start from the first clock in, finish from the last clock out, clocked breaks and the gap before "Clock in again" as pairs', () => {
     const events = [ev('in', '07:02'), ev('breakStart', '11:00'), ev('breakEnd', '11:30'), ev('out', '12:00'), ev('in', '13:00'), ev('out', '15:04')];
-    expect(clockEntry(events, undefined, 5)).toEqual({ start: '07:02', finish: '15:04', breaks: [{ start: '11:00', end: '11:30' }], fields: {} });
+    expect(clockEntry(events, undefined, 5)).toEqual({ start: '07:02', finish: '15:04', breaks: [{ start: '11:00', end: '11:30' }, { start: '12:00', end: '13:00' }], fields: {} });
     expect(clockEntry([ev('in', '07:02')], undefined, 5, '15:00').finish).toBe('15:00');
+  });
+  test('the gap before "Clock in again" takes a pair under breaksMax; with none left, clock in again is refused (ruling)', () => {
+    const out = [ev('in', '07:00'), ev('breakStart', '10:00'), ev('breakEnd', '10:30'), ev('out', '12:00')];
+    expect(clockedBreaks(out)).toEqual([{ start: '10:00', end: '10:30' }]);
+    expect(clockInAgainProblem([], out, at('13:00'), 2)).toBeNull();
+    expect(clockInAgainProblem([], out, at('13:00'), 1)).toBe(BREAK_LIMIT);
+    expect(clockInAgainProblem([], out, at('12:00:40'), 1)).toBeNull();
+    expect(clockInAgainProblem([], [ev('in', '07:00')], at('13:00'), 0)).toBeNull();
+    expect(clockInAgainProblem([{ start: '09:00', end: '09:10' }], [ev('in', '07:00'), ev('out', '12:00')], at('13:00'), 1)).toBe(BREAK_LIMIT);
   });
   test('an open break and a break inside one minute are not pairs', () => {
     expect(clockedBreaks([ev('in', '07:00'), ev('breakStart', '10:00:05'), ev('breakEnd', '10:00:50'), ev('breakStart', '11:00')])).toEqual([]);

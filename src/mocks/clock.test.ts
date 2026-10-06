@@ -64,7 +64,9 @@ describe('a day on the clock (D1, D2, D3)', () => {
     /* Clock in again: a new span; the finish moves to the last clock out */
     at('16:00:00'); moved(await move(call, 'in'));
     at('17:00:00'); const again = moved(await move(call, 'out'));
-    expect(again.day?.entries[0]).toMatchObject({ start: '07:02', finish: '17:00', breaks: [{ start: '10:00', end: '10:30' }] });
+    /* the gap between the spans is unpaid: a break pair, so the net hours leave it out as the timer does (ruling) */
+    expect(again.day?.entries[0]).toMatchObject({ start: '07:02', finish: '17:00', breaks: [{ start: '10:00', end: '10:30' }, { start: '15:00', end: '16:00' }] });
+    expect(again.record.elapsedSeconds).toBe(7 * 3600 + 28 * 60 + 12 + 3600);
     expect(day('CP-1042', '2026-08-13')?.captureSource).toBe('clock');
   });
   test('clock out on a break ends the break first', async () => {
@@ -179,6 +181,19 @@ describe('moves, versions and the break cap (Review Focus 2, D2)', () => {
     expect(r.status).toBe(409);
     expect(refusal(r)).toMatchObject({ code: 'BREAK_LIMIT', message: BREAK_LIMIT.message });
   });
+  test('with no break pair left, Clock in again is refused with the break-limit sentence and nothing is written (ruling)', async () => {
+    const call = await as('employee');
+    tenantRec().extras.breaksMax = 1;
+    at('07:00:00'); await move(call, 'in');
+    at('10:00:00'); await move(call, 'break/start');
+    at('10:15:00'); await move(call, 'break/end');
+    at('12:00:00'); moved(await move(call, 'out'));
+    at('13:00:00');
+    const before = snapshot(...WRITES), r = await move(call, 'in');
+    expect(r.status).toBe(409);
+    expect(refusal(r)).toMatchObject({ code: 'BREAK_LIMIT', message: BREAK_LIMIT.message, next: BREAK_LIMIT.next });
+    expect(snapshot(...WRITES)).toEqual(before);
+  });
 });
 
 describe('clock out goes through the day save (Review Focus 3, D3)', () => {
@@ -193,7 +208,7 @@ describe('clock out goes through the day save (Review Focus 3, D3)', () => {
     expect(snapshot(...WRITES)).toEqual(before);
     expect((await mine(call)).current?.state).toBe('running');
   });
-  test('the day keeps what the person changed on the form, the clock fills the first empty break pair, and a submitted day refuses the clock', async () => {
+  test('the day keeps what the person changed on the form, the clock fills the first empty break pair (the gap before Clock in again first), and a submitted day refuses the clock', async () => {
     const call = await as('employee');
     at('07:00:00'); await move(call, 'in');
     at('10:00:00'); await move(call, 'break/start');
@@ -210,7 +225,7 @@ describe('clock out goes through the day save (Review Focus 3, D3)', () => {
     at('18:00:00');
     const out = moved(await move(call, 'out'));
     expect(out.day).toMatchObject({ shift: 'E', captureSource: 'clock', entries: [{ start: '07:00', finish: '18:00', fields: { notes: 'Ward 3' },
-      breaks: [{ start: '09:00', end: '09:10' }, { start: '16:30', end: '16:45' }, { start: '10:00', end: '10:20' }] }] });
+      breaks: [{ start: '09:00', end: '09:10' }, { start: '15:00', end: '16:00' }, { start: '10:00', end: '10:20' }, { start: '16:30', end: '16:45' }] }] });
     const submitted = await call('POST', '/api/v1/timesheets/CP-1042/days/2026-08-13/submit', { entries: out.day?.entries ?? [], shift: 'E' }, out.day?.version);
     expect(submitted.status).toBe(200);
     at('19:00:00');

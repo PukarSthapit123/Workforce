@@ -48,20 +48,21 @@ export function formatElapsed(seconds: number): string {
 export const clockTime = (at: string) => clockFromIso(at).time;
 
 /* ----------------------------------------------------- events to the day */
-/* The breaks the clock recorded, start to end, as HH:MM pairs. A break still
-   open has no pair yet. A break that starts and ends in the same minute is
-   left out: module 2 refuses a zero-length break, and a pair the person never
-   typed must not stop the day from saving. */
+/* The breaks the clock recorded, start to end, as HH:MM pairs: every break,
+   and the gap between a clock out and "Clock in again", which is unpaid time
+   like a break (main-session ruling), so the day's net hours leave it out as
+   the timer does. A break still open, or a clock out not yet followed by a
+   clock in, has no pair yet. A pair that starts and ends in the same minute
+   is left out: module 2 refuses a zero-length break, and a pair the person
+   never typed must not stop the day from saving. */
 export function clockedBreaks(events: readonly ClockEvent[]): BreakInput[] {
   const out: BreakInput[] = [];
   let open: string | null = null;
   for (const e of events) {
-    if (e.kind === 'breakStart') open = clockTime(e.at);
-    else if (e.kind === 'breakEnd' && open != null) {
-      const end = clockTime(e.at);
-      if (end !== open) out.push({ start: open, end });
-      open = null;
-    }
+    if (e.kind === 'breakStart' || e.kind === 'out') { open = clockTime(e.at); continue; }
+    const end = clockTime(e.at);
+    if (open != null && end !== open) out.push({ start: open, end });
+    open = null;
   }
   return out;
 }
@@ -128,6 +129,14 @@ export function moveProblem(state: ClockState, move: ClockMove, ctx: MoveContext
     case 'breakEnd': return state === 'onBreak' ? null : NOT_ON_BREAK;
     case 'out': return isOpenState(state) ? null : NOT_CLOCKED_IN;
   }
+}
+/* "Clock in again" records the gap since the clock out as a break pair, so it
+   needs a pair left under breaksMax. Null when there is room, when the gap is
+   too short to need a pair, or when this is not a clock in again. */
+export function clockInAgainProblem(existing: readonly BreakInput[], events: readonly ClockEvent[], now: string, max: number): ClockProblem | null {
+  if (clockState(events) !== 'clockedOut') return null;
+  const before = breaksUsed(existing, events), after = breaksUsed(existing, [...events, { kind: 'in', at: now }]);
+  return after > before && after > max ? BREAK_LIMIT : null;
 }
 /* The events a move adds, all at the server's `now`. Clocking out on a break ends the break first. */
 export function eventsFor(state: ClockState, move: ClockMove, now: string): ClockEvent[] {

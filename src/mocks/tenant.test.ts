@@ -217,6 +217,18 @@ describe('modules (Review Focus 2)', () => {
     ModuleSwitched.parse((await call('PATCH', MOD('C'), { on: true }, ver())).body);
     expect(Object.values(typeCaps()).some(c => c.includes('site'))).toBe(false);
   });
+  test('Clock in / out off keeps every timesheet day and clock record, with true counts', async () => {
+    const id = 'clk_CP-1042_2026-08-13';
+    store.coll('clockRecords')[id] = { id, version: 1, updatedAt: '2026-08-13T06:00:00.000Z', personCode: 'CP-1042', date: '2026-08-13',
+      events: [{ kind: 'in', at: '2026-08-13T06:00:00.000Z' }], late: false, closedLate: null };
+    const call = await as('admin');
+    const off = ModuleSwitched.parse((await call('PATCH', MOD('B'), { on: false }, ver())).body);
+    expect(off.effect.kept).toEqual([
+      { what: 'timesheet days', count: Object.keys(store.coll('timesheetDays')).length },
+      { what: 'clock records', count: 1 },
+    ]);
+    expect(Object.keys(store.coll('clockRecords'))).toEqual([id]);
+  });
   test('Leave off keeps every request and episode; Leave reads refuse until it is back on, then work', async () => {
     const call = await as('admin'), mgr = await as('manager');
     const off = ModuleSwitched.parse((await call('PATCH', MOD('L'), { on: false }, ver())).body);

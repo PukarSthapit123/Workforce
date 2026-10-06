@@ -19,7 +19,7 @@ import { clockIn, clockOut, closeClock, endBreak, getMyClock, startBreak, type C
 import type { Refusal } from '@/contract/common';
 import type { DayInput, RotaDay } from '@/contract/timesheets';
 import {
-  ALREADY_CLOSED, BREAK_ENDED, BREAK_STARTED, CLOCK_OFF, CLOCK_STATUS, NOT_CLOCK_TYPE, NOT_FORGOTTEN, breaksUsed, clockEntry,
+  ALREADY_CLOSED, BREAK_ENDED, BREAK_STARTED, CLOCK_OFF, CLOCK_STATUS, NOT_CLOCK_TYPE, NOT_FORGOTTEN, breaksUsed, clockEntry, clockInAgainProblem,
   clockState, clockedInToast, clockedOutToast, closeFirst, closedToast, elapsedSeconds, eventsFor, isForgotten, isLate, isOpenState, lateNotices,
   moveProblem, ringTarget, type ClockEvent, type ClockMove, type ClockProblem,
 } from '@/domain/clock';
@@ -148,12 +148,14 @@ export const clockHandlers = [
   }),
 
   serve(clockIn, ({ session, checkVersion }) => {
-    const { p } = owner(session);
+    const { p, t } = owner(session);
     const { current, open } = locate(p);
     /* D6: nothing new while an earlier clock is still open */
     if (open) refuseWith(closeFirst(open.date));
     const rec = current ?? blank(p, today()), st = stateOf(rec);
-    const problem = moveProblem(st, 'in', { breaksOn: true, breaksUsed: 0, breaksMax: 1 });
+    const problem = moveProblem(st, 'in', { breaksOn: true, breaksUsed: 0, breaksMax: 1 })
+      /* the gap before "Clock in again" is a break pair, so it needs one left (ruling) */
+      ?? clockInAgainProblem(storedDay(p, rec.date)?.entries[0]?.breaks ?? [], rec.events, store.now(), breaksMax(t));
     if (problem) refuseWith(problem);
     const blocked = dayBlocked(p, rec.date);
     if (blocked) refuseWith(blocked);

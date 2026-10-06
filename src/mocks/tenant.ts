@@ -118,7 +118,8 @@ export function sitesOff(): string[] {
 /* What is left exactly as it was when a module goes off, counted from the store. */
 function keptFor(code: string): ModuleEffect['kept'] {
   const rows: [string, string][] = ({
-    TS: [['timesheet days', 'timesheetDays']], A: [['timesheet days', 'timesheetDays']], B: [['timesheet days', 'timesheetDays']],
+    TS: [['timesheet days', 'timesheetDays']], A: [['timesheet days', 'timesheetDays']],
+    B: [['timesheet days', 'timesheetDays'], ['clock records', 'clockRecords']],
     R: [['rota weeks', 'rotaWeeks'], ['working patterns', 'patterns'], ['cover requests', 'coverRequests']],
     L: [['leave requests', 'leaveRequests'], ['sickness episodes', 'sickEpisodes']],
   } as Record<string, [string, string][]>)[code] ?? [];
