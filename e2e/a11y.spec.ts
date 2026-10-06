@@ -3,6 +3,8 @@ import type { Page } from '@playwright/test';
 import { test, expect, FROZEN } from './support/fixtures';
 import { BIGYAN, EDDIE, PUKAR, signInEmail } from './support/timesheet';
 import { AMARA, DEE, RACHEL } from './support/rota';
+import { forgetClock, london } from './support/clock';
+import { CLOCK_STATUS } from '../src/domain/clock';
 import { tid } from '../src/testids';
 
 /* Flip the theme, then let the colour transitions it starts finish: axe reads
@@ -379,5 +381,58 @@ test.describe('1c pages', () => {
     }
     await click(tid.nav.more, tid.nav.goToList)(page);
     await fits('Go to sheet');
+  });
+});
+/* Module 2b: the clock card on My timesheet's day view in each of its states,
+   and the banner for a clock left running on an earlier day. Amara Okafor
+   enters by clock on social; the server clock moves the shift on. */
+test.describe('clock', () => {
+  test.beforeEach(async ({ api }) => { await api.seed('social'); await api.setClock(FROZEN); });
+  type ClockApi = Parameters<typeof forgetClock>[1];
+  /* through every state of the card, calling `at` with a name for each */
+  async function walkTheClock(page: Page, api: ClockApi, at: (where: string) => Promise<void>) {
+    const status = page.getByTestId(tid.clock.status);
+    await signInEmail(page, AMARA);
+    await forgetClock(page, api, '2026-08-11', '06:55', FROZEN);
+    await page.goto('/work/ts');
+    await page.getByTestId(tid.clock.forgotten).waitFor();
+    await expect(status).toHaveText(CLOCK_STATUS.idle);
+    await at('the forgotten clock banner, the card idle');
+    await page.getByTestId(tid.clock.finish).fill('15:00');
+    await page.getByTestId(tid.clock.close).click();
+    await expect(page.getByTestId(tid.clock.forgotten)).toHaveCount(0);
+    await page.getByTestId(tid.clock.clockIn).click();
+    await expect(status).toHaveText(CLOCK_STATUS.running);
+    await at('the card running');
+    await api.setClock(london('16:00'));
+    await page.getByTestId(tid.clock.breakStart).click();
+    await expect(status).toHaveText(CLOCK_STATUS.onBreak);
+    await at('the card on a break');
+    await api.setClock(london('18:00'));
+    await page.getByTestId(tid.clock.clockOut).click();
+    await expect(status).toHaveText(CLOCK_STATUS.clockedOut);
+    await at('the card clocked out');
+  }
+  for (const theme of ['light', 'dark'] as const) {
+    test(`axe: the clock card in every state and the forgotten clock banner have no serious issues (${theme})`, async ({ page, api }) => {
+      test.setTimeout(90_000);
+      await walkTheClock(page, api, async where => {
+        await setTheme(page, theme);
+        const r = await new AxeBuilder({ page }).analyze();
+        expect(r.violations.filter(v => ['serious', 'critical'].includes(v.impact ?? '')).map(v => `${where} ${v.id}: ${v.nodes.length}`)).toEqual([]);
+      });
+    });
+  }
+  /* MOBILE-FOUNDATION#31: below md the card stacks (P's 1243-1249) and nothing scrolls sideways */
+  test('phone: the clock card stacks and nothing overflows at 390px in any state', async ({ page, api }) => {
+    test.setTimeout(90_000);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await walkTheClock(page, api, async where => {
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), where).toBe(true);
+      const card = page.getByTestId(tid.clock.card);
+      expect(await card.evaluate(e => getComputedStyle(e).flexDirection), where).toBe('column');
+      const box = await card.boundingBox();
+      expect(box && box.x >= 0 && box.x + box.width <= 390, `${where}: the card within the screen`).toBe(true);
+    });
   });
 });
