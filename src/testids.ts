@@ -488,5 +488,7 @@ export const tid = {
     notBuilt: (code: string) => k('clock-not-built', code),
     /* review I1: why the day form waits while the clock runs */
     outFirst: 'clock-out-first',
+    /* review I2: the forgotten banner's sentence when the day can no longer be written */
+    noDay: 'clock-no-day',
   },
 } as const;

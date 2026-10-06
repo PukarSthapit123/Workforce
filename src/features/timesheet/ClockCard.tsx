@@ -3,7 +3,7 @@ import { AlarmClock } from 'lucide-react';
 import { tid } from '@/testids';
 import { Banner, Button, Field, FormWarn, TextInput, toastInfo } from '@/ui';
 import { useClockIn, useClockOut, useCloseClock, useEndBreak, useStartBreak, type ClockMoved, type ClockRecord, type MyClock } from '@/api/clock';
-import { CLOCK_STATUS, clockTime, forgottenMessage, formatElapsed, isOpenState } from '@/domain/clock';
+import { CLOCK_STATUS, clockTime, forgottenMessage, formatElapsed, isOpenState, noDaySentence } from '@/domain/clock';
 
 /* Module 2b Clocking: the prototype's clock card (.clockcard, renderClock and
    paintClock, qnipay-workforce-v15.html:1227-1253, 6382-6386, 6890-6918). The
@@ -88,16 +88,20 @@ export function ClockCard({ clock, readAt }: { clock: MyClock; readAt: number })
 }
 
 /* A clock from an earlier day nobody clocked out of (D6): the finish time
-   closes it and saves that day as a draft. A refusal about the time is shown
-   on the field; any other under it. */
-export function ForgottenClock({ open }: { open: ClockRecord }) {
+   closes it and saves that day as a draft. When that day can no longer be
+   written (`blocked`), closing leaves the day as it is and the manager is
+   asked to amend it, and the banner says so (review I2). A refusal about the
+   time is shown on the field; any other under it. */
+export function ForgottenClock({ open, blocked, manager }: { open: ClockRecord; blocked: MyClock['openBlocked']; manager: string }) {
   const close = useCloseClock();
   const [finish, setFinish] = useState('');
   const submit = () => close.mutate({ date: open.date, version: open.version, finish }, { onSuccess: r => toastInfo(r.toast, flagged(r)) });
   const other = close.refusal && close.refusal.field !== 'finish' ? close.refusal : null;
   return (
     <Banner testId={tid.clock.forgotten} tone="warn" icon={<AlarmClock />} title={forgottenMessage(open.date)}>
-      Enter the time you finished that day to close the clock. The day is saved as a draft for you to check and submit.
+      {blocked
+        ? <>Enter the time you finished that day to close the clock. {blocked.message} <span data-testid={tid.clock.noDay}>{noDaySentence(manager)}</span></>
+        : 'Enter the time you finished that day to close the clock. The day is saved as a draft for you to check and submit.'}
       <div className="mt-sm flex flex-wrap items-end gap-sm">
         <Field label="Finish time" required error={close.fieldError('finish')}>
           <TextInput testId={tid.clock.finish} type="time" step="300" value={finish} onChange={e => setFinish(e.target.value)} />

@@ -1,6 +1,6 @@
 import {
   ALREADY_IN, ALREADY_ON_BREAK, BREAK_ENDED, BREAK_LIMIT, BREAK_STARTED, BREAKS_OFF, CLOCK_STATUS, NOT_CLOCKED_IN, NOT_ON_BREAK, ON_BREAK_NOW,
-  CLOCK_OUT_FIRST, breaksUsed, clockEntry, clockHeldReason, clockRunning, clockInAgainProblem, clockWritten, clockState, clockedBreaks, clockedInToast, clockedOutToast, closeFirst, elapsedSeconds, eventsFor, forgottenMessage,
+  CLOCK_OUT_FIRST, closedNoDayToast, noDayNotice, noDaySentence, breaksUsed, clockEntry, clockHeldReason, clockRunning, clockInAgainProblem, clockWritten, clockState, clockedBreaks, clockedInToast, clockedOutToast, closeFirst, elapsedSeconds, eventsFor, forgottenMessage,
   formatElapsed, isForgotten, isLate, lateNotices, mergeBreaks, moveProblem, ringTarget, type ClockEvent,
 } from './clock';
 
@@ -116,6 +116,14 @@ describe('late and forgotten (D5, D6)', () => {
     expect(forgottenMessage('2026-08-12')).toBe('You did not clock out on Wed 12 Aug.');
     expect(closeFirst('2026-08-12')).toMatchObject({ code: 'CLOCK_OPEN', message: 'Close the clock from Wed 12 Aug first.' });
   });
+});
+
+test('a forgotten clock whose day can no longer be written closes without it: the toast, the banner and the line manager\'s notice (review I2)', () => {
+  expect(closedNoDayToast('2026-08-07', 'Rachel Hussain')).toBe('The clock from Fri 7 Aug is closed. The day itself is not changed. Rachel Hussain has been asked to amend it.');
+  expect(noDaySentence('Rachel Hussain')).toBe('Closing the clock does not change the day itself. Rachel Hussain is asked to amend it.');
+  expect(noDayNotice('Amara Okafor', '2026-08-07', '15:00')).toEqual({ title: 'Clock closed without the day',
+    body: 'Amara Okafor did not clock out on Fri 7 Aug and finished at 15:00. The day can no longer be changed from the clock, so it needs an amendment.' });
+  expect(clockState([ev('in', '07:02', '2026-08-07')], true)).toBe('clockedOut');
 });
 
 test('a running clock holds its day: the refusal, for the person and a proxy, and the week\'s held reason (review I1)', () => {

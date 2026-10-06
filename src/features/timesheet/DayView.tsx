@@ -40,7 +40,7 @@ export function dayChip(day: WeekDay) {
    A clock-mode type (module 2b) reads its own clock: the card shows on the
    day the clock acts on while the server's gates allow it (D4), and a clock
    left open on an earlier day shows its close banner (D6). */
-export interface DayClock { card: MyClock | null; readAt: number; open: ClockRecord | null }
+export interface DayClock { card: MyClock | null; readAt: number; open: ClockRecord | null; openBlocked: MyClock['openBlocked'] }
 export function DayView({ week, date, today, onDate, personId }: {
   week: TimesheetWeek; date: string; today: string; onDate: (d: string) => void; personId: string;
 }) {
@@ -49,7 +49,7 @@ export function DayView({ week, date, today, onDate, personId }: {
   if (!day) return null;
   const clockDay = c ? c.current?.date ?? c.now.date : null;
   const clock: DayClock = { card: c?.gates.show && date === clockDay ? c : null, readAt: q.dataUpdatedAt,
-    open: c?.gates.live && c.gates.mode === 'clock' ? c.open : null };
+    open: c?.gates.live && c.gates.mode === 'clock' ? c.open : null, openBlocked: c?.openBlocked ?? null };
   return <DayPanel key={`${date}:${day.version}`} week={week} day={day} today={today} onDate={onDate} personId={personId} clock={clock} />;
 }
 
@@ -131,7 +131,7 @@ function DayPanel({ week, day, today, onDate, personId, clock }: {
           </div>
         </div>
       </Card>
-      {clock.open && <ForgottenClock key={`${clock.open.date}:${clock.open.version}`} open={clock.open} />}
+      {clock.open && <ForgottenClock key={`${clock.open.date}:${clock.open.version}`} open={clock.open} blocked={clock.openBlocked} manager={mgr} />}
       {line && <Banner testId={tid.ts.banner('rota')} tone="info" icon={<CalendarDays />}
         title={`Scheduled on the rota · ${line.name} ${line.time} · ${line.hours} hours`}
         actions={<NavLink testId={tid.tsRota.seeShift} to="/work/shifts" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>See the shift</NavLink>}>

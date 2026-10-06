@@ -353,14 +353,27 @@ describe('late and forgotten (Review Focus 4, D5, D6)', () => {
     expect((await mine(call)).open).toBeNull();
     moved(await move(call, 'in', 0));
   });
-  test('closing a day in a closed pay period is refused with the lock note, and the clock stays open', async () => {
+  test('a forgotten clock whose day is in a closed pay period closes without writing the day, tells the line manager to amend it, and stops blocking (review I2)', async () => {
     plantOpen('CP-1042', '2026-08-07');
-    at('13:00:00', '2026-08-17');
-    const call = await as('employee'), before = snapshot(...WRITES);
-    const r = await call('POST', '/api/v1/clock/2026-08-07/close', { finish: '15:00' }, 1);
-    expect(r.status).toBe(409);
-    expect(refusal(r).code).toBe('PERIOD_LOCKED');
+    at('13:00:00', '2026-08-10');
+    const call = await as('employee');
+    const g = await mine(call);
+    expect(g.open).toMatchObject({ date: '2026-08-07', state: 'running' });
+    expect(g.openBlocked).toMatchObject({ code: 'PERIOD_LOCKED' });
+    const days = JSON.stringify(store.coll('timesheetDays')), before = snapshot(...WRITES);
+    const bad = await call('POST', '/api/v1/clock/2026-08-07/close', { finish: '3pm' }, 1);
+    expect(refusal(bad)).toMatchObject({ code: 'TS_INVALID', field: 'finish', message: 'Finish time must be a 24-hour time such as 15:00.' });
     expect(snapshot(...WRITES)).toEqual(before);
+    const c = moved(await call('POST', '/api/v1/clock/2026-08-07/close', { finish: '15:00' }, 1));
+    expect(c.toast).toBe('The clock from Fri 7 Aug is closed. The day itself is not changed. Rachel Hussain has been asked to amend it.');
+    expect(c.day).toBeNull();
+    expect(c.record).toMatchObject({ state: 'clockedOut', closedLate: null, closedNoDay: { finish: '15:00' } });
+    expect(JSON.stringify(store.coll('timesheetDays'))).toBe(days);
+    expect(clockAudits()).toEqual(['Forgotten clock closed']);
+    expect(notes().map(n => [n.personId, n.event, n.title, n.body])).toEqual([['CP-1001', 'ts_missing', 'Clock closed without the day',
+      'Amara Okafor did not clock out on Fri 7 Aug and finished at 15:00. The day can no longer be changed from the clock, so it needs an amendment.']]);
+    expect((await mine(call)).open).toBeNull();
+    moved(await move(call, 'in', 0));
   });
   test('a clock still within the day is not forgotten, so it cannot be closed', async () => {
     const call = await as('employee');

@@ -26,6 +26,8 @@ export const ClockRecord = RecordMeta.extend({
   /* the clocked break pairs the clock has written to the day so far: a later clock out adds only the rest, so a start
      or break the person edited or deleted stays as they left it (review I4); null until the clock first writes the day */
   written: z.object({ breaks: z.array(BreakInput) }).nullable(),
+  /* a forgotten clock whose day could no longer be written, closed without writing it (review I2) */
+  closedNoDay: z.object({ finish: z.string(), at: IsoDateTime }).nullable(),
   /* derived on every read, never stored: the state, the seconds worked with
      breaks paused up to the server's now, and the day as "Thu 13 Aug" */
   state: ClockStateKey, elapsedSeconds: z.number().int().nonnegative(), label: z.string(),
@@ -51,6 +53,9 @@ export const MyClock = z.object({
   rota: RotaDay.nullable(), targetHours: z.number().positive(),
   /* a clock from an earlier day nobody clocked out of (D6) */
   open: ClockRecord.nullable(),
+  /* why the open clock's day can no longer be written (a closed period, a submitted or decided day, an absence):
+     closing it then leaves the day as it is (review I2) */
+  openBlocked: Blocked.nullable(),
   gates: ClockGates, status: z.string(),
 });
 export type MyClock = z.infer<typeof MyClock>;

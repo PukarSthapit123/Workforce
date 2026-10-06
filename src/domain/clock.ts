@@ -183,6 +183,16 @@ export function isForgotten(rec: { date: string; events: readonly ClockEvent[]; 
 export const forgottenMessage = (date: string) => `You did not clock out on ${formatDay(date)}.`;
 export const closeFirst = (date: string): ClockProblem => ({ code: 'CLOCK_OPEN', message: `Close the clock from ${formatDay(date)} first.`,
   next: 'Enter the time you finished that day, then clock in.' });
+/* Review I2: a forgotten clock whose day can no longer be written (a closed
+   pay period, a submitted or decided day, a blocking absence) is closed
+   without writing the day, so it stops blocking the clock; the line manager
+   is asked to amend the day. */
+export const noDaySentence = (manager: string) => `Closing the clock does not change the day itself. ${manager} is asked to amend it.`;
+export const closedNoDayToast = (date: string, manager: string) =>
+  `The clock from ${formatDay(date)} is closed. The day itself is not changed. ${manager} has been asked to amend it.`;
+export const noDayNotice = (name: string, date: string, finish: string) => ({ title: 'Clock closed without the day',
+  body: `${name} did not clock out on ${formatDay(date)} and finished at ${finish}. The day can no longer be changed from the clock, so it needs an amendment.` });
+export const BAD_FINISH = { code: 'TS_INVALID', field: 'finish', message: 'Finish time must be a 24-hour time such as 15:00.', next: 'Enter the time you finished.' } as const;
 export const NOT_FORGOTTEN: ClockProblem = { code: 'CLOCK_MOVE', message: 'This clock is still running.', next: 'Clock out instead.' };
 export const ALREADY_CLOSED: ClockProblem = { code: 'CLOCK_MOVE', message: 'That clock is already closed.', next: 'Open the day to correct its times.' };
 

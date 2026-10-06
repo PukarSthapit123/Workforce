@@ -175,6 +175,20 @@ describe('the clock card', () => {
     await waitFor(() => expect(screen.queryByTestId(tid.clock.forgotten)).toBeNull());
   });
 
+  test('a forgotten clock whose day can no longer be written: the banner says the day is not changed, and closing it frees the clock (review I2)', async () => {
+    plant('2026-08-07', [{ kind: 'in', at: london('07:02', '2026-08-07') }]);
+    at('13:00:00', '2026-08-10');
+    await open();
+    const banner = await screen.findByTestId(tid.clock.forgotten);
+    expect(banner).toHaveTextContent('You did not clock out on Fri 7 Aug.');
+    expect(within(banner).getByTestId(tid.clock.noDay)).toHaveTextContent('Closing the clock does not change the day itself. Rachel Hussain is asked to amend it.');
+    fireEvent.change(within(banner).getByTestId(tid.clock.finish), { target: { value: '15:00' } });
+    await userEvent.click(within(banner).getByTestId(tid.clock.close));
+    expect(await toast('The clock from Fri 7 Aug is closed. The day itself is not changed. Rachel Hussain has been asked to amend it.')).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByTestId(tid.clock.forgotten)).toBeNull());
+    expect(screen.getByTestId(tid.clock.clockIn)).toBeInTheDocument();
+  });
+
   test('with Clock in / out off there is no card and the type records on the day form', async () => {
     tenant().modules.B = false;
     store.save();

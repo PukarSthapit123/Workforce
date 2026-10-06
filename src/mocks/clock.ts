@@ -19,19 +19,21 @@ import { clockIn, clockOut, closeClock, endBreak, getMyClock, startBreak, type C
 import type { Refusal } from '@/contract/common';
 import type { DayInput, RotaDay } from '@/contract/timesheets';
 import {
-  ALREADY_CLOSED, BREAK_ENDED, BREAK_STARTED, CLOCK_OFF, CLOCK_STATUS, NOT_CLOCK_TYPE, NOT_FORGOTTEN, breaksUsed, clockEntry, clockInAgainProblem,
+  ALREADY_CLOSED, BAD_FINISH, BREAK_ENDED, closedNoDayToast, noDayNotice, BREAK_STARTED, CLOCK_OFF, CLOCK_STATUS, NOT_CLOCK_TYPE, NOT_FORGOTTEN, breaksUsed, clockEntry, clockInAgainProblem,
   clockState, clockedInToast, clockedOutToast, closeFirst, closedToast, elapsedSeconds, eventsFor, isForgotten, isLate, isOpenState, lateNotices,
   moveProblem, ringTarget, clockWritten, type ClockEvent, type ClockMove, type ClockProblem, type ClockWritten,
 } from '@/domain/clock';
 import { absenceBlockedProblem } from '@/domain/leave';
 import { DEFAULT_EXTRAS, flagOn, modOn } from '@/domain/modules';
-import { clockFromIso, dowMon, formatDay, periodStart } from '@/domain/time';
+import { clockFromIso, dowMon, formatDay, periodStart, toMin } from '@/domain/time';
 
 interface StoredClock {
   id: string; version: number; updatedAt: string; personCode: string; date: string; events: ClockEvent[];
   late: boolean; closedLate: { finish: string; at: string } | null;
   /* the clocked pairs the clock has written to the day (review I4); absent on a record from before it was kept */
   written?: ClockWritten | null;
+  /* a forgotten clock closed without writing its day, which could no longer be written (review I2) */
+  closedNoDay?: { finish: string; at: string } | null;
 }
 interface Tenant { modules: Record<string, boolean>; flags: Record<string, unknown>; extras?: { breaksMax?: number } }
 interface StoredType { code: string; name: string; mode?: 'form' | 'grid' | 'clock' }
@@ -48,8 +50,10 @@ const live = (t: Tenant) => modOn(t.modules, 'TS') && modOn(t.modules, 'B');
 const breaksOn = (t: Tenant) => flagOn(t.modules, t.flags, 'BREAKS');
 const breaksMax = (t: Tenant) => t.extras?.breaksMax ?? DEFAULT_EXTRAS.breaksMax;
 const typeOf = (p: StoredPerson) => Object.values(store.coll<StoredType>('employeeTypes')).find(x => x.code === p.employeeType);
-const stateOf = (r: StoredClock) => clockState(r.events, r.closedLate !== null);
-const view = (r: StoredClock): ClockRecord => ({ ...r, written: r.written ?? null, state: stateOf(r), elapsedSeconds: elapsedSeconds(r.events, store.now(), r.closedLate !== null), label: formatDay(r.date) });
+const closed = (r: StoredClock) => r.closedLate != null || r.closedNoDay != null;
+const stateOf = (r: StoredClock) => clockState(r.events, closed(r));
+const view = (r: StoredClock): ClockRecord => ({ ...r, written: r.written ?? null, closedNoDay: r.closedNoDay ?? null, state: stateOf(r),
+  elapsedSeconds: elapsedSeconds(r.events, store.now(), closed(r)), label: formatDay(r.date) });
 const refuseWith = (p: ClockProblem | Refusal, status = 409): never => refuse(status, { code: p.code, message: p.message, next: p.next, ...('field' in p && p.field ? { field: p.field } : {}) });
 
 /* The published rota line for the day: a shift, never a rest day, leave or sickness (D5). */
@@ -85,6 +89,7 @@ function dayBlocked(p: StoredPerson, date: string): Refusal | null {
     throw e;
   }
 }
+const shortBlocked = (b: Refusal | null) => (b ? { code: b.code, message: b.message, next: b.next } : null);
 /* Every write: the clock is live and the person's type enters by clock. */
 function owner(s: Signed): { p: StoredPerson; t: Tenant } {
   const p = me(s), t = tenant();
@@ -143,8 +148,8 @@ export const clockHandlers = [
     const blocked = dayBlocked(p, date), on = live(t);
     return {
       serverNow: now, now: clockFromIso(now), current: current ? view(current) : null, version: current?.version ?? 0,
-      rota: line, targetHours: ringTarget(line?.hours), open: open ? view(open) : null,
-      gates: { live: on, mode, blocked: blocked ? { code: blocked.code, message: blocked.message, next: blocked.next } : null,
+      rota: line, targetHours: ringTarget(line?.hours), open: open ? view(open) : null, openBlocked: open ? shortBlocked(dayBlocked(p, open.date)) : null,
+      gates: { live: on, mode, blocked: shortBlocked(blocked),
         show: on && mode === 'clock' && !blocked, breaks: breaksOn(t), breaksMax: breaksMax(t) },
       status: CLOCK_STATUS[current ? stateOf(current) : 'idle'],
     };
@@ -201,6 +206,14 @@ export const clockHandlers = [
     if (!isForgotten(rec, today(), store.now(), captureRules().maxDaily)) refuseWith(NOT_FORGOTTEN);
     checkVersion(rec);
     const finish = body.finish.trim();
+    /* review I2: a day that can no longer be written is left as it is; the clock closes without it and the line manager is asked to amend it */
+    if (dayBlocked(p, rec.date)) {
+      if (toMin(finish) == null) refuseWith(BAD_FINISH, 422);
+      const saved = put(rec, { closedNoDay: { finish, at: store.now() } }), m = lineManager(p);
+      if (m) notifyEvent('ts_missing', 'actor', [m.code], noDayNotice(p.name, rec.date, finish));
+      const auditId = audit(session, 'Forgotten clock closed', rec, saved, `${formatDay(rec.date)} · finished at ${finish} · the day was not changed`);
+      return { record: view(saved), day: null, warnings: [], toast: closedNoDayToast(rec.date, m?.name ?? (p.manager.trim() || 'Your manager')), auditId };
+    }
     let written: ReturnType<typeof writeClockDay>;
     try { written = writeClockDay(session, p, t, rec, rec.events, finish); } catch (e) {
       /* the finish is this request's field, not the day form's */
