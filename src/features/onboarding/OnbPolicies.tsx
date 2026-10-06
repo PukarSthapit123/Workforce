@@ -47,10 +47,10 @@ export function PoliciesStep(props: Parameters<typeof PolicyList>[0]) {
   const done = props.policies.filter(p => p.acknowledged).length;
   return (
     <>
-      <p className="mb-md text-sm text-text-secondary">Read each one, then tick to confirm you have.{' '}
+      <p className="mb-xs text-sm text-text-secondary">Read each one, then tick to confirm you have.{' '}
         <b data-testid={tid.onb.polCount} className="font-semibold text-text-primary">{done} of {props.policies.length}</b> done.</p>
       <PolicyList {...props} />
-      <Small className="mt-md">Your confirmation records the version shown. If a policy changes you will be asked again.</Small>
+      <Small className="mt-xs">Your confirmation records the version shown. If a policy changes you will be asked again.</Small>
     </>);
 }
 

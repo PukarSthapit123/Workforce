@@ -515,5 +515,7 @@ export const tid = {
     polError: (id: string) => k('onb-pol-error', id), readBody: 'onb-read-body', readAck: 'onb-read-ack', readClose: 'onb-read-close',
     todo: 'onb-todo', complete: 'onb-complete', review: (key: string) => k('onb-review', key), sign: 'onb-sign', consent: 'onb-consent', consentError: 'onb-consent-error',
     submitted: 'onb-submitted', ref: 'onb-ref', submittedAt: 'onb-submitted-at', whatNext: 'onb-what-next', sentBack: 'onb-sent-back', askedAgain: 'onb-asked-again',
+    /* the step card's and the submitted card's `i` tip (the prototype's acard tip) */
+    stepTip: 'onb-step-tip', submittedTip: 'onb-submitted-tip',
   },
 } as const;

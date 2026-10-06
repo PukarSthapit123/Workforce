@@ -167,26 +167,26 @@ function Portal({ d }: { d: OnboardingDetail }) {
           className="sticky top-[96px] flex flex-col gap-xs max-[860px]:static max-[860px]:flex-row max-[860px]:overflow-x-auto max-[860px]:pb-xs">
           {d.steps.map((s, n) => (
             <button key={s.id} type="button" data-testid={tid.onb.step(s.id)} aria-current={n === i ? 'step' : 'false'} onClick={() => go(s.id)}
-              className={cn('flex w-full items-center gap-sm rounded-control border border-transparent px-md py-sm text-left hover:bg-surface-tint max-[860px]:w-auto max-[860px]:flex-none',
+              className={cn('relative flex w-full items-center gap-sm rounded-control border border-transparent px-md py-sm text-left hover:bg-surface-tint max-[860px]:w-auto max-[860px]:flex-none',
                 n === i && 'border-border bg-surface-card hover:bg-surface-card')}>
               <span aria-hidden="true" className={cn('grid size-6 shrink-0 place-items-center rounded-full text-xs font-bold',
                 isDone(s) ? 'bg-ok-surface text-ok' : n === i ? 'bg-brand text-text-on-brand dark:bg-brand-accent dark:text-text-on-accent' : 'bg-surface-tint text-text-muted')}>
                 {isDone(s) ? '✓' : n + 1}</span>
               <span className="min-w-0">
-                <b className="block text-sm font-semibold text-text-primary">{s.label}</b>
-                <span className="block text-xs text-text-muted max-[860px]:sr-only">{s.stateLabel}</span>
+                <b className="block text-sm leading-[normal] font-semibold whitespace-nowrap text-text-primary">{s.label}</b>
+                <span className="block text-xs leading-[normal] text-text-muted max-[860px]:sr-only">{s.stateLabel}</span>
               </span>
             </button>))}
         </nav>
         <div className="min-w-0">
-          <AdminCard testId={tid.onb.body(st.id)} icon={ICON[st.id]} title={st.label} desc={st.desc}>{body}</AdminCard>
+          <AdminCard testId={tid.onb.body(st.id)} icon={ICON[st.id]} title={st.label} tip={st.desc} tipTestId={tid.onb.stepTip}>{body}</AdminCard>
           {general && <FormWarn testId={tid.onb.formWarn}>{general.message} {general.next}</FormWarn>}
           <div className="mt-md flex items-center gap-md">
             {i > 0 ? <Button testId={tid.onb.back} kind="ghost" pending={w.busy} className="max-[860px]:flex-1" onClick={() => {
               const prev = d.steps[i - 1];
               if (prev) go(prev.id);
             }}>‹ Back</Button> : <span />}
-            <span data-testid={tid.onb.saved} role="status" className={cn('mx-auto text-xs text-text-muted before:mr-[6px] before:inline-block before:size-[6px] before:rounded-full before:align-[1px] before:content-[\'\']',
+            <span data-testid={tid.onb.saved} role="status" className={cn('mx-auto text-xs whitespace-nowrap text-text-muted before:mr-[6px] before:inline-block before:size-[6px] before:rounded-full before:align-[1px] before:content-[\'\']',
               dirty || w.busy ? 'before:bg-text-muted' : 'before:bg-ok')}>{dot}</span>
             {st.id === 'review'
               ? <Button testId={tid.onb.submit} kind="primary" pending={w.busy} className="max-[860px]:flex-1" onClick={send}>Submit to HR</Button>
@@ -259,8 +259,8 @@ function Submitted({ d }: { d: OnboardingDetail }) {
     <>
       <PageHead title={`Thank you, ${d.person.first}`} crumb="My work · Onboarding" tipTestId={tid.onb.tip} tip="Your information has been sent to HR." />
       <div data-testid={tid.onb.submitted}>
-        <AdminCard icon={<ClipboardList />} title="Submitted" desc="What happens next">
-          <Fact label="Reference" testId={tid.onb.ref}><span className="font-mono">{d.case.ref}</span></Fact>
+        <AdminCard icon={<ClipboardList />} title="Submitted" tip="What happens next" tipTestId={tid.onb.submittedTip}>
+          <Fact label="Reference" testId={tid.onb.ref}><span className="tabular-nums">{d.case.ref}</span></Fact>
           <Fact label="Submitted" testId={tid.onb.submittedAt}>{formatDateTime(d.case.submittedAt)}</Fact>
           <Small testId={tid.onb.whatNext} className="mt-[10px]">HR will check your documents. If one is rejected you will be told why, and its step opens
             again here so you can send a new one. For anything else that needs changing, ask your manager. There is nothing else for you to do now.</Small>

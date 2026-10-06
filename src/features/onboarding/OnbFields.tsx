@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Trash2 } from 'lucide-react';
 import { tid } from '@/testids';
-import { Button, Empty, Field, FieldGrid, SelectBox, SubHead, TextArea, TextInput, Wide } from '@/ui';
+import { Button, Empty, Field, FieldGrid, SelectBox, SubHead, TextArea, TextInput } from '@/ui';
 import {
   CONTACT_FIELDS, CONVICTIONS_FIELD, CONVICTION_DETAIL_FIELD, EMERGENCY_FIELDS, LOCKED_HINT, NO_QUALIFICATIONS, PERSONAL_FIELDS, QUALIFICATION_FIELDS,
   WORKING_TIME_FIELD, emptyContact, type EmergencyContact, type OnbData, type OnbField, type Qualification,
@@ -35,7 +35,8 @@ export function FieldRow({ f, testId, value, onChange, error, today, required, d
           max={f.notAfterToday ? today : undefined} min={f.notBeforeToday ? today : undefined}
           className={f.uppercase ? 'uppercase placeholder:normal-case' : undefined} onChange={e => onChange(e.target.value)} />;
   const field = <Field label={f.label} required={req} tip={f.tip} {...(error ? { error } : hint ? { hint } : {})}>{control}</Field>;
-  return f.wide ? <Wide>{field}</Wide> : field;
+  /* a field across both columns keeps the 12px under it that a Field alone in its wrapper loses */
+  return f.wide ? <div className="col-span-full mb-md">{field}</div> : field;
 }
 
 /* What the step bodies are given: the values on screen (saved, with any

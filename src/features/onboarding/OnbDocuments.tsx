@@ -46,10 +46,10 @@ export function DocumentsStep({ v, set, error, today, disabled, features, docume
   };
   return (
     <>
-      {features.rtw && <FieldGrid>
+      {features.rtw && <div className="mb-md"><FieldGrid>
         <FieldRow f={RTW_TYPE_FIELD} testId={tid.onb.field('rtwType')} today={today} disabled={disabled} error={error('rtwType')}
           value={v.documents.rtwType} onChange={x => set('documents', { ...v.documents, rtwType: x })} />
-      </FieldGrid>}
+      </FieldGrid></div>}
       <Table data-testid={tid.onb.docs} variant="records" dense>
         <TableHeader><TableRow>
           <TableHead>Document</TableHead><TableHead>Needed</TableHead><TableHead>What you sent</TableHead><TableHead>State</TableHead>
@@ -60,7 +60,7 @@ export function DocumentsStep({ v, set, error, today, disabled, features, docume
             const bad = docError(d.id);
             return (
               <Row key={d.id} testId={tid.onb.doc(d.id)}>
-                <TableCell kind="title"><b className="font-semibold">{d.label}</b><span className="block text-xs font-normal text-text-muted">{d.hint}</span></TableCell>
+                <TableCell kind="title"><b className="font-bold">{d.label}</b><span className="block text-xs font-normal text-text-muted">{d.hint}</span></TableCell>
                 <TableCell label="Needed">{d.req ? <Pill tone="warn">Required</Pill> : <span className="text-xs text-text-muted">Optional</span>}</TableCell>
                 <TableCell label="What you sent"><FileCell f={d.file} testId={tid.onb.docFile(d.id)} /></TableCell>
                 <TableCell label="State">
