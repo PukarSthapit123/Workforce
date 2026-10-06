@@ -6137,6 +6137,275 @@
     "note": "Sick note held · 8-week check 28/08/2026",
     "rtw": null
    }
+  },
+  "onboardingConfig": {
+   "onboardingConfig": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "onboardingConfig",
+    "steps": [
+     {
+      "id": "personal",
+      "label": "Personal details",
+      "on": true,
+      "fixed": true,
+      "desc": "Name, date of birth, nationality, national insurance number."
+     },
+     {
+      "id": "contact",
+      "label": "Contact information",
+      "on": true,
+      "fixed": true,
+      "desc": "Address, phone, alternative number."
+     },
+     {
+      "id": "emergency",
+      "label": "Emergency contacts",
+      "on": true,
+      "fixed": false,
+      "desc": "Who to call, and their relationship."
+     },
+     {
+      "id": "additional",
+      "label": "Additional information",
+      "on": true,
+      "fixed": false,
+      "desc": "Convictions, working time opt-out, qualifications. Each is switched on separately under Modules."
+     },
+     {
+      "id": "documents",
+      "label": "Documents",
+      "on": true,
+      "fixed": false,
+      "desc": "Right to work, proof of address, photograph."
+     },
+     {
+      "id": "policies",
+      "label": "Policies and sign-off",
+      "on": true,
+      "fixed": false,
+      "desc": "Read, acknowledge and sign."
+     },
+     {
+      "id": "review",
+      "label": "Review and submit",
+      "on": true,
+      "fixed": true,
+      "desc": "Check everything, then send it to HR."
+     }
+    ],
+    "documents": [
+     {
+      "id": "rtw",
+      "label": "Right to work",
+      "req": true,
+      "verify": "hr",
+      "blocks": true,
+      "expiry": true,
+      "hint": "Passport, birth certificate, or a visa or biometric residence permit."
+     },
+     {
+      "id": "addr",
+      "label": "Proof of address",
+      "req": true,
+      "verify": "hr",
+      "blocks": false,
+      "expiry": false,
+      "hint": "A utility bill or bank statement issued in the last three months."
+     },
+     {
+      "id": "photo",
+      "label": "Photograph",
+      "req": true,
+      "verify": "either",
+      "blocks": false,
+      "expiry": false,
+      "hint": "A recent photograph against a plain background."
+     },
+     {
+      "id": "licence",
+      "label": "Driving licence",
+      "req": false,
+      "verify": "mgr",
+      "blocks": false,
+      "expiry": true,
+      "hint": "Only if the role involves driving."
+     },
+     {
+      "id": "cert",
+      "label": "Certificates",
+      "req": false,
+      "verify": "mgr",
+      "blocks": false,
+      "expiry": true,
+      "hint": "Qualifications relevant to the role."
+     }
+    ]
+   }
+  },
+  "onboardingPolicies": {
+   "pol_conduct": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "pol_conduct",
+    "label": "Code of conduct",
+    "ver": "v4.1",
+    "sum": "Workplace behaviour, conflicts of interest and the standards expected of everyone.",
+    "body": [
+     "We expect everyone to treat colleagues, clients and members of the public with respect. Harassment, discrimination and bullying are treated as gross misconduct.",
+     "Tell your manager about anything that could be a conflict of interest, for example a second job, a family connection to a supplier, a financial interest in a client. Declaring it is not a problem. Not declaring it is.",
+     "Gifts and hospitality over £50 must be declared. Cash is never accepted.",
+     "If you see something that worries you, raise it. You will not be penalised for raising a concern in good faith, even if it turns out to be unfounded."
+    ],
+    "order": 0
+   },
+   "pol_privacy": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "pol_privacy",
+    "label": "Privacy notice",
+    "ver": "v2.0",
+    "sum": "What personal data is held about you, why, and how long it is kept.",
+    "body": [
+     "We hold your contact details, bank details, right-to-work evidence, emergency contacts and records of the hours you work. We hold them because we have to pay you correctly, meet our legal obligations as an employer, and reach somebody if you are hurt at work.",
+     "Your bank details are used for payment only. They are visible to payroll and to nobody else.",
+     "Right-to-work evidence is kept for the duration of your employment and for two years afterwards, which is the statutory minimum.",
+     "You can ask to see everything we hold about you, and ask for anything inaccurate to be corrected. Contact the person named at the end of this notice."
+    ],
+    "order": 1
+   },
+   "pol_handbook": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "pol_handbook",
+    "label": "Employee handbook",
+    "ver": "v7.3",
+    "sum": "Leave, working hours, benefits and day-to-day procedures.",
+    "body": [
+     "Your holiday year runs from 1 April. Entitlement is pro-rated if you join part way through, and is shown in the app under Leave.",
+     "Request leave through the app rather than by email, so that cover can be arranged and your balance stays right.",
+     "If you are unwell, tell your manager before your shift starts. A self-certificate covers up to seven days; beyond that we need a fit note.",
+     "Overtime is by agreement in advance. Unagreed hours are still recorded, but may be queried before they are paid."
+    ],
+    "order": 2
+   },
+   "pol_itsec": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "pol_itsec",
+    "label": "IT and data security",
+    "ver": "v3.2",
+    "sum": "Acceptable use, passwords, and what to do if something is lost or exposed.",
+    "body": [
+     "Use a different password here from the one you use anywhere else, and turn on the second factor when you are asked to.",
+     "Do not send client information to a personal email address, and do not put it on a personal device that is not encrypted.",
+     "If you lose a phone or a laptop with work information on it, tell us the same day. Nobody is in trouble for reporting a loss quickly.",
+     "If you receive a message asking you to change bank details or transfer money urgently, treat it as suspicious and verify it by phone using a number you already had."
+    ],
+    "order": 3
+   }
+  },
+  "onboardingCases": {
+   "onb_CP-1501": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "onb_CP-1501",
+    "personCode": "CP-1501",
+    "steps": {},
+    "docs": {},
+    "files": {},
+    "rejections": {},
+    "acks": {},
+    "read": {},
+    "data": {
+     "personal": {
+      "dob": "",
+      "gender": "",
+      "nat": "",
+      "ni": ""
+     },
+     "contact": {
+      "mob": "",
+      "alt": "",
+      "a1": "",
+      "a2": "",
+      "city": "",
+      "post": ""
+     },
+     "emergency": [
+      {
+       "nm": "",
+       "rel": "",
+       "ph": ""
+      }
+     ],
+     "additional": {
+      "conv": "",
+      "convDetail": "",
+      "wtd": "",
+      "quals": []
+     },
+     "documents": {
+      "rtwType": ""
+     }
+    },
+    "signature": "",
+    "consent": false,
+    "submittedAt": "",
+    "ref": "",
+    "invitedAt": "",
+    "startedAt": ""
+   },
+   "onb_CP-1502": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "onb_CP-1502",
+    "personCode": "CP-1502",
+    "steps": {},
+    "docs": {},
+    "files": {},
+    "rejections": {},
+    "acks": {},
+    "read": {},
+    "data": {
+     "personal": {
+      "dob": "",
+      "gender": "",
+      "nat": "",
+      "ni": ""
+     },
+     "contact": {
+      "mob": "",
+      "alt": "",
+      "a1": "",
+      "a2": "",
+      "city": "",
+      "post": ""
+     },
+     "emergency": [
+      {
+       "nm": "",
+       "rel": "",
+       "ph": ""
+      }
+     ],
+     "additional": {
+      "conv": "",
+      "convDetail": "",
+      "wtd": "",
+      "quals": []
+     },
+     "documents": {
+      "rtwType": ""
+     }
+    },
+    "signature": "",
+    "consent": false,
+    "submittedAt": "",
+    "ref": "",
+    "invitedAt": "",
+    "startedAt": ""
+   }
   }
  }
 }

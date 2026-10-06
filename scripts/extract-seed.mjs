@@ -169,7 +169,7 @@ function shape(tenantKey, data, PERMS_META, PERM_GROUPS, PROFILE_CHANGES, ref) {
     capabilityGroups: byId(capabilityGroups), tenant: { tenant }, locations, departments, costCentres, jobProfiles, projects,
     employeeTypes, profileChanges, personHistory: {}, notices: byId(notices), audit: {}, ...notificationSeed(data, accounts), ...timesheets(data, people),
     delegations: delegationSeed(people), ...documentSeed(accounts),
-    ...rotaData, ...leave(data, people, ref, rotaData.rotaWeeks) } };
+    ...rotaData, ...leave(data, people, ref, rotaData.rotaWeeks), ...onboarding(data, people) } };
 }
 
 /* ---- 1c group 4: notifications (brief D9) ----
@@ -397,6 +397,27 @@ function leave(data, people, ref, rotaWeeks) {
   return { leaveConfig: { leaveConfig }, leaveRequests: requests, leaveLedger: ledger, leaveBases: bases, leavers: leaverRows, sickEpisodes: episodes };
 }
 
+/* ---- module 5: onboarding (brief D1, D2, D10, D14) ----
+   The config is P's ONB_STEPS and ONB_DOCS (persisted by the prototype, so read
+   from its store, else its source), less the icons. Each policy is its own row
+   (D2), id pol_<P's id>, with its text and its place in P's order; no files.
+   Every person in candidate or preboard state gets an empty case, built by
+   src/domain/onboarding.ts itself. Em-dash asides become sentences; an aside
+   that is a list of examples ("a conflict of interest — a second job, a family
+   connection ...") reads "for example" instead of breaking into a fragment. */
+const onbSentence = s => plain(String(s || '').replace(/\s+—\s+(?=[a-z][^.—]*,[^.—]*\.)/g, ', for example '));
+function onboarding(data, people) {
+  const steps = (data.ONB_STEPS || literalOnbSteps).map(s => ({ id: s.id, label: s.label, on: s.on !== false, fixed: !!s.fixed, desc: onbSentence(s.desc) }));
+  const documents = (data.ONB_DOCS || literalOnbDocs).map(d => ({ id: d.id, label: d.label, req: !!d.req, verify: d.verify, blocks: !!d.blocks,
+    expiry: !!d.expiry, hint: onbSentence(d.hint) }));
+  const onboardingConfig = meta({ id: 'onboardingConfig', steps, documents });
+  const onboardingPolicies = byId((data.ONB_POLICIES || literalOnbPolicies).map((p, i) => meta({ id: `pol_${p.id}`, label: p.label, ver: p.ver,
+    sum: onbSentence(p.sum), body: (p.body || []).map(onbSentence), order: i })));
+  const onboardingCases = byId(people.filter(p => onboardingRules.isStarterState(p.state))
+    .map(p => meta({ id: onboardingRules.caseId(p.code), ...onboardingRules.emptyCase(p.code) })));
+  return { onboardingConfig: { onboardingConfig }, onboardingPolicies, onboardingCases };
+}
+
 /* ---- module 3: rota (brief D1, D9) ---- */
 /* Only a tenant with the Rota module gets rota data; qnipay keeps R off and gets none.
    The prototype's stored ROTA_WEEKS were stashed under the template it booted with
@@ -615,6 +636,11 @@ const literalDelegations = literal('DELEGATIONS');
 const literalDocuments = literal('DOCUMENTS');
 const literalPayrollDocs = literal('PAYROLL_DOCS');
 const leaveRules = await tsImport('../src/domain/leave.ts', import.meta.url);
+/* Module 5: the onboarding stores, read from the source when the store lacks them. */
+const literalOnbSteps = literal('ONB_STEPS');
+const literalOnbDocs = literal('ONB_DOCS');
+const literalOnbPolicies = literal('ONB_POLICIES');
+const onboardingRules = await tsImport('../src/domain/onboarding.ts', import.meta.url);
 /* The capture field catalogue, less any money: the £ value on each allowance and the expenses-to-claim field. */
 const timesheetFields = literal('FIELDS').filter(f => !MONEY_FIELDS.has(f.c))
   .map(f => Object.fromEntries(Object.entries(f).filter(([k]) => k !== 'amt')));
