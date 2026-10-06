@@ -1,6 +1,6 @@
 import {
   ALREADY_IN, ALREADY_ON_BREAK, BREAK_ENDED, BREAK_LIMIT, BREAK_STARTED, BREAKS_OFF, CLOCK_STATUS, NOT_CLOCKED_IN, NOT_ON_BREAK, ON_BREAK_NOW,
-  CLOCK_OUT_FIRST, clockedInSince, closedNoDayToast, noDayNotice, noDaySentence, breaksUsed, clockEntry, clockHeldReason, clockRunning, clockInAgainProblem, clockWritten, clockState, clockedBreaks, clockedInToast, clockedOutToast, closeFirst, elapsedSeconds, eventsFor, forgottenMessage,
+  CLOCK_OUT_FIRST, inNightTail, nightLineNote, clockedInSince, closedNoDayToast, noDayNotice, noDaySentence, breaksUsed, clockEntry, clockHeldReason, clockRunning, clockInAgainProblem, clockWritten, clockState, clockedBreaks, clockedInToast, clockedOutToast, closeFirst, elapsedSeconds, eventsFor, forgottenMessage,
   formatElapsed, isForgotten, isLate, lateNotices, mergeBreaks, moveProblem, ringTarget, type ClockEvent,
 } from './clock';
 
@@ -142,5 +142,19 @@ test('the card\'s sentences and toasts are the prototype\'s, as plain sentences'
 });
 
 test('a clock from an earlier day says since when (review I3)', () => {
-  expect(clockedInSince({ date: '2026-08-13', events: [ev('in', '21:58'), ev('breakStart', '23:00')] })).toBe('Clocked in since Thu 13 Aug 21:58.');
+  const night = [ev('in', '21:58'), ev('breakStart', '23:00')];
+  expect(clockedInSince({ events: night }, '2026-08-14')).toBe('Clocked in since Thu 13 Aug 21:58.');
+  expect(clockedInSince({ events: night }, '2026-08-13')).toBeNull();
+});
+
+test('a clock in after midnight inside a night line belongs to that line, and is late against it (review M1)', () => {
+  const night = { from: '22:00', to: '07:00' };
+  expect([inNightTail(night, '00:10'), inNightTail(night, '06:59'), inNightTail(night, '07:00'), inNightTail(night, '21:00')]).toEqual([true, true, false, false]);
+  expect(inNightTail({ from: '07:00', to: '15:00' }, '00:10')).toBe(false);
+  expect(isLate(at('00:10', '2026-08-14'), night, '2026-08-13')).toBe(true);
+  expect(isLate(at('21:58', '2026-08-13'), night, '2026-08-13')).toBe(false);
+  expect(lateNotices('Amara Okafor', '2026-08-13', at('00:10', '2026-08-14'), '22:00').subject.body)
+    .toBe('You clocked in at 00:10 on Fri 14 Aug. Your shift started at 22:00 on Thu 13 Aug.');
+  expect(nightLineNote('Night', '2026-08-13', false)).toBe('Clocking in now goes on your Night shift of Thu 13 Aug.');
+  expect(nightLineNote('Night', '2026-08-13', true)).toBe('This clock goes on your Night shift of Thu 13 Aug.');
 });

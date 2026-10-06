@@ -20,12 +20,12 @@ import type { Refusal } from '@/contract/common';
 import type { DayInput, RotaDay } from '@/contract/timesheets';
 import {
   ALREADY_CLOSED, BAD_FINISH, BREAK_ENDED, closedNoDayToast, noDayNotice, BREAK_STARTED, CLOCK_OFF, CLOCK_STATUS, NOT_CLOCK_TYPE, NOT_FORGOTTEN, breaksUsed, clockEntry, clockInAgainProblem,
-  clockState, clockedInToast, clockedOutToast, closeFirst, closedToast, elapsedSeconds, eventsFor, isForgotten, isLate, isOpenState, lateNotices,
+  clockState, clockedInToast, clockedOutToast, closeFirst, closedToast, elapsedSeconds, eventsFor, inNightTail, isForgotten, isLate, isOpenState, lateNotices,
   moveProblem, ringTarget, clockWritten, type ClockEvent, type ClockMove, type ClockProblem, type ClockWritten,
 } from '@/domain/clock';
 import { absenceBlockedProblem } from '@/domain/leave';
 import { DEFAULT_EXTRAS, flagOn, modOn } from '@/domain/modules';
-import { clockFromIso, dowMon, formatDay, periodStart, toMin } from '@/domain/time';
+import { addDays, clockFromIso, dowMon, formatDay, periodStart, toMin } from '@/domain/time';
 
 interface StoredClock {
   id: string; version: number; updatedAt: string; personCode: string; date: string; events: ClockEvent[];
@@ -66,13 +66,21 @@ const lineManager = (p: StoredPerson) => Object.values(people()).find(x => x.nam
 const me = (s: Signed) => personByCode(effectiveCode(s))
   ?? refuse(404, { code: 'not-found', message: 'That person record no longer exists.', next: 'Reload the page.' });
 
+/* The day a new clock goes on: the calendar day, except from midnight until
+   the finish of the day before's night line, when it is that line's day, as
+   long as that day has no clock yet (review M1). */
+function clockDate(p: StoredPerson): string {
+  const now = clockFromIso(store.now()), before = addDays(now.date, -1), line = rotaLine(p, before);
+  const theirs = recordAt(clocks(), clockId(p.code, before));
+  return line && inNightTail(line, now.time) && !theirs?.events.length ? before : now.date;
+}
 /* The record the card acts on, and any forgotten one. A record still running
    or on break from an earlier day is the current one while it is within the
    daily maximum of its first clock in (a night shift), and forgotten after. */
 function locate(p: StoredPerson): { current: StoredClock | undefined; open: StoredClock | undefined } {
   const d = today(), now = store.now(), max = captureRules().maxDaily;
   const active = Object.values(clocks()).filter(r => r.personCode === p.code && isOpenState(stateOf(r))).sort((a, b) => b.date.localeCompare(a.date))[0];
-  const todays = recordAt(clocks(), clockId(p.code, d));
+  const todays = recordAt(clocks(), clockId(p.code, clockDate(p)));
   if (active && isForgotten({ ...active, closed: false }, d, now, max)) return { current: todays, open: active };
   return { current: active ?? todays, open: undefined };
 }
@@ -131,7 +139,7 @@ function audit(s: Signed, act: string, before: StoredClock, after: StoredClock, 
 /* A break move: the record changes, the day does not. */
 function breakMove(s: Signed, move: 'breakStart' | 'breakEnd', checkVersion: (r: StoredClock) => void): ClockMoved {
   const { p, t } = owner(s);
-  const rec = locate(p).current ?? blank(p, today()), st = stateOf(rec);
+  const rec = locate(p).current ?? blank(p, clockDate(p)), st = stateOf(rec);
   const used = breaksUsed(storedDay(p, rec.date)?.entries[0]?.breaks ?? [], rec.events, rec.written);
   const problem = moveProblem(st, move, { breaksOn: breaksOn(t), breaksUsed: used, breaksMax: breaksMax(t) });
   if (problem) refuseWith(problem);
@@ -144,7 +152,7 @@ function breakMove(s: Signed, move: 'breakStart' | 'breakEnd', checkVersion: (r:
 export const clockHandlers = [
   serve(getMyClock, ({ session }) => {
     const p = me(session), t = tenant(), now = store.now(), { current, open } = locate(p);
-    const date = current?.date ?? today(), line = rotaLine(p, date), mode = typeOf(p)?.mode ?? 'form';
+    const date = current?.date ?? clockDate(p), line = rotaLine(p, date), mode = typeOf(p)?.mode ?? 'form';
     const blocked = dayBlocked(p, date), on = live(t), running = Boolean(current && isOpenState(stateOf(current)));
     return {
       serverNow: now, now: clockFromIso(now), date, current: current ? view(current) : null, version: current?.version ?? 0,
@@ -161,7 +169,7 @@ export const clockHandlers = [
     const { current, open } = locate(p);
     /* D6: nothing new while an earlier clock is still open */
     if (open) refuseWith(closeFirst(open.date));
-    const rec = current ?? blank(p, today()), st = stateOf(rec);
+    const rec = current ?? blank(p, clockDate(p)), st = stateOf(rec);
     const problem = moveProblem(st, 'in', { breaksOn: true, breaksUsed: 0, breaksMax: 1 })
       /* the gap before "Clock in again" is a break pair, so it needs one left (ruling) */
       ?? clockInAgainProblem(storedDay(p, rec.date)?.entries[0]?.breaks ?? [], rec.events, store.now(), breaksMax(t), rec.written);
@@ -171,7 +179,7 @@ export const clockHandlers = [
     checkVersion(rec);
     /* D5: only the day's first clock in is checked against the rota line */
     const now = store.now(), first = !rec.events.some(e => e.kind === 'in'), line = first ? rotaLine(p, rec.date) : null;
-    const late = first ? isLate(now, line) : rec.late;
+    const late = first ? isLate(now, line, rec.date) : rec.late;
     const saved = put(rec, { events: [...rec.events, ...eventsFor(st, 'in', now)], late });
     if (first && late && line) {
       const n = lateNotices(p.name, rec.date, now, line.from), m = lineManager(p);
@@ -188,7 +196,7 @@ export const clockHandlers = [
 
   serve(clockOut, ({ session, checkVersion }) => {
     const { p, t } = owner(session);
-    const rec = locate(p).current ?? blank(p, today()), st = stateOf(rec);
+    const rec = locate(p).current ?? blank(p, clockDate(p)), st = stateOf(rec);
     const problem = moveProblem(st, 'out', { breaksOn: true, breaksUsed: 0, breaksMax: 1 });
     if (problem) refuseWith(problem);
     checkVersion(rec);

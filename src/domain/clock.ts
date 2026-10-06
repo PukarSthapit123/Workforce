@@ -161,14 +161,27 @@ export function eventsFor(state: ClockState, move: ClockMove, now: string): Cloc
 /* A first clock in after the published rota line's start is late. No
    tolerance: 07:01 against 07:00 is late, 07:00 is not (the clock reads to the
    minute). No line (Rota off, a rest day, leave), no check. */
-export function isLate(at: string, line: { from: string } | null | undefined): boolean {
+export function isLate(at: string, line: { from: string } | null | undefined, date?: string): boolean {
   const start = toMin(line?.from), t = toMin(clockTime(at));
-  return start != null && t != null && t > start;
+  if (start == null || t == null) return false;
+  /* a clock in after midnight against the line of the day before (review M1) is after its start */
+  return (date != null && clockFromIso(at).date > date) || t > start;
 }
-export const lateNotices = (name: string, date: string, at: string, from: string) => ({
-  subject: { title: 'Late clock-in', body: `You clocked in at ${clockTime(at)} on ${formatDay(date)}. Your shift started at ${from}.` },
-  actor: { title: 'Late clock-in', body: `${name} clocked in at ${clockTime(at)} on ${formatDay(date)}. The shift started at ${from}.` },
-});
+/* `date` is the line's day; when the clock in came on a later calendar day (a night line after midnight) both are named. */
+export const lateNotices = (name: string, date: string, at: string, from: string) => {
+  const on = clockFromIso(at).date, line = on === date ? from : `${from} on ${formatDay(date)}`;
+  return {
+    subject: { title: 'Late clock-in', body: `You clocked in at ${clockTime(at)} on ${formatDay(on)}. Your shift started at ${line}.` },
+    actor: { title: 'Late clock-in', body: `${name} clocked in at ${clockTime(at)} on ${formatDay(on)}. The shift started at ${line}.` },
+  };
+};
+/* Review M1: a night line crosses midnight when it finishes at or before its
+   start; from midnight until its finish a new clock belongs to it, on the
+   line's date, rather than to the calendar day. */
+export function inNightTail(line: { from: string; to: string }, time: string): boolean {
+  const from = toMin(line.from), to = toMin(line.to), t = toMin(time);
+  return from != null && to != null && t != null && to <= from && t < to;
+}
 
 /* --------------------------------------------------- forgotten (D6) */
 /* A record from an earlier day still running or on break is a forgotten clock
@@ -225,8 +238,14 @@ export const BREAK_ENDED = 'Break ended and added to your breaks.';
 export const closedToast = (date: string) => `The clock from ${formatDay(date)} is closed and the day saved as a draft. Not submitted yet.`;
 /* The ring's target: the rota line's hours, else the prototype's 8 hours. */
 export const ringTarget = (hours: number | null | undefined) => (hours && hours > 0 ? hours : 8);
-/* Review I3: a clock still running from an earlier day says when it started, wherever the card shows it. */
-export function clockedInSince(rec: { date: string; events: readonly ClockEvent[] }): string {
+/* Review I3: a clock still running since an earlier calendar day says when it
+   started, wherever the card shows it; null when it started today. */
+export function clockedInSince(rec: { events: readonly ClockEvent[] }, today: string): string | null {
   const first = rec.events.find(e => e.kind === 'in');
-  return `Clocked in since ${formatDay(rec.date)}${first ? ` ${clockTime(first.at)}` : ''}.`;
+  if (!first) return null;
+  const on = clockFromIso(first.at);
+  return on.date < today ? `Clocked in since ${formatDay(on.date)} ${on.time}.` : null;
 }
+/* Review M1: after midnight a clock goes on the night line of the day before, and the card says so. */
+export const nightLineNote = (lineName: string, date: string, running: boolean) =>
+  running ? `This clock goes on your ${lineName} shift of ${formatDay(date)}.` : `Clocking in now goes on your ${lineName} shift of ${formatDay(date)}.`;

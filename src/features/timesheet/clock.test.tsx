@@ -148,6 +148,16 @@ describe('the clock card', () => {
     await waitFor(() => expect(screen.getByTestId(tid.clock.clockIn)).toBeInTheDocument());
   });
 
+  test('after midnight inside the night line, today\'s card says the clock goes on that shift, and clocking in books it there late (review M1)', async () => {
+    at('00:10:00', '2026-08-14');
+    await open();
+    expect(await screen.findByTestId(tid.clock.lineDay)).toHaveTextContent(/^Clocking in now goes on your .+ shift of Thu 13 Aug\.$/);
+    await userEvent.click(screen.getByTestId(tid.clock.clockIn));
+    expect(await toast('Clocked in. Start time 00:10.')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId(tid.clock.lineDay)).toHaveTextContent(/^This clock goes on your .+ shift of Thu 13 Aug\.$/));
+    expect(store.coll<{ late: boolean }>('clockRecords')['clk_CP-1042_2026-08-13']?.late).toBe(true);
+  });
+
   test('after Clock in again, the running form shows the start the person corrected, not the first clock in (review I4)', async () => {
     plant('2026-08-13', [{ kind: 'in', at: london('07:10') }, { kind: 'out', at: london('12:00') }, { kind: 'in', at: london('13:00') }], { written: { breaks: [] } });
     plantDay('2026-08-13', { entries: [{ start: '07:00', finish: '12:00', breaks: [], fields: {} }] });

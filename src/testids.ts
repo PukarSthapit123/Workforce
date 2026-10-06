@@ -492,5 +492,7 @@ export const tid = {
     noDay: 'clock-no-day',
     /* review I3: when a clock still running from an earlier day started */
     since: 'clock-since',
+    /* review M1: a new clock after midnight goes on the night line of the day before */
+    lineDay: 'clock-line-day',
   },
 } as const;

@@ -335,6 +335,19 @@ describe('late and forgotten (Review Focus 4, D5, D6)', () => {
     const queue = ApprovalQueue.parse((await (await as('manager'))('GET', '/api/v1/approvals/timesheets?status=pend')).body);
     expect(queue.rows.find(r => r.id === 'tsd_CP-1088_2026-08-13')?.clock).toEqual({ late: true, closedLate: false });
   });
+  test('a clock in after midnight inside a night line is checked late against that line and booked to its date (review M1)', async () => {
+    const amara = await as('employee');
+    at('00:10:00', '2026-08-14');
+    expect((await mine(amara)).date).toBe('2026-08-13');
+    const a = moved(await move(amara, 'in', 0));
+    expect(a.record).toMatchObject({ date: '2026-08-13', late: true });
+    expect(notes().map(n => [n.personId, n.event, n.body])).toEqual([
+      ['CP-1042', 'ts_late', 'You clocked in at 00:10 on Fri 14 Aug. Your shift started at 22:00 on Thu 13 Aug.'],
+      ['CP-1001', 'ts_late', 'Amara Okafor clocked in at 00:10 on Fri 14 Aug. The shift started at 22:00 on Thu 13 Aug.'],
+    ]);
+    at('07:00:00', '2026-08-14');
+    expect(moved(await move(amara, 'out')).day).toMatchObject({ date: '2026-08-13', entries: [{ start: '00:10', finish: '07:00' }] });
+  });
   test('on time, or with no rota line, nothing is late', async () => {
     const marcus = await asEmail(MARCUS);
     at('14:30:59');
