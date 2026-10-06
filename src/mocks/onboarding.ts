@@ -18,7 +18,7 @@ import { writeAudit } from './audit';
 import { notifyEvent } from './notify';
 import { accountOfPerson, accounts, effectiveCode, nameOf, people, personByCode, personView, recordAt, today, writeHistory, type Signed, type StoredPerson } from './world';
 import {
-  blockerContext, caseOf, casesColl, featuresNow, onbConfig, onbModuleOn, putCase, type StoredCase, type StoredConfig,
+  blockerContext, caseOf, casesColl, featuresNow, onbConfig, onbModuleOn, policiesColl, policiesNow, putCase, type StoredCase, type StoredConfig, type StoredPolicy,
 } from './onboarding-cases';
 import {
   ackOnboardingPolicy, addOnboardingPolicy, chaseStarter, editOnboardingPolicy, getMyOnboarding, getOnboardingSetup, getStarterOnboarding,
@@ -32,14 +32,11 @@ import {
   markRead, nextRef, noEmailText, outstandingText, policyAcknowledged, policyFromDraft, policyProblem, policyRemovedText, policySavedText,
   policyUploadedText, progress, progressText, removePolicyText, saveStep, setPolicyAck, startProblem, stepAvailable, stepNotAsked, stepOpen,
   stepSavedText, stepSwitchText, stepsAsked, submitCase, submittedText, taskState, configProblem, uploadedText, uploadProblem, verifierLabel,
-  isStarterState, type OnbDocument, type OnboardingCase, type OnboardingConfig, type OnbFeatures, type OnbPolicy, type OnbRefusal, type StepContext, type Decision,
+  isStarterState, type OnbDocument, type OnboardingCase, type OnboardingConfig, type OnbFeatures, type OnbRefusal, type StepContext, type Decision,
 } from '@/domain/onboarding';
 import { LIFECYCLE, isPersonState, transitionProblem } from '@/domain/lifecycle';
 
 /* ------------------------------------------------------------- the world */
-type StoredPolicy = { id: string; version: number; updatedAt: string } & OnbPolicy;
-const policiesColl = () => store.coll<StoredPolicy>('onboardingPolicies');
-const policiesNow = () => Object.values(policiesColl()).sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
 /* Policies are asked only while Policy acknowledgement is on. */
 const policiesAsked = (f: OnbFeatures) => (f.pol ? policiesNow() : []);
 const locName = (code: string) => nameOf('locations', code);

@@ -3,9 +3,10 @@ import { FLAGS, SWITCH_CODES, ROLE_NAME_TAKEN, switchFlag, type FlagExtras } fro
 import {
   IN_USE, NOT_A_TEMPLATE, NO_SUCH_TEMPLATE, SHIPPED_KEYS, SHIPPED_REMOVE, SHIPPED_TEMPLATES, TEMPLATE_NAME_REQUIRED, TEMPLATE_NAME_SHIPPED,
   TEMPLATE_SCOPES, UNREADABLE, captureTemplate, planApply, planSummary, readTemplateFile, removeProblem, templateFile, templateKey,
-  TYPES_LEFT_ALONE, templateNameProblem, templateSummary, type CaptureSource, type Template, type TenantState, type TemplateStructure,
+  ONB_LEFT_ALONE, TYPES_LEFT_ALONE, captureOnboarding, templateNameProblem, templateSummary, type CaptureSource, type Template, type TenantState, type TemplateStructure,
 } from './templates';
 import { CHAIN_MODULES, DEFAULT_CHAIN, defaultChainFor, type ChainModule, type ChainStep } from './approvals';
+import { ALWAYS_ASKED, POLICY_NAME_TAKEN, STEP_UNAVAILABLE, type OnbPolicy, type OnbStep, type OnboardingConfig } from './onboarding';
 
 const must = <T,>(v: T | undefined, what = 'value'): T => { if (v === undefined) throw new Error(`missing ${what}`); return v; };
 const shipped = (k: string) => must(SHIPPED_TEMPLATES[k], k);
@@ -266,5 +267,97 @@ describe('approval chains in a template (1c group 5)', () => {
       'The Profile approval chain stays as it is. The Profile chain can only have a line manager and payroll.',
       'Approval chains the template does not have stay as they are: Leave and Rota.',
       'Approval chains for modules this tenant does not have are not used: Payroll.']));
+  });
+});
+
+describe('the onboarding setup in a template (module 5, D12)', () => {
+  const step = (id: OnbStep['id'], label: string, on: boolean, fixed = false): OnbStep => ({ id, label, on, fixed, desc: '' });
+  const config = (): OnboardingConfig => ({
+    steps: [step('personal', 'Personal details', true, true), step('emergency', 'Emergency contacts', true), step('policies', 'Policies and sign-off', false)],
+    documents: [{ id: 'addr', label: 'Proof of address', req: true, verify: 'hr', blocks: false, expiry: false, hint: '' }],
+  });
+  const pol = (id: string, label: string, ver: string, extra: Partial<OnbPolicy> = {}): OnbPolicy =>
+    ({ id, label, ver, sum: `${label} in one line.`, body: [`${label} says this.`], order: 0, ...extra });
+  const policies = () => [pol('pol_conduct', 'Code of conduct', 'v4.1', { file: { name: 'conduct.pdf', size: 10, type: 'application/pdf', at: '2026-08-13T10:00:00.000Z', kind: 'pdf' } }),
+    pol('pol_privacy', 'Privacy notice', 'v2.0', { order: 1 })];
+  const ALL = { mayRenameRoles: true, mayChangeChains: true, mayChangeTypes: true, mayChangeOnboarding: true };
+  const src = (): CaptureSource => ({
+    modules: { CORE: true, ON: true }, flags: {}, extras: EXTRAS, labels: {}, defaultLabels: {}, employeeTypes: [],
+    roleNames: { employee: 'Employee', manager: 'Manager', admin: 'Admin' }, chain: [], structure: EMPTY, onboarding: { config: config(), policies: policies() },
+  });
+  /* the social tenant, holding the given onboarding setup, with every ONB_* feature on unless said otherwise */
+  const state = (o = { config: config(), policies: policies() }, flags: Record<string, boolean> = {}) =>
+    socialState({ onboarding: o, flags: { ...shipped('social').flags, ...flags } });
+  const withOnb = (o: Template['onboarding']): Template => ({ ...shipped('social'), onboarding: o });
+  const texts = (lines: readonly { area: string; text: string }[]) => lines.filter(l => l.area === 'onboarding').map(l => l.text);
+
+  test('capture keeps the step switches, the document settings and each policy with its text, and never a file', () => {
+    const t = captureTemplate('Ours', '', 'config', src());
+    expect(t.onboarding).toEqual({
+      steps: [{ id: 'personal', on: true }, { id: 'emergency', on: true }, { id: 'policies', on: false }],
+      documents: [{ id: 'addr', req: true, verify: 'hr', blocks: false, expiry: false }],
+      policies: [{ id: 'pol_conduct', label: 'Code of conduct', ver: 'v4.1', sum: 'Code of conduct in one line.', body: ['Code of conduct says this.'] },
+        { id: 'pol_privacy', label: 'Privacy notice', ver: 'v2.0', sum: 'Privacy notice in one line.', body: ['Privacy notice says this.'] }],
+    });
+    expect(keysOf(t)).not.toContain('file');
+    expect(keysOf(t).filter(k => MONEY.test(k))).toEqual([]);
+    expect(captureTemplate('Ours', '', 'config', { ...src(), onboarding: undefined })).not.toHaveProperty('onboarding');
+  });
+
+  test('switches and settings are set by id; a step stays off while its features are off, and a fixed step stays on', () => {
+    const t = withOnb({ steps: [{ id: 'personal', on: false }, { id: 'emergency', on: false }, { id: 'policies', on: true }],
+      documents: [{ id: 'addr', req: false, verify: 'mgr', blocks: true, expiry: true }, { id: 'visa', req: true, verify: 'hr', blocks: true, expiry: true }], policies: [] });
+    const p = planApply({ ...t, flags: { ...t.flags, ONB_POL: false } }, state(undefined, { ONB_POL: false }), ALL);
+    expect(p.steps.onboarding.steps).toEqual({ emergency: false });
+    expect(p.steps.onboarding.documents).toEqual({ addr: { req: false, verify: 'mgr', blocks: true, expiry: true } });
+    expect(texts(p.changes)).toEqual(['Onboarding step Emergency contacts off.',
+      'Onboarding document Proof of address: not required, checked by line manager, blocks the start and expiry tracked.']);
+    expect(texts(p.leftAlone)).toEqual(expect.arrayContaining([
+      `Onboarding step Personal details stays on. ${ALWAYS_ASKED}`, `Onboarding step Policies and sign-off stays off. ${STEP_UNAVAILABLE}`,
+      'Onboarding documents this tenant does not have are not used: visa.']));
+    /* judged against the features the template leaves the tenant with: this one turns Policy acknowledgement on */
+    expect(planApply(t, state(undefined, { ONB_POL: false }), ALL).steps.onboarding.steps).toEqual({ emergency: false, policies: true });
+  });
+
+  test('a held policy takes the wording but keeps its version, so nobody is asked again; a missing one is added; the tenant\'s others stay', () => {
+    const t = withOnb({ steps: [], documents: [], policies: [
+      { id: 'pol_conduct', label: 'Code of conduct', ver: 'v1.0', sum: 'Newer words.', body: ['A new paragraph.'] },
+      { id: 'pol_safe', label: 'Safeguarding policy', ver: 'v2.3', sum: 'Raising a concern.', body: ['Tell somebody.'] }] });
+    const p = planApply(t, state(), ALL);
+    expect(p.steps.onboarding.policiesUpdated).toEqual([{ id: 'pol_conduct', label: 'Code of conduct', sum: 'Newer words.', body: ['A new paragraph.'] }]);
+    expect(p.steps.onboarding.policiesAdded).toEqual([{ id: 'pol_safe', label: 'Safeguarding policy', ver: 'v2.3', sum: 'Raising a concern.', body: ['Tell somebody.'] }]);
+    expect(texts(p.changes)).toEqual(['Policy Code of conduct, with the template\'s wording. It stays v4.1, so nobody is asked to read it again.']);
+    expect(texts(p.added)).toEqual(['Policy Safeguarding policy v2.3, without a document. Upload one in Onboarding setup.']);
+    expect(texts(p.leftAlone)).toEqual(['Policies the template does not have stay, with their acknowledgements: Privacy notice.',
+      'Uploaded policy documents and everybody’s onboarding progress stay as they are.']);
+    expect(planSummary(p)).toBe('1 change, 1 added. Nothing was deleted.');
+  });
+
+  test('a policy whose name another one has is neither renamed nor added, and says why', () => {
+    const t = withOnb({ steps: [], documents: [], policies: [
+      { id: 'pol_conduct', label: 'privacy NOTICE', ver: 'v4.1', sum: '', body: [] },
+      { id: 'pol_other', label: 'Code of conduct', ver: 'v1.0', sum: '', body: [] }] });
+    const p = planApply(t, state(), ALL);
+    expect([p.steps.onboarding.policiesUpdated, p.steps.onboarding.policiesAdded]).toEqual([[], []]);
+    expect(texts(p.leftAlone)).toEqual(expect.arrayContaining([
+      `Policy Code of conduct stays as it is. ${POLICY_NAME_TAKEN}`, `Policy Code of conduct is not added. ${POLICY_NAME_TAKEN}`]));
+  });
+
+  test('without Configure onboarding the onboarding setup stays and says so; a matching one is no change', () => {
+    const changed = withOnb({ steps: [{ id: 'emergency', on: false }], documents: [], policies: [] });
+    const no = planApply(changed, state(), { ...ALL, mayChangeOnboarding: false });
+    expect(no.steps.onboarding).toEqual({ steps: {}, documents: {}, policiesUpdated: [], policiesAdded: [] });
+    expect(texts(no.leftAlone)).toEqual([ONB_LEFT_ALONE]);
+    const same = planApply(withOnb(captureOnboarding({ config: config(), policies: policies() })), state(), ALL);
+    expect([texts(same.changes), texts(same.added)]).toEqual([[], []]);
+  });
+
+  test('an imported file keeps the onboarding setup and lists a policy\'s file as ignored', () => {
+    const t = { ...shipped('social'), onboarding: { steps: [], documents: [],
+      policies: [{ id: 'pol_x', label: 'X', ver: 'v1.0', sum: '', body: [], file: { name: 'x.pdf' } }], progress: {} } };
+    const r = readTemplateFile(JSON.stringify(templateFile('tpl_x', t as unknown as Template)));
+    if (!r.ok) throw new Error('refused');
+    expect(r.ignored).toEqual(['onboarding.policies.file', 'onboarding.progress']);
+    expect(r.template.onboarding).toEqual({ steps: [], documents: [], policies: [{ id: 'pol_x', label: 'X', ver: 'v1.0', sum: '', body: [] }] });
   });
 });

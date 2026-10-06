@@ -47205,7 +47205,8 @@
                                   "chain",
                                   "structure",
                                   "people",
-                                  "organisation"
+                                  "organisation",
+                                  "onboarding"
                                 ]
                               },
                               "text": {
@@ -47235,7 +47236,8 @@
                                   "chain",
                                   "structure",
                                   "people",
-                                  "organisation"
+                                  "organisation",
+                                  "onboarding"
                                 ]
                               },
                               "text": {
@@ -47265,7 +47267,8 @@
                                   "chain",
                                   "structure",
                                   "people",
-                                  "organisation"
+                                  "organisation",
+                                  "onboarding"
                                 ]
                               },
                               "text": {
@@ -47887,6 +47890,127 @@
                             }
                           },
                           "additionalProperties": false
+                        },
+                        "onboarding": {
+                          "type": "object",
+                          "properties": {
+                            "steps": {
+                              "maxItems": 10,
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "enum": [
+                                      "personal",
+                                      "contact",
+                                      "emergency",
+                                      "additional",
+                                      "documents",
+                                      "policies",
+                                      "review"
+                                    ]
+                                  },
+                                  "on": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "on"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "documents": {
+                              "maxItems": 20,
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "maxLength": 20
+                                  },
+                                  "req": {
+                                    "type": "boolean"
+                                  },
+                                  "verify": {
+                                    "type": "string",
+                                    "enum": [
+                                      "hr",
+                                      "mgr",
+                                      "either",
+                                      "none"
+                                    ]
+                                  },
+                                  "blocks": {
+                                    "type": "boolean"
+                                  },
+                                  "expiry": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "req",
+                                  "verify",
+                                  "blocks",
+                                  "expiry"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "policies": {
+                              "maxItems": 40,
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "pattern": "^[a-z0-9_]{1,80}$"
+                                  },
+                                  "label": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 80
+                                  },
+                                  "ver": {
+                                    "type": "string",
+                                    "maxLength": 20
+                                  },
+                                  "sum": {
+                                    "type": "string",
+                                    "maxLength": 300
+                                  },
+                                  "body": {
+                                    "maxItems": 40,
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string",
+                                      "maxLength": 2000
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "label",
+                                  "ver",
+                                  "sum",
+                                  "body"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "steps",
+                            "documents",
+                            "policies"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -48019,7 +48143,8 @@
                               "chain",
                               "structure",
                               "people",
-                              "organisation"
+                              "organisation",
+                              "onboarding"
                             ]
                           },
                           "text": {
@@ -48049,7 +48174,8 @@
                               "chain",
                               "structure",
                               "people",
-                              "organisation"
+                              "organisation",
+                              "onboarding"
                             ]
                           },
                           "text": {
@@ -48079,7 +48205,8 @@
                               "chain",
                               "structure",
                               "people",
-                              "organisation"
+                              "organisation",
+                              "onboarding"
                             ]
                           },
                           "text": {

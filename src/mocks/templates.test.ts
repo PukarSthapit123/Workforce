@@ -4,8 +4,9 @@ import { Refusal } from '@/contract/common';
 import { getTenant } from '@/contract/tenant';
 import { ApprovalSetup } from '@/contract/approvals';
 import { TemplateApplied, TemplateFile, TemplateImported, TemplateList, TemplatePlan } from '@/contract/templates';
-import { SHIPPED_TEMPLATES, TEMPLATE_NAME_SHIPPED, TYPES_LEFT_ALONE } from '@/domain/templates';
-import { accountOf, audits, caller, fault, resetTo, snapshot, tokenFor, type Persona } from '@/test/api-helpers';
+import { OnboardingSetup } from '@/contract/onboarding';
+import { ONB_LEFT_ALONE, SHIPPED_TEMPLATES, TEMPLATE_NAME_SHIPPED, TYPES_LEFT_ALONE } from '@/domain/templates';
+import { FROZEN, accountOf, audits, caller, fault, resetTo, snapshot, tokenFor, type Persona } from '@/test/api-helpers';
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' })); afterAll(() => server.close());
 const as = async (p: Persona) => caller(await tokenFor(p));
@@ -15,7 +16,7 @@ beforeEach(async () => { resetTo('social'); admin = await as('admin'); });
 const T = '/api/v1/templates';
 const PLAN = (k: string) => `${T}/${k}/plan`, APPLY = (k: string) => `${T}/${k}/apply`, EXPORT = (k: string) => `${T}/${k}/export`, ONE = (k: string) => `${T}/${k}`;
 const WRITES = ['tenant', 'templates', 'timesheetConfig', 'employeeTypes', 'userTypes', 'departments', 'costCentres', 'locations', 'jobProfiles',
-  'projects', 'projectTasks', 'rotaWeeks', 'rotaSetAside', 'people', 'approvalChains', 'audit'];
+  'projects', 'projectTasks', 'rotaWeeks', 'rotaSetAside', 'people', 'approvalChains', 'onboardingConfig', 'onboardingPolicies', 'onboardingCases', 'audit'];
 const chainOf = async (m: string) => ApprovalSetup.parse((await admin('GET', '/api/v1/approvals/chains')).body).chains.find(c => c.module === m);
 const tenantVer = () => store.coll<{ version: number }>('tenant').tenant?.version ?? -1;
 const savedVer = (k: string) => store.coll<{ version: number }>('templates')[k]?.version ?? -1;
@@ -104,7 +105,10 @@ describe('saving (D2)', () => {
     expect(kept?.template).toMatchObject({ name: 'Care, two-stage approval', description: 'Saved from Brightpath Support Services', scope: 'config',
       labels: expect.objectContaining({ project: 'Funded programme' }), roleNames: { employee: 'Employee', manager: 'Manager', admin: 'Admin' } });
     expect(kept?.template).not.toHaveProperty('structure');
-    expect(JSON.stringify(kept?.template)).not.toMatch(/currency|[£€$]|payCode|allowance|"rules"|budget|people/i);
+    /* a policy's wording is prose a new starter reads (the code of conduct names a gifts limit), not a money field: its keys are checked instead */
+    expect(JSON.stringify({ ...kept?.template, onboarding: undefined })).not.toMatch(/currency|[£€$]|payCode|allowance|"rules"|budget|people/i);
+    const onb = kept?.template.onboarding as { policies: Record<string, unknown>[] } | undefined;
+    expect(onb?.policies.map(p => Object.keys(p).join())).toEqual(Array(4).fill('id,label,ver,sum,body'));
     expect(kept?.from).toBe('Brightpath Support Services');
     expect(audits().filter(a => a.entity === 'template').map(a => a.act)).toEqual(['Template saved']);
     const row = (await list()).templates.find(t => t.key === 'tpl_care_two_stage_approval');
@@ -259,4 +263,65 @@ test('a fault on each write leaves no change and no audit row (Review Focus 7)',
     expect((await call(m, url, body, ver)).status, url).toBe(500);
     expect(snapshot(...WRITES), url).toEqual(before);
   }
+});
+
+describe('the onboarding setup in a template (module 5, D12)', () => {
+  interface Pol { version: number; ver: string; label: string; sum: string; body: string[]; file?: { name: string } }
+  const cfg = () => store.coll<{ steps: { id: string; on: boolean }[]; documents: { id: string; blocks: boolean }[] }>('onboardingConfig').onboardingConfig;
+  const pol = (id: string) => store.coll<Pol>('onboardingPolicies')[id];
+  const caseOf = (code: string) => store.coll<{ acks: Record<string, string> }>('onboardingCases')[`onb_${code}`];
+  const KEY = 'tpl_care_onboarding';
+  const onbLines = (lines: readonly { area: string; text: string }[]) => lines.filter(l => l.area === 'onboarding').map(l => l.text);
+
+  test('a saved template keeps the setup and the policy wording but never a file; applying it puts them back and nobody is asked again', async () => {
+    Object.assign(pol('pol_conduct') ?? {}, { file: { name: 'conduct.pdf', size: 2048, type: 'application/pdf', at: FROZEN, kind: 'pdf' } });
+    Object.assign(caseOf('CP-1502') ?? {}, { acks: { pol_privacy: 'v2.0' } });
+    expect((await save('Care onboarding')).status).toBe(200);
+    const kept = store.coll<{ template: { onboarding?: { steps: unknown[]; documents: unknown[]; policies: unknown[] } } }>('templates')[KEY]?.template.onboarding;
+    expect([kept?.steps.length, kept?.documents.length, kept?.policies.length]).toEqual([7, 5, 4]);
+    expect(JSON.stringify(kept)).not.toContain('conduct.pdf');
+
+    /* the tenant moves on: a step off, a document setting changed, a policy reworded and another added */
+    const setup = OnboardingSetup.parse((await admin('GET', '/api/v1/onboarding/config')).body);
+    const steps = setup.config.steps.map(x => (x.id === 'emergency' ? { ...x, on: false } : x));
+    const documents = setup.config.documents.map(d => (d.id === 'addr' ? { ...d, blocks: true } : d));
+    expect((await admin('PUT', '/api/v1/onboarding/config', { steps, documents }, setup.config.version)).status).toBe(200);
+    expect((await admin('PATCH', '/api/v1/onboarding/policies/pol_privacy', { label: 'Privacy notice', ver: 'v2.0', sum: 'Shorter.' }, 1)).status).toBe(200);
+    expect((await admin('POST', '/api/v1/onboarding/policies', { label: 'Fire safety' })).status).toBe(200);
+
+    const plan = TemplatePlan.parse((await admin('GET', PLAN(KEY))).body);
+    expect(onbLines(plan.changes)).toEqual(['Onboarding step Emergency contacts on.', 'Onboarding document Proof of address: does not block the start.',
+      'Policy Privacy notice, with the template\'s wording. It stays v2.0, so nobody is asked to read it again.']);
+    expect(onbLines(plan.leftAlone)).toEqual(['Policies the template does not have stay, with their acknowledgements: Fire safety.',
+      'Uploaded policy documents and everybody’s onboarding progress stay as they are.']);
+    const n = audits().length;
+    const r = TemplateApplied.parse((await admin('POST', APPLY(KEY), undefined, tenantVer())).body);
+    expect(r.auditId).not.toBeNull();
+    expect(audits().slice(n).map(a => a.act)).toEqual(['Template applied']);
+    expect(cfg()?.steps.find(x => x.id === 'emergency')?.on).toBe(true);
+    expect(cfg()?.documents.find(d => d.id === 'addr')?.blocks).toBe(false);
+    expect(pol('pol_privacy')).toMatchObject({ ver: 'v2.0', sum: 'What personal data is held about you, why, and how long it is kept.', version: 3 });
+    expect(caseOf('CP-1502')?.acks).toEqual({ pol_privacy: 'v2.0' });
+    expect(pol('pol_conduct')?.file?.name).toBe('conduct.pdf');
+    expect(pol('pol_fire_safety')).toBeDefined();
+  });
+
+  test('a policy removed here comes back at its version without a document; without Configure onboarding the setup stays as it is', async () => {
+    expect((await save('Care onboarding')).status).toBe(200);
+    expect((await admin('DELETE', '/api/v1/onboarding/policies/pol_itsec', undefined, 1)).status).toBe(200);
+    const acc = store.coll<{ revocations: string[] }>('accounts')[`acc_${accountOf('admin').email}`];
+    revoke('onb_cfg');
+    admin = await as('admin');
+    const before = snapshot('onboardingConfig', 'onboardingPolicies');
+    const no = TemplateApplied.parse((await admin('POST', APPLY(KEY), undefined, tenantVer())).body);
+    expect(onbLines(no.plan.leftAlone)).toEqual([ONB_LEFT_ALONE]);
+    expect(snapshot('onboardingConfig', 'onboardingPolicies')).toEqual(before);
+
+    if (acc) acc.revocations = [];
+    admin = await as('admin');
+    const yes = TemplateApplied.parse((await admin('POST', APPLY(KEY), undefined, tenantVer())).body);
+    expect(onbLines(yes.plan.added)).toEqual(['Policy IT and data security v3.2, without a document. Upload one in Onboarding setup.']);
+    expect(pol('pol_itsec')).toMatchObject({ label: 'IT and data security', ver: 'v3.2', version: 1, body: expect.arrayContaining([expect.stringMatching(/^Use a different password/)]) });
+    expect(pol('pol_itsec')?.file).toBeUndefined();
+  });
 });

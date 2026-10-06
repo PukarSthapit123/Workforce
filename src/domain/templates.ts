@@ -20,6 +20,13 @@
    - Approval chains (1c group 5): a template carries every module's chain;
      applying it sets each chain it holds that passes the same checks as the
      Approvals page, needs the approval framework, and leaves the others.
+   - Onboarding setup (module 5, D12): a template keeps the step switches,
+     the document settings and each policy with its text, as the prototype
+     kept onbDocs and onbPolicies, never an uploaded file or anybody's
+     progress. Applying it needs Configure onboarding, switches only what
+     the features allow, takes a held policy's wording without raising its
+     version (nobody is asked again), adds the policies not here, and leaves
+     the tenant's other policies alone.
 
    Every function is pure: the tenant comes in as arguments, so the server
    refuses with exactly what the screen shows. Copy is the prototype's, with
@@ -29,6 +36,10 @@ import {
   switchFlag, switchModule, type FlagChange, type FlagExtras, type ModuleState, type Refusal,
 } from './modules';
 import { CHAIN_MODULES, POSTING_ROLE, POSTING_STEP, chainProblem, chainText, isChainModule, type ChainModule, type ChainStep } from './approvals';
+import {
+  STEP_UNAVAILABLE, isVerifier, onbFeatures, policyProblem, stepSwitchProblem, verifierLabel,
+  type OnboardingConfig, type OnbPolicy, type OnbStepId, type Verifier,
+} from './onboarding';
 
 /* ------------------------------------------------------------- shapes */
 export type TemplateScope = 'config' | 'structure';
@@ -66,6 +77,11 @@ export const STRUCTURE_LABEL: Readonly<Record<StructureKind, { many: string; one
   locations: { many: 'Locations', one: 'location' }, jobProfiles: { many: 'Job profiles', one: 'job profile' },
   contracts: { many: 'Contracts', one: 'contract' },
 };
+/* The onboarding setup a template keeps (D12): switches and settings by id, and each policy's text. No file. */
+export interface TemplateOnbStep { id: OnbStepId; on: boolean }
+export interface TemplateOnbDocument { id: string; req: boolean; verify: Verifier; blocks: boolean; expiry: boolean }
+export interface TemplateOnbPolicy { id: string; label: string; ver: string; sum: string; body: string[] }
+export interface TemplateOnboarding { steps: TemplateOnbStep[]; documents: TemplateOnbDocument[]; policies: TemplateOnbPolicy[] }
 export interface Template {
   name: string; description: string; scope: TemplateScope;
   /* every switch: Workforce core, Timesheet and its capabilities, Rota, Leave, Onboarding */
@@ -79,11 +95,12 @@ export interface Template {
   roleNames?: Record<RoleKey, string>;
   approvalChain?: ChainStep[];
   structure?: Partial<TemplateStructure>;
+  onboarding?: TemplateOnboarding;
 }
 
 export const TEMPLATE_SCOPES: readonly { key: TemplateScope; label: string; note: string }[] = [
   { key: 'config', label: 'Configuration only',
-    note: 'Modules, features, employee types, labels, the capture layout, the approval chain and role names. Nothing about this organisation’s structure or people.' },
+    note: 'Modules, features, employee types, labels, the capture layout, the approval chain, role names and the onboarding setup. Nothing about this organisation’s structure or people.' },
   { key: 'structure', label: 'Configuration and structure',
     note: 'The above, plus locations, departments, cost centres, job profiles and contracts. Never its people.' },
 ];
@@ -244,6 +261,16 @@ export interface CaptureSource {
   /* every module's approval chain, in module order */
   chain: readonly ChainStep[];
   structure: TemplateStructure;
+  /* the onboarding setup and its policies, when this tenant has them */
+  onboarding?: { config: OnboardingConfig; policies: readonly OnbPolicy[] };
+}
+/* The onboarding part (D12): the prototype's onbDocs and onbPolicies, with the step switches. */
+export function captureOnboarding(o: { config: OnboardingConfig; policies: readonly OnbPolicy[] }): TemplateOnboarding {
+  return {
+    steps: o.config.steps.map(x => ({ id: x.id, on: x.on })),
+    documents: o.config.documents.map(d => ({ id: d.id, req: d.req, verify: d.verify, blocks: d.blocks, expiry: d.expiry })),
+    policies: o.policies.map(p => ({ id: p.id, label: p.label, ver: p.ver, sum: p.sum, body: [...p.body] })),
+  };
 }
 /* captureTemplate: what the tenant has decided, not what it contains. Labels
    are kept where they differ from the field's own name. The structure scope
@@ -259,6 +286,7 @@ export function captureTemplate(name: string, description: string, scope: Templa
     roleNames: { ...src.roleNames },
     approvalChain: src.chain.map(x => ({ ...x })),
   };
+  if (src.onboarding) t.onboarding = captureOnboarding(src.onboarding);
   if (scope === 'structure') t.structure = structuredClone(src.structure);
   return t;
 }
@@ -271,7 +299,7 @@ export const templateFileName = (key: string) => `qnipay-template-${key}.json`;
 /* The keys a template may hold, at each level. Anything else in a file is
    left out and listed (D3): the prototype's company details, pay codes, pay
    rules, allowances and roster among them. */
-const TOP = ['name', 'description', 'scope', 'modules', 'flags', 'extras', 'labels', 'employeeTypes', 'roleNames', 'approvalChain', 'structure'];
+const TOP = ['name', 'description', 'scope', 'modules', 'flags', 'extras', 'labels', 'employeeTypes', 'roleNames', 'approvalChain', 'structure', 'onboarding'];
 const EXTRA_KEYS = ['weekGrid', 'weekLayout', 'breaksMax', 'vehiclesMax'];
 const ROW_KEYS: Record<string, readonly string[]> = {
   employeeTypes: ['code', 'name', 'category', 'mode', 'uom', 'capabilities'],
@@ -280,6 +308,7 @@ const ROW_KEYS: Record<string, readonly string[]> = {
   locations: ['code', 'name', 'area', 'department', 'costCentre', 'level', 'minPerShift', 'manager', 'address', 'active'],
   contracts: ['code', 'name', 'client', 'costCentre', 'manager', 'status', 'start', 'end', 'billable', 'location', 'tasks'],
   tasks: ['name', 'group', 'billable'],
+  onbSteps: ['id', 'on'], onbDocuments: ['id', 'req', 'verify', 'blocks', 'expiry'], onbPolicies: ['id', 'label', 'ver', 'sum', 'body'],
 };
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 
@@ -313,6 +342,14 @@ export function readTemplateFile(text: string): FileRead {
   if (isObj(t.roleNames)) t.roleNames = keep(t.roleNames, ROLE_KEYS, 'roleNames');
   if ('employeeTypes' in t) t.employeeTypes = rows(t.employeeTypes, 'employeeTypes', 'employeeTypes');
   if ('approvalChain' in t) t.approvalChain = rows(t.approvalChain, 'approvalChain', 'approvalChain');
+  /* a policy's file is never part of a template: it is left out and listed */
+  if (isObj(t.onboarding)) {
+    const o = keep(t.onboarding, ['steps', 'documents', 'policies'], 'onboarding');
+    if ('steps' in o) o.steps = rows(o.steps, 'onbSteps', 'onboarding.steps');
+    if ('documents' in o) o.documents = rows(o.documents, 'onbDocuments', 'onboarding.documents');
+    if ('policies' in o) o.policies = rows(o.policies, 'onbPolicies', 'onboarding.policies');
+    t.onboarding = o;
+  }
   if (isObj(t.structure)) {
     if (t.scope !== 'structure') { ignored.add('structure'); delete t.structure; }
     else {
@@ -345,8 +382,10 @@ export interface TenantState {
   chains: Readonly<Record<ChainModule, readonly ChainStep[]>>;
   /* the codes already held, per kind */
   structure: Readonly<Record<StructureKind, readonly string[]>>;
+  /* the onboarding setup and its policies now, when this tenant has them */
+  onboarding?: { config: OnboardingConfig; policies: readonly OnbPolicy[] };
 }
-export type PlanArea = 'modules' | 'features' | 'labels' | 'types' | 'roles' | 'chain' | 'structure' | 'people' | 'organisation';
+export type PlanArea = 'modules' | 'features' | 'labels' | 'types' | 'roles' | 'chain' | 'structure' | 'people' | 'organisation' | 'onboarding';
 export interface PlanLine { area: PlanArea; text: string }
 export interface ApplySteps {
   /* module switches in the order they run, and where they leave the tenant */
@@ -359,6 +398,11 @@ export interface ApplySteps {
   /* the chains to set, each whole */
   chains: { module: ChainModule; steps: ChainStep[] }[];
   structure: TemplateStructure;
+  /* the onboarding switches and settings to set by id, the held policies whose wording changes, and the policies added */
+  onboarding: {
+    steps: Record<string, boolean>; documents: Record<string, Omit<TemplateOnbDocument, 'id'>>;
+    policiesUpdated: Pick<TemplateOnbPolicy, 'id' | 'label' | 'sum' | 'body'>[]; policiesAdded: TemplateOnbPolicy[];
+  };
 }
 export interface ApplyPlan { changes: PlanLine[]; added: PlanLine[]; leftAlone: PlanLine[]; steps: ApplySteps }
 
@@ -403,10 +447,12 @@ function moduleSteps(t: Template, s: TenantState) {
    configuration: employee types are then left alone (Sites off still takes the
    site capability away, as the module switch does). */
 export const TYPES_LEFT_ALONE = 'Employee types stay as they are. Changing them needs Employee types and configuration.';
-export function planApply(t: Template, s: TenantState, opts: { mayRenameRoles: boolean; mayChangeChains: boolean; mayChangeTypes: boolean }): ApplyPlan {
+export function planApply(t: Template, s: TenantState,
+  opts: { mayRenameRoles: boolean; mayChangeChains: boolean; mayChangeTypes: boolean; mayChangeOnboarding?: boolean }): ApplyPlan {
   const changes: PlanLine[] = [], added: PlanLine[] = [], leftAlone: PlanLine[] = [];
   const steps: ApplySteps = { modules: [], finalModules: {}, finalRestore: {}, flags: [], labels: {}, typesAdded: [], typesUpdated: [], roleNames: {}, chains: [],
-    structure: { departments: [], costCentres: [], locations: [], jobProfiles: [], contracts: [] } };
+    structure: { departments: [], costCentres: [], locations: [], jobProfiles: [], contracts: [] },
+    onboarding: { steps: {}, documents: {}, policiesUpdated: [], policiesAdded: [] } };
 
   /* modules */
   const mods = moduleSteps(t, s);
@@ -501,6 +547,9 @@ export function planApply(t: Template, s: TenantState, opts: { mayRenameRoles: b
   /* approval chains: each module the template has, set whole once it passes the Approvals page's checks */
   planChains(t, s, opts.mayChangeChains, changes, leftAlone, steps);
 
+  /* onboarding setup (D12): against the modules and features the template leaves the tenant with */
+  planOnboarding(t, s, opts.mayChangeOnboarding === true, onbFeatures(mods.modules, flags), { changes, added, leftAlone }, steps);
+
   /* structure: new codes are added, held codes stay exactly as they are */
   const held = Object.fromEntries(STRUCTURE_KINDS.map(k => [k, new Set(s.structure[k].map(x => x.toUpperCase()))])) as Record<StructureKind, Set<string>>;
   const has = (k: StructureKind, code: string) => !code || held[k].has(code.toUpperCase());
@@ -556,6 +605,88 @@ function planChains(t: Template, s: TenantState, may: boolean, changes: PlanLine
   const without = CHAIN_MODULES.filter(m => !known.has(m));
   if (without.length) leftAlone.push({ area: 'chain', text: `Approval chains the template does not have stay as they are: ${list(without)}.` });
   if (unknown.length) leftAlone.push({ area: 'chain', text: `Approval chains for modules this tenant does not have are not used: ${list(unknown)}.` });
+}
+
+/* The onboarding part of a plan (D12). Steps and documents are matched by
+   id and only their switches and settings change; a step goes on only while
+   its features are on, and a fixed step stays on, as Onboarding setup
+   refuses. Policies are matched by id: a held one takes the template's name,
+   summary and text but keeps its version and its acknowledgements; one not
+   here is added without a document; the tenant's others stay. */
+export const ONB_LEFT_ALONE = 'Onboarding setup stays as it is. Changing it needs Configure onboarding.';
+type DocSettings = Omit<TemplateOnbDocument, 'id'>;
+const docWords = (d: DocSettings, was: DocSettings) => [
+  d.req !== was.req ? (d.req ? 'required' : 'not required') : '',
+  d.verify !== was.verify ? (d.verify === 'none' ? 'no check needed' : `checked by ${verifierLabel(d.verify).replace(/^Line/, 'line')}`) : '',
+  d.blocks !== was.blocks ? (d.blocks ? 'blocks the start' : 'does not block the start') : '',
+  d.expiry !== was.expiry ? (d.expiry ? 'expiry tracked' : 'expiry not tracked') : '',
+].filter(Boolean);
+const sameText = (a: readonly string[], b: readonly string[]) => a.length === b.length && a.every((x, i) => x === b[i]);
+function planOnboarding(t: Template, s: TenantState, may: boolean, f: ReturnType<typeof onbFeatures>,
+  out: { changes: PlanLine[]; added: PlanLine[]; leftAlone: PlanLine[] }, steps: ApplySteps) {
+  const want = t.onboarding, have = s.onboarding;
+  if (!want || !have) return;
+  const changes: PlanLine[] = [], added: PlanLine[] = [], leftAlone: PlanLine[] = [];
+  const next: ApplySteps['onboarding'] = { steps: {}, documents: {}, policiesUpdated: [], policiesAdded: [] };
+  const line = (text: string): PlanLine => ({ area: 'onboarding', text });
+
+  const unknownSteps: string[] = [];
+  for (const w of want.steps) {
+    const h = have.config.steps.find(x => x.id === w.id);
+    if (!h) { unknownSteps.push(w.id); continue; }
+    if (h.on === w.on || (h.fixed && w.on)) continue;
+    const problem = stepSwitchProblem(h, w.on, f);
+    if (problem) {
+      leftAlone.push(line(`Onboarding step ${h.label} stays ${h.on ? 'on' : 'off'}. ${problem.code === 'FLAG_OFF' ? STEP_UNAVAILABLE : problem.message}`));
+      continue;
+    }
+    next.steps[h.id] = w.on;
+    changes.push(line(`Onboarding step ${h.label} ${w.on ? 'on' : 'off'}.`));
+  }
+  if (unknownSteps.length) leftAlone.push(line(`Onboarding steps this tenant does not have are not used: ${list(unknownSteps)}.`));
+
+  const unknownDocs: string[] = [];
+  for (const w of want.documents) {
+    const h = have.config.documents.find(x => x.id === w.id);
+    if (!h) { unknownDocs.push(w.id); continue; }
+    if (!isVerifier(w.verify)) continue;
+    const d: DocSettings = { req: w.req, verify: w.verify, blocks: w.blocks, expiry: w.expiry };
+    const words = docWords(d, h);
+    if (!words.length) continue;
+    next.documents[h.id] = d;
+    changes.push(line(`Onboarding document ${h.label}: ${list(words)}.`));
+  }
+  if (unknownDocs.length) leftAlone.push(line(`Onboarding documents this tenant does not have are not used: ${list(unknownDocs)}.`));
+
+  /* the names a policy is checked against, as each one is renamed or added */
+  const names: OnbPolicy[] = have.policies.map(p => ({ ...p }));
+  for (const w of want.policies) {
+    const label = w.label.trim();
+    const h = have.policies.find(x => x.id === w.id);
+    if (h) {
+      if (h.label === label && h.sum === w.sum && sameText(h.body, w.body)) continue;
+      const problem = policyProblem({ label }, names, h.id);
+      if (problem) { leftAlone.push(line(`Policy ${h.label} stays as it is. ${problem.message}`)); continue; }
+      next.policiesUpdated.push({ id: h.id, label, sum: w.sum, body: [...w.body] });
+      const i = names.findIndex(x => x.id === h.id);
+      if (i >= 0) names[i] = { ...h, label };
+      changes.push(line(`Policy ${h.label}${label !== h.label ? ` becomes ${label}` : ''}, with the template's wording. It stays ${h.ver}, so nobody is asked to read it again.`));
+      continue;
+    }
+    const problem = policyProblem({ label }, names);
+    if (problem) { leftAlone.push(line(`Policy ${label || w.id} is not added. ${problem.message}`)); continue; }
+    const p: TemplateOnbPolicy = { ...w, label, body: [...w.body] };
+    next.policiesAdded.push(p);
+    names.push({ ...p, order: names.length });
+    added.push(line(`Policy ${p.label} ${p.ver}, without a document. Upload one in Onboarding setup.`));
+  }
+  const kept = have.policies.filter(p => !want.policies.some(w => w.id === p.id)).map(p => p.label);
+
+  if ((changes.length || added.length) && !may) { out.leftAlone.push(line(ONB_LEFT_ALONE)); return; }
+  steps.onboarding = next;
+  out.changes.push(...changes); out.added.push(...added); out.leftAlone.push(...leftAlone);
+  if (kept.length) out.leftAlone.push(line(`Policies the template does not have stay, with their acknowledgements: ${list(kept)}.`));
+  out.leftAlone.push(line('Uploaded policy documents and everybody’s onboarding progress stay as they are.'));
 }
 
 /* One line for the toast and the audit row. */

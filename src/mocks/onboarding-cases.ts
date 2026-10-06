@@ -7,7 +7,7 @@ import { bump } from './http';
 import { people, recordAt } from './world';
 import {
   caseId, emptyCase, isStarterState, onbFeatures, startProblem,
-  type BlockerContext, type OnboardingCase, type OnboardingConfig, type OnbRefusal,
+  type BlockerContext, type OnboardingCase, type OnboardingConfig, type OnbPolicy, type OnbRefusal,
 } from '@/domain/onboarding';
 
 interface Meta { id: string; version: number; updatedAt: string }
@@ -16,6 +16,10 @@ export type StoredConfig = Meta & OnboardingConfig;
 interface Tenant { modules: Record<string, boolean>; flags: Record<string, unknown> }
 
 export const casesColl = () => store.coll<StoredCase>('onboardingCases');
+/* Each policy is a row of its own (D2), listed in its order. */
+export type StoredPolicy = Meta & OnbPolicy;
+export const policiesColl = () => store.coll<StoredPolicy>('onboardingPolicies');
+export const policiesNow = () => Object.values(policiesColl()).sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
 export function onbTenant(): Tenant {
   const t = recordAt(store.coll<Tenant>('tenant'), 'tenant');
   if (!t) throw new Error('the store has no tenant record');

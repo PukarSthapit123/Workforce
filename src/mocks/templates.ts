@@ -4,7 +4,8 @@
    group 1 rules (switchModule, switchFlag, with Rota's shifts set aside and
    Sites' capability taken off as a switch does), labels and the weekly grid
    on timesheetConfig, employee types on employeeTypes, role names on
-   userTypes, and structure in its five collections. One audit row per
+   userTypes, structure in its five collections, and the onboarding setup on
+   onboardingConfig and onboardingPolicies (module 5, D12). One audit row per
    request; a refusal or a fault writes nothing, because serve() restores the
    store. Saved and imported templates are kept in `templates`. */
 import { store } from './store';
@@ -16,6 +17,7 @@ import { people, recordAt } from './world';
 import { rotaActor, rotaOff, rotaOn, saveTenant, sitesOff, tenantRec, tsConfig, view, type StoredTenant } from './tenant';
 import meta from './seed/meta.json';
 import { chainRecord, chainsNow, writeChain } from './approvals';
+import { policiesColl, policiesNow, type StoredConfig } from './onboarding-cases';
 import { CHAIN_MODULES, type ChainModule, type ChainStep } from '@/domain/approvals';
 import {
   Template as TemplateSchema, applyTemplate, exportTemplate, getTemplatePlan, importTemplate, listTemplates, removeTemplate, saveTemplate,
@@ -71,6 +73,11 @@ function roleNamesNow(): Record<RoleKey, string> {
   const types = store.coll<UserType>('userTypes');
   return Object.fromEntries(ROLE_KEYS.map(k => [k, recordAt(types, k)?.name ?? k])) as Record<RoleKey, string>;
 }
+/* the onboarding setup and its policies, when this tenant has them (D12) */
+function onboardingNow(): TenantState['onboarding'] {
+  const config = recordAt(store.coll<StoredConfig>('onboardingConfig'), 'onboardingConfig');
+  return config ? { config, policies: policiesNow() } : undefined;
+}
 const codes = (kind: StructureKind) => Object.values(store.coll<Row>(HOME[kind].coll)).map(r => r.code);
 function stateOf(t: StoredTenant): TenantState {
   const v = view(t);
@@ -79,6 +86,7 @@ function stateOf(t: StoredTenant): TenantState {
     extras: v.extras, labels: labelsNow(), employeeTypes: typesNow(), roleNames: roleNamesNow(),
     chains: Object.fromEntries(CHAIN_MODULES.map(m => [m, chainRecord(m).steps])) as Record<ChainModule, ChainStep[]>,
     structure: Object.fromEntries(STRUCTURE_KINDS.map(k => [k, codes(k)])) as Record<StructureKind, string[]>,
+    onboarding: onboardingNow(),
   };
 }
 function structureNow(): TemplateStructure {
@@ -151,6 +159,22 @@ function carryOut(t: StoredTenant, plan: ApplyPlan, key: string, by: RotaActor):
       } else coll[id] = { ...row, id, version: 1, updatedAt: store.now() };
     }
   }
+  /* the onboarding setup (D12): switches and settings by id; a held policy's wording without a new version, so nobody is asked again; new policies after the last */
+  const o = s.onboarding;
+  const cfg = recordAt(store.coll<StoredConfig>('onboardingConfig'), 'onboardingConfig');
+  if (cfg && (Object.keys(o.steps).length || Object.keys(o.documents).length)) {
+    store.coll<StoredConfig>('onboardingConfig')[cfg.id] = bump(cfg, {
+      steps: cfg.steps.map(x => ({ ...x, on: x.fixed ? true : o.steps[x.id] ?? x.on })),
+      documents: cfg.documents.map(d => ({ ...d, ...(o.documents[d.id] ?? {}) })),
+    });
+  }
+  const pols = policiesColl();
+  for (const u of o.policiesUpdated) {
+    const have = recordAt(pols, u.id);
+    if (have) pols[u.id] = bump(have, { label: u.label, sum: u.sum, body: u.body });
+  }
+  let order = policiesNow().reduce((m, x) => Math.max(m, x.order + 1), 0);
+  for (const a of o.policiesAdded) pols[a.id] = { ...a, order: order++, id: a.id, version: 1, updatedAt: store.now() };
   const saved = saveTenant(t, { modules: s.finalModules, restore: s.finalRestore, flags, extras, template: key });
   const notRestored = s.modules.some(m => m.code === 'R' && m.on) ? rotaOn(by).notRestored : 0;
   return { tenant: saved, notRestored };
@@ -172,7 +196,7 @@ export const templateHandlers = [
     const t = tenantRec(), v = view(t);
     const template = captureTemplate(body.name, body.description || `Saved from ${t.name}`, body.scope, {
       modules: t.modules, flags: v.flags, extras: v.extras, labels: labelsNow(), defaultLabels: DEFAULT_LABELS,
-      employeeTypes: typesNow(), roleNames: roleNamesNow(), chain: chainsNow(), structure: structureNow(),
+      employeeTypes: typesNow(), roleNames: roleNamesNow(), chain: chainsNow(), structure: structureNow(), onboarding: onboardingNow(),
     });
     const key = templateKey(template.name);
     const who = actor(session);
@@ -185,7 +209,7 @@ export const templateHandlers = [
 
   serve(getTemplatePlan, ({ session, params }) => {
     const template = templateAt(params.key);
-    return planView(params.key, template, planApply(template, stateOf(tenantRec()), { mayRenameRoles: session.caps.includes('perm_cfg'), mayChangeChains: session.caps.includes('framework'), mayChangeTypes: session.caps.includes('type_cfg') }));
+    return planView(params.key, template, planApply(template, stateOf(tenantRec()), { mayRenameRoles: session.caps.includes('perm_cfg'), mayChangeChains: session.caps.includes('framework'), mayChangeTypes: session.caps.includes('type_cfg'), mayChangeOnboarding: session.caps.includes('onb_cfg') }));
   }),
 
   serve(applyTemplate, ({ session, params, checkVersion }) => {
@@ -193,7 +217,7 @@ export const templateHandlers = [
     checkVersion(t);
     const template = templateAt(params.key);
     if (hasStructure(template)) requireCapability(session, 'master_data');
-    const plan = planApply(template, stateOf(t), { mayRenameRoles: session.caps.includes('perm_cfg'), mayChangeChains: session.caps.includes('framework'), mayChangeTypes: session.caps.includes('type_cfg') });
+    const plan = planApply(template, stateOf(t), { mayRenameRoles: session.caps.includes('perm_cfg'), mayChangeChains: session.caps.includes('framework'), mayChangeTypes: session.caps.includes('type_cfg'), mayChangeOnboarding: session.caps.includes('onb_cfg') });
     const pv = planView(params.key, template, plan);
     const message = `${template.name} applied. ${pv.summary}`;
     if (!plan.changes.length && !plan.added.length && t.template === params.key) return { record: view(t), auditId: null, plan: pv, message };
