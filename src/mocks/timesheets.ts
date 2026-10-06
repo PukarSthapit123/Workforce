@@ -21,6 +21,7 @@ import {
   type DayInput, type IntegrationAttempt, type RotaDay, type QueueRow, type TimesheetConfig, type TimesheetDay, type TimesheetField, type UpdateTimesheetConfig,
 } from '@/contract/timesheets';
 import type { Problem } from '@/domain/codes';
+import { clockHeldReason, clockRunning, clockState, isOpenState, type ClockEvent } from '@/domain/clock';
 import { absenceBlockedProblem, absenceHeldReason } from '@/domain/leave';
 import {
   APPROVAL_AUDIT_SUFFIX, TS_STATE, advisoryFlags, allSubmittedMessage, alreadySubmittedMessage, clockFromIso, dayMinutes,
@@ -371,7 +372,14 @@ function located(): Located[] {
   return Object.values(days()).flatMap(d => { const p = personByCode(d.personCode); return p ? [{ d, p }] : []; });
 }
 /* A clocked day's marks (module 2b D5, D6), read from the clock records the clock handlers keep. */
-interface ClockRec { late?: boolean; closedLate?: unknown }
+interface ClockRec { late?: boolean; closedLate?: unknown; closedNoDay?: unknown; events?: ClockEvent[] }
+/* Review I1 (2b): the person's clock on that day is running or on a break, so the day waits for it to stop. */
+function clockRunsOn(code: string, date: string): boolean {
+  const r = recordAt(store.coll<ClockRec>('clockRecords'), `clk_${code}_${date}`);
+  return Boolean(r && isOpenState(clockState(r.events ?? [], r.closedLate != null || r.closedNoDay != null)));
+}
+const clockHolds = (p: StoredPerson, dates: readonly string[]) =>
+  dates.filter(date => clockRunsOn(p.code, date)).map(date => ({ date, reason: clockHeldReason(date) }));
 function clockMark(code: string, date: string) {
   const r = recordAt(store.coll<ClockRec>('clockRecords'), `clk_${code}_${date}`);
   return r ? { clock: { late: Boolean(r.late), closedLate: r.closedLate != null } } : {};
@@ -415,6 +423,8 @@ export const timesheetHandlers = [
   serve(saveTimesheetDay, ({ session, params, body, checkVersion }) => {
     const p = personFor(params.personId), mode = access(session, p, true);
     const { existing, base } = draftBase(p, params.date);
+    /* review I1 (2b): the clock writes this day when it stops */
+    if (clockRunsOn(p.code, params.date)) refuse(409, clockRunning(params.date, mode === 'proxy'));
     checkVersion(base);
     const { rec, check } = writeDraft(session, p, base, body, mode);
     const auditId = writeAudit({ who: actor(session), act: mode === 'proxy' ? 'Proxy timesheet saved' : 'Timesheet draft saved',
@@ -428,6 +438,7 @@ export const timesheetHandlers = [
     const existing = recordAt(days(), dayId(p.code, params.date));
     /* D8: a retried submit finds the first one and is refused before the version is read */
     if (existing && (tsPending(existing.state) || existing.state === 'ok')) alreadySubmitted(existing);
+    if (clockRunsOn(p.code, params.date)) refuse(409, clockRunning(params.date, mode === 'proxy'));
     const base = existing ?? blankDay(p, params.date);
     checkVersion(base);
     refuseAbsence(p.code, params.date, body, 'date');
@@ -460,9 +471,11 @@ export const timesheetHandlers = [
     });
     const { planned, inputs, plan: full, ctx } = planWeek(p, params.weekStart, sent);
     /* a stored day sent as it was read, with absence recorded on it since, is held back (review I1) */
-    const absent = absenceHolds(p, planned, [...full.submit, ...full.resubmit]), out = new Set(absent.map(a => a.date));
+    const absent = absenceHolds(p, planned, [...full.submit, ...full.resubmit]);
+    /* review I1 (2b): a day whose clock is still running is held back too, until the clock stops */
+    const clocked = clockHolds(p, [...full.submit, ...full.resubmit]), out = new Set([...absent, ...clocked].map(a => a.date));
     const plan = { ...full, submit: full.submit.filter(d => !out.has(d)), resubmit: full.resubmit.filter(d => !out.has(d)),
-      held: [...full.held, ...absent.map(({ date, reason }) => ({ date, reason }))].sort((a, b) => a.date.localeCompare(b.date)) };
+      held: [...full.held, ...[...absent, ...clocked].map(({ date, reason }) => ({ date, reason }))].sort((a, b) => a.date.localeCompare(b.date)) };
     if (plan.blocked.length) {
       const first = firstBlocked(planned, ctx), at = first ? body.days.findIndex(d => d.date === first.date) : -1;
       if (first && isLocked(first.date)) refuse(409, { code: 'PERIOD_LOCKED', field: at >= 0 ? `days.${at}` : 'weekStart', message: weekBlockedMessage(plan.blocked), next: LOCK_NEXT(p) });
@@ -516,6 +529,9 @@ export const timesheetHandlers = [
       /* review I1: a week with a stored day now on leave or sickness is held back whole, as a locked week is */
       const absent = absenceHolds(p, planned, moving);
       if (absent.length) return holdAll(absent.map(a => a.reason).join(' '));
+      /* review I1 (2b): so is a week with a day whose clock is still running */
+      const clocked = clockHolds(p, moving);
+      if (clocked.length) return holdAll(clocked.map(a => a.reason).join(' '));
       if (!moving.length) return { ...holdAll(withTime.length ? allSubmittedMessage(managerOf(p)) : NOTHING_TO_SUBMIT), held: plan.held };
       const made = submitPlanned(p, planned, moving.sort(), session, mode);
       return { weekStart: ws, label, outcome: 'submitted' as const, reason: '', submitted: made.map(dayView), held: plan.held };

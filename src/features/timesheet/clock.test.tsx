@@ -116,6 +116,22 @@ describe('the clock card', () => {
     expect(store.coll<{ captureSource: string }>('timesheetDays')['tsd_CP-1042_2026-08-13']?.captureSource).toBe('clock');
   });
 
+  test('while the clock runs, the day cannot be saved or submitted, the finish is empty rather than the rota\'s, and the stats wait (review I1)', async () => {
+    plant('2026-08-13', [{ kind: 'in', at: london('12:00') }]);
+    await open();
+    await waitFor(() => expect(screen.getByTestId(tid.dayForm.field('start'))).toHaveValue('12:00'));
+    const finish = screen.getByTestId(tid.dayForm.field('finish'));
+    expect(finish).toHaveValue('');
+    expect(finish).toHaveAttribute('readonly');
+    expect(screen.getByTestId(tid.dayForm.save)).toBeDisabled();
+    expect(screen.getByTestId(tid.dayForm.submit)).toBeDisabled();
+    expect(screen.getByTestId(tid.clock.outFirst)).toHaveTextContent('Clock out first.');
+    expect(screen.getByTestId(tid.dayForm.stat('rota'))).not.toHaveTextContent('variance');
+    await userEvent.click(screen.getByTestId(tid.clock.clockOut));
+    await waitFor(() => expect(screen.getByTestId(tid.dayForm.submit)).toBeEnabled());
+    expect(screen.queryByTestId(tid.clock.outFirst)).toBeNull();
+  });
+
   test('after Clock in again, the running form shows the start the person corrected, not the first clock in (review I4)', async () => {
     plant('2026-08-13', [{ kind: 'in', at: london('07:10') }, { kind: 'out', at: london('12:00') }, { kind: 'in', at: london('13:00') }], { written: { breaks: [] } });
     plantDay('2026-08-13', { entries: [{ start: '07:00', finish: '12:00', breaks: [], fields: {} }] });

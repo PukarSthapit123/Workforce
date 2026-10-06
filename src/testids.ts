@@ -486,5 +486,7 @@ export const tid = {
     late: 'clock-late', closedLate: 'clock-closed-late',
     queueLate: (id: string) => k('clock-queue-late', id), queueClosedLate: (id: string) => k('clock-queue-closed-late', id),
     notBuilt: (code: string) => k('clock-not-built', code),
+    /* review I1: why the day form waits while the clock runs */
+    outFirst: 'clock-out-first',
   },
 } as const;

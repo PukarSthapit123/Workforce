@@ -5,6 +5,7 @@ import { Banner, Button, CalNav, Card, CardHead, CheckboxField, CheckRow, Field,
 import { buttonVariants } from '@/ui/shadcn/button';
 import { useMyClock, type ClockRecord, type MyClock } from '@/api/clock';
 import type { DaySaved, TimesheetWeek, WeekDay } from '@/contract/timesheets';
+import { CLOCK_OUT_FIRST } from '@/domain/clock';
 import { addDays, dowMon, formatDay, formatDmy } from '@/domain/timesheet';
 import { NON_WORKING_REASONS, formGroups, hm, rotaShift, valuesFromDay, valuesFromRota, varianceText } from './capture';
 import { ClockCard, ForgottenClock, clockedStart } from './ClockCard';
@@ -78,18 +79,21 @@ function DayPanel({ week, day, today, onDate, personId, clock }: {
   const [reason, setReason] = useState(() => savedReason.split(' · ')[0] || NON_WORKING_REASONS[0]);
   const [notes, setNotes] = useState(() => savedReason.split(' · ').slice(1).join(' · '));
   const [worked, setWorked] = useState(savedAnyway);
-  /* lockShiftTimes: while the shift runs the start is the clock's first clock in, and start and finish are read-only */
+  /* lockShiftTimes: while the shift runs the start is the clock's first clock in, and start and finish are read-only.
+     The finish is empty, not the rota line's, so the stats wait for clock out; and the day cannot be saved or
+     submitted until then, since the clock writes it when it stops (review I1). */
   const clockStart = clockedStart(clock.card?.current, rec?.entries[0]?.start);
   const [filled, setFilled] = useState<string | null>(null);
   if (clockStart && clockStart !== filled) {
     setFilled(clockStart);
-    if (entry.fields.values.start !== clockStart) entry.fill({ start: clockStart });
+    if (entry.fields.values.start !== clockStart || entry.fields.values.finish) entry.fill({ start: clockStart, finish: '' });
   }
   const locked = clockStart ? ['start', 'finish'] : undefined;
   const { busy, fields, stats } = entry, chip = dayChip(day);
   /* the times below go as "called in and worked anyway", which a leave or sickness day needs while leave blocks capture */
   const anyway = { workedAnyway: nonwork && worked };
   const lockedTitle = day.locked ? day.lockNote : undefined;
+  const running = clockStart != null, held = day.locked || running, heldTitle = day.locked ? lockedTitle : running ? CLOCK_OUT_FIRST : undefined;
 
   /* submit-nonwork: a reason and no times, routed to the approver like any day */
   const submitReason = () => entry.submit.mutate(
@@ -162,9 +166,10 @@ function DayPanel({ week, day, today, onDate, personId, clock }: {
             <CardHead title={<>Timesheet entry<Tip testId={tid.ts.entryTip} text={entryTip(week, Boolean(clock.card))} /></>} />
             <DayFields {...fields} readOnly={locked} which={side ? 'open' : 'all'} />
             <DayChecks checked={entry.checked} refusal={entry.refusal} />
-            <div className="mt-lg flex flex-wrap justify-end gap-sm">
-              <Button testId={tid.dayForm.save} kind="ghost" disabled={day.locked} title={lockedTitle} pending={busy} onMouseDown={holdFocus} onClick={() => entry.attempt('save', anyway)}>Save draft</Button>
-              <Button testId={tid.dayForm.submit} kind="primary" disabled={day.locked} title={lockedTitle} pending={busy} onMouseDown={holdFocus} onClick={() => entry.attempt('submit', anyway)}>Submit day</Button>
+            <div className="mt-lg flex flex-wrap items-center justify-end gap-sm">
+              {running && <span data-testid={tid.clock.outFirst} className="text-xs text-text-muted">{CLOCK_OUT_FIRST}</span>}
+              <Button testId={tid.dayForm.save} kind="ghost" disabled={held} title={heldTitle} pending={busy} onMouseDown={holdFocus} onClick={() => entry.attempt('save', anyway)}>Save draft</Button>
+              <Button testId={tid.dayForm.submit} kind="primary" disabled={held} title={heldTitle} pending={busy} onMouseDown={holdFocus} onClick={() => entry.attempt('submit', anyway)}>Submit day</Button>
             </div>
           </Card>
         </div>

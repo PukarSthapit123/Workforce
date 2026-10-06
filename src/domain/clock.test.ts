@@ -1,6 +1,6 @@
 import {
   ALREADY_IN, ALREADY_ON_BREAK, BREAK_ENDED, BREAK_LIMIT, BREAK_STARTED, BREAKS_OFF, CLOCK_STATUS, NOT_CLOCKED_IN, NOT_ON_BREAK, ON_BREAK_NOW,
-  breaksUsed, clockEntry, clockInAgainProblem, clockWritten, clockState, clockedBreaks, clockedInToast, clockedOutToast, closeFirst, elapsedSeconds, eventsFor, forgottenMessage,
+  CLOCK_OUT_FIRST, breaksUsed, clockEntry, clockHeldReason, clockRunning, clockInAgainProblem, clockWritten, clockState, clockedBreaks, clockedInToast, clockedOutToast, closeFirst, elapsedSeconds, eventsFor, forgottenMessage,
   formatElapsed, isForgotten, isLate, lateNotices, mergeBreaks, moveProblem, ringTarget, type ClockEvent,
 } from './clock';
 
@@ -116,6 +116,13 @@ describe('late and forgotten (D5, D6)', () => {
     expect(forgottenMessage('2026-08-12')).toBe('You did not clock out on Wed 12 Aug.');
     expect(closeFirst('2026-08-12')).toMatchObject({ code: 'CLOCK_OPEN', message: 'Close the clock from Wed 12 Aug first.' });
   });
+});
+
+test('a running clock holds its day: the refusal, for the person and a proxy, and the week\'s held reason (review I1)', () => {
+  expect(clockRunning('2026-08-13')).toEqual({ code: 'CLOCK_RUNNING', message: 'The clock is still running on Thu 13 Aug.', next: 'Clock out first.' });
+  expect(clockRunning('2026-08-13', true).next).toBe('Ask them to clock out first.');
+  expect(clockHeldReason('2026-08-13')).toBe('Thu 13 Aug has a clock still running, so it was held back. Clock out first.');
+  expect(CLOCK_OUT_FIRST).toBe('Clock out first.');
 });
 
 test('the card\'s sentences and toasts are the prototype\'s, as plain sentences', () => {

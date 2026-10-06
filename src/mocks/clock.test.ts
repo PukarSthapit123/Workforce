@@ -233,6 +233,42 @@ describe('clock out goes through the day save (Review Focus 3, D3)', () => {
   });
 });
 
+describe('while the clock runs, its day cannot be saved or submitted (review I1)', () => {
+  const PATH = '/api/v1/timesheets/CP-1042/days/2026-08-13';
+  const body = { shift: 'N', entries: [{ start: '15:30', finish: '07:00', breaks: [] }] };
+  test('the day save and the day submit are refused CLOCK_RUNNING, for the person and for a proxy, and nothing is written', async () => {
+    const call = await as('employee'), manager = await as('manager');
+    at('15:30:00'); await move(call, 'in');
+    const before = snapshot(...WRITES);
+    for (const r of [await call('PUT', PATH, body, 0), await call('POST', `${PATH}/submit`, body, 0)]) {
+      expect(r.status).toBe(409);
+      expect(refusal(r)).toEqual({ code: 'CLOCK_RUNNING', message: 'The clock is still running on Thu 13 Aug.', next: 'Clock out first.' });
+    }
+    const proxy = await manager('PUT', PATH, body, 0);
+    expect(refusal(proxy)).toEqual({ code: 'CLOCK_RUNNING', message: 'The clock is still running on Thu 13 Aug.', next: 'Ask them to clock out first.' });
+    expect(snapshot(...WRITES)).toEqual(before);
+    /* on a break it is still running */
+    at('16:00:00'); await move(call, 'break/start');
+    expect(refusal(await call('PUT', PATH, body, 0)).code).toBe('CLOCK_RUNNING');
+    /* once clocked out, the day saves as usual */
+    at('17:00:00');
+    const out = moved(await move(call, 'out'));
+    expect((await call('PUT', PATH, { shift: 'N', entries: out.day?.entries ?? [] }, out.day?.version)).status).toBe(200);
+  });
+  test('the week submit holds the day back with the reason and submits the rest', async () => {
+    const call = await as('employee');
+    at('15:30:00'); await move(call, 'in');
+    const r = await call('POST', '/api/v1/timesheets/CP-1042/weeks/2026-08-10/submit', { days: [
+      { date: '2026-08-10', version: 0, shift: 'E', entries: [{ start: '07:00', finish: '15:00', breaks: [] }] },
+      { date: '2026-08-13', version: 0, shift: 'N', entries: [{ start: '15:30', finish: '23:00', breaks: [] }] }] });
+    expect(r.status).toBe(200);
+    const res = r.body as { submitted: { date: string }[]; held: { date: string; reason: string }[] };
+    expect(res.submitted.map(d => d.date)).toEqual(['2026-08-10']);
+    expect(res.held).toContainEqual({ date: '2026-08-13', reason: 'Thu 13 Aug has a clock still running, so it was held back. Clock out first.' });
+    expect(day('CP-1042', '2026-08-13')).toBeUndefined();
+  });
+});
+
 describe('clock out writes only what the clock owns since its last write (review I4)', () => {
   /* clock in 07:10, a clocked break 10:00-10:15, out 12:00; the person edits the day; clock in again 13:00, out 17:00 */
   async function editedThenAgain(edit: { start: string; breaks: { start: string; end: string }[] }) {
@@ -274,14 +310,15 @@ describe('late and forgotten (Review Focus 4, D5, D6)', () => {
       ['CP-1001', 'ts_late', 'Late clock-in', 'Marcus Reilly clocked in at 14:31 on Thu 13 Aug. The shift started at 14:30.'],
     ]);
     /* clocking in again is not checked again */
-    at('16:00:00'); const out = moved(await move(marcus, 'out'));
+    at('16:00:00'); moved(await move(marcus, 'out'));
     at('16:30:00'); await move(marcus, 'in');
+    at('17:00:00'); const again = moved(await move(marcus, 'out'));
     expect(notes()).toHaveLength(2);
     /* the day and the team queue carry the mark for the Late pill */
     const week = TimesheetWeek.parse((await marcus('GET', '/api/v1/timesheets/CP-1088/weeks/2026-08-10')).body);
     expect(week.days[3]?.clock).toEqual({ late: true, closedLate: false });
     expect(week.days[2]?.clock).toBeUndefined();
-    await marcus('POST', '/api/v1/timesheets/CP-1088/days/2026-08-13/submit', { entries: out.day?.entries ?? [], shift: 'L' }, out.day?.version);
+    expect((await marcus('POST', '/api/v1/timesheets/CP-1088/days/2026-08-13/submit', { entries: again.day?.entries ?? [], shift: 'L' }, again.day?.version)).status).toBe(200);
     const queue = ApprovalQueue.parse((await (await as('manager'))('GET', '/api/v1/approvals/timesheets?status=pend')).body);
     expect(queue.rows.find(r => r.id === 'tsd_CP-1088_2026-08-13')?.clock).toEqual({ late: true, closedLate: false });
   });

@@ -186,6 +186,15 @@ export const closeFirst = (date: string): ClockProblem => ({ code: 'CLOCK_OPEN',
 export const NOT_FORGOTTEN: ClockProblem = { code: 'CLOCK_MOVE', message: 'This clock is still running.', next: 'Clock out instead.' };
 export const ALREADY_CLOSED: ClockProblem = { code: 'CLOCK_MOVE', message: 'That clock is already closed.', next: 'Open the day to correct its times.' };
 
+/* ------------------------------------------- a running clock holds its day */
+/* Review I1: while a clock is running or on a break, the day it will write
+   cannot be saved or submitted from the day form, the week or by a proxy, so
+   the clock always finds a draft to write when it stops. */
+export const CLOCK_OUT_FIRST = 'Clock out first.';
+export const clockRunning = (date: string, proxy = false): ClockProblem => ({ code: 'CLOCK_RUNNING',
+  message: `The clock is still running on ${formatDay(date)}.`, next: proxy ? 'Ask them to clock out first.' : CLOCK_OUT_FIRST });
+export const clockHeldReason = (date: string) => `${formatDay(date)} has a clock still running, so it was held back. ${CLOCK_OUT_FIRST}`;
+
 /* ------------------------------------------------------------- the gates */
 export const CLOCK_OFF: ClockProblem = { code: 'MODULE_OFF', message: 'Clock in / out is switched off, so the clock cannot be used.',
   next: 'Record your day on the day form instead.' };
