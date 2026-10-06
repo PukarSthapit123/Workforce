@@ -3682,8 +3682,8 @@
    "section": "MOBILE FOUNDATION",
    "text": "MOB The clock card stacks rather than crowding one line",
    "area": "clocking",
-   "status": "pending",
-   "deferredTo": "clocking"
+   "status": "ported",
+   "test": "e2e/a11y.spec.ts › clock › phone: the clock card stacks and nothing overflows at 390px in any state"
   },
   {
    "id": "MOBILE-FOUNDATION#32",
