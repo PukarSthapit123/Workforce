@@ -233,6 +233,36 @@ describe('clock out goes through the day save (Review Focus 3, D3)', () => {
   });
 });
 
+describe('clock out writes only what the clock owns since its last write (review I4)', () => {
+  /* clock in 07:10, a clocked break 10:00-10:15, out 12:00; the person edits the day; clock in again 13:00, out 17:00 */
+  async function editedThenAgain(edit: { start: string; breaks: { start: string; end: string }[] }) {
+    const call = await as('employee');
+    at('07:10:00'); await move(call, 'in');
+    at('10:00:00'); await move(call, 'break/start');
+    at('10:15:00'); await move(call, 'break/end');
+    at('12:00:00');
+    const first = moved(await move(call, 'out'));
+    const saved = await call('PUT', '/api/v1/timesheets/CP-1042/days/2026-08-13', { shift: 'N', entries: [{ start: edit.start, finish: '12:00', breaks: edit.breaks }] }, first.day?.version);
+    expect(saved.status).toBe(200);
+    at('13:00:00'); moved(await move(call, 'in'));
+    at('17:00:00');
+    return move(call, 'out');
+  }
+  test('a corrected start is not reverted (S5)', async () => {
+    const out = moved(await editedThenAgain({ start: '07:00', breaks: [{ start: '10:00', end: '10:15' }] }));
+    expect(out.day?.entries[0]).toMatchObject({ start: '07:00', finish: '17:00', breaks: [{ start: '10:00', end: '10:15' }, { start: '12:00', end: '13:00' }] });
+  });
+  test('a deleted clocked break is not added back (S6)', async () => {
+    const out = moved(await editedThenAgain({ start: '07:10', breaks: [] }));
+    expect(out.day?.entries[0]).toMatchObject({ start: '07:10', finish: '17:00', breaks: [{ start: '12:00', end: '13:00' }] });
+  });
+  test('a widened clocked break stays as widened, and clock out is not refused for an overlap (S2)', async () => {
+    const out = moved(await editedThenAgain({ start: '07:10', breaks: [{ start: '10:00', end: '10:20' }] }));
+    expect(out.day?.entries[0]?.breaks).toEqual([{ start: '10:00', end: '10:20' }, { start: '12:00', end: '13:00' }]);
+    expect(out.record.state).toBe('clockedOut');
+  });
+});
+
 describe('late and forgotten (Review Focus 4, D5, D6)', () => {
   test('a first clock in after the rota line start is late: the record is flagged and ts_late reaches the person and their line manager', async () => {
     const marcus = await asEmail(MARCUS);

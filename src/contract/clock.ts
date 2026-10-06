@@ -11,7 +11,7 @@ import { z } from 'zod';
 import { defineEndpoint } from './endpoints';
 import { IsoDateTime, RecordMeta } from './common';
 import { IsoDate } from './people';
-import { Clock, RotaDay, TimesheetDay } from './timesheets';
+import { BreakInput, Clock, RotaDay, TimesheetDay } from './timesheets';
 
 export const ClockKind = z.enum(['in', 'breakStart', 'breakEnd', 'out']);
 export const ClockEvent = z.object({ kind: ClockKind, at: IsoDateTime });
@@ -23,6 +23,9 @@ export const ClockRecord = RecordMeta.extend({
   late: z.boolean(),
   /* a forgotten clock-out closed later with the finish the person gave (D6) */
   closedLate: z.object({ finish: z.string(), at: IsoDateTime }).nullable(),
+  /* the clocked break pairs the clock has written to the day so far: a later clock out adds only the rest, so a start
+     or break the person edited or deleted stays as they left it (review I4); null until the clock first writes the day */
+  written: z.object({ breaks: z.array(BreakInput) }).nullable(),
   /* derived on every read, never stored: the state, the seconds worked with
      breaks paused up to the server's now, and the day as "Thu 13 Aug" */
   state: ClockStateKey, elapsedSeconds: z.number().int().nonnegative(), label: z.string(),

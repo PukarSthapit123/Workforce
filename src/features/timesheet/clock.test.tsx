@@ -31,6 +31,12 @@ function plant(date: string, events: Ev[], extra: Record<string, unknown> = {}) 
     late: false, closedLate: null, ...extra };
   store.save();
 }
+/* A stored draft day for Amara, copied from a seeded one of hers. */
+function plantDay(date: string, changes: Record<string, unknown>) {
+  const days = store.coll<Record<string, unknown>>('timesheetDays'), id = `tsd_CP-1042_${date}`;
+  days[id] = { ...days['tsd_CP-1042_2026-08-03'], id, date, state: 'draft', captureSource: 'clock', history: [], submittedAt: '', ...changes };
+  store.save();
+}
 const tenant = () => {
   const t = store.coll<{ modules: Record<string, boolean>; flags: Record<string, boolean>; extras: { breaksMax: number } }>('tenant').tenant;
   if (!t) throw new Error('no tenant');
@@ -108,6 +114,14 @@ describe('the clock card', () => {
     expect(screen.getByTestId(tid.clock.again)).toHaveTextContent('Clock in again');
     expect(screen.getByTestId(tid.ts.dayState)).toHaveTextContent('Draft · not submitted');
     expect(store.coll<{ captureSource: string }>('timesheetDays')['tsd_CP-1042_2026-08-13']?.captureSource).toBe('clock');
+  });
+
+  test('after Clock in again, the running form shows the start the person corrected, not the first clock in (review I4)', async () => {
+    plant('2026-08-13', [{ kind: 'in', at: london('07:10') }, { kind: 'out', at: london('12:00') }, { kind: 'in', at: london('13:00') }], { written: { breaks: [] } });
+    plantDay('2026-08-13', { entries: [{ start: '07:00', finish: '12:00', breaks: [], fields: {} }] });
+    await open();
+    await waitFor(() => expect(status()).toHaveTextContent('Clocked in. Shift running.'));
+    await waitFor(() => expect(screen.getByTestId(tid.dayForm.field('start'))).toHaveValue('07:00'));
   });
 
   test('a refusal is shown with what to do next, and nothing is written', async () => {

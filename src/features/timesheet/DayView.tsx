@@ -79,7 +79,7 @@ function DayPanel({ week, day, today, onDate, personId, clock }: {
   const [notes, setNotes] = useState(() => savedReason.split(' · ').slice(1).join(' · '));
   const [worked, setWorked] = useState(savedAnyway);
   /* lockShiftTimes: while the shift runs the start is the clock's first clock in, and start and finish are read-only */
-  const clockStart = clockedStart(clock.card?.current);
+  const clockStart = clockedStart(clock.card?.current, rec?.entries[0]?.start);
   const [filled, setFilled] = useState<string | null>(null);
   if (clockStart && clockStart !== filled) {
     setFilled(clockStart);

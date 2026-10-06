@@ -2736,6 +2736,43 @@
                             }
                           ]
                         },
+                        "written": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "breaks": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "start": {
+                                        "type": "string",
+                                        "maxLength": 5
+                                      },
+                                      "end": {
+                                        "type": "string",
+                                        "maxLength": 5
+                                      }
+                                    },
+                                    "required": [
+                                      "start",
+                                      "end"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                }
+                              },
+                              "required": [
+                                "breaks"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "state": {
                           "type": "string",
                           "enum": [
@@ -2763,6 +2800,7 @@
                         "events",
                         "late",
                         "closedLate",
+                        "written",
                         "state",
                         "elapsedSeconds",
                         "label"
@@ -3257,6 +3295,43 @@
                             }
                           ]
                         },
+                        "written": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "breaks": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "start": {
+                                        "type": "string",
+                                        "maxLength": 5
+                                      },
+                                      "end": {
+                                        "type": "string",
+                                        "maxLength": 5
+                                      }
+                                    },
+                                    "required": [
+                                      "start",
+                                      "end"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                }
+                              },
+                              "required": [
+                                "breaks"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "state": {
                           "type": "string",
                           "enum": [
@@ -3284,6 +3359,7 @@
                         "events",
                         "late",
                         "closedLate",
+                        "written",
                         "state",
                         "elapsedSeconds",
                         "label"
@@ -3758,6 +3834,43 @@
                             }
                           ]
                         },
+                        "written": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "breaks": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "start": {
+                                        "type": "string",
+                                        "maxLength": 5
+                                      },
+                                      "end": {
+                                        "type": "string",
+                                        "maxLength": 5
+                                      }
+                                    },
+                                    "required": [
+                                      "start",
+                                      "end"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                }
+                              },
+                              "required": [
+                                "breaks"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "state": {
                           "type": "string",
                           "enum": [
@@ -3785,6 +3898,7 @@
                         "events",
                         "late",
                         "closedLate",
+                        "written",
                         "state",
                         "elapsedSeconds",
                         "label"
@@ -4259,6 +4373,43 @@
                             }
                           ]
                         },
+                        "written": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "breaks": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "start": {
+                                        "type": "string",
+                                        "maxLength": 5
+                                      },
+                                      "end": {
+                                        "type": "string",
+                                        "maxLength": 5
+                                      }
+                                    },
+                                    "required": [
+                                      "start",
+                                      "end"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                }
+                              },
+                              "required": [
+                                "breaks"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "state": {
                           "type": "string",
                           "enum": [
@@ -4286,6 +4437,7 @@
                         "events",
                         "late",
                         "closedLate",
+                        "written",
                         "state",
                         "elapsedSeconds",
                         "label"
@@ -4773,6 +4925,43 @@
                                 }
                               ]
                             },
+                            "written": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "breaks": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "properties": {
+                                          "start": {
+                                            "type": "string",
+                                            "maxLength": 5
+                                          },
+                                          "end": {
+                                            "type": "string",
+                                            "maxLength": 5
+                                          }
+                                        },
+                                        "required": [
+                                          "start",
+                                          "end"
+                                        ],
+                                        "additionalProperties": false
+                                      }
+                                    }
+                                  },
+                                  "required": [
+                                    "breaks"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
                             "state": {
                               "type": "string",
                               "enum": [
@@ -4800,6 +4989,7 @@
                             "events",
                             "late",
                             "closedLate",
+                            "written",
                             "state",
                             "elapsedSeconds",
                             "label"
@@ -4945,6 +5135,43 @@
                                 }
                               ]
                             },
+                            "written": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "breaks": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "properties": {
+                                          "start": {
+                                            "type": "string",
+                                            "maxLength": 5
+                                          },
+                                          "end": {
+                                            "type": "string",
+                                            "maxLength": 5
+                                          }
+                                        },
+                                        "required": [
+                                          "start",
+                                          "end"
+                                        ],
+                                        "additionalProperties": false
+                                      }
+                                    }
+                                  },
+                                  "required": [
+                                    "breaks"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
                             "state": {
                               "type": "string",
                               "enum": [
@@ -4972,6 +5199,7 @@
                             "events",
                             "late",
                             "closedLate",
+                            "written",
                             "state",
                             "elapsedSeconds",
                             "label"
@@ -5208,6 +5436,43 @@
                             }
                           ]
                         },
+                        "written": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "breaks": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "start": {
+                                        "type": "string",
+                                        "maxLength": 5
+                                      },
+                                      "end": {
+                                        "type": "string",
+                                        "maxLength": 5
+                                      }
+                                    },
+                                    "required": [
+                                      "start",
+                                      "end"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                }
+                              },
+                              "required": [
+                                "breaks"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "state": {
                           "type": "string",
                           "enum": [
@@ -5235,6 +5500,7 @@
                         "events",
                         "late",
                         "closedLate",
+                        "written",
                         "state",
                         "elapsedSeconds",
                         "label"

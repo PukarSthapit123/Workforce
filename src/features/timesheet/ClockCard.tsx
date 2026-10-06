@@ -26,9 +26,12 @@ export function useClockSeconds(current: ClockRecord | null, readAt: number): nu
   return current.elapsedSeconds + (running ? Math.max(0, Math.floor((now - readAt) / 1000)) : 0);
 }
 
-/* The day's start as the clock has it while a shift runs (lockShiftTimes): the first clock in. */
-export function clockedStart(current: ClockRecord | null | undefined): string | null {
+/* The day's start as the clock has it while a shift runs (lockShiftTimes): the
+   first clock in, or once the clock has written the day, the start stored on
+   it, which the person may have corrected (review I4). */
+export function clockedStart(current: ClockRecord | null | undefined, stored?: string): string | null {
   if (!current || !isOpenState(current.state)) return null;
+  if (current.written && stored?.trim()) return stored.trim();
   const first = current.events.find(e => e.kind === 'in');
   return first ? clockTime(first.at) : null;
 }

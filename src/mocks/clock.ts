@@ -21,7 +21,7 @@ import type { DayInput, RotaDay } from '@/contract/timesheets';
 import {
   ALREADY_CLOSED, BREAK_ENDED, BREAK_STARTED, CLOCK_OFF, CLOCK_STATUS, NOT_CLOCK_TYPE, NOT_FORGOTTEN, breaksUsed, clockEntry, clockInAgainProblem,
   clockState, clockedInToast, clockedOutToast, closeFirst, closedToast, elapsedSeconds, eventsFor, isForgotten, isLate, isOpenState, lateNotices,
-  moveProblem, ringTarget, type ClockEvent, type ClockMove, type ClockProblem,
+  moveProblem, ringTarget, clockWritten, type ClockEvent, type ClockMove, type ClockProblem, type ClockWritten,
 } from '@/domain/clock';
 import { absenceBlockedProblem } from '@/domain/leave';
 import { DEFAULT_EXTRAS, flagOn, modOn } from '@/domain/modules';
@@ -30,6 +30,8 @@ import { clockFromIso, dowMon, formatDay, periodStart } from '@/domain/time';
 interface StoredClock {
   id: string; version: number; updatedAt: string; personCode: string; date: string; events: ClockEvent[];
   late: boolean; closedLate: { finish: string; at: string } | null;
+  /* the clocked pairs the clock has written to the day (review I4); absent on a record from before it was kept */
+  written?: ClockWritten | null;
 }
 interface Tenant { modules: Record<string, boolean>; flags: Record<string, unknown>; extras?: { breaksMax?: number } }
 interface StoredType { code: string; name: string; mode?: 'form' | 'grid' | 'clock' }
@@ -47,7 +49,7 @@ const breaksOn = (t: Tenant) => flagOn(t.modules, t.flags, 'BREAKS');
 const breaksMax = (t: Tenant) => t.extras?.breaksMax ?? DEFAULT_EXTRAS.breaksMax;
 const typeOf = (p: StoredPerson) => Object.values(store.coll<StoredType>('employeeTypes')).find(x => x.code === p.employeeType);
 const stateOf = (r: StoredClock) => clockState(r.events, r.closedLate !== null);
-const view = (r: StoredClock): ClockRecord => ({ ...r, state: stateOf(r), elapsedSeconds: elapsedSeconds(r.events, store.now(), r.closedLate !== null), label: formatDay(r.date) });
+const view = (r: StoredClock): ClockRecord => ({ ...r, written: r.written ?? null, state: stateOf(r), elapsedSeconds: elapsedSeconds(r.events, store.now(), r.closedLate !== null), label: formatDay(r.date) });
 const refuseWith = (p: ClockProblem | Refusal, status = 409): never => refuse(status, { code: p.code, message: p.message, next: p.next, ...('field' in p && p.field ? { field: p.field } : {}) });
 
 /* The published rota line for the day: a shift, never a rest day, leave or sickness (D5). */
@@ -102,12 +104,13 @@ const storedDay = (p: StoredPerson, date: string) => daysOf(p.code).find(d => d.
 
 /* D3: the clock's day, written through module 2's save path as a draft with
    captureSource clock. The stored day keeps everything the clock does not
-   own; its first entry takes the clock's start, finish and breaks; an empty
-   shift takes the rota line's. Refuses as the day save refuses. */
-function writeClockDay(s: Signed, p: StoredPerson, t: Tenant, date: string, events: readonly ClockEvent[], finish?: string) {
-  const { existing, base } = draftBase(p, date);
+   own; its first entry takes the clock's finish and the breaks it has not
+   written yet, and its start on the clock's first write (review I4); an
+   empty shift takes the rota line's. Refuses as the day save refuses. */
+function writeClockDay(s: Signed, p: StoredPerson, t: Tenant, rec: StoredClock, events: readonly ClockEvent[], finish?: string) {
+  const date = rec.date, { existing, base } = draftBase(p, date);
   const stored = existing ? asStored(existing) : null, first = stored?.entries[0];
-  const entry = clockEntry(events, first, breaksMax(t), finish);
+  const entry = clockEntry(events, first, breaksMax(t), rec.written ?? null, finish);
   const shift = stored?.shift || rotaLine(p, date)?.code || '';
   const input: DayInput = stored
     ? { ...stored, shift, entries: [entry, ...stored.entries.slice(1)] }
@@ -124,7 +127,7 @@ function audit(s: Signed, act: string, before: StoredClock, after: StoredClock, 
 function breakMove(s: Signed, move: 'breakStart' | 'breakEnd', checkVersion: (r: StoredClock) => void): ClockMoved {
   const { p, t } = owner(s);
   const rec = locate(p).current ?? blank(p, today()), st = stateOf(rec);
-  const used = breaksUsed(storedDay(p, rec.date)?.entries[0]?.breaks ?? [], rec.events);
+  const used = breaksUsed(storedDay(p, rec.date)?.entries[0]?.breaks ?? [], rec.events, rec.written);
   const problem = moveProblem(st, move, { breaksOn: breaksOn(t), breaksUsed: used, breaksMax: breaksMax(t) });
   if (problem) refuseWith(problem);
   checkVersion(rec);
@@ -155,7 +158,7 @@ export const clockHandlers = [
     const rec = current ?? blank(p, today()), st = stateOf(rec);
     const problem = moveProblem(st, 'in', { breaksOn: true, breaksUsed: 0, breaksMax: 1 })
       /* the gap before "Clock in again" is a break pair, so it needs one left (ruling) */
-      ?? clockInAgainProblem(storedDay(p, rec.date)?.entries[0]?.breaks ?? [], rec.events, store.now(), breaksMax(t));
+      ?? clockInAgainProblem(storedDay(p, rec.date)?.entries[0]?.breaks ?? [], rec.events, store.now(), breaksMax(t), rec.written);
     if (problem) refuseWith(problem);
     const blocked = dayBlocked(p, rec.date);
     if (blocked) refuseWith(blocked);
@@ -184,8 +187,8 @@ export const clockHandlers = [
     if (problem) refuseWith(problem);
     checkVersion(rec);
     const now = store.now(), events = [...rec.events, ...eventsFor(st, 'out', now)];
-    const { rec: day, check } = writeClockDay(session, p, t, rec.date, events);
-    const saved = put(rec, { events }), worked = elapsedSeconds(events, now);
+    const { rec: day, check } = writeClockDay(session, p, t, rec, events);
+    const saved = put(rec, { events, written: clockWritten(events) }), worked = elapsedSeconds(events, now);
     const auditId = audit(session, ACT.out, rec, saved, `${formatDay(rec.date)} · ${clockFromIso(now).time} · saved as a draft`, { day: day.id });
     return { record: view(saved), day: dayView(day), warnings: check.warnings, toast: clockedOutToast(worked), auditId };
   }),
@@ -199,12 +202,12 @@ export const clockHandlers = [
     checkVersion(rec);
     const finish = body.finish.trim();
     let written: ReturnType<typeof writeClockDay>;
-    try { written = writeClockDay(session, p, t, rec.date, rec.events, finish); } catch (e) {
+    try { written = writeClockDay(session, p, t, rec, rec.events, finish); } catch (e) {
       /* the finish is this request's field, not the day form's */
       if (e instanceof Refused && e.body.field === 'entries.0.finish') refuse(e.status, { ...e.body, field: 'finish' });
       throw e;
     }
-    const saved = put(rec, { closedLate: { finish, at: store.now() } });
+    const saved = put(rec, { closedLate: { finish, at: store.now() }, written: clockWritten(rec.events) });
     const auditId = audit(session, 'Forgotten clock closed', rec, saved, `${formatDay(rec.date)} · finished at ${finish} · saved as a draft`, { day: written.rec.id });
     return { record: view(saved), day: dayView(written.rec), warnings: written.check.warnings, toast: closedToast(rec.date), auditId };
   }),

@@ -1,6 +1,6 @@
 import {
   ALREADY_IN, ALREADY_ON_BREAK, BREAK_ENDED, BREAK_LIMIT, BREAK_STARTED, BREAKS_OFF, CLOCK_STATUS, NOT_CLOCKED_IN, NOT_ON_BREAK, ON_BREAK_NOW,
-  breaksUsed, clockEntry, clockInAgainProblem, clockState, clockedBreaks, clockedInToast, clockedOutToast, closeFirst, elapsedSeconds, eventsFor, forgottenMessage,
+  breaksUsed, clockEntry, clockInAgainProblem, clockWritten, clockState, clockedBreaks, clockedInToast, clockedOutToast, closeFirst, elapsedSeconds, eventsFor, forgottenMessage,
   formatElapsed, isForgotten, isLate, lateNotices, mergeBreaks, moveProblem, ringTarget, type ClockEvent,
 } from './clock';
 
@@ -33,7 +33,20 @@ describe('the events become the day (D3)', () => {
   test('start from the first clock in, finish from the last clock out, clocked breaks and the gap before "Clock in again" as pairs', () => {
     const events = [ev('in', '07:02'), ev('breakStart', '11:00'), ev('breakEnd', '11:30'), ev('out', '12:00'), ev('in', '13:00'), ev('out', '15:04')];
     expect(clockEntry(events, undefined, 5)).toEqual({ start: '07:02', finish: '15:04', breaks: [{ start: '11:00', end: '11:30' }, { start: '12:00', end: '13:00' }], fields: {} });
-    expect(clockEntry([ev('in', '07:02')], undefined, 5, '15:00').finish).toBe('15:00');
+    expect(clockEntry([ev('in', '07:02')], undefined, 5, null, '15:00').finish).toBe('15:00');
+  });
+  test('once the clock has written the day, clock out writes only what it owns since: the start and breaks the person left stay, only new pairs are added (review I4)', () => {
+    const first = [ev('in', '07:10'), ev('breakStart', '10:00'), ev('breakEnd', '10:15'), ev('out', '12:00')];
+    const written = clockWritten(first), all = [...first, ev('in', '13:00'), ev('out', '17:00')];
+    expect(written).toEqual({ breaks: [{ start: '10:00', end: '10:15' }] });
+    /* the start corrected to 07:00 and the clocked break deleted: both stay as left */
+    expect(clockEntry(all, { start: '07:00', breaks: [], fields: {} }, 5, written))
+      .toEqual({ start: '07:00', finish: '17:00', breaks: [{ start: '12:00', end: '13:00' }], fields: {} });
+    /* the clocked break widened to 10:20: kept, and the old pair is not added back */
+    expect(clockEntry(all, { start: '07:10', breaks: [{ start: '10:00', end: '10:20' }] }, 5, written).breaks)
+      .toEqual([{ start: '10:00', end: '10:20' }, { start: '12:00', end: '13:00' }]);
+    expect(breaksUsed([], all, written)).toBe(1);
+    expect(clockInAgainProblem([{ start: '10:00', end: '10:20' }], first, at('13:00'), 2, written)).toBeNull();
   });
   test('the gap before "Clock in again" takes a pair under breaksMax; with none left, clock in again is refused (ruling)', () => {
     const out = [ev('in', '07:00'), ev('breakStart', '10:00'), ev('breakEnd', '10:30'), ev('out', '12:00')];

@@ -82,22 +82,34 @@ export function mergeBreaks(existing: readonly BreakInput[], clocked: readonly B
   }
   return out;
 }
-/* The pairs a day would hold with the clocked breaks merged in: what the break cap counts. */
-export const breaksUsed = (existing: readonly BreakInput[], events: readonly ClockEvent[]) =>
-  mergeBreaks(existing, clockedBreaks(events), Number.POSITIVE_INFINITY).filter(b => !empty(b)).length;
+/* What the clock has already written to the day (review I4): the clocked
+   pairs, in order. Events are only ever appended, so the pairs of a later
+   write start with these, and only the rest are the clock's to add. Null
+   until the clock first writes the day. */
+export interface ClockWritten { breaks: BreakInput[] }
+export const clockWritten = (events: readonly ClockEvent[]): ClockWritten => ({ breaks: clockedBreaks(events) });
+const unwritten = (events: readonly ClockEvent[], written: ClockWritten | null | undefined) => clockedBreaks(events).slice(written?.breaks.length ?? 0);
+/* The pairs a day would hold with the clock's unwritten breaks merged in: what the break cap counts. */
+export const breaksUsed = (existing: readonly BreakInput[], events: readonly ClockEvent[], written?: ClockWritten | null) =>
+  mergeBreaks(existing, unwritten(events, written), Number.POSITIVE_INFINITY).filter(b => !empty(b)).length;
 
 export interface ClockEntry { start: string; finish: string; breaks: BreakInput[]; fields: Record<string, string | boolean> }
-/* The day's first entry as the clock leaves it (D3): start from the first
-   clock in, finish from the last clock out (or the finish the person gave
-   when closing a forgotten clock), the clocked breaks merged into the breaks
-   already there. The entry's other fields stay as they were. */
-export function clockEntry(events: readonly ClockEvent[], existing: { breaks: readonly BreakInput[]; fields?: Record<string, string | boolean> } | undefined,
-  breaksMax: number, finish?: string): ClockEntry {
+/* The day's first entry as the clock leaves it (D3), writing only what the
+   clock owns since its last write (review I4): the finish is the last clock
+   out (or the finish the person gave when closing the clock); the clocked
+   pairs not yet written are merged into the breaks already there; the start
+   is the first clock in on the clock's first write, and after that the start
+   the person left. A break they edited or deleted stays as they left it. The
+   entry's other fields stay as they were. */
+export function clockEntry(events: readonly ClockEvent[],
+  existing: { start?: string; breaks: readonly BreakInput[]; fields?: Record<string, string | boolean> } | undefined,
+  breaksMax: number, written: ClockWritten | null = null, finish?: string): ClockEntry {
   const first = events.find(e => e.kind === 'in'), last = [...events].reverse().find(e => e.kind === 'out');
+  const kept = written ? existing?.start?.trim() : '';
   return {
-    start: first ? clockTime(first.at) : '',
+    start: kept || (first ? clockTime(first.at) : ''),
     finish: finish ?? (last ? clockTime(last.at) : ''),
-    breaks: mergeBreaks(existing?.breaks ?? [], clockedBreaks(events), breaksMax),
+    breaks: mergeBreaks(existing?.breaks ?? [], unwritten(events, written), breaksMax),
     fields: { ...(existing?.fields ?? {}) },
   };
 }
@@ -133,9 +145,10 @@ export function moveProblem(state: ClockState, move: ClockMove, ctx: MoveContext
 /* "Clock in again" records the gap since the clock out as a break pair, so it
    needs a pair left under breaksMax. Null when there is room, when the gap is
    too short to need a pair, or when this is not a clock in again. */
-export function clockInAgainProblem(existing: readonly BreakInput[], events: readonly ClockEvent[], now: string, max: number): ClockProblem | null {
+export function clockInAgainProblem(existing: readonly BreakInput[], events: readonly ClockEvent[], now: string, max: number,
+  written?: ClockWritten | null): ClockProblem | null {
   if (clockState(events) !== 'clockedOut') return null;
-  const before = breaksUsed(existing, events), after = breaksUsed(existing, [...events, { kind: 'in', at: now }]);
+  const before = breaksUsed(existing, events, written), after = breaksUsed(existing, [...events, { kind: 'in', at: now }], written);
   return after > before && after > max ? BREAK_LIMIT : null;
 }
 /* The events a move adds, all at the server's `now`. Clocking out on a break ends the break first. */
