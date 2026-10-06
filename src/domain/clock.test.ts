@@ -1,6 +1,6 @@
 import {
   ALREADY_IN, ALREADY_ON_BREAK, BREAK_ENDED, BREAK_LIMIT, BREAK_STARTED, BREAKS_OFF, CLOCK_STATUS, NOT_CLOCKED_IN, NOT_ON_BREAK, ON_BREAK_NOW,
-  CLOCK_OUT_FIRST, closedNoDayToast, noDayNotice, noDaySentence, breaksUsed, clockEntry, clockHeldReason, clockRunning, clockInAgainProblem, clockWritten, clockState, clockedBreaks, clockedInToast, clockedOutToast, closeFirst, elapsedSeconds, eventsFor, forgottenMessage,
+  CLOCK_OUT_FIRST, clockedInSince, closedNoDayToast, noDayNotice, noDaySentence, breaksUsed, clockEntry, clockHeldReason, clockRunning, clockInAgainProblem, clockWritten, clockState, clockedBreaks, clockedInToast, clockedOutToast, closeFirst, elapsedSeconds, eventsFor, forgottenMessage,
   formatElapsed, isForgotten, isLate, lateNotices, mergeBreaks, moveProblem, ringTarget, type ClockEvent,
 } from './clock';
 
@@ -139,4 +139,8 @@ test('the card\'s sentences and toasts are the prototype\'s, as plain sentences'
   expect([BREAK_STARTED, BREAK_ENDED]).toEqual(['On break. Timer paused.', 'Break ended and added to your breaks.']);
   expect(CLOCK_STATUS.clockedOut).toBe('Clocked out and saved as a draft. Save or submit the day below.');
   expect([ringTarget(7.5), ringTarget(0), ringTarget(null)]).toEqual([7.5, 8, 8]);
+});
+
+test('a clock from an earlier day says since when (review I3)', () => {
+  expect(clockedInSince({ date: '2026-08-13', events: [ev('in', '21:58'), ev('breakStart', '23:00')] })).toBe('Clocked in since Thu 13 Aug 21:58.');
 });

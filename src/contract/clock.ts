@@ -45,6 +45,8 @@ export const ClockGates = z.object({
 export const MyClock = z.object({
   /* the server's clock: the card's timer ticks on from it, never from the browser's own */
   serverNow: IsoDateTime, now: Clock,
+  /* the day the card acts on: the current clock's, wherever it started, else the day a new clock goes on (review I3) */
+  date: IsoDate,
   /* the record the card acts on: today's, or a night shift still running past midnight */
   current: ClockRecord.nullable(),
   /* the If-Match clock in, break and clock out send: current's version, or 0 */

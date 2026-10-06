@@ -490,5 +490,7 @@ export const tid = {
     outFirst: 'clock-out-first',
     /* review I2: the forgotten banner's sentence when the day can no longer be written */
     noDay: 'clock-no-day',
+    /* review I3: when a clock still running from an earlier day started */
+    since: 'clock-since',
   },
 } as const;

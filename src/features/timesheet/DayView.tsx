@@ -5,7 +5,7 @@ import { Banner, Button, CalNav, Card, CardHead, CheckboxField, CheckRow, Field,
 import { buttonVariants } from '@/ui/shadcn/button';
 import { useMyClock, type ClockRecord, type MyClock } from '@/api/clock';
 import type { DaySaved, TimesheetWeek, WeekDay } from '@/contract/timesheets';
-import { CLOCK_OUT_FIRST } from '@/domain/clock';
+import { CLOCK_OUT_FIRST, isOpenState } from '@/domain/clock';
 import { addDays, dowMon, formatDay, formatDmy } from '@/domain/timesheet';
 import { NON_WORKING_REASONS, formGroups, hm, rotaShift, valuesFromDay, valuesFromRota, varianceText } from './capture';
 import { ClockCard, ForgottenClock, clockedStart } from './ClockCard';
@@ -47,8 +47,10 @@ export function DayView({ week, date, today, onDate, personId }: {
   const q = useMyClock(week.capture.mode === 'clock'), c = q.data;
   const day = week.days.find(d => d.date === date);
   if (!day) return null;
-  const clockDay = c ? c.current?.date ?? c.now.date : null;
-  const clock: DayClock = { card: c?.gates.show && date === clockDay ? c : null, readAt: q.dataUpdatedAt,
+  /* review I3: the card follows the current clock wherever it started: on its own day, and on today's view while it runs */
+  const running = Boolean(c?.current && isOpenState(c.current.state));
+  const onCard = c ? date === c.date || (running && date === c.now.date) : false;
+  const clock: DayClock = { card: c?.gates.show && onCard ? c : null, readAt: q.dataUpdatedAt,
     open: c?.gates.live && c.gates.mode === 'clock' ? c.open : null, openBlocked: c?.openBlocked ?? null };
   return <DayPanel key={`${date}:${day.version}`} week={week} day={day} today={today} onDate={onDate} personId={personId} clock={clock} />;
 }
@@ -82,7 +84,9 @@ function DayPanel({ week, day, today, onDate, personId, clock }: {
   /* lockShiftTimes: while the shift runs the start is the clock's first clock in, and start and finish are read-only.
      The finish is empty, not the rota line's, so the stats wait for clock out; and the day cannot be saved or
      submitted until then, since the clock writes it when it stops (review I1). */
-  const clockStart = clockedStart(clock.card?.current, rec?.entries[0]?.start);
+  /* only the clock's own day is held: a clock from an earlier day shown on today leaves today's form alone */
+  const own = clock.card?.current?.date === day.date ? clock.card.current : null;
+  const clockStart = clockedStart(own, rec?.entries[0]?.start);
   const [filled, setFilled] = useState<string | null>(null);
   if (clockStart && clockStart !== filled) {
     setFilled(clockStart);

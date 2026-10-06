@@ -225,3 +225,8 @@ export const BREAK_ENDED = 'Break ended and added to your breaks.';
 export const closedToast = (date: string) => `The clock from ${formatDay(date)} is closed and the day saved as a draft. Not submitted yet.`;
 /* The ring's target: the rota line's hours, else the prototype's 8 hours. */
 export const ringTarget = (hours: number | null | undefined) => (hours && hours > 0 ? hours : 8);
+/* Review I3: a clock still running from an earlier day says when it started, wherever the card shows it. */
+export function clockedInSince(rec: { date: string; events: readonly ClockEvent[] }): string {
+  const first = rec.events.find(e => e.kind === 'in');
+  return `Clocked in since ${formatDay(rec.date)}${first ? ` ${clockTime(first.at)}` : ''}.`;
+}

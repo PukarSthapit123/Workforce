@@ -132,6 +132,22 @@ describe('the clock card', () => {
     expect(screen.queryByTestId(tid.clock.outFirst)).toBeNull();
   });
 
+  test('a clock still running from an earlier day shows on today\'s view, says since when, and Clock out stops that day\'s clock (review I3)', async () => {
+    plant('2026-08-13', [{ kind: 'in', at: london('21:58') }]);
+    at('02:00:00', '2026-08-14');
+    await open();
+    expect(screen.getByTestId(tid.ts.dayLabel)).toHaveTextContent('Fri 14 Aug');
+    await waitFor(() => expect(status()).toHaveTextContent('Clocked in. Shift running.'));
+    expect(screen.getByTestId(tid.clock.since)).toHaveTextContent('Clocked in since Thu 13 Aug 21:58.');
+    /* today's own form is not the clock's, so it stays editable */
+    expect(screen.getByTestId(tid.dayForm.field('start'))).not.toHaveAttribute('readonly');
+    await userEvent.click(screen.getByTestId(tid.clock.clockOut));
+    expect(await toast('Clocked out and saved as a draft. 4:02:00. Not submitted yet.')).toBeInTheDocument();
+    expect(store.coll<{ entries: { start: string; finish: string }[] }>('timesheetDays')['tsd_CP-1042_2026-08-13']?.entries[0])
+      .toMatchObject({ start: '21:58', finish: '02:00' });
+    await waitFor(() => expect(screen.getByTestId(tid.clock.clockIn)).toBeInTheDocument());
+  });
+
   test('after Clock in again, the running form shows the start the person corrected, not the first clock in (review I4)', async () => {
     plant('2026-08-13', [{ kind: 'in', at: london('07:10') }, { kind: 'out', at: london('12:00') }, { kind: 'in', at: london('13:00') }], { written: { breaks: [] } });
     plantDay('2026-08-13', { entries: [{ start: '07:00', finish: '12:00', breaks: [], fields: {} }] });

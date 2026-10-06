@@ -3,7 +3,7 @@ import { AlarmClock } from 'lucide-react';
 import { tid } from '@/testids';
 import { Banner, Button, Field, FormWarn, TextInput, toastInfo } from '@/ui';
 import { useClockIn, useClockOut, useCloseClock, useEndBreak, useStartBreak, type ClockMoved, type ClockRecord, type MyClock } from '@/api/clock';
-import { CLOCK_STATUS, clockTime, forgottenMessage, formatElapsed, isOpenState, noDaySentence } from '@/domain/clock';
+import { CLOCK_STATUS, clockTime, clockedInSince, forgottenMessage, formatElapsed, isOpenState, noDaySentence } from '@/domain/clock';
 
 /* Module 2b Clocking: the prototype's clock card (.clockcard, renderClock and
    paintClock, qnipay-workforce-v15.html:1227-1253, 6382-6386, 6890-6918). The
@@ -56,6 +56,8 @@ export function ClockCard({ clock, readAt }: { clock: MyClock; readAt: number })
   };
   const refusal = last ? moves[last].refusal : null;
   const open = state === 'running' || state === 'onBreak';
+  /* review I3: a clock still running from an earlier day */
+  const earlier = current && open && current.date < clock.now.date ? current : null;
   return (
     <>
       <section data-testid={tid.clock.card} aria-label="Clock"
@@ -72,6 +74,7 @@ export function ClockCard({ clock, readAt }: { clock: MyClock; readAt: number })
           <div data-testid={tid.clock.timer} role="timer"
             className="font-[family-name:var(--qp-font-display)] text-[length:var(--qp-text-30)] leading-[1.1] font-semibold tabular-nums">{formatElapsed(seconds)}</div>
           <div data-testid={tid.clock.status} role="status" className="mt-[2px] text-xs opacity-80">{CLOCK_STATUS[state]}</div>
+          {earlier && <div data-testid={tid.clock.since} className="text-xs opacity-80">{clockedInSince(earlier)}</div>}
         </div>
         <div className="ml-auto flex flex-wrap gap-sm max-md:ml-0 max-md:w-full">
           {state === 'running' && clock.gates.breaks &&

@@ -88,6 +88,19 @@ describe('a day on the clock (D1, D2, D3)', () => {
     const out = moved(await move(call, 'out'));
     expect(out.day).toMatchObject({ date: '2026-08-13', entries: [{ start: '21:58', finish: '07:00' }] });
   });
+  test('the card follows a clock from an earlier day: the read names the day it acts on, and shows it even when that day is blocked (review I3)', async () => {
+    const call = await as('employee');
+    at('21:58:00'); await move(call, 'in');
+    at('02:00:00', '2026-08-14');
+    expect(await mine(call)).toMatchObject({ date: '2026-08-13', now: { date: '2026-08-14' }, current: { date: '2026-08-13', state: 'running' }, gates: { show: true } });
+    /* a running clock is shown so it can be stopped, even if its day is blocked since it started */
+    const days = store.coll<Record<string, unknown>>('timesheetDays');
+    days['tsd_CP-1042_2026-08-13'] = { ...days['tsd_CP-1042_2026-08-12'], id: 'tsd_CP-1042_2026-08-13', date: '2026-08-13' };
+    expect((await mine(call)).gates).toMatchObject({ show: true, blocked: { code: 'ALREADY_SUBMITTED' } });
+    /* once it is stopped, the card is today's again */
+    store.coll<{ events: unknown[] }>('clockRecords')['clk_CP-1042_2026-08-13']?.events.push({ kind: 'out', at: london('06:00', '2026-08-14') });
+    expect(await mine(call)).toMatchObject({ date: '2026-08-14', current: null, gates: { show: true } });
+  });
 });
 
 describe('own only and the gates (Review Focus 1, D4)', () => {

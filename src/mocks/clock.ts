@@ -145,12 +145,13 @@ export const clockHandlers = [
   serve(getMyClock, ({ session }) => {
     const p = me(session), t = tenant(), now = store.now(), { current, open } = locate(p);
     const date = current?.date ?? today(), line = rotaLine(p, date), mode = typeOf(p)?.mode ?? 'form';
-    const blocked = dayBlocked(p, date), on = live(t);
+    const blocked = dayBlocked(p, date), on = live(t), running = Boolean(current && isOpenState(stateOf(current)));
     return {
-      serverNow: now, now: clockFromIso(now), current: current ? view(current) : null, version: current?.version ?? 0,
+      serverNow: now, now: clockFromIso(now), date, current: current ? view(current) : null, version: current?.version ?? 0,
       rota: line, targetHours: ringTarget(line?.hours), open: open ? view(open) : null, openBlocked: open ? shortBlocked(dayBlocked(p, open.date)) : null,
       gates: { live: on, mode, blocked: shortBlocked(blocked),
-        show: on && mode === 'clock' && !blocked, breaks: breaksOn(t), breaksMax: breaksMax(t) },
+        /* a running clock always shows, so it can be stopped, even if its day was blocked since it started (review I3) */
+        show: on && mode === 'clock' && (!blocked || running), breaks: breaksOn(t), breaksMax: breaksMax(t) },
       status: CLOCK_STATUS[current ? stateOf(current) : 'idle'],
     };
   }),
