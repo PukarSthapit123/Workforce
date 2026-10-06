@@ -25,6 +25,11 @@ test('an employee clocks in, takes a break and clocks out: the times land on the
   await expect(page.getByTestId(tid.dayForm.field('start'))).toHaveValue('15:30');
   await expect(page.getByTestId(tid.dayForm.field('start'))).toHaveAttribute('readonly', '');
   await expect(page.getByTestId(tid.dayForm.field('finish'))).toHaveAttribute('readonly', '');
+  /* review I1: the finish waits for clock out, not the rota line's, and the day cannot be saved or submitted until then */
+  await expect(page.getByTestId(tid.dayForm.field('finish'))).toHaveValue('');
+  await expect(page.getByTestId(tid.dayForm.save)).toBeDisabled();
+  await expect(page.getByTestId(tid.dayForm.submit)).toBeDisabled();
+  await expect(page.getByTestId(tid.clock.outFirst)).toHaveText('Clock out first.');
 
   await api.setClock(london('16:00'));
   await card.getByTestId(tid.clock.breakStart).click();
