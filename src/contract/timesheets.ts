@@ -98,6 +98,8 @@ export const RotaDay = z.object({
   code: z.string(), name: z.string(), from: z.string(), to: z.string(), time: z.string(), hours: z.number().nonnegative(), cross: z.boolean(),
 });
 export type RotaDay = z.infer<typeof RotaDay>;
+/* A clocked day's marks (module 2b): a late first clock in (D5), a forgotten clock closed later (D6). */
+export const ClockMark = z.object({ late: z.boolean(), closedLate: z.boolean() });
 /* A shift in the tenant's catalogue, offered as the Rota line while the Rota module is on. */
 export const RotaLineOption = z.object({ code: z.string(), name: z.string(), from: z.string(), to: z.string() });
 /* One of the tenant's open projects with its own tasks: the Project and Job task options (fieldOpts). */
@@ -130,6 +132,8 @@ export const WeekDay = z.object({
   absence: z.enum(['leave', 'sickness']).nullable().optional(),
   /* the day on the person's published rota; absent with the Rota module off or the week unpublished */
   rota: RotaDay.optional(),
+  /* the day was clocked (module 2b): late against the rota line (D5), or a forgotten clock closed later (D6) */
+  clock: ClockMark.optional(),
 });
 export type WeekDay = z.infer<typeof WeekDay>;
 export const EarlierWeek = z.object({
@@ -185,7 +189,9 @@ export const DayDecided = z.object({ record: TimesheetDay, attempt: IntegrationA
 
 /* ----------------------------------------------------------------- queue */
 export const QueueStatus = z.enum(['pend', 'all', 'resub', 'ok', 'back']);
-export const QueueRow = TimesheetDay.extend({ personName: z.string(), location: z.string(), locationName: z.string(), flags: z.array(AdvisoryFlag) });
+/* clock: as WeekDay.clock, for the Late and closed-later pills on a clocked day (module 2b D5, D6) */
+export const QueueRow = TimesheetDay.extend({ personName: z.string(), location: z.string(), locationName: z.string(), flags: z.array(AdvisoryFlag),
+  clock: ClockMark.optional() });
 export type QueueRow = z.infer<typeof QueueRow>;
 /* What "approve all" would do, computed by the server over every pending day
    the approver may decide (IMP-008), with the checksum the bulk call returns. */

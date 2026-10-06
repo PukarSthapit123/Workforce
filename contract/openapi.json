@@ -1924,6 +1924,22 @@
                               ],
                               "additionalProperties": false
                             }
+                          },
+                          "clock": {
+                            "type": "object",
+                            "properties": {
+                              "late": {
+                                "type": "boolean"
+                              },
+                              "closedLate": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "late",
+                              "closedLate"
+                            ],
+                            "additionalProperties": false
                           }
                         },
                         "required": [
@@ -44969,6 +44985,22 @@
                               "time",
                               "hours",
                               "cross"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "clock": {
+                            "type": "object",
+                            "properties": {
+                              "late": {
+                                "type": "boolean"
+                              },
+                              "closedLate": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "late",
+                              "closedLate"
                             ],
                             "additionalProperties": false
                           }

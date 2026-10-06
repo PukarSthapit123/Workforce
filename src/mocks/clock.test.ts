@@ -2,6 +2,7 @@ import { server } from './node';
 import { store } from './store';
 import { Refusal } from '@/contract/common';
 import { ClockMoved, MyClock } from '@/contract/clock';
+import { ApprovalQueue, TimesheetWeek } from '@/contract/timesheets';
 import { BREAK_LIMIT, BREAKS_OFF, CLOCK_OFF, NOT_CLOCKED_IN, NOT_ON_BREAK, ALREADY_IN } from '@/domain/clock';
 import { audits, caller, fault, resetTo, snapshot, tokenFor, type Persona } from '@/test/api-helpers';
 
@@ -228,9 +229,16 @@ describe('late and forgotten (Review Focus 4, D5, D6)', () => {
       ['CP-1001', 'ts_late', 'Late clock-in', 'Marcus Reilly clocked in at 14:31 on Thu 13 Aug. The shift started at 14:30.'],
     ]);
     /* clocking in again is not checked again */
-    at('16:00:00'); await move(marcus, 'out');
+    at('16:00:00'); const out = moved(await move(marcus, 'out'));
     at('16:30:00'); await move(marcus, 'in');
     expect(notes()).toHaveLength(2);
+    /* the day and the team queue carry the mark for the Late pill */
+    const week = TimesheetWeek.parse((await marcus('GET', '/api/v1/timesheets/CP-1088/weeks/2026-08-10')).body);
+    expect(week.days[3]?.clock).toEqual({ late: true, closedLate: false });
+    expect(week.days[2]?.clock).toBeUndefined();
+    await marcus('POST', '/api/v1/timesheets/CP-1088/days/2026-08-13/submit', { entries: out.day?.entries ?? [], shift: 'L' }, out.day?.version);
+    const queue = ApprovalQueue.parse((await (await as('manager'))('GET', '/api/v1/approvals/timesheets?status=pend')).body);
+    expect(queue.rows.find(r => r.id === 'tsd_CP-1088_2026-08-13')?.clock).toEqual({ late: true, closedLate: false });
   });
   test('on time, or with no rota line, nothing is late', async () => {
     const marcus = await asEmail(MARCUS);
@@ -258,6 +266,8 @@ describe('late and forgotten (Review Focus 4, D5, D6)', () => {
     expect(c.record).toMatchObject({ state: 'clockedOut', closedLate: { finish: '15:00' } });
     expect(day('CP-1042', '2026-08-11')).toMatchObject({ state: 'draft', captureSource: 'clock', shift: 'E', entries: [{ start: '07:02', finish: '15:00' }] });
     expect(clockAudits()).toEqual(['Forgotten clock closed']);
+    const week = TimesheetWeek.parse((await call('GET', '/api/v1/timesheets/CP-1042/weeks/2026-08-10')).body);
+    expect(week.days[1]?.clock).toEqual({ late: false, closedLate: true });
     expect((await mine(call)).open).toBeNull();
     moved(await move(call, 'in', 0));
   });

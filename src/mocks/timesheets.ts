@@ -370,8 +370,14 @@ interface Located { d: StoredDay; p: StoredPerson }
 function located(): Located[] {
   return Object.values(days()).flatMap(d => { const p = personByCode(d.personCode); return p ? [{ d, p }] : []; });
 }
+/* A clocked day's marks (module 2b D5, D6), read from the clock records the clock handlers keep. */
+interface ClockRec { late?: boolean; closedLate?: unknown }
+function clockMark(code: string, date: string) {
+  const r = recordAt(store.coll<ClockRec>('clockRecords'), `clk_${code}_${date}`);
+  return r ? { clock: { late: Boolean(r.late), closedLate: r.closedLate != null } } : {};
+}
 const rowOf = ({ d, p }: Located): QueueRow =>
-  ({ ...dayView(d), personName: p.name, location: p.location, locationName: nameOf('locations', p.location), flags: flagsFor(d) });
+  ({ ...dayView(d), personName: p.name, location: p.location, locationName: nameOf('locations', p.location), flags: flagsFor(d), ...clockMark(p.code, d.date) });
 
 /* The matrix's rota: everyone on a published week in the approver's scope (module 3, gap 6). */
 function weekRota(sc: ReturnType<typeof scopeOf>, weekStart: string): Record<string, RotaDay[]> {
@@ -394,7 +400,7 @@ export const timesheetHandlers = [
       const absence = mark === 'V' ? 'leave' as const : mark === 'S' ? 'sickness' as const : undefined;
       return { date, record: d ? dayView(d) : null, state: d?.state ?? 'none' as const, version: d?.version ?? 0,
         minutes: d ? dayMinutes(d.entries) : 0, future: date > today.date, locked, lockNote: locked ? lockNote(date, c.cutoff) : '',
-        flags: d && d.state !== 'draft' ? flagsFor(d) : [], ...(absence ? { absence } : {}), ...(r ? { rota: r } : {}) };
+        flags: d && d.state !== 'draft' ? flagsFor(d) : [], ...(absence ? { absence } : {}), ...(r ? { rota: r } : {}), ...clockMark(p.code, date) };
     });
     const alloc = weekModel(FIELDS, typeOf(p), envFor(p), c.weekGrid).ctx.map(f => f.c);
     const totals = weekTotals(ws, list.flatMap(x => (x.record ? [{ date: x.date, entries: x.record.entries }] : [])), alloc);
