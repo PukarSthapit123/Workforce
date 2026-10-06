@@ -42,26 +42,26 @@ export function PoliciesCard({ policies }: { policies: readonly OnbPolicySetupVi
   const n = policies.length;
   return (
     <AdminCard testId={tid.monb.card('policies')} icon={<Lock />} title="Policies" tipTestId={tid.monb.tip('policies')}
-      tip="Upload the document a new starter has to read. Replacing it raises the version, and anybody who acknowledged the old one is asked again."
-      desc={<span data-testid={tid.monb.polCount}>{n} document{n === 1 ? '' : 's'} to read and acknowledge</span>}>
+      tip="Upload the document a new starter has to read. Replacing it raises the version, and anybody who acknowledged the old one is asked again.">
       {n
-        ? <Table data-testid={tid.monb.policies} dense className={DENSE_TEXT}>
+        ? <Table data-testid={tid.monb.policies} variant="records" dense className={DENSE_TEXT}>
             <TableHeader><TableRow>
               <TableHead>Policy</TableHead><TableHead>Version</TableHead><TableHead>Document</TableHead>
               <TableHead className="text-right">Acknowledged</TableHead><TableHead><span className="sr-only">Actions</span></TableHead>
             </TableRow></TableHeader>
             <TableBody>{policies.map(p => (
               <Row key={p.id} testId={tid.monb.pol(p.id)}>
-                <TableCell><strong>{p.label}</strong>{p.sum && <span className="block text-xs text-text-muted">{p.sum}</span>}</TableCell>
-                <TableCell data-testid={tid.monb.polVer(p.id)} className="font-mono">{p.ver}</TableCell>
-                <TableCell>{p.file
+                <TableCell kind="title"><strong>{p.label}</strong>{p.sum && <span className="block text-xs font-normal text-text-muted">{p.sum}</span>}</TableCell>
+                <TableCell label="Version" data-testid={tid.monb.polVer(p.id)} className="font-mono">{p.ver}</TableCell>
+                <TableCell label="Document">{p.file
                   ? <FileCell f={p.file} testId={tid.monb.polFile(p.id)} />
                   /* the prototype points at "the extract below", which nothing on this page shows: say what a new starter reads instead */
                   : <span data-testid={tid.monb.polFile(p.id)} className="text-xs text-text-muted">
                       {p.body.length ? 'Nothing uploaded. New starters read the extract held here instead.' : 'Nothing uploaded yet.'}</span>}</TableCell>
-                <TableCell data-testid={tid.monb.polAcks(p.id)} className="text-right tabular-nums">{p.ackCount}</TableCell>
-                <TableCell className="text-right whitespace-nowrap">
-                  <span className="inline-flex gap-[6px]">
+                <TableCell label="Acknowledged" data-testid={tid.monb.polAcks(p.id)} className="text-right tabular-nums">{p.ackCount}</TableCell>
+                <TableCell kind="foot" className="text-right whitespace-nowrap">
+                  {/* on a phone, as the prototype: Upload and Edit side by side, Remove under them */}
+                  <span className="inline-flex gap-[6px] max-md:grid max-md:w-full max-md:grid-cols-2 max-md:[&>*:last-child]:col-span-2">
                     <Button testId={tid.monb.polUpload(p.id)} kind="ghost" small pending={upload.isPending(`onboarding/policy/${p.id}`)}
                       onClick={() => pick(p)}>{p.file ? 'Replace' : 'Upload'}</Button>
                     <Button testId={tid.monb.polEdit(p.id)} kind="ghost" small onClick={() => setBox({ k: 'edit', id: p.id })}>Edit</Button>

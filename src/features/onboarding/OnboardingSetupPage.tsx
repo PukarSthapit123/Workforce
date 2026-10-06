@@ -10,7 +10,7 @@ import { ApiError } from '@/api/client';
 import { useOnboardingSetup, useSaveOnboardingConfig, type OnboardingSetup, type UpdateOnboardingConfig } from '@/api/onboarding';
 import { useTenant } from '@/shell/shellData';
 import { versionKey } from '@/lib/latest';
-import { ALWAYS_ASKED, REQUIRED_CHANGE_WARNING, STEP_UNAVAILABLE, isVerifier, stepsAsked } from '@/domain/onboarding';
+import { ALWAYS_ASKED, REQUIRED_CHANGE_WARNING, STEP_UNAVAILABLE, isVerifier } from '@/domain/onboarding';
 import { DENSE_TEXT, PoliciesCard } from './OnbSetupPolicies';
 
 /* Qnipay setup → Modules → Onboarding → Onboarding setup: the prototype's
@@ -55,12 +55,11 @@ const draftOf = (c: OnboardingSetup['config']): UpdateOnboardingConfig =>
 type DocKey = 'req' | 'blocks' | 'expiry';
 
 function SetupDraftView({ setup }: { setup: OnboardingSetup }) {
-  const { config, features } = setup;
+  const { config } = setup;
   const [draft, setDraft] = useState<UpdateOnboardingConfig>(() => draftOf(config));
   const save = useSaveOnboardingConfig();
   const dirty = JSON.stringify(draft) !== JSON.stringify(draftOf(config));
   const fe = save.fieldError;
-  const inUse = stepsAsked(draft, features).length;
   const setStep = (id: string, on: boolean) => setDraft(d => ({ ...d, steps: d.steps.map(s => (s.id === id ? { ...s, on } : s)) }));
   const setDoc = (id: string, patch: Partial<UpdateOnboardingConfig['documents'][number]>) =>
     setDraft(d => ({ ...d, documents: d.documents.map(x => (x.id === id ? { ...x, ...patch } : x)) }));
@@ -71,8 +70,7 @@ function SetupDraftView({ setup }: { setup: OnboardingSetup }) {
   return (
     <>
       <AdminCard testId={tid.monb.card('steps')} icon={<ClipboardList />} title="Steps" tipTestId={tid.monb.tip('steps')}
-        tip="The order a new starter works through. A step you switch off is not asked for at all."
-        desc={<span data-testid={tid.monb.stepsCount}>{inUse} of {draft.steps.length} steps in use</span>}>
+        tip="The order a new starter works through. A step you switch off is not asked for at all.">
         {draft.steps.map(s => {
           const at = setup.steps.find(x => x.id === s.id);
           const available = at?.available !== false;
@@ -95,29 +93,30 @@ function SetupDraftView({ setup }: { setup: OnboardingSetup }) {
       </AdminCard>
 
       <AdminCard testId={tid.monb.card('documents')} icon={<Folder />} title="Documents" tipTestId={tid.monb.tip('documents')}
-        tip="What a new starter must provide. Who verifies each one, and whether an unverified document stops them starting, are set per document."
-        desc="What they must provide, and who checks it">
-        <Table data-testid={tid.monb.docs} dense className={DENSE_TEXT}>
+        tip="What a new starter must provide. Who verifies each one, and whether an unverified document stops them starting, are set per document.">
+        {/* a card per document on a phone (table.rec), as the prototype shows it */}
+        <Table data-testid={tid.monb.docs} variant="records" dense className={DENSE_TEXT}>
           <TableHeader><TableRow>
             <TableHead>Document</TableHead><TableHead>Required</TableHead><TableHead>Verified by</TableHead>
             <TableHead>Blocks start</TableHead><TableHead>Expiry tracked</TableHead>
           </TableRow></TableHeader>
           <TableBody>{draft.documents.map(d => {
             const err = fe(`documents.${d.id}.verify`) ?? fe(`documents.${d.id}`);
-            const sw = (k: DocKey, words: string, testId: string) => (
-              <TableCell><SwitchField testId={testId} aria-label={`${d.label} ${words}`} checked={d[k]} onCheckedChange={v => setDoc(d.id, { [k]: v })} /></TableCell>);
+            const sw = (k: DocKey, words: string, testId: string, label: string) => (
+              <TableCell label={label}>
+                <SwitchField testId={testId} aria-label={`${d.label} ${words}`} checked={d[k]} onCheckedChange={v => setDoc(d.id, { [k]: v })} /></TableCell>);
             return (
               <Row key={d.id} testId={tid.monb.doc(d.id)}>
-                <TableCell><strong>{d.label}</strong><span className="block text-xs text-text-muted">{d.hint}</span></TableCell>
-                {sw('req', 'required', tid.monb.docReq(d.id))}
-                <TableCell>
+                <TableCell kind="title"><strong>{d.label}</strong><span className="block text-xs font-normal text-text-muted">{d.hint}</span></TableCell>
+                {sw('req', 'required', tid.monb.docReq(d.id), 'Required')}
+                <TableCell label="Verified by">
                   <SettingSelect testId={tid.monb.docVerify(d.id)} small aria-label={`${d.label} verified by`} value={d.verify}
                     aria-invalid={err ? true : undefined} onChange={e => { const v = e.target.value; if (isVerifier(v)) setDoc(d.id, { verify: v }); }}>
                     {setup.verifiers.map(v => <option key={v.value} value={v.value}>{v.label}</option>)}</SettingSelect>
                   {err && <p role="alert" className="mt-xs text-xs text-err">{err}</p>}
                 </TableCell>
-                {sw('blocks', 'blocks start', tid.monb.docBlocks(d.id))}
-                {sw('expiry', 'expiry tracked', tid.monb.docExpiry(d.id))}
+                {sw('blocks', 'blocks start', tid.monb.docBlocks(d.id), 'Blocks start')}
+                {sw('expiry', 'expiry tracked', tid.monb.docExpiry(d.id), 'Expiry tracked')}
               </Row>);
           })}</TableBody>
         </Table>

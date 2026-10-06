@@ -34,19 +34,18 @@ const open = async () => {
   return screen.findByTestId(tid.monb.card('steps'));
 };
 const dialog = () => screen.getByTestId(tid.modal.root);
+const rows = () => screen.getByTestId(tid.monb.policies).querySelectorAll('tbody tr').length;
 
 describe('Onboarding setup: steps and documents apply on Save', () => {
   test('the three fixed steps are always asked; switching one off is unsaved until Save, Cancel puts it back, and Save says people keep what they gave', async () => {
     await open();
     expect(screen.getByText('Modules · Onboarding · Onboarding setup')).toBeInTheDocument();
-    expect(screen.getByTestId(tid.monb.stepsCount)).toHaveTextContent('7 of 7 steps in use');
     expect(screen.getAllByText('Always asked')).toHaveLength(3);
     expect(screen.getByTestId(tid.monb.save)).toBeDisabled();
     expectTestIdCoverage(document.body);
 
     await userEvent.click(screen.getByTestId(tid.monb.stepSwitch('emergency')));
     expect(screen.getByTestId(tid.monb.dirty)).toHaveTextContent('Unsaved changes');
-    expect(screen.getByTestId(tid.monb.stepsCount)).toHaveTextContent('6 of 7 steps in use');
     await userEvent.click(screen.getByTestId(tid.monb.cancel));
     expect(screen.queryByTestId(tid.monb.dirty)).toBeNull();
     expect(screen.getByTestId(tid.monb.stepSwitch('emergency'))).toHaveAttribute('aria-checked', 'true');
@@ -73,7 +72,6 @@ describe('Onboarding setup: steps and documents apply on Save', () => {
     expect(screen.getByTestId(tid.monb.stepSwitch('policies'))).toBeDisabled();
     expect(screen.getByTestId(tid.monb.stepNeeds('policies'))).toHaveTextContent(`${STEP_UNAVAILABLE} It needs Policy acknowledgement.`);
     expect(screen.queryByTestId(tid.monb.stepNeeds('emergency'))).toBeNull();
-    expect(screen.getByTestId(tid.monb.stepsCount)).toHaveTextContent('6 of 7 steps in use');
   });
 
   test('document settings save together: one request, one audit row', async () => {
@@ -92,7 +90,7 @@ describe('Onboarding setup: steps and documents apply on Save', () => {
 describe('Onboarding setup: policies, one row at a time', () => {
   test('Add a policy refuses a missing or duplicate name in the form, then adds it at v1.0', async () => {
     await open();
-    expect(screen.getByTestId(tid.monb.polCount)).toHaveTextContent('4 documents to read and acknowledge');
+    expect(rows()).toBe(4);
     await userEvent.click(screen.getByTestId(tid.monb.polAdd));
     await userEvent.click(screen.getByTestId(tid.monb.polSave));
     expect(screen.getByTestId(tid.monb.polWarn)).toHaveTextContent(POLICY_NAME_NEEDED);
@@ -108,7 +106,7 @@ describe('Onboarding setup: policies, one row at a time', () => {
     expect(await screen.findByTestId(tid.monb.pol('pol_fire_safety'))).toHaveTextContent('Exits, alarms and drills.');
     expect(screen.getByTestId(tid.monb.polVer('pol_fire_safety'))).toHaveTextContent('v1.0');
     expect(screen.getByTestId(tid.monb.polFile('pol_fire_safety'))).toHaveTextContent('Nothing uploaded yet.');
-    expect(screen.getByTestId(tid.monb.polCount)).toHaveTextContent('5 documents');
+    expect(rows()).toBe(5);
     expect(acts()).toEqual(['Policy added']);
   });
 
