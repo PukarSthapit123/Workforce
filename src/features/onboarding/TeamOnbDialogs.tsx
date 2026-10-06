@@ -23,7 +23,7 @@ export function CheckDialog({ x, onClose }: { x: OnbQueueRow; onClose(): void })
   const refused = reject.refusal?.field === 'reason' ? null : reject.refusal ?? verify.refusal;
   const done = (s: { summary: string }) => { toastInfo(s.summary); onClose(); };
   return (
-    <Modal open onOpenChange={o => { if (!o) onClose(); }} title={x.document.label} width="wide"
+    <Modal open onOpenChange={o => { if (!o) onClose(); }} title={x.document.label} scope={x.person.name} width="wide"
       footer={<>
         <Button testId={tid.tonb.notNow} kind="ghost" onClick={onClose}>Not now</Button>
         <Button testId={tid.tonb.reject} kind="ghost" pending={busy}
@@ -31,7 +31,6 @@ export function CheckDialog({ x, onClose }: { x: OnbQueueRow; onClose(): void })
         <Button testId={tid.tonb.verify} kind="primary" pending={busy}
           onClick={() => { reject.clearFieldErrors(); verify.mutate(vars, { onSuccess: done }); }}>Verify</Button>
       </>}>
-      <Small className="mb-md">{x.person.name}</Small>
       <FileRecordView f={x.file} alt={x.document.label} title={x.file.name} imageTestId={tid.tonb.checkImage} noPreviewTestId={tid.tonb.checkNoPreview} />
       <Fact label="Needed">{x.document.req ? 'Required' : 'Optional'}</Fact>
       <Fact label="Stops them starting">{x.document.blocks ? 'Yes' : 'No'}</Fact>

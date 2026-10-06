@@ -51,6 +51,9 @@ export function TeamOnboardingPage() {
     </Page>);
 }
 
+/* table.dense (v15:478) sets its cells and headings at 14px as well as its padding */
+const DENSE_TEXT = 'md:[&_td]:text-sm md:[&_th]:text-sm';
+
 /* "Waiting on a check" (v15:4741-4749): documents sent and not yet checked. */
 function Queue({ d, canCheck }: { d: TeamOnboarding; canCheck: boolean }) {
   const [checking, setChecking] = useState<{ code: string; doc: string } | null>(null);
@@ -60,7 +63,7 @@ function Queue({ d, canCheck }: { d: TeamOnboarding; canCheck: boolean }) {
   return (
     <AdminCard testId={tid.tonb.queue} icon={<ShieldCheck />} title="Waiting on a check" tipTestId={tid.tonb.queueTip}
       tip="A document counts only once somebody has checked it. Who may check each type is set under Onboarding setup.">
-      <Table variant="records" dense>
+      <Table variant="records" dense className={DENSE_TEXT}>
         <TableHeader><TableRow>
           <TableHead>Person</TableHead><TableHead>Document</TableHead><TableHead>Starts</TableHead><TableHead>What they sent</TableHead>
           <TableHead><span className="sr-only">Actions</span></TableHead>
@@ -112,7 +115,7 @@ function InProgress({ d, canTrack, addLink, refresh }: { d: TeamOnboarding; canT
     <AdminCard testId={tid.tonb.list} icon={<Users />} title="In progress" tipTestId={tid.tonb.listTip}
       tip="Everyone in candidate or preboarding. They leave this list when they become active.">
       {n
-        ? <Table data-testid={tid.tonb.table} variant="records" dense>
+        ? <Table data-testid={tid.tonb.table} variant="records" dense className={DENSE_TEXT}>
             <TableHeader><TableRow>
               <TableHead>Person</TableHead><TableHead>Starts</TableHead><TableHead>Employee type</TableHead><TableHead>Progress</TableHead>
               <TableHead>State</TableHead><TableHead>Blocking</TableHead><TableHead><span className="sr-only">Actions</span></TableHead>
@@ -133,7 +136,7 @@ function InProgress({ d, canTrack, addLink, refresh }: { d: TeamOnboarding; canT
                         {r.progress.done}/{r.progress.total}<span className="sr-only">, {r.progress.text}</span></span>
                     </TableCell>
                     <TableCell label="State"><StatePill testId={tid.tonb.state(code)} state={r.person.state} /></TableCell>
-                    <TableCell label="Blocking" className="text-xs">
+                    <TableCell label="Blocking" className="text-text-muted">
                       <span data-testid={tid.tonb.blocking(code)}>{bl.length
                         ? `${bl.slice(0, 2).map(x => x.why).join(' · ')}${bl.length > 2 ? ` +${bl.length - 2}` : ''}`
                         : 'Nothing'}</span>
