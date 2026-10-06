@@ -494,5 +494,7 @@ export const tid = {
     since: 'clock-since',
     /* review M1: a new clock after midnight goes on the night line of the day before */
     lineDay: 'clock-line-day',
+    /* review M3: Clock out at a time you choose, after a day rule refused the clock out */
+    choose: 'clock-choose', chooseFinish: 'clock-choose-finish', chooseRefusal: 'clock-choose-refusal',
   },
 } as const;

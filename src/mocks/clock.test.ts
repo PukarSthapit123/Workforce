@@ -210,16 +210,26 @@ describe('moves, versions and the break cap (Review Focus 2, D2)', () => {
 });
 
 describe('clock out goes through the day save (Review Focus 3, D3)', () => {
-  test('a finish past the daily maximum is refused with module 2\'s sentence, and nothing is written', async () => {
+  test('a finish past the daily maximum is refused with module 2\'s sentence, nothing is written, and the person clocks out at a time they choose (review M3)', async () => {
     const call = await as('employee');
     at('06:00:00'); await move(call, 'in');
     at('22:30:00');
     const before = snapshot(...WRITES);
     const r = await move(call, 'out');
     expect(r.status).toBe(422);
-    expect(refusal(r)).toMatchObject({ code: 'TS_INVALID', field: 'entries.0.finish', message: 'Net time is 16h 30m, above the 16-hour daily maximum.' });
+    expect(refusal(r)).toMatchObject({ code: 'TS_INVALID', field: 'entries.0.finish', message: 'Net time is 16h 30m, above the 16-hour daily maximum.',
+      next: 'Use “Clock out at a time you choose” and enter the time you finished.' });
     expect(snapshot(...WRITES)).toEqual(before);
     expect((await mine(call)).current?.state).toBe('running');
+    /* review M3: the close flow with a finish the person chooses; not one still to come */
+    const v = (await mine(call)).version;
+    const ahead = await call('POST', '/api/v1/clock/2026-08-13/close', { finish: '23:00' }, v);
+    expect([ahead.status, refusal(ahead)]).toEqual([422, { code: 'TS_INVALID', field: 'finish', message: 'That finish time has not come yet.', next: 'Enter the time you finished.' }]);
+    const c = moved(await call('POST', '/api/v1/clock/2026-08-13/close', { finish: '21:00' }, v));
+    expect(c.toast).toBe('Clocked out at 21:00 and saved as a draft. Not submitted yet.');
+    expect(c.record).toMatchObject({ state: 'clockedOut', closedLate: { finish: '21:00' } });
+    expect(c.day?.entries[0]).toMatchObject({ start: '06:00', finish: '21:00' });
+    expect(clockAudits()).toEqual(['Clocked in', 'Clocked out at a chosen time']);
   });
   test('the day keeps what the person changed on the form, the clock fills the first empty break pair (the gap before Clock in again first), and a submitted day refuses the clock', async () => {
     const call = await as('employee');
@@ -400,12 +410,6 @@ describe('late and forgotten (Review Focus 4, D5, D6)', () => {
       'Amara Okafor did not clock out on Fri 7 Aug and finished at 15:00. The day can no longer be changed from the clock, so it needs an amendment.']]);
     expect((await mine(call)).open).toBeNull();
     moved(await move(call, 'in', 0));
-  });
-  test('a clock still within the day is not forgotten, so it cannot be closed', async () => {
-    const call = await as('employee');
-    at('07:00:00'); await move(call, 'in');
-    const r = await call('POST', '/api/v1/clock/2026-08-13/close', { finish: '15:00' }, 1);
-    expect(refusal(r)).toMatchObject({ code: 'CLOCK_MOVE', message: 'This clock is still running.' });
   });
 });
 

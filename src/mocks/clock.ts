@@ -19,7 +19,7 @@ import { clockIn, clockOut, closeClock, endBreak, getMyClock, startBreak, type C
 import type { Refusal } from '@/contract/common';
 import type { DayInput, RotaDay } from '@/contract/timesheets';
 import {
-  ALREADY_CLOSED, BAD_FINISH, BREAK_ENDED, closedNoDayToast, noDayNotice, BREAK_STARTED, CLOCK_OFF, CLOCK_STATUS, NOT_CLOCK_TYPE, NOT_FORGOTTEN, breaksUsed, clockEntry, clockInAgainProblem,
+  ALREADY_CLOSED, BAD_FINISH, BREAK_ENDED, CHOOSE_FINISH_NEXT, FINISH_AHEAD, chosenToast, clockTime, closedNoDayToast, finishAhead, noDayNotice, BREAK_STARTED, CLOCK_OFF, CLOCK_STATUS, NOT_CLOCK_TYPE, breaksUsed, clockEntry, clockInAgainProblem,
   clockState, clockedInToast, clockedOutToast, closeFirst, closedToast, elapsedSeconds, eventsFor, inNightTail, isForgotten, isLate, isOpenState, lateNotices,
   moveProblem, ringTarget, clockWritten, type ClockEvent, type ClockMove, type ClockProblem, type ClockWritten,
 } from '@/domain/clock';
@@ -201,7 +201,13 @@ export const clockHandlers = [
     if (problem) refuseWith(problem);
     checkVersion(rec);
     const now = store.now(), events = [...rec.events, ...eventsFor(st, 'out', now)];
-    const { rec: day, check } = writeClockDay(session, p, t, rec, events);
+    let wrote: ReturnType<typeof writeClockDay>;
+    try { wrote = writeClockDay(session, p, t, rec, events); } catch (e) {
+      /* review M3: a day rule refused it, so the clock keeps running; the card offers a finish the person chooses */
+      if (e instanceof Refused) refuse(e.status, { ...e.body, next: CHOOSE_FINISH_NEXT });
+      throw e;
+    }
+    const { rec: day, check } = wrote;
     const saved = put(rec, { events, written: clockWritten(events) }), worked = elapsedSeconds(events, now);
     const auditId = audit(session, ACT.out, rec, saved, `${formatDay(rec.date)} · ${clockFromIso(now).time} · saved as a draft`, { day: day.id });
     return { record: view(saved), day: dayView(day), warnings: check.warnings, toast: clockedOutToast(worked), auditId };
@@ -212,15 +218,18 @@ export const clockHandlers = [
     const rec = recordAt(clocks(), clockId(p.code, params.date))
       ?? refuse(404, { code: 'not-found', message: `You have no clock on ${formatDay(params.date)}.`, next: 'Reload the page.' });
     if (!isOpenState(stateOf(rec))) refuseWith(ALREADY_CLOSED);
-    if (!isForgotten(rec, today(), store.now(), captureRules().maxDaily)) refuseWith(NOT_FORGOTTEN);
+    /* D6 for a forgotten clock; review M3 for the current one, when a day rule refused its clock out */
+    const forgotten = isForgotten(rec, today(), store.now(), captureRules().maxDaily);
     checkVersion(rec);
-    const finish = body.finish.trim();
+    const finish = body.finish.trim(), first = rec.events.find(e => e.kind === 'in');
+    if (finishAhead(rec.date, first ? clockTime(first.at) : '', finish, clockFromIso(store.now()))) refuseWith(FINISH_AHEAD, 422);
+    const act = forgotten ? 'Forgotten clock closed' : 'Clocked out at a chosen time';
     /* review I2: a day that can no longer be written is left as it is; the clock closes without it and the line manager is asked to amend it */
     if (dayBlocked(p, rec.date)) {
       if (toMin(finish) == null) refuseWith(BAD_FINISH, 422);
       const saved = put(rec, { closedNoDay: { finish, at: store.now() } }), m = lineManager(p);
       if (m) notifyEvent('ts_missing', 'actor', [m.code], noDayNotice(p.name, rec.date, finish));
-      const auditId = audit(session, 'Forgotten clock closed', rec, saved, `${formatDay(rec.date)} · finished at ${finish} · the day was not changed`);
+      const auditId = audit(session, act, rec, saved, `${formatDay(rec.date)} · finished at ${finish} · the day was not changed`);
       return { record: view(saved), day: null, warnings: [], toast: closedNoDayToast(rec.date, m?.name ?? (p.manager.trim() || 'Your manager')), auditId };
     }
     let written: ReturnType<typeof writeClockDay>;
@@ -230,7 +239,7 @@ export const clockHandlers = [
       throw e;
     }
     const saved = put(rec, { closedLate: { finish, at: store.now() }, written: clockWritten(rec.events) });
-    const auditId = audit(session, 'Forgotten clock closed', rec, saved, `${formatDay(rec.date)} · finished at ${finish} · saved as a draft`, { day: written.rec.id });
-    return { record: view(saved), day: dayView(written.rec), warnings: written.check.warnings, toast: closedToast(rec.date), auditId };
+    const auditId = audit(session, act, rec, saved, `${formatDay(rec.date)} · finished at ${finish} · saved as a draft`, { day: written.rec.id });
+    return { record: view(saved), day: dayView(written.rec), warnings: written.check.warnings, toast: forgotten ? closedToast(rec.date) : chosenToast(finish), auditId };
   }),
 ];

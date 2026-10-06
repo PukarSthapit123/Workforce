@@ -6,7 +6,7 @@
    (D6) rules and every sentence the card and the server say are here too, so
    the client and the fake server cannot disagree. The prototype's "·" asides
    are plain sentences. */
-import { clockFromIso, formatDay, pad, toMin } from './time';
+import { addDays, clockFromIso, formatDay, pad, toMin } from './time';
 import type { BreakInput } from './timesheet';
 
 export type ClockKind = 'in' | 'breakStart' | 'breakEnd' | 'out';
@@ -205,8 +205,21 @@ export const closedNoDayToast = (date: string, manager: string) =>
   `The clock from ${formatDay(date)} is closed. The day itself is not changed. ${manager} has been asked to amend it.`;
 export const noDayNotice = (name: string, date: string, finish: string) => ({ title: 'Clock closed without the day',
   body: `${name} did not clock out on ${formatDay(date)} and finished at ${finish}. The day can no longer be changed from the clock, so it needs an amendment.` });
-export const BAD_FINISH = { code: 'TS_INVALID', field: 'finish', message: 'Finish time must be a 24-hour time such as 15:00.', next: 'Enter the time you finished.' } as const;
-export const NOT_FORGOTTEN: ClockProblem = { code: 'CLOCK_MOVE', message: 'This clock is still running.', next: 'Clock out instead.' };
+/* Review M3: a clock out a day rule refuses (the daily maximum, say) leaves
+   the clock running, so the card offers the close flow with a finish the
+   person chooses, and the refusal names it. The finish must have come: one
+   at or before the first clock in is the next morning, as on the day form. */
+export const CHOOSE_FINISH = 'Clock out at a time you choose';
+export const CHOOSE_FINISH_NEXT = `Use “${CHOOSE_FINISH}” and enter the time you finished.`;
+export const chosenToast = (finish: string) => `Clocked out at ${finish} and saved as a draft. Not submitted yet.`;
+export const FINISH_AHEAD = { code: 'TS_INVALID', field: 'finish', message: 'That finish time has not come yet.', next: 'Enter the time you finished.' } as const;
+export function finishAhead(date: string, start: string, finish: string, now: { date: string; time: string }): boolean {
+  const s = toMin(start), f = toMin(finish);
+  if (f == null) return false;
+  const on = s != null && f <= s ? addDays(date, 1) : date;
+  return `${on} ${finish}` > `${now.date} ${now.time}`;
+}
+export const BAD_FINISH ={ code: 'TS_INVALID', field: 'finish', message: 'Finish time must be a 24-hour time such as 15:00.', next: 'Enter the time you finished.' } as const;
 export const ALREADY_CLOSED: ClockProblem = { code: 'CLOCK_MOVE', message: 'That clock is already closed.', next: 'Open the day to correct its times.' };
 
 /* ------------------------------------------- a running clock holds its day */

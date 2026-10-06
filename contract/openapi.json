@@ -2598,7 +2598,7 @@
     },
     "/api/v1/clock/{date}/close": {
       "post": {
-        "summary": "Close a clock from an earlier day nobody clocked out of, with the time you finished, and save that day as a draft (If-Match)",
+        "summary": "Close a clock with the time you finished: one from an earlier day nobody clocked out of, or the running one when a day rule refused its clock out. Saves that day as a draft, or, when the day can no longer be written, leaves it and asks the line manager to amend it (If-Match)",
         "security": [
           {
             "bearer": []

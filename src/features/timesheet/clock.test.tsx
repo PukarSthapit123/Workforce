@@ -158,6 +158,22 @@ describe('the clock card', () => {
     expect(store.coll<{ late: boolean }>('clockRecords')['clk_CP-1042_2026-08-13']?.late).toBe(true);
   });
 
+  test('a clock out refused by a day rule offers Clock out at a time you choose, which stops the clock with that finish (review M3)', async () => {
+    plant('2026-08-13', [{ kind: 'in', at: london('06:00') }]);
+    at('22:30:00');
+    await open();
+    await userEvent.click(await screen.findByTestId(tid.clock.clockOut));
+    const warn = await screen.findByTestId(tid.clock.refusal);
+    expect(warn).toHaveTextContent('Net time is 16h 30m, above the 16-hour daily maximum.');
+    expect(warn).toHaveTextContent('Use “Clock out at a time you choose” and enter the time you finished.');
+    fireEvent.change(screen.getByTestId(tid.clock.chooseFinish), { target: { value: '21:00' } });
+    await userEvent.click(screen.getByTestId(tid.clock.choose));
+    expect(await toast('Clocked out at 21:00 and saved as a draft. Not submitted yet.')).toBeInTheDocument();
+    await waitFor(() => expect(status()).toHaveTextContent('Clocked out and saved as a draft. Save or submit the day below.'));
+    expect(screen.queryByTestId(tid.clock.refusal)).toBeNull();
+    expect(screen.queryByTestId(tid.clock.choose)).toBeNull();
+  });
+
   test('after Clock in again, the running form shows the start the person corrected, not the first clock in (review I4)', async () => {
     plant('2026-08-13', [{ kind: 'in', at: london('07:10') }, { kind: 'out', at: london('12:00') }, { kind: 'in', at: london('13:00') }], { written: { breaks: [] } });
     plantDay('2026-08-13', { entries: [{ start: '07:00', finish: '12:00', breaks: [], fields: {} }] });

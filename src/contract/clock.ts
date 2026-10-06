@@ -84,4 +84,4 @@ export const clockOut = defineEndpoint({ method: 'POST', path: '/api/v1/clock/ou
   summary: 'Clock out, ending any break first, and save the day as a draft through the day save (If-Match). Its refusals are the day save\'s.' });
 export const closeClock = defineEndpoint({ method: 'POST', path: '/api/v1/clock/:date/close', params: ByDate, request: CloseClock, response: ClockMoved,
   capability: 'own_ts', versioned: true, errors: [404, 409],
-  summary: 'Close a clock from an earlier day nobody clocked out of, with the time you finished, and save that day as a draft (If-Match)' });
+  summary: 'Close a clock with the time you finished: one from an earlier day nobody clocked out of, or the running one when a day rule refused its clock out. Saves that day as a draft, or, when the day can no longer be written, leaves it and asks the line manager to amend it (If-Match)' });

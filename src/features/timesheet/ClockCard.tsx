@@ -3,7 +3,7 @@ import { AlarmClock } from 'lucide-react';
 import { tid } from '@/testids';
 import { Banner, Button, Field, FormWarn, TextInput, toastInfo } from '@/ui';
 import { useClockIn, useClockOut, useCloseClock, useEndBreak, useStartBreak, type ClockMoved, type ClockRecord, type MyClock } from '@/api/clock';
-import { CLOCK_STATUS, clockTime, clockedInSince, forgottenMessage, formatElapsed, isOpenState, nightLineNote, noDaySentence } from '@/domain/clock';
+import { CLOCK_STATUS, clockTime, clockedInSince, forgottenMessage, formatElapsed, isOpenState, nightLineNote, noDaySentence, CHOOSE_FINISH, CHOOSE_FINISH_NEXT } from '@/domain/clock';
 
 /* Module 2b Clocking: the prototype's clock card (.clockcard, renderClock and
    paintClock, qnipay-workforce-v15.html:1227-1253, 6382-6386, 6890-6918). The
@@ -55,6 +55,8 @@ export function ClockCard({ clock, readAt }: { clock: MyClock; readAt: number })
     moves[move].mutate({ version: clock.version }, { onSuccess: (r: ClockMoved) => toastInfo(r.toast, flagged(r)) });
   };
   const refusal = last ? moves[last].refusal : null;
+  /* review M3: a day rule refused the clock out, so the clock still runs; offer a finish the person chooses */
+  const choosing = last === 'out' && refusal?.next === CHOOSE_FINISH_NEXT;
   const open = state === 'running' || state === 'onBreak';
   /* review I3: a clock still running since an earlier day says since when */
   const since = current && open ? clockedInSince(current, clock.now.date) : null;
@@ -90,7 +92,27 @@ export function ClockCard({ clock, readAt }: { clock: MyClock; readAt: number })
         </div>
       </section>
       {refusal && <FormWarn testId={tid.clock.refusal}>{refusal.message} <span className="opacity-90">{refusal.next}</span></FormWarn>}
+      {choosing && current && <ChooseFinish key={current.version} rec={current} onDone={() => setLast(null)} />}
     </>);
+}
+
+/* Review M3: when a day rule refused the clock out, the close flow with a
+   finish the person chooses stops the clock and saves the day with it. */
+function ChooseFinish({ rec, onDone }: { rec: ClockRecord; onDone: () => void }) {
+  const close = useCloseClock();
+  const [finish, setFinish] = useState('');
+  const submit = () => close.mutate({ date: rec.date, version: rec.version, finish }, { onSuccess: r => { toastInfo(r.toast, flagged(r)); onDone(); } });
+  const other = close.refusal && close.refusal.field !== 'finish' ? close.refusal : null;
+  return (
+    <div className="mb-md">
+      <div className="flex flex-wrap items-end gap-sm">
+        <Field label="Finish time" required error={close.fieldError('finish')}>
+          <TextInput testId={tid.clock.chooseFinish} type="time" step="300" value={finish} onChange={e => setFinish(e.target.value)} />
+        </Field>
+        <div className="mb-md"><Button testId={tid.clock.choose} kind="primary" pending={close.anyPending} onClick={submit}>{CHOOSE_FINISH}</Button></div>
+      </div>
+      {other && <FormWarn testId={tid.clock.chooseRefusal}>{other.message} <span className="opacity-90">{other.next}</span></FormWarn>}
+    </div>);
 }
 
 /* A clock from an earlier day nobody clocked out of (D6): the finish time

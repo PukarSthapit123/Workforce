@@ -1,6 +1,6 @@
 import {
   ALREADY_IN, ALREADY_ON_BREAK, BREAK_ENDED, BREAK_LIMIT, BREAK_STARTED, BREAKS_OFF, CLOCK_STATUS, NOT_CLOCKED_IN, NOT_ON_BREAK, ON_BREAK_NOW,
-  CLOCK_OUT_FIRST, inNightTail, nightLineNote, clockedInSince, closedNoDayToast, noDayNotice, noDaySentence, breaksUsed, clockEntry, clockHeldReason, clockRunning, clockInAgainProblem, clockWritten, clockState, clockedBreaks, clockedInToast, clockedOutToast, closeFirst, elapsedSeconds, eventsFor, forgottenMessage,
+  CHOOSE_FINISH, CHOOSE_FINISH_NEXT, CLOCK_OUT_FIRST, chosenToast, finishAhead, inNightTail, nightLineNote, clockedInSince, closedNoDayToast, noDayNotice, noDaySentence, breaksUsed, clockEntry, clockHeldReason, clockRunning, clockInAgainProblem, clockWritten, clockState, clockedBreaks, clockedInToast, clockedOutToast, closeFirst, elapsedSeconds, eventsFor, forgottenMessage,
   formatElapsed, isForgotten, isLate, lateNotices, mergeBreaks, moveProblem, ringTarget, type ClockEvent,
 } from './clock';
 
@@ -157,4 +157,16 @@ test('a clock in after midnight inside a night line belongs to that line, and is
     .toBe('You clocked in at 00:10 on Fri 14 Aug. Your shift started at 22:00 on Thu 13 Aug.');
   expect(nightLineNote('Night', '2026-08-13', false)).toBe('Clocking in now goes on your Night shift of Thu 13 Aug.');
   expect(nightLineNote('Night', '2026-08-13', true)).toBe('This clock goes on your Night shift of Thu 13 Aug.');
+});
+
+test('clock out refused by a day rule offers a finish the person chooses, which must have come (review M3)', () => {
+  expect(CHOOSE_FINISH).toBe('Clock out at a time you choose');
+  expect(CHOOSE_FINISH_NEXT).toBe('Use “Clock out at a time you choose” and enter the time you finished.');
+  const now = { date: '2026-08-13', time: '22:30' };
+  expect([finishAhead('2026-08-13', '06:00', '21:00', now), finishAhead('2026-08-13', '06:00', '22:30', now), finishAhead('2026-08-13', '06:00', '23:00', now)])
+    .toEqual([false, false, true]);
+  /* a finish at or before the start is the next morning */
+  expect(finishAhead('2026-08-13', '21:58', '02:00', { date: '2026-08-14', time: '03:00' })).toBe(false);
+  expect(finishAhead('2026-08-13', '21:58', '05:00', { date: '2026-08-14', time: '03:00' })).toBe(true);
+  expect(chosenToast('21:00')).toBe('Clocked out at 21:00 and saved as a draft. Not submitted yet.');
 });
