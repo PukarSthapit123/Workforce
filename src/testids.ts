@@ -497,4 +497,23 @@ export const tid = {
     /* review M3: Clock out at a time you choose, after a day rule refused the clock out */
     choose: 'clock-choose', chooseFinish: 'clock-choose-finish', chooseRefusal: 'clock-choose-refusal',
   },
+  /* module 5: My work → Onboarding, the new starter's portal (essOnboarding, v15:4766; onbSubmitted, 4796) */
+  onb: {
+    error: 'onb-error', loading: 'onb-loading', tip: 'onb-tip', progress: 'onb-progress', rail: 'onb-rail', step: (id: string) => k('onb-step', id),
+    body: (id: string) => k('onb-body', id), back: 'onb-back', next: 'onb-next', submit: 'onb-submit', saved: 'onb-saved', formWarn: 'onb-form-warn',
+    field: (key: string) => k('onb-field', key),
+    contact: (i: number) => k('onb-contact', i), contactField: (i: number, key: string) => k('onb-contact', i, key),
+    contactAdd: 'onb-contact-add', contactRemove: (i: number) => k('onb-contact-remove', i),
+    qual: (i: number) => k('onb-qual', i), qualField: (i: number, key: string) => k('onb-qual', i, key),
+    qualAdd: 'onb-qual-add', qualRemove: (i: number) => k('onb-qual-remove', i), noQuals: 'onb-no-quals',
+    docs: 'onb-docs', doc: (id: string) => k('onb-doc', id), docState: (id: string) => k('onb-doc-state', id), docFile: (id: string) => k('onb-doc-file', id),
+    docReason: (id: string) => k('onb-doc-reason', id), docError: (id: string) => k('onb-doc-error', id),
+    docView: (id: string) => k('onb-doc-view', id), docUpload: (id: string) => k('onb-doc-upload', id), filePick: 'onb-file-pick', filesNote: 'onb-files-note',
+    viewImage: 'onb-view-image', viewNoPreview: 'onb-view-no-preview', viewReplace: 'onb-view-replace', viewClose: 'onb-view-close',
+    policies: 'onb-policies', polCount: 'onb-pol-count', pol: (id: string) => k('onb-pol', id), polAck: (id: string) => k('onb-pol-ack', id),
+    polVer: (id: string) => k('onb-pol-ver', id), polRead: (id: string) => k('onb-pol-read', id), polReadPill: (id: string) => k('onb-pol-read-pill', id),
+    polError: (id: string) => k('onb-pol-error', id), readBody: 'onb-read-body', readAck: 'onb-read-ack', readClose: 'onb-read-close',
+    todo: 'onb-todo', complete: 'onb-complete', review: (key: string) => k('onb-review', key), sign: 'onb-sign', consent: 'onb-consent', consentError: 'onb-consent-error',
+    submitted: 'onb-submitted', ref: 'onb-ref', submittedAt: 'onb-submitted-at', whatNext: 'onb-what-next', sentBack: 'onb-sent-back', askedAgain: 'onb-asked-again',
+  },
 } as const;

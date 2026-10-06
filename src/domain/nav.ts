@@ -24,7 +24,6 @@ export interface NavGroup { key: 'work' | 'team' | 'setup'; label: string; tabs:
 /* which sub-project brings each view; a view not listed here is built in plan 1a */
 const LATER: Record<string, string> = {
   hours: 'Timesheet',
-  onb: 'Onboarding',
   thours: 'Timesheet',
   texc: 'Timesheet', tonb: 'Onboarding',
   mpay: 'Timesheet',
