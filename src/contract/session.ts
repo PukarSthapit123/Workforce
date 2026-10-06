@@ -10,6 +10,9 @@ export const Session = z.object({
   /* roleName: the display name of the viewed person's user type (D11), so
      the role pill shows a renamed role while viewing as someone */
   viewingAs: z.object({ personCode: z.string(), name: z.string(), userType: SessionAccount.shape.userType, roleName: z.string() }).optional(),
+  /* module 5 D8: the person whose eyes this is (the viewed one while viewing as) is a
+     candidate or preboarding while the Onboarding module is on, so they see the portal only */
+  onboarding: z.boolean(),
   simulated: z.literal(true),   // honest label: this sign-in is not Entra ID yet
 });
 export type Session = z.infer<typeof Session>;

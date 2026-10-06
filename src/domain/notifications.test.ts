@@ -12,9 +12,13 @@ const ev = (code: string) => must(eventBy(code), code);
 
 describe('the catalogue (NOTIF_EVENTS, NOTIF_CHANNELS)', () => {
   test('carries the prototype\'s 30 events in its order, grouped by module, with their default channels', () => {
-    expect(NOTIF_EVENTS).toHaveLength(30);
+    /* the prototype's 30, and module 5's four Onboarding events (brief D9) */
+    expect(NOTIF_EVENTS).toHaveLength(34);
     expect(NOTIF_EVENTS.map(e => e.code).slice(0, 3)).toEqual(['ts_submitted', 'ts_approved', 'ts_returned']);
-    expect([...new Set(NOTIF_EVENTS.map(e => e.module))]).toEqual(['Timesheet', 'Rota', 'Leave', 'Workforce']);
+    expect([...new Set(NOTIF_EVENTS.map(e => e.module))]).toEqual(['Timesheet', 'Rota', 'Leave', 'Onboarding', 'Workforce']);
+    expect(NOTIF_EVENTS.filter(e => e.module === 'Onboarding').map(e => e.code)).toEqual(['ob_submitted', 'ob_doc_decided', 'ob_chased', 'ob_invited']);
+    /* an invitation reaches the starter in the app only: no email is sent in this build (D6, D9) */
+    expect(ev('ob_invited').defaults).toEqual({ employee: 'In-app', manager: null, admin: null });
     expect(ev('lv_ok').defaults).toEqual({ employee: 'In-app + email', manager: 'Off', admin: 'Off' });
     expect(ev('cfg').defaults).toEqual({ employee: null, manager: null, admin: 'In-app + email' });
     expect(NOTIF_CHANNELS).toEqual(['Off', 'In-app', 'Email', 'In-app + email', 'In-app + email + SMS']);
@@ -87,6 +91,7 @@ describe('deep links (NOTIF_TARGETS, notifReachable)', () => {
     expect(['Timesheet', 'Rota', 'Leave', 'DBS', 'Workforce'].map(a => targetView(a, 'employee'))).toEqual(['ts', 'shifts', 'leave', 'profile', 'home']);
     expect(['Timesheet', 'Rota', 'Leave', 'DBS', 'Workforce'].map(a => targetView(a, 'admin'))).toEqual(['ipay', 'mrota', 'mleave', 'apeople', 'asetup']);
     expect(targetView('Integration', 'admin')).toBe('asetup');
+    expect((['employee', 'manager', 'admin'] as const).map(p => targetView('Onboarding', p))).toEqual(['onb', 'tonb', 'tonb']);
     expect(targetView('Notices', 'employee')).toBe('notices');
   });
   test('a link is offered only when the page is on that person\'s nav and built', () => {

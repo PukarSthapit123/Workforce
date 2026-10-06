@@ -11,6 +11,7 @@ import { rotaKeys } from './rota';
 import { timesheetKeys } from './timesheets';
 import { leaveKeys } from './leave';
 import { notificationKeys } from './notifications';
+import { onboardingKeys } from './onboarding';
 import {
   getTenant, setFlag, setModule, updateTenantSettings,
   type FlagChanged, type ModuleSwitched, type SetFlag, type Tenant, type UpdateTenantSettings,
@@ -27,7 +28,7 @@ const TENANT_KEY = () => 'tenant';
 /* A module switch can hide or bring back any module's data: Rota off sets its
    shifts aside, Sites off changes employee types, Leave and Timesheet reads
    refuse while off. Everything those screens read is read again. */
-const MODULE_READS = [tenantKeys.all, rotaKeys.all, timesheetKeys.all, timesheetKeys.config, leaveKeys.all, ['employee-types'], notificationKeys.all] as const;
+const MODULE_READS = [tenantKeys.all, rotaKeys.all, timesheetKeys.all, timesheetKeys.config, leaveKeys.all, onboardingKeys.all, ['employee-types'], notificationKeys.all] as const;
 
 export function useSetModule() {
   return useRecordMutation<{ code: string; on: boolean; ifMatch: number }, ModuleSwitched>({

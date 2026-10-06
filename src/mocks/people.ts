@@ -3,6 +3,7 @@ import { bump, refuse } from './http';
 import { serve } from './serve';
 import { actor, requireCapability, sessions } from './auth';
 import { writeAudit } from './audit';
+import { ensureCase } from './onboarding-cases';
 import {
   listPeople, getNextCode, getPerson, createPerson, updatePerson, listHistory, type HistoryEntry,
 } from '@/contract/people';
@@ -88,11 +89,13 @@ export const peopleHandlers = [
       emergencyPhone: '', bankAccount: '', bankSortCode: '', end: '' };
     people()[rec.id] = rec;
     if (d.email) addAccount(d.email, d.code, userType);
+    /* module 5 D1: a starter gets an empty onboarding case */
+    const onboardingCase = ensureCase(d.code, d.state);
     const who = actor(session);
     writeHistory(d.code, who, 'created', [{ field: 'state', from: '', to: d.state }], 'Record created');
     const auditId = writeAudit({ who, act: 'Employee created', entity: 'person', entityId: d.code, before: null,
       after: { code: d.code, name: d.name, employeeType: d.employeeType, location: d.location, contractedHours: d.contractedHours,
-        state: d.state, account: d.email || null, userType: d.email ? userType : null } });
+        state: d.state, account: d.email || null, userType: d.email ? userType : null, ...(onboardingCase ? { onboardingCase } : {}) } });
     return { record: personView(rec), auditId };
   }),
   serve(updatePerson, ({ session, params, body, checkVersion }) => {

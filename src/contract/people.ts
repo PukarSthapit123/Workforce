@@ -68,4 +68,4 @@ export const Transition = z.object({ to: z.string(), reason: z.string() });
 export type Transition = z.infer<typeof Transition>;
 export const transitionPerson = defineEndpoint({ method: 'POST', path: '/api/v1/people/:id/transitions', params: PersonParams, request: Transition,
   response: mutation(Person), capability: 'emp_crud', versioned: true, errors: [404, 409],
-  summary: 'Move a person along the lifecycle, with a reason (If-Match). 409 names the states it can move to.' });
+  summary: 'Move a person along the lifecycle, with a reason (If-Match). 409 names the states it can move to, or what a new starter still has outstanding before they can become active.' });

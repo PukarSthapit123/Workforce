@@ -4,7 +4,7 @@
 import { store } from './store';
 import { bump, refuse } from './http';
 import { serve } from './serve';
-import { actor } from './auth';
+import { actor, onboardingNow } from './auth';
 import { writeAudit } from './audit';
 import { effectiveCode, recordAt } from './world';
 import { MATRIX_ID, matrixNow, matrixRec, notifications, personaOf, switchesNow, type StoredMatrix, type StoredNotification } from './notify';
@@ -28,7 +28,7 @@ function inbox(s: AuthedSession): StoredNotification[] {
 }
 function myNotifications(s: AuthedSession) {
   const { modules, flags } = switchesNow(), mine = inbox(s), now = store.now();
-  const nav = buildNav({ caps: new Set(s.caps), modules, flags: Object.fromEntries(Object.entries(flags).map(([k, v]) => [k, Boolean(v)])), onboarding: false });
+  const nav = buildNav({ caps: new Set(s.caps), modules, flags: Object.fromEntries(Object.entries(flags).map(([k, v]) => [k, Boolean(v)])), onboarding: onboardingNow(effectiveCode(s)) });
   const persona = personaOf(effectiveCode(s));
   const items: NotificationItem[] = mine.map(n => ({ id: n.id, area: n.area, title: n.title, body: n.body, at: n.at, read: n.read,
     ago: ageText(n.at, now), link: linkFor(n.area, persona, nav) }));

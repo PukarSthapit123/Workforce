@@ -29,6 +29,12 @@ export const accountForPerson = (code: string) => Object.values(store.coll<Accou
 const userTypeOf = (a: Account) => store.coll<UserType>('userTypes')[a.userType];
 export const roleNameOf = (a: Account) => userTypeOf(a)?.name ?? a.userType.charAt(0).toUpperCase() + a.userType.slice(1);
 export const locationNameOf = (p: Person | undefined) => Object.values(store.coll<{ code: string; name: string }>('locations')).find(l => l.code === p?.location)?.name ?? p?.location ?? '';
+/* module 5 D8: still onboarding (candidate or preboarding) while the Onboarding module is on, as the prototype's onboarding(p) */
+const STARTER = new Set(['candidate', 'preboard']);
+export function onboardingNow(code: string): boolean {
+  const t = store.coll<{ modules?: Record<string, boolean> }>('tenant').tenant;
+  return Boolean(t?.modules?.ON) && STARTER.has(personBy(code)?.state ?? '');
+}
 export const capsFor = (a: Account) => resolveCapabilities(store.coll<UserType>('userTypes')[a.userType]?.capabilities ?? [], a.grants, a.revocations);
 
 const SIGNED_OUT = { code: 'signed-out', message: 'You are signed out.', next: 'Sign in again to continue.' };
@@ -51,7 +57,7 @@ export function sessionView(s: ServerSession): Session {
   return { token: s.token, simulated: true,
     account: { email: a.email, userType: a.userType, personCode: a.personCode, name: p?.name ?? a.email,
       roleName: roleNameOf(a), roleDescription: userTypeOf(a)?.description ?? '', locationName: locationNameOf(p) },
-    capabilities: capsFor(viewingAs?.va ?? a),
+    capabilities: capsFor(viewingAs?.va ?? a), onboarding: onboardingNow(viewingAs?.vp.code ?? a.personCode),
     ...(viewingAs ? { viewingAs: { personCode: viewingAs.vp.code, name: viewingAs.vp.name, userType: viewingAs.va.userType, roleName: roleNameOf(viewingAs.va) } } : {}) };
 }
 

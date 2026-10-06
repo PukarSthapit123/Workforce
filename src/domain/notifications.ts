@@ -22,7 +22,7 @@ export const NOTIF_PERSONAS = ['employee', 'manager', 'admin'] as const;
 export type NotifPersona = typeof NOTIF_PERSONAS[number];
 export const isNotifPersona = (v: unknown): v is NotifPersona => typeof v === 'string' && (NOTIF_PERSONAS as readonly string[]).includes(v);
 
-export type EventModule = 'Timesheet' | 'Rota' | 'Leave' | 'Workforce';
+export type EventModule = 'Timesheet' | 'Rota' | 'Leave' | 'Onboarding' | 'Workforce';
 /* null: the event never applies to that user type (shown as a dash). */
 export type EventChannels = Readonly<Record<NotifPersona, NotifChannel | null>>;
 /* What else an event needs before it is offered in settings: an employee type
@@ -58,6 +58,11 @@ export const NOTIF_EVENTS: readonly NotifEvent[] = [
   { code: 'lv_late', module: 'Leave', label: 'Leave approval overdue', description: 'The approval SLA has been breached', defaults: ch('In-app', 'In-app + email', 'Email') },
   { code: 'lv_esc', module: 'Leave', label: 'Leave escalation', description: 'A request has moved to the next approver', defaults: ch('In-app', 'In-app + email', 'In-app + email') },
   { code: 'lv_ent', module: 'Leave', label: 'Entitlement changed', description: 'A recalculation has altered a balance', defaults: ch('In-app + email', 'In-app', 'In-app') },
+  /* module 5 (brief D9): raised by the onboarding handlers; an invitation is in-app only, since no email is sent in this build */
+  { code: 'ob_submitted', module: 'Onboarding', label: 'Onboarding submitted', description: 'A new starter has sent their onboarding to be checked', defaults: ch(null, 'In-app + email', 'Off') },
+  { code: 'ob_doc_decided', module: 'Onboarding', label: 'Onboarding document checked', description: 'An uploaded document was accepted, or rejected with a reason', defaults: ch('In-app + email', null, null) },
+  { code: 'ob_chased', module: 'Onboarding', label: 'Onboarding outstanding', description: 'A new starter is reminded of what is still to do', defaults: ch('In-app + email', null, null) },
+  { code: 'ob_invited', module: 'Onboarding', label: 'Onboarding invitation', description: 'A candidate is invited to complete their onboarding', defaults: ch('In-app', null, null) },
   { code: 'pf_req', module: 'Workforce', label: 'Profile change requested', description: 'A colleague has proposed a change to their own details', defaults: ch('In-app', 'In-app + email', 'Off') },
   { code: 'pf_done', module: 'Workforce', label: 'Profile change decided', description: 'A proposed change was approved or declined', defaults: ch('In-app + email', 'Off', 'Off') },
   { code: 'notice_posted', module: 'Workforce', label: 'Notice posted', description: 'A notice went live, or its text changed, for people in its audience', defaults: ch('In-app', 'In-app', 'Off'), needs: { kind: 'flag', flag: 'NOTICES' } },
@@ -144,6 +149,7 @@ export const NOTIF_TARGETS: Readonly<Record<string, Readonly<Record<NotifPersona
   Timesheet: { employee: 'ts', manager: 'tteam', admin: 'ipay' },
   Rota: { employee: 'shifts', manager: 'trota', admin: 'mrota' },
   Leave: { employee: 'leave', manager: 'tleave', admin: 'mleave' },
+  Onboarding: { employee: 'onb', manager: 'tonb', admin: 'tonb' },
   DBS: { employee: 'profile', manager: 'tpeople', admin: 'apeople' },
   Workforce: { employee: 'home', manager: 'tpeople', admin: 'asetup' },
   Notices: { employee: 'notices', manager: 'notices', admin: 'tnotices' },

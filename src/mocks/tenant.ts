@@ -19,6 +19,7 @@ import { writeAudit } from './audit';
 import { recordAt } from './world';
 import { leaveAbsenceOn } from './leave';
 import { writeAbsence } from './rota';
+import { casesInProgress } from './onboarding-cases';
 import { getTenant, setFlag, setModule, updateTenantSettings, type ModuleEffect, type Tenant } from '@/contract/tenant';
 import type { TimesheetConfig } from '@/contract/timesheets';
 import type { RotaConfigRecord } from '@/contract/rota';
@@ -123,6 +124,8 @@ function keptFor(code: string): ModuleEffect['kept'] {
     R: [['rota weeks', 'rotaWeeks'], ['working patterns', 'patterns'], ['cover requests', 'coverRequests']],
     L: [['leave requests', 'leaveRequests'], ['sickness episodes', 'sickEpisodes']],
   } as Record<string, [string, string][]>)[code] ?? [];
+  /* Onboarding: the cases of people still onboarding, kept for when the module returns */
+  if (code === 'ON') return [{ what: 'onboarding cases in progress', count: casesInProgress() }];
   return rows.map(([what, coll]) => ({ what, count: count(coll) }));
 }
 

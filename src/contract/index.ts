@@ -19,3 +19,4 @@ export * from './approvals';
 export * from './notices';
 export * from './home';
 export * from './clock';
+export * from './onboarding';

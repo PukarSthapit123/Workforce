@@ -31,9 +31,12 @@ test('CR An active record can become a leaver, with its reason kept on the recor
     before: { state: 'active' }, after: { state: 'leaver' }, reason: 'Resigned, last day 30 September' });
 });
 
+/* With Onboarding off the guard table alone decides; the onboarding gate on becoming active is module 5's (src/mocks/onboarding.test.ts). */
 test('every from → to pair is allowed or refused exactly as the guard table says', async () => {
   for (const from of PERSON_STATES) for (const to of PERSON_STATES) {
     resetTo('social');
+    const t = store.coll<{ modules: Record<string, boolean> }>('tenant').tenant;
+    if (t) t.modules.ON = false;
     const fresh = caller(await tokenFor('admin'));
     const p = personOf('CP-1042');
     store.coll<{ state: string }>('people')[p.id] = { ...p, state: from };

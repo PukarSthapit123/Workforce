@@ -41,7 +41,7 @@ export function useShellData(): ShellData {
     if (tenant.error instanceof ApiError && tenant.error.status === 401) return { kind: 'loading' }; // signing out
     return { kind: 'error', onRetry: () => void tenant.refetch(), onSignOut: () => void signOut() };
   }
-  const nav = buildNav({ caps: new Set(session.capabilities), modules: tenant.data.modules, flags: tenant.data.flags, onboarding: false });
+  const nav = buildNav({ caps: new Set(session.capabilities), modules: tenant.data.modules, flags: tenant.data.flags, onboarding: session.onboarding });
   /* viewAs and endViewAs toast their own failures and never reject on a
      refusal (SessionProvider's switchView), so nothing here goes unhandled. */
   return { kind: 'ready', session, nav, onSignOut: () => void signOut(), onViewAs: personCode => void viewAs(personCode), onEndViewAs: () => void endViewAs() };
