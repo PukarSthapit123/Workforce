@@ -99,15 +99,29 @@ function ViewDialog({ d, disabled, onClose, onReplace }: { d: OnbDocumentView; d
         <Button testId={tid.onb.viewClose} kind="ghost" onClick={onClose}>Close</Button>
         <Button testId={tid.onb.viewReplace} kind="primary" pending={disabled} onClick={onReplace}>Replace</Button>
       </>}>
+      <FileRecordView f={f} alt={d.label} title={f?.kind === 'pdf' ? 'A PDF was uploaded' : 'A file was uploaded'}
+        imageTestId={tid.onb.viewImage} noPreviewTestId={tid.onb.viewNoPreview} />
+    </Modal>);
+}
+
+/* What a document holds, as the view dialog and the tracker's check dialog
+   show it (onb-view and onb-review, v15:11499-11518, 11632-11668): the image
+   itself (.onb-view), or a note that only images are previewed here, then the
+   file's name, size and when it was sent. */
+export function FileRecordView({ f, alt, title, imageTestId, noPreviewTestId }: {
+  f: OnbFileRecord | null; alt: string; title: string; imageTestId: string; noPreviewTestId: string;
+}) {
+  return (
+    <>
       {f?.preview
-        ? <img data-testid={tid.onb.viewImage} src={f.preview} alt={d.label}
+        ? <img data-testid={imageTestId} src={f.preview} alt={alt}
             className="mb-md max-h-[52vh] w-full rounded-control border bg-surface-sunken object-contain" />
-        : <Banner testId={tid.onb.viewNoPreview} tone="info" title={f?.kind === 'pdf' ? 'A PDF was uploaded' : 'A file was uploaded'}>
+        : <Banner testId={noPreviewTestId} tone="info" title={title}>
             Only images are previewed here. The file itself is not kept in this build, only its name and size.</Banner>}
       {f && <>
         <Fact label="File">{f.name}</Fact>
         <Fact label="Size">{fileSize(f.size)}</Fact>
         <Fact label="Uploaded">{formatDateTime(f.at)}</Fact>
       </>}
-    </Modal>);
+    </>);
 }

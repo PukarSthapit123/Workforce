@@ -224,6 +224,24 @@ describe('the tracker and its scope: own location, or every location with Config
     }
     expect(snapshot(...WRITES)).toEqual(before);
   });
+  test('a holder of Verify onboarding documents alone reads the tracker and one case, and verifies, but cannot invite, start or chase', async () => {
+    await upload(await asEmail(TOM), 'photo', PHOTO, 1);
+    const mgr = Object.values(store.coll<{ personCode: string; revocations: string[] }>('accounts')).find(a => a.personCode === 'CP-1001');
+    if (!mgr) throw new Error('no manager account');
+    mgr.revocations = ['onb_track'];
+    const call = await as('manager');
+    const list = TeamOnboarding.parse((await call('GET', '/api/v1/onboarding/team')).body);
+    expect(list.queue.map(q => `${q.person.code}/${q.document.id}`)).toEqual(['CP-1502/photo']);
+    expect(list.location).not.toBe('');
+    const one = await call('GET', '/api/v1/onboarding/team/CP-1502');
+    expect(one.status).toBe(200);
+    const ok = await team(call, 'CP-1502', 'documents/photo/verify', undefined, 2);
+    expect(ok.status).toBe(200);
+    expect(caseOf('CP-1502')?.docs.photo).toBe('verified');
+    const r = await team(call, 'CP-1502', 'chase', undefined);
+    expect(r.status).toBe(403);
+    expect(refusal(r)).toMatchObject({ code: 'capability', message: 'This needs "Track onboarding", which your access does not include.' });
+  });
   test('a person who is not onboarding is not on the tracker\'s actions; nobody checks their own documents', async () => {
     const call = await as('manager');
     const r = await team(call, 'CP-1042', 'chase', undefined);

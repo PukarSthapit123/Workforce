@@ -13,7 +13,7 @@
 import { store } from './store';
 import { bump, refuse } from './http';
 import { serve } from './serve';
-import { actor, capsFor } from './auth';
+import { actor, capsFor, requireCapability } from './auth';
 import { writeAudit } from './audit';
 import { notifyEvent } from './notify';
 import { accountOfPerson, accounts, effectiveCode, nameOf, people, personByCode, personView, recordAt, today, writeHistory, type Signed, type StoredPerson } from './world';
@@ -59,6 +59,10 @@ const refuseOnb = (p: OnbRefusal): never => refuse(STATUS[p.code] ?? 422, { ...p
 const seesAll = (s: Signed) => s.caps.includes('onb_cfg');
 const myLocation = (s: Signed) => personByCode(effectiveCode(s))?.location ?? '';
 const inOnbScope = (s: Signed) => (p: StoredPerson) => seesAll(s) || p.location === myLocation(s);
+/* The tracker and one starter's case are read with Track onboarding or Verify onboarding documents. */
+function requireTracker(s: Signed) {
+  if (!s.caps.includes('onb_verify')) requireCapability(s, 'onb_track');
+}
 const starters = () => Object.values(people()).filter(p => isStarterState(p.state));
 /* The starter a tracker action names: found, in scope, and still onboarding. */
 function starterAt(s: Signed, code: string): StoredPerson {
@@ -247,6 +251,7 @@ export const onboardingHandlers = [
 
   /* ----------------------------------------------------------------- team */
   serve(getTeamOnboarding, ({ session }) => {
+    requireTracker(session);
     requireOnboarding();
     const cfg = onbConfig(), f = featuresNow(), ctx = blockerContext();
     const list = starters().filter(inOnbScope(session)).sort((a, b) => a.name.localeCompare(b.name) || a.code.localeCompare(b.code));
@@ -259,10 +264,12 @@ export const onboardingHandlers = [
         if (c.docs[d.id] === 'done' && file) queue.push({ person, caseRef, document: d, file, sizeText: fileSize(file.size) });
       }
     }
-    return { rows, queue, toVerify: queue.length, verify: f.verify, all: seesAll(session), locationName: seesAll(session) ? 'every location' : locName(myLocation(session)) };
+    return { rows, queue, toVerify: queue.length, verify: f.verify, all: seesAll(session),
+      locationName: seesAll(session) ? 'every location' : locName(myLocation(session)), location: myLocation(session) };
   }),
 
   serve(getStarterOnboarding, ({ session, params }) => {
+    requireTracker(session);
     requireOnboarding();
     return detailOf(starterAt(session, params.personCode));
   }),

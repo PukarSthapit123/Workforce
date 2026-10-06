@@ -28175,7 +28175,6 @@
             "bearer": []
           }
         ],
-        "x-capability": "onb_track",
         "parameters": [
           {
             "name": "personCode",
@@ -29163,7 +29162,6 @@
             "bearer": []
           }
         ],
-        "x-capability": "onb_track",
         "responses": {
           "200": {
             "description": "OK",
@@ -29608,6 +29606,9 @@
                     },
                     "locationName": {
                       "type": "string"
+                    },
+                    "location": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -29616,7 +29617,8 @@
                     "toVerify",
                     "verify",
                     "all",
-                    "locationName"
+                    "locationName",
+                    "location"
                   ],
                   "additionalProperties": false
                 }

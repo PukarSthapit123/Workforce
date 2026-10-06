@@ -144,6 +144,8 @@ export type OnbQueueRow = z.infer<typeof OnbQueueRow>;
 export const TeamOnboarding = z.object({
   rows: z.array(TrackerRow), queue: z.array(OnbQueueRow), toVerify: z.number().int(), verify: z.boolean(),
   all: z.boolean(), locationName: z.string(),
+  /* the caller's own location: where a new starter added from the tracker is placed by default */
+  location: z.string(),
 });
 export type TeamOnboarding = z.infer<typeof TeamOnboarding>;
 export const RejectDocument = z.object({ reason: z.string().max(300) });
@@ -204,10 +206,13 @@ export const submitOnboarding = defineEndpoint({ method: 'POST', path: '/api/v1/
   capability: 'own_onb', versioned: true, errors: [409],
   summary: 'Submit my onboarding to HR (If-Match: the case): every step done, the confirmation ticked, and a typed signature while signing is on' });
 
-export const getTeamOnboarding = defineEndpoint({ method: 'GET', path: '/api/v1/onboarding/team', response: TeamOnboarding, capability: 'onb_track',
+/* No single capability: the tracker and one starter's case are read with
+   Track onboarding or Verify onboarding documents, which the handler checks;
+   each action still needs its own. */
+export const getTeamOnboarding = defineEndpoint({ method: 'GET', path: '/api/v1/onboarding/team', response: TeamOnboarding, errors: [403],
   summary: 'New starters at my location (every location with Configure onboarding): progress, state, what blocks the start, and documents waiting on a check' });
 export const getStarterOnboarding = defineEndpoint({ method: 'GET', path: '/api/v1/onboarding/team/:personCode', params: ByPerson, response: OnboardingDetail,
-  capability: 'onb_track', errors: [403, 404, 409], summary: 'One new starter\'s onboarding, as the tracker and the check dialog read it' });
+  errors: [403, 404, 409], summary: 'One new starter\'s onboarding, as the tracker and the check dialog read it' });
 export const verifyOnboardingDocument = defineEndpoint({ method: 'POST', path: '/api/v1/onboarding/team/:personCode/documents/:doc/verify', params: ByPersonDoc,
   response: CaseChanged, capability: 'onb_verify', versioned: true, errors: [403, 404, 409],
   summary: 'Verify an uploaded document (If-Match: the case). The person is told.' });

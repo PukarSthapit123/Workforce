@@ -518,4 +518,18 @@ export const tid = {
     /* the step card's and the submitted card's `i` tip (the prototype's acard tip) */
     stepTip: 'onb-step-tip', submittedTip: 'onb-submitted-tip',
   },
+  /* module 5: My team → Onboarding, the tracker (mgrOnboarding, v15:4729) */
+  tonb: {
+    error: 'tonb-error', loading: 'tonb-loading', tip: 'tonb-tip', add: 'tonb-add', addEmpty: 'tonb-add-empty', toVerify: 'tonb-to-verify',
+    queue: 'tonb-queue', queueTip: 'tonb-queue-tip', queueRow: (code: string, doc: string) => k('tonb-queue-row', code, doc),
+    queueFile: (code: string, doc: string) => k('tonb-queue-file', code, doc), check: (code: string, doc: string) => k('tonb-check', code, doc),
+    list: 'tonb-list', listTip: 'tonb-list-tip', table: 'tonb-table', empty: 'tonb-empty', row: (code: string) => k('tonb-row', code),
+    progress: (code: string) => k('tonb-progress', code), state: (code: string) => k('tonb-state', code), blocking: (code: string) => k('tonb-blocking', code),
+    invite: (code: string) => k('tonb-invite', code), start: (code: string) => k('tonb-start', code),
+    /* the check dialog (onb-review) */
+    checkImage: 'tonb-check-image', checkNoPreview: 'tonb-check-no-preview', reason: 'tonb-reason', checkWarn: 'tonb-check-warn',
+    notNow: 'tonb-not-now', reject: 'tonb-reject', verify: 'tonb-verify',
+    /* the not-ready dialog (onb-activate) */
+    notReady: 'tonb-not-ready', blocker: (i: number) => k('tonb-blocker', i), notReadyClose: 'tonb-not-ready-close', chase: 'tonb-chase',
+  },
 } as const;

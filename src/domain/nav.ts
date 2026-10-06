@@ -25,7 +25,7 @@ export interface NavGroup { key: 'work' | 'team' | 'setup'; label: string; tabs:
 const LATER: Record<string, string> = {
   hours: 'Timesheet',
   thours: 'Timesheet',
-  texc: 'Timesheet', tonb: 'Onboarding',
+  texc: 'Timesheet',
   mpay: 'Timesheet',
   ipay: 'Payroll and Business Central', ibc: 'Payroll and Business Central', iit: 'Rota',
 };
@@ -101,7 +101,7 @@ export function buildNav({ caps, modules, flags, onboarding }: NavInput): NavGro
     [can('team_sick') && on('L'), tab('team', 'tsick', 'Sickness', { group: 'Requests', groupKey: 'requests' })],
     [can('team_hours'), tab('team', 'texc', 'Exceptions', { group: 'Requests', groupKey: 'requests' })],
     [can('team_people'), tab('team', 'tpeople', 'People', { group: 'People', groupKey: 'people' })],
-    [can('onb_track') && on('ON'), tab('team', 'tonb', 'Onboarding', { group: 'People', groupKey: 'people' })],
+    [(can('onb_track') || can('onb_verify')) && on('ON'), tab('team', 'tonb', 'Onboarding', { group: 'People', groupKey: 'people' })],
     [can('notice_post') && flag('NOTICES'), tab('team', 'tnotices', 'Notices', { group: 'People', groupKey: 'people' })],
   ];
   const keep = (xs: [boolean, NavTab][]) => xs.filter(([ok]) => ok).map(([, t]) => t);

@@ -29,8 +29,10 @@ const close = (onClose: () => void) => (o: boolean) => { if (!o) onClose(); };
 
 /* Loads what the form needs, then renders it with its first values, so no
    effect has to patch state in later. */
-export function PersonForm({ person, defaultLocation, onClose, onChangeState }: {
-  person?: Person; defaultLocation?: string; onClose(): void; onChangeState?(p: Person): void;
+export function PersonForm({ person, defaultLocation, startState = 'candidate', onClose, onChangeState }: {
+  person?: Person; defaultLocation?: string;
+  /* the starting state a new record opens with: the onboarding tracker's "Add a new starter" presets candidate, as the prototype's employeeBox(null, state) does */
+  startState?: Start; onClose(): void; onChangeState?(p: Person): void;
 }) {
   const next = useNextCode(!person), types = useEmployeeTypes(), locs = useDimension('locations');
   const ready = (person || next.data) && types.data && locs.data;
@@ -39,7 +41,7 @@ export function PersonForm({ person, defaultLocation, onClose, onChangeState }: 
   const initial: Draft = person ? fromPerson(person) : {
     code: next.data?.code ?? '', name: '', email: '', phone: '', resource: '', cis: false,
     employeeType: firstType?.code ?? '', jobProfile: '', location: defaultLocation ?? locs.data?.[0]?.code ?? '', department: '', manager: '', start: todayIso(),
-    category: firstType?.category ?? 'Contracted', contractedHours: '0', maxHours: '48', night: false, userType: 'employee', state: 'candidate' };
+    category: firstType?.category ?? 'Contracted', contractedHours: '0', maxHours: '48', night: false, userType: 'employee', state: startState };
   return <PersonFormBody person={person} initial={initial} onClose={onClose} onChangeState={onChangeState} />;
 }
 

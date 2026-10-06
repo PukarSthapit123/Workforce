@@ -25,8 +25,10 @@ export const useHistory = (id: string) =>
 export const useNextCode = (enabled: boolean) =>
   useQuery({ queryKey: peopleKeys.next, queryFn: () => api(getNextCode), enabled, staleTime: 0 });
 
-/* A person's writes change the in-use counts of the dimensions and types. */
-const AFTER_PERSON = [peopleKeys.all, ['dims'], ['employee-types']] as const;
+/* A person's writes change the in-use counts of the dimensions and types, and
+   who is onboarding (a starter has a case, D1). The onboarding key is written
+   out rather than imported, since src/api/onboarding.ts imports from here. */
+const AFTER_PERSON = [peopleKeys.all, ['dims'], ['employee-types'], ['onboarding']] as const;
 
 export const useCreatePerson = () => useRecordMutation({
   mutationFn: (body: CreatePerson) => api(createPerson, { body }),
@@ -45,6 +47,6 @@ export const useMovePerson = () => useRecordMutation({
   mutationFn: (v: { person: Person; to: string; reason: string }) =>
     api(transitionPerson, { params: { id: v.person.id }, body: { to: v.to, reason: v.reason }, ifMatch: v.person.version }),
   recordKey: v => v.person.id,
-  invalidates: [peopleKeys.all],
+  invalidates: [peopleKeys.all, ['onboarding']],
 });
 export type { StateFilter };
