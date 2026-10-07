@@ -520,7 +520,9 @@ export function nextPolVer(v: string): string {
   return m ? `v${m[1] ?? ''}.${Number(m[2]) + 1}` : 'v1.1';
 }
 /* D10: a new document raises the version and clears every acknowledgement of that
-   policy, so everybody who agreed to the old one is asked again. */
+   policy, so everybody who agreed to the old one is asked again. The caller
+   passes only the cases of people still onboarding: somebody who has started
+   is never asked again, and keeps what they agreed to as the record. */
 export function applyPolicyUpload(p: OnbPolicy, file: OnbFile, cases: readonly OnboardingCase[]): { policy: OnbPolicy; changed: OnboardingCase[]; asked: number } {
   const changed = cases.filter(c => p.id in c.acks || c.read[p.id]).map(c => {
     return { ...c, acks: without(c.acks, p.id), read: without(c.read, p.id) };

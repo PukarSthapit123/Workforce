@@ -4,7 +4,7 @@
    domain's (src/domain/onboarding.ts). */
 import { store } from './store';
 import { bump } from './http';
-import { people, recordAt } from './world';
+import { people, personByCode, recordAt } from './world';
 import {
   caseId, emptyCase, isStarterState, onbFeatures, startProblem,
   type BlockerContext, type OnboardingCase, type OnboardingConfig, type OnbPolicy, type OnbRefusal,
@@ -46,6 +46,12 @@ export function putCase(c: StoredCase, next: OnboardingCase): StoredCase {
   return saved;
 }
 
+/* A case whose person is still a candidate or preboarding and has not
+   started: only they are asked to acknowledge a policy again. */
+export const stillOnboarding = (c: OnboardingCase) => {
+  const p = personByCode(c.personCode);
+  return Boolean(p && isStarterState(p.state) && !c.startedAt);
+};
 /* The cases of people still onboarding (a candidate or preboarding). */
 export const casesInProgress = () => Object.values(people()).filter(p => isStarterState(p.state) && recordAt(casesColl(), caseId(p.code))).length;
 

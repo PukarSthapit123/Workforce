@@ -18,7 +18,7 @@ import { writeAudit } from './audit';
 import { notifyEvent } from './notify';
 import { accountOfPerson, accounts, effectiveCode, nameOf, people, personByCode, personView, recordAt, today, writeHistory, type Signed, type StoredPerson } from './world';
 import {
-  blockerContext, caseOf, casesColl, featuresNow, onbConfig, onbModuleOn, policiesColl, policiesNow, putCase, type StoredCase, type StoredConfig, type StoredPolicy,
+  blockerContext, caseOf, casesColl, featuresNow, onbConfig, onbModuleOn, policiesColl, policiesNow, putCase, stillOnboarding, type StoredCase, type StoredConfig, type StoredPolicy,
 } from './onboarding-cases';
 import {
   ackOnboardingPolicy, addOnboardingPolicy, chaseStarter, editOnboardingPolicy, getMyOnboarding, getOnboardingSetup, getStarterOnboarding,
@@ -406,7 +406,8 @@ export const onboardingHandlers = [
     const bad = uploadProblem(body);
     if (bad) return refuseOnb(bad);
     const file = fileRecord(body, store.now());
-    const r = applyPolicyUpload(p, file, Object.values(casesColl()));
+    /* only people still onboarding are asked again; somebody who has started keeps what they agreed to as the record */
+    const r = applyPolicyUpload(p, file, Object.values(casesColl()).filter(stillOnboarding));
     const saved = bump(p, r.policy);
     policiesColl()[p.id] = saved;
     /* D10: everyone who acknowledged it is asked again, once */

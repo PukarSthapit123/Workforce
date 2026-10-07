@@ -501,7 +501,7 @@ describe('onboarding setup (D2, D10, D11)', () => {
     expect(r.record).toMatchObject({ id: 'pol_fire_safety', ver: 'v1.0', order: 4, ackCount: 0 });
     expect(r.summary).toBe('Fire safety saved. Upload the document to make it readable.');
   });
-  test('a new upload raises the version and asks everyone who acknowledged it again, exactly once (D10)', async () => {
+  test('a new upload raises the version and asks everyone still onboarding who acknowledged it again, exactly once (D10)', async () => {
     for (const email of [TOM, PRIYA]) await (await asEmail(email))('POST', '/api/v1/onboarding/me/policies/pol_conduct/ack', { on: true }, 1);
     const call = await as('admin');
     expect((await setup(call)).policies.find(p => p.id === 'pol_conduct')?.ackCount).toBe(2);
@@ -511,6 +511,14 @@ describe('onboarding setup (D2, D10, D11)', () => {
     const second = PolicyUploaded.parse((await call('POST', '/api/v1/onboarding/policies/pol_conduct/file', { name: 'conduct-v4-3.pdf', size: 200_000, type: 'application/pdf' }, 2)).body);
     expect(second).toMatchObject({ asked: 0, summary: 'Code of conduct is now v4.3. It is ready to read.' });
     expect(onbAudits().filter(a => a.act === 'Policy document uploaded').map(a => (a.after as { askedAgain: number }).askedAgain)).toEqual([2, 0]);
+  });
+  test('somebody who has started is not counted or asked again by a new upload; their acknowledgement stays as the record (review M3)', async () => {
+    for (const email of [TOM, PRIYA]) await (await asEmail(email))('POST', '/api/v1/onboarding/me/policies/pol_conduct/ack', { on: true }, 1);
+    complete('CP-1502');
+    expect((await team(await as('manager'), 'CP-1502', 'start', undefined, version('CP-1502'))).status).toBe(200);
+    const r = PolicyUploaded.parse((await (await as('admin'))('POST', '/api/v1/onboarding/policies/pol_conduct/file', { name: 'conduct-v4-2.pdf', size: 200_000, type: 'application/pdf' }, 1)).body);
+    expect(r).toMatchObject({ asked: 1, summary: 'Code of conduct is now v4.2. 1 person will be asked again.' });
+    expect([caseOf('CP-1501')?.acks, caseOf('CP-1502')?.acks]).toEqual([{}, { pol_conduct: 'v4.1' }]);
   });
   test('removing a policy keeps past acknowledgements in the audit trail and on the cases', async () => {
     await (await asEmail(TOM))('POST', '/api/v1/onboarding/me/policies/pol_itsec/ack', { on: true }, 1);
