@@ -36,7 +36,9 @@ for (const { w, h } of WIDTHS) {
 
       await signInAs('admin');
       await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
-      await page.getByTestId(tid.notBuilt.root).waitFor();
+      /* the admin's first tab is Team onboarding (tonb), built in module 5 */
+      await page.getByTestId(tid.page('tonb')).waitFor();
+      await page.getByTestId(tid.tonb.list).waitFor();
       await shot('landing', false);
 
       await page.goto('/setup/asetup');
