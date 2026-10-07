@@ -4,7 +4,7 @@ import { Refusal } from '@/contract/common';
 import { Session } from '@/contract/session';
 import { MyNotifications } from '@/contract/notifications';
 import {
-  CaseChanged, CaseSubmitted, OnboardingConfigSaved, OnboardingDetail, OnboardingSetup, PolicySaved, PolicyUploaded, StarterChased, StarterMoved, TeamOnboarding,
+  CaseChanged, CaseSubmitted, OnboardingConfigSaved, OnboardingDetail, OnboardingSetup, PolicySaved, PolicyUploaded, StarterChased, StarterMoved, StarterOnboarding, TeamOnboarding,
 } from '@/contract/onboarding';
 import {
   ALWAYS_ASKED, INVITE_REASON, POLICY_NAME_NEEDED, POLICY_NAME_TAKEN, REASON_NEEDED, START_REASON, STEP_MESSAGES, CONSENT_NEEDED,
@@ -242,6 +242,20 @@ describe('the tracker and its scope: own location, or every location with Config
     expect(r.status).toBe(403);
     expect(refusal(r)).toMatchObject({ code: 'capability', message: 'This needs "Track onboarding", which your access does not include.' });
   });
+  test('the tracker\'s read of one starter carries no NI number, address, convictions detail, signature or consent (review I3)', async () => {
+    const c = caseOf('CP-1502');
+    if (!c) throw new Error('no case for CP-1502');
+    store.coll('onboardingCases')[c.id] = { ...c, signature: 'T Achterberg', consent: true,
+      data: { personal: { dob: '1990-04-02', gender: '', nat: 'Dutch', ni: 'QQ 12 34 56 C' }, contact: { mob: '07700 900123', alt: '', a1: '14 Larkspur Road', a2: '', city: 'Leeds', post: 'LS6 2AB' },
+        emergency: [{ nm: 'Anke Achterberg', rel: 'Parent', ph: '07700 900456' }], additional: { conv: 'Yes', convDetail: 'Speeding fine 2024', wtd: '', quals: [] }, documents: { rtwType: 'Passport' } } };
+    await upload(await asEmail(TOM), 'photo', PHOTO, version('CP-1502'));
+    const r = await (await as('manager'))('GET', '/api/v1/onboarding/team/CP-1502');
+    const view = StarterOnboarding.parse(r.body), text = JSON.stringify(r.body);
+    expect(view.documents.find(d => d.id === 'photo')?.file).toMatchObject({ name: 'face.jpg', preview: PHOTO.preview });
+    expect(Object.keys(r.body as object).sort()).toEqual(['caseRef', 'documents', 'person', 'progress', 'ref', 'steps', 'submittedAt', 'toStart']);
+    for (const secret of ['QQ 12 34 56 C', '1990-04-02', '14 Larkspur Road', 'LS6 2AB', '07700 900123', 'Anke Achterberg', 'Speeding fine', 'T Achterberg', '"signature"', '"consent"', '"data"'])
+      expect(text, secret).not.toContain(secret);
+  });
   test('a person who is not onboarding is not on the tracker\'s actions; nobody checks their own documents', async () => {
     const call = await as('manager');
     const r = await team(call, 'CP-1042', 'chase', undefined);
@@ -279,7 +293,7 @@ describe('the tracker and its scope: own location, or every location with Config
   test('chasing tells the starter what is outstanding, once, with one audit row; with nothing outstanding there is nothing to chase', async () => {
     const call = await as('manager');
     const r = StarterChased.parse((await team(call, 'CP-1502', 'chase', undefined)).body);
-    const out = OnboardingDetail.parse((await call('GET', '/api/v1/onboarding/team/CP-1502')).body).toStart;
+    const out = StarterOnboarding.parse((await call('GET', '/api/v1/onboarding/team/CP-1502')).body).toStart;
     expect(r.summary).toBe(`Tom Achterberg reminded. ${out.length} outstanding.`);
     expect(notes('CP-1502').map(n => [n.event, n.body])).toEqual([['ob_chased', outstandingText(out as Blocker[])]]);
     expect(onbAudits().map(a => a.act)).toEqual(['Onboarding chased']);
@@ -294,7 +308,7 @@ describe('activation is refused on the server while start blockers remain, throu
     const call = await as('manager'), before = snapshot(...WRITES);
     const r = await team(call, 'CP-1502', 'start', undefined, 1);
     expect(r.status).toBe(409);
-    const out = OnboardingDetail.parse((await call('GET', '/api/v1/onboarding/team/CP-1502')).body).toStart;
+    const out = StarterOnboarding.parse((await call('GET', '/api/v1/onboarding/team/CP-1502')).body).toStart;
     expect(refusal(r)).toMatchObject({ code: 'NOT_READY', message: notReadyText('Tom Achterberg', out as Blocker[]) });
     expect(snapshot(...WRITES)).toEqual(before);
   });

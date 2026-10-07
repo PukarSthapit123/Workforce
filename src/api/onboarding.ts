@@ -16,7 +16,7 @@ import {
   type Blocker, type CaseChanged, type CaseSubmitted, type OnbDocumentRecord, type OnbDocumentView, type OnbFeatures, type OnbFileRecord,
   type OnboardingCaseRecord, type OnboardingConfigRecord, type OnboardingConfigSaved, type OnboardingDetail, type OnboardingSetup, type OnbPerson,
   type OnbPolicySetupView, type OnbPolicyView, type OnbProgress, type OnbQueueRow, type OnbStepRecord, type OnbStepView, type PolicyDraft,
-  type PolicyRemoved, type PolicySaved, type PolicyUploaded, type SaveStep, type StarterChased, type StarterMoved, type SubmitOnboarding,
+  type PolicyRemoved, type PolicySaved, type PolicyUploaded, type SaveStep, type StarterChased, type StarterMoved, type StarterOnboarding, type SubmitOnboarding,
   type TeamOnboarding, type TrackerRow, type UpdateOnboardingConfig, type UploadFile,
 } from '@/contract/onboarding';
 
@@ -32,6 +32,7 @@ export const onboardingKeys = {
 /* Only while the signed-in person is a candidate or preboarding: refused otherwise (NOT_ONBOARDING). */
 export const useMyOnboarding = (enabled = true) => useQuery({ queryKey: onboardingKeys.mine, queryFn: () => api(getMyOnboarding), enabled });
 export const useTeamOnboarding = (enabled = true) => useQuery({ queryKey: onboardingKeys.team, queryFn: () => api(getTeamOnboarding), enabled });
+/* The tracker's view of one starter: states, files and blockers, none of their answers. */
 export const useStarterOnboarding = (personCode: string, enabled = true) => useQuery({
   queryKey: onboardingKeys.starter(personCode), queryFn: () => api(getStarterOnboarding, { params: { personCode } }), enabled: enabled && !!personCode,
 });
@@ -115,6 +116,6 @@ export const useRemoveOnboardingPolicy = () => useRecordMutation({
 export type {
   Blocker, CaseChanged, CaseSubmitted, OnbDocumentRecord, OnbDocumentView, OnbFeatures, OnbFileRecord, OnboardingCaseRecord, OnboardingConfigRecord,
   OnboardingConfigSaved, OnboardingDetail, OnboardingSetup, OnbPerson, OnbPolicySetupView, OnbPolicyView, OnbProgress, OnbQueueRow, OnbStepRecord,
-  OnbStepView, PolicyDraft, PolicyRemoved, PolicySaved, PolicyUploaded, SaveStep, StarterChased, StarterMoved, SubmitOnboarding, TeamOnboarding,
+  OnbStepView, PolicyDraft, PolicyRemoved, PolicySaved, PolicyUploaded, SaveStep, StarterChased, StarterMoved, StarterOnboarding, SubmitOnboarding, TeamOnboarding,
   TrackerRow, UpdateOnboardingConfig, UploadFile,
 };

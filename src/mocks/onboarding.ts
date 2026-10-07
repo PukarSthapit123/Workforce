@@ -24,7 +24,7 @@ import {
   ackOnboardingPolicy, addOnboardingPolicy, chaseStarter, editOnboardingPolicy, getMyOnboarding, getOnboardingSetup, getStarterOnboarding,
   getTeamOnboarding, inviteStarter, readOnboardingPolicy, rejectOnboardingDocument, removeOnboardingPolicy, saveOnboardingStep, startStarter,
   submitOnboarding, updateOnboardingConfig, uploadOnboardingDocument, uploadOnboardingPolicy, verifyOnboardingDocument,
-  type OnbDocumentView, type OnboardingDetail, type OnbPerson, type OnbPolicySetupView, type OnbStepView, type TrackerRow, type OnbQueueRow,
+  type OnbDocumentView, type OnboardingDetail, type OnbPerson, type OnbPolicySetupView, type OnbStepView, type StarterOnboarding, type TrackerRow, type OnbQueueRow,
 } from '@/contract/onboarding';
 import {
   ALREADY_SUBMITTED, DEFAULT_POLICY_VER, FILES_NOTE, INVITE_REASON, START_REASON, STEP_NEEDS, VERIFIERS,
@@ -114,7 +114,13 @@ function detailOf(p: StoredPerson): OnboardingDetail {
   };
 }
 /* A step sent back after submission is judged against the documents they were asked then (askedOf). */
-const stepContext = (c: OnboardingCase, cfg: OnboardingConfig, f: OnbFeatures): StepContext =>
+/* The tracker's view of one starter (review I3): states, files and blockers, never their answers. */
+function starterViewOf(p: StoredPerson): StarterOnboarding {
+  const c = caseOf(p.code), cfg = onbConfig(), f = featuresNow();
+  return { person: personOf(p), caseRef: { id: c.id, version: c.version }, steps: stepViews(c, cfg, f), documents: docViews(c, cfg, f),
+    progress: progressOf(c), toStart: blockers(c, blockerContext(), 'start'), submittedAt: c.submittedAt, ref: c.ref };
+}
+const stepContext =(c: OnboardingCase, cfg: OnboardingConfig, f: OnbFeatures): StepContext =>
   ({ features: f, documents: askedOf(c, { config: cfg, features: f }).documents, policies: policiesAsked(f), today: today() });
 function docAsked(id: string): OnbDocument {
   return docsAsked(onbConfig(), featuresNow()).find(d => d.id === id) ?? NOT_FOUND(`There is no document "${id}" to upload or check.`, 'Reload the page to see the documents asked for.');
@@ -270,7 +276,7 @@ export const onboardingHandlers = [
   serve(getStarterOnboarding, ({ session, params }) => {
     requireTracker(session);
     requireOnboarding();
-    return detailOf(starterAt(session, params.personCode));
+    return starterViewOf(starterAt(session, params.personCode));
   }),
 
   serve(verifyOnboardingDocument, ({ session, params, checkVersion }) => decide(session, params, checkVersion, { ok: true })),

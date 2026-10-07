@@ -98,6 +98,16 @@ export const OnboardingDetail = z.object({
   filesNote: z.string(), today: IsoDate,
 });
 export type OnboardingDetail = z.infer<typeof OnboardingDetail>;
+/* One starter's onboarding as the tracker reads it: what a manager needs to
+   check the documents and see what stops the start, and none of the starter's
+   own answers. No step data (date of birth, NI number, address, contacts,
+   convictions), no signature, no consent. Strict, so a field added to the
+   handler by mistake fails the response check instead of reaching the browser. */
+export const StarterOnboarding = z.strictObject({
+  person: OnbPerson, caseRef: z.object({ id: z.string(), version: z.number().int().nonnegative() }), steps: z.array(OnbStepView),
+  documents: z.array(OnbDocumentView), progress: OnbProgress, toStart: z.array(Blocker), submittedAt: AtOrBlank, ref: z.string(),
+});
+export type StarterOnboarding = z.infer<typeof StarterOnboarding>;
 
 /* ------------------------------------------------------------- my case */
 const Text = (n = 200) => z.string().max(n);
@@ -213,8 +223,8 @@ export const submitOnboarding = defineEndpoint({ method: 'POST', path: '/api/v1/
    each action still needs its own. */
 export const getTeamOnboarding = defineEndpoint({ method: 'GET', path: '/api/v1/onboarding/team', response: TeamOnboarding, errors: [403],
   summary: 'New starters at my location (every location with Configure onboarding): progress, state, what blocks the start, and documents waiting on a check' });
-export const getStarterOnboarding = defineEndpoint({ method: 'GET', path: '/api/v1/onboarding/team/:personCode', params: ByPerson, response: OnboardingDetail,
-  errors: [403, 404, 409], summary: 'One new starter\'s onboarding, as the tracker and the check dialog read it' });
+export const getStarterOnboarding = defineEndpoint({ method: 'GET', path: '/api/v1/onboarding/team/:personCode', params: ByPerson, response: StarterOnboarding,
+  errors: [403, 404, 409], summary: 'One new starter\'s onboarding as the tracker reads it: progress, step and document states, the files to check and what blocks the start. None of their answers.' });
 export const verifyOnboardingDocument = defineEndpoint({ method: 'POST', path: '/api/v1/onboarding/team/:personCode/documents/:doc/verify', params: ByPersonDoc,
   response: CaseChanged, capability: 'onb_verify', versioned: true, errors: [403, 404, 409],
   summary: 'Verify an uploaded document (If-Match: the case). The person is told.' });
