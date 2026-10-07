@@ -153,6 +153,9 @@ describe('My onboarding', () => {
 
     await userEvent.click(screen.getByTestId(tid.onb.polRead('pol_privacy')));
     expect(await screen.findByTestId(tid.onb.readBody)).toHaveTextContent('Your bank details are used for payment only.');
+    // P's onb-read header: the name as the title, the version as the scope badge beside it.
+    expect(screen.getByTestId(tid.modal.title)).toHaveTextContent(/^Privacy notice$/);
+    expect(screen.getByTestId(tid.modal.title).parentElement).toHaveTextContent('Privacy noticev2.0');
     await waitFor(() => expect(caseNow().read.pol_privacy).toBe(true));
     await waitFor(() => expect(screen.getByTestId(tid.onb.readAck)).not.toHaveAttribute('aria-disabled'));
     expectTestIdCoverage(document.body);
@@ -213,6 +216,13 @@ describe('My onboarding', () => {
     expect(within(again).getByTestId(tid.onb.pol('pol_handbook'))).toHaveTextContent('v7.3');
     expect(within(again).queryByTestId(tid.onb.pol('pol_conduct'))).toBeNull();
     expectTestIdCoverage(document.body);
+
+    await userEvent.click(within(again).getByTestId(tid.onb.polRead('pol_handbook')));
+    expect(await screen.findByTestId(tid.onb.readBody)).toBeInTheDocument();
+    expect(screen.getByTestId(tid.modal.title)).toHaveTextContent(/^Employee handbook$/);
+    expect(screen.getByTestId(tid.modal.title).parentElement).toHaveTextContent('Employee handbookv7.3');
+    await userEvent.click(screen.getByTestId(tid.onb.readClose));
+    await waitFor(() => expect(screen.queryByTestId(tid.onb.readBody)).toBeNull());
 
     await userEvent.click(screen.getByTestId(tid.onb.polAck('pol_handbook')));
     await expectToast('Employee handbook v7.3 acknowledged.');

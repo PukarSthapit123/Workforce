@@ -57,7 +57,7 @@ export function PoliciesStep(props: Parameters<typeof PolicyList>[0]) {
 /* onb-read (v15:11593-11606): the policy's text, and "I have read and understood". */
 export function ReadDialog({ p, busy, onClose, onAck }: { p: OnbPolicyView; busy: boolean; onClose(): void; onAck(): void }) {
   return (
-    <Modal open onOpenChange={o => { if (!o) onClose(); }} title={`${p.label} ${p.ver}`} width="wide"
+    <Modal open onOpenChange={o => { if (!o) onClose(); }} title={p.label} scope={p.ver} width="wide"
       footer={<>
         <Button testId={tid.onb.readClose} kind="ghost" onClick={onClose}>Close</Button>
         {!p.acknowledged && <Button testId={tid.onb.readAck} kind="primary" pending={busy} onClick={onAck}>I have read and understood</Button>}
