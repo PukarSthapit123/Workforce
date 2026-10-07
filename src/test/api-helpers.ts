@@ -4,6 +4,7 @@ import { store } from '@/mocks/store';
 import { faults } from '@/mocks/faults';
 import { setToken } from '@/api/session-token';
 import type { AuditEntry } from '@/contract/audit';
+import { isStarterState } from '@/domain/onboarding';
 
 export type Persona = 'employee' | 'manager' | 'admin';
 export const FROZEN = '2026-08-13T14:30:00.000Z';
@@ -11,9 +12,16 @@ export const FROZEN = '2026-08-13T14:30:00.000Z';
 export function resetTo(tenant: 'social' | 'qnipay' = 'social') { faults.length = 0; store.reset(tenant); store.setClock(FROZEN); }
 
 interface Acc { email: string; userType: Persona; personCode: string }
+/* The first account of that user type whose person has started. The server
+   keeps a new starter (candidate or preboard) to the onboarding portal, so
+   the generic persona never picks one: qnipay's first employee accounts are
+   Priya Raman (candidate) and Tom Achterberg (preboard), and the tests about
+   starters sign in as them by name. */
 export function accountOf(t: Persona): Acc {
-  const a = Object.values(store.coll<Acc>('accounts')).find(x => x.userType === t);
-  if (!a) throw new Error(`the seed has no ${t} account`);
+  const people = Object.values(store.coll<{ code: string; state: string }>('people'));
+  const started = (code: string) => { const p = people.find(x => x.code === code); return !p || !isStarterState(p.state); };
+  const a = Object.values(store.coll<Acc>('accounts')).find(x => x.userType === t && started(x.personCode));
+  if (!a) throw new Error(`the seed has no ${t} account for somebody who has started`);
   return a;
 }
 export async function tokenFor(t: Persona): Promise<string> {
