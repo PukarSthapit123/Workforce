@@ -336,6 +336,13 @@ export const confirmFilled = defineEndpoint({ method: 'POST', path: '/api/v1/rot
   capability: 'team_cover', versioned: true, errors: [404, 409],
   summary: 'Confirm a filled shift was worked (If-Match). With IT access requests on, this raises one.' });
 
+/* The IT service desk (admIT, v15:9689): the access requests confirming a
+   filled shift raised, gated as the prototype's SETUP_NEED gates iit. */
+export const ItRequestList = z.object({ items: z.array(ItRequest) });
+export type ItRequestList = z.infer<typeof ItRequestList>;
+export const listItRequests = defineEndpoint({ method: 'GET', path: '/api/v1/rota/it-requests', response: ItRequestList, capability: 'integration',
+  summary: 'The IT access requests raised when a filled shift was confirmed, newest first. Refused while IT access requests are switched off.' });
+
 export const getMyShifts = defineEndpoint({ method: 'GET', path: '/api/v1/rota/my-shifts', query: MyShiftsQuery, response: MyShifts, capability: 'own_shifts',
   summary: 'The signed-in person\'s week once published, their next shift and who is on it, rest days, and open shifts they can claim' });
 

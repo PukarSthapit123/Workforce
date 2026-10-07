@@ -28,7 +28,7 @@ const LATER: Record<string, string> = {
   thours: 'Payroll and Business Central',
   texc: 'Payroll and Business Central',
   mpay: 'Payroll and Business Central',
-  ipay: 'Payroll and Business Central', ibc: 'Payroll and Business Central', iit: 'Rota',
+  ipay: 'Payroll and Business Central', ibc: 'Payroll and Business Central',
 };
 const tab = (group: NavGroup['key'], view: string, label: string, extra: Partial<NavTab> = {}): NavTab =>
   ({ view, label, path: `/${group}/${view}`, built: !(view in LATER), ...(view in LATER ? { subProject: LATER[view] } : {}), ...extra });

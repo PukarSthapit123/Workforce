@@ -73,3 +73,29 @@ for (const { w, h } of WIDTHS) {
     });
   }
 }
+
+/* The IT service desk (admIT) with one request on it: Rachel Hussain confirms
+   Ellie Warren's filled Saturday early on its day, which raises ITR-1007, and
+   Dee Fitzgerald, who holds integration, opens the page. Its own test, so its
+   baselines are refreshed without touching the screens above. */
+for (const { w, h } of WIDTHS) {
+  for (const theme of THEMES) {
+    test(`visual: the IT service desk at ${w}px, ${theme}`, async ({ page, api }) => {
+      await page.clock.setFixedTime(new Date(FROZEN));
+      await page.setViewportSize({ width: w, height: h });
+      await page.addInitScript(t => { try { localStorage.setItem('qnipay.theme', t); } catch { /* the theme is also set on the html element */ } }, theme);
+      await signInEmail(page, RACHEL);
+      await api.setClock('2026-08-15T09:00:00.000Z');
+      await page.goto('/team/tcover');
+      await page.getByTestId(tid.tcover.confirm('fil_1')).click();
+      await page.getByTestId(tid.tcover.it('fil_1')).waitFor();
+
+      await signInEmail(page, DEE);
+      await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+      await page.goto('/setup/iit');
+      await page.getByTestId(tid.iit.row('ITR-1007')).waitFor();
+      await settle(page);
+      await expect(page).toHaveScreenshot(`iit-${w}-${theme}.png`, { fullPage: true });
+    });
+  }
+}

@@ -11,10 +11,10 @@ import { notificationKeys } from './notifications';
 import {
   acceptRotaPlan, addPatternPeople, askAllCover, assignCover, claimCover, clearRotaWeek, confirmFilled, copyRotaWeek, createPattern,
   createShiftType, deletePattern, deleteShiftType, escalateCover, fillCover, generatePattern, getMyShifts, getRotaConfig, getRotaHome, getRotaWeek,
-  listCover, listPatterns, listShiftTypes, openCover, planRotaWeek, repeatRotaWeek, setCoverReason, suggestRotaCell, transitionRotaWeek,
+  listCover, listItRequests, listPatterns, listShiftTypes, openCover, planRotaWeek, repeatRotaWeek, setCoverReason, suggestRotaCell, transitionRotaWeek,
   updatePattern, updateRotaConfig, updateShiftType, writeRotaCell,
   type AcceptPlan, type AddPatternPeople, type CellInput, type CellSaved, type CellSuggestions, type CoverBoard, type CoverFilled,
-  type CoverSaved, type CoverView, type CreatePattern, type CreateShiftType, type FilledConfirmed, type FilledView, type GeneratePattern,
+  type CoverSaved, type CoverView, type CreatePattern, type CreateShiftType, type FilledConfirmed, type FilledView, type GeneratePattern, type ItRequest, type ItRequestList,
   type MyShifts, type OpenCover, type OpenShift, type PatternGenerated, type PatternList, type PatternRecord, type PlanAccepted,
   type PlanItem, type RotaConfigRecord, type RotaHome, type RotaRow, type RotaSetup, type RotaWeekView, type ShiftCatalogue, type ShiftTypeRecord,
   type UpdatePattern, type UpdateRotaConfig, type UpdateShiftType, type WeekCleared, type WeekCopied, type WeekMoved, type WeekPlan,
@@ -36,6 +36,7 @@ export const rotaKeys = {
   mine: ['rota', 'my-shifts'] as const,
   myWeek: (weekStart: string) => ['rota', 'my-shifts', weekStart] as const,
   config: ['rota', 'config'] as const,
+  itRequests: ['rota', 'it-requests'] as const,
 };
 
 /* ---------------------------------------------------------------- reads */
@@ -64,6 +65,8 @@ export const useMyShifts = (weekStart?: string, enabled = true) => useQuery({
   queryKey: rotaKeys.myWeek(weekStart ?? ''), queryFn: () => api(getMyShifts, { query: { weekStart } }), enabled,
 });
 export const useRotaConfig = (enabled = true) => useQuery({ queryKey: rotaKeys.config, queryFn: () => api(getRotaConfig), enabled });
+/* The IT service desk (iit): the access requests confirming a filled shift raised. */
+export const useItRequests = () => useQuery({ queryKey: rotaKeys.itRequests, queryFn: () => api(listItRequests) });
 
 /* --------------------------------------------------------------- writes */
 /* A rota write can change any week (repeat and generate reach forward), cover,
@@ -165,7 +168,9 @@ export const useClaimShift = () => useRecordMutation({
   mutationFn: (c: Pick<OpenShift, 'id' | 'version'>) => api(claimCover, { params: { id: c.id }, ifMatch: c.version }), recordKey: c => `rota/cover/${c.id}`, invalidates: AFTER,
 });
 export const useConfirmFilled = () => useRecordMutation({
-  mutationFn: (f: Pick<FilledView, 'id' | 'version'>) => api(confirmFilled, { params: { id: f.id }, ifMatch: f.version }), recordKey: f => `rota/filled/${f.id}`, invalidates: COVER,
+  mutationFn: (f: Pick<FilledView, 'id' | 'version'>) => api(confirmFilled, { params: { id: f.id }, ifMatch: f.version }), recordKey: f => `rota/filled/${f.id}`,
+  /* a confirmation can raise an IT access request, so the IT service desk is read again too */
+  invalidates: [...COVER, rotaKeys.itRequests],
 });
 
 /* Rota setup (mrota): applies on Save, versioned, one audit row. */
@@ -176,7 +181,7 @@ export const useSaveRotaConfig = () => useRecordMutation({
 
 export type {
   AcceptPlan, CellInput, CellSaved, CellSuggestions, CoverBoard, CoverFilled, CoverSaved, CoverView, CreatePattern, CreateShiftType,
-  FilledConfirmed, FilledView, GeneratePattern, MyShifts, OpenCover, OpenShift, PatternGenerated, PatternList, PatternRecord, PlanAccepted,
+  FilledConfirmed, FilledView, GeneratePattern, ItRequest, ItRequestList, MyShifts, OpenCover, OpenShift, PatternGenerated, PatternList, PatternRecord, PlanAccepted,
   PlanItem, RotaConfigRecord, RotaHome, RotaRow, RotaSetup, RotaWeekView, ShiftCatalogue, ShiftTypeRecord, UpdatePattern, UpdateRotaConfig,
   UpdateShiftType, WeekCleared, WeekCopied, WeekMoved, WeekPlan, WeekRepeated,
 };

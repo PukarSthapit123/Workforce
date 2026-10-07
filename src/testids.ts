@@ -547,4 +547,9 @@ export const tid = {
     /* the add and edit dialog (pol-add, pol-edit) */
     polName: 'monb-pol-name', polVersion: 'monb-pol-version', polSum: 'monb-pol-sum', polWarn: 'monb-pol-warn', polCancel: 'monb-pol-cancel', polSave: 'monb-pol-save',
   },
+  /* module 3: Qnipay setup → Integrations → IT service desk (admIT, v15:9689) */
+  iit: {
+    error: 'iit-error', loading: 'iit-loading', banner: 'iit-banner', table: 'iit-table', empty: 'iit-empty',
+    row: (ref: string) => k('iit-row', ref), status: (ref: string) => k('iit-status', ref),
+  },
 } as const;

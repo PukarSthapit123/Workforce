@@ -3,7 +3,7 @@ import { store } from './store';
 import { Refusal } from '@/contract/common';
 import {
   CellSaved, CellSuggestions, CoverBoard, CoverFilled, CoverSaved, FilledConfirmed, MyShifts, PatternGenerated, PatternList, PlanAccepted,
-  RotaHome, RotaSetup, RotaWeekView, ShiftCatalogue, WeekCleared, WeekCopied, WeekMoved, WeekPlan, WeekRepeated,
+  ItRequestList, RotaHome, RotaSetup, RotaWeekView, ShiftCatalogue, WeekCleared, WeekCopied, WeekMoved, WeekPlan, WeekRepeated,
 } from '@/contract/rota';
 import { DaySaved } from '@/contract/timesheets';
 import { FROZEN, accountOf, audits, caller, fault, resetTo, snapshot, tokenFor, type Persona } from '@/test/api-helpers';
@@ -668,5 +668,34 @@ describe('shift types, patterns, my shifts and setup', () => {
     expect(Object.keys(cfg().types as object)).toEqual(['shift', 'casual', 'salaried']);
     expect(auditActs()).toEqual(['Rota setup saved']);
     expect(refusal(await call('PATCH', '/api/v1/rota/config', { minDefault: 0 }, 2))).toMatchObject({ field: 'minDefault', message: 'Default people per shift must be a whole number from 1 to 50.' });
+  });
+});
+
+describe('GET /api/v1/rota/it-requests (the IT service desk, admIT)', () => {
+  const IT = '/api/v1/rota/it-requests';
+  test('only someone holding integration reads it: the manager and the employee are refused', async () => {
+    for (const p of ['manager', 'employee'] as const) {
+      const r = await (await as(p))('GET', IT);
+      expect(r.status).toBe(403);
+      expect(refusal(r).code).toBe('capability');
+    }
+  });
+  test('with ITACCESS off it is refused in the refusal shape', async () => {
+    setFlag('ITACCESS', false);
+    const r = await (await as('admin'))('GET', IT);
+    expect(r.status).toBe(403);
+    expect(refusal(r)).toEqual({ code: 'feature-off', message: 'IT access requests are switched off for this organisation.',
+      next: 'An administrator can switch them on in Qnipay setup → Modules → Rota → Rota setup.' });
+  });
+  test('the requests a confirmation raised are listed, newest first, in the contract shape', async () => {
+    const admin = await as('admin');
+    expect(ItRequestList.parse((await admin('GET', IT)).body)).toEqual({ items: [] });
+    store.setClock('2026-08-15T09:00:00.000Z');
+    const raised = FilledConfirmed.parse((await (await as('manager'))('POST', '/api/v1/rota/filled/fil_1/confirm', undefined, 1)).body).itRequest;
+    if (!raised) throw new Error('confirming with ITACCESS on raised no request');
+    store.coll('itRequests').itr_old = { ...raised, id: 'itr_old', ref: 'ITR-1000', raisedAt: '2026-08-01T09:00:00.000Z' };
+    const list = ItRequestList.parse((await admin('GET', IT)).body);
+    expect(list.items.map(i => i.ref)).toEqual(['ITR-1007', 'ITR-1000']);
+    expect(list.items[0]).toMatchObject({ personCode: 'CP-1310', worker: 'Bank', status: 'Raised', system: 'IT service desk (simulated)' });
   });
 });

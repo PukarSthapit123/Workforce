@@ -70,4 +70,15 @@ test('a manager opens cover for a short day, gives the reason, assigns a suggest
   await signInEmail(page, DEE);
   expect((await auditOf(api, 'coverRequest')).map(a => a.act).sort()).toEqual(['Cover reason set', 'Cover request filled', 'Cover request opened']);
   expect((await auditOf(api, 'filledShift')).map(a => a.act)).toEqual(['Filled shift confirmed']);
+
+  /* the administrator, who holds integration, finds the request on the IT service desk */
+  const ref = done?.itRequest ?? '';
+  await page.goto('/setup/iit');
+  const it = page.getByTestId(tid.iit.row(ref));
+  await expect(it).toContainText(ref);
+  await expect(it).toContainText(filled.name);
+  await expect(it).toContainText('Willow House');
+  await expect(it).toContainText('Fri 14 Aug');
+  await expect(it.getByTestId(tid.iit.status(ref))).toHaveText('Raised');
+  await expect(page.getByTestId(tid.iit.empty)).toHaveCount(0);
 });

@@ -179,7 +179,7 @@ test.describe('module 2 pages', () => {
    grid, its day view and the Add a shift dialog), Shift catalogue, Working
    patterns with its editor, and Cover requests for Rachel Hussain; My shifts
    and My timesheet's day with the rota banner for Amara Okafor; Rota setup
-   with its upload dialog for Dee Fitzgerald. */
+   with its upload dialog and the IT service desk for Dee Fitzgerald. */
 const PAGES_3: [string, Step[]][] = [
   [RACHEL, [
     ['/team/trota', open('/team/trota', tid.trota.dayview)],
@@ -196,6 +196,8 @@ const PAGES_3: [string, Step[]][] = [
   [DEE, [
     ['/setup/mrota', async page => { await open('/setup/mrota', tid.mrota.card('staffing'))(page); await page.getByTestId(tid.tshifts.catalogue).waitFor(); await page.getByTestId(tid.mrota.patterns).waitFor(); }],
     ['pattern upload dialog', click(tid.patUpload.open, tid.patUpload.import)],
+    /* the IT service desk, with its banner and the empty list the seed starts with */
+    ['/setup/iit', async page => { await escape(page); await open('/setup/iit', tid.iit.table)(page); await page.getByTestId(tid.iit.banner).waitFor(); }],
   ]],
 ];
 test.describe('module 3 pages', () => {

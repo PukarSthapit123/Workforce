@@ -19,7 +19,7 @@ import {
 import {
   acceptRotaPlan, addPatternPeople, askAllCover, assignCover, claimCover, clearRotaWeek, confirmFilled, copyRotaWeek, createPattern,
   createShiftType, deletePattern, deleteShiftType, escalateCover, fillCover, generatePattern, getMyShifts, getRotaConfig, getRotaHome, getRotaWeek,
-  listCover, listPatterns, listShiftTypes, openCover, planRotaWeek, repeatRotaWeek, setCoverReason, suggestRotaCell, transitionRotaWeek,
+  listCover, listItRequests, listPatterns, listShiftTypes, openCover, planRotaWeek, repeatRotaWeek, setCoverReason, suggestRotaCell, transitionRotaWeek,
   updatePattern, updateRotaConfig, updateShiftType, writeRotaCell,
   type CoverRecord, type CoverView, type FilledShift, type HoursFlag, type ItRequest, type PatternRecord, type RotaConfigRecord,
   type RotaWeekView, type ShiftTypeRecord, type Suggestion as SuggestionView, type UpdateRotaConfig,
@@ -936,6 +936,15 @@ export const rotaHandlers = [
     const auditId = writeAudit({ who: actor(session), act: 'Filled shift confirmed', entity: 'filledShift', entityId: f.id,
       before: { confirmed: false }, after: { confirmed: true, itRequest: saved.itRequest, detail: `${coverDetail(f, f.name)} · ${summary}` } });
     return { record: saved, itRequest: it, summary, auditId };
+  }),
+
+  /* The IT service desk (admIT): an integration page, so it reads with the
+     integration capability and ITACCESS alone, as the nav gates it. Newest first. */
+  serve(listItRequests, () => {
+    if (!flagOn('ITACCESS')) refuse(403, { code: 'feature-off', message: 'IT access requests are switched off for this organisation.',
+      next: 'An administrator can switch them on in Qnipay setup → Modules → Rota → Rota setup.' });
+    const items = Object.values(itColl()).sort((a, b) => b.raisedAt.localeCompare(a.raisedAt) || b.ref.localeCompare(a.ref));
+    return { items };
   }),
 
   /* ------------------------------------------------------------ my shifts */

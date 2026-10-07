@@ -121,7 +121,11 @@ test('the module setup and integration pages the prototype\'s SETUP_NEED lists a
   expect(byView('mpay')).toMatchObject({ built: false, subProject: 'Payroll and Business Central', section: 'Integrations' });
   expect(byView('ipay')).toMatchObject({ built: false, subProject: 'Payroll and Business Central', section: 'Integrations' });
   expect(byView('ibc')).toMatchObject({ built: false, subProject: 'Payroll and Business Central', section: 'Integrations' });
-  expect(byView('iit')).toMatchObject({ built: false, subProject: 'Rota', section: 'Integrations' });
+  /* the IT service desk is Rota's (module 3), gated on integration and ITACCESS */
+  expect(byView('iit')).toMatchObject({ built: true, path: '/setup/iit', section: 'Integrations' });
+  expect(byView('iit').subProject).toBeUndefined();
+  const off = buildNav({ caps: caps('mod_cfg', 'integration'), modules: ALL_MODULES, flags: { ...flags, ITACCESS: false }, onboarding: false });
+  expect(must(off.find((x): x is NavGroup => x.key === 'setup')).tabs.map(t => t.view)).not.toContain('iit');
 });
 
 test('Notifications and Approvals are built in 1c and gated on the framework capability', () => {
