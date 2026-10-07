@@ -4,6 +4,7 @@ import { test, expect, FROZEN } from './support/fixtures';
 import { BIGYAN, EDDIE, PUKAR, signInEmail } from './support/timesheet';
 import { AMARA, DEE, RACHEL } from './support/rota';
 import { forgetClock, london } from './support/clock';
+import { TOM, completeMine } from './support/onboarding';
 import { CLOCK_STATUS } from '../src/domain/clock';
 import { tid } from '../src/testids';
 
@@ -434,5 +435,61 @@ test.describe('clock', () => {
       const box = await card.boundingBox();
       expect(box && box.x >= 0 && box.x + box.width <= 390, `${where}: the card within the screen`).toBe(true);
     });
+  });
+});
+
+/* Module 5 on the qnipay seed, where Onboarding and every ONB_* feature are
+   on: Tom Achterberg's portal on its personal, documents, policies and review
+   steps, with a policy's read dialog, then (once he has sent everything) his
+   submitted page; Team onboarding for Pukar Sthapit with the check dialog,
+   the not-ready dialog and Add a new starter; Onboarding setup for Eddie
+   Harford with the add-policy dialog and the remove confirm. */
+const pages5 = (api: Parameters<typeof completeMine>[1]): [string, Step[]][] => [
+  [TOM, [
+    ['/work/onb personal', open('/work/onb', tid.onb.body('personal'))],
+    ['documents step', click(tid.onb.step('documents'), tid.onb.docs)],
+    ['policies step', click(tid.onb.step('policies'), tid.onb.polCount)],
+    ['policy read dialog', click(tid.onb.polRead('pol_conduct'), tid.onb.readBody)],
+    ['review step', async page => { await escape(page); await click(tid.onb.step('review'), tid.onb.todo)(page); }],
+    ['submitted page', async page => { await completeMine(page, api); await open('/work/onb', tid.onb.submitted)(page); }],
+  ]],
+  [PUKAR, [
+    ['/team/tonb', async page => { await open('/team/tonb', tid.tonb.queue)(page); await page.getByTestId(tid.tonb.table).waitFor(); }],
+    ['check dialog', click(tid.tonb.check('EMP003', 'rtw'), tid.tonb.reason)],
+    ['not-ready dialog', async page => { await escape(page); await click(tid.tonb.start('EMP003'), tid.tonb.notReady)(page); }],
+    ['add a new starter', async page => { await escape(page); await click(tid.tonb.add, tid.personForm.root)(page); }],
+  ]],
+  [EDDIE, [
+    ['/setup/monb', async page => { await open('/setup/monb', tid.monb.card('steps'))(page); await page.getByTestId(tid.monb.policies).waitFor(); }],
+    ['add policy dialog', click(tid.monb.polAdd, tid.monb.polName)],
+    ['remove policy confirm', async page => { await escape(page); await click(tid.monb.polRemove('pol_itsec'), tid.modal.root)(page); }],
+  ]],
+];
+test.describe('module 5 pages', () => {
+  test.beforeEach(async ({ api }) => { await api.seed('qnipay'); await api.setClock(FROZEN); });
+  for (const theme of ['light', 'dark'] as const) {
+    test(`axe: onboarding pages and dialogs have no serious issues (${theme})`, async ({ page, api }) => {
+      test.setTimeout(150_000);
+      for (const [email, steps] of pages5(api)) {
+        await signInEmail(page, email);
+        for (const [where, go] of steps) {
+          await go(page);
+          await setTheme(page, theme);
+          const r = await new AxeBuilder({ page }).analyze();
+          expect(r.violations.filter(v => ['serious', 'critical'].includes(v.impact ?? '')).map(v => `${where} ${v.id}: ${v.nodes.length}`)).toEqual([]);
+        }
+      }
+    });
+  }
+  test('phone: onboarding pages and dialogs have no horizontal overflow at 390px', async ({ page, api }) => {
+    test.setTimeout(150_000);
+    await page.setViewportSize({ width: 390, height: 844 });
+    for (const [email, steps] of pages5(api)) {
+      await signInEmail(page, email);
+      for (const [where, go] of steps) {
+        await go(page);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), where).toBe(true);
+      }
+    }
   });
 });
