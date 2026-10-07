@@ -141,6 +141,35 @@ describe('My onboarding', () => {
     expect(acts()).toEqual(['Onboarding document uploaded']);
   });
 
+  test('the required marker is a marker beside the label, not part of it: the accessible name is the label alone and the field says it is required', async () => {
+    await signIn();
+    await open();
+    for (const [key, label] of [['dob', 'Date of birth'], ['nat', 'Nationality'], ['ni', 'National insurance number']] as const) {
+      const control = screen.getByTestId(tid.onb.field(key));
+      expect(control).toHaveAccessibleName(label);
+      expect(control).toHaveAttribute('aria-required', 'true');
+      const marker = within(fieldOf(tid.onb.field(key))).getByText('required');
+      expect(marker).toHaveAttribute('aria-hidden', 'true');
+      expect(marker.closest('label')).toBeNull();
+    }
+    /* an optional field carries no marker */
+    expect(within(fieldOf(tid.onb.field('gender'))).queryByText('required')).toBeNull();
+    expect(screen.getByTestId(tid.onb.field('gender'))).not.toHaveAttribute('aria-required');
+  });
+
+  test('the acknowledgement is stated once, not three times: the step asks to tick, and only the read dialog says "I have read and understood"', async () => {
+    await signIn();
+    await open();
+    const step = await goTo('policies');
+    const count = (re: RegExp) => (document.body.textContent?.match(re) ?? []).length;
+    expect(count(/I have read and understood/g)).toBe(0);
+    expect(within(step).getAllByText(/tick to confirm/)).toHaveLength(1);
+    await userEvent.click(screen.getByTestId(tid.onb.polRead('pol_conduct')));
+    await screen.findByTestId(tid.onb.readBody);
+    expect(count(/I have read and understood/g)).toBe(1);
+    expect(count(/tick to confirm/g)).toBe(1);
+  });
+
   test('a policy is read and acknowledged at the version shown; one left unticked is refused at the policy', async () => {
     await signIn();
     await open();

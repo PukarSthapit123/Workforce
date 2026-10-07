@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { store } from '@/mocks/store';
 import { tid } from '@/testids';
 import type { OnboardingCaseRecord, OnboardingConfigRecord, OnbPolicyRecord } from '@/contract/onboarding';
-import { POLICY_NAME_NEEDED, POLICY_NAME_TAKEN, STEP_UNAVAILABLE, stepSwitchText } from '@/domain/onboarding';
+import { POLICY_NAME_NEEDED, POLICY_NAME_TAKEN, REQUIRED_CHANGE_WARNING, STEP_UNAVAILABLE, stepSwitchText } from '@/domain/onboarding';
 import { buildNav } from '@/domain/nav';
 import { expectTestIdCoverage } from '@/test/testid-coverage';
 import { renderPage, withFakeServer } from '@/test/render-page';
@@ -84,6 +84,32 @@ describe('Onboarding setup: steps and documents apply on Save', () => {
     const docs = Object.fromEntries(config().documents.map(d => [d.id, d]));
     expect([docs.addr?.blocks, docs.photo?.verify, docs.cert?.expiry]).toEqual([true, 'none', false]);
     expect(acts()).toEqual(['Onboarding setup saved']);
+  });
+
+  test('the page cautions that changing what is required affects people part-way through; who verifies waits for Save, Cancel puts it back, and Save audits the before and after', async () => {
+    await open();
+    const caution = screen.getByTestId(tid.head.caution('monb'));
+    expect(caution).toHaveAttribute('role', 'note');
+    expect(caution).toHaveTextContent(REQUIRED_CHANGE_WARNING);
+
+    const was = config().documents.find(d => d.id === 'photo');
+    if (!was) throw new Error('no photograph document');
+    expect(was.verify).not.toBe('none');
+    const verify = () => screen.getByTestId(tid.monb.docVerify('photo'));
+    fireEvent.change(verify(), { target: { value: 'none' } });
+    expect(screen.getByTestId(tid.monb.dirty)).toHaveTextContent('Unsaved changes');
+    await userEvent.click(screen.getByTestId(tid.monb.cancel));
+    expect(verify()).toHaveValue(was.verify);
+    expect(config().version).toBe(1);
+    expect(acts()).toEqual([]);
+
+    fireEvent.change(verify(), { target: { value: 'none' } });
+    await userEvent.click(screen.getByTestId(tid.monb.save));
+    await expectToast('Document settings saved.');
+    const saved = audits().filter(a => a.act === 'Onboarding setup saved');
+    expect(saved).toHaveLength(1);
+    expect(saved[0]?.before).toEqual({ documents: { photo: was } });
+    expect(saved[0]?.after).toMatchObject({ documents: { photo: { ...was, verify: 'none' } } });
   });
 });
 

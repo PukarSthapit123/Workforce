@@ -66,6 +66,13 @@ test('a new starter lands on the portal alone, completes every step, uploads, ac
   await expect(info(page, 'Photograph: tom.png is waiting to be checked.')).toBeVisible();
   for (const d of ['rtw', 'addr', 'photo']) await expect(page.getByTestId(tid.onb.docState(d))).toContainText('Submitted');
   await expect(page.getByTestId(tid.onb.docFile('photo')).locator('img')).toHaveCount(1);
+  /* the image's downscaled preview opens in the View dialog; a PDF is named, not previewed */
+  await page.getByTestId(tid.onb.docView('photo')).click();
+  await expect(page.getByTestId(tid.onb.viewImage)).toBeVisible();
+  await expect(page.getByTestId(tid.onb.viewImage)).toHaveAttribute('src', /^data:image\/jpeg;base64,/);
+  await expect(page.getByTestId(tid.onb.viewNoPreview)).toHaveCount(0);
+  await page.getByTestId(tid.onb.viewClose).click();
+  await expect(page.getByTestId(tid.onb.viewImage)).toHaveCount(0);
   await next.click();
   await body('policies').waitFor();
 

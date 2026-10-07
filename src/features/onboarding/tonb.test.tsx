@@ -186,6 +186,20 @@ describe('Team onboarding: starting, adding and who sees which action', () => {
     expect(row.closest('tr')).toHaveTextContent('0/7');
   });
 
+  test('an empty tracker says nobody is onboarding here and offers Add a new starter as the way in', async () => {
+    for (const code of ['EMP002', 'EMP003']) personOf(code).state = 'active';
+    await signIn();
+    await open();
+    const empty = await screen.findByTestId(tid.tonb.empty);
+    expect(screen.queryByTestId(tid.tonb.table)).toBeNull();
+    expect(empty).toHaveTextContent('Nobody is onboarding at Manchester.');
+    const add = within(empty).getByTestId(tid.tonb.addEmpty);
+    expect(add).toHaveTextContent('Add a new starter');
+    await userEvent.click(add);
+    await screen.findByTestId(tid.personForm.root);
+    expect(screen.getByTestId(tid.personForm.field('state'))).toHaveTextContent('Candidate');
+  });
+
   test('each action shows only to the holder of its capability', async () => {
     sent();
     revoke('onb_track', 'emp_crud');
