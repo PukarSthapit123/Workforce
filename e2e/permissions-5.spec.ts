@@ -38,10 +38,11 @@ test.describe('on qnipay', () => {
     expect((await api.get('/api/v1/onboarding/team')).status).toBe(403);
     expect((await api.get('/api/v1/onboarding/team/EMP002')).status).toBe(403);
     expect((await api.get('/api/v1/onboarding/config')).status).toBe(403);
+    /* a write from somebody still onboarding is refused before its capability is looked at: they have not started */
     const self = await sendVersioned(page, 'POST', '/api/v1/onboarding/team/EMP003/start', 1);
-    expect([self.status, code(self)]).toEqual([403, 'capability']);
+    expect([self.status, code(self)]).toEqual([403, 'not-started']);
     const verify = await sendVersioned(page, 'POST', '/api/v1/onboarding/team/EMP002/documents/rtw/verify', 1);
-    expect([verify.status, code(verify)]).toEqual([403, 'capability']);
+    expect([verify.status, code(verify)]).toEqual([403, 'not-started']);
     expect(await onbStore(page)).toEqual(before);
   });
 
