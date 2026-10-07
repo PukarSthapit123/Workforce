@@ -346,6 +346,18 @@ describe('activation is refused on the server while start blockers remain, throu
     expect((await call('POST', `/api/v1/people/${p.id}/transitions`, { to: 'active', reason: 'First day' }, p.version)).status).toBe(200);
     expect(caseOf('CP-1502')?.startedAt).toBe('2026-08-13T14:30:00.000Z');
   });
+  test('a document made required after a starter submitted does not hold them back; it does hold back somebody not yet submitted (review I2)', async () => {
+    complete('CP-1502');
+    expect((await (await asEmail(TOM))('POST', '/api/v1/onboarding/me/submit', { consent: true, signature: 'Tom Achterberg' }, 1)).status).toBe(200);
+    const admin = await as('admin'), s = OnboardingSetup.parse((await admin('GET', '/api/v1/onboarding/config')).body);
+    const documents = s.config.documents.map(d => (d.id === 'licence' ? { ...d, req: true, blocks: true } : d));
+    expect((await admin('PUT', '/api/v1/onboarding/config', { steps: s.config.steps, documents }, s.config.version)).status).toBe(200);
+    const rows = TeamOnboarding.parse((await admin('GET', '/api/v1/onboarding/team')).body).rows;
+    expect(rows.find(r => r.person.code === 'CP-1502')?.blockers).toEqual([]);
+    expect(rows.find(r => r.person.code === 'CP-1501')?.blockers.map(b => b.why)).toContain('Driving licence not uploaded');
+    const r = StarterMoved.parse((await team(await as('manager'), 'CP-1502', 'start', undefined, version('CP-1502'))).body);
+    expect(r.person.state).toBe('active');
+  });
   test('a candidate cannot be started: they are invited first', async () => {
     complete('CP-1501');
     const r = await team(await as('manager'), 'CP-1501', 'start', undefined, 1);

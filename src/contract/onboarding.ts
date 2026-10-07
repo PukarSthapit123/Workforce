@@ -56,6 +56,8 @@ export const OnboardingCaseRecord = RecordMeta.extend({
   personCode: z.string(), steps: z.record(z.string(), TaskState), docs: z.record(z.string(), TaskState), files: z.record(z.string(), OnbFileRecord),
   rejections: z.record(z.string(), z.string()), acks: z.record(z.string(), z.string()), read: z.record(z.string(), z.boolean()),
   data: OnbDataRecord, signature: z.string(), consent: z.boolean(), submittedAt: AtOrBlank, ref: z.string(), invitedAt: AtOrBlank, startedAt: AtOrBlank,
+  /* what was asked when they submitted: the start is judged against it, never against a requirement added later */
+  asked: z.object({ steps: z.array(OnbStepId), documents: z.array(z.object({ id: z.string(), req: z.boolean(), blocks: z.boolean() })) }).optional(),
 });
 export type OnboardingCaseRecord = z.infer<typeof OnboardingCaseRecord>;
 

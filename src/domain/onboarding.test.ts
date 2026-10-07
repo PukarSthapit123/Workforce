@@ -203,6 +203,42 @@ describe('blockers and progress', () => {
   });
 });
 
+describe('what was asked at submission (review I2)', () => {
+  const submit = (c: OnboardingCase, b: BlockerContext) => must(submitCase(c, { consent: true, signature: 'Tom Achterberg', ref: 'ONB-1001', at: AT }, b));
+  const verified = (c: OnboardingCase) => ['rtw', 'addr', 'photo'].reduce((x, id) => must(decideDocument(x, doc(id), { ok: true })), c);
+  const licenceRequired: OnboardingConfig = { ...CONFIG, documents: CONFIG.documents.map(d => (d.id === 'licence' ? { ...d, req: true, blocks: true } : d)) };
+  const noEmergency: OnboardingConfig = { ...CONFIG, steps: CONFIG.steps.map(s => (s.id === 'emergency' ? { ...s, on: false } : s)) };
+  test('submission records the steps asked and each document with its Required and Blocks start settings', () => {
+    const c = submit(complete(), ctx());
+    expect(c.asked?.steps).toEqual(['personal', 'contact', 'emergency', 'additional', 'documents', 'policies', 'review']);
+    expect(c.asked?.documents.find(d => d.id === 'licence')).toEqual({ id: 'licence', req: false, blocks: false });
+    expect(c.asked?.documents.find(d => d.id === 'rtw')).toEqual({ id: 'rtw', req: true, blocks: true });
+  });
+  test('a document made required after a submission does not block that person\'s start, but blocks someone not yet submitted', () => {
+    const sent = verified(submit(complete(), ctx()));
+    const later: BlockerContext = { config: licenceRequired, features: F };
+    expect(blockers(sent, later, 'start')).toEqual([]);
+    expect(blockers(verified(complete()), later, 'start').map(b => b.why)).toEqual(['Driving licence not uploaded']);
+  });
+  test('a step switched on after a submission made with it off does not block that person\'s start', () => {
+    const before = complete();
+    const steps = Object.fromEntries(Object.entries(before.steps).filter(([k]) => k !== 'emergency'));
+    const sent = verified(submit({ ...before, steps }, { config: noEmergency, features: F }));
+    expect(blockers(sent, ctx(), 'start')).toEqual([]);
+    expect(progress(sent, ctx())).toEqual({ done: 6, total: 6 });
+    expect(blockers({ ...sent, submittedAt: '' }, ctx(), 'start').map(b => b.why)).toEqual(['Emergency contacts not completed']);
+  });
+  test('a rule relaxed since counts in their favour; a submitted case with no record is judged against today\'s config', () => {
+    const sent = submit(complete(), ctx());
+    const relaxed: BlockerContext = { config: { ...CONFIG, documents: CONFIG.documents.map(d => (d.id === 'rtw' ? { ...d, blocks: false } : d)) }, features: F };
+    expect(blockers(sent, ctx(), 'start').map(b => b.why)).toEqual(['Right to work not verified']);
+    expect(blockers(sent, relaxed, 'start')).toEqual([]);
+    const legacy: OnboardingCase = { ...verified(sent) };
+    delete legacy.asked;
+    expect(blockers(legacy, { config: licenceRequired, features: F }, 'start').map(b => b.why)).toEqual(['Driving licence not uploaded']);
+  });
+});
+
 describe('submit', () => {
   const sub = (c: OnboardingCase, consent: boolean, signature?: string, f = F) =>
     submitCase(c, { consent, ...(signature === undefined ? {} : { signature }), ref: 'ONB-1001', at: AT }, ctx(f));

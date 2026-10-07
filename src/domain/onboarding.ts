@@ -120,7 +120,12 @@ export interface OnboardingCase {
   ref: string;
   invitedAt: string;
   startedAt: string;
+  /* what was asked when they submitted (steps, and documents with their
+     Required and Blocks start settings); absent before submission, and on a
+     case submitted before this was recorded */
+  asked?: OnbAsked;
 }
+export interface OnbAsked { steps: OnbStepId[]; documents: { id: string; req: boolean; blocks: boolean }[] }
 export const emptyContact = (): EmergencyContact => ({ nm: '', rel: '', ph: '' });
 export const emptyData = (): OnbData => ({
   personal: { dob: '', gender: '', nat: '', ni: '' },
@@ -372,14 +377,38 @@ export const stepSavedText = (label: string) => `${label} saved.`;
 export interface Blocker { kind: 'step' | 'doc'; id: string; why: string }
 export type BlockerStage = 'submit' | 'start';
 export interface BlockerContext { config: OnboardingConfig; features: OnbFeatures }
+/* What was asked, recorded at submission. */
+export const askedNow = (ctx: BlockerContext): OnbAsked => ({
+  steps: stepsAsked(ctx.config, ctx.features).map(s => s.id),
+  documents: docsAsked(ctx.config, ctx.features).map(({ id, req, blocks }) => ({ id, req, blocks })),
+});
+/* What a person is judged against. Before submission, today's config. After
+   it, what they were asked when they submitted, so a step switched on or a
+   document made required (or made to block the start) later is never held
+   against somebody who can no longer change their onboarding. A rule relaxed
+   since still counts in their favour, and something no longer asked at all
+   is not counted. A submitted case with no record of what was asked (from
+   before it was kept) is judged against today's config. */
+export function askedOf(c: OnboardingCase, ctx: BlockerContext): { steps: OnbStep[]; documents: OnbDocument[] } {
+  const steps = stepsAsked(ctx.config, ctx.features), documents = docsAsked(ctx.config, ctx.features);
+  const a = c.submittedAt ? c.asked : undefined;
+  if (!a) return { steps, documents };
+  return {
+    steps: steps.filter(s => a.steps.includes(s.id)),
+    documents: documents.flatMap(d => {
+      const was = a.documents.find(x => x.id === d.id);
+      return was ? [{ ...d, req: d.req && was.req, blocks: d.blocks && was.blocks }] : [];
+    }),
+  };
+}
 /* Two gates, easily confused: 'submit' is what the person must do before
    sending it to HR; 'start' is that, plus the checks only HR can make. Review is
    the act of submitting, so it never counts against itself. */
 export function blockers(c: OnboardingCase, ctx: BlockerContext, stage: BlockerStage = 'start'): Blocker[] {
-  const out: Blocker[] = [];
-  for (const st of stepsAsked(ctx.config, ctx.features))
+  const out: Blocker[] = [], asked = askedOf(c, ctx);
+  for (const st of asked.steps)
     if (st.id !== 'review' && !stepDone(c, st.id)) out.push({ kind: 'step', id: st.id, why: `${st.label} not completed` });
-  for (const d of docsAsked(ctx.config, ctx.features).filter(x => x.req)) {
+  for (const d of asked.documents.filter(x => x.req)) {
     const k = docState(c, d.id);
     if (k === 'todo' || k === 'prog') out.push({ kind: 'doc', id: d.id, why: `${d.label} not uploaded` });
     else if (stage === 'start' && d.blocks && ctx.features.verify && k !== 'verified') out.push({ kind: 'doc', id: d.id, why: `${d.label} not verified` });
@@ -393,7 +422,7 @@ export const outstandingText = (bl: readonly Blocker[]) => bl.map(b => `${b.why}
 
 /* Steps done over steps asked; review counts once submitted. */
 export function progress(c: OnboardingCase, ctx: BlockerContext): { done: number; total: number } {
-  const steps = stepsAsked(ctx.config, ctx.features);
+  const steps = askedOf(c, ctx).steps;
   const done = steps.filter(s => stepDone(c, s.id) || (s.id === 'review' && !!c.submittedAt)).length;
   return { done, total: steps.length };
 }
@@ -418,7 +447,7 @@ export function submitCase(c: OnboardingCase, input: SubmitInput, ctx: BlockerCo
   if (bl[0]) return no({ code: 'OUTSTANDING', message: stillToDoText(bl), next: 'Finish the steps not ticked on the left, then submit.' });
   if (!input.consent) return no(invalid('consent', CONSENT_NEEDED, 'Tick the confirmation, then submit.'));
   if (ctx.features.sign && !signature) return no(invalid('signature', SIGNATURE_NEEDED, 'Type your full name in the signature box, then submit.'));
-  return ok({ ...c, signature, consent: true, submittedAt: input.at, ref: input.ref, steps: { ...c.steps, review: 'done' } });
+  return ok({ ...c, signature, consent: true, submittedAt: input.at, ref: input.ref, steps: { ...c.steps, review: 'done' }, asked: askedNow(ctx) });
 }
 export const submittedText = (ref: string) => `Submitted with reference ${ref}. HR has been told.`;
 

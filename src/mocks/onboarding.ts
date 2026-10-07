@@ -28,7 +28,7 @@ import {
 } from '@/contract/onboarding';
 import {
   ALREADY_SUBMITTED, DEFAULT_POLICY_VER, FILES_NOTE, INVITE_REASON, START_REASON, STEP_NEEDS, VERIFIERS,
-  ackCount, acknowledgedText, applyPolicyUpload, applyUpload, blockers, decideDocument, decidedText, docsAsked, fileRecord, fileSize, isStepId,
+  ackCount, acknowledgedText, applyPolicyUpload, askedOf, applyUpload, blockers, decideDocument, decidedText, docsAsked, fileRecord, fileSize, isStepId,
   markRead, nextRef, noEmailText, outstandingText, policyAcknowledged, policyFromDraft, policyProblem, policyRemovedText, policySavedText,
   policyUploadedText, progress, progressText, removePolicyText, saveStep, setPolicyAck, startProblem, stepAvailable, stepNotAsked, stepOpen,
   stepSavedText, stepSwitchText, stepsAsked, submitCase, submittedText, taskState, configProblem, uploadedText, uploadProblem, verifierLabel,
@@ -113,7 +113,9 @@ function detailOf(p: StoredPerson): OnboardingDetail {
     open: !c.submittedAt || Object.values(c.steps).includes('prog'), submitted: c.submittedAt ? submittedText(c.ref) : '', filesNote: FILES_NOTE, today: today(),
   };
 }
-const stepContext = (cfg: OnboardingConfig, f: OnbFeatures): StepContext => ({ features: f, documents: docsAsked(cfg, f), policies: policiesAsked(f), today: today() });
+/* A step sent back after submission is judged against the documents they were asked then (askedOf). */
+const stepContext = (c: OnboardingCase, cfg: OnboardingConfig, f: OnbFeatures): StepContext =>
+  ({ features: f, documents: askedOf(c, { config: cfg, features: f }).documents, policies: policiesAsked(f), today: today() });
 function docAsked(id: string): OnbDocument {
   return docsAsked(onbConfig(), featuresNow()).find(d => d.id === id) ?? NOT_FOUND(`There is no document "${id}" to upload or check.`, 'Reload the page to see the documents asked for.');
 }
@@ -180,7 +182,7 @@ export const onboardingHandlers = [
     const c = caseOf(p.code);
     checkVersion(c);
     const { mode, ...patch } = body;
-    const r = saveStep(c, step.id, patch, stepContext(cfg, f), mode);
+    const r = saveStep(c, step.id, patch, stepContext(c, cfg, f), mode);
     if (!r.ok) return refuseOnb(r.refusal);
     const summary = mode === 'check' ? stepSavedText(step.label) : 'All changes saved.';
     if (sameJson({ ...c, ...r.value }, c)) return { record: caseView(c), summary, auditId: null };
