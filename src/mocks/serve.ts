@@ -3,7 +3,8 @@
    endpoint, so a handler body holds only its own rules:
      1. the session (requireSession), unless the endpoint is public; this
         includes the view-as read-only guard, relaxed only for an endpoint
-        marked allowedWhileViewing;
+        marked allowedWhileViewing, and the new-starter guard: a person still
+        onboarding may write only to an endpoint marked allowedWhileOnboarding;
      2. ep.capability (requireCapability);
      3. path params and the query, against the endpoint's schemas (422);
      4. the body, against ep.request (422);
@@ -49,7 +50,7 @@ export function serve<const E extends Endpoint>(ep: E, fn: (ctx: Served<E>) => z
   SERVED.add(ep);
   const name = `${ep.method} ${ep.path}`;
   const handler = METHOD[ep.method](ep.path, handle(async ({ request, params }: { request: Request; params: Record<string, unknown> }) => {
-    const session = ep.public ? undefined : requireSession(request, ep.allowedWhileViewing === true);
+    const session = ep.public ? undefined : requireSession(request, ep.allowedWhileViewing === true, ep.allowedWhileOnboarding === true);
     if (ep.capability && session) requireCapability(session, ep.capability);
     const p: unknown = ep.params ? readParams(params, ep.params) : {};
     const q: unknown = ep.query ? readQuery(request, ep.query) : {};

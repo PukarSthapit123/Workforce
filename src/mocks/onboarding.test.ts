@@ -80,12 +80,13 @@ describe('my onboarding: the starter acts on their own case only (D5)', () => {
     }
     expect(snapshot(...WRITES)).toEqual(before);
   });
-  test('a starter has no way onto another starter\'s case: the tracker and its actions need Track onboarding', async () => {
+  test('a starter has no way onto another starter\'s case: the tracker needs Track onboarding, and its actions are refused before they start', async () => {
     const call = await asEmail(TOM), before = snapshot(...WRITES);
-    for (const [method, path] of [['GET', '/api/v1/onboarding/team'], ['GET', '/api/v1/onboarding/team/CP-1501'], ['POST', '/api/v1/onboarding/team/CP-1501/chase']]) {
+    for (const [method, path, code] of [['GET', '/api/v1/onboarding/team', 'capability'], ['GET', '/api/v1/onboarding/team/CP-1501', 'capability'],
+      ['POST', '/api/v1/onboarding/team/CP-1501/chase', 'not-started']]) {
       const r = await call(method ?? 'GET', path ?? '');
       expect(r.status, path).toBe(403);
-      expect(refusal(r).code).toBe('capability');
+      expect(refusal(r).code, path).toBe(code);
     }
     expect(snapshot(...WRITES)).toEqual(before);
   });
@@ -256,8 +257,9 @@ describe('the tracker and its scope: own location, or every location with Config
     expect(refusal(r).code).toBe('NOT_ONBOARDING');
     setPerson('CP-1001', { state: 'preboard' });
     const self = await team(call, 'CP-1001', 'documents/photo/verify', undefined, 0);
+    /* a starter cannot reach their own case from the tracker: the server keeps them to the portal (SELF_CHECK stays behind it) */
     expect(self.status).toBe(403);
-    expect(refusal(self).code).toBe('SELF_CHECK');
+    expect(refusal(self).code).toBe('not-started');
   });
   test('a document is rejected with a reason (which reopens the documents step), replaced, then verified; the starter is told each time (D4)', async () => {
     const tom = await asEmail(TOM);
@@ -458,6 +460,23 @@ describe('a new starter sees the portal only (D8)', () => {
     expect((await sessionOf(AMARA)).onboarding).toBe(false);
     setModule('ON', false);
     expect((await sessionOf(PRIYA)).onboarding).toBe(false);
+  });
+  test('the server keeps a new starter to the portal: a leave request is refused and writes nothing, while their onboarding, inbox and sign-out still work (review M1)', async () => {
+    const tom = await asEmail(TOM), before = snapshot(...WRITES, 'leaveRequests', 'leaveLedger');
+    const r = await tom('POST', '/api/v1/leave/requests', { type: 'AL', from: '2026-09-07', to: '2026-09-08', part: 'full' });
+    expect(r.status).toBe(403);
+    expect(refusal(r)).toMatchObject({ code: 'not-started', message: 'You can use the rest of Qnipay once you have started.', next: expect.stringContaining('Finish your onboarding first.') });
+    expect(snapshot(...WRITES, 'leaveRequests', 'leaveLedger')).toEqual(before);
+    expect((await tom('GET', '/api/v1/onboarding/me')).status).toBe(200);
+    expect((await save(tom, 'personal', { mode: 'check', personal: PERSONAL }, 1)).status).toBe(200);
+    expect((await tom('POST', '/api/v1/notifications/read-all')).status).toBe(200);
+    expect((await tom('DELETE', '/api/v1/session')).status).toBe(200);
+  });
+  test('once started, the same person is no longer held to the portal', async () => {
+    complete('CP-1502');
+    expect((await team(await as('manager'), 'CP-1502', 'start', undefined, 1)).status).toBe(200);
+    const r = await (await asEmail(TOM))('POST', '/api/v1/leave/requests', { type: 'AL', from: '2026-09-07', to: '2026-09-08', part: 'full' });
+    expect(r.status === 403 && refusal(r).code === 'not-started').toBe(false);
   });
   test('the inbox builds its links from the portal-only nav: a leave item opens nothing for a starter', async () => {
     store.coll('notifications').ntf_000000000901 = { id: 'ntf_000000000901', version: 1, updatedAt: '2026-08-13T14:00:00.000Z', personId: 'CP-1501', area: 'Leave',

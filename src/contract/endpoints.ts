@@ -16,12 +16,16 @@ export type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
      of the production contract.
    - allowedWhileViewing: one of the few writes a session viewing as someone
      else may still make (ending the view, signing out).
+   - allowedWhileOnboarding: one of the few writes a new starter (a candidate
+     or preboarding person, while Onboarding is on) may make: their own
+     onboarding, signing out, reading their notifications. Every other write
+     is refused for them, as the nav shows them the portal only.
    - errors: refusal statuses this endpoint can answer beyond the ones the
      flags above already imply (for example 404 or 409). */
 export interface Endpoint {
   method: Method; path: `/api/v1/${string}`; summary: string;
   request?: z.ZodType; response: z.ZodType; capability?: string;
-  params?: z.ZodObject; query?: z.ZodObject; versioned?: true; public?: true; allowedWhileViewing?: true; devOnly?: true;
+  params?: z.ZodObject; query?: z.ZodObject; versioned?: true; public?: true; allowedWhileViewing?: true; allowedWhileOnboarding?: true; devOnly?: true;
   errors?: readonly number[];
 }
 export const ENDPOINTS: Endpoint[] = [];

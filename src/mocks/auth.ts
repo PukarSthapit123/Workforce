@@ -64,7 +64,13 @@ export function sessionView(s: ServerSession): Session {
 /* View-as is a preview. While a session is viewing as someone, the only
    changes it may make are the ones its endpoint marks allowedWhileViewing
    (ending the view, signing out). Every other write is refused here, once. */
-export function requireSession(request: Request, allowedWhileViewing = false): AuthedSession {
+/* Module 5 D8, on the server too: a new starter (candidate or preboarding,
+   with Onboarding on) sees the portal only, so the only changes they may make
+   are the ones its endpoint marks allowedWhileOnboarding (their own
+   onboarding, signing out, reading their notifications). */
+export const NOT_STARTED = { code: 'not-started', message: 'You can use the rest of Qnipay once you have started.',
+  next: 'Finish your onboarding first. My onboarding shows what is left.' };
+export function requireSession(request: Request, allowedWhileViewing = false, allowedWhileOnboarding = false): AuthedSession {
   const token = request.headers.get('Authorization')?.replace(/^Bearer /, '') ?? '';
   const all = sessions();
   const s = Object.hasOwn(all, token) ? all[token] : undefined;
@@ -73,6 +79,7 @@ export function requireSession(request: Request, allowedWhileViewing = false): A
   const v = sessionView(s);
   if (v.viewingAs && request.method !== 'GET' && !allowedWhileViewing)
     refuse(403, { code: 'viewing-as', message: `You are viewing the app as ${v.viewingAs.name}, so changes are off. Nothing has been saved.`, next: 'Return to your own account first, then make the change.' });
+  if (!v.viewingAs && v.onboarding && request.method !== 'GET' && !allowedWhileOnboarding) refuse(403, NOT_STARTED);
   return { ...s, account: a, caps: v.capabilities };
 }
 

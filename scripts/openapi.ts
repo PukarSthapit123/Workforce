@@ -7,7 +7,7 @@ const json = (schema: z.ZodType) => z.toJSONSchema(schema, { unrepresentable: 'a
 const REFUSAL_REF = { $ref: '#/components/schemas/Refusal' };
 const DESCRIPTION: Record<number, string> = {
   401: 'Signed out, or the credentials do not match',
-  403: 'The session lacks the capability, or is viewing as someone else and so cannot make changes',
+  403: 'The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet',
   404: 'The record does not exist',
   409: 'The change is refused because of the state of the data',
   412: 'The record changed since it was read (If-Match is stale)',

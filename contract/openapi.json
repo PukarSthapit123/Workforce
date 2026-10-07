@@ -268,7 +268,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -512,7 +512,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -602,7 +602,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -765,7 +765,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -917,7 +917,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -1120,7 +1120,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -1540,7 +1540,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -2193,7 +2193,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -2370,7 +2370,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -2482,7 +2482,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -2574,7 +2574,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -3140,7 +3140,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -3725,7 +3725,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -4290,7 +4290,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -4855,7 +4855,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -5495,7 +5495,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -6030,7 +6030,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -6145,7 +6145,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -6340,7 +6340,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -6581,7 +6581,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -6676,7 +6676,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -6878,7 +6878,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -7131,7 +7131,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -7255,7 +7255,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -7433,7 +7433,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -7518,7 +7518,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -7789,7 +7789,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -7968,7 +7968,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -8293,7 +8293,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -9123,7 +9123,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -9293,7 +9293,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -9428,7 +9428,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -9630,7 +9630,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -9883,7 +9883,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -10374,7 +10374,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -10988,7 +10988,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -11352,7 +11352,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -11556,7 +11556,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -11713,7 +11713,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -12430,7 +12430,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -12770,7 +12770,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -13127,7 +13127,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -13504,7 +13504,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -13883,7 +13883,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -14088,7 +14088,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -14565,7 +14565,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -14802,7 +14802,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -14997,7 +14997,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -15502,7 +15502,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -15597,7 +15597,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -15852,7 +15852,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -16195,7 +16195,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -16458,7 +16458,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -16790,7 +16790,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -17122,7 +17122,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -17521,7 +17521,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -17844,7 +17844,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -17984,7 +17984,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -18410,7 +18410,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -18674,7 +18674,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -18934,7 +18934,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -19294,7 +19294,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -19659,7 +19659,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -19769,7 +19769,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -20004,7 +20004,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -20309,7 +20309,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -20550,7 +20550,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -20931,7 +20931,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -21236,7 +21236,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -21683,6 +21683,54 @@
                               "const": ""
                             }
                           ]
+                        },
+                        "asked": {
+                          "type": "object",
+                          "properties": {
+                            "steps": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "enum": [
+                                  "personal",
+                                  "contact",
+                                  "emergency",
+                                  "additional",
+                                  "documents",
+                                  "policies",
+                                  "review"
+                                ]
+                              }
+                            },
+                            "documents": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "req": {
+                                    "type": "boolean"
+                                  },
+                                  "blocks": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "req",
+                                  "blocks"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "steps",
+                            "documents"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -21737,7 +21785,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -22187,6 +22235,54 @@
                               "const": ""
                             }
                           ]
+                        },
+                        "asked": {
+                          "type": "object",
+                          "properties": {
+                            "steps": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "enum": [
+                                  "personal",
+                                  "contact",
+                                  "emergency",
+                                  "additional",
+                                  "documents",
+                                  "policies",
+                                  "review"
+                                ]
+                              }
+                            },
+                            "documents": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "req": {
+                                    "type": "boolean"
+                                  },
+                                  "blocks": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "req",
+                                  "blocks"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "steps",
+                            "documents"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -22241,7 +22337,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -22672,6 +22768,54 @@
                               "const": ""
                             }
                           ]
+                        },
+                        "asked": {
+                          "type": "object",
+                          "properties": {
+                            "steps": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "enum": [
+                                  "personal",
+                                  "contact",
+                                  "emergency",
+                                  "additional",
+                                  "documents",
+                                  "policies",
+                                  "review"
+                                ]
+                              }
+                            },
+                            "documents": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "req": {
+                                    "type": "boolean"
+                                  },
+                                  "blocks": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "req",
+                                  "blocks"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "steps",
+                            "documents"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -22726,7 +22870,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -23303,6 +23447,54 @@
                               "const": ""
                             }
                           ]
+                        },
+                        "asked": {
+                          "type": "object",
+                          "properties": {
+                            "steps": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "enum": [
+                                  "personal",
+                                  "contact",
+                                  "emergency",
+                                  "additional",
+                                  "documents",
+                                  "policies",
+                                  "review"
+                                ]
+                              }
+                            },
+                            "documents": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "req": {
+                                    "type": "boolean"
+                                  },
+                                  "blocks": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "req",
+                                  "blocks"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "steps",
+                            "documents"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -23357,7 +23549,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -23801,6 +23993,54 @@
                               "const": ""
                             }
                           ]
+                        },
+                        "asked": {
+                          "type": "object",
+                          "properties": {
+                            "steps": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "enum": [
+                                  "personal",
+                                  "contact",
+                                  "emergency",
+                                  "additional",
+                                  "documents",
+                                  "policies",
+                                  "review"
+                                ]
+                              }
+                            },
+                            "documents": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "req": {
+                                    "type": "boolean"
+                                  },
+                                  "blocks": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "req",
+                                  "blocks"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "steps",
+                            "documents"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -23856,7 +24096,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -24349,6 +24589,54 @@
                               "const": ""
                             }
                           ]
+                        },
+                        "asked": {
+                          "type": "object",
+                          "properties": {
+                            "steps": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "enum": [
+                                  "personal",
+                                  "contact",
+                                  "emergency",
+                                  "additional",
+                                  "documents",
+                                  "policies",
+                                  "review"
+                                ]
+                              }
+                            },
+                            "documents": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "req": {
+                                    "type": "boolean"
+                                  },
+                                  "blocks": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "req",
+                                  "blocks"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "steps",
+                            "documents"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -24842,7 +25130,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -25083,7 +25371,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -25216,7 +25504,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -25474,7 +25762,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -25712,7 +26000,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -25817,7 +26105,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -26258,6 +26546,54 @@
                               "const": ""
                             }
                           ]
+                        },
+                        "asked": {
+                          "type": "object",
+                          "properties": {
+                            "steps": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "enum": [
+                                  "personal",
+                                  "contact",
+                                  "emergency",
+                                  "additional",
+                                  "documents",
+                                  "policies",
+                                  "review"
+                                ]
+                              }
+                            },
+                            "documents": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "req": {
+                                    "type": "boolean"
+                                  },
+                                  "blocks": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "req",
+                                  "blocks"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "steps",
+                            "documents"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -26312,7 +26648,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -26753,6 +27089,54 @@
                               "const": ""
                             }
                           ]
+                        },
+                        "asked": {
+                          "type": "object",
+                          "properties": {
+                            "steps": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "enum": [
+                                  "personal",
+                                  "contact",
+                                  "emergency",
+                                  "additional",
+                                  "documents",
+                                  "policies",
+                                  "review"
+                                ]
+                              }
+                            },
+                            "documents": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "req": {
+                                    "type": "boolean"
+                                  },
+                                  "blocks": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "req",
+                                  "blocks"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "steps",
+                            "documents"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -26807,7 +27191,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -27238,6 +27622,54 @@
                               "const": ""
                             }
                           ]
+                        },
+                        "asked": {
+                          "type": "object",
+                          "properties": {
+                            "steps": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "enum": [
+                                  "personal",
+                                  "contact",
+                                  "emergency",
+                                  "additional",
+                                  "documents",
+                                  "policies",
+                                  "review"
+                                ]
+                              }
+                            },
+                            "documents": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "req": {
+                                    "type": "boolean"
+                                  },
+                                  "blocks": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "req",
+                                  "blocks"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "steps",
+                            "documents"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -27451,7 +27883,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -27882,6 +28314,54 @@
                               "const": ""
                             }
                           ]
+                        },
+                        "asked": {
+                          "type": "object",
+                          "properties": {
+                            "steps": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "enum": [
+                                  "personal",
+                                  "contact",
+                                  "emergency",
+                                  "additional",
+                                  "documents",
+                                  "policies",
+                                  "review"
+                                ]
+                              }
+                            },
+                            "documents": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "req": {
+                                    "type": "boolean"
+                                  },
+                                  "blocks": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "req",
+                                  "blocks"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "steps",
+                            "documents"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -28095,7 +28575,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -28169,7 +28649,7 @@
     },
     "/api/v1/onboarding/team/{personCode}": {
       "get": {
-        "summary": "One new starter's onboarding, as the tracker and the check dialog read it",
+        "summary": "One new starter's onboarding as the tracker reads it: progress, step and document states, the files to check and what blocks the start. None of their answers.",
         "security": [
           {
             "bearer": []
@@ -28290,7 +28770,7 @@
                       ],
                       "additionalProperties": false
                     },
-                    "case": {
+                    "caseRef": {
                       "type": "object",
                       "properties": {
                         "id": {
@@ -28300,371 +28780,11 @@
                           "type": "integer",
                           "minimum": 0,
                           "maximum": 9007199254740991
-                        },
-                        "updatedAt": {
-                          "type": "string",
-                          "format": "date-time",
-                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-                        },
-                        "personCode": {
-                          "type": "string"
-                        },
-                        "steps": {
-                          "type": "object",
-                          "propertyNames": {
-                            "type": "string"
-                          },
-                          "additionalProperties": {
-                            "type": "string",
-                            "enum": [
-                              "todo",
-                              "prog",
-                              "done",
-                              "verified",
-                              "rejected"
-                            ]
-                          }
-                        },
-                        "docs": {
-                          "type": "object",
-                          "propertyNames": {
-                            "type": "string"
-                          },
-                          "additionalProperties": {
-                            "type": "string",
-                            "enum": [
-                              "todo",
-                              "prog",
-                              "done",
-                              "verified",
-                              "rejected"
-                            ]
-                          }
-                        },
-                        "files": {
-                          "type": "object",
-                          "propertyNames": {
-                            "type": "string"
-                          },
-                          "additionalProperties": {
-                            "type": "object",
-                            "properties": {
-                              "name": {
-                                "type": "string"
-                              },
-                              "size": {
-                                "type": "integer",
-                                "minimum": 0,
-                                "maximum": 9007199254740991
-                              },
-                              "type": {
-                                "type": "string"
-                              },
-                              "at": {
-                                "type": "string",
-                                "format": "date-time",
-                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-                              },
-                              "kind": {
-                                "type": "string",
-                                "enum": [
-                                  "image",
-                                  "pdf",
-                                  "file"
-                                ]
-                              },
-                              "preview": {
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "name",
-                              "size",
-                              "type",
-                              "at",
-                              "kind"
-                            ],
-                            "additionalProperties": false
-                          }
-                        },
-                        "rejections": {
-                          "type": "object",
-                          "propertyNames": {
-                            "type": "string"
-                          },
-                          "additionalProperties": {
-                            "type": "string"
-                          }
-                        },
-                        "acks": {
-                          "type": "object",
-                          "propertyNames": {
-                            "type": "string"
-                          },
-                          "additionalProperties": {
-                            "type": "string"
-                          }
-                        },
-                        "read": {
-                          "type": "object",
-                          "propertyNames": {
-                            "type": "string"
-                          },
-                          "additionalProperties": {
-                            "type": "boolean"
-                          }
-                        },
-                        "data": {
-                          "type": "object",
-                          "properties": {
-                            "personal": {
-                              "type": "object",
-                              "properties": {
-                                "dob": {
-                                  "type": "string"
-                                },
-                                "gender": {
-                                  "type": "string"
-                                },
-                                "nat": {
-                                  "type": "string"
-                                },
-                                "ni": {
-                                  "type": "string"
-                                }
-                              },
-                              "required": [
-                                "dob",
-                                "gender",
-                                "nat",
-                                "ni"
-                              ],
-                              "additionalProperties": false
-                            },
-                            "contact": {
-                              "type": "object",
-                              "properties": {
-                                "mob": {
-                                  "type": "string"
-                                },
-                                "alt": {
-                                  "type": "string"
-                                },
-                                "a1": {
-                                  "type": "string"
-                                },
-                                "a2": {
-                                  "type": "string"
-                                },
-                                "city": {
-                                  "type": "string"
-                                },
-                                "post": {
-                                  "type": "string"
-                                }
-                              },
-                              "required": [
-                                "mob",
-                                "alt",
-                                "a1",
-                                "a2",
-                                "city",
-                                "post"
-                              ],
-                              "additionalProperties": false
-                            },
-                            "emergency": {
-                              "type": "array",
-                              "items": {
-                                "type": "object",
-                                "properties": {
-                                  "nm": {
-                                    "type": "string"
-                                  },
-                                  "rel": {
-                                    "type": "string"
-                                  },
-                                  "ph": {
-                                    "type": "string"
-                                  }
-                                },
-                                "required": [
-                                  "nm",
-                                  "rel",
-                                  "ph"
-                                ],
-                                "additionalProperties": false
-                              }
-                            },
-                            "additional": {
-                              "type": "object",
-                              "properties": {
-                                "conv": {
-                                  "type": "string"
-                                },
-                                "convDetail": {
-                                  "type": "string"
-                                },
-                                "wtd": {
-                                  "type": "string"
-                                },
-                                "quals": {
-                                  "type": "array",
-                                  "items": {
-                                    "type": "object",
-                                    "properties": {
-                                      "nm": {
-                                        "type": "string"
-                                      },
-                                      "by": {
-                                        "type": "string"
-                                      },
-                                      "exp": {
-                                        "type": "string"
-                                      }
-                                    },
-                                    "required": [
-                                      "nm",
-                                      "by",
-                                      "exp"
-                                    ],
-                                    "additionalProperties": false
-                                  }
-                                }
-                              },
-                              "required": [
-                                "conv",
-                                "convDetail",
-                                "wtd",
-                                "quals"
-                              ],
-                              "additionalProperties": false
-                            },
-                            "documents": {
-                              "type": "object",
-                              "properties": {
-                                "rtwType": {
-                                  "type": "string"
-                                }
-                              },
-                              "required": [
-                                "rtwType"
-                              ],
-                              "additionalProperties": false
-                            }
-                          },
-                          "required": [
-                            "personal",
-                            "contact",
-                            "emergency",
-                            "additional",
-                            "documents"
-                          ],
-                          "additionalProperties": false
-                        },
-                        "signature": {
-                          "type": "string"
-                        },
-                        "consent": {
-                          "type": "boolean"
-                        },
-                        "submittedAt": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "format": "date-time",
-                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-                            },
-                            {
-                              "type": "string",
-                              "const": ""
-                            }
-                          ]
-                        },
-                        "ref": {
-                          "type": "string"
-                        },
-                        "invitedAt": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "format": "date-time",
-                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-                            },
-                            {
-                              "type": "string",
-                              "const": ""
-                            }
-                          ]
-                        },
-                        "startedAt": {
-                          "anyOf": [
-                            {
-                              "type": "string",
-                              "format": "date-time",
-                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-                            },
-                            {
-                              "type": "string",
-                              "const": ""
-                            }
-                          ]
                         }
                       },
                       "required": [
                         "id",
-                        "version",
-                        "updatedAt",
-                        "personCode",
-                        "steps",
-                        "docs",
-                        "files",
-                        "rejections",
-                        "acks",
-                        "read",
-                        "data",
-                        "signature",
-                        "consent",
-                        "submittedAt",
-                        "ref",
-                        "invitedAt",
-                        "startedAt"
-                      ],
-                      "additionalProperties": false
-                    },
-                    "features": {
-                      "type": "object",
-                      "properties": {
-                        "rtw": {
-                          "type": "boolean"
-                        },
-                        "conv": {
-                          "type": "boolean"
-                        },
-                        "wtd": {
-                          "type": "boolean"
-                        },
-                        "qual": {
-                          "type": "boolean"
-                        },
-                        "pol": {
-                          "type": "boolean"
-                        },
-                        "sign": {
-                          "type": "boolean"
-                        },
-                        "verify": {
-                          "type": "boolean"
-                        }
-                      },
-                      "required": [
-                        "rtw",
-                        "conv",
-                        "wtd",
-                        "qual",
-                        "pol",
-                        "sign",
-                        "verify"
+                        "version"
                       ],
                       "additionalProperties": false
                     },
@@ -28872,106 +28992,6 @@
                         "additionalProperties": false
                       }
                     },
-                    "policies": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "string"
-                          },
-                          "version": {
-                            "type": "integer",
-                            "minimum": 0,
-                            "maximum": 9007199254740991
-                          },
-                          "updatedAt": {
-                            "type": "string",
-                            "format": "date-time",
-                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-                          },
-                          "label": {
-                            "type": "string"
-                          },
-                          "ver": {
-                            "type": "string"
-                          },
-                          "sum": {
-                            "type": "string"
-                          },
-                          "body": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
-                          },
-                          "order": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          "file": {
-                            "type": "object",
-                            "properties": {
-                              "name": {
-                                "type": "string"
-                              },
-                              "size": {
-                                "type": "integer",
-                                "minimum": 0,
-                                "maximum": 9007199254740991
-                              },
-                              "type": {
-                                "type": "string"
-                              },
-                              "at": {
-                                "type": "string",
-                                "format": "date-time",
-                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
-                              },
-                              "kind": {
-                                "type": "string",
-                                "enum": [
-                                  "image",
-                                  "pdf",
-                                  "file"
-                                ]
-                              },
-                              "preview": {
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "name",
-                              "size",
-                              "type",
-                              "at",
-                              "kind"
-                            ],
-                            "additionalProperties": false
-                          },
-                          "acknowledged": {
-                            "type": "boolean"
-                          },
-                          "read": {
-                            "type": "boolean"
-                          }
-                        },
-                        "required": [
-                          "id",
-                          "version",
-                          "updatedAt",
-                          "label",
-                          "ver",
-                          "sum",
-                          "body",
-                          "order",
-                          "acknowledged",
-                          "read"
-                        ],
-                        "additionalProperties": false
-                      }
-                    },
                     "progress": {
                       "type": "object",
                       "properties": {
@@ -29002,33 +29022,6 @@
                       ],
                       "additionalProperties": false
                     },
-                    "toSubmit": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "kind": {
-                            "type": "string",
-                            "enum": [
-                              "step",
-                              "doc"
-                            ]
-                          },
-                          "id": {
-                            "type": "string"
-                          },
-                          "why": {
-                            "type": "string"
-                          }
-                        },
-                        "required": [
-                          "kind",
-                          "id",
-                          "why"
-                        ],
-                        "additionalProperties": false
-                      }
-                    },
                     "toStart": {
                       "type": "array",
                       "items": {
@@ -29056,35 +29049,32 @@
                         "additionalProperties": false
                       }
                     },
-                    "open": {
-                      "type": "boolean"
+                    "submittedAt": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        {
+                          "type": "string",
+                          "const": ""
+                        }
+                      ]
                     },
-                    "submitted": {
+                    "ref": {
                       "type": "string"
-                    },
-                    "filesNote": {
-                      "type": "string"
-                    },
-                    "today": {
-                      "type": "string",
-                      "format": "date",
-                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
                     }
                   },
                   "required": [
                     "person",
-                    "case",
-                    "features",
+                    "caseRef",
                     "steps",
                     "documents",
-                    "policies",
                     "progress",
-                    "toSubmit",
                     "toStart",
-                    "open",
-                    "submitted",
-                    "filesNote",
-                    "today"
+                    "submittedAt",
+                    "ref"
                   ],
                   "additionalProperties": false
                 }
@@ -29102,7 +29092,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -29636,7 +29626,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -29765,7 +29755,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -30058,7 +30048,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -30331,7 +30321,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -30688,7 +30678,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -30801,7 +30791,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -31055,7 +31045,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -31398,7 +31388,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -31834,7 +31824,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -32082,7 +32072,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -32338,7 +32328,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -32776,7 +32766,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -32861,7 +32851,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -33159,7 +33149,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -33568,7 +33558,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -33951,7 +33941,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -34414,7 +34404,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -34694,7 +34684,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -35074,7 +35064,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -35433,7 +35423,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -35733,7 +35723,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -36093,7 +36083,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -36413,7 +36403,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -36844,7 +36834,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -37121,7 +37111,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -37363,7 +37353,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -37508,7 +37498,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -37627,7 +37617,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -37931,7 +37921,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -38214,7 +38204,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -38491,7 +38481,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -38630,7 +38620,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -38958,7 +38948,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -39247,7 +39237,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -39501,7 +39491,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -39610,7 +39600,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -39864,7 +39854,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -40068,7 +40058,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -40264,7 +40254,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -41208,7 +41198,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -41972,7 +41962,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -42751,7 +42741,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -43579,7 +43569,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -43756,7 +43746,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -44538,7 +44528,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -44755,7 +44745,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -45507,7 +45497,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -46238,7 +46228,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -46349,7 +46339,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -46655,7 +46645,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -47441,7 +47431,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -48167,7 +48157,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -48367,7 +48357,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -48473,7 +48463,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -48710,7 +48700,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -48892,7 +48882,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -49083,7 +49073,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -49451,7 +49441,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -49901,7 +49891,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -50338,7 +50328,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -51082,7 +51072,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -51679,7 +51669,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -52166,7 +52156,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -52692,7 +52682,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -53218,7 +53208,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -53695,7 +53685,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -54257,7 +54247,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -55390,7 +55380,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -55574,7 +55564,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -55779,7 +55769,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -55929,7 +55919,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -56082,7 +56072,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -56307,7 +56297,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {
@@ -56465,7 +56455,7 @@
             }
           },
           "403": {
-            "description": "The session lacks the capability, or is viewing as someone else and so cannot make changes",
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
             "content": {
               "application/json": {
                 "schema": {

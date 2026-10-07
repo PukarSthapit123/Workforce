@@ -28,7 +28,7 @@ export const DemoAccount = z.object({ email: z.string(), name: z.string(), userT
 
 export const createSession = defineEndpoint({ method: 'POST', path: '/api/v1/session', request: SignInRequest, response: Session, public: true, errors: [401], summary: 'Sign in (simulated; Entra ID in production)' });
 export const getSession = defineEndpoint({ method: 'GET', path: '/api/v1/session', response: Session, summary: 'The current session' });
-export const deleteSession = defineEndpoint({ method: 'DELETE', path: '/api/v1/session', response: z.null(), allowedWhileViewing: true, summary: 'Sign out' });
+export const deleteSession = defineEndpoint({ method: 'DELETE', path: '/api/v1/session', response: z.null(), allowedWhileViewing: true, allowedWhileOnboarding: true, summary: 'Sign out' });
 export const startViewAs = defineEndpoint({ method: 'POST', path: '/api/v1/session/view-as', request: ViewAsRequest, response: Session, capability: 'perm_cfg', summary: 'Look at the app as another person, as a preview in which changes are off; audited' });
 export const listViewAsPeople = defineEndpoint({ method: 'GET', path: '/api/v1/session/view-as/people', response: z.array(ViewAsPerson), capability: 'perm_cfg', summary: 'Who the account menu offers to view as: at most five, one per role' });
 export const endViewAs = defineEndpoint({ method: 'DELETE', path: '/api/v1/session/view-as', response: Session, allowedWhileViewing: true, summary: 'Return to your own account' });

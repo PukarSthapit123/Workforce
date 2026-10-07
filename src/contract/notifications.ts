@@ -52,8 +52,8 @@ export type MatrixSaved = z.infer<typeof MatrixSaved>;
 export const getMyNotifications = defineEndpoint({ method: 'GET', path: '/api/v1/notifications/me', response: MyNotifications,
   summary: 'My notifications, newest first: only my own, only those delivered in-app, only from modules that are on, each with its link when I can open it, and my unread count' });
 export const markNotificationRead = defineEndpoint({ method: 'POST', path: '/api/v1/notifications/:id/read', params: z.object({ id: z.string().min(1).max(40) }),
-  response: NotificationsRead, errors: [404], summary: 'Mark one of my notifications read. Someone else\'s is not found. One audit row; none when it was already read.' });
-export const markAllNotificationsRead = defineEndpoint({ method: 'POST', path: '/api/v1/notifications/read-all', response: NotificationsRead,
+  response: NotificationsRead, allowedWhileOnboarding: true, errors: [404], summary: 'Mark one of my notifications read. Someone else\'s is not found. One audit row; none when it was already read.' });
+export const markAllNotificationsRead = defineEndpoint({ method: 'POST', path: '/api/v1/notifications/read-all', response: NotificationsRead, allowedWhileOnboarding: true,
   summary: 'Mark every notification in my inbox read. One audit row; none when nothing was unread.' });
 export const getNotificationMatrix = defineEndpoint({ method: 'GET', path: '/api/v1/notifications/matrix', response: NotificationMatrix, capability: 'framework',
   summary: 'Who is told of each event, per user type and channel, for the events this tenant can raise; with the evidence table while flexible-worker monitoring is on' });

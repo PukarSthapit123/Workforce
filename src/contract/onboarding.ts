@@ -204,18 +204,18 @@ const ByPersonDoc = z.object({ personCode: z.string().min(1), doc: z.string().mi
 export const getMyOnboarding = defineEndpoint({ method: 'GET', path: '/api/v1/onboarding/me', response: OnboardingDetail, capability: 'own_onb', errors: [409],
   summary: 'My onboarding: the steps I am asked, my documents and policies, my progress and what is still to do. Only while I am a candidate or preboarding.' });
 export const saveOnboardingStep = defineEndpoint({ method: 'PUT', path: '/api/v1/onboarding/me/steps/:step', params: ByStep, request: SaveStep, response: CaseChanged,
-  capability: 'own_onb', versioned: true, errors: [404, 409],
+  capability: 'own_onb', versioned: true, allowedWhileOnboarding: true, errors: [404, 409],
   summary: 'Save a step of my onboarding (If-Match: the case). check judges it and marks it done; quiet saves without judging.' });
 export const uploadOnboardingDocument = defineEndpoint({ method: 'POST', path: '/api/v1/onboarding/me/documents/:doc', params: ByDoc, request: UploadFile,
-  response: CaseChanged, capability: 'own_onb', versioned: true, errors: [404, 409],
+  response: CaseChanged, capability: 'own_onb', versioned: true, allowedWhileOnboarding: true, errors: [404, 409],
   summary: 'Upload or replace a document (If-Match: the case). Simulated: the name, size, type, time and an image preview are kept, nothing else.' });
 export const readOnboardingPolicy = defineEndpoint({ method: 'POST', path: '/api/v1/onboarding/me/policies/:id/read', params: ByPolicy, response: CaseChanged,
-  capability: 'own_onb', versioned: true, errors: [404, 409], summary: 'Record that I opened a policy (If-Match: the case)' });
+  capability: 'own_onb', versioned: true, allowedWhileOnboarding: true, errors: [404, 409], summary: 'Record that I opened a policy (If-Match: the case)' });
 export const ackOnboardingPolicy = defineEndpoint({ method: 'POST', path: '/api/v1/onboarding/me/policies/:id/ack', params: ByPolicy, request: AckPolicy,
-  response: CaseChanged, capability: 'own_onb', versioned: true, errors: [404, 409],
+  response: CaseChanged, capability: 'own_onb', versioned: true, allowedWhileOnboarding: true, errors: [404, 409],
   summary: 'Acknowledge a policy, or take the tick back (If-Match: the case). The version acknowledged is kept.' });
 export const submitOnboarding = defineEndpoint({ method: 'POST', path: '/api/v1/onboarding/me/submit', request: SubmitOnboarding, response: CaseSubmitted,
-  capability: 'own_onb', versioned: true, errors: [409],
+  capability: 'own_onb', versioned: true, allowedWhileOnboarding: true, errors: [409],
   summary: 'Submit my onboarding to HR (If-Match: the case): every step done, the confirmation ticked, and a typed signature while signing is on' });
 
 /* No single capability: the tracker and one starter's case are read with
