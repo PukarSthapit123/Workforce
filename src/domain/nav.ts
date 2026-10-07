@@ -23,10 +23,11 @@ export interface NavGroup { key: 'work' | 'team' | 'setup'; label: string; tabs:
 
 /* which sub-project brings each view; a view not listed here is built in plan 1a */
 const LATER: Record<string, string> = {
-  hours: 'Timesheet',
-  thours: 'Timesheet',
-  texc: 'Timesheet',
-  mpay: 'Timesheet',
+  /* hours, team hours, exceptions and pay codes are module 6's, not Timesheet's */
+  hours: 'Payroll and Business Central',
+  thours: 'Payroll and Business Central',
+  texc: 'Payroll and Business Central',
+  mpay: 'Payroll and Business Central',
   ipay: 'Payroll and Business Central', ibc: 'Payroll and Business Central', iit: 'Rota',
 };
 const tab = (group: NavGroup['key'], view: string, label: string, extra: Partial<NavTab> = {}): NavTab =>

@@ -82,7 +82,7 @@ test('someone still onboarding sees onboarding and nothing else', () => {
 test('views outside plan 1a are marked not built and name their sub-project', () => {
   const g = buildNav({ caps: caps('own_home', 'own_ts', 'own_hours'), modules: ALL_MODULES, flags, onboarding: false });
   const hours = must(must(g[0]).tabs.find(t => t.view === 'hours'));
-  expect(hours).toMatchObject({ built: false, subProject: 'Timesheet' });
+  expect(hours).toMatchObject({ built: false, subProject: 'Payroll and Business Central' });
   /* module 2 builds My timesheet */
   expect(must(must(g[0]).tabs.find(t => t.view === 'ts'))).toMatchObject({ built: true });
 });
@@ -118,7 +118,7 @@ test('the module setup and integration pages the prototype\'s SETUP_NEED lists a
   expect(byView('mrota').subProject).toBeUndefined();
   expect(byView('mleave')).toMatchObject({ built: true, path: '/setup/mleave', section: 'Modules' });
   expect(byView('mleave').subProject).toBeUndefined();
-  expect(byView('mpay')).toMatchObject({ built: false, subProject: 'Timesheet', section: 'Integrations' });
+  expect(byView('mpay')).toMatchObject({ built: false, subProject: 'Payroll and Business Central', section: 'Integrations' });
   expect(byView('ipay')).toMatchObject({ built: false, subProject: 'Payroll and Business Central', section: 'Integrations' });
   expect(byView('ibc')).toMatchObject({ built: false, subProject: 'Payroll and Business Central', section: 'Integrations' });
   expect(byView('iit')).toMatchObject({ built: false, subProject: 'Rota', section: 'Integrations' });
