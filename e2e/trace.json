@@ -5819,7 +5819,7 @@
    "text": "OB ... and can be opened",
    "area": "onboarding",
    "status": "ported",
-   "test": "src/features/onboarding/onb.test.tsx › an upload over 8 MB is refused before it is read; a PDF is sent and waits to be checked"
+   "test": "e2e/employee-5.spec.ts › a new starter lands on the portal alone, completes every step, uploads, acknowledges, signs and submits, and sees the reference"
   },
   {
    "id": "ONBOARDING-MODULE#30",
@@ -5955,7 +5955,7 @@
    "text": "OB Somebody with outstanding items cannot be started",
    "area": "onboarding",
    "status": "ported",
-   "test": "src/features/onboarding/tonb.test.tsx › Start them with anything outstanding opens the not-ready dialog with the list, and Chase them reminds the starter"
+   "test": "src/mocks/onboarding.test.ts › a starter parked in Archived is still refused activation while anything is outstanding, and nothing is written"
   },
   {
    "id": "ONBOARDING-MODULE#47",
@@ -6003,7 +6003,7 @@
    "text": "OB ... and warns that changing it affects people part-way through",
    "area": "onboarding",
    "status": "ported",
-   "test": "src/features/onboarding/monb.test.tsx › document settings save together: one request, one audit row"
+   "test": "src/features/onboarding/monb.test.tsx › the page cautions that changing what is required affects people part-way through; who verifies waits for Save, Cancel puts it back, and Save audits the before and after"
   },
   {
    "id": "ONBOARDING-MODULE#53",
@@ -6011,7 +6011,7 @@
    "text": "OB Changing who verifies is confirmed and audited",
    "area": "onboarding",
    "status": "ported",
-   "test": "src/features/onboarding/monb.test.tsx › document settings save together: one request, one audit row"
+   "test": "src/features/onboarding/monb.test.tsx › the page cautions that changing what is required affects people part-way through; who verifies waits for Save, Cancel puts it back, and Save audits the before and after"
   },
   {
    "id": "ONBOARDING-MODULE#54",
@@ -6035,7 +6035,7 @@
    "text": "OB The required marker is a marker, not part of the label",
    "area": "onboarding",
    "status": "ported",
-   "test": "src/features/onboarding/onb.test.tsx › the portal greets them, shows the steps with their fields, refuses an incomplete step at its field and moves on once it is done"
+   "test": "src/features/onboarding/onb.test.tsx › the required marker is a marker beside the label, not part of it: the accessible name is the label alone and the field says it is required"
   },
   {
    "id": "ONBOARDING-MODULE#57",
@@ -6659,7 +6659,7 @@
    "text": "PD ... and says who will be asked again",
    "area": "onboarding",
    "status": "ported",
-   "test": "src/features/onboarding/monb.test.tsx › uploading a new document raises the version and says how many people will be asked again"
+   "test": "src/mocks/onboarding.test.ts › a new upload raises the version and asks everyone still onboarding who acknowledged it again, exactly once (D10)"
   },
   {
    "id": "POLICIES-ARE-DOCUMENTS-AN-ADMIN-UPLOADS#11",
@@ -6787,7 +6787,7 @@
    "text": "CP The acknowledgement is stated once, not three times",
    "area": "onboarding",
    "status": "ported",
-   "test": "src/features/onboarding/onb.test.tsx › a policy is read and acknowledged at the version shown; one left unticked is refused at the policy"
+   "test": "src/features/onboarding/onb.test.tsx › the acknowledgement is stated once, not three times: the step asks to tick, and only the read dialog says \"I have read and understood\""
   },
   {
    "id": "PEOPLE-CONTRACTS-AND-DIMENSIONS#1",
@@ -7083,7 +7083,7 @@
    "text": "OA An empty tracker offers the way in rather than only reporting nothing",
    "area": "onboarding",
    "status": "ported",
-   "test": "src/features/onboarding/tonb.test.tsx › with nothing outstanding Start them makes the starter active, and they leave the list"
+   "test": "src/features/onboarding/tonb.test.tsx › an empty tracker says nobody is onboarding here and offers Add a new starter as the way in"
   },
   {
    "id": "A-NEW-STARTER-CAN-SIGN-IN#1",
@@ -7747,7 +7747,8 @@
    "section": "REGRESSION (baseline register)",
    "text": "R-14 IT service desk renders",
    "area": "prototype-only",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/rota/it-service-desk.test.tsx › a confirmed filled shift is listed with what IT needs, with full test id coverage"
   }
  ]
 }
