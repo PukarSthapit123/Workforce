@@ -186,7 +186,7 @@ function Portal({ d }: { d: OnboardingDetail }) {
               const prev = d.steps[i - 1];
               if (prev) go(prev.id);
             }}>‹ Back</Button> : <span />}
-            <span data-testid={tid.onb.saved} role="status" className={cn('mx-auto text-xs whitespace-nowrap text-text-muted before:mr-[6px] before:inline-block before:size-[6px] before:rounded-full before:align-[1px] before:content-[\'\']',
+            <span data-testid={tid.onb.saved} role="status" className={cn('mx-auto text-xs whitespace-nowrap text-text-muted max-[860px]:min-w-0 max-[860px]:text-center max-[860px]:whitespace-normal before:mr-[6px] before:inline-block before:size-[6px] before:rounded-full before:align-[1px] before:content-[\'\']',
               dirty || w.busy ? 'before:bg-text-muted' : 'before:bg-ok')}>{dot}</span>
             {st.id === 'review'
               ? <Button testId={tid.onb.submit} kind="primary" pending={w.busy} className="max-[860px]:flex-1" onClick={send}>Submit to HR</Button>
