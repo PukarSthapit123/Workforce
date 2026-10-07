@@ -593,11 +593,15 @@ describe('the timesheet reads the real rota line (Review Focus 7, D13)', () => {
   });
   test('on qnipay (Rota off) no rota warning fires, even with a line in the store', async () => {
     resetTo('qnipay');
-    const me = accountOf('employee').personCode;
-    const p = Object.values(store.coll<{ code: string; location: string }>('people')).find(x => x.code === me);
+    /* an employee who has started: qnipay's first employee accounts are new starters, kept to the onboarding portal */
+    const people = Object.values(store.coll<{ code: string; location: string; state: string }>('people'));
+    const acc = Object.values(store.coll<{ email: string; personCode: string; userType: string }>('accounts'))
+      .find(a => a.userType === 'employee' && people.find(x => x.code === a.personCode)?.state === 'active');
+    if (!acc) throw new Error('the qnipay seed has no active employee account');
+    const me = acc.personCode, p = people.find(x => x.code === me);
     store.coll('shiftTypes').sht_N = { id: 'sht_N', version: 1, updatedAt: FROZEN, code: 'N', name: 'Night', from: '22:00', to: '07:00', breakMinutes: 0, hours: 9, cross: true, night: true, start: 22, end: 31, tone: 'N' };
     plant(p?.location ?? '', '2026-08-10', { [me]: ['N', 'N', 'N', 'N', 'N', '', ''] }, 'published');
-    const r = await save(await as('employee'), me, '2026-08-13', '07:00', '19:00');
+    const r = await save(await asEmail(acc.email), me, '2026-08-13', '07:00', '19:00');
     expect(r.status).toBe(200);
     expect(DaySaved.parse(r.body).warnings.some(x => x.includes('against the rota line'))).toBe(false);
   });
