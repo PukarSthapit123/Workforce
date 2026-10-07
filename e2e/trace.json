@@ -2571,7 +2571,7 @@
    "text": "H And it opens the owning module, so the crumb agrees",
    "area": "1c",
    "status": "ported",
-   "test": "src/shell/shell.test.tsx › on a module setup page (mts, mrota, mleave) the strip is that module’s drill-in, with the setup page current"
+   "test": "src/shell/shell.test.tsx › on a module setup page (mts, mrota, mleave, monb) the strip is that module’s drill-in, with the setup page current"
   },
   {
    "id": "ONE-HOME-PER-PAGE#16",
@@ -2579,7 +2579,7 @@
    "text": "H The tab strip shows the module, not the setup index",
    "area": "1c",
    "status": "ported",
-   "test": "src/shell/shell.test.tsx › on a module setup page (mts, mrota, mleave) the strip is that module’s drill-in, with the setup page current"
+   "test": "src/shell/shell.test.tsx › on a module setup page (mts, mrota, mleave, monb) the strip is that module’s drill-in, with the setup page current"
   },
   {
    "id": "TIMESHEET-AS-ONE-MODULE-WITH-CAPTURE-METHODS#1",
@@ -5594,406 +5594,464 @@
    "section": "ONBOARDING MODULE",
    "text": "OB Onboarding is a module like the others",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/onboarding.test.ts › with the module off every endpoint refuses"
   },
   {
    "id": "ONBOARDING-MODULE#2",
    "section": "ONBOARDING MODULE",
    "text": "OB It has its own features",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/onboarding.test.ts › a feature counts only while Onboarding is on"
   },
   {
    "id": "ONBOARDING-MODULE#3",
    "section": "ONBOARDING MODULE",
    "text": "OB ... and its own setup page",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/monb.test.tsx › it needs Configure onboarding: not on the nav without it, and the server refuses the read"
   },
   {
    "id": "ONBOARDING-MODULE#4",
    "section": "ONBOARDING MODULE",
    "text": "OB A new starter is offered at sign-in",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/onboarding.test.ts › session.onboarding is true for a candidate or preboarding person while Onboarding is on, false otherwise"
   },
   {
    "id": "ONBOARDING-MODULE#5",
    "section": "ONBOARDING MODULE",
    "text": "OB They land on an onboarding portal",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/onboarding-landing.test.tsx › a candidate sees the onboarding portal and nothing else, and lands on it"
   },
   {
    "id": "ONBOARDING-MODULE#6",
    "section": "ONBOARDING MODULE",
    "text": "OB ... which greets them and shows progress",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/onb.test.tsx › the portal greets them, shows the steps with their fields, refuses an incomplete step at its field and moves on once it is done"
   },
   {
    "id": "ONBOARDING-MODULE#7",
    "section": "ONBOARDING MODULE",
    "text": "OB The step rail lists every step",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/onb.test.tsx › the portal greets them, shows the steps with their fields, refuses an incomplete step at its field and moves on once it is done"
   },
   {
    "id": "ONBOARDING-MODULE#8",
    "section": "ONBOARDING MODULE",
    "text": "OB A date field opens a date picker rather than accepting free text",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/onb.test.tsx › the portal greets them, shows the steps with their fields, refuses an incomplete step at its field and moves on once it is done"
   },
   {
    "id": "ONBOARDING-MODULE#9",
    "section": "ONBOARDING MODULE",
    "text": "OB An email field is typed as one",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/onb.test.tsx › the portal greets them, shows the steps with their fields, refuses an incomplete step at its field and moves on once it is done"
   },
   {
    "id": "ONBOARDING-MODULE#10",
    "section": "ONBOARDING MODULE",
    "text": "OB The national insurance number is length-limited and uppercased",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/onb.test.tsx › the portal greets them, shows the steps with their fields, refuses an incomplete step at its field and moves on once it is done"
   },
   {
    "id": "ONBOARDING-MODULE#11",
    "section": "ONBOARDING MODULE",
    "text": "OB An incomplete step is refused with the reason",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/onb.test.tsx › the portal greets them, shows the steps with their fields, refuses an incomplete step at its field and moves on once it is done"
   },
   {
    "id": "ONBOARDING-MODULE#12",
    "section": "ONBOARDING MODULE",
    "text": "OB ... and they stay on that step",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/onb.test.tsx › the portal greets them, shows the steps with their fields, refuses an incomplete step at its field and moves on once it is done"
   },
   {
    "id": "ONBOARDING-MODULE#13",
    "section": "ONBOARDING MODULE",
    "text": "OB A complete step saves and advances",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/onb.test.tsx › the portal greets them, shows the steps with their fields, refuses an incomplete step at its field and moves on once it is done"
   },
   {
    "id": "ONBOARDING-MODULE#14",
    "section": "ONBOARDING MODULE",
    "text": "OB The completed step is ticked on the rail",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/onb.test.tsx › the portal greets them, shows the steps with their fields, refuses an incomplete step at its field and moves on once it is done"
   },
   {
    "id": "ONBOARDING-MODULE#15",
    "section": "ONBOARDING MODULE",
    "text": "OB Emergency contacts are next and start with one",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/onboarding.test.ts › emergency: only the first contact is required, name then phone"
   },
   {
    "id": "ONBOARDING-MODULE#16",
    "section": "ONBOARDING MODULE",
    "text": "OB A second contact can be added",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/onb.test.tsx › the portal greets them, shows the steps with their fields, refuses an incomplete step at its field and moves on once it is done"
   },
   {
    "id": "ONBOARDING-MODULE#17",
    "section": "ONBOARDING MODULE",
    "text": "OB ... and only the first is required",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/onboarding.test.ts › emergency: only the first contact is required, name then phone"
   },
   {
    "id": "ONBOARDING-MODULE#18",
    "section": "ONBOARDING MODULE",
    "text": "OB The convictions question is asked",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/onb.test.tsx › the portal greets them, shows the steps with their fields, refuses an incomplete step at its field and moves on once it is done"
   },
   {
    "id": "ONBOARDING-MODULE#19",
    "section": "ONBOARDING MODULE",
    "text": "OB ... with a note that a declaration does not itself block employment",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/onb.test.tsx › the portal greets them, shows the steps with their fields, refuses an incomplete step at its field and moves on once it is done"
   },
   {
    "id": "ONBOARDING-MODULE#20",
    "section": "ONBOARDING MODULE",
    "text": "OB The working time opt-out is asked",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/onb.test.tsx › the portal greets them, shows the steps with their fields, refuses an incomplete step at its field and moves on once it is done"
   },
   {
    "id": "ONBOARDING-MODULE#21",
    "section": "ONBOARDING MODULE",
    "text": "OB ... and states it is voluntary and withdrawable",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/onb.test.tsx › the portal greets them, shows the steps with their fields, refuses an incomplete step at its field and moves on once it is done"
   },
   {
    "id": "ONBOARDING-MODULE#22",
    "section": "ONBOARDING MODULE",
    "text": "OB Both must be answered",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/onboarding.test.ts › additional: convictions answered, details when Yes, working time answered; switched-off questions are not asked"
   },
   {
    "id": "ONBOARDING-MODULE#23",
    "section": "ONBOARDING MODULE",
    "text": "OB Documents lists what is required",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/onboarding.test.ts › a preboarding starter reads their steps, documents, policies and what is still to do"
   },
   {
    "id": "ONBOARDING-MODULE#24",
    "section": "ONBOARDING MODULE",
    "text": "OB The right-to-work type must be declared",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/onboarding.test.ts › documents: the right-to-work type, then the first required document missing or rejected"
   },
   {
    "id": "ONBOARDING-MODULE#25",
    "section": "ONBOARDING MODULE",
    "text": "OB A required document that is missing is refused",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/onboarding.test.ts › documents: the right-to-work type, then the first required document missing or rejected"
   },
   {
    "id": "ONBOARDING-MODULE#26",
    "section": "ONBOARDING MODULE",
    "text": "OB A document is uploaded through a real file picker",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/onb.test.tsx › an upload over 8 MB is refused before it is read; a PDF is sent and waits to be checked"
   },
   {
    "id": "ONBOARDING-MODULE#27",
    "section": "ONBOARDING MODULE",
    "text": "OB ... and the file is named back to the person",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/onb.test.tsx › an upload over 8 MB is refused before it is read; a PDF is sent and waits to be checked"
   },
   {
    "id": "ONBOARDING-MODULE#28",
    "section": "ONBOARDING MODULE",
    "text": "OB What was uploaded is shown against the document",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/onb.test.tsx › an upload over 8 MB is refused before it is read; a PDF is sent and waits to be checked"
   },
   {
    "id": "ONBOARDING-MODULE#29",
    "section": "ONBOARDING MODULE",
    "text": "OB ... and can be opened",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/onb.test.tsx › an upload over 8 MB is refused before it is read; a PDF is sent and waits to be checked"
   },
   {
    "id": "ONBOARDING-MODULE#30",
    "section": "ONBOARDING MODULE",
    "text": "OB Each policy must be acknowledged",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/onb.test.tsx › a policy is read and acknowledged at the version shown; one left unticked is refused at the policy"
   },
   {
    "id": "ONBOARDING-MODULE#31",
    "section": "ONBOARDING MODULE",
    "text": "OB An unacknowledged policy is refused",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/onb.test.tsx › a policy is read and acknowledged at the version shown; one left unticked is refused at the policy"
   },
   {
    "id": "ONBOARDING-MODULE#32",
    "section": "ONBOARDING MODULE",
    "text": "OB Review shows what was entered",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/onb.test.tsx › submitting needs the confirmation and a typed signature, then shows the reference"
   },
   {
    "id": "ONBOARDING-MODULE#33",
    "section": "ONBOARDING MODULE",
    "text": "OB Submission is refused without the confirmation",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/onb.test.tsx › submitting needs the confirmation and a typed signature, then shows the reference"
   },
   {
    "id": "ONBOARDING-MODULE#34",
    "section": "ONBOARDING MODULE",
    "text": "OB A complete application submits with a reference",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/onboarding.test.ts › a good submission ticks review, stamps the time and reference, and cannot be repeated"
   },
   {
    "id": "ONBOARDING-MODULE#35",
    "section": "ONBOARDING MODULE",
    "text": "OB The candidate is thanked and told what happens next",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/onb.test.tsx › the submitted page shows the reference, a document sent back with its reason, and a policy asked again"
   },
   {
    "id": "ONBOARDING-MODULE#36",
    "section": "ONBOARDING MODULE",
    "text": "OB A tracker exists for the manager",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/tonb.test.tsx › the starters at the manager's location with progress, state and what blocks them, Invite only for the candidate, with full test id coverage"
   },
   {
    "id": "ONBOARDING-MODULE#37",
    "section": "ONBOARDING MODULE",
    "text": "OB It lists who is onboarding and what blocks them",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/tonb.test.tsx › the starters at the manager's location with progress, state and what blocks them, Invite only for the candidate, with full test id coverage"
   },
   {
    "id": "ONBOARDING-MODULE#38",
    "section": "ONBOARDING MODULE",
    "text": "OB Submitted documents wait to be verified",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/tonb.test.tsx › the starters at the manager's location with progress, state and what blocks them, Invite only for the candidate, with full test id coverage"
   },
   {
    "id": "ONBOARDING-MODULE#39",
    "section": "ONBOARDING MODULE",
    "text": "OB A document is checked before it is decided on",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/tonb.test.tsx › a document is checked in front of the checker: rejecting without a reason is refused at the field, with one it is rejected; another is verified"
   },
   {
    "id": "ONBOARDING-MODULE#40",
    "section": "ONBOARDING MODULE",
    "text": "OB ... and the document itself is put in front of the checker",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/tonb.test.tsx › a document is checked in front of the checker: rejecting without a reason is refused at the field, with one it is rejected; another is verified"
   },
   {
    "id": "ONBOARDING-MODULE#41",
    "section": "ONBOARDING MODULE",
    "text": "OB ... with whether it stops them starting",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/tonb.test.tsx › a document is checked in front of the checker: rejecting without a reason is refused at the field, with one it is rejected; another is verified"
   },
   {
    "id": "ONBOARDING-MODULE#42",
    "section": "ONBOARDING MODULE",
    "text": "OB Rejecting without a reason is refused",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/tonb.test.tsx › a document is checked in front of the checker: rejecting without a reason is refused at the field, with one it is rejected; another is verified"
   },
   {
    "id": "ONBOARDING-MODULE#43",
    "section": "ONBOARDING MODULE",
    "text": "OB ... and with one, the candidate is told why",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/onboarding.test.ts › a document is rejected with a reason (which reopens the documents step), replaced, then verified; the starter is told each time (D4)"
   },
   {
    "id": "ONBOARDING-MODULE#44",
    "section": "ONBOARDING MODULE",
    "text": "OB A document can be verified once seen",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/tonb.test.tsx › a document is checked in front of the checker: rejecting without a reason is refused at the field, with one it is rejected; another is verified"
   },
   {
    "id": "ONBOARDING-MODULE#45",
    "section": "ONBOARDING MODULE",
    "text": "OB Starting somebody is offered",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/tonb.test.tsx › with nothing outstanding Start them makes the starter active, and they leave the list"
   },
   {
    "id": "ONBOARDING-MODULE#46",
    "section": "ONBOARDING MODULE",
    "text": "OB Somebody with outstanding items cannot be started",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/tonb.test.tsx › Start them with anything outstanding opens the not-ready dialog with the list, and Chase them reminds the starter"
   },
   {
    "id": "ONBOARDING-MODULE#47",
    "section": "ONBOARDING MODULE",
    "text": "OB ... and it lists exactly what is outstanding",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/tonb.test.tsx › Start them with anything outstanding opens the not-ready dialog with the list, and Chase them reminds the starter"
   },
   {
    "id": "ONBOARDING-MODULE#48",
    "section": "ONBOARDING MODULE",
    "text": "OB They can be chased, and it is recorded",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/onboarding.test.ts › chasing tells the starter what is outstanding, once, with one audit row; with nothing outstanding there is nothing to chase"
   },
   {
    "id": "ONBOARDING-MODULE#49",
    "section": "ONBOARDING MODULE",
    "text": "OB Onboarding actions are audited",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/manager-5.spec.ts › a manager checks documents, rejects one with a reason the starter acts on, chases, and starts them only once nothing blocks"
   },
   {
    "id": "ONBOARDING-MODULE#50",
    "section": "ONBOARDING MODULE",
    "text": "OB Setup states who verifies each document",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/monb.test.tsx › document settings save together: one request, one audit row"
   },
   {
    "id": "ONBOARDING-MODULE#51",
    "section": "ONBOARDING MODULE",
    "text": "OB ... and whether each blocks the start",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/monb.test.tsx › document settings save together: one request, one audit row"
   },
   {
    "id": "ONBOARDING-MODULE#52",
    "section": "ONBOARDING MODULE",
    "text": "OB ... and warns that changing it affects people part-way through",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/monb.test.tsx › document settings save together: one request, one audit row"
   },
   {
    "id": "ONBOARDING-MODULE#53",
    "section": "ONBOARDING MODULE",
    "text": "OB Changing who verifies is confirmed and audited",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/monb.test.tsx › document settings save together: one request, one audit row"
   },
   {
    "id": "ONBOARDING-MODULE#54",
    "section": "ONBOARDING MODULE",
    "text": "OB A candidate is not offered surfaces they cannot use",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/onboarding-landing.test.tsx › a candidate sees the onboarding portal and nothing else, and lands on it"
   },
   {
    "id": "ONBOARDING-MODULE#55",
    "section": "ONBOARDING MODULE",
    "text": "OB ... and nothing else, so the one task is the only thing on screen",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/onboarding-landing.test.tsx › a candidate sees the onboarding portal and nothing else, and lands on it"
   },
   {
    "id": "ONBOARDING-MODULE#56",
    "section": "ONBOARDING MODULE",
    "text": "OB The required marker is a marker, not part of the label",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/onb.test.tsx › the portal greets them, shows the steps with their fields, refuses an incomplete step at its field and moves on once it is done"
   },
   {
    "id": "ONBOARDING-MODULE#57",
    "section": "ONBOARDING MODULE",
    "text": "OB Verification blocks starting, not submitting",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/onboarding.test.ts › submit counts the person's own duties; start adds a blocking document not yet verified"
   },
   {
    "id": "ONBOARDING-MODULE#58",
    "section": "ONBOARDING MODULE",
    "text": "OB Review is not counted as a blocker against itself",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/onboarding.test.ts › submit counts the person's own duties; start adds a blocking document not yet verified"
   },
   {
    "id": "PERSISTENCE-AND-ACCOUNTS#1",
@@ -6352,35 +6410,40 @@
    "section": "ONBOARDING STEPS ARE CONFIGURABLE",
    "text": "OS Each optional step has a switch",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/monb.test.tsx › the three fixed steps are always asked; switching one off is unsaved until Save, Cancel puts it back, and Save says people keep what they gave"
   },
   {
    "id": "ONBOARDING-STEPS-ARE-CONFIGURABLE#2",
    "section": "ONBOARDING STEPS ARE CONFIGURABLE",
    "text": "OS The three that cannot be skipped say so",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/monb.test.tsx › a fixed step has no switch, and a step whose features are off cannot be switched and says why"
   },
   {
    "id": "ONBOARDING-STEPS-ARE-CONFIGURABLE#3",
    "section": "ONBOARDING STEPS ARE CONFIGURABLE",
    "text": "OS Switching one off is confirmed and audited",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/monb.test.tsx › the three fixed steps are always asked; switching one off is unsaved until Save, Cancel puts it back, and Save says people keep what they gave"
   },
   {
    "id": "ONBOARDING-STEPS-ARE-CONFIGURABLE#4",
    "section": "ONBOARDING STEPS ARE CONFIGURABLE",
    "text": "OS ... and says people part-way through keep what they gave",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/monb.test.tsx › the three fixed steps are always asked; switching one off is unsaved until Save, Cancel puts it back, and Save says people keep what they gave"
   },
   {
    "id": "ONBOARDING-STEPS-ARE-CONFIGURABLE#5",
    "section": "ONBOARDING STEPS ARE CONFIGURABLE",
    "text": "OS A step whose features are off cannot be switched on",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/monb.test.tsx › a fixed step has no switch, and a step whose features are off cannot be switched and says why"
   },
   {
    "id": "TIME-IS-CAPTURED-AS-TIME#1",
@@ -6419,49 +6482,56 @@
    "section": "ONBOARDING: DOCUMENTS, POLICIES AND LABELS",
    "text": "OD Uploads are real files, read through one shared picker",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/onb.test.tsx › an upload over 8 MB is refused before it is read; a PDF is sent and waits to be checked"
   },
   {
    "id": "ONBOARDING-DOCUMENTS-POLICIES-AND-LABELS#2",
    "section": "ONBOARDING: DOCUMENTS, POLICIES AND LABELS",
    "text": "OD An image is kept as a downscaled preview, not at full size",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/onboarding.test.ts › only an image keeps a preview; a PDF is named as one"
   },
   {
    "id": "ONBOARDING-DOCUMENTS-POLICIES-AND-LABELS#3",
    "section": "ONBOARDING: DOCUMENTS, POLICIES AND LABELS",
    "text": "OD A file too large for browser storage is refused with its size",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/domain/onboarding.test.ts › 8 MB is the limit, refused with the file's size"
   },
   {
    "id": "ONBOARDING-DOCUMENTS-POLICIES-AND-LABELS#4",
    "section": "ONBOARDING: DOCUMENTS, POLICIES AND LABELS",
    "text": "OD A policy carries its text, so it can actually be read",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/seed/seed-5.test.ts › each policy is its own row, pol_<id>, with its version, summary, text and place, and no file"
   },
   {
    "id": "ONBOARDING-DOCUMENTS-POLICIES-AND-LABELS#5",
    "section": "ONBOARDING: DOCUMENTS, POLICIES AND LABELS",
    "text": "OD Acknowledgement is a checkbox, not a switch",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/onb.test.tsx › a policy is read and acknowledged at the version shown; one left unticked is refused at the policy"
   },
   {
    "id": "ONBOARDING-DOCUMENTS-POLICIES-AND-LABELS#6",
    "section": "ONBOARDING: DOCUMENTS, POLICIES AND LABELS",
    "text": "OD The final confirmation is a checkbox too",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/onb.test.tsx › submitting needs the confirmation and a typed signature, then shows the reference"
   },
   {
    "id": "ONBOARDING-DOCUMENTS-POLICIES-AND-LABELS#7",
    "section": "ONBOARDING: DOCUMENTS, POLICIES AND LABELS",
    "text": "OD Reading a policy offers to acknowledge it there and then",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/onb.test.tsx › a policy is read and acknowledged at the version shown; one left unticked is refused at the policy"
   },
   {
    "id": "SECTION-LABELS-ARE-NOT-SHOUTED#1",
@@ -6516,91 +6586,104 @@
    "section": "POLICIES ARE DOCUMENTS AN ADMIN UPLOADS",
    "text": "PD An administrator can add a policy",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/monb.test.tsx › Add a policy refuses a missing or duplicate name in the form, then adds it at v1.0"
   },
   {
    "id": "POLICIES-ARE-DOCUMENTS-AN-ADMIN-UPLOADS#2",
    "section": "POLICIES ARE DOCUMENTS AN ADMIN UPLOADS",
    "text": "PD ... upload the document itself",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/monb.test.tsx › uploading a new document raises the version and says how many people will be asked again"
   },
   {
    "id": "POLICIES-ARE-DOCUMENTS-AN-ADMIN-UPLOADS#3",
    "section": "POLICIES ARE DOCUMENTS AN ADMIN UPLOADS",
    "text": "PD ... edit and remove one",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/monb.test.tsx › Edit changes the name, version or summary of one policy"
   },
   {
    "id": "POLICIES-ARE-DOCUMENTS-AN-ADMIN-UPLOADS#4",
    "section": "POLICIES ARE DOCUMENTS AN ADMIN UPLOADS",
    "text": "PD The list shows how many have acknowledged the current version",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-5.spec.ts › an administrator switches a step off, changes a document setting and uploads a new policy version; the starter is asked again"
   },
   {
    "id": "POLICIES-ARE-DOCUMENTS-AN-ADMIN-UPLOADS#5",
    "section": "POLICIES ARE DOCUMENTS AN ADMIN UPLOADS",
    "text": "PD A policy needs a name",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/monb.test.tsx › Add a policy refuses a missing or duplicate name in the form, then adds it at v1.0"
   },
   {
    "id": "POLICIES-ARE-DOCUMENTS-AN-ADMIN-UPLOADS#6",
    "section": "POLICIES ARE DOCUMENTS AN ADMIN UPLOADS",
    "text": "PD A policy can be added",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/monb.test.tsx › Add a policy refuses a missing or duplicate name in the form, then adds it at v1.0"
   },
   {
    "id": "POLICIES-ARE-DOCUMENTS-AN-ADMIN-UPLOADS#7",
    "section": "POLICIES ARE DOCUMENTS AN ADMIN UPLOADS",
    "text": "PD ... and says to upload the document to make it readable",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/monb.test.tsx › Add a policy refuses a missing or duplicate name in the form, then adds it at v1.0"
   },
   {
    "id": "POLICIES-ARE-DOCUMENTS-AN-ADMIN-UPLOADS#8",
    "section": "POLICIES ARE DOCUMENTS AN ADMIN UPLOADS",
    "text": "PD It appears in the list",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/monb.test.tsx › Add a policy refuses a missing or duplicate name in the form, then adds it at v1.0"
   },
   {
    "id": "POLICIES-ARE-DOCUMENTS-AN-ADMIN-UPLOADS#9",
    "section": "POLICIES ARE DOCUMENTS AN ADMIN UPLOADS",
    "text": "PD Uploading a document raises the version",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/monb.test.tsx › uploading a new document raises the version and says how many people will be asked again"
   },
   {
    "id": "POLICIES-ARE-DOCUMENTS-AN-ADMIN-UPLOADS#10",
    "section": "POLICIES ARE DOCUMENTS AN ADMIN UPLOADS",
    "text": "PD ... and says who will be asked again",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/monb.test.tsx › uploading a new document raises the version and says how many people will be asked again"
   },
   {
    "id": "POLICIES-ARE-DOCUMENTS-AN-ADMIN-UPLOADS#11",
    "section": "POLICIES ARE DOCUMENTS AN ADMIN UPLOADS",
    "text": "PD The uploaded file is shown against the policy",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/admin-5.spec.ts › an administrator switches a step off, changes a document setting and uploads a new policy version; the starter is asked again"
   },
   {
    "id": "POLICIES-ARE-DOCUMENTS-AN-ADMIN-UPLOADS#12",
    "section": "POLICIES ARE DOCUMENTS AN ADMIN UPLOADS",
    "text": "PD Removing asks first",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/monb.test.tsx › Remove asks first, and only the confirm removes it"
   },
   {
    "id": "POLICIES-ARE-DOCUMENTS-AN-ADMIN-UPLOADS#13",
    "section": "POLICIES ARE DOCUMENTS AN ADMIN UPLOADS",
    "text": "PD ... and it is gone",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/monb.test.tsx › Remove asks first, and only the confirm removes it"
   },
   {
    "id": "CONSISTENCY#1",
@@ -6703,8 +6786,8 @@
    "section": "COPY IS NOT PADDED",
    "text": "CP The acknowledgement is stated once, not three times",
    "area": "onboarding",
-   "deferredTo": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/onb.test.tsx › a policy is read and acknowledged at the version shown; one left unticked is refused at the policy"
   },
   {
    "id": "PEOPLE-CONTRACTS-AND-DIMENSIONS#1",
@@ -6959,105 +7042,120 @@
    "section": "ONBOARDING STARTS WITH A PERSON",
    "text": "OA A manager can add a new starter from the tracker itself",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/tonb.test.tsx › Add a new starter opens the person form already set to candidate, and the new starter appears on the tracker"
   },
   {
    "id": "ONBOARDING-STARTS-WITH-A-PERSON#2",
    "section": "ONBOARDING STARTS WITH A PERSON",
    "text": "OA ... and the form opens already knowing what is being added",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/tonb.test.tsx › Add a new starter opens the person form already set to candidate, and the new starter appears on the tracker"
   },
   {
    "id": "ONBOARDING-STARTS-WITH-A-PERSON#3",
    "section": "ONBOARDING STARTS WITH A PERSON",
    "text": "OA The three starting states are offered",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/people.test.ts › a starting state other than candidate, preboarding or active is refused"
   },
   {
    "id": "ONBOARDING-STARTS-WITH-A-PERSON#4",
    "section": "ONBOARDING STARTS WITH A PERSON",
    "text": "OA A new starter can be created on this tenant’s own ID scheme",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/people.test.ts › a valid record is created with its account, one history entry and one audit row"
   },
   {
    "id": "ONBOARDING-STARTS-WITH-A-PERSON#5",
    "section": "ONBOARDING STARTS WITH A PERSON",
    "text": "OA ... and appears on the tracker with nothing done yet",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/tonb.test.tsx › Add a new starter opens the person form already set to candidate, and the new starter appears on the tracker"
   },
   {
    "id": "ONBOARDING-STARTS-WITH-A-PERSON#6",
    "section": "ONBOARDING STARTS WITH A PERSON",
    "text": "OA An empty tracker offers the way in rather than only reporting nothing",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/tonb.test.tsx › with nothing outstanding Start them makes the starter active, and they leave the list"
   },
   {
    "id": "A-NEW-STARTER-CAN-SIGN-IN#1",
    "section": "A NEW STARTER CAN SIGN IN",
    "text": "NS An address is required, because it is how they sign in",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/onboarding.test.ts › each is refused with its sentence, and nothing is written"
   },
   {
    "id": "A-NEW-STARTER-CAN-SIGN-IN#2",
    "section": "A NEW STARTER CAN SIGN IN",
    "text": "NS ... and two people cannot share one",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/onboarding.test.ts › each is refused with its sentence, and nothing is written"
   },
   {
    "id": "A-NEW-STARTER-CAN-SIGN-IN#3",
    "section": "A NEW STARTER CAN SIGN IN",
    "text": "NS Creating somebody does not report a refused transition",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/mocks/onboarding.test.ts › a person created as a candidate gets an empty case; one created active does not"
   },
   {
    "id": "A-NEW-STARTER-CAN-SIGN-IN#4",
    "section": "A NEW STARTER CAN SIGN IN",
    "text": "NS They can be invited",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/tonb.test.tsx › Invite moves the candidate to preboarding and says no email is sent"
   },
   {
    "id": "A-NEW-STARTER-CAN-SIGN-IN#5",
    "section": "A NEW STARTER CAN SIGN IN",
    "text": "NS The invitation names the address it goes to",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "e2e/manager-5.spec.ts › Invite moves a candidate to preboarding and says no email is sent; Add a new starter opens the person form set to candidate"
   },
   {
    "id": "A-NEW-STARTER-CAN-SIGN-IN#6",
    "section": "A NEW STARTER CAN SIGN IN",
    "text": "NS ... and is honest that nothing is sent in this build",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/onboarding/tonb.test.tsx › Invite moves the candidate to preboarding and says no email is sent"
   },
   {
    "id": "A-NEW-STARTER-CAN-SIGN-IN#7",
    "section": "A NEW STARTER CAN SIGN IN",
    "text": "NS They appear on the sign-in list, newest first",
    "area": "onboarding",
-   "status": "pending"
+   "status": "n/a",
+   "reason": "replaced by the sign-in shortcut, which lists one account per persona (SignIn.tsx demoShortcut); a new starter signs in with their own address, so they are not listed"
   },
   {
    "id": "A-NEW-STARTER-CAN-SIGN-IN#8",
    "section": "A NEW STARTER CAN SIGN IN",
    "text": "NS ... and the list says it is a shortcut, not the whole roster",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/SignIn.test.tsx › the demo accounts list is bounded: a shortcut, not the whole workforce"
   },
   {
    "id": "A-NEW-STARTER-CAN-SIGN-IN#9",
    "section": "A NEW STARTER CAN SIGN IN",
    "text": "NS Signing in as them opens the onboarding portal and nothing else",
    "area": "onboarding",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/shell/onboarding-landing.test.tsx › a candidate sees the onboarding portal and nothing else, and lands on it"
   },
   {
    "id": "NOTICE-BOARD-Workforce-core#1",
