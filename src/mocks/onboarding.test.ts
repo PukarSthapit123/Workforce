@@ -117,13 +117,6 @@ describe('my onboarding: the starter acts on their own case only (D5)', () => {
       expect(refusal(r).code).toBe('NOT_FOUND');
     }
   });
-  test('every case write needs If-Match on the case: missing is 428, stale is 412, and nothing is written', async () => {
-    const call = await asEmail(TOM), before = snapshot(...WRITES);
-    expect((await call('PUT', '/api/v1/onboarding/me/steps/personal', { mode: 'quiet', personal: PERSONAL })).status).toBe(428);
-    expect((await save(call, 'personal', { mode: 'quiet', personal: PERSONAL }, 7)).status).toBe(412);
-    expect((await upload(call, 'photo', PHOTO, 7)).status).toBe(412);
-    expect(snapshot(...WRITES)).toEqual(before);
-  });
   test('an upload keeps the file record and waits for a check; a file over 8 MB is refused; with verification off it is accepted at once', async () => {
     const call = await asEmail(TOM);
     const r = CaseChanged.parse((await upload(call, 'photo', PHOTO, 1)).body);
@@ -489,7 +482,6 @@ describe('onboarding setup (D2, D10, D11)', () => {
     const fixed = await call('PUT', '/api/v1/onboarding/config', { steps: r.record.steps.map(x => (x.id === 'personal' ? { ...x, on: false } : x)), documents: r.record.documents }, 2);
     expect(fixed.status).toBe(409);
     expect(refusal(fixed)).toMatchObject({ code: 'FIXED', message: ALWAYS_ASKED });
-    expect((await call('PUT', '/api/v1/onboarding/config', { steps, documents: s.config.documents }, 1)).status).toBe(412);
     expect(snapshot(...WRITES)).toEqual(before);
   });
   test('a policy needs a name and no two share one; a new one starts at v1.0', async () => {
@@ -546,6 +538,44 @@ describe('the Onboarding module switch', () => {
   });
 });
 
+/* ------------------------------------------------------------ If-Match */
+describe('every versioned onboarding write needs If-Match on its own record: missing is 428, stale is 412, and nothing is written (review M5)', () => {
+  const MGR = 'rachel.hussain@brightpath.org', ADMIN = 'dee.fitzgerald@brightpath.org';
+  type Rec = { version: number } | undefined;
+  const theCase = (code: string) => (): Rec => store.coll<{ version: number }>('onboardingCases')[`onb_${code}`];
+  const theConfig = (): Rec => store.coll<{ version: number }>('onboardingConfig').onboardingConfig;
+  const thePolicy = (): Rec => store.coll<{ version: number }>('onboardingPolicies').pol_conduct;
+  const writes: [string, string, string, string, unknown, () => Rec][] = [
+    ['save a step', TOM, 'PUT', '/api/v1/onboarding/me/steps/personal', { mode: 'quiet', personal: PERSONAL }, theCase('CP-1502')],
+    ['upload a document', TOM, 'POST', '/api/v1/onboarding/me/documents/photo', PHOTO, theCase('CP-1502')],
+    ['read a policy', TOM, 'POST', '/api/v1/onboarding/me/policies/pol_conduct/read', undefined, theCase('CP-1502')],
+    ['acknowledge a policy', TOM, 'POST', '/api/v1/onboarding/me/policies/pol_conduct/ack', { on: true }, theCase('CP-1502')],
+    ['submit', TOM, 'POST', '/api/v1/onboarding/me/submit', { consent: true, signature: 'Tom Achterberg' }, theCase('CP-1502')],
+    ['verify a document', MGR, 'POST', '/api/v1/onboarding/team/CP-1502/documents/photo/verify', undefined, theCase('CP-1502')],
+    ['reject a document', MGR, 'POST', '/api/v1/onboarding/team/CP-1502/documents/photo/reject', { reason: 'Too dark' }, theCase('CP-1502')],
+    ['invite', MGR, 'POST', '/api/v1/onboarding/team/CP-1501/invite', undefined, theCase('CP-1501')],
+    ['start', MGR, 'POST', '/api/v1/onboarding/team/CP-1502/start', undefined, theCase('CP-1502')],
+    ['save setup', ADMIN, 'PUT', '/api/v1/onboarding/config', { steps: [], documents: [] }, theConfig],
+    ['edit a policy', ADMIN, 'PATCH', '/api/v1/onboarding/policies/pol_conduct', { label: 'Conduct' }, thePolicy],
+    ['upload a policy', ADMIN, 'POST', '/api/v1/onboarding/policies/pol_conduct/file', PHOTO, thePolicy],
+    ['remove a policy', ADMIN, 'DELETE', '/api/v1/onboarding/policies/pol_conduct', undefined, thePolicy],
+  ];
+  for (const [what, email, method, path, body, target] of writes) {
+    test(what, async () => {
+      const call = await asEmail(email), rec = target();
+      if (!rec) throw new Error(`no record for ${what}`);
+      /* the version this person read; somebody else has saved the record since, so only this record's version is stale */
+      const read = rec.version;
+      rec.version = read + 8;
+      const before = snapshot(...WRITES);
+      const missing = await call(method, path, body);
+      expect(missing.status).toBe(428);
+      const stale = await call(method, path, body, read);
+      expect(stale.status).toBe(412);
+      expect(snapshot(...WRITES)).toEqual(before);
+    });
+  }
+});
 /* --------------------------------------------------------------- faults */
 describe('a fault on each write leaves no case change, notification or audit row (Review Focus 5)', () => {
   const writes: [string, string, string, string, unknown, number | undefined][] = [
