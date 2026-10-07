@@ -524,11 +524,14 @@ export function nextPolVer(v: string): string {
    passes only the cases of people still onboarding: somebody who has started
    is never asked again, and keeps what they agreed to as the record. */
 export function applyPolicyUpload(p: OnbPolicy, file: OnbFile, cases: readonly OnboardingCase[]): { policy: OnbPolicy; changed: OnboardingCase[]; asked: number } {
-  const changed = cases.filter(c => p.id in c.acks || c.read[p.id]).map(c => {
-    return { ...c, acks: without(c.acks, p.id), read: without(c.read, p.id) };
-  });
-  const asked = cases.filter(c => p.id in c.acks).length;
-  return { policy: { ...p, file, ver: nextPolVer(p.ver) }, changed, asked };
+  return { policy: { ...p, file, ver: nextPolVer(p.ver) }, ...reaskPolicy(p.id, cases) };
+}
+/* Clears one policy's acknowledgements and read marks on the cases given, so
+   each person who had acknowledged it is asked again once (a new upload, or a
+   template that changes its wording). `asked` counts those who had. */
+export function reaskPolicy(id: string, cases: readonly OnboardingCase[]): { changed: OnboardingCase[]; asked: number } {
+  const changed = cases.filter(c => id in c.acks || c.read[id]).map(c => ({ ...c, acks: without(c.acks, id), read: without(c.read, id) }));
+  return { changed, asked: cases.filter(c => id in c.acks).length };
 }
 export const policyUploadedText = (label: string, ver: string, asked: number) =>
   `${label} is now ${ver}. ${asked ? `${plural(asked, 'person', 'people')} will be asked again.` : 'It is ready to read.'}`;

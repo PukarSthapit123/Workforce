@@ -273,7 +273,7 @@ describe('the onboarding setup in a template (module 5, D12)', () => {
   const KEY = 'tpl_care_onboarding';
   const onbLines = (lines: readonly { area: string; text: string }[]) => lines.filter(l => l.area === 'onboarding').map(l => l.text);
 
-  test('a saved template keeps the setup and the policy wording but never a file; applying it puts them back and nobody is asked again', async () => {
+  test('a saved template keeps the setup and the policy wording but never a file; applying it puts them back, and new wording asks again those still onboarding (review M2)', async () => {
     Object.assign(pol('pol_conduct') ?? {}, { file: { name: 'conduct.pdf', size: 2048, type: 'application/pdf', at: FROZEN, kind: 'pdf' } });
     Object.assign(caseOf('CP-1502') ?? {}, { acks: { pol_privacy: 'v2.0' } });
     expect((await save('Care onboarding')).status).toBe(200);
@@ -291,17 +291,17 @@ describe('the onboarding setup in a template (module 5, D12)', () => {
 
     const plan = TemplatePlan.parse((await admin('GET', PLAN(KEY))).body);
     expect(onbLines(plan.changes)).toEqual(['Onboarding step Emergency contacts on.', 'Onboarding document Proof of address: does not block the start.',
-      'Policy Privacy notice, with the template\'s wording. It stays v2.0, so nobody is asked to read it again.']);
+      'Policy Privacy notice, with the template\'s wording. It becomes v2.1. 1 person will be asked to read it again.']);
     expect(onbLines(plan.leftAlone)).toEqual(['Policies the template does not have stay, with their acknowledgements: Fire safety.',
-      'Uploaded policy documents and everybody’s onboarding progress stay as they are.']);
+      'Uploaded policy documents stay as they are. Everybody’s onboarding progress stays too, apart from the policies they are asked to read again.']);
     const n = audits().length;
     const r = TemplateApplied.parse((await admin('POST', APPLY(KEY), undefined, tenantVer())).body);
     expect(r.auditId).not.toBeNull();
     expect(audits().slice(n).map(a => a.act)).toEqual(['Template applied']);
     expect(cfg()?.steps.find(x => x.id === 'emergency')?.on).toBe(true);
     expect(cfg()?.documents.find(d => d.id === 'addr')?.blocks).toBe(false);
-    expect(pol('pol_privacy')).toMatchObject({ ver: 'v2.0', sum: 'What personal data is held about you, why, and how long it is kept.', version: 3 });
-    expect(caseOf('CP-1502')?.acks).toEqual({ pol_privacy: 'v2.0' });
+    expect(pol('pol_privacy')).toMatchObject({ ver: 'v2.1', sum: 'What personal data is held about you, why, and how long it is kept.', version: 3 });
+    expect(caseOf('CP-1502')?.acks).toEqual({});
     expect(pol('pol_conduct')?.file?.name).toBe('conduct.pdf');
     expect(pol('pol_fire_safety')).toBeDefined();
   });

@@ -17,7 +17,8 @@ import { people, recordAt } from './world';
 import { rotaActor, rotaOff, rotaOn, saveTenant, sitesOff, tenantRec, tsConfig, view, type StoredTenant } from './tenant';
 import meta from './seed/meta.json';
 import { chainRecord, chainsNow, writeChain } from './approvals';
-import { policiesColl, policiesNow, type StoredConfig } from './onboarding-cases';
+import { casesColl, policiesColl, policiesNow, putCase, stillOnboarding, type StoredConfig } from './onboarding-cases';
+import { caseId, reaskPolicy } from '@/domain/onboarding';
 import { CHAIN_MODULES, type ChainModule, type ChainStep } from '@/domain/approvals';
 import {
   Template as TemplateSchema, applyTemplate, exportTemplate, getTemplatePlan, importTemplate, listTemplates, removeTemplate, saveTemplate,
@@ -76,7 +77,9 @@ function roleNamesNow(): Record<RoleKey, string> {
 /* the onboarding setup and its policies, when this tenant has them (D12) */
 function onboardingNow(): TenantState['onboarding'] {
   const config = recordAt(store.coll<StoredConfig>('onboardingConfig'), 'onboardingConfig');
-  return config ? { config, policies: policiesNow() } : undefined;
+  if (!config) return undefined;
+  const policies = policiesNow(), onboarding = Object.values(casesColl()).filter(stillOnboarding);
+  return { config, policies, acknowledged: Object.fromEntries(policies.map(p => [p.id, onboarding.filter(c => p.id in c.acks).length])) };
 }
 const codes = (kind: StructureKind) => Object.values(store.coll<Row>(HOME[kind].coll)).map(r => r.code);
 function stateOf(t: StoredTenant): TenantState {
@@ -159,7 +162,7 @@ function carryOut(t: StoredTenant, plan: ApplyPlan, key: string, by: RotaActor):
       } else coll[id] = { ...row, id, version: 1, updatedAt: store.now() };
     }
   }
-  /* the onboarding setup (D12): switches and settings by id; a held policy's wording without a new version, so nobody is asked again; new policies after the last */
+  /* the onboarding setup (D12): switches and settings by id; a held policy's new name and wording, and with new wording a new version that asks the people still onboarding again (D10); new policies after the last */
   const o = s.onboarding;
   const cfg = recordAt(store.coll<StoredConfig>('onboardingConfig'), 'onboardingConfig');
   if (cfg && (Object.keys(o.steps).length || Object.keys(o.documents).length)) {
@@ -171,7 +174,12 @@ function carryOut(t: StoredTenant, plan: ApplyPlan, key: string, by: RotaActor):
   const pols = policiesColl();
   for (const u of o.policiesUpdated) {
     const have = recordAt(pols, u.id);
-    if (have) pols[u.id] = bump(have, { label: u.label, sum: u.sum, body: u.body });
+    if (!have) continue;
+    pols[u.id] = bump(have, { label: u.label, ver: u.ver, sum: u.sum, body: u.body });
+    if (u.reask) for (const c of reaskPolicy(u.id, Object.values(casesColl()).filter(stillOnboarding)).changed) {
+      const was = recordAt(casesColl(), caseId(c.personCode));
+      if (was) putCase(was, c);
+    }
   }
   let order = policiesNow().reduce((m, x) => Math.max(m, x.order + 1), 0);
   for (const a of o.policiesAdded) pols[a.id] = { ...a, order: order++, id: a.id, version: 1, updatedAt: store.now() };

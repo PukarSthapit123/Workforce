@@ -24,9 +24,11 @@
      the document settings and each policy with its text, as the prototype
      kept onbDocs and onbPolicies, never an uploaded file or anybody's
      progress. Applying it needs Configure onboarding, switches only what
-     the features allow, takes a held policy's wording without raising its
-     version (nobody is asked again), adds the policies not here, and leaves
-     the tenant's other policies alone.
+     the features allow, and takes a held policy's name and wording. New
+     wording (text or summary) raises its version and asks the people still
+     onboarding who acknowledged it to read it again, as a new upload does
+     (D10); a new name alone keeps the version. It adds the policies not
+     here, and leaves the tenant's other policies alone.
 
    Every function is pure: the tenant comes in as arguments, so the server
    refuses with exactly what the screen shows. Copy is the prototype's, with
@@ -37,7 +39,7 @@ import {
 } from './modules';
 import { CHAIN_MODULES, POSTING_ROLE, POSTING_STEP, chainProblem, chainText, isChainModule, type ChainModule, type ChainStep } from './approvals';
 import {
-  STEP_UNAVAILABLE, isVerifier, onbFeatures, policyProblem, stepSwitchProblem, verifierLabel,
+  STEP_UNAVAILABLE, isVerifier, nextPolVer, onbFeatures, policyProblem, stepSwitchProblem, verifierLabel,
   type OnboardingConfig, type OnbPolicy, type OnbStepId, type Verifier,
 } from './onboarding';
 
@@ -382,8 +384,9 @@ export interface TenantState {
   chains: Readonly<Record<ChainModule, readonly ChainStep[]>>;
   /* the codes already held, per kind */
   structure: Readonly<Record<StructureKind, readonly string[]>>;
-  /* the onboarding setup and its policies now, when this tenant has them */
-  onboarding?: { config: OnboardingConfig; policies: readonly OnbPolicy[] };
+  /* the onboarding setup and its policies now, when this tenant has them; acknowledged counts, by policy id,
+     the people still onboarding who hold an acknowledgement of it (those a new wording asks again) */
+  onboarding?: { config: OnboardingConfig; policies: readonly OnbPolicy[]; acknowledged?: Readonly<Record<string, number>> };
 }
 export type PlanArea = 'modules' | 'features' | 'labels' | 'types' | 'roles' | 'chain' | 'structure' | 'people' | 'organisation' | 'onboarding';
 export interface PlanLine { area: PlanArea; text: string }
@@ -398,10 +401,11 @@ export interface ApplySteps {
   /* the chains to set, each whole */
   chains: { module: ChainModule; steps: ChainStep[] }[];
   structure: TemplateStructure;
-  /* the onboarding switches and settings to set by id, the held policies whose wording changes, and the policies added */
+  /* the onboarding switches and settings to set by id, the held policies whose name or wording changes (reask: new wording,
+     so the version goes up and the people still onboarding who acknowledged it are asked again), and the policies added */
   onboarding: {
     steps: Record<string, boolean>; documents: Record<string, Omit<TemplateOnbDocument, 'id'>>;
-    policiesUpdated: Pick<TemplateOnbPolicy, 'id' | 'label' | 'sum' | 'body'>[]; policiesAdded: TemplateOnbPolicy[];
+    policiesUpdated: (Pick<TemplateOnbPolicy, 'id' | 'label' | 'ver' | 'sum' | 'body'> & { reask: boolean })[]; policiesAdded: TemplateOnbPolicy[];
   };
 }
 export interface ApplyPlan { changes: PlanLine[]; added: PlanLine[]; leftAlone: PlanLine[]; steps: ApplySteps }
@@ -611,8 +615,10 @@ function planChains(t: Template, s: TenantState, may: boolean, changes: PlanLine
    id and only their switches and settings change; a step goes on only while
    its features are on, and a fixed step stays on, as Onboarding setup
    refuses. Policies are matched by id: a held one takes the template's name,
-   summary and text but keeps its version and its acknowledgements; one not
-   here is added without a document; the tenant's others stay. */
+   summary and text. New wording raises its version and asks again the people
+   still onboarding who acknowledged it, as a new upload does (D10); a new name
+   alone keeps the version and the acknowledgements. One not here is added
+   without a document; the tenant's others stay. */
 export const ONB_LEFT_ALONE = 'Onboarding setup stays as it is. Changing it needs Configure onboarding.';
 type DocSettings = Omit<TemplateOnbDocument, 'id'>;
 const docWords = (d: DocSettings, was: DocSettings) => [
@@ -660,6 +666,7 @@ function planOnboarding(t: Template, s: TenantState, may: boolean, f: ReturnType
 
   /* the names a policy is checked against, as each one is renamed or added */
   const names: OnbPolicy[] = have.policies.map(p => ({ ...p }));
+  let reasked = 0;
   for (const w of want.policies) {
     const label = w.label.trim();
     const h = have.policies.find(x => x.id === w.id);
@@ -667,10 +674,17 @@ function planOnboarding(t: Template, s: TenantState, may: boolean, f: ReturnType
       if (h.label === label && h.sum === w.sum && sameText(h.body, w.body)) continue;
       const problem = policyProblem({ label }, names, h.id);
       if (problem) { leftAlone.push(line(`Policy ${h.label} stays as it is. ${problem.message}`)); continue; }
-      next.policiesUpdated.push({ id: h.id, label, sum: w.sum, body: [...w.body] });
+      /* new wording is a new version, and asks again (D10); a new name alone is not */
+      const reask = h.sum !== w.sum || !sameText(h.body, w.body), ver = reask ? nextPolVer(h.ver) : h.ver;
+      next.policiesUpdated.push({ id: h.id, label, ver, sum: w.sum, body: [...w.body], reask });
       const i = names.findIndex(x => x.id === h.id);
       if (i >= 0) names[i] = { ...h, label };
-      changes.push(line(`Policy ${h.label}${label !== h.label ? ` becomes ${label}` : ''}, with the template's wording. It stays ${h.ver}, so nobody is asked to read it again.`));
+      const renamed = label !== h.label ? ` becomes ${label}` : '', asked = have.acknowledged?.[h.id] ?? 0;
+      changes.push(line(reask
+        ? `Policy ${h.label}${renamed}, with the template's wording. It becomes ${ver}. ${asked
+          ? `${plural(asked, 'person', 'people')} will be asked to read it again.` : 'Nobody still onboarding has acknowledged it, so nobody is asked again.'}`
+        : `Policy ${h.label}${renamed}. It stays ${h.ver}, so nobody is asked to read it again.`));
+      if (reask) reasked += asked;
       continue;
     }
     const problem = policyProblem({ label }, names);
@@ -686,7 +700,9 @@ function planOnboarding(t: Template, s: TenantState, may: boolean, f: ReturnType
   steps.onboarding = next;
   out.changes.push(...changes); out.added.push(...added); out.leftAlone.push(...leftAlone);
   if (kept.length) out.leftAlone.push(line(`Policies the template does not have stay, with their acknowledgements: ${list(kept)}.`));
-  out.leftAlone.push(line('Uploaded policy documents and everybody’s onboarding progress stay as they are.'));
+  out.leftAlone.push(line(reasked
+    ? 'Uploaded policy documents stay as they are. Everybody’s onboarding progress stays too, apart from the policies they are asked to read again.'
+    : 'Uploaded policy documents and everybody’s onboarding progress stay as they are.'));
 }
 
 /* One line for the toast and the audit row. */

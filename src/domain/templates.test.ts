@@ -319,20 +319,40 @@ describe('the onboarding setup in a template (module 5, D12)', () => {
     expect(planApply(t, state(undefined, { ONB_POL: false }), ALL).steps.onboarding.steps).toEqual({ emergency: false, policies: true });
   });
 
-  test('a held policy takes the wording but keeps its version, so nobody is asked again; a missing one is added; the tenant\'s others stay', () => {
+  test('a held policy given new wording takes a new version; a missing one is added; the tenant\'s others stay', () => {
     const t = withOnb({ steps: [], documents: [], policies: [
       { id: 'pol_conduct', label: 'Code of conduct', ver: 'v1.0', sum: 'Newer words.', body: ['A new paragraph.'] },
       { id: 'pol_safe', label: 'Safeguarding policy', ver: 'v2.3', sum: 'Raising a concern.', body: ['Tell somebody.'] }] });
     const p = planApply(t, state(), ALL);
-    expect(p.steps.onboarding.policiesUpdated).toEqual([{ id: 'pol_conduct', label: 'Code of conduct', sum: 'Newer words.', body: ['A new paragraph.'] }]);
+    expect(p.steps.onboarding.policiesUpdated).toEqual([{ id: 'pol_conduct', label: 'Code of conduct', ver: 'v4.2', sum: 'Newer words.', body: ['A new paragraph.'], reask: true }]);
     expect(p.steps.onboarding.policiesAdded).toEqual([{ id: 'pol_safe', label: 'Safeguarding policy', ver: 'v2.3', sum: 'Raising a concern.', body: ['Tell somebody.'] }]);
-    expect(texts(p.changes)).toEqual(['Policy Code of conduct, with the template\'s wording. It stays v4.1, so nobody is asked to read it again.']);
+    expect(texts(p.changes)).toEqual(['Policy Code of conduct, with the template\'s wording. It becomes v4.2. Nobody still onboarding has acknowledged it, so nobody is asked again.']);
     expect(texts(p.added)).toEqual(['Policy Safeguarding policy v2.3, without a document. Upload one in Onboarding setup.']);
     expect(texts(p.leftAlone)).toEqual(['Policies the template does not have stay, with their acknowledgements: Privacy notice.',
       'Uploaded policy documents and everybody’s onboarding progress stay as they are.']);
     expect(planSummary(p)).toBe('1 change, 1 added. Nothing was deleted.');
   });
 
+  test('new wording or a new summary asks again the people still onboarding who acknowledged it, and the plan says how many (review M2)', () => {
+    const o = { config: config(), policies: policies(), acknowledged: { pol_conduct: 2, pol_privacy: 1 } };
+    const reworded = withOnb({ steps: [], documents: [], policies: [
+      { id: 'pol_conduct', label: 'Code of conduct', ver: 'v4.1', sum: 'Code of conduct in one line.', body: ['Different words.'] },
+      { id: 'pol_privacy', label: 'Privacy notice', ver: 'v2.0', sum: 'A new summary.', body: ['Privacy notice says this.'] }] });
+    const p = planApply(reworded, state(o), ALL);
+    expect(p.steps.onboarding.policiesUpdated.map(u => [u.id, u.ver, u.reask])).toEqual([['pol_conduct', 'v4.2', true], ['pol_privacy', 'v2.1', true]]);
+    expect(texts(p.changes)).toEqual([
+      'Policy Code of conduct, with the template\'s wording. It becomes v4.2. 2 people will be asked to read it again.',
+      'Policy Privacy notice, with the template\'s wording. It becomes v2.1. 1 person will be asked to read it again.']);
+    expect(texts(p.leftAlone)).toContain('Uploaded policy documents stay as they are. Everybody’s onboarding progress stays too, apart from the policies they are asked to read again.');
+  });
+  test('a new name alone keeps the version and the acknowledgements', () => {
+    const o = { config: config(), policies: policies(), acknowledged: { pol_conduct: 2 } };
+    const p = planApply(withOnb({ steps: [], documents: [], policies: [
+      { id: 'pol_conduct', label: 'Conduct at work', ver: 'v9.9', sum: 'Code of conduct in one line.', body: ['Code of conduct says this.'] }] }), state(o), ALL);
+    expect(p.steps.onboarding.policiesUpdated).toEqual([{ id: 'pol_conduct', label: 'Conduct at work', ver: 'v4.1', sum: 'Code of conduct in one line.', body: ['Code of conduct says this.'], reask: false }]);
+    expect(texts(p.changes)).toEqual(['Policy Code of conduct becomes Conduct at work. It stays v4.1, so nobody is asked to read it again.']);
+    expect(texts(p.leftAlone)).toContain('Uploaded policy documents and everybody’s onboarding progress stay as they are.');
+  });
   test('a policy whose name another one has is neither renamed nor added, and says why', () => {
     const t = withOnb({ steps: [], documents: [], policies: [
       { id: 'pol_conduct', label: 'privacy NOTICE', ver: 'v4.1', sum: '', body: [] },
