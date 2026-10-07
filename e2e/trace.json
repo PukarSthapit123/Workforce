@@ -5715,7 +5715,7 @@
    "text": "OB A second contact can be added",
    "area": "onboarding",
    "status": "ported",
-   "test": "src/features/onboarding/onb.test.tsx › the portal greets them, shows the steps with their fields, refuses an incomplete step at its field and moves on once it is done"
+   "test": "src/features/onboarding/onb.test.tsx › a second emergency contact can be added and removed; only the first is required"
   },
   {
    "id": "ONBOARDING-MODULE#17",
@@ -5731,7 +5731,7 @@
    "text": "OB The convictions question is asked",
    "area": "onboarding",
    "status": "ported",
-   "test": "src/features/onboarding/onb.test.tsx › the portal greets them, shows the steps with their fields, refuses an incomplete step at its field and moves on once it is done"
+   "test": "src/features/onboarding/onb.test.tsx › the additional step keeps the prototype's statutory notes"
   },
   {
    "id": "ONBOARDING-MODULE#19",
@@ -5739,7 +5739,7 @@
    "text": "OB ... with a note that a declaration does not itself block employment",
    "area": "onboarding",
    "status": "ported",
-   "test": "src/features/onboarding/onb.test.tsx › the portal greets them, shows the steps with their fields, refuses an incomplete step at its field and moves on once it is done"
+   "test": "src/features/onboarding/onb.test.tsx › the additional step keeps the prototype's statutory notes"
   },
   {
    "id": "ONBOARDING-MODULE#20",
@@ -5747,7 +5747,7 @@
    "text": "OB The working time opt-out is asked",
    "area": "onboarding",
    "status": "ported",
-   "test": "src/features/onboarding/onb.test.tsx › the portal greets them, shows the steps with their fields, refuses an incomplete step at its field and moves on once it is done"
+   "test": "src/features/onboarding/onb.test.tsx › the additional step keeps the prototype's statutory notes"
   },
   {
    "id": "ONBOARDING-MODULE#21",
@@ -5755,7 +5755,7 @@
    "text": "OB ... and states it is voluntary and withdrawable",
    "area": "onboarding",
    "status": "ported",
-   "test": "src/features/onboarding/onb.test.tsx › the portal greets them, shows the steps with their fields, refuses an incomplete step at its field and moves on once it is done"
+   "test": "src/features/onboarding/onb.test.tsx › the additional step keeps the prototype's statutory notes"
   },
   {
    "id": "ONBOARDING-MODULE#22",

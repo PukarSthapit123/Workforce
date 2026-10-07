@@ -95,15 +95,21 @@ describe('My onboarding', () => {
     await screen.findByTestId(tid.onb.body('personal'));
     expect(screen.getByTestId(tid.onb.field('ni'))).toHaveValue('QQ123456C');
     expect(acts()).toHaveLength(1);
+  });
 
-    /* emergency contacts: a second can be added and removed; only the first is required */
+  test('a second emergency contact can be added and removed; only the first is required', async () => {
+    await signIn();
+    await open();
     await goTo('emergency');
     await userEvent.click(screen.getByTestId(tid.onb.contactAdd));
     expect(screen.getByTestId(tid.onb.contact(1))).toBeInTheDocument();
     await userEvent.click(screen.getByTestId(tid.onb.contactRemove(1)));
     expect(screen.queryByTestId(tid.onb.contact(1))).toBeNull();
+  });
 
-    /* additional: the statutory notes are the prototype's words */
+  test("the additional step keeps the prototype's statutory notes", async () => {
+    await signIn();
+    await open();
     await goTo('additional');
     expect(document.body).toHaveTextContent('A declaration does not by itself prevent you starting.');
     expect(document.body).toHaveTextContent('An opt-out is voluntary and you may withdraw it later by giving notice.');
