@@ -305,6 +305,24 @@ describe('activation is refused on the server while start blockers remain, throu
     expect(refusal(r)).toMatchObject({ code: 'NOT_READY', message: expect.stringMatching(/^Tom Achterberg cannot start yet\. \d+ outstanding\. Personal details not completed\.$/) });
     expect(snapshot(...WRITES)).toEqual(before);
   });
+  test('a starter parked in Archived is still refused activation while anything is outstanding, and nothing is written', async () => {
+    const call = await as('admin'), p = personOf('CP-1502');
+    expect((await call('POST', `/api/v1/people/${p.id}/transitions`, { to: 'archived', reason: 'Parked' }, p.version)).status).toBe(200);
+    const parked = personOf('CP-1502'), before = snapshot(...WRITES);
+    const r = await call('POST', `/api/v1/people/${parked.id}/transitions`, { to: 'active', reason: 'Starting Monday' }, parked.version);
+    expect(r.status).toBe(409);
+    expect(refusal(r)).toMatchObject({ code: 'NOT_READY', message: expect.stringMatching(/^Tom Achterberg cannot start yet\. \d+ outstanding\. Personal details not completed\.$/) });
+    expect(snapshot(...WRITES)).toEqual(before);
+    expect(personOf('CP-1502').state).toBe('archived');
+  });
+  test('a parked starter with nothing outstanding can be made active from Archived, and the case records the start', async () => {
+    complete('CP-1502');
+    const call = await as('admin'), p = personOf('CP-1502');
+    await call('POST', `/api/v1/people/${p.id}/transitions`, { to: 'archived', reason: 'Parked' }, p.version);
+    const parked = personOf('CP-1502');
+    expect((await call('POST', `/api/v1/people/${parked.id}/transitions`, { to: 'active', reason: 'Starting Monday' }, parked.version)).status).toBe(200);
+    expect(caseOf('CP-1502')?.startedAt).toBe('2026-08-13T14:30:00.000Z');
+  });
   test('a required document not yet verified still blocks the start while verification is on', async () => {
     complete('CP-1502');
     store.coll<Case>('onboardingCases')['onb_CP-1502'] = { ...(caseOf('CP-1502') as Case), docs: { rtw: 'done', addr: 'verified', photo: 'verified' } };

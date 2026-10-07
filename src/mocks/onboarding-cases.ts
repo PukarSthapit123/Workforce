@@ -59,14 +59,23 @@ export function ensureCase(personCode: string, state: string): string | null {
   return id;
 }
 
+/* A case that exists and never recorded a start: the person began onboarding
+   and has not finished it, whatever state they were moved to since. */
+const unstartedCase = (personCode: string) => {
+  const c = recordAt(casesColl(), caseId(personCode));
+  return c && !c.startedAt ? c : undefined;
+};
 /* D6: moving a candidate or preboarding person to active, while the
-   Onboarding module is on, is refused while anything blocks the start. */
+   Onboarding module is on, is refused while anything blocks the start. The
+   same holds for anybody whose onboarding never started, from whatever state
+   (a starter parked in Archived and then made active is still a starter). */
 export function activationProblem(p: { code: string; name: string; state: string }, to: string): OnbRefusal | null {
-  if (to !== 'active' || !isStarterState(p.state) || !onbModuleOn()) return null;
+  if (to !== 'active' || !onbModuleOn()) return null;
+  if (!isStarterState(p.state) && !unstartedCase(p.code)) return null;
   return startProblem(p.name, caseOf(p.code), blockerContext());
 }
-/* Once they are active the case records when they started. */
+/* Once they are active the case records when they started (once only). */
 export function markStarted(personCode: string): void {
-  const c = recordAt(casesColl(), caseId(personCode));
+  const c = unstartedCase(personCode);
   if (c) putCase(c, { ...c, startedAt: store.now() });
 }

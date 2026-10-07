@@ -28,7 +28,7 @@ export const transitionHandlers = [
     people()[p.id] = saved;
     /* D1: moving into candidate or preboarding brings an empty case; becoming active records the start */
     const onboardingCase = ensureCase(p.code, to);
-    if (to === 'active' && (p.state === 'candidate' || p.state === 'preboard')) markStarted(p.code);
+    if (to === 'active') markStarted(p.code);
     const who = actor(session);
     writeHistory(p.code, who, 'transition', [
       { field: 'state', from: p.state, to },
