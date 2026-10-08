@@ -5,7 +5,8 @@ import {
   CellSaved, CellSuggestions, CoverBoard, CoverFilled, CoverSaved, FilledConfirmed, MyShifts, PatternGenerated, PatternList, PlanAccepted,
   ItRequestList, RotaHome, RotaSetup, RotaWeekView, ShiftCatalogue, WeekCleared, WeekCopied, WeekMoved, WeekPlan, WeekRepeated,
 } from '@/contract/rota';
-import { DaySaved } from '@/contract/timesheets';
+import { DaySaved, TimesheetWeek } from '@/contract/timesheets';
+import { HomeMonth } from '@/contract/home';
 import { FROZEN, accountOf, audits, caller, fault, resetTo, snapshot, tokenFor, type Persona } from '@/test/api-helpers';
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' })); afterAll(() => server.close());
@@ -701,5 +702,52 @@ describe('GET /api/v1/rota/it-requests (the IT service desk, admIT)', () => {
     const list = ItRequestList.parse((await admin('GET', IT)).body);
     expect(list.items.map(i => i.ref)).toEqual(['ITR-1007', 'ITR-1000']);
     expect(list.items[0]).toMatchObject({ personCode: 'CP-1310', worker: 'Bank', status: 'Raised', system: 'IT service desk (simulated)' });
+  });
+});
+
+describe('a change of week start keeps stored weeks readable (module 8 D4, review C1)', () => {
+  /* Close the open work the refusal counts, then move the week start to Sunday through the real endpoint. */
+  async function toSunday() {
+    Object.values(store.coll<{ state: string }>('timesheetDays')).forEach(d => { if (['pend', 'back', 'resub'].includes(d.state)) d.state = 'ok'; });
+    Object.values(store.coll<{ state: string }>('rotaWeeks')).forEach(w => { if (['draft', 'review', 'amendment'].includes(w.state)) w.state = 'published'; });
+    const t = store.coll<{ version: number }>('tenant').tenant;
+    const r = await (await as('admin'))('PATCH', '/api/v1/tenant/settings', { weekStart: 'Sunday' }, t?.version ?? 0);
+    expect(r.status).toBe(200);
+  }
+  test('Home, My shifts and the timesheet rota line still show the published Monday-keyed weeks', async () => {
+    const me = await as('employee'), code = accountOf('employee').personCode;
+    const shiftsOn = (b: unknown) => HomeMonth.parse(b).days.filter(d => d.shift).map(d => `${d.date} ${d.shift?.code ?? ''}`);
+    const homeBefore = shiftsOn((await me('GET', '/api/v1/home?month=2026-08')).body);
+    const mineBefore = MyShifts.parse((await me('GET', '/api/v1/rota/my-shifts')).body);
+    const tsBefore = TimesheetWeek.parse((await me('GET', `/api/v1/timesheets/${code}/weeks/2026-08-10`)).body);
+    expect(homeBefore.length).toBeGreaterThan(0);
+    expect(mineBefore.days.length).toBeGreaterThan(0);
+
+    await toSunday();
+    const homeAfter = shiftsOn((await me('GET', '/api/v1/home?month=2026-08')).body);
+    expect(homeAfter).toEqual(homeBefore);
+    /* My shifts opens on the stored week that covers today, under its own key */
+    const mine = MyShifts.parse((await me('GET', '/api/v1/rota/my-shifts')).body);
+    expect(mine).toMatchObject({ weekStart: '2026-08-10', state: mineBefore.state, visible: true, days: mineBefore.days });
+    /* the timesheet's Sunday week takes each day from the stored week covering it */
+    const ts = TimesheetWeek.parse((await me('GET', `/api/v1/timesheets/${code}/weeks/2026-08-16`)).body);
+    expect(ts.days[0]?.rota).toEqual(tsBefore.days[6]?.rota);
+    const tsSun = TimesheetWeek.parse((await me('GET', `/api/v1/timesheets/${code}/weeks/2026-08-09`)).body);
+    expect(tsSun.days.slice(1).map(d => d.rota)).toEqual(tsBefore.days.slice(0, 6).map(d => d.rota));
+  });
+  test('the board keeps its stored weeks and steps to new-start weeks after them', async () => {
+    await toSunday();
+    const manager = await as('manager');
+    const w = RotaWeekView.parse((await manager('GET', WH)).body);
+    expect(w).toMatchObject({ weekStart: '2026-08-10', state: 'published', prevWeek: '2026-08-03' });
+    const home = RotaHome.parse((await manager('GET', '/api/v1/rota/home')).body);
+    expect(home.weekStart).toBe('2026-08-10');
+    /* past the stored weeks, the next week starts on a Sunday */
+    let next = w;
+    for (let i = 0; i < 12 && store.coll('rotaWeeks')[`rw_WH_${next.nextWeek}`]; i++)
+      next = RotaWeekView.parse((await manager('GET', `/api/v1/rota/weeks/WH/${next.nextWeek}`)).body);
+    expect(new Date(`${next.nextWeek}T00:00:00Z`).getUTCDay()).toBe(0);
+    const fresh = await manager('GET', `/api/v1/rota/weeks/WH/${next.nextWeek}`);
+    expect(fresh.status).toBe(200);
   });
 });

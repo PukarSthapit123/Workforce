@@ -11,7 +11,7 @@ import { refuse } from './http';
 import { serve } from './serve';
 import { effectiveCode, nameOf, personByCode, recordAt, type StoredPerson } from './world';
 import { tenantRec, view } from './tenant';
-import { rotaDaysFor, rotaToneOf } from './rota';
+import { rotaDayOn, rotaToneOf } from './rota';
 import { absenceOf, daysOf, hm, isLocked } from './timesheets';
 import { leaveRecordOn, leaveTypeInfo } from './leave';
 import { getDocument, getHome, listMyDocuments, type DocumentRow, type HomeDay } from '@/contract/home';
@@ -21,7 +21,7 @@ import {
   outOfBoundsProblem, whoLine, type KeyDay,
 } from '@/domain/home';
 import { flagOn } from '@/domain/modules';
-import { clockFromIso, dayIndex, periodStart, weekDates } from '@/domain/time';
+import { clockFromIso, periodStart, weekDates } from '@/domain/time';
 import { dayMinutes } from '@/domain/timesheet';
 
 type StoredDay = Omit<TimesheetDay, 'minutes' | 'posting' | 'enteredByName'>;
@@ -33,12 +33,7 @@ const personOf = (code: string): StoredPerson => personByCode(code) ?? NO_PERSON
 /* One person's days, read once per request: the published rota by week and
    the stored timesheet days by date. */
 function reader(p: StoredPerson, today: string) {
-  const weeks = new Map<string, RotaDay[] | undefined>();
-  const rotaOn = (date: string) => {
-    const ws = periodStart(date);
-    if (!weeks.has(ws)) weeks.set(ws, rotaDaysFor(p.code, ws));
-    return weeks.get(ws)?.[dayIndex(date)];
-  };
+  const rotaOn = (date: string): RotaDay | undefined => rotaDayOn(p.code, date);
   const stored = new Map(daysOf(p.code).map(d => [d.date, d as StoredDay]));
   const holidays = new Map(view(tenantRec()).bankHolidays.map(b => [b.date, b.name]));
   return (date: string): HomeDay => {

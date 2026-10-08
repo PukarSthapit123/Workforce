@@ -67,6 +67,8 @@ export const RotaWeekView = z.object({
   /* the locations this person may manage: their own, or every active one with master data (D5) */
   locations: z.array(LocationOption),
   weekStart: IsoDate, label: z.string(), isoWeek: z.number().int(), today: IsoDate,
+  /* the weeks either side: a week stored before the week start changed keeps its key (module 8 D4) */
+  prevWeek: IsoDate, nextWeek: IsoDate,
   state: RotaState, publishVersion: z.number().int().nonnegative(), publishedAt: AtOrBlank, publishedBy: Actor.nullable(),
   /* newest first */
   changes: z.array(RotaChange),

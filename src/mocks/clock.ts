@@ -12,7 +12,7 @@ import { serve } from './serve';
 import { actor } from './auth';
 import { writeAudit } from './audit';
 import { notifyEvent } from './notify';
-import { rotaDaysFor } from './rota';
+import { rotaDayOn } from './rota';
 import { asStored, absenceBlocks, captureRules, dayView, daysOf, draftBase, isLocked, refuseLocked, writeDraft } from './timesheets';
 import { effectiveCode, people, personByCode, recordAt, type Signed, type StoredPerson } from './world';
 import { clockIn, clockOut, closeClock, endBreak, getMyClock, startBreak, type ClockMoved, type ClockRecord } from '@/contract/clock';
@@ -25,7 +25,7 @@ import {
 } from '@/domain/clock';
 import { absenceBlockedProblem } from '@/domain/leave';
 import { DEFAULT_EXTRAS, flagOn, modOn } from '@/domain/modules';
-import { addDays, clockFromIso, dayIndex, formatDay, periodStart, toMin } from '@/domain/time';
+import { addDays, clockFromIso, formatDay, toMin } from '@/domain/time';
 
 interface StoredClock {
   id: string; version: number; updatedAt: string; personCode: string; date: string; events: ClockEvent[];
@@ -58,7 +58,7 @@ const refuseWith = (p: ClockProblem | Refusal, status = 409): never => refuse(st
 
 /* The published rota line for the day: a shift, never a rest day, leave or sickness (D5). */
 function rotaLine(p: StoredPerson, date: string): RotaDay | null {
-  const r = rotaDaysFor(p.code, periodStart(date))?.[dayIndex(date)];
+  const r = rotaDayOn(p.code, date);
   return r && r.from && r.code !== 'V' && r.code !== 'S' ? r : null;
 }
 /* The person's line manager, by the name their record carries. */

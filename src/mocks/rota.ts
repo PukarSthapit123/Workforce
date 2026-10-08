@@ -36,13 +36,13 @@ import {
   itRequestFor, itRequestNotice, lineOf, lineRestIssues, minFor, newCover, onRoster, onShift, openCoverProblem, openShiftNotice,
   openShiftsFor, patternGenerateProblem, patternProblem, patternUsage, planSummary, planWeek, publishAuditText, publishNotice,
   publishProblem, publishSummary, publishWeek, recalcShift, renumberStages, repeatAuditText, repeatProblem, repeatSummary, repeatWeek,
-  resizeCycle, restNeed, rotaConfigProblem, rotaDaysOf, rotaInputFor, rotaPolicyWithholds, rotaState, rotaTransitionProblem, rotaVisible, rotaWeekId,
+  resizeCycle, restNeed, rotaConfigProblem, rotaDayOf, rotaDaysOf, rotaInputFor, rotaPolicyWithholds, rotaState, rotaTransitionProblem, rotaVisible, rotaWeekId,
   rotadHours, setCell, setCells, shiftAssignedNotice, shiftBy, shiftRemovalProblem, shiftTime, shiftTypeProblem, shiftUsage,
   staggerOffsets, suggest, thinnest, typeRotaFor, typesAfterNightChange, typesAfterShiftCreate, typesWithoutShift, rotaKeyCounts,
   type AssignMode, type AssignOutcome, type Candidate, type CellWrite, type PatternPersonInfo, type RotaActor, type RotaChange,
   type RotaDay, type RotaWeekCore, type RotaWorker, type RuleContext, type Suggestion, type WeekLookup,
 } from '@/domain/rota';
-import { absenceCellWrites, datesCellPlan, shortDays, type CoverDay } from '@/domain/leave';
+import { absenceCellWrites, shortDays, type CellPlanWeek, type CoverDay } from '@/domain/leave';
 
 /* ------------------------------------------------------------- the world */
 interface Meta { id: string; version: number; updatedAt: string }
@@ -104,8 +104,10 @@ function requireBuilder(s: Signed, cap: 'rota_pattern' | 'rota_shift') {
     refuse(403, { code: 'rota-policy', message: `Rota setup says only administrators build ${cap === 'rota_pattern' ? 'working patterns' : 'shift types'}.`,
       next: 'Ask an administrator, or change who builds the rota in Rota setup.' });
 }
-function requireMonday(weekStart: string, field = 'weekStart') {
-  if (!isWeekStart(weekStart)) invalid({ field, message: `A week starts on a ${tenant().weekStart}.` });
+/* A week is named by its first day: a day the tenant's week starts on, or the
+   key of a week stored before the week start changed (D4, review C1). */
+function requireMonday(loc: string, weekStart: string, field = 'weekStart') {
+  if (!isWeekStart(weekStart) && !weekRec(loc, weekStart)) invalid({ field, message: `A week starts on a ${tenant().weekStart}.` });
 }
 
 /* ----------------------------------------------------------- the people */
@@ -147,6 +149,29 @@ const coreOf = (w: StoredWeek): RotaWeekCore => ({ location: w.location, weekSta
 const weekCore = (loc: string, ws: string): RotaWeekCore => { const w = weekRec(loc, ws); return w ? coreOf(w) : emptyWeek(loc, ws); };
 /* the record If-Match is checked against: the stored week, or version 0 for one not stored yet */
 const weekMeta = (loc: string, ws: string): Meta => weekRec(loc, ws) ?? { id: rotaWeekId(loc, ws), version: 0, updatedAt: store.now() };
+/* Review C1 (D4): a stored week keeps its key when the tenant's week start
+   changes, and stays readable. A date belongs to the stored week that covers
+   it, the earliest key in the six days up to it, so a week already stored
+   keeps all seven of its days. Only a date no stored week covers falls in the
+   week the tenant's start gives. */
+export function weekOn(loc: string, date: string): { weekStart: string; day: number } {
+  for (let back = 6; back >= 0; back--) {
+    const ws = addDays(date, -back);
+    if (weekRec(loc, ws)) return { weekStart: ws, day: back };
+  }
+  return { weekStart: periodStart(date), day: dayIndex(date) };
+}
+/* The dates grouped into the stored weeks that cover them (weekOn), in date
+   order: datesCellPlan, but a stored week keeps its days after a change of
+   week start (review C1). */
+function cellPlanAt(loc: string, dates: readonly string[]): CellPlanWeek[] {
+  const out: CellPlanWeek[] = [];
+  for (const d of [...new Set(dates)].sort()) {
+    const { weekStart, day } = weekOn(loc, d), w = out.find(x => x.weekStart === weekStart);
+    if (w) w.days.push(day); else out.push({ location: loc, weekStart, weekId: rotaWeekId(loc, weekStart), days: [day] });
+  }
+  return out;
+}
 function saveWeek(core: RotaWeekCore): StoredWeek {
   const id = rotaWeekId(core.location, core.weekStart), old = recordAt(weeks(), id);
   const rec: StoredWeek = old ? bump(old, core) : { id, version: 1, updatedAt: store.now(), ...core };
@@ -180,6 +205,7 @@ function weekView(s: Signed, l: StoredLocation, ws: string): RotaWeekView {
     id: rotaWeekId(l.code, ws), version: rec?.version ?? 0,
     location: { code: l.code, name: l.name, area: l.area ?? '', level: l.level ?? '', minPerShift: l.minPerShift ?? cfg.minDefault },
     locations: manageable(s), weekStart: ws, label: weekLabel(ws), isoWeek: isoWeek(ws), today: today(),
+    prevWeek: weekOn(l.code, addDays(ws, -1)).weekStart, nextWeek: weekOn(l.code, addDays(ws, 7)).weekStart,
     state: w.state, publishVersion: w.publishVersion, publishedAt: w.publishedAt, publishedBy: w.publishedBy, changes: w.changes,
     min, gapDays: gapDays(lines, min), onShift: weekDates(ws).map((_, i) => onShift(lines, i)), coverage: coverage(lines, sh),
     rows, key: rotaKeyCounts(lines), shifts: sh,
@@ -236,8 +262,10 @@ const cellField = (personCode: string, day: number) => `lines.${personCode}.${da
 const covers = () => store.coll<CoverRecord>('coverRequests');
 const filledColl = () => store.coll<FilledShift>('filledShifts');
 const itColl = () => store.coll<ItRequest>('itRequests');
-const eligibleFor = (loc: string, date: string, code: string) =>
-  suggest(dayIndex(date), code, candidatesAt(loc, weekCore(loc, periodStart(date)))).ok;
+const eligibleFor = (loc: string, date: string, code: string) => {
+  const at = weekOn(loc, date);
+  return suggest(at.day, code, candidatesAt(loc, weekCore(loc, at.weekStart))).ok;
+};
 function coverView(c: CoverRecord): CoverView {
   const sh = shiftList(), ok = c.open ? eligibleFor(c.location, c.date, c.shift) : [];
   return { ...c, locationName: locName(c.location), shiftName: shiftBy(sh, c.shift)?.name ?? c.shift, time: shiftTime(sh, c.shift),
@@ -265,7 +293,7 @@ const refuseCover = (p: { code: string; message: string; next: string; field?: s
   refuse(p.code === 'VALIDATION' ? 422 : 409, { ...p, code: p.code === 'VALIDATION' ? 'invalid' : p.code });
 /* D15: the shift goes on through the week path, then the request closes and a filled row waits for confirmation. */
 function fillWith(s: Signed, c: CoverRecord, p: StoredPerson, why: string, notifyPerson: boolean) {
-  const day = dayIndex(c.date), week = weekCore(c.location, periodStart(c.date));
+  const at = weekOn(c.location, c.date), day = at.day, week = weekCore(c.location, at.weekStart);
   const placed = placeShift(week, p, day, c.shift, s, why, 'personCode', 'assign');
   saveWeek(placed.week);
   if (notifyPerson || placed.amended) noticeFor(p, placed.week, day, c.shift, placed.amended);
@@ -357,11 +385,11 @@ const diff = <T extends object>(was: T, is: T, keys: readonly (keyof T)[]) => {
    been published (D14: an unpublished plan is not shown to the employee, so it
    does not reach their timesheet either). Rest, leave and sickness are not a line. */
 export function rotaInputOn(personCode: string, date: string): RotaInput | undefined {
-  const p = personByCode(personCode);
-  const w = p ? weekRec(p.location, periodStart(date)) : undefined;
-  if (!p || !w || !rotaVisible(w.state)) return undefined;
+  const p = personByCode(personCode), at = p ? weekOn(p.location, date) : undefined;
+  const w = p && at ? weekRec(p.location, at.weekStart) : undefined;
+  if (!p || !at || !w || !rotaVisible(w.state)) return undefined;
   const c = config();
-  return rotaInputFor(lineOf(w, p.code), dayIndex(date), { shifts: shiftList(), typeRota: typeRotaFor(c.types, p.employeeType), config: c,
+  return rotaInputFor(lineOf(w, p.code), at.day, { shifts: shiftList(), typeRota: typeRotaFor(c.types, p.employeeType), config: c,
     typeName: nameOf('employeeTypes', p.employeeType) });
 }
 
@@ -373,9 +401,18 @@ const visibleWeek = (loc: string, ws: string) => {
   const w = weekRec(loc, ws);
   return w && rotaVisible(w.state) ? w : undefined;
 };
-export function rotaDaysFor(personCode: string, weekStart: string): RotaDay[] | undefined {
-  const p = personByCode(personCode), w = p ? visibleWeek(p.location, weekStart) : undefined;
-  return p && w ? rotaDaysOf(lineOf(w, p.code), shiftList()) : undefined;
+/* One date's published rota day for the person, from the stored week that
+   covers it (review C1); nothing while that week is not published. */
+export function rotaDayOn(personCode: string, date: string): RotaDay | undefined {
+  const p = personByCode(personCode), at = p ? weekOn(p.location, date) : undefined;
+  const w = p && at ? visibleWeek(p.location, at.weekStart) : undefined;
+  return p && at && w ? rotaDayOf(lineOf(w, p.code)[at.day] ?? '', shiftList()) : undefined;
+}
+/* The seven days from weekStart, each from the stored week that covers it: a
+   week that straddles a change of week start reads from both. */
+export function rotaDaysFor(personCode: string, weekStart: string): (RotaDay | undefined)[] | undefined {
+  const days = weekDates(weekStart).map(d => rotaDayOn(personCode, d));
+  return days.some(Boolean) ? days : undefined;
 }
 /* The tone a shift is painted in on My home's month (toneOf); a code no
    longer in the catalogue reads as Early, as the prototype's toneOf does. */
@@ -385,10 +422,12 @@ export function rotaToneOf(code: string): 'E' | 'L' | 'N' {
 }
 /* Everyone on a location's published week, by person code, for the approver's matrix. */
 export function rotaWeekDays(location: string, weekStart: string): Record<string, RotaDay[]> {
-  const w = visibleWeek(location, weekStart);
-  if (!w) return {};
-  const sh = shiftList();
-  return Object.fromEntries(Object.keys(w.lines).map(code => [code, rotaDaysOf(lineOf(w, code), sh)]));
+  const sh = shiftList(), w = visibleWeek(location, weekStart);
+  if (w) return Object.fromEntries(Object.keys(w.lines).map(code => [code, rotaDaysOf(lineOf(w, code), sh)]));
+  /* a week that straddles a change of week start (review C1): each day from the stored week covering it */
+  const at = weekDates(weekStart).map(d => { const a = weekOn(location, d); return { day: a.day, w: visibleWeek(location, a.weekStart) }; });
+  const codes = [...new Set(at.flatMap(x => (x.w ? Object.keys(x.w.lines) : [])))];
+  return Object.fromEntries(codes.map(code => [code, at.map(x => rotaDayOf(x.w ? lineOf(x.w, code)[x.day] ?? '' : '', sh))]));
 }
 /* The catalogue as the timesheet's Rota line options, while the Rota module is on. */
 export const rotaLineOptions = () => (tenant().modules.R ? shiftList().map(s => ({ code: s.code, name: s.name, from: s.from, to: s.to })) : undefined);
@@ -401,9 +440,9 @@ export function rotaCoverDays(personCode: string, dates: readonly string[]): Cov
   const p = personByCode(personCode), l = p ? locationBy(p.location) : undefined;
   if (!p || !l) return [];
   return dates.flatMap(date => {
-    const w = weekRec(l.code, periodStart(date));
+    const at = weekOn(l.code, date), w = weekRec(l.code, at.weekStart);
     if (!w) return [];
-    const day = dayIndex(date), lines = rosterOf(l.code, w).map(x => lineOf(w, x.code));
+    const day = at.day, lines = rosterOf(l.code, w).map(x => lineOf(w, x.code));
     return [{ date, onShift: onShift(lines, day), working: isWorking(lineOf(w, p.code)[day]), min: minAt(l) }];
   });
 }
@@ -419,7 +458,7 @@ export function writeAbsence(o: { personCode: string; dates: readonly string[]; 
   const p = personByCode(o.personCode), l = p ? locationBy(p.location) : undefined;
   if (!p || !l) return out;
   const sh = shiftList();
-  for (const plan of datesCellPlan(l.code, o.dates)) {
+  for (const plan of cellPlanAt(l.code, o.dates)) {
     const week = weekCore(l.code, plan.weekStart), line = lineOf(week, p.code);
     const writes = absenceCellWrites(plan, { code: p.code, name: p.name }, o.mark, o.by, store.now()).filter(w => line[w.day] !== o.mark);
     if (!writes.length) continue;
@@ -448,20 +487,21 @@ export const rotaHandlers = [
     requireRota();
     const ls = manageable(session), sc = scopeOf(session), now = today();
     const own = sc.all ? personByCode(effectiveCode(session))?.location : sc.location;
-    return { locations: ls, location: ls.find(l => l.code === own)?.code ?? ls[0]?.code ?? '', today: now, weekStart: periodStart(now) };
+    const location = ls.find(l => l.code === own)?.code ?? ls[0]?.code ?? '';
+    return { locations: ls, location, today: now, weekStart: location ? weekOn(location, now).weekStart : periodStart(now) };
   }),
 
   serve(getRotaWeek, ({ session, params }) => {
     requireRota();
     const l = locationFor(session, params.location);
-    requireMonday(params.weekStart);
+    requireMonday(l.code, params.weekStart);
     return weekView(session, l, params.weekStart);
   }),
 
   serve(writeRotaCell, ({ session, params, body, checkVersion }) => {
     requireRota();
     const l = locationFor(session, params.location), ws = params.weekStart;
-    requireMonday(ws);
+    requireMonday(l.code, ws);
     checkVersion(weekMeta(l.code, ws));
     const p = personAt(body.personCode, l.code), week = weekCore(l.code, ws), field = cellField(p.code, body.day);
     const cur = lineOf(week, p.code)[body.day] ?? '', sh = shiftList();
@@ -495,7 +535,7 @@ export const rotaHandlers = [
   serve(transitionRotaWeek, ({ session, params, body, checkVersion }) => {
     requireRota();
     const l = locationFor(session, params.location), ws = params.weekStart;
-    requireMonday(ws);
+    requireMonday(l.code, ws);
     checkVersion(weekMeta(l.code, ws));
     const w = weekCore(l.code, ws);
     if (body.to === 'published') {
@@ -522,7 +562,7 @@ export const rotaHandlers = [
   serve(copyRotaWeek, ({ session, params, checkVersion }) => {
     requireRota();
     const l = locationFor(session, params.location), ws = params.weekStart, src = addDays(ws, -7);
-    requireMonday(ws);
+    requireMonday(l.code, ws);
     checkVersion(weekMeta(l.code, ws));
     const target = weekCore(l.code, ws), slot = weekRec(l.code, src), roster = activeAt(l.code).map(p => p.code);
     const problem = copyProblem(target, slot, roster);
@@ -540,7 +580,7 @@ export const rotaHandlers = [
   serve(repeatRotaWeek, ({ session, params, body, checkVersion }) => {
     requireRota();
     const l = locationFor(session, params.location), ws = params.weekStart;
-    requireMonday(ws);
+    requireMonday(l.code, ws);
     checkVersion(weekMeta(l.code, ws));
     const src = weekRec(l.code, ws), roster = activeAt(l.code).map(p => p.code);
     const problem = repeatProblem(src, roster, body.weeks);
@@ -558,7 +598,7 @@ export const rotaHandlers = [
   serve(clearRotaWeek, ({ session, params, checkVersion }) => {
     requireRota();
     const l = locationFor(session, params.location), ws = params.weekStart;
-    requireMonday(ws);
+    requireMonday(l.code, ws);
     checkVersion(weekMeta(l.code, ws));
     const w = weekCore(l.code, ws), roster = activeAt(l.code).map(p => p.code);
     const problem = clearProblem(w, roster, l.name);
@@ -575,7 +615,7 @@ export const rotaHandlers = [
   serve(planRotaWeek, ({ session, params }) => {
     requireRota();
     const l = locationFor(session, params.location), ws = params.weekStart;
-    requireMonday(ws);
+    requireMonday(l.code, ws);
     const items = planWeek(candidatesAt(l.code, weekCore(l.code, ws)), minAt(l), shiftList())
       .map(x => (x.none ? { day: x.day, code: x.code, none: true, personCode: '', name: '', why: [] } : { ...x }));
     return { items, summary: planSummary(items.filter(x => !x.none).length) };
@@ -584,7 +624,7 @@ export const rotaHandlers = [
   serve(acceptRotaPlan, ({ session, params, body, checkVersion }) => {
     requireRota();
     const l = locationFor(session, params.location), ws = params.weekStart;
-    requireMonday(ws);
+    requireMonday(l.code, ws);
     checkVersion(weekMeta(l.code, ws));
     let week = weekCore(l.code, ws), amended = false;
     const advisories: HoursFlag[] = [], placedAll: { p: StoredPerson; day: number; code: string }[] = [];
@@ -607,7 +647,7 @@ export const rotaHandlers = [
   serve(suggestRotaCell, ({ session, params, query }) => {
     requireRota();
     const l = locationFor(session, params.location), ws = params.weekStart;
-    requireMonday(ws);
+    requireMonday(l.code, ws);
     if (!shiftBy(shiftList(), query.code)) invalid({ field: 'code', message: `There is no shift type with the code ${query.code}.` });
     const r = suggest(query.day, query.code, candidatesAt(l.code, weekCore(l.code, ws)));
     return { day: query.day, code: query.code, ok: r.ok.map(suggestionView),
@@ -904,8 +944,8 @@ export const rotaHandlers = [
     const closed = coverClosed(c);
     if (closed) refuse(409, closed);
     if (!c.reason) refuse(409, { code: 'NOT_OFFERED', message: 'This shift is not open for claiming yet.', next: 'Claim open shifts from My shifts.' });
-    const ctx = ctxFor(me), line = lineOf(weekCore(c.location, periodStart(c.date)), me.code);
-    const ex = ctx.safeWorker ? eligibility(worker(me), line, dayIndex(c.date), c.shift, ctx)[0] : undefined;
+    const ctx = ctxFor(me), at = weekOn(c.location, c.date), line = lineOf(weekCore(c.location, at.weekStart), me.code);
+    const ex = ctx.safeWorker ? eligibility(worker(me), line, at.day, c.shift, ctx)[0] : undefined;
     if (ex) refuse(422, { code: 'ROTA_INELIGIBLE', field: 'id', message: claimRefusal(ex), next: 'Choose another open shift.' });
     const r = fillWith(session, c, me, 'Claimed', false);
     notifyEvent('rt_assign', 'actor', managersAt(c.location), coverFilledNotice(me.name, shiftList(), c.shift, c.date));
@@ -951,8 +991,8 @@ export const rotaHandlers = [
   serve(getMyShifts, ({ session, query }) => {
     requireRota();
     const p = personByCode(effectiveCode(session)) ?? NOT_FOUND('person record');
-    const now = today(), ws = query.weekStart ?? periodStart(now);
-    requireMonday(ws);
+    const now = today(), ws = query.weekStart ?? weekOn(p.location, now).weekStart;
+    requireMonday(p.location, ws);
     const w = weekCore(p.location, ws), visible = rotaVisible(w.state), sh = shiftList();
     const line = visible ? lineOf(w, p.code) : emptyLine(), dates = weekDates(ws);
     const days = dates.flatMap((date, i) => {
@@ -963,7 +1003,7 @@ export const rotaHandlers = [
     const next = nextDay ? { ...nextDay, with: rosterOf(p.location, w).filter(x => x.code !== p.code && lineOf(w, x.code)[dayIndex(nextDay.date)] === nextDay.code).map(x => x.name) } : null;
     const published = Object.values(weeks()).filter(x => x.location === p.location && rotaVisible(x.state)).map(x => addDays(x.weekStart, 6)).sort();
     const open = flagOn('FULFIL')
-      ? openShiftsFor({ ...worker(p), location: p.location }, Object.values(covers()).filter(c => c.date >= now), date => lineOf(weekCore(p.location, periodStart(date)), p.code), ctxFor(p))
+      ? openShiftsFor({ ...worker(p), location: p.location }, Object.values(covers()).filter(c => c.date >= now), date => lineOf(weekCore(p.location, weekOn(p.location, date).weekStart), p.code), ctxFor(p))
       : [];
     return {
       person: { code: p.code, name: p.name, location: p.location, locationName: locName(p.location) },

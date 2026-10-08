@@ -10,7 +10,7 @@ import { serve } from './serve';
 import { actor, requireCapability } from './auth';
 import { writeAudit } from './audit';
 import { faults } from './faults';
-import { rotaDaysFor, rotaInputOn, rotaLineOptions, rotaWeekDays } from './rota';
+import { rotaDayOn, rotaDaysFor, rotaInputOn, rotaLineOptions, rotaWeekDays } from './rota';
 import { leaveAbsenceOn, leaveBlocksTimesheet } from './leave';
 import { invalid } from './people';
 import meta from './seed/meta.json';
@@ -31,7 +31,7 @@ import {
   validateTimes, weekBlockedMessage, weekDates, weekDayOutcome, weekLabel, weekModel, weekTotals, NOTHING_TO_SUBMIT,
   allocationProblem, type AllowanceDef, type CheckContext, type FieldEnv, type PayCode, type TsState, type WeekDayInput,
 } from '@/domain/timesheet';
-import { dayIndex, isWeekStart } from '@/domain/time';
+import { isWeekStart } from '@/domain/time';
 
 type StoredDay = Omit<TimesheetDay, 'minutes' | 'posting' | 'enteredByName'>;
 type StoredAttempt = IntegrationAttempt;
@@ -293,7 +293,7 @@ function earlierWeeks(p: StoredPerson) {
 /* The day's absence (module 4 D8): a V or S cell on the published rota, else
    approved leave or recorded sickness from the leave records, on any tenant. */
 export function absenceOf(personCode: string, date: string): '' | 'V' | 'S' {
-  const cell = rotaDaysFor(personCode, periodStart(date))?.[dayIndex(date)]?.code;
+  const cell = rotaDayOn(personCode, date)?.code;
   return cell === 'V' || cell === 'S' ? cell : leaveAbsenceOn(personCode, date);
 }
 /* With "Leave blocks timesheet capture" on, time on an absence day is refused

@@ -164,7 +164,7 @@ function Board({ view, loading, thisWeek, initialPlan, onLocation, onWeek }: {
   return (
     <>
       <WeekBar view={view} atCurrent={view.weekStart === thisWeek} busy={busy} actions={{
-        onWeek: step => goWeek(step === 0 ? thisWeek : addDays(view.weekStart, 7 * step)),
+        onWeek: step => goWeek(step === 0 ? thisWeek : step < 0 ? view.prevWeek : view.nextWeek),
         onHorizon: () => setBox({ k: 'horizon' }), onCopy: doCopy, onRepeat: openRepeat, onClear: openClear,
         onReview: review, onAdhoc: () => setBox({ k: 'adhoc' }), onPublish: publish,
       }} />
