@@ -21,7 +21,7 @@ import {
   outOfBoundsProblem, whoLine, type KeyDay,
 } from '@/domain/home';
 import { flagOn } from '@/domain/modules';
-import { clockFromIso, dowMon, periodStart, weekDates } from '@/domain/time';
+import { clockFromIso, dayIndex, periodStart, weekDates } from '@/domain/time';
 import { dayMinutes } from '@/domain/timesheet';
 
 type StoredDay = Omit<TimesheetDay, 'minutes' | 'posting' | 'enteredByName'>;
@@ -37,7 +37,7 @@ function reader(p: StoredPerson, today: string) {
   const rotaOn = (date: string) => {
     const ws = periodStart(date);
     if (!weeks.has(ws)) weeks.set(ws, rotaDaysFor(p.code, ws));
-    return weeks.get(ws)?.[dowMon(date)];
+    return weeks.get(ws)?.[dayIndex(date)];
   };
   const stored = new Map(daysOf(p.code).map(d => [d.date, d as StoredDay]));
   const holidays = new Map(view(tenantRec()).bankHolidays.map(b => [b.date, b.name]));

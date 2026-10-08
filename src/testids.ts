@@ -349,6 +349,7 @@ export const tid = {
     policy: (i: number) => k('mleave-policy', i), policyUnit: (i: number) => k('mleave-policy-unit', i),
     policyNum: (i: number, key: string) => k('mleave-policy-num', i, key),
     num: (key: string) => k('mleave-num', key), toggle: (key: string) => k('mleave-toggle', key), unit: 'mleave-unit', finYear: 'mleave-fin-year',
+    finYearLink: 'mleave-fin-year-link',
     toilWindow: 'mleave-toil-window', escalateTo: 'mleave-escalate-to', rotaOff: 'mleave-rota-off',
     stage: (i: number) => k('mleave-stage', i), stageWho: (i: number) => k('mleave-stage-who', i), stageAction: (i: number) => k('mleave-stage-action', i),
     stageWait: (i: number) => k('mleave-stage-wait', i), stageChannel: (i: number) => k('mleave-stage-channel', i),
@@ -371,8 +372,14 @@ export const tid = {
   /* 1c: Calendar and saved data (acal) */
   acal: {
     error: 'acal-error', loading: 'acal-loading', card: (key: string) => k('acal-card', key), tip: (key: string) => k('acal-tip', key),
-    finYear: 'acal-fin-year', weekStart: 'acal-week-start', horizon: 'acal-horizon', holidays: 'acal-holidays',
+    finYear: 'acal-fin-year', finYearStart: 'acal-fin-year-start', finYearEnd: 'acal-fin-year-end',
+    settingsSave: 'acal-settings-save', settingsCancel: 'acal-settings-cancel', weekStart: 'acal-week-start', horizon: 'acal-horizon',
+    holidays: 'acal-holidays', region: 'acal-region', fillRegion: 'acal-fill-region', addHoliday: 'acal-add-holiday',
+    newHolidayDate: 'acal-new-holiday-date', newHolidayName: 'acal-new-holiday-name',
     holiday: (date: string) => k('acal-holiday', date), treatment: (date: string) => k('acal-treatment', date), noHolidays: 'acal-no-holidays',
+    holidayDate: (date: string) => k('acal-holiday-date', date), holidayName: (date: string) => k('acal-holiday-name', date),
+    holidayEdit: (date: string) => k('acal-holiday-edit', date), holidaySave: (date: string) => k('acal-holiday-save', date),
+    holidayCancel: (date: string) => k('acal-holiday-cancel', date), holidayRemove: (date: string) => k('acal-holiday-remove', date),
     saving: 'acal-saving', size: 'acal-size', export: 'acal-export', reset: 'acal-reset', restore: 'acal-restore', build: 'acal-build',
   },
   /* 1c: the Rename roles dialog on Permissions (D11) */
@@ -389,6 +396,7 @@ export const tid = {
     saveName: 'aorg-save-name', saveDesc: 'aorg-save-desc', scope: (s: string) => k('aorg-scope', s), save: 'aorg-save', saveCancel: 'aorg-save-cancel', saveWarn: 'aorg-save-warn',
     plan: (part: string) => k('aorg-plan', part), planLoading: 'aorg-plan-loading', planError: 'aorg-plan-error', apply: 'aorg-apply', applyCancel: 'aorg-apply-cancel',
     name: 'aorg-name', registration: 'aorg-registration', address: 'aorg-address', country: 'aorg-country',
+    timezone: 'aorg-timezone', timeZones: 'aorg-time-zones', dateFormat: 'aorg-date-format', clock: 'aorg-clock',
     nmw: 'aorg-nmw', bankHolidays: 'aorg-bank-holidays', payFrequency: 'aorg-pay-frequency', weekEnding: 'aorg-week-ending',
     firstPayDate: 'aorg-first-pay-date', cutoff: 'aorg-cutoff', cutoffLink: 'aorg-cutoff-link',
   },

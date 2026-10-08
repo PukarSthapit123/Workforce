@@ -3,21 +3,30 @@ import { defineEndpoint } from './endpoints';
 import { RecordMeta, mutation } from './common';
 import { IsoDate } from './people';
 import { WeekGrid, WeekLayout } from './timesheets';
+import { isTimeZone } from '@/domain/time';
+
+export const DATE_FORMATS = ['dd/mm/yyyy', 'yyyy-mm-dd', 'mm/dd/yyyy'] as const;
+export const CLOCK_STYLES = ['24h', '12h'] as const;
+export const WEEK_STARTS = ['Monday', 'Sunday', 'Saturday'] as const;
+const TimeZone = z.string().trim().min(1).max(100).refine(isTimeZone, 'Choose a valid IANA time zone.');
 
 /* The organisation's own details. No currency: money stays in Business Central. */
 export const Company = z.object({
   registration: z.string(), address: z.string(), country: z.string(), nmwCheck: z.boolean(),
-  bankHolidayRegion: z.string(), payFrequency: z.string(), weekEnding: z.string(), firstPayDate: z.union([IsoDate, z.literal('')]),
+  bankHolidayRegion: z.enum(['England & Wales', 'Scotland', 'Northern Ireland', 'None']),
+  payFrequency: z.string(), weekEnding: z.string(), firstPayDate: z.union([IsoDate, z.literal('')]),
 });
 export const FinancialYear = z.object({ start: IsoDate, end: IsoDate, label: z.string() });
-export const BankHoliday = z.object({ date: IsoDate, name: z.string() });
+export const BankHoliday = z.object({ date: IsoDate, name: z.string().trim().min(1).max(80) });
+export type BankHolidayRecord = z.infer<typeof BankHoliday>;
 /* Settings that hang off a feature (D6). weekGrid and weekLayout are read
    from timesheetConfig, which module 2 keeps reading; breaksMax and
    vehiclesMax have no other home. */
 export const FlagExtras = z.object({ weekGrid: WeekGrid, weekLayout: WeekLayout, breaksMax: z.number().int(), vehiclesMax: z.number().int() });
 export const Tenant = RecordMeta.extend({
   name: z.string(), template: z.string(), modules: z.record(z.string(), z.boolean()), flags: z.record(z.string(), z.boolean()),
-  company: Company, financialYear: FinancialYear, weekStart: z.string(), bankHolidays: z.array(BankHoliday),
+  company: Company, financialYear: FinancialYear, weekStart: z.enum(WEEK_STARTS), bankHolidays: z.array(BankHoliday),
+  timezone: TimeZone, dateFormat: z.enum(DATE_FORMATS), clock: z.enum(CLOCK_STYLES),
   /* months, from rotaConfig (its one home), 12 when Rota has never been set up */
   rotaHorizon: z.number().int(),
   extras: FlagExtras,
@@ -58,10 +67,15 @@ export type SetFlag = z.infer<typeof SetFlag>;
 export const UpdateTenantSettings = z.strictObject({
   rotaHorizon: z.literal([12, 6, 3], { error: 'Choose a rota horizon of 12, 6 or 3 months.' }).optional(),
   name: z.string().trim().min(1, 'The organisation needs a name.').max(80).optional(),
+  timezone: TimeZone.optional(), dateFormat: z.enum(DATE_FORMATS).optional(), clock: z.enum(CLOCK_STYLES).optional(),
+  weekStart: z.enum(WEEK_STARTS).optional(),
+  financialYear: z.strictObject({ start: IsoDate.optional(), end: IsoDate.optional() }).optional(),
+  bankHolidays: z.array(BankHoliday).max(200).refine(rows => new Set(rows.map(x => x.date)).size === rows.length,
+    'A date can only have one bank holiday.').optional(),
   company: z.strictObject({
     registration: z.string().trim().max(20), address: z.string().trim().max(200),
     country: z.enum(['United Kingdom', 'Ireland', 'Nepal']), nmwCheck: z.boolean(),
-    bankHolidayRegion: z.enum(['England & Wales', 'Scotland', 'Northern Ireland', 'Republic of Ireland']),
+    bankHolidayRegion: z.enum(['England & Wales', 'Scotland', 'Northern Ireland', 'None']),
     payFrequency: z.enum(['Weekly', 'Fortnightly', 'Four-weekly', 'Monthly']), weekEnding: z.enum(['Sunday', 'Saturday', 'Friday']),
     firstPayDate: z.union([IsoDate, z.literal('')]),
   }).partial().optional(),
@@ -79,4 +93,5 @@ export const setFlag = defineEndpoint({ method: 'PATCH', path: '/api/v1/tenant/f
   summary: 'Turn a feature on or off and set its extras (If-Match: the tenant\'s version). A feature of a module that is not live is MODULE_OFF; extras of a feature that is off are FLAG_OFF.' });
 export const updateTenantSettings = defineEndpoint({ method: 'PATCH', path: '/api/v1/tenant/settings', request: UpdateTenantSettings,
   response: mutation(Tenant), capability: 'master_data', versioned: true,
-  summary: 'Change the rota horizon, the organisation name or company details (If-Match: the tenant\'s version)' });
+  errors: [409],
+  summary: 'Change tenant date and time settings, the financial year, bank holidays, rota horizon, organisation name or company details (If-Match: the tenant\'s version)' });

@@ -9,7 +9,7 @@ import {
 import { buttonVariants } from '@/ui/shadcn/button';
 import { useMyDelegations } from '@/api/approvals';
 import { useApproveLeave, useLeavers, useTeamBalances, useTeamLeave, type LeaverRow, type TeamBalanceRow, type TeamRequestView } from '@/api/leave';
-import { formatDmy } from '@/domain/time';
+import { clockFromIso, formatDmy } from '@/domain/time';
 import { latest } from '@/lib/latest';
 import { cn } from '@/lib/utils';
 import { useCaps } from '@/shell/useCaps';
@@ -80,7 +80,7 @@ function RequestCard({ r, slaDays, escalateTo, onDecline, onEntitlement }: {
       <div className="flex flex-wrap items-start gap-md">
         <div className="min-w-0">
           <div className="text-sm font-semibold">{r.name} <span className="font-mono text-xs font-normal text-text-muted">{r.personCode}</span></div>
-          <Small>{r.typeName} · {r.range} · {r.qtyText} · requested {formatDmy(r.raisedAt.slice(0, 10))}</Small>
+          <Small>{r.typeName} · {r.range} · {r.qtyText} · requested {formatDmy(clockFromIso(r.raisedAt).date)}</Small>
         </div>
         <div className="ml-auto flex items-center">
           {r.sla.escalated

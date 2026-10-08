@@ -1195,6 +1195,9 @@
      "end": "2027-03-31",
      "label": "2026/27"
     },
+    "timezone": "Europe/London",
+    "dateFormat": "dd/mm/yyyy",
+    "clock": "24h",
     "weekStart": "Monday",
     "bankHolidays": [
      {

@@ -12,8 +12,8 @@
 import type { Problem } from './codes';
 import type { RotaInput } from './timesheet';
 import {
-  addDays, addMonths, daysBetween, dowMon, DOW_SHORT, fmtMin, formatDay, formatDmy, isIsoDate, isoWeek, periodStart,
-  restGap, toMin, type ShiftSpan,
+  activeLocale, addDays, addMonths, dayIndex, daysBetween, dowMon, DOW_SHORT, fmtMin, formatDay, formatDmy, formatTime, isIsoDate, isoWeek, periodStart,
+  restGap, slotWeekday, toMin, weekHeads, type ShiftSpan,
 } from './time';
 
 /* ------------------------------------------------------------------ cells */
@@ -66,13 +66,13 @@ export const shiftTime = (shifts: readonly ShiftType[], code: string) => {
   if (code === LEAVE) return 'Annual leave';
   if (code === SICK) return 'Sickness';
   const s = shiftBy(shifts, code);
-  return s ? `${s.from}–${s.to}` : '';
+  return s ? `${formatTime(s.from)}–${formatTime(s.to)}` : '';
 };
 export const shiftShortTime = (shifts: readonly ShiftType[], code: string) => {
   if (code === LEAVE) return 'Leave';
   if (code === SICK) return 'Sickness';
   const s = shiftBy(shifts, code);
-  return s ? `${s.from.slice(0, 5)}–${s.to.slice(0, 2)}` : '';
+  return s ? activeLocale().clock === '24h' ? `${s.from.slice(0, 5)}–${s.to.slice(0, 2)}` : `${formatTime(s.from)}–${formatTime(s.to)}` : '';
 };
 export const shiftLetter = (code: string) => (code === LEAVE ? 'AL' : code);
 /* Custom codes take their tone, so they inherit a palette rather than render unstyled. */
@@ -267,7 +267,7 @@ const nameOrNothing = (shifts: readonly ShiftType[], code: string) => (code ? sh
 export const amendedAuditText = (locName: string, week: RotaWeekCore, c: RotaChange, shifts: readonly ShiftType[]) =>
   `${locName} · week ${isoWeek(week.weekStart)} v${c.version} · ${c.name} · ${nameOrNothing(shifts, c.from)} → ${nameOrNothing(shifts, c.to)}`;
 export const amendedNotice = (weekStart: string, day: number) => ({ title: 'Rota amended',
-  body: `Week ${isoWeek(weekStart)} · your shift on ${DOW_SHORT[day] ?? ''} has changed. Check your shifts.` });
+  body: `Week ${isoWeek(weekStart)} · your shift on ${weekHeads()[day] ?? ''} has changed. Check your shifts.` });
 
 /* ----------------------------------------------------------- coverage */
 /* onShift: people at the location on shift that day. */
@@ -467,7 +467,7 @@ export function suggest(day: number, code: string, people: readonly Candidate[])
       sc += 4 - Math.floor(hrs / 7.5);
       why.push(hrs ? `${hrs}h booked so far this week` : 'Bank worker with no shifts yet this week');
       if (p.favourite) { sc += 3; why.push('Favourite here, so asked first'); }
-      if (p.preferredDays.includes(day)) { sc += 3; why.push('Wants shifts on this day'); }
+      if (p.preferredDays.includes(slotWeekday(day))) { sc += 3; why.push('Wants shifts on this day'); }
     }
     const s = shiftBy(shifts, code);
     if (s?.night) { const n = nightsIn(line, shifts); sc += (3 - n) * 2; if (n <= 1) why.push('Fewest nights this week'); }
@@ -606,7 +606,7 @@ export function applyPattern(p: PatternCore, ctx: ApplyContext): ApplyResult {
   const writes = new Map<string, WeekWrite>(), skipped = new Set<string>(), touched = new Set<string>();
   let written = 0, occupied = 0, absence = 0;
   for (let i = 0; i < r.span; i++) {
-    const dt = addDays(r.from, i), ws = periodStart(dt), dow = dowMon(dt);
+    const dt = addDays(r.from, i), ws = periodStart(dt), dow = dayIndex(dt);
     for (const { x, info } of on) {
       const key = rotaWeekId(info.location, ws), slot = weekAt(info.location, ws);
       if (slot && rotaVisible(slot.state)) { skipped.add(key); continue; }
@@ -883,10 +883,10 @@ export function openShiftsFor<C extends CoverCore>(w: RotaWorker & { location: s
   for (const c of covers) {
     if (!c.open || !c.reason || c.location !== w.location) continue;
     if (!ctx.safeWorker) { out.push({ cover: c, why: 'Open at your location' }); continue; }
-    const day = dowMon(c.date);
+    const day = dayIndex(c.date);
     if (eligibility(w, lineFor(c.date), day, c.shift, ctx).length) continue;
     out.push({ cover: c, why: w.favourite ? 'You are a favourite here, so it is offered to you first'
-      : w.preferredDays.includes(day) ? 'Matches the days you said you can work' : 'You are cleared and available for this shift' });
+      : w.preferredDays.includes(slotWeekday(day)) ? 'Matches the days you said you can work' : 'You are cleared and available for this shift' });
   }
   return out;
 }
@@ -924,6 +924,6 @@ export function rotaDayOf(code: string, shifts: readonly ShiftType[]): RotaDay {
   if (isAbsence(code)) return { code, name: code === LEAVE ? 'Annual leave' : 'Sickness', from: '', to: '', time: '', hours: 0, cross: false };
   const s = shiftBy(shifts, code);
   if (!s) return { code: '', name: 'Rest day', from: '', to: '', time: '', hours: 0, cross: false };
-  return { code: s.code, name: s.name, from: s.from, to: s.to, time: `${s.from}–${s.to}`, hours: s.hours, cross: s.cross };
+  return { code: s.code, name: s.name, from: s.from, to: s.to, time: shiftTime(shifts, code), hours: s.hours, cross: s.cross };
 }
 export const rotaDaysOf = (line: Line | undefined, shifts: readonly ShiftType[]): RotaDay[] => normLine(line).map(c => rotaDayOf(c, shifts));

@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { Button, NavLink } from '@/ui';
 import { buttonVariants } from '@/ui/shadcn/button';
 import type { ShiftTypeRecord } from '@/contract/rota';
+import { formatTime } from '@/domain/time';
 import { TONE_CLASS, cellTone } from './week';
 
 /* The shift palette: the prototype's shiftPalette (qnipay-workforce-v15.html:
@@ -30,12 +31,12 @@ export function Palette({ shifts, lifted, onLift, onDragStart, onDragEnd, canMak
       <span className="mr-[2px] text-xs font-[650] tracking-[.04em] text-text-muted">Drag a shift onto the rota</span>
       {shifts.map(s => (
         <button key={s.code} type="button" draggable data-testid={tid.trota.pchip(s.code)} aria-pressed={lifted === s.code}
-          aria-label={`${s.name}, ${s.from} to ${s.to}. Drag onto a rota cell, or press Enter to pick it up`}
+          aria-label={`${s.name}, ${formatTime(s.from)} to ${formatTime(s.to)}. Drag onto a rota cell, or press Enter to pick it up`}
           onClick={(e: MouseEvent) => onLift(s.code, e.detail === 0)} onDragStart={start(s.code)} onDragEnd={onDragEnd}
           className={cn('inline-flex cursor-grab items-center gap-[6px] rounded-[7px] border-l-3 px-[10px] py-[6px] text-xs font-semibold select-none',
             'transition-shadow duration-(--qp-duration-fast) ease-qp hover:shadow-sm focus-visible:shadow-focus active:cursor-grabbing',
             TONE_CLASS[cellTone(shifts, s.code)], lifted === s.code && 'opacity-55 shadow-focus')}>
-          <b>{s.code}</b> {s.name}<span className="text-xs font-medium tabular-nums">{s.from}–{s.to}</span>
+          <b>{s.code}</b> {s.name}<span className="text-xs font-medium tabular-nums">{formatTime(s.from)}–{formatTime(s.to)}</span>
         </button>))}
       {canMake && onNew && <Button testId={tid.trota.newShift} kind="ghost" small onClick={onNew}>New shift type</Button>}
       {canMake && !onNew && <NavLink testId={tid.trota.newShift} to="/team/tshifts"

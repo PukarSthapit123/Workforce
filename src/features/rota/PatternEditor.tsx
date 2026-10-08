@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { tid } from '@/testids';
 import { cn } from '@/lib/utils';
+import { formatTime } from '@/domain/time';
 import {
   Avatar, Banner, Button, CheckboxField, Field, FieldGrid, FormWarn, Modal, NativeSelect, Pill, Row, SelectBox, SettingRow, SettingText, Small, SubHead,
   SwitchField, TextInput, Tip, UnitInput, toastInfo,
@@ -145,11 +146,11 @@ export function PatternEditor({ pattern, ctx, onClose, onAddPeople, onDelete, on
                 aria-label={`Day ${i + 1}, ${c ? shiftName(sh, c) || c : 'rest day'}. Tap to change.`}
                 className={cn('cursor-pointer rounded-sm border border-transparent bg-surface-tint px-[6px] py-[9px] text-center text-xs leading-[1.4] text-text-muted transition-shadow duration-(--qp-duration-fast) hover:shadow-[inset_0_0_0_2px_var(--qp-color-brand-primary)]',
                   s && CYC_TONE[s.tone])}>
-                Day {i + 1}<br /><strong className="text-xs">{c ? (s ? `${s.from.slice(0, 2)}–${s.to.slice(0, 2)}` : c) : 'off'}</strong>
+                Day {i + 1}<br /><strong className="text-xs">{c ? (s ? `${formatTime(s.from)}–${formatTime(s.to)}` : c) : 'off'}</strong>
               </button>);
           })}
         </div>
-        <Small testId={tid.tpat.legend}>{sh.map(s => `${s.code} = ${s.name} ${s.from}–${s.to}`).join(' · ')} · blank = rest day.
+        <Small testId={tid.tpat.legend}>{sh.map(s => `${s.code} = ${s.name} ${formatTime(s.from)}–${formatTime(s.to)}`).join(' · ')} · blank = rest day.
           {d.days.some(c => shiftBy(sh, c)?.cross) ? ' This cycle includes a shift that crosses midnight.' : ''}</Small>
         {unknown > 0 && <div className="mt-sm"><Banner testId={tid.tpat.unknown} tone="warn"
           title={`${unknown} day${unknown > 1 ? 's reference' : ' references'} a shift that is no longer in the catalogue`}>

@@ -2,8 +2,8 @@ import { useState, type ReactNode } from 'react';
 import { Link2, RefreshCw, Repeat, Ruler, Tag, TriangleAlert, Upload, UsersRound } from 'lucide-react';
 import { tid } from '@/testids';
 import {
-  ActionBar, AdminCard, Button, Card, Chip, ChipPicker, Empty, FormWarn, GuideButton, InlineInput, Page, PageHead, Pill, Row, SettingRow, SettingSelect,
-  SettingText, Small, SubHead, SwitchField, UnitInput, toastInfo,
+  ActionBar, AdminCard, Button, Card, Chip, ChipPicker, Empty, FormWarn, GuideButton, InlineInput, NavLink, Page, PageHead, Pill, Row, SettingRow, SettingSelect,
+  Small, SubHead, SwitchField, UnitInput, toastInfo,
 } from '@/ui';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import { ApiError } from '@/api/client';
@@ -113,10 +113,9 @@ function SetupDraftView({ setup }: { setup: LeaveSetup }) {
               onChange={e => set({ unit: e.target.value })}>
               {RECORD_UNITS.map(o => <option key={o} value={o}>{o}</option>)}</SettingSelect></Control>
         </SettingRow>
-        <SettingRow title="Financial year starts" desc="Entitlement and leaver reconciliation run on this year">
-          <Control error={fe('finYearStart')}>
-            <SettingText testId={tid.mleave.finYear} aria-label="Financial year starts" className="max-w-[120px]" value={draft.finYearStart}
-              aria-invalid={invalid(fe('finYearStart'))} onChange={e => set({ finYearStart: e.target.value })} /></Control>
+        <SettingRow title="Financial year" desc={`Entitlement and leaver reconciliation use the year set on Calendar. Start: ${config.finYearStart}.`}>
+          <span data-testid={tid.mleave.finYear} className="text-xs text-text-muted">{config.finYearStart}</span>
+          <NavLink testId={tid.mleave.finYearLink} to="/setup/acal" className="text-xs font-semibold text-brand underline dark:text-brand-accent">Change it on Calendar</NavLink>
         </SettingRow>
         {numRow('carry', 'Days that can carry over', undefined, 'days')}
         {toggleRow('bhPaid', 'Bank holidays paid on top of entitlement')}

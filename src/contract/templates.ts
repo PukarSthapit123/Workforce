@@ -7,11 +7,13 @@
 import { z } from 'zod';
 import { defineEndpoint } from './endpoints';
 import { IsoDateTime } from './common';
-import { DateOrBlank } from './people';
+import { DateOrBlank, IsoDate } from './people';
 import { Tenant } from './tenant';
+import { CLOCK_STYLES, DATE_FORMATS, WEEK_STARTS } from './tenant';
 import { WeekGrid, WeekLayout } from './timesheets';
 import { EntryMode, PayBasis, TypeCapability, WorkerCategory } from './employee-types';
 import { OnbStepId, Verifier } from './onboarding';
+import { isTimeZone } from '@/domain/time';
 
 const Text = (max: number) => z.string().trim().max(max);
 const Code = z.string().trim().regex(/^[A-Z0-9][A-Z0-9_.-]{0,19}$/, 'A code is capital letters, digits, a dash, a dot or an underscore, with no spaces.');
@@ -39,6 +41,10 @@ const Onboarding = z.object({
     ver: Text(20), sum: Text(300), body: z.array(Text(2000)).max(40) })).max(40),
 });
 const RoleNames = z.object({ employee: Text(24).min(1), manager: Text(24).min(1), admin: Text(24).min(1) });
+const TenantSettings = z.object({
+  timezone: z.string().refine(isTimeZone), dateFormat: z.enum(DATE_FORMATS), clock: z.enum(CLOCK_STYLES), weekStart: z.enum(WEEK_STARTS),
+  financialYear: z.object({ start: IsoDate, end: IsoDate }).refine(x => x.start <= x.end),
+});
 export const Template = z.object({
   name: Text(80).min(1), description: Text(300), scope: TemplateScope,
   modules: z.record(z.string(), z.boolean()), flags: z.record(z.string(), z.boolean()),
@@ -46,6 +52,7 @@ export const Template = z.object({
   labels: z.record(z.string(), Text(60).min(1)),
   employeeTypes: z.array(TemplateType).max(50),
   roleNames: RoleNames.optional(), approvalChain: z.array(ChainStep).max(40).optional(), structure: Structure.optional(), onboarding: Onboarding.optional(),
+  tenantSettings: TenantSettings.optional(),
 });
 export type Template = z.infer<typeof Template>;
 export const TemplateFile = z.object({ kind: z.literal('qnipay.template'), v: z.literal(1), key: z.string(), template: Template });

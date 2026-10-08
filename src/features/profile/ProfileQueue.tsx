@@ -5,7 +5,7 @@ import type { ProfileChange } from '@/contract/profile';
 import { Button, Card, CardHead, CardNote, Field, FormWarn, Modal, PersonBlock, Pill, Small, TextInput, toastInfo } from '@/ui';
 import { useDecide, useProfileQueue } from '@/api/profile';
 import { selfField } from '@/domain/selfService';
-import { formatDate } from '@/lib/format';
+import { formatAtDate } from '@/domain/time';
 import { latest } from '@/lib/latest';
 
 const TITLE = { manager: 'Profile changes awaiting you', payroll: 'Bank detail changes awaiting payroll' } as const;
@@ -36,7 +36,7 @@ export function ProfileQueue({ stage }: { stage: 'manager' | 'payroll' }) {
       <ul>{rows.map(c => (
         <li key={c.id} data-testid={tid.queue.row(c.id)} className="flex flex-wrap items-center gap-md border-b py-sm last:border-b-0">
           <PersonBlock name={c.personName}>
-            <Small>{selfField(c.field).label} · raised {formatDate(c.raisedAt.slice(0, 10))}{c.note ? ` · ${c.note}` : ''}</Small>
+            <Small>{selfField(c.field).label} · raised {formatAtDate(c.raisedAt)}{c.note ? ` · ${c.note}` : ''}</Small>
             <Small><span className="line-through">{c.from || '—'}</span> → <strong className="text-text-primary">{c.to}</strong></Small>
           </PersonBlock>
           <span className="ml-auto inline-flex flex-wrap items-center gap-xs">

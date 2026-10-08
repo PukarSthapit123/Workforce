@@ -33,6 +33,14 @@ test('the matrix groups events by module, marks email and SMS not connected, sho
   expectTestIdCoverage(document.body);
 });
 
+test('notification evidence timestamps use the tenant 12-hour clock', async () => {
+  const tenant = store.coll<{ clock: string }>('tenant').tenant;
+  if (!tenant) throw new Error('the social tenant is not loaded');
+  tenant.clock = '12h';
+  await open();
+  expect(screen.getByTestId(tid.anotif.evidenceRow('AWR-9-CP1310-0807'))).toHaveTextContent('07/08/2026 6:00 am');
+});
+
 test('changes are held until Save, then saved together with one audit row; Cancel puts them back', async () => {
   await open();
   fireEvent.change(screen.getByTestId(tid.anotif.cell('rt_pub', 'manager')), { target: { value: 'Off' } });

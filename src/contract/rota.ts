@@ -3,7 +3,7 @@
    plan acceptance carries If-Match on that week. Eligibility, publishing,
    generate, repeat, copy, clear and the cover stages are the server's (group 1
    domain); the screens run the same rules only to warn early. No money (D10).
-   `location` in a path is a location code (WH); `weekStart` is a Monday. */
+   `location` in a path is a location code (WH); `weekStart` follows the tenant setting. */
 import { z } from 'zod';
 import { defineEndpoint } from './endpoints';
 import { IsoDateTime, RecordMeta, mutation } from './common';

@@ -52,6 +52,19 @@ const rotaConfig = () => recordAt(store.coll<RotaConfigRecord>('rotaConfig'), 'r
 const setAside = () => recordAt(store.coll<SetAside>(SET_ASIDE), SET_ASIDE);
 const count = (coll: string) => Object.keys(store.coll(coll)).length;
 
+export function requireWeekStartChangeAllowed(t: Pick<StoredTenant, 'weekStart'>, next: Tenant['weekStart']) {
+  if (next === t.weekStart) return;
+  const timesheets = Object.values(store.coll<{ state: string }>('timesheetDays'))
+    .filter(d => d.state === 'pend' || d.state === 'back' || d.state === 'resub').length;
+  const rotas = Object.values(store.coll<{ state: string }>('rotaWeeks'))
+    .filter(w => w.state === 'draft' || w.state === 'review' || w.state === 'amendment').length;
+  if (timesheets || rotas) refuse(409, {
+    code: 'week-start-in-use',
+    message: `The week start cannot change while ${timesheets} timesheet ${timesheets === 1 ? 'day is' : 'days are'} and ${rotas} rota ${rotas === 1 ? 'week is' : 'weeks are'} open.`,
+    next: 'Finish or close those timesheets and rota weeks, then try again.',
+  });
+}
+
 export function view(t: StoredTenant): Tenant {
   const tc = tsConfig();
   return {
@@ -190,6 +203,30 @@ export const tenantHandlers = [
     checkVersion(t);
     const before: Record<string, unknown> = {}, after: Record<string, unknown> = {};
     const horizon = rotaConfig()?.horizon ?? DEFAULT_ROTA_CONFIG.horizon;
+    const localeFields = ['timezone', 'dateFormat', 'clock', 'weekStart'] as const;
+    if (body.weekStart !== undefined) requireWeekStartChangeAllowed(t, body.weekStart);
+    for (const key of localeFields) {
+      const value = body[key];
+      if (value === undefined || value === t[key]) continue;
+      before[key] = t[key]; after[key] = value;
+    }
+    if (body.financialYear) {
+      const financialYear = { ...t.financialYear, ...body.financialYear };
+      if (financialYear.start > financialYear.end) refuse(422, {
+        code: 'invalid', field: 'financialYear', message: 'The financial year must end on or after it starts.',
+        next: 'Choose a valid start and end date.',
+      });
+      const label = `${financialYear.start.slice(0, 4)}/${financialYear.end.slice(2, 4)}`;
+      financialYear.label = label;
+      if (JSON.stringify(financialYear) !== JSON.stringify(t.financialYear)) {
+        before.financialYear = t.financialYear;
+        after.financialYear = financialYear;
+      }
+    }
+    if (body.bankHolidays && JSON.stringify(body.bankHolidays) !== JSON.stringify(t.bankHolidays)) {
+      before.bankHolidays = t.bankHolidays;
+      after.bankHolidays = body.bankHolidays;
+    }
     if (body.rotaHorizon !== undefined && body.rotaHorizon !== horizon) { before.rotaHorizon = horizon; after.rotaHorizon = body.rotaHorizon; }
     if (body.name !== undefined && body.name !== t.name) { before.name = t.name; after.name = body.name; }
     const company = { ...t.company };
@@ -199,6 +236,7 @@ export const tenantHandlers = [
       Object.assign(company, { [k]: v });
     }
     if (!Object.keys(after).length) return { record: view(t), auditId: null };
+    const nextFinancialYear = after.financialYear as Tenant['financialYear'] | undefined;
     if (after.rotaHorizon !== undefined) {
       /* the horizon's one home; created at the defaults if Rota was never set up */
       const rc = rotaConfig();
@@ -206,8 +244,17 @@ export const tenantHandlers = [
         : { id: 'rotaConfig', version: 1, updatedAt: store.now(), ...DEFAULT_ROTA_CONFIG, fulfilStages: [], types: {}, horizon: body.rotaHorizon ?? horizon };
       store.coll<RotaConfigRecord>('rotaConfig')[next.id] = next;
     }
-    const saved = saveTenant(t, { company, ...(body.name !== undefined ? { name: body.name } : {}) });
-    const auditId = writeAudit({ who: actor(session), act: Object.keys(after).every(k => k === 'rotaHorizon') ? 'Rota horizon changed' : 'Organisation settings changed',
+    const saved = saveTenant(t, {
+      company, ...(body.name !== undefined ? { name: body.name } : {}),
+      ...(body.timezone !== undefined ? { timezone: body.timezone } : {}),
+      ...(body.dateFormat !== undefined ? { dateFormat: body.dateFormat } : {}),
+      ...(body.clock !== undefined ? { clock: body.clock } : {}),
+      ...(body.weekStart !== undefined ? { weekStart: body.weekStart } : {}),
+      ...(nextFinancialYear ? { financialYear: nextFinancialYear } : {}),
+      ...(body.bankHolidays !== undefined ? { bankHolidays: body.bankHolidays } : {}),
+    });
+    const auditId = writeAudit({ who: actor(session), act: Object.keys(after).every(k => k === 'rotaHorizon') ? 'Rota horizon changed'
+      : Object.keys(after).some(k => ['timezone', 'dateFormat', 'clock', 'weekStart', 'financialYear', 'bankHolidays'].includes(k)) ? 'Calendar settings changed' : 'Organisation settings changed',
       entity: 'tenant', entityId: 'settings', before, after });
     return { record: view(saved), auditId };
   }),

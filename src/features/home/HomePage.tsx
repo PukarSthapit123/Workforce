@@ -8,7 +8,7 @@ import { ApiError } from '@/api/client';
 import { useHome, type HomeDay, type HomeMonth } from '@/api/home';
 import { useMyLeave } from '@/api/leave';
 import { useTenant } from '@/shell/shellData';
-import { DOW_SHORT, MONTH_SHORT, formatDmy, parseIso } from '@/domain/time';
+import { MONTH_SHORT, formatDmy, parseIso, weekHeads } from '@/domain/time';
 import { GLYPHS, missingTitle, shiftMonth, shortDate } from '@/domain/home';
 import { NoticesHomeCard } from '@/features/notices/NoticesHomeCard';
 import { BookLeave, DayDialog } from './DayDialog';
@@ -56,10 +56,9 @@ function Home({ m, onMonth }: { m: HomeMonth; onMonth: (month: string) => void }
             back={{ testId: tid.home.thisMonth, label: 'This month', current: 'This month', atCurrent: m.month === m.thisMonth, onClick: () => onMonth(m.thisMonth) }} />
           {m.summary && <span data-testid={tid.home.summary} className="ml-auto text-xs text-text-muted">{m.summary}</span>}
         </div>
-        {/* .calm: seven columns, Monday first; the day heads are column heads in
-            capitals as the prototype's (data-caps: capitals on purpose) */}
+        {/* .calm: the day heads follow the tenant's week start. */}
         <div data-testid={tid.home.grid} className="grid grid-cols-7 gap-xs">
-          {DOW_SHORT.map(d => <div key={d} aria-hidden="true" data-caps className="pb-xs text-center text-xs font-bold tracking-[.04em] text-text-muted uppercase">{d}</div>)}
+          {weekHeads().map(d => <div key={d} aria-hidden="true" data-caps className="pb-xs text-center text-xs font-bold tracking-[.04em] text-text-muted uppercase">{d}</div>)}
           {Array.from({ length: m.leadingBlanks }, (_, i) => <div key={`blank-${i}`} aria-hidden="true" />)}
           {m.days.map(d => <DayCell key={d.date} d={d} onOpen={() => setOpen(d)} />)}
         </div>

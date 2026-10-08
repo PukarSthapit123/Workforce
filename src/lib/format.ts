@@ -1,5 +1,5 @@
-const DT = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
-export const formatDateTime = (iso: string) => DT.format(new Date(iso)).replace(',', '');
+import { clockAt, activeLocale, formatDmy } from '@/domain/time';
+export { formatDateTime } from '@/domain/time';
 
 const show = (v: unknown): string => v === undefined || v === null ? 'none' : typeof v === 'boolean' ? (v ? 'yes' : 'no')
   : Array.isArray(v) ? (v.length ? v.join(', ') : 'none') : typeof v === 'object' ? JSON.stringify(v) : String(v);
@@ -10,12 +10,8 @@ export function describeChange(before: unknown, after: unknown): string {
     .map(k => `${k}: ${show(b[k])} → ${show(a[k])}`).join(' · ');
 }
 
-/* An ISO date (YYYY-MM-DD) the British way; a blank or malformed one reads as a dash. */
-export const formatDate = (iso: string) => {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
-  return m ? `${m[3] ?? ''}/${m[2] ?? ''}/${m[1] ?? ''}` : '—';
-};
+/* A stored date follows the tenant's configured date format. */
+export const formatDate = (iso: string) => /^\d{4}-\d{2}-\d{2}$/.test(iso) ? formatDmy(iso) : '—';
 
-/* Today as an ISO date (YYYY-MM-DD), in London time like every date shown. */
-const DAY = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit' });
-export const todayIso = (now: Date = new Date()) => DAY.format(now);
+/* The date today is in the tenant's zone, not the browser's zone. */
+export const todayIso = (now: Date = new Date()) => clockAt(now.toISOString(), activeLocale().timezone).date;

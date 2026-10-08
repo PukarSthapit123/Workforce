@@ -1,4 +1,4 @@
-import { addMonths, daysBetween, dmyToIso, fmtMin, isIsoDate, periodStart, weekDates } from './time';
+import { addMonths, clockAt, daysBetween, dayIndex, dmyToIso, fmtMin, formatDmy, formatTime, isIsoDate, periodStart, setActiveLocale, weekDates, weekHeads } from './time';
 
 describe('shared date helpers', () => {
   test('whole days between two dates, months that roll as JavaScript dates do', () => {
@@ -13,5 +13,14 @@ describe('shared date helpers', () => {
     expect([fmtMin(30), fmtMin(1470), fmtMin(1320)]).toEqual(['00:30', '00:30', '22:00']);
     expect(periodStart('2026-08-13')).toBe('2026-08-10');
     expect(weekDates('2026-08-10').at(-1)).toBe('2026-08-16');
+  });
+  test('the tenant clock crosses London midnight at 00:30 BST, not UTC midnight', () => {
+    expect(clockAt('2026-07-10T23:30:00.000Z', 'Europe/London')).toEqual({ date: '2026-07-11', time: '00:30' });
+  });
+  test('date, clock and week formatting follow the active tenant settings', () => {
+    setActiveLocale({ timezone: 'Europe/London', dateFormat: 'mm/dd/yyyy', clock: '12h', weekStart: 'Sunday' });
+    expect([formatDmy('2026-08-13'), formatTime('15:05'), periodStart('2026-08-13'), dayIndex('2026-08-13'), weekHeads()[0]])
+      .toEqual(['08/13/2026', '3:05 pm', '2026-08-09', 4, 'Sun']);
+    setActiveLocale({ timezone: 'Europe/London', dateFormat: 'dd/mm/yyyy', clock: '24h', weekStart: 'Monday' });
   });
 });

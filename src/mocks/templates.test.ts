@@ -104,6 +104,11 @@ describe('saving (D2)', () => {
     const kept = store.coll<{ template: Record<string, unknown>; savedBy: string; from: string }>('templates').tpl_care_two_stage_approval;
     expect(kept?.template).toMatchObject({ name: 'Care, two-stage approval', description: 'Saved from Brightpath Support Services', scope: 'config',
       labels: expect.objectContaining({ project: 'Funded programme' }), roleNames: { employee: 'Employee', manager: 'Manager', admin: 'Admin' } });
+    expect(kept?.template.tenantSettings).toEqual({
+      timezone: 'Europe/London', dateFormat: 'dd/mm/yyyy', clock: '24h', weekStart: 'Monday',
+      financialYear: { start: '2026-04-01', end: '2027-03-31' },
+    });
+    expect(kept?.template.tenantSettings).not.toHaveProperty('bankHolidays');
     expect(kept?.template).not.toHaveProperty('structure');
     /* a policy's wording is prose a new starter reads (the code of conduct names a gifts limit), not a money field: its keys are checked instead */
     expect(JSON.stringify({ ...kept?.template, onboarding: undefined })).not.toMatch(/currency|[£€$]|payCode|allowance|"rules"|budget|people/i);
@@ -164,6 +169,31 @@ describe('applying (D1, Review Focus 3)', () => {
     expect(rows[0]).toMatchObject({ id: out.auditId, act: 'Template applied', entityId: 'mne', before: { template: 'social' } });
     expect(out.message).toMatch(/^M&E \/ Building Services applied\. \d+ changes, \d+ added\. Nothing was deleted\.$/);
     expect(audits().filter(a => a.entity !== 'session')).toHaveLength(1);
+  });
+  test('a config template applies tenant time and financial-year settings in the same versioned write', async () => {
+    expect((await save('Date and time')).status).toBe(200);
+    const t = store.coll<{ timezone: string; dateFormat: string; clock: string; financialYear: { start: string; end: string; label: string } }>('tenant').tenant;
+    if (!t) throw new Error('no tenant');
+    Object.assign(t, {
+      timezone: 'Pacific/Auckland', dateFormat: 'yyyy-mm-dd', clock: '12h',
+      financialYear: { start: '2026-01-01', end: '2026-12-31', label: '2026' },
+    });
+    const out = TemplateApplied.parse((await admin('POST', APPLY('tpl_date_and_time'), undefined, tenantVer())).body);
+    expect(out.record).toMatchObject({
+      timezone: 'Europe/London', dateFormat: 'dd/mm/yyyy', clock: '24h', weekStart: 'Monday',
+      financialYear: { start: '2026-04-01', end: '2027-03-31', label: '2026/27' },
+    });
+    expect(audits().filter(a => a.act === 'Template applied')).toHaveLength(1);
+  });
+  test('a template cannot bypass the open-work refusal for a week-start change', async () => {
+    expect((await save('Week start')).status).toBe(200);
+    const t = store.coll<{ weekStart: string }>('tenant').tenant;
+    if (!t) throw new Error('no tenant');
+    t.weekStart = 'Sunday';
+    const before = snapshot('tenant', 'audit');
+    const out = await admin('POST', APPLY('tpl_week_start'), undefined, tenantVer());
+    expect([out.status, refusal(out.body).code]).toEqual([409, 'week-start-in-use']);
+    expect(snapshot('tenant', 'audit')).toEqual(before);
   });
   test('a saved template brings its configuration back, and applying the one in force again writes nothing', async () => {
     const call = admin;

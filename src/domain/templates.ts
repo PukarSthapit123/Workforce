@@ -42,6 +42,7 @@ import {
   STEP_UNAVAILABLE, isVerifier, nextPolVer, onbFeatures, policyProblem, stepSwitchProblem, verifierLabel,
   type OnboardingConfig, type OnbPolicy, type OnbStepId, type Verifier,
 } from './onboarding';
+import type { ClockStyle, DateFormat, WeekStart } from './time';
 
 /* ------------------------------------------------------------- shapes */
 export type TemplateScope = 'config' | 'structure';
@@ -84,6 +85,10 @@ export interface TemplateOnbStep { id: OnbStepId; on: boolean }
 export interface TemplateOnbDocument { id: string; req: boolean; verify: Verifier; blocks: boolean; expiry: boolean }
 export interface TemplateOnbPolicy { id: string; label: string; ver: string; sum: string; body: string[] }
 export interface TemplateOnboarding { steps: TemplateOnbStep[]; documents: TemplateOnbDocument[]; policies: TemplateOnbPolicy[] }
+export interface TemplateTenantSettings {
+  timezone: string; dateFormat: DateFormat; clock: ClockStyle; weekStart: WeekStart;
+  financialYear: { start: string; end: string };
+}
 export interface Template {
   name: string; description: string; scope: TemplateScope;
   /* every switch: Workforce core, Timesheet and its capabilities, Rota, Leave, Onboarding */
@@ -98,6 +103,7 @@ export interface Template {
   approvalChain?: ChainStep[];
   structure?: Partial<TemplateStructure>;
   onboarding?: TemplateOnboarding;
+  tenantSettings?: TemplateTenantSettings;
 }
 
 export const TEMPLATE_SCOPES: readonly { key: TemplateScope; label: string; note: string }[] = [
@@ -265,6 +271,7 @@ export interface CaptureSource {
   structure: TemplateStructure;
   /* the onboarding setup and its policies, when this tenant has them */
   onboarding?: { config: OnboardingConfig; policies: readonly OnbPolicy[] };
+  tenantSettings?: TemplateTenantSettings;
 }
 /* The onboarding part (D12): the prototype's onbDocs and onbPolicies, with the step switches. */
 export function captureOnboarding(o: { config: OnboardingConfig; policies: readonly OnbPolicy[] }): TemplateOnboarding {
@@ -288,6 +295,7 @@ export function captureTemplate(name: string, description: string, scope: Templa
     roleNames: { ...src.roleNames },
     approvalChain: src.chain.map(x => ({ ...x })),
   };
+  if (src.tenantSettings) t.tenantSettings = structuredClone(src.tenantSettings);
   if (src.onboarding) t.onboarding = captureOnboarding(src.onboarding);
   if (scope === 'structure') t.structure = structuredClone(src.structure);
   return t;
@@ -301,7 +309,7 @@ export const templateFileName = (key: string) => `qnipay-template-${key}.json`;
 /* The keys a template may hold, at each level. Anything else in a file is
    left out and listed (D3): the prototype's company details, pay codes, pay
    rules, allowances and roster among them. */
-const TOP = ['name', 'description', 'scope', 'modules', 'flags', 'extras', 'labels', 'employeeTypes', 'roleNames', 'approvalChain', 'structure', 'onboarding'];
+const TOP = ['name', 'description', 'scope', 'modules', 'flags', 'extras', 'labels', 'employeeTypes', 'roleNames', 'approvalChain', 'structure', 'onboarding', 'tenantSettings'];
 const EXTRA_KEYS = ['weekGrid', 'weekLayout', 'breaksMax', 'vehiclesMax'];
 const ROW_KEYS: Record<string, readonly string[]> = {
   employeeTypes: ['code', 'name', 'category', 'mode', 'uom', 'capabilities'],
@@ -352,6 +360,7 @@ export function readTemplateFile(text: string): FileRead {
     if ('policies' in o) o.policies = rows(o.policies, 'onbPolicies', 'onboarding.policies');
     t.onboarding = o;
   }
+  if (isObj(t.tenantSettings)) t.tenantSettings = keep(t.tenantSettings, ['timezone', 'dateFormat', 'clock', 'weekStart', 'financialYear'], 'tenantSettings');
   if (isObj(t.structure)) {
     if (t.scope !== 'structure') { ignored.add('structure'); delete t.structure; }
     else {
@@ -387,6 +396,7 @@ export interface TenantState {
   /* the onboarding setup and its policies now, when this tenant has them; acknowledged counts, by policy id,
      the people still onboarding who hold an acknowledgement of it (those a new wording asks again) */
   onboarding?: { config: OnboardingConfig; policies: readonly OnbPolicy[]; acknowledged?: Readonly<Record<string, number>> };
+  tenantSettings?: TemplateTenantSettings;
 }
 export type PlanArea = 'modules' | 'features' | 'labels' | 'types' | 'roles' | 'chain' | 'structure' | 'people' | 'organisation' | 'onboarding';
 export interface PlanLine { area: PlanArea; text: string }
@@ -407,6 +417,7 @@ export interface ApplySteps {
     steps: Record<string, boolean>; documents: Record<string, Omit<TemplateOnbDocument, 'id'>>;
     policiesUpdated: (Pick<TemplateOnbPolicy, 'id' | 'label' | 'ver' | 'sum' | 'body'> & { reask: boolean })[]; policiesAdded: TemplateOnbPolicy[];
   };
+  tenantSettings: Partial<TemplateTenantSettings>;
 }
 export interface ApplyPlan { changes: PlanLine[]; added: PlanLine[]; leftAlone: PlanLine[]; steps: ApplySteps }
 
@@ -456,7 +467,7 @@ export function planApply(t: Template, s: TenantState,
   const changes: PlanLine[] = [], added: PlanLine[] = [], leftAlone: PlanLine[] = [];
   const steps: ApplySteps = { modules: [], finalModules: {}, finalRestore: {}, flags: [], labels: {}, typesAdded: [], typesUpdated: [], roleNames: {}, chains: [],
     structure: { departments: [], costCentres: [], locations: [], jobProfiles: [], contracts: [] },
-    onboarding: { steps: {}, documents: {}, policiesUpdated: [], policiesAdded: [] } };
+    onboarding: { steps: {}, documents: {}, policiesUpdated: [], policiesAdded: [] }, tenantSettings: {} };
 
   /* modules */
   const mods = moduleSteps(t, s);
@@ -553,6 +564,21 @@ export function planApply(t: Template, s: TenantState,
 
   /* onboarding setup (D12): against the modules and features the template leaves the tenant with */
   planOnboarding(t, s, opts.mayChangeOnboarding === true, onbFeatures(mods.modules, flags), { changes, added, leftAlone }, steps);
+
+  if (t.tenantSettings && s.tenantSettings) {
+    const wanted = t.tenantSettings, held = s.tenantSettings;
+    const scalar: (keyof Omit<TemplateTenantSettings, 'financialYear'>)[] = ['timezone', 'dateFormat', 'clock', 'weekStart'];
+    for (const key of scalar) {
+      if (wanted[key] === held[key]) continue;
+      Object.assign(steps.tenantSettings, { [key]: wanted[key] });
+      const label = key === 'dateFormat' ? 'Date format' : key === 'weekStart' ? 'Week starts on' : key === 'clock' ? 'Clock' : 'Time zone';
+      changes.push({ area: 'organisation', text: `${label}: ${wanted[key]}.` });
+    }
+    if (wanted.financialYear.start !== held.financialYear.start || wanted.financialYear.end !== held.financialYear.end) {
+      steps.tenantSettings.financialYear = { ...wanted.financialYear };
+      changes.push({ area: 'organisation', text: `Financial year: ${wanted.financialYear.start} to ${wanted.financialYear.end}.` });
+    }
+  }
 
   /* structure: new codes are added, held codes stay exactly as they are */
   const held = Object.fromEntries(STRUCTURE_KINDS.map(k => [k, new Set(s.structure[k].map(x => x.toUpperCase()))])) as Record<StructureKind, Set<string>>;

@@ -2,7 +2,7 @@
    DOW_SHORT, weekDates, SHNAME, TIME, SHORTT, shLetter and toneOf as the grid,
    the day view and the dialogs use them (qnipay-workforce-v15.html:1884-1917,
    7176-7348). The rules themselves are the domain's. */
-import { DOW_SHORT, addDays, formatDmy, parseIso } from '@/domain/time';
+import { addDays, formatDmy, formatTime, parseIso, weekHeads } from '@/domain/time';
 import { isAbsence, isWorking, shiftBy, toneOf, type ShiftType } from '@/domain/rota';
 import type { RotaRow } from '@/contract/rota';
 
@@ -11,7 +11,7 @@ export const DAY_INDEXES = [0, 1, 2, 3, 4, 5, 6] as const;
 
 const dateOf = (weekStart: string, day: number) => parseIso(addDays(weekStart, day));
 export const dayNum = (weekStart: string, day: number) => dateOf(weekStart, day).getUTCDate();
-export const dow = (day: number) => DOW_SHORT[day] ?? '';
+export const dow = (day: number) => weekHeads()[day] ?? '';
 /* "Fri 14" */
 export const shortDay = (weekStart: string, day: number) => `${dow(day)} ${dayNum(weekStart, day)}`;
 /* "Fri 14 August" */
@@ -67,6 +67,6 @@ export function cellLabel(shifts: readonly ShiftType[], r: RotaRow, weekStart: s
   if (!code) return `${when}, no shift`;
   if (isAbsence(code)) return `${when}, ${code === 'V' ? 'Annual leave' : 'Sickness'}`;
   const s = shiftBy(shifts, code);
-  return s ? `${when}, ${s.name}, ${s.from}–${s.to}` : `${when}, ${code}`;
+  return s ? `${when}, ${s.name}, ${formatTime(s.from)}–${formatTime(s.to)}` : `${when}, ${code}`;
 }
 export const working = (r: RotaRow, day: number) => isWorking(r.line[day]);

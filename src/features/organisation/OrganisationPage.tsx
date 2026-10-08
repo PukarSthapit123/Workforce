@@ -18,7 +18,8 @@ import {
 import { useCaps } from '@/shell/useCaps';
 import { downloadText } from '@/lib/download';
 import { formatDateTime } from '@/lib/format';
-import { formatDmy } from '@/domain/time';
+import { CLOCK_STYLES, DATE_FORMATS } from '@/contract/tenant';
+import { DEFAULT_ZONE } from '@/domain/time';
 import { MODULES, moduleLive } from '@/domain/modules';
 import { TEMPLATE_SCOPES, scopeLabel, templateFileName, type TemplateScope } from '@/domain/templates';
 
@@ -43,6 +44,7 @@ export function OrganisationPage() {
             <TemplatesCard tenant={tenant.data} />
             <TemplateActions />
             <CompanyCard tenant={tenant.data} />
+            <DateTimeCard tenant={tenant.data} />
             <ComplianceCard tenant={tenant.data} />
             <PayPeriodsCard tenant={tenant.data} />
           </>
@@ -265,7 +267,6 @@ function SaveDialog({ onClose }: { onClose(): void }) {
 
 /* ----------------------------------------------------- company details */
 const COUNTRIES = ['United Kingdom', 'Ireland', 'Nepal'] as const;
-const REGIONS = ['England & Wales', 'Scotland', 'Northern Ireland', 'Republic of Ireland'] as const;
 const FREQUENCIES = ['Weekly', 'Fortnightly', 'Four-weekly', 'Monthly'] as const;
 const WEEK_ENDS = ['Sunday', 'Saturday', 'Friday'] as const;
 type CompanyChange = NonNullable<UpdateTenantSettings['company']>;
@@ -331,6 +332,57 @@ function CompanyCard({ tenant }: { tenant: Tenant }) {
     </AdminCard>);
 }
 
+const TIME_ZONES = (() => {
+  const zones = typeof Intl.supportedValuesOf === 'function' ? Intl.supportedValuesOf('timeZone') : [];
+  return zones.includes('UTC') ? zones : ['UTC', ...zones];
+})();
+const DATE_FORMAT_LABELS: Record<(typeof DATE_FORMATS)[number], string> = {
+  'dd/mm/yyyy': 'Day / month / year', 'yyyy-mm-dd': 'Year / month / day', 'mm/dd/yyyy': 'Month / day / year',
+};
+
+function DateTimeCard({ tenant }: { tenant: Tenant }) {
+  const s = useSettings(tenant), busy = s.save.anyPending;
+  const timeZoneList = 'aorg-time-zones';
+  return (
+    <AdminCard testId={tid.aorg.card('date-time')} icon={<CalendarDays />} title="Date and time" tipTestId={tid.aorg.tip('date-time')}
+      tip="Dates, times and the working day follow this organisation’s settings.">
+      <SettingRow title="Time zone" desc="Choose an IANA time zone. Changes apply from the next request.">
+        <div className="flex flex-col items-end max-md:w-full max-md:items-start">
+          <SettingText testId={tid.aorg.timezone} aria-label="Time zone" list={timeZoneList} value={tenant.timezone || DEFAULT_ZONE}
+            disabled={busy} aria-invalid={s.error('timezone') ? true : undefined}
+            onChange={e => {
+              const zone = e.currentTarget.value.trim();
+              if (TIME_ZONES.includes(zone) && zone !== tenant.timezone) s.save.mutate({
+                change: { timezone: zone }, ifMatch: tenant.version,
+              }, { onSuccess: out => { if (out.auditId) toastInfo('Time zone saved.', 'It applies from the next request.'); } });
+            }} />
+          <datalist id={timeZoneList} data-testid={tid.aorg.timeZones}>{TIME_ZONES.map(zone => <option key={zone} value={zone} />)}</datalist>
+          {s.error('timezone') && <p role="alert" className="mt-xs text-xs text-err">{s.error('timezone')}</p>}
+        </div>
+      </SettingRow>
+      <SettingRow title="Date format">
+        <SettingSelect testId={tid.aorg.dateFormat} aria-label="Date format" value={tenant.dateFormat} disabled={busy}
+          onChange={e => {
+            const format = DATE_FORMATS.find(x => x === e.target.value);
+            if (format && format !== tenant.dateFormat) s.save.mutate({ change: { dateFormat: format }, ifMatch: tenant.version },
+              { onSuccess: out => { if (out.auditId) toastInfo('Date format saved.', 'It is live for everyone now.'); } });
+          }}>
+          {DATE_FORMATS.map(format => <option key={format} value={format}>{DATE_FORMAT_LABELS[format]} ({format})</option>)}
+        </SettingSelect>
+      </SettingRow>
+      <SettingRow title="Clock">
+        <SettingSelect testId={tid.aorg.clock} aria-label="Clock style" value={tenant.clock} disabled={busy}
+          onChange={e => {
+            const clock = CLOCK_STYLES.find(x => x === e.target.value);
+            if (clock && clock !== tenant.clock) s.save.mutate({ change: { clock }, ifMatch: tenant.version },
+              { onSuccess: out => { if (out.auditId) toastInfo('Clock style saved.', 'It is live for everyone now.'); } });
+          }}>
+          {CLOCK_STYLES.map(clock => <option key={clock} value={clock}>{clock === '24h' ? '24-hour clock' : '12-hour clock'}</option>)}
+        </SettingSelect>
+      </SettingRow>
+    </AdminCard>);
+}
+
 function ComplianceCard({ tenant }: { tenant: Tenant }) {
   const s = useSettings(tenant), c = tenant.company, busy = s.save.anyPending;
   return (
@@ -339,10 +391,6 @@ function ComplianceCard({ tenant }: { tenant: Tenant }) {
       <SettingRow title="National Minimum Wage check" desc="Warn if total pay ÷ hours falls below NMW">
         <SwitchField testId={tid.aorg.nmw} aria-label="National Minimum Wage check" checked={c.nmwCheck} disabled={busy}
           onCheckedChange={on => s.company({ nmwCheck: on }, `National Minimum Wage check ${on ? 'on' : 'off'}.`)} />
-      </SettingRow>
-      <SettingRow title="Bank-holiday calendar" desc="Used by the shared calendar and by date-derived premiums">
-        <SelectSetting testId={tid.aorg.bankHolidays} label="Bank-holiday calendar" value={c.bankHolidayRegion} options={REGIONS} disabled={busy}
-          onSave={v => s.company({ bankHolidayRegion: v }, `Bank-holiday calendar: ${v}.`)} />
       </SettingRow>
       <CardNote>Thresholds follow current guidance. Verify them against the applicable tax year before sign-off.</CardNote>
     </AdminCard>);
@@ -367,7 +415,7 @@ function PayPeriodsCard({ tenant }: { tenant: Tenant }) {
       </SettingRow>
       <SettingRow title="First pay date">
         <TextSetting key={c.firstPayDate} testId={tid.aorg.firstPayDate} label="First pay date" type="date" value={c.firstPayDate} disabled={busy} error={s.error('firstPayDate')}
-          onSave={v => s.company({ firstPayDate: v }, v ? `First pay date: ${formatDmy(v)}.` : 'First pay date cleared.')} />
+          onSave={v => s.company({ firstPayDate: v }, v ? `First pay date saved.` : 'First pay date cleared.')} />
       </SettingRow>
       <SettingRow title="Pay-period cut-off" desc="After the cut-off the period is closed: employees can no longer submit">
         <span data-testid={tid.aorg.cutoff} className="text-sm">{cutoff}</span>

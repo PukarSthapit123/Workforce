@@ -6,6 +6,7 @@ import { renameUserType } from '@/contract/access';
 import { Session } from '@/contract/session';
 import { isAbsence } from '@/domain/rota';
 import { accountOf, audits, caller, fault, resetTo, snapshot, tokenFor, type Persona } from '@/test/api-helpers';
+import { today } from './world';
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' })); afterAll(() => server.close());
 beforeEach(() => resetTo('social'));
@@ -40,6 +41,11 @@ describe('reading the tenant', () => {
     expect(t.rotaHorizon).toBe(12);
     expect(t.extras).toEqual({ weekGrid: 'times', weekLayout: 'classic', breaksMax: 5, vehiclesMax: 4 });
     expect([t.restore, t.rotaSetAside]).toEqual([{}, 0]);
+  });
+
+  test('tenant today is 00:30 on the next calendar day during British Summer Time', () => {
+    store.setClock('2026-07-10T23:30:00.000Z');
+    expect(today()).toBe('2026-07-11');
   });
   test('anyone signed in reads it (every module reader depends on it)', async () => {
     expect((await (await as('employee'))('GET', T)).status).toBe(200);
@@ -283,6 +289,35 @@ describe('features and their extras', () => {
 });
 
 describe('settings', () => {
+  test('timezone, date format, clock and week start save on the tenant with one audit row', async () => {
+    const call = await as('admin');
+    const out = updateTenantSettings.response.parse((await call('PATCH', SETTINGS,
+      { timezone: 'Pacific/Auckland', dateFormat: 'yyyy-mm-dd', clock: '12h' }, ver())).body);
+    expect(out.record).toMatchObject({ timezone: 'Pacific/Auckland', dateFormat: 'yyyy-mm-dd', clock: '12h', weekStart: 'Monday' });
+    expect(audits().filter(a => a.entity === 'tenant')).toEqual([
+      expect.objectContaining({ act: 'Calendar settings changed', before: { timezone: 'Europe/London', dateFormat: 'dd/mm/yyyy', clock: '24h' },
+        after: { timezone: 'Pacific/Auckland', dateFormat: 'yyyy-mm-dd', clock: '12h' } }),
+    ]);
+  });
+  test('week start refuses while open timesheet days or rota weeks remain, and names both counts', async () => {
+    const call = await as('admin');
+    const openTimesheets = Object.values(store.coll<{ state: string }>('timesheetDays')).filter(d => ['pend', 'back', 'resub'].includes(d.state)).length;
+    const openRotas = Object.values(store.coll<{ state: string }>('rotaWeeks')).filter(w => ['draft', 'review', 'amendment'].includes(w.state)).length;
+    expect(openTimesheets + openRotas).toBeGreaterThan(0);
+    const r = await call('PATCH', SETTINGS, { weekStart: 'Sunday' }, ver());
+    expect([r.status, Refusal.parse(r.body)]).toEqual([409, expect.objectContaining({
+      code: 'week-start-in-use', message: `The week start cannot change while ${openTimesheets} timesheet ${openTimesheets === 1 ? 'day is' : 'days are'} and ${openRotas} rota ${openRotas === 1 ? 'week is' : 'weeks are'} open.`,
+    })]);
+  });
+  test('week start changes when all timesheet days and rota weeks are closed', async () => {
+    Object.values(store.coll<{ state: string }>('timesheetDays')).forEach(d => { d.state = 'ok'; });
+    Object.values(store.coll<{ state: string }>('rotaWeeks')).forEach(w => { w.state = 'closed'; });
+    const out = updateTenantSettings.response.parse((await (await as('admin'))('PATCH', SETTINGS, { weekStart: 'Sunday' }, ver())).body);
+    expect(out.record.weekStart).toBe('Sunday');
+    expect(audits().filter(a => a.entity === 'tenant')).toEqual([
+      expect.objectContaining({ act: 'Calendar settings changed', before: { weekStart: 'Monday' }, after: { weekStart: 'Sunday' } }),
+    ]);
+  });
   test('the rota horizon goes to Rota setup, its one home, with one audit row', async () => {
     const call = await as('admin');
     const out = updateTenantSettings.response.parse((await call('PATCH', SETTINGS, { rotaHorizon: 6 }, ver())).body);

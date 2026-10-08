@@ -9972,10 +9972,6 @@
                         "buySell": {
                           "type": "boolean"
                         },
-                        "finYearStart": {
-                          "type": "string",
-                          "maxLength": 5
-                        },
                         "bhPaid": {
                           "type": "boolean"
                         },
@@ -9996,6 +9992,10 @@
                         },
                         "cancelWindow": {
                           "type": "number"
+                        },
+                        "finYearStart": {
+                          "type": "string",
+                          "maxLength": 5
                         },
                         "types": {
                           "type": "array",
@@ -10199,7 +10199,6 @@
                         "toilMax",
                         "toilWindow",
                         "buySell",
-                        "finYearStart",
                         "bhPaid",
                         "absenceTrigger",
                         "autoEntitlement",
@@ -10207,6 +10206,7 @@
                         "affectsRota",
                         "minNotice",
                         "cancelWindow",
+                        "finYearStart",
                         "types",
                         "policies",
                         "stages",
@@ -10445,10 +10445,6 @@
                   },
                   "buySell": {
                     "type": "boolean"
-                  },
-                  "finYearStart": {
-                    "type": "string",
-                    "maxLength": 5
                   },
                   "bhPaid": {
                     "type": "boolean"
@@ -10719,10 +10715,6 @@
                         "buySell": {
                           "type": "boolean"
                         },
-                        "finYearStart": {
-                          "type": "string",
-                          "maxLength": 5
-                        },
                         "bhPaid": {
                           "type": "boolean"
                         },
@@ -10743,6 +10735,10 @@
                         },
                         "cancelWindow": {
                           "type": "number"
+                        },
+                        "finYearStart": {
+                          "type": "string",
+                          "maxLength": 5
                         },
                         "types": {
                           "type": "array",
@@ -10946,7 +10942,6 @@
                         "toilMax",
                         "toilWindow",
                         "buySell",
-                        "finYearStart",
                         "bhPaid",
                         "absenceTrigger",
                         "autoEntitlement",
@@ -10954,6 +10949,7 @@
                         "affectsRota",
                         "minNotice",
                         "cancelWindow",
+                        "finYearStart",
                         "types",
                         "policies",
                         "stages",
@@ -47122,7 +47118,13 @@
                               "type": "boolean"
                             },
                             "bankHolidayRegion": {
-                              "type": "string"
+                              "type": "string",
+                              "enum": [
+                                "England & Wales",
+                                "Scotland",
+                                "Northern Ireland",
+                                "None"
+                              ]
                             },
                             "payFrequency": {
                               "type": "string"
@@ -47181,7 +47183,12 @@
                           "additionalProperties": false
                         },
                         "weekStart": {
-                          "type": "string"
+                          "type": "string",
+                          "enum": [
+                            "Monday",
+                            "Sunday",
+                            "Saturday"
+                          ]
                         },
                         "bankHolidays": {
                           "type": "array",
@@ -47194,7 +47201,9 @@
                                 "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
                               },
                               "name": {
-                                "type": "string"
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 80
                               }
                             },
                             "required": [
@@ -47203,6 +47212,26 @@
                             ],
                             "additionalProperties": false
                           }
+                        },
+                        "timezone": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        },
+                        "dateFormat": {
+                          "type": "string",
+                          "enum": [
+                            "dd/mm/yyyy",
+                            "yyyy-mm-dd",
+                            "mm/dd/yyyy"
+                          ]
+                        },
+                        "clock": {
+                          "type": "string",
+                          "enum": [
+                            "24h",
+                            "12h"
+                          ]
                         },
                         "rotaHorizon": {
                           "type": "integer",
@@ -47276,6 +47305,9 @@
                         "financialYear",
                         "weekStart",
                         "bankHolidays",
+                        "timezone",
+                        "dateFormat",
+                        "clock",
                         "rotaHorizon",
                         "extras",
                         "restore",
@@ -48118,6 +48150,65 @@
                             "steps",
                             "documents",
                             "policies"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "tenantSettings": {
+                          "type": "object",
+                          "properties": {
+                            "timezone": {
+                              "type": "string"
+                            },
+                            "dateFormat": {
+                              "type": "string",
+                              "enum": [
+                                "dd/mm/yyyy",
+                                "yyyy-mm-dd",
+                                "mm/dd/yyyy"
+                              ]
+                            },
+                            "clock": {
+                              "type": "string",
+                              "enum": [
+                                "24h",
+                                "12h"
+                              ]
+                            },
+                            "weekStart": {
+                              "type": "string",
+                              "enum": [
+                                "Monday",
+                                "Sunday",
+                                "Saturday"
+                              ]
+                            },
+                            "financialYear": {
+                              "type": "object",
+                              "properties": {
+                                "start": {
+                                  "type": "string",
+                                  "format": "date",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                                },
+                                "end": {
+                                  "type": "string",
+                                  "format": "date",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                                }
+                              },
+                              "required": [
+                                "start",
+                                "end"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": [
+                            "timezone",
+                            "dateFormat",
+                            "clock",
+                            "weekStart",
+                            "financialYear"
                           ],
                           "additionalProperties": false
                         }
@@ -49249,7 +49340,13 @@
                               "type": "boolean"
                             },
                             "bankHolidayRegion": {
-                              "type": "string"
+                              "type": "string",
+                              "enum": [
+                                "England & Wales",
+                                "Scotland",
+                                "Northern Ireland",
+                                "None"
+                              ]
                             },
                             "payFrequency": {
                               "type": "string"
@@ -49308,7 +49405,12 @@
                           "additionalProperties": false
                         },
                         "weekStart": {
-                          "type": "string"
+                          "type": "string",
+                          "enum": [
+                            "Monday",
+                            "Sunday",
+                            "Saturday"
+                          ]
                         },
                         "bankHolidays": {
                           "type": "array",
@@ -49321,7 +49423,9 @@
                                 "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
                               },
                               "name": {
-                                "type": "string"
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 80
                               }
                             },
                             "required": [
@@ -49330,6 +49434,26 @@
                             ],
                             "additionalProperties": false
                           }
+                        },
+                        "timezone": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        },
+                        "dateFormat": {
+                          "type": "string",
+                          "enum": [
+                            "dd/mm/yyyy",
+                            "yyyy-mm-dd",
+                            "mm/dd/yyyy"
+                          ]
+                        },
+                        "clock": {
+                          "type": "string",
+                          "enum": [
+                            "24h",
+                            "12h"
+                          ]
                         },
                         "rotaHorizon": {
                           "type": "integer",
@@ -49403,6 +49527,9 @@
                         "financialYear",
                         "weekStart",
                         "bankHolidays",
+                        "timezone",
+                        "dateFormat",
+                        "clock",
                         "rotaHorizon",
                         "extras",
                         "restore",
@@ -49629,7 +49756,13 @@
                               "type": "boolean"
                             },
                             "bankHolidayRegion": {
-                              "type": "string"
+                              "type": "string",
+                              "enum": [
+                                "England & Wales",
+                                "Scotland",
+                                "Northern Ireland",
+                                "None"
+                              ]
                             },
                             "payFrequency": {
                               "type": "string"
@@ -49688,7 +49821,12 @@
                           "additionalProperties": false
                         },
                         "weekStart": {
-                          "type": "string"
+                          "type": "string",
+                          "enum": [
+                            "Monday",
+                            "Sunday",
+                            "Saturday"
+                          ]
                         },
                         "bankHolidays": {
                           "type": "array",
@@ -49701,7 +49839,9 @@
                                 "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
                               },
                               "name": {
-                                "type": "string"
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 80
                               }
                             },
                             "required": [
@@ -49710,6 +49850,26 @@
                             ],
                             "additionalProperties": false
                           }
+                        },
+                        "timezone": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        },
+                        "dateFormat": {
+                          "type": "string",
+                          "enum": [
+                            "dd/mm/yyyy",
+                            "yyyy-mm-dd",
+                            "mm/dd/yyyy"
+                          ]
+                        },
+                        "clock": {
+                          "type": "string",
+                          "enum": [
+                            "24h",
+                            "12h"
+                          ]
                         },
                         "rotaHorizon": {
                           "type": "integer",
@@ -49783,6 +49943,9 @@
                         "financialYear",
                         "weekStart",
                         "bankHolidays",
+                        "timezone",
+                        "dateFormat",
+                        "clock",
                         "rotaHorizon",
                         "extras",
                         "restore",
@@ -49965,7 +50128,7 @@
     },
     "/api/v1/tenant/settings": {
       "patch": {
-        "summary": "Change the rota horizon, the organisation name or company details (If-Match: the tenant's version)",
+        "summary": "Change tenant date and time settings, the financial year, bank holidays, rota horizon, organisation name or company details (If-Match: the tenant's version)",
         "security": [
           {
             "bearer": []
@@ -50005,6 +50168,73 @@
                     "minLength": 1,
                     "maxLength": 80
                   },
+                  "timezone": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "dateFormat": {
+                    "type": "string",
+                    "enum": [
+                      "dd/mm/yyyy",
+                      "yyyy-mm-dd",
+                      "mm/dd/yyyy"
+                    ]
+                  },
+                  "clock": {
+                    "type": "string",
+                    "enum": [
+                      "24h",
+                      "12h"
+                    ]
+                  },
+                  "weekStart": {
+                    "type": "string",
+                    "enum": [
+                      "Monday",
+                      "Sunday",
+                      "Saturday"
+                    ]
+                  },
+                  "financialYear": {
+                    "type": "object",
+                    "properties": {
+                      "start": {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      },
+                      "end": {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "bankHolidays": {
+                    "maxItems": 200,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "date": {
+                          "type": "string",
+                          "format": "date",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                        },
+                        "name": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 80
+                        }
+                      },
+                      "required": [
+                        "date",
+                        "name"
+                      ]
+                    }
+                  },
                   "company": {
                     "type": "object",
                     "properties": {
@@ -50033,7 +50263,7 @@
                           "England & Wales",
                           "Scotland",
                           "Northern Ireland",
-                          "Republic of Ireland"
+                          "None"
                         ]
                       },
                       "payFrequency": {
@@ -50140,7 +50370,13 @@
                               "type": "boolean"
                             },
                             "bankHolidayRegion": {
-                              "type": "string"
+                              "type": "string",
+                              "enum": [
+                                "England & Wales",
+                                "Scotland",
+                                "Northern Ireland",
+                                "None"
+                              ]
                             },
                             "payFrequency": {
                               "type": "string"
@@ -50199,7 +50435,12 @@
                           "additionalProperties": false
                         },
                         "weekStart": {
-                          "type": "string"
+                          "type": "string",
+                          "enum": [
+                            "Monday",
+                            "Sunday",
+                            "Saturday"
+                          ]
                         },
                         "bankHolidays": {
                           "type": "array",
@@ -50212,7 +50453,9 @@
                                 "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
                               },
                               "name": {
-                                "type": "string"
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 80
                               }
                             },
                             "required": [
@@ -50221,6 +50464,26 @@
                             ],
                             "additionalProperties": false
                           }
+                        },
+                        "timezone": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 100
+                        },
+                        "dateFormat": {
+                          "type": "string",
+                          "enum": [
+                            "dd/mm/yyyy",
+                            "yyyy-mm-dd",
+                            "mm/dd/yyyy"
+                          ]
+                        },
+                        "clock": {
+                          "type": "string",
+                          "enum": [
+                            "24h",
+                            "12h"
+                          ]
                         },
                         "rotaHorizon": {
                           "type": "integer",
@@ -50294,6 +50557,9 @@
                         "financialYear",
                         "weekStart",
                         "bankHolidays",
+                        "timezone",
+                        "dateFormat",
+                        "clock",
                         "rotaHorizon",
                         "extras",
                         "restore",
@@ -50329,6 +50595,16 @@
           },
           "403": {
             "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The change is refused because of the state of the data",
             "content": {
               "application/json": {
                 "schema": {
@@ -50450,7 +50726,13 @@
                           "type": "boolean"
                         },
                         "bankHolidayRegion": {
-                          "type": "string"
+                          "type": "string",
+                          "enum": [
+                            "England & Wales",
+                            "Scotland",
+                            "Northern Ireland",
+                            "None"
+                          ]
                         },
                         "payFrequency": {
                           "type": "string"
@@ -50509,7 +50791,12 @@
                       "additionalProperties": false
                     },
                     "weekStart": {
-                      "type": "string"
+                      "type": "string",
+                      "enum": [
+                        "Monday",
+                        "Sunday",
+                        "Saturday"
+                      ]
                     },
                     "bankHolidays": {
                       "type": "array",
@@ -50522,7 +50809,9 @@
                             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
                           },
                           "name": {
-                            "type": "string"
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 80
                           }
                         },
                         "required": [
@@ -50531,6 +50820,26 @@
                         ],
                         "additionalProperties": false
                       }
+                    },
+                    "timezone": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "dateFormat": {
+                      "type": "string",
+                      "enum": [
+                        "dd/mm/yyyy",
+                        "yyyy-mm-dd",
+                        "mm/dd/yyyy"
+                      ]
+                    },
+                    "clock": {
+                      "type": "string",
+                      "enum": [
+                        "24h",
+                        "12h"
+                      ]
                     },
                     "rotaHorizon": {
                       "type": "integer",
@@ -50604,6 +50913,9 @@
                     "financialYear",
                     "weekStart",
                     "bankHolidays",
+                    "timezone",
+                    "dateFormat",
+                    "clock",
                     "rotaHorizon",
                     "extras",
                     "restore",

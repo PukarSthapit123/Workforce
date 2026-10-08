@@ -6,7 +6,7 @@
    (D6) rules and every sentence the card and the server say are here too, so
    the client and the fake server cannot disagree. The prototype's "·" asides
    are plain sentences. */
-import { addDays, clockFromIso, formatDay, pad, toMin } from './time';
+import { addDays, clockFromIso, formatDay, formatTime, pad, toMin } from './time';
 import type { BreakInput } from './timesheet';
 
 export type ClockKind = 'in' | 'breakStart' | 'breakEnd' | 'out';
@@ -44,7 +44,7 @@ export function formatElapsed(seconds: number): string {
   const s = Math.max(0, Math.floor(seconds));
   return `${Math.floor(s / 3600)}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`;
 }
-/* An event's time on the London clock every module 2 rule reads, as HH:MM. */
+/* An event's time on the tenant clock every module 2 rule reads, as HH:MM. */
 export const clockTime = (at: string) => clockFromIso(at).time;
 
 /* ----------------------------------------------------- events to the day */
@@ -169,10 +169,10 @@ export function isLate(at: string, line: { from: string } | null | undefined, da
 }
 /* `date` is the line's day; when the clock in came on a later calendar day (a night line after midnight) both are named. */
 export const lateNotices = (name: string, date: string, at: string, from: string) => {
-  const on = clockFromIso(at).date, line = on === date ? from : `${from} on ${formatDay(date)}`;
+  const on = clockFromIso(at).date;
   return {
-    subject: { title: 'Late clock-in', body: `You clocked in at ${clockTime(at)} on ${formatDay(on)}. Your shift started at ${line}.` },
-    actor: { title: 'Late clock-in', body: `${name} clocked in at ${clockTime(at)} on ${formatDay(on)}. The shift started at ${line}.` },
+    subject: { title: 'Late clock-in', body: `You clocked in at ${formatTime(clockTime(at))} on ${formatDay(on)}. Your shift started at ${formatTime(from)}${on === date ? '' : ` on ${formatDay(date)}`}.` },
+    actor: { title: 'Late clock-in', body: `${name} clocked in at ${formatTime(clockTime(at))} on ${formatDay(on)}. The shift started at ${formatTime(from)}${on === date ? '' : ` on ${formatDay(date)}`}.` },
   };
 };
 /* Review M1: a night line crosses midnight when it finishes at or before its
@@ -204,14 +204,14 @@ export const noDaySentence = (manager: string) => `Closing the clock does not ch
 export const closedNoDayToast = (date: string, manager: string) =>
   `The clock from ${formatDay(date)} is closed. The day itself is not changed. ${manager} has been asked to amend it.`;
 export const noDayNotice = (name: string, date: string, finish: string) => ({ title: 'Clock closed without the day',
-  body: `${name} did not clock out on ${formatDay(date)} and finished at ${finish}. The day can no longer be changed from the clock, so it needs an amendment.` });
+  body: `${name} did not clock out on ${formatDay(date)} and finished at ${formatTime(finish)}. The day can no longer be changed from the clock, so it needs an amendment.` });
 /* Review M3: a clock out a day rule refuses (the daily maximum, say) leaves
    the clock running, so the card offers the close flow with a finish the
    person chooses, and the refusal names it. The finish must have come: one
    at or before the first clock in is the next morning, as on the day form. */
 export const CHOOSE_FINISH = 'Clock out at a time you choose';
 export const CHOOSE_FINISH_NEXT = `Use “${CHOOSE_FINISH}” and enter the time you finished.`;
-export const chosenToast = (finish: string) => `Clocked out at ${finish} and saved as a draft. Not submitted yet.`;
+export const chosenToast = (finish: string) => `Clocked out at ${formatTime(finish)} and saved as a draft. Not submitted yet.`;
 export const FINISH_AHEAD = { code: 'TS_INVALID', field: 'finish', message: 'That finish time has not come yet.', next: 'Enter the time you finished.' } as const;
 export function finishAhead(date: string, start: string, finish: string, now: { date: string; time: string }): boolean {
   const s = toMin(start), f = toMin(finish);
@@ -244,7 +244,7 @@ export const CLOCK_STATUS: Readonly<Record<ClockState, string>> = {
   onBreak: 'On break. Timer paused.',
   clockedOut: 'Clocked out and saved as a draft. Save or submit the day below.',
 };
-export const clockedInToast = (at: string) => `Clocked in. Start time ${clockTime(at)}.`;
+export const clockedInToast = (at: string) => `Clocked in. Start time ${formatTime(clockTime(at))}.`;
 export const clockedOutToast = (seconds: number) => `Clocked out and saved as a draft. ${formatElapsed(seconds)}. Not submitted yet.`;
 export const BREAK_STARTED = 'On break. Timer paused.';
 export const BREAK_ENDED = 'Break ended and added to your breaks.';
@@ -257,7 +257,7 @@ export function clockedInSince(rec: { events: readonly ClockEvent[] }, today: st
   const first = rec.events.find(e => e.kind === 'in');
   if (!first) return null;
   const on = clockFromIso(first.at);
-  return on.date < today ? `Clocked in since ${formatDay(on.date)} ${on.time}.` : null;
+  return on.date < today ? `Clocked in since ${formatDay(on.date)} ${formatTime(on.time)}.` : null;
 }
 /* Review M1: after midnight a clock goes on the night line of the day before, and the card says so. */
 export const nightLineNote = (lineName: string, date: string, running: boolean) =>

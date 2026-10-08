@@ -10,6 +10,7 @@ import {
   type AllowanceDef, type CheckContext, type RateContext, type FieldDef, type FieldEnv, type PayCode, type TimesInput, type TsState,
   type TypeCapture, type TypeRule,
 } from './timesheet';
+import { setActiveLocale } from './time';
 
 /* The prototype's frozen clock: Thursday 13 August 2026, 09:12. */
 const NOW = { date: '2026-08-13', time: '09:12' };
@@ -98,6 +99,12 @@ describe('pay period lock', () => {
     expect(cutoffFor('2026-08-03', 'Sunday 18:00')).toEqual({ date: '2026-08-09', time: '18:00' });
     expect(cutoffFor('2026-08-03', 'Thursday 10:00')).toEqual({ date: '2026-08-13', time: '10:00' });
     expect(cutoffFor('2026-08-03', 'Friday')).toEqual({ date: '2026-08-10', time: '12:00' });
+  });
+  test('the configured cut-off stays after a Sunday-start pay period', () => {
+    setActiveLocale({ timezone: 'Europe/London', dateFormat: 'dd/mm/yyyy', clock: '24h', weekStart: 'Sunday' });
+    expect(cutoffFor('2026-08-09', 'Monday 12:00')).toEqual({ date: '2026-08-17', time: '12:00' });
+    expect(lockNote('2026-08-09', 'Monday 12:00')).toBe('Pay period 09/08/2026 – 15/08/2026 closed at Monday 12:00 (17/08/2026 12:00)');
+    setActiveLocale({ timezone: 'Europe/London', dateFormat: 'dd/mm/yyyy', clock: '24h', weekStart: 'Monday' });
   });
   test('a past period whose cut-off has passed is locked', () => {
     expect(periodLocked('2026-08-05', lockOn, NOW)).toBe(true);

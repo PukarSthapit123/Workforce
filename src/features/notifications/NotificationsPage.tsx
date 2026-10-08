@@ -5,7 +5,7 @@ import { ActionBar, AdminCard, Banner, Button, Page, PageHead, SettingSelect, Ti
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import { useNotificationMatrix, useUpdateMatrix, type NotificationMatrix, type UpdateMatrix } from '@/api/notifications';
 import { NOTIF_CHANNELS, NOTIF_PERSONAS, channelLabel, isNotifChannel, type NotifChannel, type NotifPersona } from '@/domain/notifications';
-import { clockFromIso, formatDmy } from '@/domain/time';
+import { formatDateTime } from '@/lib/format';
 
 /* Notifications: the prototype's admNotifications (qnipay-workforce-v15.html:
    8370-8403). One row per event this tenant can raise, grouped "<Module>
@@ -99,7 +99,6 @@ function Matrix({ matrix }: { matrix: NotificationMatrix }) {
 }
 
 function Evidence({ rows }: { rows: NonNullable<NotificationMatrix['evidence']> }) {
-  const when = (at: string) => { const c = clockFromIso(at); return `${formatDmy(c.date)} ${c.time}`; };
   return (
     <AdminCard testId={tid.anotif.evidence} icon={<Receipt />} title="Notification evidence" tipTestId={tid.anotif.evidenceTip}
       tip="Retained for audit: employee, milestone, timestamp, recipient, channel and reference."
@@ -112,7 +111,7 @@ function Evidence({ rows }: { rows: NonNullable<NotificationMatrix['evidence']> 
           {rows.map(r => (
             <TableRow key={r.ref} data-testid={tid.anotif.evidenceRow(r.ref)}>
               <TableCell kind="title">{r.employee}</TableCell><TableCell label="Employee ID" className="tabular-nums">{r.employeeId}</TableCell>
-              <TableCell label="Event">{r.event}</TableCell><TableCell label="Timestamp" className="text-xs tabular-nums">{when(r.at)}</TableCell>
+              <TableCell label="Event">{r.event}</TableCell><TableCell label="Timestamp" className="text-xs tabular-nums">{formatDateTime(r.at)}</TableCell>
               <TableCell label="Recipient" className="text-xs">{r.recipient}</TableCell><TableCell label="Channel" className="text-xs">{r.channel}</TableCell>
               <TableCell label="Reference" className="text-xs tabular-nums">{r.ref}</TableCell>
             </TableRow>))}

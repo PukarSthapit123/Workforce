@@ -13,7 +13,7 @@ import {
 } from '@/api/rota';
 import { useCaps } from '@/shell/useCaps';
 import { formatDateTime } from '@/lib/format';
-import { DOW_SHORT, dowMon, formatDay, parseIso, periodStart } from '@/domain/time';
+import { DOW_SHORT, dayIndex, dowMon, formatDay, parseIso, periodStart } from '@/domain/time';
 import { COVER_REASONS, NO_REASONS_WHY, askFirstText } from '@/domain/rota';
 import type { FulfilStage, PlanItem } from '@/contract/rota';
 import { AdhocDialog } from './Dialogs';
@@ -149,7 +149,7 @@ function Request({ c, stages }: { c: CoverView; stages: readonly FulfilStage[] }
    week's own cell suggestions for that day and shift. */
 function Suggestions({ c, wait }: { c: CoverView; wait: number }) {
   const assign = useAssignCover();
-  const cell = useCellSuggestions(c.location, periodStart(c.date), dowMon(c.date), c.shift);
+  const cell = useCellSuggestions(c.location, periodStart(c.date), dayIndex(c.date), c.shift);
   const no = cell.data?.no ?? [];
   const ruled = (label: string) => no.length > 0 && <RuledOutList label={label}>
     {no.slice(0, 6).map(x => <RuledOutRow key={x.personCode} testId={tid.tcover.ruled(c.id, x.personCode)} name={x.name} why={`${x.rule}: ${x.reason}`} />)}

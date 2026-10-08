@@ -12,6 +12,7 @@ import { timesheetKeys } from './timesheets';
 import { leaveKeys } from './leave';
 import { notificationKeys } from './notifications';
 import { onboardingKeys } from './onboarding';
+import { setActiveLocale } from '@/domain/time';
 import {
   getTenant, setFlag, setModule, updateTenantSettings,
   type FlagChanged, type ModuleSwitched, type SetFlag, type Tenant, type UpdateTenantSettings,
@@ -21,7 +22,11 @@ import type { Mutation } from '@/contract/common';
 
 export const tenantKeys = { all: ['tenant'] as const };
 /* The tenant's settings, from the one cached query the shell itself reads. */
-export const useTenant = () => useQuery({ queryKey: tenantKeys.all, queryFn: () => api(getTenant) });
+export const useTenant = () => useQuery({ queryKey: tenantKeys.all, queryFn: async () => {
+  const tenant = await api(getTenant);
+  setActiveLocale(tenant);
+  return tenant;
+} });
 
 /* All three writes change the same record, so they share one pending key. */
 const TENANT_KEY = () => 'tenant';
@@ -51,7 +56,7 @@ export function useUpdateTenantSettings() {
   return useRecordMutation<{ change: UpdateTenantSettings; ifMatch: number }, Mutation<Tenant>>({
     mutationFn: vars => api(updateTenantSettings, { body: vars.change, ifMatch: vars.ifMatch }),
     recordKey: TENANT_KEY,
-    invalidates: [tenantKeys.all, rotaKeys.all],
+    invalidates: [tenantKeys.all, rotaKeys.all, timesheetKeys.all, leaveKeys.all],
   });
 }
 /* Configurable role names (D11). Renaming your own user type re-reads the

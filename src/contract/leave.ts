@@ -202,11 +202,12 @@ export type LeaveTypeRecord = z.infer<typeof LeaveTypeRecord>;
 export const TypeLeave = z.object({ policy: z.string().max(10), unit: BalanceUnit });
 const LeaveConfigFields = {
   slaDays: z.number(), escalateTo: z.string().max(40), unit: z.string().max(40), carry: z.number(), toilMax: z.number(), toilWindow: z.number(),
-  buySell: z.boolean(), finYearStart: z.string().max(5), bhPaid: z.boolean(), absenceTrigger: z.number(), autoEntitlement: z.boolean(),
+  buySell: z.boolean(), bhPaid: z.boolean(), absenceTrigger: z.number(), autoEntitlement: z.boolean(),
   blocksTimesheet: z.boolean(), affectsRota: z.boolean(), minNotice: z.number(), cancelWindow: z.number(),
 };
 export const LeaveConfigRecord = RecordMeta.extend({
-  ...LeaveConfigFields, types: z.array(LeaveTypeRecord), policies: z.array(LeavePolicy), stages: z.array(LeaveStage), typeLeave: z.record(z.string(), TypeLeave),
+  ...LeaveConfigFields, finYearStart: z.string().max(5), types: z.array(LeaveTypeRecord), policies: z.array(LeavePolicy), stages: z.array(LeaveStage),
+  typeLeave: z.record(z.string(), TypeLeave),
 });
 export type LeaveConfigRecord = z.infer<typeof LeaveConfigRecord>;
 /* The module flags are shown read-only: they change under Modules & features (D11). requestCounts: how

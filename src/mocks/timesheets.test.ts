@@ -7,6 +7,7 @@ import {
 } from '@/contract/timesheets';
 import { mutation } from '@/contract/common';
 import { queueChecksum } from '@/domain/timesheet';
+import { addDays } from '@/domain/time';
 import { FROZEN, accountOf, audits, caller, fault, resetTo, snapshot, tokenFor, type Persona } from '@/test/api-helpers';
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' })); afterAll(() => server.close());
@@ -40,7 +41,7 @@ function plant(code: string, date: string, state = 'pend') {
 }
 /* Every day of a week as it is stored now, each with its version and no entries: "submit as read". */
 const asRead = (code: string, weekStart: string) => Array.from({ length: 7 }, (_, i) => {
-  const date = new Date(Date.parse(`${weekStart}T00:00:00Z`) + i * 86400000).toISOString().slice(0, 10);
+  const date = addDays(weekStart, i);
   return { date, version: day(code, date)?.version ?? 0 };
 });
 const LOCK_0805 = 'Pay period 03/08/2026 – 09/08/2026 closed at Monday 12:00 (10/08/2026 12:00).';

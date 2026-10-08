@@ -6,7 +6,8 @@ import { buttonVariants } from '@/ui/shadcn/button';
 import { useMyClock, type ClockRecord, type MyClock } from '@/api/clock';
 import type { DaySaved, TimesheetWeek, WeekDay } from '@/contract/timesheets';
 import { CLOCK_OUT_FIRST } from '@/domain/clock';
-import { addDays, dowMon, formatDay, formatDmy } from '@/domain/timesheet';
+import { addDays, formatDay, formatDmy } from '@/domain/timesheet';
+import { dayIndex, formatTime } from '@/domain/time';
 import { NON_WORKING_REASONS, formGroups, hm, rotaShift, valuesFromDay, valuesFromRota, varianceText } from './capture';
 import { ClockCard, ForgottenClock, clockedStart } from './ClockCard';
 import { DayFields, DayStatsCard, hasClosedGroups } from './DayForm';
@@ -105,10 +106,10 @@ function DayPanel({ week, day, today, onDate, personId, clock }: {
     { onSuccess: () => toastInfo(`Reason submitted · ${reason} · routed to ${mgr}`) });
   /* copy-day: yesterday's rota line when there is one (the prototype's), otherwise yesterday's recorded entry */
   const copyYesterday = () => {
-    const y = week.days[dowMon(day.date) - 1];
+    const y = week.days[dayIndex(day.date) - 1];
     if (!y) { toastInfo('No previous day in this week to copy'); return; }
     const line = rotaShift(y);
-    if (line) { entry.fill(valuesFromRota(line)); toastInfo(`Filled from yesterday’s rota · ${line.from}`); return; }
+    if (line) { entry.fill(valuesFromRota(line)); toastInfo(`Filled from yesterday’s rota · ${formatTime(line.from)}`); return; }
     if (!y.record?.entries.length) { toastInfo('Nothing recorded yesterday to copy'); return; }
     const from = valuesFromDay(y, c);
     entry.fill(from);

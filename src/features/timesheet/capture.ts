@@ -5,6 +5,7 @@
    the server takes, and the client-side checks. Every check is a domain
    function the server also runs (brief D3): the client only warns early. */
 import type { CaptureSetup, DayInput, RotaDay, WeekDay } from '@/contract/timesheets';
+import { formatTime } from '@/domain/time';
 import {
   deriveWorkType, fieldProblem, fieldSettingFor, fieldVisible, formatMinutes, missingMandatory, projectOptions, rotaFor, taskOptions, toMin, validateTimes,
   type BreakInput, type Clock, type DerivedRate, type FieldDef, type FieldDefault, type FieldEnv, type TypeCapture,
@@ -95,7 +96,7 @@ export function selectValues(code: string, opts: readonly string[] | undefined, 
    so a line seeded from the rota is one of its options. */
 export function fieldOptions(def: FieldDef, c: CaptureSetup, chosen: Readonly<Record<string, unknown>> = {}): { value: string; label: string }[] {
   if (def.c === 'work_type') return c.payCodes.filter(p => p.workType).map(p => ({ value: p.code, label: p.label || p.code }));
-  if (def.c === 'shift_code' && c.rotaLines) return c.rotaLines.map(l => ({ value: l.code, label: `${l.name} · ${l.from}–${l.to}` }));
+  if (def.c === 'shift_code' && c.rotaLines) return c.rotaLines.map(l => ({ value: l.code, label: `${l.name} · ${formatTime(l.from)}–${formatTime(l.to)}` }));
   return selectValues(def.c, def.opts, c, chosen).map(o => ({ value: o, label: o }));
 }
 

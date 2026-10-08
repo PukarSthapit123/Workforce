@@ -18,7 +18,7 @@ export type PolicyNumKey = (typeof POLICY_NUM_KEYS)[number];
 export interface PolicyDraft { unit: LeaveUnit; nums: Record<PolicyNumKey, string> }
 export interface StageDraft { who: string; action: string; wait: string; channel: string }
 export interface LeaveDraft {
-  nums: Record<NumKey, string>; toggles: Record<ToggleKey, boolean>; unit: string; finYearStart: string; toilWindow: number; escalateTo: string;
+  nums: Record<NumKey, string>; toggles: Record<ToggleKey, boolean>; unit: string; toilWindow: number; escalateTo: string;
   types: LeaveTypeRecord[]; policies: PolicyDraft[]; stages: StageDraft[]; typeLeave: Record<string, TypeLeave>;
 }
 
@@ -38,7 +38,7 @@ const stageDraft = (s: LeaveStage): StageDraft => ({ who: s.who, action: s.actio
 export function draftOf(c: LeaveConfigRecord, typeCodes: readonly string[]): LeaveDraft {
   return {
     nums: pick(NUM_KEYS, k => String(c[k])), toggles: pick(TOGGLE_KEYS, k => c[k]),
-    unit: c.unit, finYearStart: c.finYearStart, toilWindow: c.toilWindow, escalateTo: c.escalateTo,
+    unit: c.unit, toilWindow: c.toilWindow, escalateTo: c.escalateTo,
     types: c.types.map(t => ({ ...t })),
     policies: c.policies.map(p => ({ unit: p.unit, nums: pick(POLICY_NUM_KEYS, k => String(p[k])) })),
     stages: c.stages.map(stageDraft),
@@ -59,7 +59,6 @@ export function leaveBody(c: LeaveConfigRecord, d: LeaveDraft): UpdateLeaveConfi
   for (const k of NUM_KEYS) if (num(d.nums[k]) !== c[k]) body[k] = num(d.nums[k]);
   for (const k of TOGGLE_KEYS) if (d.toggles[k] !== c[k]) body[k] = d.toggles[k];
   if (d.unit !== c.unit) body.unit = d.unit;
-  if (d.finYearStart !== c.finYearStart) body.finYearStart = d.finYearStart;
   if (d.toilWindow !== c.toilWindow) body.toilWindow = d.toilWindow;
   if (d.escalateTo !== c.escalateTo) body.escalateTo = d.escalateTo;
   if (!sameTypes(d.types, c.types)) body.types = d.types;

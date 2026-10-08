@@ -7,7 +7,7 @@
    line, which it does only while the Rota module is on (D9). Messages are the
    prototype's, with each em-dash aside rewritten as its own sentence. */
 import type { Problem } from './codes';
-import { addDays, dowMon, formatDay, formatDmy, pad, toMin, weekDates, periodStart, type Clock } from './time';
+import { addDays, dowMon, formatDay, formatDmy, formatTime, pad, toMin, weekDates, periodStart, type Clock } from './time';
 
 /* ---------------------------------------------------------------- states (D2) */
 export const TS_STATES = ['draft', 'pend', 'back', 'resub', 'ok'] as const;
@@ -77,11 +77,13 @@ export const DEFAULT_RULES: CaptureRules = {
   enforceLock: true, otDaily: 8, otWeekly: 40, nightFrom: '20:00', nightTo: '06:00',
 };
 
-const CUTOFF_DAYS: Record<string, number> = { Sunday: 6, Monday: 7, Tuesday: 8, Wednesday: 9, Thursday: 10 };
+const CUTOFF_DAYS: Record<string, number> = { Sunday: 6, Monday: 0, Tuesday: 1, Wednesday: 2, Thursday: 3 };
 /* When the period beginning `weekStart` closes, from the tenant's cut-off ("Monday 12:00"). */
 export function cutoffFor(weekStart: string, cutoff: string): { date: string; time: string } {
   const [day = '', time] = String(cutoff || 'Monday 12:00').split(' ');
-  return { date: addDays(weekStart, CUTOFF_DAYS[day] ?? 7), time: time || '12:00' };
+  const end = addDays(periodStart(weekStart), 6), endDay = dowMon(end);
+  const targetDay = CUTOFF_DAYS[day] ?? 0;
+  return { date: addDays(end, (targetDay - endDay + 7) % 7), time: time || '12:00' };
 }
 const isPast = (c: { date: string; time: string }, now: Clock) =>
   c.date < now.date || (c.date === now.date && (toMin(c.time) ?? 0) <= (toMin(now.time) ?? 0));
@@ -94,7 +96,8 @@ export function periodLocked(iso: string, s: { enforceLock: boolean; cutoff: str
 }
 export function lockNote(iso: string, cutoff: string): string {
   const ws = periodStart(iso), c = cutoffFor(ws, cutoff);
-  return `Pay period ${formatDmy(ws)} – ${formatDmy(addDays(ws, 6))} closed at ${cutoff} (${formatDmy(c.date)} ${c.time})`;
+  const [day = '', time = '12:00'] = String(cutoff || 'Monday 12:00').split(' ');
+  return `Pay period ${formatDmy(ws)} – ${formatDmy(addDays(ws, 6))} closed at ${day} ${formatTime(time)} (${formatDmy(c.date)} ${formatTime(c.time)})`;
 }
 
 export interface BreakInput { start: string; end: string }

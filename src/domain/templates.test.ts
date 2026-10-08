@@ -13,6 +13,8 @@ const shipped = (k: string) => must(SHIPPED_TEMPLATES[k], k);
 const DEFAULT_LABELS: Record<string, string> = Object.fromEntries(meta.timesheetFields.map(f => [f.c, f.label]));
 const EXTRAS: FlagExtras = { weekGrid: 'times', weekLayout: 'classic', breaksMax: 5, vehiclesMax: 4 };
 const EMPTY: TemplateStructure = { departments: [], costCentres: [], locations: [], jobProfiles: [], contracts: [] };
+const TENANT_SETTINGS = { timezone: 'Europe/London', dateFormat: 'dd/mm/yyyy' as const, clock: '24h' as const, weekStart: 'Monday' as const,
+  financialYear: { start: '2026-04-01', end: '2027-03-31' } };
 const DEFAULT_CHAINS = Object.fromEntries(CHAIN_MODULES.map(m => [m, defaultChainFor(m)])) as Record<ChainModule, ChainStep[]>;
 
 /* The social tenant as seeded: every module on, its own template's flags and labels. */
@@ -22,6 +24,7 @@ function socialState(over: Partial<TenantState> = {}): TenantState {
     name: 'Brightpath Support Services', people: 19, modules: { ...t.modules }, restore: {}, flags: { ...t.flags }, extras: { ...EXTRAS },
     labels: { ...DEFAULT_LABELS, ...t.labels }, employeeTypes: structuredClone(t.employeeTypes),
     roleNames: { employee: 'Employee', manager: 'Manager', admin: 'Admin' }, chains: DEFAULT_CHAINS,
+    tenantSettings: structuredClone(TENANT_SETTINGS),
     structure: { departments: ['CARE', 'OPS', 'PRJ', 'ADM'], costCentres: ['WH-CAM-01', 'CC-100'], locations: ['WH', 'BC'], jobProfiles: ['SW', 'ADM'], contracts: ['PRJ-114'] },
     ...over,
   };
@@ -77,6 +80,7 @@ describe('capture by scope (D2)', () => {
     labels: { ...DEFAULT_LABELS, project: 'Contract' }, defaultLabels: DEFAULT_LABELS,
     employeeTypes: [{ code: 'hourly', name: 'Consultant', category: 'Contracted', mode: 'grid', uom: 'hour', capabilities: ['project'] }],
     roleNames: { employee: 'Consultant', manager: 'Lead', admin: 'Operations' }, chain: DEFAULT_CHAIN,
+    tenantSettings: structuredClone(TENANT_SETTINGS),
     structure: { ...EMPTY, departments: [{ code: 'DEL', name: 'Delivery', manager: '' }],
       contracts: [{ code: 'J1', name: 'Job', client: '', costCentre: '', manager: '', status: 'Active', start: '', end: '', billable: true, location: '', tasks: [] }] },
   };
@@ -90,6 +94,7 @@ describe('capture by scope (D2)', () => {
     expect(t.labels).toEqual({ project: 'Contract' });
     expect(t.roleNames).toEqual(src.roleNames);
     expect(t.approvalChain).toEqual(DEFAULT_CHAIN);
+    expect(t.tenantSettings).toEqual(TENANT_SETTINGS);
     expect(t.structure).toBeUndefined();
     expect(t).not.toHaveProperty('people');
     noMoney(t);
@@ -184,6 +189,18 @@ describe('the apply plan (D1)', () => {
     expect(planSummary(p)).toBe('Nothing needed to change. Nothing was deleted.');
     expect(planSummary({ changes: [{ area: 'modules', text: 'x' }, { area: 'modules', text: 'y' }], added: [{ area: 'types', text: 'z' }] }))
       .toBe('2 changes, 1 added. Nothing was deleted.');
+  });
+  test('tenant date, time, week and financial-year settings are planned as configuration', () => {
+    const t: Template = { ...shipped('social'), tenantSettings: {
+      timezone: 'Pacific/Auckland', dateFormat: 'yyyy-mm-dd', clock: '12h', weekStart: 'Sunday',
+      financialYear: { start: '2026-07-01', end: '2027-06-30' },
+    } };
+    const p = planApply(t, socialState(), { mayRenameRoles: true, mayChangeChains: true, mayChangeTypes: true });
+    expect(p.steps.tenantSettings).toEqual(t.tenantSettings);
+    expect(p.changes.filter(x => x.area === 'organisation').map(x => x.text)).toEqual([
+      'Time zone: Pacific/Auckland.', 'Date format: yyyy-mm-dd.', 'Clock: 12h.', 'Week starts on: Sunday.',
+      'Financial year: 2026-07-01 to 2027-06-30.',
+    ]);
   });
 });
 

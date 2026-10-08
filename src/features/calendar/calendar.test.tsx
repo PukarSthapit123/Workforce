@@ -5,6 +5,7 @@ import { tid } from '@/testids';
 import { expectTestIdCoverage } from '@/test/testid-coverage';
 import { renderPage, withFakeServer } from '@/test/render-page';
 import { audits, resetTo, signInAs } from '@/test/api-helpers';
+import { bankHolidaysFor } from '@/domain/bank-holidays';
 import { CalendarPage } from './CalendarPage';
 
 /* The social seed: financial year 2026/27, three bank holidays, Rota and
@@ -40,6 +41,55 @@ test('the rota horizon saves when chosen, with one audit row', async () => {
   expect(horizon()).toBe(6);
   expect(audits().filter(a => a.entity === 'tenant')).toHaveLength(1);
   await waitFor(() => expect(screen.getByTestId(tid.acal.horizon)).toHaveValue('6'));
+});
+
+test('changing the region keeps the existing dates until the admin confirms filling from it', async () => {
+  await open();
+  const holidays = () => store.coll<{ bankHolidays: { date: string; name: string }[] }>('tenant').tenant?.bankHolidays;
+  const before = structuredClone(holidays());
+  fireEvent.change(screen.getByTestId(tid.acal.region), { target: { value: 'Scotland' } });
+  await waitFor(() => expect(screen.getByTestId(tid.acal.region)).toHaveValue('Scotland'));
+  expect(holidays()).toEqual(before);
+  expect(audits().filter(a => a.entity === 'tenant')).toHaveLength(1);
+
+  await userEvent.click(screen.getByTestId(tid.acal.fillRegion));
+  const modal = await screen.findByTestId(tid.modal.root);
+  expect(modal).toHaveTextContent('The list will be replaced');
+  await userEvent.click(within(modal).getByTestId(tid.modal.confirm));
+  await waitFor(() => expect(holidays()).toEqual(bankHolidaysFor('Scotland', '2026-04-01', '2028-03-31')));
+  await waitFor(() => expect(screen.queryByTestId(tid.modal.root)).toBeNull());
+  expect(audits().filter(a => a.entity === 'tenant')).toHaveLength(2);
+});
+
+test('the editable financial year saves with one audit row', async () => {
+  await open();
+  fireEvent.change(screen.getByTestId(tid.acal.finYearStart), { target: { value: '2026-05-01' } });
+  fireEvent.change(screen.getByTestId(tid.acal.finYearEnd), { target: { value: '2027-04-30' } });
+  await userEvent.click(screen.getByTestId(tid.acal.settingsSave));
+  await waitFor(() => expect(store.coll<{ financialYear: { start: string; end: string }; weekStart: string }>('tenant').tenant)
+    .toMatchObject({ financialYear: { start: '2026-05-01', end: '2027-04-30' } }));
+  expect(audits().filter(a => a.entity === 'tenant')).toHaveLength(1);
+});
+
+test('bank holidays can be added, edited and removed with one audit row per change', async () => {
+  await open();
+  fireEvent.change(screen.getByTestId(tid.acal.newHolidayDate), { target: { value: '2026-09-07' } });
+  fireEvent.change(screen.getByTestId(tid.acal.newHolidayName), { target: { value: 'Staff day' } });
+  await userEvent.click(screen.getByTestId(tid.acal.addHoliday));
+  expect(await screen.findByTestId(tid.acal.holiday('2026-09-07'))).toHaveTextContent('Staff day');
+
+  const row = within(screen.getByTestId(tid.acal.holiday('2026-09-07')));
+  await userEvent.click(row.getByTestId(tid.acal.holidayEdit('2026-09-07')));
+  fireEvent.change(screen.getByTestId(tid.acal.holidayDate('2026-09-07')), { target: { value: '2026-09-08' } });
+  fireEvent.change(screen.getByTestId(tid.acal.holidayName('2026-09-07')), { target: { value: 'Updated staff day' } });
+  await userEvent.click(screen.getByTestId(tid.acal.holidaySave('2026-09-07')));
+  expect(await screen.findByTestId(tid.acal.holiday('2026-09-08'))).toHaveTextContent('Updated staff day');
+
+  await userEvent.click(within(screen.getByTestId(tid.acal.holiday('2026-09-08'))).getByTestId(tid.acal.holidayRemove('2026-09-08')));
+  const modal = await screen.findByTestId(tid.modal.root);
+  await userEvent.click(within(modal).getByTestId(tid.modal.confirm));
+  await waitFor(() => expect(screen.queryByTestId(tid.acal.holiday('2026-09-08'))).toBeNull());
+  expect(audits().filter(a => a.entity === 'tenant')).toHaveLength(3);
 });
 
 test('export downloads everything held as one JSON file named after the organisation', async () => {

@@ -36,6 +36,14 @@ test('current notices, urgent first, with where I stand, the expired ones a pres
   expect(screen.getByTestId(tid.notices.row('NTC-0003'))).toHaveTextContent('until 10/08/2026');
 });
 
+test('an acknowledgement date follows the tenant date format', async () => {
+  const tenant = store.coll<{ dateFormat: string }>('tenant').tenant;
+  if (!tenant) throw new Error('the social tenant is not loaded');
+  tenant.dateFormat = 'yyyy-mm-dd';
+  await open();
+  expect(screen.getByTestId(tid.notices.you('NTC-0001'))).toHaveTextContent('Acknowledged 2026-08-10');
+});
+
 test('reading a notice and acknowledging it records the version I read, once, and the row says so', async () => {
   await open();
   await userEvent.click(screen.getByTestId(tid.notices.read('NTC-0002')));

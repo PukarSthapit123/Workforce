@@ -25,16 +25,17 @@ import { clockHeldReason, clockRunning, clockState, isOpenState, type ClockEvent
 import { absenceBlockedProblem, absenceHeldReason } from '@/domain/leave';
 import {
   APPROVAL_AUDIT_SUFFIX, TS_STATE, advisoryFlags, allSubmittedMessage, alreadySubmittedMessage, clockFromIso, dayMinutes,
-  deriveWorkType, dispatchAttempt, dowMon, formatDmy, formatMinutes, historyEntry, isoWeek, lockNote, missingMandatory,
+  deriveWorkType, dispatchAttempt, formatDmy, formatMinutes, historyEntry, isoWeek, lockNote, missingMandatory,
   periodLocked, periodStart, planWeekSubmit, queueChecksum, queuedAttempt, retryAttempt, retryAuditText, retryProblem,
   returnReasonProblem, rotaFor, timesheetConfigProblem, toMin, transitionAuditText, tsCan, tsPending, tsTransitionProblem,
   validateTimes, weekBlockedMessage, weekDates, weekDayOutcome, weekLabel, weekModel, weekTotals, NOTHING_TO_SUBMIT,
   allocationProblem, type AllowanceDef, type CheckContext, type FieldEnv, type PayCode, type TsState, type WeekDayInput,
 } from '@/domain/timesheet';
+import { dayIndex, isWeekStart } from '@/domain/time';
 
 type StoredDay = Omit<TimesheetDay, 'minutes' | 'posting' | 'enteredByName'>;
 type StoredAttempt = IntegrationAttempt;
-interface Tenant { modules: Record<string, boolean>; flags: Record<string, unknown> }
+interface Tenant { modules: Record<string, boolean>; flags: Record<string, unknown>; weekStart: string }
 interface StoredType { code: string; name: string; capabilities: string[]; mode?: 'form' | 'grid' | 'clock' }
 
 export const FIELDS: TimesheetField[] = meta.timesheetFields;
@@ -292,7 +293,7 @@ function earlierWeeks(p: StoredPerson) {
 /* The day's absence (module 4 D8): a V or S cell on the published rota, else
    approved leave or recorded sickness from the leave records, on any tenant. */
 export function absenceOf(personCode: string, date: string): '' | 'V' | 'S' {
-  const cell = rotaDaysFor(personCode, periodStart(date))?.[dowMon(date)]?.code;
+  const cell = rotaDaysFor(personCode, periodStart(date))?.[dayIndex(date)]?.code;
   return cell === 'V' || cell === 'S' ? cell : leaveAbsenceOn(personCode, date);
 }
 /* With "Leave blocks timesheet capture" on, time on an absence day is refused
@@ -318,8 +319,8 @@ function absenceHolds(p: StoredPerson, planned: readonly Planned[], dates: reado
     return mark ? [{ date, mark, reason: absenceHeldReason(date, mark) }] : [];
   });
 }
-function requireMonday(weekStart: string, field = 'weekStart') {
-  if (dowMon(weekStart) !== 0) invalid({ field, message: 'A week starts on a Monday.' });
+function requireWeekStart(weekStart: string, field = 'weekStart') {
+  if (!isWeekStart(weekStart)) invalid({ field, message: `A week starts on a ${tenant().weekStart}.` });
 }
 
 /* ----------------------------------------------------------- week submit */
@@ -397,7 +398,7 @@ export const timesheetHandlers = [
   serve(getTimesheetWeek, ({ session, params }) => {
     const p = personFor(params.personId);
     access(session, p, false);
-    requireMonday(params.weekStart);
+    requireWeekStart(params.weekStart);
     const ws = params.weekStart, c = config(), today = now();
     /* the published rota for the week (module 3 D13, D16); a V or S cell is the day's absence, not a line,
        and so are approved leave and recorded sickness (module 4 D8) */
@@ -455,7 +456,7 @@ export const timesheetHandlers = [
 
   serve(submitTimesheetWeek, ({ session, params, body }) => {
     const p = personFor(params.personId), mode = access(session, p, true);
-    requireMonday(params.weekStart);
+    requireWeekStart(params.weekStart);
     /* only the days sent are acted on, each checked against the version it was read at (D8) */
     const dates = weekDates(params.weekStart), sent = new Map<string, DayInput | null>();
     body.days.forEach((d, i) => {
@@ -513,7 +514,7 @@ export const timesheetHandlers = [
     const current = periodStart(now().date), c = config();
     const weeks = [...new Set(body.weeks)];
     weeks.forEach((ws, i) => {
-      requireMonday(ws, `weeks.${i}`);
+      requireWeekStart(ws, `weeks.${i}`);
       if (ws >= current) invalid({ field: `weeks.${i}`, message: 'Only earlier weeks are caught up here. Submit this week from the week view.' });
     });
     const out = weeks.sort().reverse().map(ws => {

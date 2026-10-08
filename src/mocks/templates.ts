@@ -14,7 +14,7 @@ import { serve } from './serve';
 import { actor, requireCapability } from './auth';
 import { writeAudit } from './audit';
 import { people, recordAt } from './world';
-import { rotaActor, rotaOff, rotaOn, saveTenant, sitesOff, tenantRec, tsConfig, view, type StoredTenant } from './tenant';
+import { requireWeekStartChangeAllowed, rotaActor, rotaOff, rotaOn, saveTenant, sitesOff, tenantRec, tsConfig, view, type StoredTenant } from './tenant';
 import meta from './seed/meta.json';
 import { chainRecord, chainsNow, writeChain } from './approvals';
 import { casesColl, policiesColl, policiesNow, putCase, stillOnboarding, type StoredConfig } from './onboarding-cases';
@@ -87,6 +87,10 @@ function stateOf(t: StoredTenant): TenantState {
   return {
     name: t.name, people: Object.keys(people()).length, modules: t.modules, restore: t.restore ?? {}, flags: v.flags,
     extras: v.extras, labels: labelsNow(), employeeTypes: typesNow(), roleNames: roleNamesNow(),
+    tenantSettings: {
+      timezone: t.timezone, dateFormat: t.dateFormat, clock: t.clock, weekStart: t.weekStart,
+      financialYear: { start: t.financialYear.start, end: t.financialYear.end },
+    },
     chains: Object.fromEntries(CHAIN_MODULES.map(m => [m, chainRecord(m).steps])) as Record<ChainModule, ChainStep[]>,
     structure: Object.fromEntries(STRUCTURE_KINDS.map(k => [k, codes(k)])) as Record<StructureKind, string[]>,
     onboarding: onboardingNow(),
@@ -183,7 +187,17 @@ function carryOut(t: StoredTenant, plan: ApplyPlan, key: string, by: RotaActor):
   }
   let order = policiesNow().reduce((m, x) => Math.max(m, x.order + 1), 0);
   for (const a of o.policiesAdded) pols[a.id] = { ...a, order: order++, id: a.id, version: 1, updatedAt: store.now() };
-  const saved = saveTenant(t, { modules: s.finalModules, restore: s.finalRestore, flags, extras, template: key });
+  const fy = s.tenantSettings.financialYear;
+  const financialYear = fy
+    ? { ...fy, label: `${fy.start.slice(0, 4)}/${fy.end.slice(2, 4)}` }
+    : t.financialYear;
+  const saved = saveTenant(t, {
+    modules: s.finalModules, restore: s.finalRestore, flags, extras, template: key, financialYear,
+    ...(s.tenantSettings.timezone ? { timezone: s.tenantSettings.timezone } : {}),
+    ...(s.tenantSettings.dateFormat ? { dateFormat: s.tenantSettings.dateFormat } : {}),
+    ...(s.tenantSettings.clock ? { clock: s.tenantSettings.clock } : {}),
+    ...(s.tenantSettings.weekStart ? { weekStart: s.tenantSettings.weekStart } : {}),
+  });
   const notRestored = s.modules.some(m => m.code === 'R' && m.on) ? rotaOn(by).notRestored : 0;
   return { tenant: saved, notRestored };
 }
@@ -205,6 +219,10 @@ export const templateHandlers = [
     const template = captureTemplate(body.name, body.description || `Saved from ${t.name}`, body.scope, {
       modules: t.modules, flags: v.flags, extras: v.extras, labels: labelsNow(), defaultLabels: DEFAULT_LABELS,
       employeeTypes: typesNow(), roleNames: roleNamesNow(), chain: chainsNow(), structure: structureNow(), onboarding: onboardingNow(),
+      tenantSettings: {
+        timezone: t.timezone, dateFormat: t.dateFormat, clock: t.clock, weekStart: t.weekStart,
+        financialYear: { start: t.financialYear.start, end: t.financialYear.end },
+      },
     });
     const key = templateKey(template.name);
     const who = actor(session);
@@ -226,6 +244,7 @@ export const templateHandlers = [
     const template = templateAt(params.key);
     if (hasStructure(template)) requireCapability(session, 'master_data');
     const plan = planApply(template, stateOf(t), { mayRenameRoles: session.caps.includes('perm_cfg'), mayChangeChains: session.caps.includes('framework'), mayChangeTypes: session.caps.includes('type_cfg'), mayChangeOnboarding: session.caps.includes('onb_cfg') });
+    if (plan.steps.tenantSettings.weekStart) requireWeekStartChangeAllowed(t, plan.steps.tenantSettings.weekStart);
     const pv = planView(params.key, template, plan);
     const message = `${template.name} applied. ${pv.summary}`;
     if (!plan.changes.length && !plan.added.length && t.template === params.key) return { record: view(t), auditId: null, plan: pv, message };

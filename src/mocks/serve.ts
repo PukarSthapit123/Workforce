@@ -23,6 +23,7 @@ import type { RecordMeta } from '@/contract/common';
 import { store } from './store';
 import { checkVersion, handle, readJson, readParams, readQuery, refuse, Refused } from './http';
 import { requireCapability, requireSession, type AuthedSession } from './auth';
+import { localeOf, setActiveLocale } from '@/domain/time';
 
 export interface Served<E extends Endpoint> {
   request: Request;
@@ -50,6 +51,7 @@ export function serve<const E extends Endpoint>(ep: E, fn: (ctx: Served<E>) => z
   SERVED.add(ep);
   const name = `${ep.method} ${ep.path}`;
   const handler = METHOD[ep.method](ep.path, handle(async ({ request, params }: { request: Request; params: Record<string, unknown> }) => {
+    setActiveLocale(localeOf(store.coll<Record<string, unknown>>('tenant').tenant));
     const session = ep.public ? undefined : requireSession(request, ep.allowedWhileViewing === true, ep.allowedWhileOnboarding === true);
     if (ep.capability && session) requireCapability(session, ep.capability);
     const p: unknown = ep.params ? readParams(params, ep.params) : {};

@@ -36,7 +36,7 @@ import {
   type Balance, type LeaveYearSpan, type BalanceUnit, type LeavePart, type Entitlement, type LeaveRefusal, type LedgerRow,
 } from '@/domain/leave';
 import { SICK, isActive, type RotaActor } from '@/domain/rota';
-import { addDays, daysBetween } from '@/domain/time';
+import { addDays, clockFromIso, daysBetween } from '@/domain/time';
 
 /* ------------------------------------------------------------- the world */
 interface Meta { id: string; version: number; updatedAt: string }
@@ -64,7 +64,9 @@ function requireFlag(flag: string, what: string) {
 function config(): LeaveConfigRecord {
   const c = recordAt(store.coll<LeaveConfigRecord>('leaveConfig'), 'leaveConfig');
   if (!c) throw new Error('the store has no leave config');
-  return c;
+  const start = recordAt(store.coll<{ financialYear?: { start: string } }>('tenant'), 'tenant')?.financialYear?.start;
+  if (!start) throw new Error('the tenant has no financial year');
+  return { ...c, finYearStart: `${start.slice(8, 10)}/${start.slice(5, 7)}` };
 }
 const requests = () => store.coll<StoredRequest>('leaveRequests');
 const ledgerColl = () => store.coll<StoredLedger>('leaveLedger');
@@ -263,11 +265,12 @@ export const leaveHandlers = [
       return p && mine(p) ? [{ r, p }] : [];
     }).sort((a, b) => a.r.raisedAt.localeCompare(b.r.raisedAt) || a.r.id.localeCompare(b.r.id));
     const views: TeamRequestView[] = pend.map(({ r, p }) => {
-      const sla = slaOf({ raised: r.raisedAt.slice(0, 10), escalated: r.escalated }, c.slaDays, now, c.stages.length);
+      const raised = clockFromIso(r.raisedAt).date;
+      const sla = slaOf({ raised, escalated: r.escalated }, c.slaDays, now, c.stages.length);
       return { ...requestView(r), name: p.name, location: p.location, balance: balanceText(leaveOf(p).bal),
         sla: { daysLeft: sla.daysLeft, escalated: sla.escalated, tone: sla.tone, text: slaPillText(sla, c.slaDays, c.escalateTo) },
         stage: { n: sla.stage, text: stageText(c.stages, sla.stage), action: c.stages[sla.stage - 1]?.action ?? '' },
-        advisories: [noticeAdvisory(r.from, r.raisedAt.slice(0, 10), c.minNotice), cancelWindowAdvisory(r.from, now, c.cancelWindow)].filter((x): x is string => !!x) };
+        advisories: [noticeAdvisory(r.from, raised, c.minNotice), cancelWindowAdvisory(r.from, now, c.cancelWindow)].filter((x): x is string => !!x) };
     });
     const q = (query.q ?? '').trim().toLowerCase();
     const shown = views.filter(v => (!q || v.name.toLowerCase().includes(q) || v.personCode.toLowerCase().includes(q))

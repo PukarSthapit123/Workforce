@@ -6,7 +6,7 @@ import {
 } from '@/ui';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import { useCellSuggestions, useClearWeek, useOpenCover, useRepeatWeek, type RotaRow, type RotaWeekView } from '@/api/rota';
-import { addDays, addMonths, formatDay, periodStart } from '@/domain/time';
+import { addDays, addMonths, formatDay, formatTime, periodStart } from '@/domain/time';
 import {
   COVER_REASONS, NOBODY_CAN_TAKE, NO_REASONS_WHY, REPEAT_WEEKS, clearPreview, restAround, shiftBy, shiftHours, shiftName, shiftTime, thinnest,
 } from '@/domain/rota';
@@ -19,7 +19,7 @@ import { DAY_INDEXES, MONTH_NAMES, longDay, shortDay, weekRange } from './week';
    the page's one assignment path. */
 
 const ref = (v: RotaWeekView) => ({ location: v.location.code, weekStart: v.weekStart, version: v.version });
-const shiftOptions = (v: RotaWeekView) => v.shifts.map(s => ({ value: s.code, label: `${s.name} · ${s.from}–${s.to}` }));
+const shiftOptions = (v: RotaWeekView) => v.shifts.map(s => ({ value: s.code, label: `${s.name} · ${formatTime(s.from)}–${formatTime(s.to)}` }));
 export const askFirst = (name: string) =>
   toastInfo(`Simulated · ${name.split(' ')[0] ?? name} would be asked first.`, 'No message is sent in this build.');
 
@@ -284,5 +284,4 @@ export function AdhocDialog({ view, onPlan, onClose }: { view: RotaWeekView; onP
       </div>
     </Modal>);
 }
-
 

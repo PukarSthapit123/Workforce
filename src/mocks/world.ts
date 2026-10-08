@@ -7,6 +7,7 @@ import type { Person } from '@/contract/people';
 import { maskBank } from '@/domain/selfService';
 import type { UsageWorld } from '@/domain/usage';
 import type { PersonContext } from '@/domain/people';
+import { clockAt, localeOf } from '@/domain/time';
 
 export type Signed = AuthedSession;
 export type StoredPerson = Omit<Person, 'userType'>;
@@ -22,7 +23,7 @@ export const personByCode = (code: string) => Object.values(people()).find(p => 
 export const accountOfPerson = (code: string) => Object.values(accounts()).find(a => a.personCode === code);
 export const codesOf = (collection: string) => Object.values(store.coll<Coded>(collection)).map(r => r.code);
 export const nameOf = (collection: string, code: string) => Object.values(store.coll<Coded>(collection)).find(r => r.code === code)?.name ?? code;
-export const today = () => store.now().slice(0, 10);
+export const today = () => clockAt(store.now(), localeOf(store.coll<Record<string, unknown>>('tenant').tenant).timezone).date;
 /* Object.hasOwn, so an id such as "__proto__" finds nothing. */
 export const recordAt = <T>(coll: Record<string, T>, id: string): T | undefined => (Object.hasOwn(coll, id) ? coll[id] : undefined);
 

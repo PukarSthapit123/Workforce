@@ -7,6 +7,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import { useCreateShiftType, useDeleteShiftType, useUpdateShiftType, type ShiftCatalogue, type ShiftTypeRecord, type UpdateShiftType } from '@/api/rota';
 import { SHIFT_TONES, recalcShift, shiftTypeProblem, type ShiftTone } from '@/domain/rota';
+import { formatTime } from '@/domain/time';
 
 /* The shift catalogue: the prototype's shiftCatalogueBody and shiftTypeBox
    (qnipay-workforce-v15.html:7206-7227, 10297-10328), built once and shown in
@@ -21,7 +22,7 @@ const TONE_OPTIONS = SHIFT_TONES.map(([v, l]) => <option key={v} value={v}>{l}</
 const isTone = (v: string): v is ShiftTone => SHIFT_TONES.some(([t]) => t === v);
 const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? '' : 's'}`;
 const paidLine = (s: { name: string; from: string; to: string; hours: number; cross: boolean }) =>
-  `${s.name} · ${s.from}–${s.to} · ${s.hours}h paid${s.cross ? ' · crosses midnight' : ''}`;
+  `${s.name} · ${formatTime(s.from)}–${formatTime(s.to)} · ${s.hours}h paid${s.cross ? ' · crosses midnight' : ''}`;
 
 export function ShiftCatalogueBody({ catalogue, onAdd }: { catalogue: ShiftCatalogue; onAdd: () => void }) {
   const update = useUpdateShiftType(), remove = useDeleteShiftType();

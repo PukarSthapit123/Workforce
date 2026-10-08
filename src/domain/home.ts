@@ -4,7 +4,7 @@
    gives the shift, the leave records give leave and sickness, the timesheet
    gives what was recorded, and the tenant gives its bank holidays. The server
    paints the days with these rules; the page only draws them. */
-import { DOW_SHORT, MONTH_SHORT, addDays, dowMon, pad, parseIso } from './time';
+import { DOW_SHORT, MONTH_SHORT, addDays, dayIndex, dowMon, formatDay, pad, parseIso } from './time';
 import { SHIFT_TONES } from './rota';
 import type { TsState } from './timesheet';
 
@@ -26,8 +26,8 @@ export function monthDates(month: string): string[] {
   for (let d = first; d.startsWith(month); d = addDays(d, 1)) out.push(d);
   return out;
 }
-/* How many blank cells come before the 1st in a Monday-first grid (firstDowMon). */
-export const leadingBlanks = (month: string) => dowMon(`${month}-01`);
+/* How many blank cells come before the 1st in the tenant's calendar grid. */
+export const leadingBlanks = (month: string) => dayIndex(`${month}-01`);
 
 /* CAL_MIN and CAL_MAX, worked out rather than fixed: from the month before
    today's to as far ahead as the rota horizon reaches (P: July 2026 to
@@ -128,7 +128,7 @@ export function monthSummary(t: MonthTotals): string {
 
 /* ------------------------------------------------------------- wording */
 /* "Thu 13 Aug" */
-export const shortDate = (iso: string) => { const d = parseIso(iso); return `${DOW_SHORT[dowMon(iso)] ?? ''} ${d.getUTCDate()} ${MONTH_SHORT[d.getUTCMonth()] ?? ''}`; };
+export const shortDate = (iso: string) => formatDay(iso);
 /* "13 Aug" */
 export const dayMonth = (iso: string) => { const d = parseIso(iso); return `${d.getUTCDate()} ${MONTH_SHORT[d.getUTCMonth()] ?? ''}`; };
 /* "2 days with no hours recorded. Mon, Tue" */

@@ -5,7 +5,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Avatar, Button, Card, CardHead, CheckboxField, FormWarn, Row, toastInfo, toastRefusal } from '@/ui';
 import { useApprovalQueue, useBulkApprove, type BulkApproved, type QueueRow } from '@/api/timesheets';
 import { usePeople } from '@/api/people';
-import { addDays, formatDay, isoWeek, periodStart, queueChecksum } from '@/domain/timesheet';
+import { addDays, dowMon, isoWeek, periodStart, queueChecksum } from '@/domain/timesheet';
+import { DOW_SHORT, parseIso } from '@/domain/time';
 import { PIP, isPending, pipFor } from './team';
 
 /* mgrTeamMatrix (qnipay-workforce-v15.html:7076-7097) and approve-matrix
@@ -25,6 +26,7 @@ export function TeamMatrix({ today, self, rota, onDone }: {
   const bulk = useBulkApprove();
   const rows = mx.data?.rows ?? [];
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  const dayLabel = (iso: string) => `${DOW_SHORT[dowMon(iso)] ?? ''} ${parseIso(iso).getUTCDate()}`;
   /* the roster at the location; without the people list, whoever appears in the queue */
   const fromRows = [...new Map(rows.map(r => [r.personCode, { code: r.personCode, name: r.personName }])).values()];
   const team = (roster.data ? roster.data.map(p => ({ code: p.code, name: p.name })) : fromRows).filter(p => p.code !== self);
@@ -55,7 +57,7 @@ export function TeamMatrix({ today, self, rota, onDone }: {
           <TableHeader><TableRow>
             <TableHead><CheckboxField testId={tid.tteam.mxAll} aria-label="Select everyone" checked={allOn}
               onCheckedChange={v => setChosen(v === true ? new Set(team.map(p => p.code)) : new Set())} /></TableHead>
-            {days.map(d => <TableHead key={d}>{formatDay(d).slice(0, -4)}</TableHead>)}
+            {days.map(d => <TableHead key={d}>{dayLabel(d)}</TableHead>)}
           </TableRow></TableHeader>
           <TableBody>
             {team.map(p => (

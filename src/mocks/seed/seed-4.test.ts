@@ -5,6 +5,7 @@ import {
   leaveYear, monthsWorked, nextStepText, policyBy, reconcileLeaver, requestDays, requestProblem, sicknessDates, slaOf, typeLeaveFor,
   type LeaveBase, type LeaveConfig, type LeavePolicy, type LeaveRecord, type LeaveStage, type LeaveType, type LedgerRow, type SickEpisode, type TypeLeave,
 } from '@/domain/leave';
+import { clockFromIso } from '@/domain/time';
 
 type Rec = Record<string, unknown> & { id: string };
 interface SeedFile { data: Record<string, Record<string, Rec>> }
@@ -68,7 +69,7 @@ for (const [name, raw] of Object.entries({ social, qnipay })) {
         ['lr_1', 'AL', '2026-08-24', '2026-08-28', 5, 'days', 'pending'], ['lr_2', 'TOIL', '2026-08-21', '2026-08-21', 7.5, 'hours', 'pending'],
         ['lr_3', 'AL', '2026-09-03', '2026-09-04', 2, 'days', 'pending'], ['lr_4', 'AL', '2026-08-10', '2026-08-11', 2, 'days', 'approved'],
         ['lr_5', 'AL', '2026-08-17', '2026-08-18', 2, 'days', 'approved']]);
-      const sla = w.requests.filter(r => r.state === 'pending').map(r => slaOf({ raised: r.raisedAt.slice(0, 10), escalated: r.escalated }, w.cfg.slaDays, TODAY, w.cfg.stages.length));
+      const sla = w.requests.filter(r => r.state === 'pending').map(r => slaOf({ raised: clockFromIso(r.raisedAt).date, escalated: r.escalated }, w.cfg.slaDays, TODAY, w.cfg.stages.length));
       expect(sla.map(s => [s.daysLeft, s.escalated, s.stage])).toEqual([[0, true, 3], [3, false, 2], [4, false, 2]]);
     });
     test('every manager\'s location has a request waiting on them', () => {
