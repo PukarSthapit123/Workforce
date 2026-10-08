@@ -30,7 +30,7 @@ export function UnitInput({ testId, unit, className, ...rest }: { testId: string
     <span className={cn('inline-flex w-fit items-center overflow-hidden rounded-sm border border-border-strong bg-surface-sunken focus-within:border-brand focus-within:shadow-focus has-[[aria-invalid=true]]:border-err', className)}>
       <input data-testid={testId} {...rest}
         className="h-[30px] w-16 border-0 bg-transparent px-sm text-right text-sm tabular-nums outline-none focus:shadow-none disabled:text-text-secondary max-md:min-h-touch max-md:text-base" />
-      <span aria-hidden="true" className="grid h-[30px] place-items-center border-l px-sm text-xs text-text-muted max-md:min-h-touch">{unit}</span>
+      <span aria-hidden="true" className="grid h-[30px] w-10 shrink-0 place-items-center border-l px-xs text-xs text-text-muted max-md:min-h-touch">{unit}</span>
     </span>);
 }
 

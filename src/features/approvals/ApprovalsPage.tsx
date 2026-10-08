@@ -88,12 +88,12 @@ function SignOffCard({ s }: { s: SignOff }) {
       </SettingRow>
       <SettingRow title="Pay-period cut-off" desc="Deadline to submit before the period closes">
         <span data-testid={tid.aappr.cutoff} className="text-sm">{s.cutoff}</span>
-        <NavLink testId={tid.aappr.cutoffLink} to="/setup/mts" className={LINK}>Change it on Timesheet setup</NavLink>
+        <NavLink testId={tid.aappr.cutoffLink} to="/setup/mts#mts-cutoff" className={LINK}>Change it on Timesheet setup</NavLink>
       </SettingRow>
       <SettingRow title={<>Enforce the cut-off<Tip testId={tid.aappr.enforceTip} text="When on, a closed period refuses new submissions and amendments. When off, the deadline is advisory only." /></>}
         desc={s.enforceLock ? `On. Periods before ${formatDmy(s.current.from)} are closed.` : 'Off. The deadline is displayed but not applied.'}>
         <span data-testid={tid.aappr.enforce} className="text-sm">{s.enforceLock ? 'On' : 'Off'}</span>
-        <NavLink testId={tid.aappr.enforceLink} to="/setup/mts" className={LINK}>Change it on Timesheet setup</NavLink>
+        <NavLink testId={tid.aappr.enforceLink} to="/setup/mts#mts-period-lock" className={LINK}>Change it on Timesheet setup</NavLink>
       </SettingRow>
       <SettingRow title="Current period state" desc="Computed from the cut-off and today’s date">
         <Pill testId={tid.aappr.current} tone="ok">Open · {range(s.current)}</Pill>
@@ -103,7 +103,7 @@ function SignOffCard({ s }: { s: SignOff }) {
       <SettingRow title={<>Return-with-reason required<Tip testId={tid.aappr.reasonTip} text="The reason is sent to the employee with the returned timesheet and stored on the entry." /></>}
         desc="Manager must give a reason when sending back">
         <span data-testid={tid.aappr.reason} className="text-sm">{s.returnReasonRequired ? 'Required' : 'Not required'}</span>
-        <NavLink testId={tid.aappr.reasonLink} to="/setup/mts" className={LINK}>Change it on Timesheet setup</NavLink>
+        <NavLink testId={tid.aappr.reasonLink} to="/setup/mts#mts-return-reason" className={LINK}>Change it on Timesheet setup</NavLink>
       </SettingRow>
     </AdminCard>);
 }

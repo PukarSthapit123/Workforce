@@ -79,16 +79,17 @@ export const ALLOWANCE_EXISTS = 'An allowance with that code already exists.';
 /* rule-add: a new rule matches nothing until a trigger is chosen. */
 export const newRule = (): TypeRule => ({ trigger: 'New trigger', when: '', code: 'OT15', value: '1.5×', how: 'Auto (BC)' });
 export const HOW_APPLIED = ['Auto (BC)', 'Auto (rota)', 'Auto (date)'] as const;
-export const DEFAULT_OVERTIME = { threshold: 40, multiplier: 1.5, weekendMultiplier: 1.5 } as const;
-export const emptyType = (): TypeCapture => ({ fields: {}, allowances: [], rules: [], overtime: null });
+export const emptyType = (): TypeCapture => ({ fields: {}, allowances: [], rules: [] });
 
 /* What the page edits: the server's config as last read, changed in place. */
 export interface SetupDraft {
   rules: CaptureRules; weekGrid: TimesheetConfig['weekGrid']; weekLayout: TimesheetConfig['weekLayout'];
+  cutoff: string; returnReasonRequired: boolean;
   allowances: Record<string, AllowanceDef>; types: Record<string, TypeCapture>;
 }
 export const draftOf = (c: TimesheetConfig): SetupDraft =>
-  ({ rules: c.rules, weekGrid: c.weekGrid, weekLayout: c.weekLayout, allowances: c.allowances, types: c.types });
+  ({ rules: c.rules, weekGrid: c.weekGrid, weekLayout: c.weekLayout, cutoff: c.cutoff, returnReasonRequired: c.returnReasonRequired,
+    allowances: c.allowances, types: c.types });
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 /* The PATCH body: only what differs. Rules go as the changed keys (the server
@@ -101,6 +102,8 @@ export function setupBody(c: TimesheetConfig, d: SetupDraft): UpdateTimesheetCon
   const types = Object.fromEntries(Object.entries(d.types).filter(([k, v]) => !same(Object.hasOwn(c.types, k) ? c.types[k] : undefined, v)));
   if (Object.keys(types).length) body.types = types;
   if (!same(c.allowances, d.allowances)) body.allowances = d.allowances;
+  if (d.cutoff !== c.cutoff) body.cutoff = d.cutoff;
+  if (d.returnReasonRequired !== c.returnReasonRequired) body.returnReasonRequired = d.returnReasonRequired;
   if (d.weekGrid !== c.weekGrid) body.weekGrid = d.weekGrid;
   if (d.weekLayout !== c.weekLayout) body.weekLayout = d.weekLayout;
   return body;

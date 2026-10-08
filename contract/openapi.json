@@ -51020,9 +51020,6 @@
                             "otDaily": {
                               "type": "number"
                             },
-                            "otWeekly": {
-                              "type": "number"
-                            },
                             "nightFrom": {
                               "type": "string"
                             },
@@ -51039,7 +51036,6 @@
                             "enforceRest",
                             "enforceLock",
                             "otDaily",
-                            "otWeekly",
                             "nightFrom",
                             "nightTo"
                           ],
@@ -51201,40 +51197,12 @@
                                   ],
                                   "additionalProperties": false
                                 }
-                              },
-                              "overtime": {
-                                "anyOf": [
-                                  {
-                                    "type": "object",
-                                    "properties": {
-                                      "threshold": {
-                                        "type": "number"
-                                      },
-                                      "multiplier": {
-                                        "type": "number"
-                                      },
-                                      "weekendMultiplier": {
-                                        "type": "number"
-                                      }
-                                    },
-                                    "required": [
-                                      "threshold",
-                                      "multiplier",
-                                      "weekendMultiplier"
-                                    ],
-                                    "additionalProperties": false
-                                  },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
                               }
                             },
                             "required": [
                               "fields",
                               "allowances",
-                              "rules",
-                              "overtime"
+                              "rules"
                             ],
                             "additionalProperties": false
                           }
@@ -51460,9 +51428,6 @@
                       "otDaily": {
                         "type": "number"
                       },
-                      "otWeekly": {
-                        "type": "number"
-                      },
                       "nightFrom": {
                         "type": "string"
                       },
@@ -51624,39 +51589,12 @@
                               "how"
                             ]
                           }
-                        },
-                        "overtime": {
-                          "anyOf": [
-                            {
-                              "type": "object",
-                              "properties": {
-                                "threshold": {
-                                  "type": "number"
-                                },
-                                "multiplier": {
-                                  "type": "number"
-                                },
-                                "weekendMultiplier": {
-                                  "type": "number"
-                                }
-                              },
-                              "required": [
-                                "threshold",
-                                "multiplier",
-                                "weekendMultiplier"
-                              ]
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
                         }
                       },
                       "required": [
                         "fields",
                         "allowances",
-                        "rules",
-                        "overtime"
+                        "rules"
                       ]
                     }
                   }
@@ -51718,9 +51656,6 @@
                             "otDaily": {
                               "type": "number"
                             },
-                            "otWeekly": {
-                              "type": "number"
-                            },
                             "nightFrom": {
                               "type": "string"
                             },
@@ -51737,7 +51672,6 @@
                             "enforceRest",
                             "enforceLock",
                             "otDaily",
-                            "otWeekly",
                             "nightFrom",
                             "nightTo"
                           ],
@@ -51899,40 +51833,12 @@
                                   ],
                                   "additionalProperties": false
                                 }
-                              },
-                              "overtime": {
-                                "anyOf": [
-                                  {
-                                    "type": "object",
-                                    "properties": {
-                                      "threshold": {
-                                        "type": "number"
-                                      },
-                                      "multiplier": {
-                                        "type": "number"
-                                      },
-                                      "weekendMultiplier": {
-                                        "type": "number"
-                                      }
-                                    },
-                                    "required": [
-                                      "threshold",
-                                      "multiplier",
-                                      "weekendMultiplier"
-                                    ],
-                                    "additionalProperties": false
-                                  },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
                               }
                             },
                             "required": [
                               "fields",
                               "allowances",
-                              "rules",
-                              "overtime"
+                              "rules"
                             ],
                             "additionalProperties": false
                           }
@@ -55195,9 +55101,6 @@
                             "otDaily": {
                               "type": "number"
                             },
-                            "otWeekly": {
-                              "type": "number"
-                            },
                             "nightFrom": {
                               "type": "string"
                             },
@@ -55214,7 +55117,6 @@
                             "enforceRest",
                             "enforceLock",
                             "otDaily",
-                            "otWeekly",
                             "nightFrom",
                             "nightTo"
                           ],
@@ -55382,40 +55284,12 @@
                                     ],
                                     "additionalProperties": false
                                   }
-                                },
-                                "overtime": {
-                                  "anyOf": [
-                                    {
-                                      "type": "object",
-                                      "properties": {
-                                        "threshold": {
-                                          "type": "number"
-                                        },
-                                        "multiplier": {
-                                          "type": "number"
-                                        },
-                                        "weekendMultiplier": {
-                                          "type": "number"
-                                        }
-                                      },
-                                      "required": [
-                                        "threshold",
-                                        "multiplier",
-                                        "weekendMultiplier"
-                                      ],
-                                      "additionalProperties": false
-                                    },
-                                    {
-                                      "type": "null"
-                                    }
-                                  ]
                                 }
                               },
                               "required": [
                                 "fields",
                                 "allowances",
-                                "rules",
-                                "overtime"
+                                "rules"
                               ],
                               "additionalProperties": false
                             },

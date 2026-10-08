@@ -31,5 +31,5 @@ export function Pill({ testId, tone, glyph, className, note, children }: {
 /* The prototype's .scope (v15:686-688): a small capitals badge, such as the
    "You" beside your own role's column. */
 export function ScopeBadge({ children }: { children: ReactNode }) {
-  return <span data-caps className="ml-[6px] rounded-pill bg-surface-tint px-[7px] py-[2px] align-middle text-xs font-bold tracking-[.05em] text-text-muted uppercase">{children}</span>;
+  return <span data-caps className="rounded-pill bg-surface-card px-[7px] py-[2px] align-middle text-xs font-bold tracking-[.05em] text-text-muted uppercase">{children}</span>;
 }

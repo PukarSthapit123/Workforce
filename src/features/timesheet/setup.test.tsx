@@ -25,17 +25,46 @@ const open = async () => {
 };
 const choose = (testId: string, value: string) => fireEvent.change(screen.getByTestId(testId), { target: { value } });
 
-test('the page shows every card, with full test id coverage, and a day-rate type has no overtime inputs', async () => {
+test('the page shows every card and explains weekly overtime is not built', async () => {
   await open();
   for (const k of ['fields', 'rules', 'allowances', 'boundary']) expect(screen.getByTestId(tid.mts.card(k))).toBeInTheDocument();
   expect(screen.getByText('Modules · Timesheet · Timesheet setup')).toBeInTheDocument();
-  expect(screen.getByTestId(tid.mts.ot('threshold'))).toHaveValue(40);
+  expect(screen.getByTestId(tid.mts.otDay)).toHaveTextContent('Not built yet. Weekly overtime thresholds and multipliers are not applied by the timesheet rules.');
+  expect(screen.getByTestId(tid.mts.rule('minNet'))).toHaveValue(0.25);
+  expect(screen.getByTestId(tid.mts.rule('nightFrom'))).toHaveValue('20:00');
+  expect(screen.getByTestId(tid.mts.rule('nightTo'))).toHaveValue('06:00');
+  expect(screen.getByTestId(tid.mts.rule('otDaily'))).toHaveValue(8);
+  expect(screen.getByTestId(tid.mts.cutoffDay)).toHaveValue('Monday');
+  expect(screen.getByTestId(tid.mts.cutoffTime)).toHaveValue('12:00');
+  expect(screen.getByTestId(tid.mts.rule('enforceLock'))).toHaveAttribute('aria-checked', 'true');
+  expect(screen.getByTestId(tid.mts.returnReasonRequired)).toHaveAttribute('aria-checked', 'true');
+  expect(screen.getByTestId(tid.mts.fieldRow('start'))).toHaveClass('!bg-surface-card');
+  expect(screen.getByTestId(tid.mts.fieldRow('finish'))).toHaveClass('!bg-surface-sunken');
   expect(screen.getByTestId(tid.mts.save)).toBeDisabled();
   expectTestIdCoverage(document.body);
   await userEvent.click(screen.getByTestId(tid.mts.type('salaried')));
-  expect(screen.getByTestId(tid.mts.otDay)).toHaveTextContent('Project Manager is paid per worked day');
   expect(screen.getByTestId(tid.mts.fieldType('salaried'))).toHaveAttribute('aria-pressed', 'true');
   expectTestIdCoverage(document.body);
+});
+
+test('the period and capture rules save together through the versioned setup mutation', async () => {
+  await open();
+  choose(tid.mts.cutoffDay, 'Thursday');
+  choose(tid.mts.cutoffTime, '09:30');
+  choose(tid.mts.rule('minNet'), '0.5');
+  choose(tid.mts.rule('nightFrom'), '21:00');
+  choose(tid.mts.rule('nightTo'), '05:00');
+  choose(tid.mts.rule('otDaily'), '7');
+  await userEvent.click(screen.getByTestId(tid.mts.rule('enforceLock')));
+  await userEvent.click(screen.getByTestId(tid.mts.returnReasonRequired));
+  const before = config().version;
+  await userEvent.click(screen.getByTestId(tid.mts.save));
+  expect(await screen.findByTestId(tid.toast.info)).toHaveTextContent('Timesheet setup saved.');
+  expect(config()).toMatchObject({
+    version: before + 1, cutoff: 'Thursday 09:30', returnReasonRequired: false,
+    rules: { minNet: 0.5, nightFrom: '21:00', nightTo: '05:00', otDaily: 7, enforceLock: false },
+  });
+  expect(setupAudits()).toHaveLength(1);
 });
 
 test('changes apply only on Save: one request, one audit row, and the draft starts again from what was saved', async () => {

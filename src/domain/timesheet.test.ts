@@ -310,7 +310,7 @@ describe('capture fields per type', () => {
   const site = F({ c: 'site', mod: 'C', req: 'site' }), vehicle = F({ c: 'vehicle', driverOnly: true });
   const overtime = F({ c: 'overtime', cat: 'Allowance', pay: 'OT15' }), notes = F({ c: 'notes' });
   const type: TypeCapture = { fields: { start: { vis: true, mand: true }, project: { vis: true, mand: false }, notes: { vis: false, mand: false } },
-    allowances: ['OT15'], rules: [], overtime: null };
+    allowances: ['OT15'], rules: [] };
   const env: FieldEnv = { modules: { C: true }, flagOn: f => f === 'PROJECT', capabilities: ['project'],
     defaults: { start: { vis: true, mand: false, label: 'Start' }, site: { vis: false, mand: false, label: 'Location' } } };
   test('a field needs its module, flag and capability, and a place in the type\'s map', () => {
@@ -431,7 +431,7 @@ describe('weekly layout', () => {
     F({ c: 'site', cat: 'Location', input: 'select', opts: ['MCR'] }), F({ c: 'drive', cat: 'Compliance', input: 'calc' })];
   const env: FieldEnv = { modules: {}, flagOn: () => true, capabilities: [], defaults: { project: { vis: true, mand: false, label: 'Job' } } };
   const type: TypeCapture = { fields: { start: { vis: true, mand: true }, project: { vis: true, mand: false }, billable: { vis: true, mand: false } },
-    allowances: [], rules: [], overtime: null };
+    allowances: [], rules: [] };
   test('the week model carries the visible project and location selects as allocations', () => {
     expect(weekModel(fields, type, env, 'times')).toEqual({ ctx: [{ c: 'project', label: 'Job', opts: ['J00020'] }], hasTime: true, multi: true, times: true });
     expect(weekModel(fields, { ...type, fields: {} }, env, 'hours')).toEqual({ ctx: [], hasTime: false, multi: false, times: false });

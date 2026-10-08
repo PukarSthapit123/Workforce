@@ -50,16 +50,15 @@ export type IntegrationAttempt = z.infer<typeof IntegrationAttempt>;
 export const CaptureRules = z.object({
   maxDaily: z.number(), warnDaily: z.number(), minNet: z.number(), varianceWarn: z.number(),
   blockFuture: z.boolean(), enforceRest: z.boolean(), enforceLock: z.boolean(),
-  otDaily: z.number(), otWeekly: z.number(), nightFrom: z.string(), nightTo: z.string(),
+  otDaily: z.number(), nightFrom: z.string(), nightTo: z.string(),
 });
 export type CaptureRules = z.infer<typeof CaptureRules>;
 export const FieldSetting = z.object({ vis: z.boolean(), mand: z.boolean() });
 export const FieldDefault = FieldSetting.extend({ label: z.string() });
 /* `value` is a multiplier or a threshold (1.5×, 8 h). The server refuses a currency value. */
 export const TypeRule = z.object({ trigger: z.string(), when: z.string(), code: z.string(), value: z.string(), how: z.string() });
-export const Overtime = z.object({ threshold: z.number(), multiplier: z.number(), weekendMultiplier: z.number() });
 export const TypeCapture = z.object({
-  fields: z.record(z.string(), FieldSetting), allowances: z.array(z.string()), rules: z.array(TypeRule), overtime: Overtime.nullable(),
+  fields: z.record(z.string(), FieldSetting), allowances: z.array(z.string()), rules: z.array(TypeRule),
 });
 export type TypeCapture = z.infer<typeof TypeCapture>;
 /* Strict, so an allowance sent with an amount is refused rather than stored. */

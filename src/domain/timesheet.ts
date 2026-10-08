@@ -69,12 +69,12 @@ export function formatMinutes(min: number, fmt: TimeFormat): string {
 export interface CaptureRules {
   maxDaily: number; warnDaily: number; minNet: number; varianceWarn: number;
   blockFuture: boolean; enforceRest: boolean; enforceLock: boolean;
-  otDaily: number; otWeekly: number; nightFrom: string; nightTo: string;
+  otDaily: number; nightFrom: string; nightTo: string;
 }
 /* The prototype's TS_RULES defaults. */
 export const DEFAULT_RULES: CaptureRules = {
   maxDaily: 16, warnDaily: 12, minNet: 0.25, varianceWarn: 2, blockFuture: true, enforceRest: true,
-  enforceLock: true, otDaily: 8, otWeekly: 40, nightFrom: '20:00', nightTo: '06:00',
+  enforceLock: true, otDaily: 8, nightFrom: '20:00', nightTo: '06:00',
 };
 
 const CUTOFF_DAYS: Record<string, number> = { Sunday: 6, Monday: 0, Tuesday: 1, Wednesday: 2, Thursday: 3 };
@@ -200,9 +200,8 @@ export interface FieldDef {
 export interface FieldSetting { vis: boolean; mand: boolean }
 export interface FieldDefault extends FieldSetting { label: string }
 export interface TypeRule { trigger: string; when: string; code: string; value: string; how: string }
-export interface Overtime { threshold: number; multiplier: number; weekendMultiplier: number }
 export interface TypeCapture {
-  fields: Record<string, FieldSetting>; allowances: readonly string[]; rules: readonly TypeRule[]; overtime: Overtime | null;
+  fields: Record<string, FieldSetting>; allowances: readonly string[]; rules: readonly TypeRule[];
 }
 /* What decides whether a field is offered: the tenant's modules and flags, the
    type's capabilities (from employee types) and the tenant's field defaults. */
@@ -568,7 +567,6 @@ export function timesheetConfigProblem(c: ConfigInput, ctx: ConfigContext): Prob
   if (!(r.minNet >= 0 && r.minNet < r.maxDaily)) return bad('rules.minNet', 'The minimum net time must be 0 or more and below the daily maximum.');
   if (!(r.varianceWarn >= 0)) return bad('rules.varianceWarn', 'The rota variance must be 0 or more hours.');
   if (!(r.otDaily > 0 && r.otDaily <= 24)) return bad('rules.otDaily', 'The daily overtime threshold must be more than 0 and at most 24 hours.');
-  if (!(r.otWeekly > 0 && r.otWeekly <= 168)) return bad('rules.otWeekly', 'The weekly overtime threshold must be more than 0 and at most 168 hours.');
   if (toMin(r.nightFrom) == null) return bad('rules.nightFrom', 'The night window must start at a 24-hour time such as 20:00.');
   if (toMin(r.nightTo) == null) return bad('rules.nightTo', 'The night window must end at a 24-hour time such as 06:00.');
   const cut = CUTOFF_PATTERN.exec(c.cutoff);
@@ -589,9 +587,6 @@ export function timesheetConfigProblem(c: ConfigInput, ctx: ConfigContext): Prob
       if (!payable(rule.code)) return bad(`${at}.code`, `${rule.code} is not a pay code.`);
       if (CURRENCY.test(rule.value)) return bad(`${at}.value`, 'A rule value is a multiplier or a threshold, never an amount. Business Central holds the rates.');
     }
-    const ot = t.overtime;
-    if (ot && !(ot.threshold > 0 && ot.threshold <= 168)) return bad(`types.${code}.overtime.threshold`, 'The overtime threshold must be more than 0 and at most 168 hours.');
-    if (ot && !(ot.multiplier >= 1 && ot.weekendMultiplier >= 1)) return bad(`types.${code}.overtime.multiplier`, 'An overtime multiplier must be at least 1.');
   }
   return null;
 }

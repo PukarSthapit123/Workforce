@@ -178,7 +178,8 @@ export const tid = {
     payRow: (i: number) => k('mts-pay-row', i), payTrigger: (i: number) => k('mts-pay-trigger', i), payWhen: (i: number) => k('mts-pay-when', i),
     payCode: (i: number) => k('mts-pay-code', i), payValue: (i: number) => k('mts-pay-value', i), payHow: (i: number) => k('mts-pay-how', i),
     payRemove: (i: number) => k('mts-pay-remove', i), payEmpty: 'mts-pay-empty', payAdd: 'mts-pay-add',
-    ot: (key: string) => k('mts-ot', key), otDay: 'mts-ot-day',
+    ot: (key: string) => k('mts-ot', key), otDay: 'mts-ot-day', cutoffDay: 'mts-cutoff-day', cutoffTime: 'mts-cutoff-time',
+    returnReasonRequired: 'mts-return-reason-required',
   },
   /* module 3: Team rota (trota): the week bar, banners, filters, palette, grid, day view, suggested cover, history and dialogs */
   trota: {

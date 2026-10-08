@@ -14,7 +14,7 @@ interface Day extends Rec {
 }
 interface Config extends Rec {
   rules: CaptureRules; cutoff: string; timeFormat: TimeFormat; weekGrid: string; weekLayout: string;
-  types: Record<string, { fields: Record<string, unknown>; allowances: string[]; rules: { when: string; value: string }[]; overtime: unknown }>;
+  types: Record<string, { fields: Record<string, unknown>; allowances: string[]; rules: { when: string; value: string }[] }>;
   allowances: Record<string, Rec>;
 }
 const vals = <T = Rec>(s: SeedFile, c: string) => Object.values(s.data[c] ?? {}) as T[];
@@ -69,15 +69,14 @@ for (const [name, raw] of Object.entries({ social, qnipay })) {
     test('timesheet config: capture rules, a capture entry per employee type, and the weekly layout', () => {
       const cfg = configOf(seed);
       expect(Object.keys(cfg.rules).sort()).toEqual(['blockFuture', 'enforceLock', 'enforceRest', 'maxDaily', 'minNet', 'nightFrom', 'nightTo',
-        'otDaily', 'otWeekly', 'varianceWarn', 'warnDaily']);
+        'otDaily', 'varianceWarn', 'warnDaily']);
       expect(cfg.cutoff).toMatch(/^(Sunday|Monday|Tuesday|Wednesday|Thursday) \d{2}:\d{2}$/);
       expect(WEEK_GRIDS as readonly string[]).toContain(cfg.weekGrid);
       expect(WEEK_LAYOUTS as readonly string[]).toContain(cfg.weekLayout);
       expect(Object.keys(cfg.types).sort()).toEqual(vals(seed, 'employeeTypes').map(t => t.code).sort());
       for (const [k, t] of Object.entries(cfg.types)) {
         for (const r of t.rules) expect(r.when === '' || Object.hasOwn(RATE_TRIGGERS, r.when), k).toBe(true);
-        const uom = vals(seed, 'employeeTypes').find(x => x.code === k)?.uom;
-        expect(t.overtime === null, k).toBe(uom === 'day');
+        expect(t).not.toHaveProperty('overtime');
       }
     });
     test('no money: no allowance amount, no flat pay code value, no expenses field and no pound sign anywhere', () => {

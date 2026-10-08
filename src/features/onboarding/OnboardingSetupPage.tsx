@@ -40,10 +40,7 @@ export function OnboardingSetupPage() {
       {tenant.data && !on && <Card><Empty testId={tid.monb.off}>{OFF}</Empty></Card>}
       {on && (setup.data
         /* the draft starts again from what the server holds whenever the config gets a new version: after a save, or after a 412 */
-        ? <>
-            <SetupDraftView key={versionKey(setup.data.config)} setup={setup.data} />
-            <PoliciesCard policies={setup.data.policies} />
-          </>
+        ? <SetupDraftView key={versionKey(setup.data.config)} setup={setup.data} />
         : !setup.isError && <p data-testid={tid.monb.loading} className="text-text-secondary">Loading Onboarding setup&hellip;</p>)}
       {(setup.isError || tenant.isError) && <p data-testid={tid.monb.error} role="alert" className="text-err">
         {refused && refused.code !== 'network' ? `${refused.message} ${refused.next}` : 'Onboarding setup could not be loaded. Reload the page.'}</p>}
@@ -123,6 +120,7 @@ function SetupDraftView({ setup }: { setup: OnboardingSetup }) {
       </AdminCard>
 
       {save.refusal && <FormWarn testId={tid.monb.warn}>{save.refusal.message} {save.refusal.next}</FormWarn>}
+      <PoliciesCard policies={setup.policies} />
       {/* Save and Cancel stay in reach while a change waits to be saved */}
       <ActionBar stuck={dirty}>
         {dirty && <span data-testid={tid.monb.dirty} className="mr-auto text-xs text-text-muted">Unsaved changes</span>}

@@ -74,7 +74,7 @@ function TypeDetail({ type, onRemoved }: { type: EmployeeTypeRow; onRemoved(): v
           onChange={e => setV(x => ({ ...x, name: e.target.value }))} /></SettingRow>
       <SettingRow title="Usual basis" desc="What a new person of this type is employed on">{select('category', 'Usual basis', CATEGORIES)}</SettingRow>
       <SettingRow title="Entry mode" desc="Day form, weekly grid, or a live clock">{select('mode', 'Entry mode', MODES)}</SettingRow>
-      <SettingRow title="Pay basis" desc="Hourly types accrue hours and overtime; day-rate types are paid per worked day">{select('uom', 'Pay basis', UOMS)}</SettingRow>
+      <SettingRow title="Pay basis" desc="Hourly types record hours for payroll; day-rate types are paid per worked day">{select('uom', 'Pay basis', UOMS)}</SettingRow>
       <h3 className={SUB}>Capabilities <span className="font-normal text-text-muted">· what the field catalogue offers this type</span></h3>
       {(lib.data?.capabilities ?? []).map(c => (
         <SettingRow key={c.code} title={c.label} desc={c.desc}>

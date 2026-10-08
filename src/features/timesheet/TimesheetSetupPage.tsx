@@ -1,11 +1,11 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Check, FlaskConical, Minus, Plug, Ruler, SlidersHorizontal } from 'lucide-react';
+import { useLocation } from 'react-router';
 import { tid } from '@/testids';
-import { cn } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import {
   ActionBar, AdminCard, Button, Chip, ChipPicker, Empty, Field, FormWarn, GroupLabel, GuideButton, Modal, NavLink, Page, PageHead, Pill, Row, ScopeBadge,
-  INLINE_INPUT, SettingRow, SettingSelect as Asel, Small, SwitchField, TextInput, Tip, UnitInput, toastInfo,
+  SettingRow, SettingSelect as Asel, SettingText, Small, SubHead, SwitchField, TextInput, Tip, UnitInput, toastInfo,
 } from '@/ui';
 import { useSaveTimesheetConfig, useTimesheetConfig, type TimesheetConfig, type TimesheetSetup } from '@/api/timesheets';
 import { useEmployeeTypes } from '@/api/reference';
@@ -16,7 +16,7 @@ import type { TypeRule } from '@/domain/timesheet';
 import { PAY_BASIS, RATE_TRIGGERS, WEEK_GRID_LABEL, WEEK_LAYOUT_LABEL, payBasisOf, payCodeList, payElement } from '@/domain/timesheet';
 import { versionKey } from '@/lib/latest';
 import {
-  ALLOWANCE_EXISTS, DEFAULT_OVERTIME, HOW_APPLIED, allowanceCode, allowanceNeed, draftOf, emptyType, newRule, setupBody, setupFieldGroups,
+  ALLOWANCE_EXISTS, HOW_APPLIED, allowanceCode, allowanceNeed, draftOf, emptyType, newRule, setupBody, setupFieldGroups,
   toggleMandatory, toggleVisible, type SetupDraft,
 } from './setup';
 
@@ -30,8 +30,12 @@ import {
    amount (D11). */
 export function TimesheetSetupPage() {
   const setup = useTimesheetConfig(), types = useEmployeeTypes(), tenant = useTenant();
+  const { hash } = useLocation();
   const [picked, setPicked] = useState<string | null>(null);
   const ready = setup.data && types.data && tenant.data;
+  useEffect(() => {
+    if (ready && hash) document.getElementById(hash.slice(1))?.scrollIntoView({ block: 'start' });
+  }, [hash, ready]);
   return (
     <Page testId={tid.page('mts')}>
       {ready
@@ -50,10 +54,6 @@ function Head() {
     actions={<GuideButton view="mts" />} />;
 }
 
-/* .inl and .asel are shared (src/ui FormParts). */
-const INL = INLINE_INPUT;
-/* .wtsub (v15:1503-1506) */
-const SUB = 'mt-lg mb-sm border-b pb-xs text-xs font-[650] tracking-normal text-text-secondary first:mt-0';
 const SUB_NOTE = 'font-normal text-text-muted';
 
 function Err({ text }: { text?: string }) {
@@ -63,10 +63,11 @@ const MODE: Record<string, string> = { clock: 'Clock entry', grid: 'Weekly grid'
 /* a select keeps the stored value even when it is not one of the usual choices */
 const withValue = <T,>(opts: readonly T[], v: T) => (opts.includes(v) ? opts : [...opts, v]);
 const RULE_SELECTS: { key: 'maxDaily' | 'warnDaily' | 'varianceWarn'; title: string; desc: string; opts: number[] }[] = [
-  { key: 'maxDaily', title: 'Daily maximum', desc: 'A day above this is refused outright', opts: [12, 14, 16, 18, 20] },
-  { key: 'warnDaily', title: 'Review threshold', desc: 'A day above this is flagged for the approver but allowed', opts: [8, 10, 12, 14] },
-  { key: 'varianceWarn', title: 'Rota variance warning', desc: 'Hours away from the rota line before it is flagged', opts: [1, 2, 3, 4] },
+  { key: 'maxDaily', title: 'Daily maximum (hours)', desc: 'A day above this is refused outright', opts: [12, 14, 16, 18, 20] },
+  { key: 'warnDaily', title: 'Review threshold (hours)', desc: 'A day above this is flagged for the approver but allowed', opts: [8, 10, 12, 14] },
+  { key: 'varianceWarn', title: 'Rota variance warning (hours)', desc: 'Hours away from the rota line before it is flagged', opts: [1, 2, 3, 4] },
 ];
+const CUTOFF_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'] as const;
 const TRIGGER_LABEL = (when: string) => {
   const t = Object.hasOwn(RATE_TRIGGERS, when) ? RATE_TRIGGERS[when] : undefined;
   return t ? t.label.charAt(0).toUpperCase() + t.label.slice(1) : 'Matches nothing yet';
@@ -87,6 +88,8 @@ function SetupDraftView({ setup, types, env, picked, onPick }: {
   const type = Object.hasOwn(draft.types, code) ? draft.types[code] ?? emptyType() : emptyType();
   const setType = (fn: (t: TypeCapture) => TypeCapture) => setDraft(d => ({ ...d, types: { ...d.types, [code]: fn(type) } }));
   const setRule = <K extends keyof CaptureRules>(k: K, v: CaptureRules[K]) => setDraft(d => ({ ...d, rules: { ...d.rules, [k]: v } }));
+  const [cutoffDay = 'Monday', cutoffTime = '12:00'] = draft.cutoff.split(' ');
+  const setCutoff = (day: string, time: string) => setDraft(d => ({ ...d, cutoff: `${day} ${time}` }));
   const fe = save.fieldError;
   /* a refusal about one employee type opens that type, so the field it names is on screen */
   const refusedType = /^types\.([^.]+)/.exec(save.refusal?.field ?? '')?.[1];
@@ -105,9 +108,9 @@ function SetupDraftView({ setup, types, env, picked, onPick }: {
         tip="Which fields each employee type fills in, and which are required. A field must be switched on under Features before a type can be given it.">
         <ChipPicker>
           {types.map(t => (
-            <Chip key={t.code} testId={tid.mts.fieldType(t.code)} on={t.code === code} onClick={() => onPick(t.code)}>
-              {t.name}<span className="text-xs opacity-70">{MODE[t.mode] ?? 'Day form'} · paid per {t.uom || 'hour'}</span></Chip>))}
+            <EmployeeTypeChip key={t.code} type={t} testId={tid.mts.fieldType(t.code)} selected={t.code === code} onClick={() => onPick(t.code)} />))}
         </ChipPicker>
+        {current && <SubHead>Capture fields for {current.name}</SubHead>}
         {current && <CaptureFields fields={fields} env={{ ...env, capabilities: current.capabilities }} labels={config.fieldDefaults} type={type}
           onChange={map => setType(t => ({ ...t, fields: map }))} />}
       </AdminCard>
@@ -119,8 +122,40 @@ function SetupDraftView({ setup, types, env, picked, onPick }: {
             <div className="flex flex-col items-end max-md:items-start">
               <Asel testId={tid.mts.rule(r.key)} aria-label={r.title} aria-invalid={fe(`rules.${r.key}`) ? true : undefined}
                 value={draft.rules[r.key]} onChange={e => setRule(r.key, Number(e.target.value))}>
-                {withValue(r.opts, draft.rules[r.key]).map(o => <option key={o} value={o}>{o}</option>)}</Asel>
+                {withValue(r.opts, draft.rules[r.key]).map(o => <option key={o} value={o}>{o} hours</option>)}</Asel>
               <Err text={fe(`rules.${r.key}`)} />
+            </div>
+          </SettingRow>))}
+        <SettingRow title="Minimum net time (hours)" desc="The minimum recorded time after breaks">
+          <div className="flex flex-col items-end max-md:items-start">
+            <UnitInput testId={tid.mts.rule('minNet')} unit="hours" aria-label="Minimum net time (hours)" type="number" inputMode="decimal" step="0.25" min="0"
+              value={draft.rules.minNet} aria-invalid={fe('rules.minNet') ? true : undefined}
+              onChange={e => setRule('minNet', Number(e.target.value))} />
+            <Err text={fe('rules.minNet')} />
+          </div>
+        </SettingRow>
+        <SettingRow title="Night or unsocial window" desc="The time range used by automatic pay rules">
+          <div className="flex flex-wrap items-center justify-end gap-sm max-md:justify-start">
+            <label className="flex items-center gap-xs text-xs text-text-secondary">From
+              <SettingText testId={tid.mts.rule('nightFrom')} aria-label="Night window starts at" type="time" value={draft.rules.nightFrom}
+                aria-invalid={fe('rules.nightFrom') ? true : undefined} onChange={e => setRule('nightFrom', e.target.value)} />
+            </label>
+            <label className="flex items-center gap-xs text-xs text-text-secondary">to
+              <SettingText testId={tid.mts.rule('nightTo')} aria-label="Night window ends at" type="time" value={draft.rules.nightTo}
+                aria-invalid={fe('rules.nightTo') ? true : undefined} onChange={e => setRule('nightTo', e.target.value)} />
+            </label>
+            {(fe('rules.nightFrom') || fe('rules.nightTo')) && <Err text={fe('rules.nightFrom') ?? fe('rules.nightTo')} />}
+          </div>
+        </SettingRow>
+        {([
+          ['otDaily', 'Daily overtime threshold (hours)', 'Hours in one day before the daily overtime trigger applies', 24],
+        ] as const).map(([key, title, desc, max]) => (
+          <SettingRow key={key} title={title} desc={desc}>
+            <div className="flex flex-col items-end max-md:items-start">
+              <UnitInput testId={tid.mts.rule(key)} unit="hours" aria-label={title} type="number" inputMode="decimal" step="0.25" min="0" max={max}
+                value={draft.rules[key]} aria-invalid={fe(`rules.${key}`) ? true : undefined}
+                onChange={e => setRule(key, Number(e.target.value))} />
+              <Err text={fe(`rules.${key}`)} />
             </div>
           </SettingRow>))}
         <SettingRow title={<>Block future-dated entry<Tip testId={tid.mts.tip('future')} text="Time cannot be recorded for a day that has not happened." /></>}
@@ -130,23 +165,42 @@ function SetupDraftView({ setup, types, env, picked, onPick }: {
         <SettingRow title="Warn on short rest" desc="Flag when rest against an adjacent shift is below the employee type’s rule">
           <SwitchField testId={tid.mts.rule('enforceRest')} aria-label="Warn on short rest" checked={draft.rules.enforceRest}
             onCheckedChange={v => setRule('enforceRest', v)} /></SettingRow>
+        <SettingRow title="Pay-period cut-off" desc="The day and 24-hour time when the period closes">
+          <div id="mts-cutoff" className="flex flex-wrap items-center justify-end gap-sm max-md:justify-start">
+            <Asel testId={tid.mts.cutoffDay} aria-label="Pay-period cut-off day" value={cutoffDay}
+              aria-invalid={fe('cutoff') ? true : undefined} onChange={e => setCutoff(e.target.value, cutoffTime)}>
+              {CUTOFF_DAYS.map(day => <option key={day} value={day}>{day}</option>)}
+            </Asel>
+            <SettingText testId={tid.mts.cutoffTime} aria-label="Pay-period cut-off time" type="time" value={cutoffTime}
+              aria-invalid={fe('cutoff') ? true : undefined} onChange={e => setCutoff(cutoffDay, e.target.value)} />
+            <Err text={fe('cutoff')} />
+          </div>
+        </SettingRow>
+        <SettingRow title="Enforce period lock" desc="Refuse submissions and amendments after the cut-off">
+          <div id="mts-period-lock"><SwitchField testId={tid.mts.rule('enforceLock')} aria-label="Enforce period lock" checked={draft.rules.enforceLock}
+            aria-invalid={fe('rules.enforceLock') ? true : undefined} onCheckedChange={v => setRule('enforceLock', v)} /></div>
+        </SettingRow>
+        <SettingRow title="Return reason required" desc="Require an approver to give a reason when sending a timesheet back">
+          <div id="mts-return-reason"><SwitchField testId={tid.mts.returnReasonRequired} aria-label="Return reason required" checked={draft.returnReasonRequired}
+            onCheckedChange={v => setDraft(d => ({ ...d, returnReasonRequired: v }))} /></div>
+        </SettingRow>
         {/* D6: what the weekly grid captures and how it is laid out live on the
             Weekly grid feature's row in Modules & features; this is a pointer to it */}
         {env.flags.WEEKLY && <SettingRow title="Weekly grid"
           desc={<span data-testid={tid.mtsPointer.weekly}>{WEEK_GRID_LABEL[config.weekGrid]}. {WEEK_LAYOUT_LABEL[config.weekLayout]}. Set on the Weekly grid row in Modules &amp; features.</span>}>
-          <NavLink testId={tid.mtsPointer.link} to="/setup/amods?m=TS" className="text-xs font-semibold text-brand underline dark:text-brand-accent">Change it in Modules &amp; features</NavLink>
+          <NavLink testId={tid.mtsPointer.link} to="/setup/amods?m=TS" className="text-xs font-semibold text-brand underline dark:text-brand-accent">Open Modules &amp; features</NavLink>
         </SettingRow>}
       </AdminCard>
 
-      <AdminCard testId={tid.mts.card('allowances')} icon={<FlaskConical />} title="Allowances & rules by employee type"
-        desc="Allowances are declared by the employee on the day. Rules derive pay automatically in Business Central. Pick a type to configure.">
+      <AdminCard testId={tid.mts.card('allowances')} icon={<FlaskConical />} title="Allowances & rules by employee type" tipTestId={tid.mts.tip('allowances')}
+        tip="Allowances are declared by the employee on the day. Rules derive pay automatically in Business Central.">
         <ChipPicker>
           {types.map(t => (
-            <Chip key={t.code} testId={tid.mts.type(t.code)} on={t.code === code} onClick={() => onPick(t.code)}>
-              {t.name} <span className="text-xs font-bold tracking-[.05em] opacity-70">{t.uom === 'day' ? 'DAY' : 'HR'}</span></Chip>))}
+            <EmployeeTypeChip key={t.code} type={t} testId={tid.mts.type(t.code)} selected={t.code === code} onClick={() => onPick(t.code)} />))}
         </ChipPicker>
         {current && <>
-          <h3 className={SUB}>Allowances this type can claim <span className={SUB_NOTE}>· the employee ticks these on the day; the value is what Business Central posts</span></h3>
+          <SubHead>Settings for {current.name}</SubHead>
+          <SubHead>Allowances this type can claim <span className={SUB_NOTE}>· the employee ticks these on the day; the value is what Business Central posts</span></SubHead>
           <div>
             {/* An allowance the type lacks the capability for is not dimmed as a whole row, as the
                 prototype did: at half opacity its name and line fall below AA contrast. Its switch
@@ -157,11 +211,12 @@ function SetupDraftView({ setup, types, env, picked, onPick }: {
               return (
                 <div key={a.code} data-testid={tid.mts.allowRow(a.code)} className="flex flex-wrap items-center gap-md border-b py-[10px] last:border-b-0">
                   <div className="min-w-[200px] flex-1">
-                    <input data-testid={tid.mts.allowLabel(a.code)} aria-label="Allowance name" className={INL} value={a.label} aria-invalid={err ? true : undefined}
-                      onChange={e => setDraft(d => ({ ...d, allowances: { ...d.allowances, [a.code]: { ...a, label: e.target.value } } }))} />
+                    <Field label="Allowance name" error={err}>
+                      <TextInput testId={tid.mts.allowLabel(a.code)} value={a.label}
+                        onChange={e => setDraft(d => ({ ...d, allowances: { ...d.allowances, [a.code]: { ...a, label: e.target.value } } }))} />
+                    </Field>
                     <span className="mt-px block text-xs text-text-muted">{blocked && need ? `Needs the ${need} capability`
                       : <>Employee-declared · posts {a.code} to <b className="tabular-nums">{payElement(payCodes, draft.allowances, a.code)}</b></>}</span>
-                    <Err text={err} />
                   </div>
                   <SwitchField testId={tid.mts.allowOn(a.code)} aria-label={`${a.label} for ${current.name}`} checked={on} disabled={blocked}
                     onCheckedChange={() => setType(t => ({ ...t, allowances: on ? t.allowances.filter(x => x !== a.code) : [...t.allowances, a.code] }))} />
@@ -172,15 +227,11 @@ function SetupDraftView({ setup, types, env, picked, onPick }: {
           <div className="mt-lg flex flex-wrap justify-end gap-sm">
             <Button testId={tid.mts.allowAdd} kind="ghost" small onClick={() => setAdding(true)}>Add allowance</Button></div>
 
-          <h3 className={SUB}>Automatic pay rules <span className={SUB_NOTE}>· derived in Business Central from dates and hours, with no employee input</span></h3>
+          <SubHead>Automatic pay rules <span className={SUB_NOTE}>· derived in Business Central from dates and hours, with no employee input</span></SubHead>
           <PayRules code={code} rules={type.rules} payCodes={payCodes} draft={draft} fe={fe} onChange={rules => setType(t => ({ ...t, rules }))} />
 
-          <h3 className={SUB}>Overtime thresholds <span className={SUB_NOTE}>· hourly types only</span></h3>
-          {(current.uom || 'hour') === 'day'
-            ? <Small testId={tid.mts.otDay}>{current.name} is paid per worked day, so weekly overtime thresholds do not apply.
-                Switch the pay basis to hourly on the Employee types tab to use them.</Small>
-            : <OvertimeRows key={code} code={code} overtime={type.overtime} fe={fe} onChange={overtime => setType(t => ({ ...t, overtime }))} />}
-          <Small className="mt-[10px]">These are thresholds and multipliers, not amounts.</Small>
+          <SubHead>Weekly overtime</SubHead>
+          <Small testId={tid.mts.otDay}>Not built yet. Weekly overtime thresholds and multipliers are not applied by the timesheet rules.</Small>
         </>}
       </AdminCard>
 
@@ -205,12 +256,18 @@ function SetupDraftView({ setup, types, env, picked, onPick }: {
     </>);
 }
 
+function EmployeeTypeChip({ type, testId, selected, onClick }: { type: EmployeeTypeRow; testId: string; selected: boolean; onClick(): void }) {
+  return <Chip testId={testId} on={selected} onClick={onClick}>
+    {type.name}<span className="text-xs opacity-70">{MODE[type.mode] ?? 'Day form'} · paid per {type.uom || 'hour'}</span></Chip>;
+}
+
 /* admCaptureFields and typeFieldRows: one row per field, Visible and Mandatory switches, the pack that owns it. */
 function CaptureFields({ fields, env, labels, type, onChange }: {
   fields: TimesheetSetup['fields']; env: Env & { capabilities: readonly string[] }; labels: TimesheetConfig['fieldDefaults'];
   type: TypeCapture; onChange(map: TypeCapture['fields']): void;
 }) {
   const groups = setupFieldGroups(fields, env, labels);
+  let fieldRowIndex = 0;
   return (
     <Table variant="matrix" dense>
       <TableHeader><TableRow>
@@ -223,12 +280,13 @@ function CaptureFields({ fields, env, labels, type, onChange }: {
         {groups.length === 0 && <Row testId={tid.mts.fieldsEmpty}><TableCell colSpan={4}>
           <Empty>No fields available. Give this type a capability under Employee types, or turn a feature on under Modules & features.</Empty></TableCell></Row>}
         {groups.map(g => [
-          <Row key={`cat-${g.cat}`} testId={tid.mts.fieldCat(g.cat)}><TableCell colSpan={4} className="text-xs font-[650] text-text-secondary">{g.cat}</TableCell></Row>,
+          <Row key={`cat-${g.cat}`} testId={tid.mts.fieldCat(g.cat)} data-row-kind="category" className="!bg-surface-tint"><TableCell colSpan={4} className="text-xs font-[650] text-text-secondary">{g.cat}</TableCell></Row>,
           ...g.rows.map(({ field: f, label, max }) => {
             const s = Object.hasOwn(type.fields, f.c) ? type.fields[f.c] : undefined;
             const vis = Boolean(s?.vis);
+            const stripe = fieldRowIndex++ % 2 === 1;
             return (
-              <Row key={f.c} testId={tid.mts.fieldRow(f.c)}>
+              <Row key={f.c} testId={tid.mts.fieldRow(f.c)} data-row-kind="field" className={stripe ? '!bg-surface-sunken' : '!bg-surface-card'}>
                 <TableCell>{label}{max != null && <span className="text-xs text-text-muted"> up to {max}</span>}</TableCell>
                 <TableCell className="text-center"><SwitchField testId={tid.mts.fieldVis(f.c)} aria-label={`Show ${label}`} checked={vis}
                   onCheckedChange={() => onChange(toggleVisible(type.fields, fields, f))} /></TableCell>
@@ -264,31 +322,31 @@ function PayRules({ code, rules, payCodes, draft, fe, onChange }: {
             const basis = payBasisOf(payCodes, draft.allowances, r.code);
             return (
               <Row key={i} testId={tid.mts.payRow(i)}>
-                <TableCell>
-                  <input data-testid={tid.mts.payTrigger(i)} aria-label="Trigger" className={INL} value={r.trigger} onChange={e => set(i, { trigger: e.target.value })} />
+                <TableCell className="align-top">
+                  <TextInput testId={tid.mts.payTrigger(i)} aria-label="Trigger" className="w-full min-w-[120px]" value={r.trigger} onChange={e => set(i, { trigger: e.target.value })} />
                   <Asel testId={tid.mts.payWhen(i)} small aria-label="What the trigger matches" className="mt-xs" value={r.when}
                     aria-invalid={at(i, 'when') ? true : undefined} onChange={e => set(i, { when: e.target.value })}>
                     {withValue(['', ...Object.keys(RATE_TRIGGERS)], r.when).map(w => <option key={w} value={w}>{TRIGGER_LABEL(w)}</option>)}</Asel>
                   <Err text={at(i, 'when')} />
                 </TableCell>
-                <TableCell>
+                <TableCell className="align-top">
                   <Asel testId={tid.mts.payCode(i)} small aria-label="Pay code" value={r.code} aria-invalid={at(i, 'code') ? true : undefined}
                     onChange={e => set(i, { code: e.target.value })}>
                     {withValue(codes, r.code).map(c => <option key={c} value={c}>{c}</option>)}</Asel>
                   <Err text={at(i, 'code')} />
                 </TableCell>
-                <TableCell className="text-xs text-text-muted tabular-nums">{payElement(payCodes, draft.allowances, r.code)}
+                <TableCell className="align-top text-xs text-text-muted tabular-nums">{payElement(payCodes, draft.allowances, r.code)}
                   <span className="block">{(Object.hasOwn(PAY_BASIS, basis) ? PAY_BASIS[basis as keyof typeof PAY_BASIS].label : basis).toLowerCase()}</span></TableCell>
-                <TableCell>
-                  <input data-testid={tid.mts.payValue(i)} aria-label="Value" className={cn(INL, 'min-w-[96px] max-w-[90px] tabular-nums')} value={r.value}
+                <TableCell className="align-top">
+                  <TextInput testId={tid.mts.payValue(i)} aria-label="Value" className="w-[90px] min-w-0 tabular-nums" value={r.value}
                     aria-invalid={at(i, 'value') ? true : undefined} onChange={e => set(i, { value: e.target.value })} />
                   <Err text={at(i, 'value')} />
                 </TableCell>
-                <TableCell>
+                <TableCell className="align-top">
                   <Asel testId={tid.mts.payHow(i)} small aria-label="Applied" value={r.how} onChange={e => set(i, { how: e.target.value })}>
                     {withValue<string>(HOW_APPLIED, r.how).map(h => <option key={h} value={h}>{h}</option>)}</Asel>
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="align-top text-right">
                   <Button testId={tid.mts.payRemove(i)} kind="ghost" small onClick={() => onChange(rules.filter((_, j) => j !== i))}>Remove</Button></TableCell>
               </Row>);
           })}
@@ -297,42 +355,6 @@ function PayRules({ code, rules, payCodes, draft, fe, onChange }: {
       <div className="mt-lg flex flex-wrap justify-end gap-sm">
         <Button testId={tid.mts.payAdd} kind="ghost" small onClick={() => onChange([...rules, newRule()])}>Add rule</Button></div>
     </>);
-}
-
-/* The weekly overtime rows. A type with no thresholds yet shows the prototype's defaults; they are stored only once one is changed. */
-type OtKey = keyof typeof DEFAULT_OVERTIME;
-const OT_ROWS: { key: OtKey; title: string; desc: string; unit: string }[] = [
-  { key: 'threshold', title: 'Weekly overtime threshold', desc: 'Hours per week before overtime applies', unit: 'hrs' },
-  { key: 'multiplier', title: 'Weekly overtime multiplier', desc: 'Rate beyond the threshold', unit: '×' },
-  { key: 'weekendMultiplier', title: 'Weekend / bank-holiday multiplier', desc: 'Applied automatically by date from the shared calendar', unit: '×' },
-];
-function OvertimeRows({ code, overtime, fe, onChange }: {
-  code: string; overtime: TypeCapture['overtime']; fe(field: string): string | undefined; onChange(o: NonNullable<TypeCapture['overtime']>): void;
-}) {
-  const ot = overtime ?? DEFAULT_OVERTIME;
-  /* the text as typed, so a half-typed "1." or an empty box is not rewritten under the cursor */
-  const [text, setText] = useState<Record<OtKey, string>>(() => ({
-    threshold: String(ot.threshold), multiplier: String(ot.multiplier), weekendMultiplier: String(ot.weekendMultiplier) }));
-  return (
-    <div>
-      {OT_ROWS.map(r => {
-        /* both multipliers are refused under one name */
-        const err = fe(`types.${code}.overtime.${r.key === 'weekendMultiplier' ? 'multiplier' : r.key}`);
-        return (
-          <SettingRow key={r.key} title={r.title} desc={r.desc}>
-            <div className="flex flex-col items-end max-md:items-start">
-              <UnitInput testId={tid.mts.ot(r.key)} unit={r.unit} aria-label={r.title} type="number" inputMode="decimal" step="0.1" min="0"
-                value={text[r.key]} aria-invalid={err ? true : undefined}
-                onChange={e => {
-                  const v = e.target.value;
-                  setText(t => ({ ...t, [r.key]: v }));
-                  onChange({ ...ot, [r.key]: v.trim() === '' || !Number.isFinite(Number(v)) ? 0 : Number(v) });
-                }} />
-              <Err text={err} />
-            </div>
-          </SettingRow>);
-      })}
-    </div>);
 }
 
 /* What crosses the boundary, and what never does. Static. */

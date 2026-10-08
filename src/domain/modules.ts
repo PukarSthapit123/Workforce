@@ -40,7 +40,7 @@ export const MOD_SUBS: Readonly<Record<SubCode, SubDef>> = {
   C: { code: 'C', name: 'Sites & locations', kind: 'capability', description: 'Location field, per-site rules and the location check on clock-in.' },
 };
 export const FLAGS: readonly FlagDef[] = [
-  { code: 'AUTO_OT', label: 'Auto overtime split', mod: 'TS', description: 'Split hours past the weekly threshold into an overtime pay code.' },
+  { code: 'AUTO_OT', label: 'Weekly overtime split (not built yet)', mod: 'TS', description: 'Not built yet. The timesheet rules do not split hours past a weekly threshold.' },
   { code: 'LATE_FINISH', label: 'Late finish detection', mod: 'TS', description: 'Flag shifts finishing after the configured cut-off.' },
   { code: 'UNSOCIAL', label: 'Unsocial hours detection', mod: 'TS', description: 'Flag hours worked inside the unsocial window.' },
   { code: 'EMAIL_APPROVAL', label: 'Email approval', mod: 'TS', description: 'Managers can approve a week from an email link.' },

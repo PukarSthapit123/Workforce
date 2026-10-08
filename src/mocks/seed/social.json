@@ -2649,7 +2649,6 @@
      "enforceRest": false,
      "enforceLock": true,
      "otDaily": 8,
-     "otWeekly": 40,
      "nightFrom": "20:00",
      "nightTo": "06:00"
     },
@@ -3138,12 +3137,7 @@
         "value": "",
         "how": "Auto (rota)"
        }
-      ],
-      "overtime": {
-       "threshold": 40,
-       "multiplier": 1.5,
-       "weekendMultiplier": 1.5
-      }
+      ]
      },
      "casual": {
       "fields": {
@@ -3223,12 +3217,7 @@
         "value": "1×",
         "how": "Auto (BC)"
        }
-      ],
-      "overtime": {
-       "threshold": 40,
-       "multiplier": 1.5,
-       "weekendMultiplier": 1.5
-      }
+      ]
      },
      "salaried": {
       "fields": {
@@ -3280,8 +3269,7 @@
         "value": "—",
         "how": "Auto (BC)"
        }
-      ],
-      "overtime": null
+      ]
      }
     }
    }

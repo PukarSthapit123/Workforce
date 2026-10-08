@@ -2,9 +2,9 @@
  "flags": [
   {
    "code": "AUTO_OT",
-   "label": "Auto overtime split",
+   "label": "Weekly overtime split (not built yet)",
    "mod": "TS",
-   "desc": "Split hours past the weekly threshold into an overtime pay code."
+   "desc": "Not built yet. The timesheet rules do not split hours past a weekly threshold."
   },
   {
    "code": "LATE_FINISH",

@@ -25,6 +25,9 @@ test('the chain per module with the posting step locked, the sign-off settings a
   expect(screen.getByTestId(tid.aappr.method)).toHaveTextContent('Email link (one-click)');
   expect(screen.getByTestId(tid.aappr.methodLink)).toHaveAttribute('href', '/setup/amods?m=TS');
   expect(screen.getByTestId(tid.aappr.cutoff)).toHaveTextContent('Monday 12:00');
+  expect(screen.getByTestId(tid.aappr.cutoffLink)).toHaveAttribute('href', '/setup/mts#mts-cutoff');
+  expect(screen.getByTestId(tid.aappr.enforceLink)).toHaveAttribute('href', '/setup/mts#mts-period-lock');
+  expect(screen.getByTestId(tid.aappr.reasonLink)).toHaveAttribute('href', '/setup/mts#mts-return-reason');
   expect(screen.getByTestId(tid.aappr.current)).toHaveTextContent('Open · 10/08/2026 – 16/08/2026');
   expect(screen.getByTestId(tid.aappr.previous)).toHaveTextContent('Closed · 03/08/2026 – 09/08/2026');
   expect(screen.getByTestId(tid.aappr.delegRow('dlg_1'))).toHaveTextContent('Rachel Hussain');
