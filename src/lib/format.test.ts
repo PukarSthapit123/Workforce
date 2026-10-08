@@ -1,6 +1,12 @@
 import { formatDate, formatDateTime, describeChange, todayIso } from './format';
+import { setActiveLocale } from '@/domain/time';
 test('British date and time in London time', () => {
   expect(formatDateTime('2026-08-13T13:30:00.000Z')).toBe('13/08/2026 14:30');
+});
+test('timestamps display in the selected IANA timezone with the local calendar date', () => {
+  setActiveLocale({ timezone: 'Asia/Kathmandu', dateFormat: 'yyyy-mm-dd', clock: '24h' });
+  expect(formatDateTime('2026-07-10T23:30:00.000Z')).toBe('2026-07-11 05:15');
+  setActiveLocale({ timezone: 'Europe/London', dateFormat: 'dd/mm/yyyy', clock: '24h' });
 });
 test('a change reads before -> after, field by field', () => {
   expect(describeChange({ proxy: false }, { proxy: true })).toBe('proxy: no → yes');

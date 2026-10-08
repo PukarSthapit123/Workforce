@@ -299,6 +299,17 @@ describe('settings', () => {
         after: { timezone: 'Pacific/Auckland', dateFormat: 'yyyy-mm-dd', clock: '12h' } }),
     ]);
   });
+  test('an IANA zone alias is stored as the selected ID and a raw UTC offset is refused', async () => {
+    const call = await as('admin');
+    const out = updateTenantSettings.response.parse((await call('PATCH', SETTINGS, { timezone: 'Asia/Kathmandu' }, ver())).body);
+    expect(out.record.timezone).toBe('Asia/Kathmandu');
+    const before = snapshot(...WRITES);
+    const invalid = await call('PATCH', SETTINGS, { timezone: '+05:45' }, ver());
+    expect([invalid.status, Refusal.parse(invalid.body)]).toEqual([422, expect.objectContaining({
+      field: 'timezone', message: 'Choose a valid IANA time zone.',
+    })]);
+    expect(snapshot(...WRITES)).toEqual(before);
+  });
   test('week start refuses while open timesheet days or rota weeks remain, and names both counts', async () => {
     const call = await as('admin');
     const openTimesheets = Object.values(store.coll<{ state: string }>('timesheetDays')).filter(d => ['pend', 'back', 'resub'].includes(d.state)).length;

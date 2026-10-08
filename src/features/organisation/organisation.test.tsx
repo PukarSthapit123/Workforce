@@ -11,7 +11,7 @@ import { OrganisationPage } from './OrganisationPage';
    three employee types, nothing saved here yet. */
 withFakeServer();
 beforeEach(async () => { resetTo('social'); await signInAs('admin'); });
-const tenant = () => store.coll<{ name: string; template: string; modules: Record<string, boolean>; company: { country: string } }>('tenant').tenant;
+const tenant = () => store.coll<{ name: string; template: string; timezone: string; modules: Record<string, boolean>; company: { country: string } }>('tenant').tenant;
 const saved = () => store.coll<{ template: { name: string; scope: string } }>('templates');
 const open = async () => {
   renderPage(<OrganisationPage />);
@@ -37,6 +37,7 @@ test('the page shows the spine, every template with the live one marked, the com
   expect(screen.getByTestId(tid.aorg.nmw)).toHaveAttribute('aria-checked', 'true');
   expect(screen.getByTestId(tid.aorg.payFrequency)).toHaveValue('Fortnightly');
   await waitFor(() => expect(screen.getByTestId(tid.aorg.cutoff)).toHaveTextContent('Monday 12:00'));
+  expect(screen.getByTestId(tid.aorg.cutoffLink)).toHaveAttribute('href', '/setup/mts#mts-cutoff');
   expect(screen.queryByText(/currency|accent colour/i)).toBeNull();
   expectTestIdCoverage(document.body);
 });
@@ -47,6 +48,18 @@ test('a company setting saves when it is chosen, with one audit row', async () =
   expect(await screen.findByText('Country: Ireland.')).toBeInTheDocument();
   expect(tenant()?.company.country).toBe('Ireland');
   expect(audits().filter(a => a.entity === 'tenant').map(a => a.act)).toEqual(['Organisation settings changed']);
+});
+
+test('the timezone dropdown offers IANA zones and saves the selected identifier, not an offset', async () => {
+  await open();
+  const select = screen.getByTestId(tid.aorg.timezone);
+  expect(select.tagName).toBe('SELECT');
+  expect(screen.getByTestId(tid.aorg.timeZones)).toContainElement(within(select).getByRole('option', { name: 'Asia/Kathmandu' }));
+  expect(within(select).getByRole('option', { name: 'America/New_York' })).toBeInTheDocument();
+  fireEvent.change(select, { target: { value: 'Asia/Kathmandu' } });
+  expect(await screen.findByText('Time zone saved.')).toBeInTheDocument();
+  expect(tenant()?.timezone).toBe('Asia/Kathmandu');
+  expect(audits().filter(a => a.entity === 'tenant')).toHaveLength(1);
 });
 
 test('save a template: a name is needed, then it is listed as saved here with what it keeps', async () => {

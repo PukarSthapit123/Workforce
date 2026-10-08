@@ -1,4 +1,5 @@
-import { addMonths, clockAt, daysBetween, dayIndex, dmyToIso, fmtMin, formatDmy, formatTime, isIsoDate, periodStart, setActiveLocale, weekDates, weekHeads } from './time';
+import { addMonths, clockAt, daysBetween, dayIndex, dmyToIso, fmtMin, formatDmy, formatTime, isIsoDate, isTimeZone, periodStart, setActiveLocale,
+  supportedTimeZones, weekDates, weekHeads } from './time';
 
 describe('shared date helpers', () => {
   test('whole days between two dates, months that roll as JavaScript dates do', () => {
@@ -16,6 +17,15 @@ describe('shared date helpers', () => {
   });
   test('the tenant clock crosses London midnight at 00:30 BST, not UTC midnight', () => {
     expect(clockAt('2026-07-10T23:30:00.000Z', 'Europe/London')).toEqual({ date: '2026-07-11', time: '00:30' });
+  });
+  test('worldwide IANA zones retain their IDs, convert local time and apply DST automatically', () => {
+    expect(supportedTimeZones()).toEqual(expect.arrayContaining(['Asia/Kathmandu', 'Asia/Tokyo', 'Pacific/Auckland', 'UTC']));
+    expect([isTimeZone('Asia/Kathmandu'), isTimeZone('Pacific/Auckland'), isTimeZone('+05:45')]).toEqual([true, true, false]);
+    expect(clockAt('2026-07-10T23:30:00.000Z', 'Asia/Kathmandu')).toEqual({ date: '2026-07-11', time: '05:15' });
+    expect([
+      clockAt('2026-03-08T06:30:00.000Z', 'America/New_York'),
+      clockAt('2026-03-08T07:30:00.000Z', 'America/New_York'),
+    ]).toEqual([{ date: '2026-03-08', time: '01:30' }, { date: '2026-03-08', time: '03:30' }]);
   });
   test('date, clock and week formatting follow the active tenant settings', () => {
     setActiveLocale({ timezone: 'Europe/London', dateFormat: 'mm/dd/yyyy', clock: '12h', weekStart: 'Sunday' });

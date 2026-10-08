@@ -23,10 +23,20 @@ export interface Locale { timezone: string; dateFormat: DateFormat; clock: Clock
 export const DEFAULT_ZONE = 'Europe/London';
 export const DEFAULT_LOCALE: Readonly<Locale> = Object.freeze({ timezone: DEFAULT_ZONE, dateFormat: 'dd/mm/yyyy', clock: '24h', weekStart: 'Monday' });
 
-/* A timezone this runtime knows, by its IANA name. */
+/* supportedValuesOf omits UTC and some IANA links, including the commonly
+   used Asia/Kathmandu spelling. Keep those named zones selectable too. */
+const TIME_ZONE_LINKS = ['Asia/Kathmandu'] as const;
+const timeZones = [...new Set([
+  ...(typeof Intl.supportedValuesOf === 'function' ? Intl.supportedValuesOf('timeZone') : [DEFAULT_ZONE]),
+  'UTC',
+  ...TIME_ZONE_LINKS,
+])].sort();
+const TIME_ZONE_SET = new Set(timeZones);
+export const supportedTimeZones = (): readonly string[] => timeZones;
+
+/* Accept named IANA identifiers only; Intl also accepts non-IANA offset strings. */
 export function isTimeZone(zone: unknown): zone is string {
-  if (!zone || typeof zone !== 'string') return false;
-  try { new Intl.DateTimeFormat('en-GB', { timeZone: zone }); return true; } catch { return false; }
+  return typeof zone === 'string' && TIME_ZONE_SET.has(zone);
 }
 const pick = <T extends string>(all: readonly T[], v: unknown, d: T): T => all.find(x => x === v) ?? d;
 /* A locale from whatever a record holds: anything missing or unknown is the default. */

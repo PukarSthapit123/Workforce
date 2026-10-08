@@ -19,7 +19,7 @@ import { useCaps } from '@/shell/useCaps';
 import { downloadText } from '@/lib/download';
 import { formatDateTime } from '@/lib/format';
 import { CLOCK_STYLES, DATE_FORMATS } from '@/contract/tenant';
-import { DEFAULT_ZONE } from '@/domain/time';
+import { DEFAULT_ZONE, supportedTimeZones } from '@/domain/time';
 import { MODULES, moduleLive } from '@/domain/modules';
 import { TEMPLATE_SCOPES, scopeLabel, templateFileName, type TemplateScope } from '@/domain/templates';
 
@@ -332,31 +332,27 @@ function CompanyCard({ tenant }: { tenant: Tenant }) {
     </AdminCard>);
 }
 
-const TIME_ZONES = (() => {
-  const zones = typeof Intl.supportedValuesOf === 'function' ? Intl.supportedValuesOf('timeZone') : [];
-  return zones.includes('UTC') ? zones : ['UTC', ...zones];
-})();
 const DATE_FORMAT_LABELS: Record<(typeof DATE_FORMATS)[number], string> = {
   'dd/mm/yyyy': 'Day / month / year', 'yyyy-mm-dd': 'Year / month / day', 'mm/dd/yyyy': 'Month / day / year',
 };
 
 function DateTimeCard({ tenant }: { tenant: Tenant }) {
   const s = useSettings(tenant), busy = s.save.anyPending;
-  const timeZoneList = 'aorg-time-zones';
   return (
     <AdminCard testId={tid.aorg.card('date-time')} icon={<CalendarDays />} title="Date and time" tipTestId={tid.aorg.tip('date-time')}
       tip="Dates, times and the working day follow this organisation’s settings.">
       <SettingRow title="Time zone" desc="Choose an IANA time zone. Changes apply from the next request.">
-        <div className="flex flex-col items-end max-md:w-full max-md:items-start">
-          <SettingText testId={tid.aorg.timezone} aria-label="Time zone" list={timeZoneList} value={tenant.timezone || DEFAULT_ZONE}
+        <div data-testid={tid.aorg.timeZones} className="flex flex-col items-end max-md:w-full max-md:items-start">
+          <SettingSelect testId={tid.aorg.timezone} aria-label="Time zone" value={tenant.timezone || DEFAULT_ZONE}
             disabled={busy} aria-invalid={s.error('timezone') ? true : undefined}
             onChange={e => {
-              const zone = e.currentTarget.value.trim();
-              if (TIME_ZONES.includes(zone) && zone !== tenant.timezone) s.save.mutate({
+              const zone = e.currentTarget.value;
+              if (zone !== tenant.timezone) s.save.mutate({
                 change: { timezone: zone }, ifMatch: tenant.version,
               }, { onSuccess: out => { if (out.auditId) toastInfo('Time zone saved.', 'It applies from the next request.'); } });
-            }} />
-          <datalist id={timeZoneList} data-testid={tid.aorg.timeZones}>{TIME_ZONES.map(zone => <option key={zone} value={zone} />)}</datalist>
+            }}>
+            {supportedTimeZones().map(zone => <option key={zone} value={zone}>{zone}</option>)}
+          </SettingSelect>
           {s.error('timezone') && <p role="alert" className="mt-xs text-xs text-err">{s.error('timezone')}</p>}
         </div>
       </SettingRow>
@@ -419,7 +415,7 @@ function PayPeriodsCard({ tenant }: { tenant: Tenant }) {
       </SettingRow>
       <SettingRow title="Pay-period cut-off" desc="After the cut-off the period is closed: employees can no longer submit">
         <span data-testid={tid.aorg.cutoff} className="text-sm">{cutoff}</span>
-        <NavLink testId={tid.aorg.cutoffLink} to="/setup/mts" className="text-xs font-semibold text-brand underline dark:text-brand-accent">Change it on Timesheet setup</NavLink>
+        <NavLink testId={tid.aorg.cutoffLink} to="/setup/mts#mts-cutoff" className="text-xs font-semibold text-brand underline dark:text-brand-accent">Change it on Timesheet setup</NavLink>
       </SettingRow>
     </AdminCard>);
 }
