@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { tid } from '@/testids';
 import { cn } from '@/lib/utils';
-import { formatTime } from '@/domain/time';
+import { activeLocale, formatTime } from '@/domain/time';
 import {
   Avatar, Banner, Button, CheckboxField, Field, FieldGrid, FormWarn, Modal, NativeSelect, Pill, Row, SelectBox, SettingRow, SettingText, Small, SubHead,
   SwitchField, TextInput, Tip, UnitInput, toastInfo,
@@ -14,6 +14,9 @@ import { addDays, periodStart } from '@/domain/time';
 import { GEN_PERIODS, clampCycle, genBy, genLabel, genRange, resizeCycle, shiftBy, shiftName, shiftTime, staggerOffsets, TICK_SOMEONE } from '@/domain/rota';
 import type { PatternCandidate } from '@/contract/rota';
 import type { z } from 'zod';
+/* P's compact hours ("07–15") on the 24-hour clock; the full times on the 12-hour clock. */
+const cellHours = (s: { from: string; to: string }) =>
+  activeLocale().clock === '24h' ? `${s.from.slice(0, 2)}–${s.to.slice(0, 2)}` : `${formatTime(s.from)}–${formatTime(s.to)}`;
 
 /* The working pattern windows: the prototype's patternDetail inside
    patternWindow, patternBox and patternPersonBox (qnipay-workforce-v15.html:
@@ -146,7 +149,7 @@ export function PatternEditor({ pattern, ctx, onClose, onAddPeople, onDelete, on
                 aria-label={`Day ${i + 1}, ${c ? shiftName(sh, c) || c : 'rest day'}. Tap to change.`}
                 className={cn('cursor-pointer rounded-sm border border-transparent bg-surface-tint px-[6px] py-[9px] text-center text-xs leading-[1.4] text-text-muted transition-shadow duration-(--qp-duration-fast) hover:shadow-[inset_0_0_0_2px_var(--qp-color-brand-primary)]',
                   s && CYC_TONE[s.tone])}>
-                Day {i + 1}<br /><strong className="text-xs">{c ? (s ? `${formatTime(s.from)}–${formatTime(s.to)}` : c) : 'off'}</strong>
+                Day {i + 1}<br /><strong className="text-xs">{c ? (s ? cellHours(s) : c) : 'off'}</strong>
               </button>);
           })}
         </div>

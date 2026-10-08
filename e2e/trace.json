@@ -911,7 +911,7 @@
    "text": "B2 Capture rules card is on Timesheet setup",
    "area": "timesheet",
    "status": "ported",
-   "test": "src/features/timesheet/setup.test.tsx › the page shows every card, with full test id coverage, and a day-rate type has no overtime inputs"
+   "test": "src/features/timesheet/setup.test.tsx › the page shows every card and explains weekly overtime is not built"
   },
   {
    "id": "CHUNK-B-timesheet-integrity#14",
