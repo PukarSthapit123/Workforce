@@ -1,5 +1,5 @@
 import {
-  CANCELLED_TOAST, CHOOSE_TYPE, DEFAULT_LEAVE_CONFIG, DEFAULT_TYPE_LEAVE, LAST_BEFORE_FIRST, OVERLAPS, OVER_BALANCE, PICK_BOTH_DATES, REASON_REQUIRED, ROTA_OFF_IMPACT,
+  CANCELLED_TOAST, CHOOSE_TYPE, DEFAULT_LEAVE_CONFIG, LEAVE_METHOD_LABEL, DEFAULT_TYPE_LEAVE, LAST_BEFORE_FIRST, OVERLAPS, OVER_BALANCE, PICK_BOTH_DATES, REASON_REQUIRED, ROTA_OFF_IMPACT,
   RTW_ALREADY, RTW_TOAST, SELF_APPROVAL, SETTLED_IN_PAYROLL, absenceBlockedProblem, absenceHeldReason, absenceCellPlan, absenceCellWrites, bookedLeaveDates, datesCellPlan, sicknessDates, absenceMark, absenceOn, absenceRecordOn, approvedNotice,
   approvedToast, balanceOf, balanceText, bradford, cancelTip, cancelWindowAdvisory, cancelledNotice, coverImpact, dailyHours, daysReturnedNotice,
   daysReturnedToast, daysToTakeText, declineReasonProblem, declinedNotice, declinedToast, entitlement, episodeDays, episodeEnd, escalationText,
@@ -13,14 +13,14 @@ import {
 import { emptyWeek, setCells } from './rota';
 
 const TODAY = '2026-08-13';
-const STD: LeavePolicy = { code: 'STD', name: 'Standard annual leave', method: 'Statutory + service', unit: 'days', base: 24, statutory: 28,
-  serviceRule: '+1 day per 3 years, capped at 5', prorata: 'By contracted hours ÷ full-time hours', carry: 5, approval: true, sla: 5, escalate: true, bh: 'On top of entitlement' };
-const ACC: LeavePolicy = { ...STD, code: 'ACC', name: 'Accrual (bank / flexible)', method: '12.07% of hours worked', unit: 'hours', base: 0, serviceRule: 'Not applied' };
-const FIX: LeavePolicy = { ...STD, code: 'FIX', name: 'Fixed allowance', method: 'Fixed days per year', base: 5, serviceRule: 'Not applied' };
-const NONE: LeavePolicy = { ...STD, code: 'NONE', name: 'No entitlement', method: 'Unpaid, no balance', base: 0, serviceRule: 'Not applied' };
-const HRIS: LeavePolicy = { ...STD, code: 'HRIS', name: 'Held in the HRIS', method: 'Statutory scheme, managed outside Workforce', unit: 'weeks', base: 0, serviceRule: 'Per statute' };
-const SICKP: LeavePolicy = { ...NONE, code: 'SICK', name: 'Sickness absence', method: 'Occupational scheme' };
-const TOILP: LeavePolicy = { ...NONE, code: 'TOIL', name: 'Time off in lieu', method: 'Banked from approved overtime', unit: 'hours' };
+const STD: LeavePolicy = { code: 'STD', name: 'Standard annual leave', method: 'fixed', unit: 'days', base: 24,
+  serviceRules: [{ afterYears: 3, add: 1, cap: 5 }], prorata: true, carry: 5, approval: true, sla: 5, bankHolidayHandling: 'working-days' };
+const ACC: LeavePolicy = { ...STD, code: 'ACC', name: 'Accrual (bank / flexible)', method: 'accrual', unit: 'hours', base: 0, serviceRules: [], prorata: false, bankHolidayHandling: 'included' };
+const FIX: LeavePolicy = { ...STD, code: 'FIX', name: 'Fixed allowance', method: 'fixed', base: 5, serviceRules: [], carry: 0, bankHolidayHandling: 'not-applicable' };
+const NONE: LeavePolicy = { ...STD, code: 'NONE', name: 'No entitlement', method: 'none', base: 0, serviceRules: [], carry: 0, prorata: false, bankHolidayHandling: 'not-applicable' };
+const HRIS: LeavePolicy = { ...NONE, code: 'HRIS', name: 'Held in the HRIS', method: 'external', unit: 'weeks', base: 0 };
+const SICKP: LeavePolicy = { ...NONE, code: 'SICK', name: 'Sickness absence', method: 'sickness' };
+const TOILP: LeavePolicy = { ...NONE, code: 'TOIL', name: 'Time off in lieu', unit: 'hours' };
 const POLICIES = [STD, ACC, TOILP, FIX, NONE, HRIS, SICKP];
 const type = (code: string, o: Partial<LeaveType> = {}): LeaveType => ({ code, name: code, icon: '•', short: code, policy: 'STD', paid: true, evidence: false, unit: 'days', active: true, ...o });
 const TYPES: LeaveType[] = [type('AL', { name: 'Annual leave' }), type('TOIL', { name: 'Time off in lieu', policy: 'TOIL', unit: 'hours' }),
@@ -34,6 +34,9 @@ const rec = (o: Partial<LeaveRecord> & { id?: string } = {}): LeaveRecord & { id
   ({ id: 'lr_1', type: 'AL', from: '2026-08-17', to: '2026-08-18', part: 'full', qty: 2, unit: 'days', state: 'approved', ...o });
 const ME = { personCode: 'CP-1001', name: 'Rachel Hussain' };
 const AT = '2026-08-13T08:12:00.000Z';
+const SICK_REASONS = ['Cold or flu', 'Stomach upset', 'Musculoskeletal', 'Mental health', 'Other'];
+const sickPlan = (episodes: Parameters<typeof recordSicknessPlan>[0], input: Parameters<typeof recordSicknessPlan>[1], today = TODAY) =>
+  recordSicknessPlan(episodes, input, today, SICK_REASONS);
 
 describe('types, policies and the leave year', () => {
   test('policyBy falls back to the first policy; a type with no leave setting uses Standard in days', () => {
@@ -55,9 +58,9 @@ describe('types, policies and the leave year', () => {
     expect(typeBalanceText(type('TOIL'), undefined, '', { hours: 0, useBy: '' })).toBe('0 hours built up');
     expect(typeBalanceText(type('UNP'), NONE, '', toil)).toBe('No limit. Unpaid.');
     expect(typeBalanceText(type('COMP'), FIX, '', toil)).toBe('5 days a year');
-    expect(typeBalanceText(type('PAR'), HRIS, '', toil)).toBe('Held in the HRIS');
+    expect(typeBalanceText(type('PAR'), HRIS, '', toil)).toBe('Held outside Workforce');
     expect(typeBalanceText(type('SICK'), SICKP, '', toil)).toBe('Occupational scheme applies');
-    expect(typeBalanceText(type('X'), STD, '', toil)).toBe('—');
+    expect(typeBalanceText(type('X'), STD, '', toil)).toBe('24 days a year');
   });
   test('the leave year runs from finYearStart', () => {
     expect(leaveYear(TODAY, '01/04')).toEqual({ start: '2026-04-01', end: '2027-03-31', label: '2026/27' });
@@ -77,9 +80,6 @@ describe('leave setup (D11)', () => {
   test('the seeded setup passes', () => { expect(ok()).toBeNull(); });
   test('each setting is checked, with a plain message naming the field', () => {
     expect(cfg({ slaDays: 0 })).toMatchObject({ code: 'VALIDATION', field: 'slaDays', message: 'The approval SLA is a whole number of days from 1 to 60.' });
-    expect(cfg({ escalateTo: 'Nobody' })?.field).toBe('escalateTo');
-    expect(cfg({ unit: 'Weeks' })?.field).toBe('unit');
-    expect(cfg({ carry: -1 })?.field).toBe('carry');
     expect(cfg({ toilMax: 401 })?.field).toBe('toilMax');
     expect(cfg({ toilWindow: 4 })?.field).toBe('toilWindow');
     expect(cfg({ finYearStart: '31/02' })).toMatchObject({ field: 'finYearStart', message: 'The leave year starts on a day and month, like 01/04.' });
@@ -98,7 +98,7 @@ describe('leave setup (D11)', () => {
     expect(run({ types: [type('AL'), type('TR', { name: '' })] })?.field).toBe('types.1.name');
     expect(run({ stages: [...STAGES.slice(0, 2), { ...newLeaveStage(3), wait: 1.5 }] })?.field).toBe('stages.2.wait');
     expect(run({ tl: { shift: { policy: 'ZZ', unit: 'days' } } })?.field).toBe('typeLeave.shift.policy');
-    expect(run({ stages: STAGES.slice(0, 1) })).toMatchObject({ field: 'stages', message: 'Keep the first two workflow stages.' });
+    expect(run({ stages: STAGES.slice(0, 1) })).toMatchObject({ field: 'stages', message: 'Keep the employee and manager escalation stages.' });
     expect(run({ stages: [...STAGES.slice(0, 2), { ...newLeaveStage(3), channel: 'Pigeon' }] })?.message).toBe('Choose how stage 3 notifies from the list.');
     expect(run({ stages: [...STAGES.slice(0, 2), { ...newLeaveStage(3), who: '' }] })?.message).toBe('Stage 3 needs an approver and an action.');
     expect(run({ tl: { casual: { policy: 'STD', unit: 'days' } } })?.message).toBe('There is no employee type with the code casual.');
@@ -117,11 +117,11 @@ describe('entitlement (D3)', () => {
     expect(yearsService('', TODAY)).toBe(0);
     expect(yearsService('2027-01-01', TODAY)).toBe(0);
   });
-  test('service bonus: a day per three years, capped at five, only where the policy has a service rule', () => {
+  test('service bonus: a unit per three years, capped at five, only where the policy has a service rule', () => {
     expect([0, 2, 3, 6, 15, 30].map(y => serviceBonus(STD, y))).toEqual([0, 0, 1, 2, 5, 5]);
     expect(serviceBonus(FIX, 9)).toBe(0);
     expect(serviceBonus(SICKP, 9)).toBe(0);
-    expect(serviceBonus({ serviceRule: '+2 days per 5 years' }, 12)).toBe(4);
+    expect(serviceBonus({ serviceRules: [{ afterYears: 5, add: 2, cap: 10 }] }, 12)).toBe(4);
   });
   test('Standard: base plus service, pro-rata by contracted hours, with the calculation shown', () => {
     const e = entitlement({ contractedHours: 37.5, start: '2022-02-14' }, STD, TODAY);
@@ -129,11 +129,20 @@ describe('entitlement (D3)', () => {
     expect(e.lines).toEqual([
       { label: 'Policy base', value: '24 days' }, { label: 'Service (4 years)', value: '+1 day' },
       { label: 'Contracted hours', value: '37.5 h of 37.5 h full time' }, { label: 'Pro-rata factor', value: '100.0%' },
+      { label: 'Bank holidays', value: 'On top of entitlement' },
       { label: 'Entitlement', value: '25 days · 187.50 hours' }]);
     expect(entitlement({ contractedHours: 22.5, start: '2024-01-11' }, STD, TODAY)).toMatchObject({ days: 14.4, hours: 64.8 });
     expect(entitlement({ contractedHours: 40, start: '' }, STD, TODAY).days).toBe(24);
     expect(entitlement({ contractedHours: 0, start: '2020-01-01' }, STD, TODAY).days).toBe(0);
     expect(entitlement({ contractedHours: 37.5, start: '2025-01-01' }, STD, TODAY).lines[1]).toEqual({ label: 'Service (1 year)', value: 'no addition' });
+  });
+  test('the tenant full-time week drives pro-rata, and scheduled working bank holidays affect entitlement and trace', () => {
+    const facts = { contractedHours: 37.5, start: '2022-02-14' };
+    const configured = entitlement(facts, STD, TODAY, { fullTimeWeeklyHours: 40, bhPaid: false, workingBankHolidays: 2 });
+    expect(configured.days).toBe(21.4);
+    expect(configured.lines.find(line => line.label === 'Contracted hours')).toEqual({ label: 'Contracted hours', value: '37.5 h of 40 h full time' });
+    expect(configured.lines.find(line => line.label === 'Bank holidays')).toEqual({ label: 'Bank holidays', value: '2 working bank holiday day(s) deducted' });
+    expect(entitlement(facts, STD, TODAY, { bhPaid: true, workingBankHolidays: 2 }).days).toBe(25);
   });
   test('the reference date is the clock: a year later the bonus moves', () => {
     expect(entitlement({ contractedHours: 37.5, start: '2023-08-14' }, STD, TODAY).days).toBe(24);
@@ -146,8 +155,8 @@ describe('entitlement (D3)', () => {
     expect(e.lines[1]?.value).toBe('12.07%');
   });
   test('No entitlement and HRIS policies hold nothing and say why', () => {
-    expect(entitlement({ contractedHours: 37.5, start: '' }, NONE, TODAY)).toMatchObject({ days: 0, hours: 0, lines: [{ label: 'Policy', value: 'Unpaid, no balance' }] });
-    expect(entitlement({ contractedHours: 37.5, start: '' }, HRIS, TODAY).lines[0]?.value).toBe('Statutory scheme, managed outside Workforce');
+    expect(entitlement({ contractedHours: 37.5, start: '' }, NONE, TODAY)).toMatchObject({ days: 0, hours: 0, lines: [{ label: 'Policy', value: 'No balance kept' }] });
+    expect(entitlement({ contractedHours: 37.5, start: '' }, HRIS, TODAY).lines[0]?.value).toBe('Held outside Workforce');
   });
   test('the hours-change simulation computes before and after and writes nothing', () => {
     const s = proRataSimulation({ contractedHours: 37.5, start: '2022-02-14' }, 22.5, STD, TODAY);
@@ -294,9 +303,34 @@ describe('balance (D3): derived from base, requests and ledger', () => {
     expect(bal([across]).pending).toBe(2);
     const facts = { contractedHours: 37.5, start: '2022-02-14' }, o = { facts, policy: STD, base, requests: [across], ledger: [], today: TODAY, finYearStart: '01/04' };
     const now = yearBalance(o, leaveYear(TODAY, '01/04')), next = yearBalance(o, leaveYear('2027-04-01', '01/04'));
-    expect([now.ent.days, now.takenD, now.pending, now.leftD]).toEqual([25, 7.5, 2, 15.5]);
-    /* next year: the same policy and hours, five years' service at 01/04/2027, nothing taken before it, no carry-over */
-    expect([next.ent.years, next.ent.days, next.takenD, next.pending, next.leftD]).toEqual([5, 25, 0, 2, 23]);
+    expect([now.ent.days, now.takenD, now.pending, now.leftD]).toEqual([30, 7.5, 2, 20.5]);
+    /* next year: the same policy and hours, five years' service at 01/04/2027, with carry calculated from the prior year */
+    expect([next.ent.years, next.ent.days, next.takenD, next.pending, next.leftD]).toEqual([5, 30, 0, 2, 28]);
+  });
+  test('prior-year unused entitlement carries over up to the policy cap and is shown in the trace', () => {
+    const facts = { contractedHours: 37.5, start: '' }, carryBase = { unit: 'days' as const, taken: 0, toil: 0, toilBy: '' };
+    const o = { facts, policy: STD, base: carryBase, requests: [rec({ from: '2025-04-01', to: '2025-04-20', qty: 20 })], ledger: [], today: TODAY, finYearStart: '01/04' };
+    const y = yearBalance(o, leaveYear(TODAY, '01/04'));
+    expect(y.ent.days).toBe(28);
+    expect(y.ent.lines.find(line => line.label === 'Carry-over')).toEqual({ label: 'Carry-over', value: '4 of 5 days carried from 2025/26' });
+    const capped = yearBalance({ ...o, requests: [] }, leaveYear(TODAY, '01/04'));
+    expect(capped.ent.days).toBe(29);
+    expect(capped.ent.lines.find(line => line.label === 'Carry-over')?.value).toBe('5 of 5 days carried from 2025/26');
+    const nextYear = yearBalance({ ...o, base: { ...carryBase, year: '2026/27', taken: 20 }, requests: [], today: '2027-05-01' },
+      leaveYear('2027-05-01', '01/04'));
+    expect(nextYear.ent.days).toBe(28);
+    expect(nextYear.ent.lines.find(line => line.label === 'Carry-over')?.value).toBe('4 of 5 days carried from 2026/27');
+    /* the entitlement line is the total, and it is the trace's last line */
+    expect(y.ent.lines.at(-1)).toEqual({ label: 'Entitlement', value: '28 days · 210.00 hours' });
+  });
+  test('a policy with no balance keeps its one line saying why: no carry-over or entitlement line (review M7)', () => {
+    const facts = { contractedHours: 37.5, start: '' }, carryBase = { unit: 'days' as const, taken: 0, toil: 0, toilBy: '' };
+    for (const policy of [NONE, HRIS, SICKP]) {
+      const y = yearBalance({ facts, policy: { ...policy, carry: 5 }, base: carryBase, requests: [], ledger: [], today: TODAY, finYearStart: '01/04' },
+        leaveYear(TODAY, '01/04'));
+      expect(y.ent.lines).toEqual([{ label: 'Policy', value: LEAVE_METHOD_LABEL[policy.method] }]);
+      expect(y.ent.days).toBe(0);
+    }
   });
   test('approving moves waiting to taken; cancelling releases it; each exactly once', () => {
     const waiting = bal([rec({ state: 'pending' })]), approved = bal([rec()]), cancelled = bal([rec({ state: 'cancelled' })]);
@@ -398,18 +432,18 @@ describe('sickness episodes and Bradford (D9)', () => {
   });
   test('a day next to an open or just-ended episode extends it; a day apart starts a new spell', () => {
     const eps = [ep('e1', '2026-08-10', '2026-08-11')];
-    const r = (from: string, to = '') => recordSicknessPlan(eps, { from, to, reason: 'Cold or flu' }, TODAY);
+    const r = (from: string, to = '') => sickPlan(eps, { from, to, reason: 'Cold or flu' });
     expect(r('2026-08-12', '2026-08-12')).toEqual({ ok: true, plan: { kind: 'extend', id: 'e1', from: '2026-08-10', to: '2026-08-12' } });
     expect(r('2026-08-09', '2026-08-09')).toEqual({ ok: true, plan: { kind: 'extend', id: 'e1', from: '2026-08-09', to: '2026-08-11' } });
     expect(r('2026-08-12')).toEqual({ ok: true, plan: { kind: 'extend', id: 'e1', from: '2026-08-10', to: '' } });
     expect(r('2026-08-13', '2026-08-13')).toEqual({ ok: true, plan: { kind: 'new', from: '2026-08-13', to: '2026-08-13' } });
-    const open = recordSicknessPlan([ep('e2', '2026-08-10', '')], { from: '2026-08-13', to: '2026-08-13', reason: 'Other' }, TODAY);
+    const open = sickPlan([ep('e2', '2026-08-10', '')], { from: '2026-08-13', to: '2026-08-13', reason: 'Other' });
     expect(open).toEqual({ ok: true, plan: { kind: 'extend', id: 'e2', from: '2026-08-10', to: '' } });
   });
   /* review I3 */
   test('a range that touches two episodes joins them into the earliest, open if either is', () => {
     const eps = [ep('b', '2026-08-06', '2026-08-07'), ep('a', '2026-08-03', '2026-08-04')];
-    const r = (from: string, to: string, list = eps) => recordSicknessPlan(list, { from, to, reason: 'Other' }, TODAY);
+    const r = (from: string, to: string, list = eps) => sickPlan(list, { from, to, reason: 'Other' });
     const joined = { ok: true, plan: { kind: 'extend', id: 'a', from: '2026-08-03', to: '2026-08-07', absorbed: ['b'] } };
     expect(r('2026-08-05', '2026-08-05')).toEqual(joined);
     expect(r('2026-08-05', '2026-08-07')).toEqual(joined);
@@ -422,10 +456,10 @@ describe('sickness episodes and Bradford (D9)', () => {
     expect(bradford([ep('a', '2026-08-03', '2026-08-07')], TODAY, 100)).toMatchObject({ spells: 1, days: 5, score: 5 });
   });
   test('recording refuses a missing day, a backwards range, an unknown reason, and a day already recorded', () => {
-    expect(recordSicknessPlan([], { from: '', to: '', reason: 'Other' }, TODAY)).toMatchObject({ ok: false, problem: { field: 'from', message: 'Pick the first day off.' } });
-    expect(recordSicknessPlan([], { from: '2026-08-12', to: '2026-08-11', reason: 'Other' }, TODAY)).toMatchObject({ ok: false, problem: { field: 'to', message: LAST_BEFORE_FIRST } });
-    expect(recordSicknessPlan([], { from: '2026-08-12', to: '', reason: 'Hangover' }, TODAY)).toMatchObject({ ok: false, problem: { field: 'reason', message: 'Choose the reason given.' } });
-    expect(recordSicknessPlan([ep('e1', '2026-08-10', '2026-08-12')], { from: '2026-08-11', to: '2026-08-11', reason: 'Other' }, TODAY))
+    expect(sickPlan([], { from: '', to: '', reason: 'Other' })).toMatchObject({ ok: false, problem: { field: 'from', message: 'Pick the first day off.' } });
+    expect(sickPlan([], { from: '2026-08-12', to: '2026-08-11', reason: 'Other' })).toMatchObject({ ok: false, problem: { field: 'to', message: LAST_BEFORE_FIRST } });
+    expect(sickPlan([], { from: '2026-08-12', to: '', reason: 'Hangover' })).toMatchObject({ ok: false, problem: { field: 'reason', message: 'Choose the reason given.' } });
+    expect(sickPlan([ep('e1', '2026-08-10', '2026-08-12')], { from: '2026-08-11', to: '2026-08-11', reason: 'Other' }))
       .toMatchObject({ ok: false, problem: { code: 'ALREADY_RECORDED', message: 'Tue 11 Aug is already recorded as sickness.' } });
   });
   test('Bradford: spells squared times days over 52 weeks, triggered at the threshold', () => {

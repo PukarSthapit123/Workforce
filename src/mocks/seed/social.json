@@ -1217,7 +1217,8 @@
      "breaksMax": 5,
      "vehiclesMax": 4
     },
-    "restore": {}
+    "restore": {},
+    "fullTimeWeeklyHours": 37.5
    }
   },
   "locations": {
@@ -5358,12 +5359,8 @@
     "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "leaveConfig",
     "slaDays": 5,
-    "escalateTo": "Service Manager",
-    "unit": "Days and hours",
-    "carry": 5,
     "toilMax": 24,
     "toilWindow": 3,
-    "buySell": false,
     "finYearStart": "01/04",
     "bhPaid": true,
     "absenceTrigger": 100,
@@ -5466,107 +5463,99 @@
      {
       "code": "STD",
       "name": "Standard annual leave",
-      "method": "Statutory + service",
+      "method": "fixed",
       "unit": "days",
       "base": 24,
-      "statutory": 28,
-      "serviceRule": "+1 day per 3 years, capped at 5",
-      "prorata": "By contracted hours ÷ full-time hours",
+      "prorata": true,
       "carry": 5,
       "approval": true,
-      "sla": 5,
-      "escalate": true,
-      "bh": "On top of entitlement"
+      "sla": null,
+      "serviceRules": [
+       {
+        "afterYears": 3,
+        "add": 1,
+        "cap": 5
+       }
+      ],
+      "bankHolidayHandling": "working-days"
      },
      {
       "code": "ACC",
       "name": "Accrual (bank / flexible)",
-      "method": "12.07% of hours worked",
+      "method": "accrual",
       "unit": "hours",
       "base": 0,
-      "statutory": 28,
-      "serviceRule": "Not applied",
-      "prorata": "Accrues as hours are worked",
+      "prorata": false,
       "carry": 0,
       "approval": true,
-      "sla": 5,
-      "escalate": true,
-      "bh": "Included in the accrual rate"
+      "sla": null,
+      "serviceRules": [],
+      "bankHolidayHandling": "included"
      },
      {
       "code": "TOIL",
       "name": "Time off in lieu",
-      "method": "Banked from approved overtime",
+      "method": "none",
       "unit": "hours",
       "base": 0,
-      "statutory": 0,
-      "serviceRule": "Not applied",
-      "prorata": "Not applied",
+      "prorata": false,
       "carry": 0,
       "approval": true,
-      "sla": 3,
-      "escalate": false,
-      "bh": "Not applicable"
+      "sla": null,
+      "serviceRules": [],
+      "bankHolidayHandling": "not-applicable"
      },
      {
       "code": "SICK",
       "name": "Sickness absence",
-      "method": "Occupational scheme",
+      "method": "sickness",
       "unit": "days",
       "base": 0,
-      "statutory": 0,
-      "serviceRule": "Scheme length by service",
-      "prorata": "Not applied",
+      "prorata": false,
       "carry": 0,
-      "approval": false,
-      "sla": 1,
-      "escalate": false,
-      "bh": "Not applicable"
+      "approval": true,
+      "sla": null,
+      "serviceRules": [],
+      "bankHolidayHandling": "not-applicable"
      },
      {
       "code": "FIX",
       "name": "Fixed allowance",
-      "method": "Fixed days per year",
+      "method": "fixed",
       "unit": "days",
       "base": 5,
-      "statutory": 0,
-      "serviceRule": "Not applied",
-      "prorata": "Not applied",
+      "prorata": true,
       "carry": 0,
       "approval": true,
-      "sla": 5,
-      "escalate": true,
-      "bh": "Not applicable"
+      "sla": null,
+      "serviceRules": [],
+      "bankHolidayHandling": "not-applicable"
      },
      {
       "code": "NONE",
       "name": "No entitlement",
-      "method": "Unpaid, no balance",
+      "method": "none",
       "unit": "days",
       "base": 0,
-      "statutory": 0,
-      "serviceRule": "Not applied",
-      "prorata": "Not applied",
+      "prorata": false,
       "carry": 0,
       "approval": true,
-      "sla": 5,
-      "escalate": false,
-      "bh": "Not applicable"
+      "sla": null,
+      "serviceRules": [],
+      "bankHolidayHandling": "not-applicable"
      },
      {
       "code": "HRIS",
       "name": "Held in the HRIS",
-      "method": "Statutory scheme, managed outside Workforce",
+      "method": "external",
       "unit": "weeks",
       "base": 0,
-      "statutory": 0,
-      "serviceRule": "Per statute",
-      "prorata": "Per statute",
+      "prorata": false,
       "carry": 0,
       "approval": true,
-      "sla": 5,
-      "escalate": true,
-      "bh": "Per statute"
+      "sla": null,
+      "serviceRules": [],
+      "bankHolidayHandling": "not-applicable"
      }
     ],
     "stages": [
@@ -5612,7 +5601,14 @@
       "policy": "STD",
       "unit": "days"
      }
-    }
+    },
+    "sicknessReasons": [
+     "Cold or flu",
+     "Stomach upset",
+     "Musculoskeletal",
+     "Mental health",
+     "Other"
+    ]
    }
   },
   "leaveRequests": {
@@ -5846,7 +5842,9 @@
     "unit": "days",
     "taken": 7.5,
     "toil": 6,
-    "toilBy": "2026-09-30"
+    "toilBy": "2026-09-30",
+    "carryBaselineYear": "2025-04-01",
+    "carryBaselineTakenD": 25
    },
    "lb_CP-1088": {
     "version": 1,
@@ -5857,7 +5855,9 @@
     "unit": "days",
     "taken": 13,
     "toil": 2.5,
-    "toilBy": "2026-10-31"
+    "toilBy": "2026-10-31",
+    "carryBaselineYear": "2025-04-01",
+    "carryBaselineTakenD": 20
    },
    "lb_CP-1153": {
     "version": 1,
@@ -5868,7 +5868,9 @@
     "unit": "days",
     "taken": 11,
     "toil": 0,
-    "toilBy": ""
+    "toilBy": "",
+    "carryBaselineYear": "2025-04-01",
+    "carryBaselineTakenD": 25
    },
    "lb_CP-1201": {
     "version": 1,
@@ -5879,7 +5881,9 @@
     "unit": "days",
     "taken": 9,
     "toil": 0,
-    "toilBy": ""
+    "toilBy": "",
+    "carryBaselineYear": "2025-04-01",
+    "carryBaselineTakenD": 14.4
    },
    "lb_CP-1266": {
     "version": 1,
@@ -5890,7 +5894,9 @@
     "unit": "days",
     "taken": 6,
     "toil": 3,
-    "toilBy": "2026-11-30"
+    "toilBy": "2026-11-30",
+    "carryBaselineYear": "2025-04-01",
+    "carryBaselineTakenD": 22
    },
    "lb_CP-1402": {
     "version": 1,
@@ -5901,7 +5907,9 @@
     "unit": "days",
     "taken": 8,
     "toil": 11.5,
-    "toilBy": "2026-09-30"
+    "toilBy": "2026-09-30",
+    "carryBaselineYear": "2025-04-01",
+    "carryBaselineTakenD": 24
    },
    "lb_CP-1310": {
     "version": 1,
@@ -5913,7 +5921,9 @@
     "taken": 0,
     "toil": 0,
     "toilBy": "",
-    "accruedHours": 38.6
+    "accruedHours": 38.6,
+    "carryBaselineYear": "2025-04-01",
+    "carryBaselineTakenD": 0
    },
    "lb_CP-1455": {
     "version": 1,
@@ -5925,7 +5935,9 @@
     "taken": 7.5,
     "toil": 0,
     "toilBy": "",
-    "accruedHours": 52.1
+    "accruedHours": 52.1,
+    "carryBaselineYear": "2025-04-01",
+    "carryBaselineTakenD": 0
    },
    "lb_CP-1377": {
     "version": 1,
@@ -5937,7 +5949,9 @@
     "taken": 0,
     "toil": 0,
     "toilBy": "",
-    "accruedHours": 16.4
+    "accruedHours": 16.4,
+    "carryBaselineYear": "2025-04-01",
+    "carryBaselineTakenD": 0
    },
    "lb_CP-1490": {
     "version": 1,
@@ -5949,7 +5963,9 @@
     "taken": 0,
     "toil": 0,
     "toilBy": "",
-    "accruedHours": 24.2
+    "accruedHours": 24.2,
+    "carryBaselineYear": "2025-04-01",
+    "carryBaselineTakenD": 0
    },
    "lb_CP-1001": {
     "version": 1,
@@ -5960,7 +5976,9 @@
     "unit": "days",
     "taken": 12,
     "toil": 0,
-    "toilBy": ""
+    "toilBy": "",
+    "carryBaselineYear": "2025-04-01",
+    "carryBaselineTakenD": 26
    },
    "lb_CP-1002": {
     "version": 1,
@@ -5971,7 +5989,9 @@
     "unit": "days",
     "taken": 5,
     "toil": 0,
-    "toilBy": ""
+    "toilBy": "",
+    "carryBaselineYear": "2025-04-01",
+    "carryBaselineTakenD": 27
    },
    "lb_CP-1288": {
     "version": 1,
@@ -5982,7 +6002,9 @@
     "unit": "days",
     "taken": 16,
     "toil": 0,
-    "toilBy": ""
+    "toilBy": "",
+    "carryBaselineYear": "2025-04-01",
+    "carryBaselineTakenD": 14.4
    },
    "lb_EMP-2044": {
     "version": 1,
@@ -5993,7 +6015,9 @@
     "unit": "days",
     "taken": 10,
     "toil": 0,
-    "toilBy": ""
+    "toilBy": "",
+    "carryBaselineYear": "2025-04-01",
+    "carryBaselineTakenD": 25
    },
    "lb_EMP-2062": {
     "version": 1,
@@ -6004,7 +6028,9 @@
     "unit": "days",
     "taken": 7,
     "toil": 0,
-    "toilBy": ""
+    "toilBy": "",
+    "carryBaselineYear": "2025-04-01",
+    "carryBaselineTakenD": 24
    },
    "lb_EMP-2071": {
     "version": 1,
@@ -6015,7 +6041,9 @@
     "unit": "days",
     "taken": 4,
     "toil": 0,
-    "toilBy": ""
+    "toilBy": "",
+    "carryBaselineYear": "2025-04-01",
+    "carryBaselineTakenD": 24
    },
    "lb_EMP-2088": {
     "version": 1,
@@ -6026,7 +6054,9 @@
     "unit": "days",
     "taken": 9,
     "toil": 0,
-    "toilBy": ""
+    "toilBy": "",
+    "carryBaselineYear": "2025-04-01",
+    "carryBaselineTakenD": 24
    },
    "lb_CP-1501": {
     "version": 1,
@@ -6037,7 +6067,9 @@
     "unit": "days",
     "taken": 0,
     "toil": 0,
-    "toilBy": ""
+    "toilBy": "",
+    "carryBaselineYear": "2025-04-01",
+    "carryBaselineTakenD": 24
    },
    "lb_CP-1502": {
     "version": 1,
@@ -6048,7 +6080,9 @@
     "unit": "days",
     "taken": 0,
     "toil": 0,
-    "toilBy": ""
+    "toilBy": "",
+    "carryBaselineYear": "2025-04-01",
+    "carryBaselineTakenD": 19.2
    }
   },
   "leavers": {

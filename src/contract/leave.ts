@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { defineEndpoint } from './endpoints';
 import { IsoDateTime, RecordMeta, mutation } from './common';
 import { IsoDate } from './people';
+import { BANK_HOLIDAY_HANDLING, LEAVE_METHODS } from '@/domain/leave';
 
 const Actor = z.object({ personCode: z.string(), name: z.string() });
 const AtOrBlank = z.union([IsoDateTime, z.literal('')]);
@@ -22,6 +23,8 @@ export const LeavePart = z.enum(['full', 'am', 'pm', 'hours']);
 export type LeavePart = z.infer<typeof LeavePart>;
 export const BalanceUnit = z.enum(['days', 'hours']);
 export const LeaveUnit = z.enum(['days', 'hours', 'weeks']);
+export const LeaveMethod = z.enum(LEAVE_METHODS);
+export const ServiceRule = z.object({ afterYears: z.number(), add: z.number(), cap: z.number() });
 
 /* ----------------------------------------------------------- the request */
 export const LeaveMove = z.object({ from: z.string(), to: z.string(), by: Actor, at: IsoDateTime, reason: z.string() });
@@ -44,8 +47,9 @@ export type LeaveRequestView = z.infer<typeof LeaveRequestView>;
 /* ------------------------------------------------- entitlement and balance */
 export const CalcLine = z.object({ label: z.string(), value: z.string() });
 export const LeavePolicy = z.object({
-  code: z.string(), name: z.string(), method: z.string(), unit: LeaveUnit, base: z.number(), statutory: z.number(), serviceRule: z.string(),
-  prorata: z.string(), carry: z.number(), approval: z.boolean(), sla: z.number().int(), escalate: z.boolean(), bh: z.string(),
+  code: z.string(), name: z.string(), method: LeaveMethod, unit: LeaveUnit, base: z.number(), serviceRules: z.array(ServiceRule),
+  prorata: z.boolean(), carry: z.number(), approval: z.boolean(), sla: z.number().int().nullable(),
+  bankHolidayHandling: z.enum(BANK_HOLIDAY_HANDLING),
 });
 export type LeavePolicy = z.infer<typeof LeavePolicy>;
 /* The traceable calculation ("How this was worked out"). */
@@ -200,14 +204,16 @@ export const LeaveTypeRecord = z.object({
 });
 export type LeaveTypeRecord = z.infer<typeof LeaveTypeRecord>;
 export const TypeLeave = z.object({ policy: z.string().max(10), unit: BalanceUnit });
-const LeaveConfigFields = {
-  slaDays: z.number(), escalateTo: z.string().max(40), unit: z.string().max(40), carry: z.number(), toilMax: z.number(), toilWindow: z.number(),
-  buySell: z.boolean(), bhPaid: z.boolean(), absenceTrigger: z.number(), autoEntitlement: z.boolean(),
-  blocksTimesheet: z.boolean(), affectsRota: z.boolean(), minNotice: z.number(), cancelWindow: z.number(),
-};
+export const LeaveConfigData = z.object({
+  slaDays: z.number(), toilMax: z.number(), toilWindow: z.number(), bhPaid: z.boolean(), absenceTrigger: z.number(),
+  autoEntitlement: z.boolean(), blocksTimesheet: z.boolean(), affectsRota: z.boolean(), minNotice: z.number(), cancelWindow: z.number(),
+  sicknessReasons: z.array(z.string().trim().min(1).max(40)).max(30), types: z.array(LeaveTypeRecord).max(30),
+  policies: z.array(LeavePolicy).max(20), stages: z.array(LeaveStage).max(10), typeLeave: z.record(z.string(), TypeLeave),
+});
+export type LeaveConfigData = z.infer<typeof LeaveConfigData>;
+const LeaveConfigFields = LeaveConfigData.shape;
 export const LeaveConfigRecord = RecordMeta.extend({
-  ...LeaveConfigFields, finYearStart: z.string().max(5), types: z.array(LeaveTypeRecord), policies: z.array(LeavePolicy), stages: z.array(LeaveStage),
-  typeLeave: z.record(z.string(), TypeLeave),
+  ...LeaveConfigFields, finYearStart: z.string().max(5),
 });
 export type LeaveConfigRecord = z.infer<typeof LeaveConfigRecord>;
 /* The module flags are shown read-only: they change under Modules & features (D11). requestCounts: how
@@ -220,10 +226,14 @@ export const LeaveSetup = z.object({
 export type LeaveSetup = z.infer<typeof LeaveSetup>;
 /* Each key replaces the stored one, except typeLeave (merged by employee type code). Stages are renumbered by position. */
 export const UpdateLeaveConfig = z.strictObject({
-  ...LeaveConfigFields, types: z.array(LeaveTypeRecord).max(30), policies: z.array(LeavePolicy.extend({ code: z.string().min(1).max(10), name: z.string().max(60) })).max(20),
-  stages: z.array(LeaveStage.extend({ n: z.number().int().optional(), who: z.string().max(60), action: z.string().max(120), channel: z.string().max(40) })).max(10),
-  typeLeave: z.record(z.string(), TypeLeave),
-}).partial();
+  slaDays: z.number().optional(), toilMax: z.number().optional(), toilWindow: z.number().optional(), bhPaid: z.boolean().optional(),
+  absenceTrigger: z.number().optional(), autoEntitlement: z.boolean().optional(), blocksTimesheet: z.boolean().optional(),
+  affectsRota: z.boolean().optional(), minNotice: z.number().optional(), cancelWindow: z.number().optional(),
+  sicknessReasons: z.array(z.string().trim().min(1).max(40)).max(30).optional(),
+  types: z.array(LeaveTypeRecord).max(30).optional(), policies: z.array(LeavePolicy.extend({ code: z.string().min(1).max(10), name: z.string().max(60) })).max(20).optional(),
+  stages: z.array(LeaveStage.extend({ n: z.number().int().optional(), who: z.string().max(60), action: z.string().max(120), channel: z.string().max(40) })).max(10).optional(),
+  typeLeave: z.record(z.string(), TypeLeave).optional(),
+}).strict();
 export type UpdateLeaveConfig = z.infer<typeof UpdateLeaveConfig>;
 
 /* ------------------------------------------------------------- endpoints */
@@ -264,4 +274,4 @@ export const giveDaysBack = defineEndpoint({ method: 'POST', path: '/api/v1/leav
 export const getLeaveConfig = defineEndpoint({ method: 'GET', path: '/api/v1/leave/config', response: LeaveSetup, capability: 'mod_cfg',
   summary: 'Leave setup: types, policies, entitlement rules, the booking workflow, Leave and Rota, and the per-type leave policy' });
 export const updateLeaveConfig = defineEndpoint({ method: 'PATCH', path: '/api/v1/leave/config', request: UpdateLeaveConfig, response: mutation(LeaveConfigRecord),
-  capability: 'mod_cfg', versioned: true, summary: 'Save Leave setup (If-Match). The per-type leave policy is merged by type code; stages are renumbered.' });
+  capability: 'mod_cfg', versioned: true, errors: [409], summary: 'Save Leave setup (If-Match). The per-type leave policy is merged by type code; stages are renumbered.' });

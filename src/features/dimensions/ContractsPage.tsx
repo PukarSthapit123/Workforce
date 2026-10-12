@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { tid } from '@/testids';
 import type { Person } from '@/contract/people';
-import { Button, Field, FormWarn, GuideButton, Modal, Page, PageHead, Row, UnitInput, toastInfo } from '@/ui';
+import { Button, Field, FormWarn, GuideButton, Modal, NavLink, Page, PageHead, Row, UnitInput, toastInfo } from '@/ui';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import { usePeople, useUpdatePerson } from '@/api/people';
 import { formatDate } from '@/lib/format';
 import { latest, versionKey } from '@/lib/latest';
 import { StatePill } from '@/features/people/StatePill';
+import { useTenant } from '@/api/tenant';
+import { DEFAULT_FULL_TIME_WEEKLY_HOURS } from '@/domain/leave';
 
-const basis = (h: number) => (h >= 35 ? 'Full time' : h > 0 ? 'Part time' : 'No contracted hours');
+const basis = (h: number, fullTime: number) => (h >= fullTime ? 'Full time' : h > 0 ? 'Part time' : 'No contracted hours');
 
 /* Ported from the prototype's admContracts (qnipay-workforce-v15.html:8284-
    8297): contracted hours, the one baseline Rota, Timesheet and Leave compare
@@ -18,6 +20,8 @@ const basis = (h: number) => (h >= 35 ? 'Full time' : h > 0 ? 'Part time' : 'No 
    patterns belong to Rota, which is not built. */
 export function ContractsPage() {
   const people = usePeople('all', '');
+  const tenant = useTenant();
+  const fullTimeHours = tenant.data?.fullTimeWeeklyHours ?? DEFAULT_FULL_TIME_WEEKLY_HOURS;
   const [held, setEditing] = useState<Person | null>(null);
   /* the form works on the record as last read, and starts again when it changes */
   const editing = held && latest(held, people.data);
@@ -25,6 +29,9 @@ export function ContractsPage() {
     <Page testId={tid.page('acon')}>
       <PageHead title="Contracts" crumb="Qnipay setup · Contracts" tipTestId={tid.head.tip('acon')}
         tip="Contracted hours: the common baseline for every comparison Timesheet and Rota make." actions={<GuideButton view="acon" />} />
+      {/* D3: full time is the tenant's one full-time week, set on Calendar */}
+      {tenant.data && <p className="mb-md text-xs text-text-muted"><span data-testid={tid.contracts.fullTime}>Full time is {fullTimeHours} hours a week or more.</span>{' '}
+        <NavLink testId={tid.contracts.fullTimeLink} to="/setup/acal" className="font-semibold text-brand underline dark:text-brand-accent">Change it on Calendar</NavLink></p>}
       {people.isPending && <p className="text-text-secondary">Loading&hellip;</p>}
       {people.isError && <p data-testid={tid.contracts.error} role="alert" className="text-err">The contracts could not be loaded, so nothing here is current. Reload the page.</p>}
       {people.data && (
@@ -42,7 +49,7 @@ export function ContractsPage() {
               <TableCell label="Category">{p.category}</TableCell>
               <TableCell label="Contracted" className="text-right tabular-nums max-md:text-left">{p.contractedHours} h</TableCell>
               <TableCell label="Maximum" className="text-right tabular-nums max-md:text-left">{p.maxHours} h</TableCell>
-              <TableCell label="Full or part time" className="text-xs text-text-muted">{basis(p.contractedHours)}</TableCell>
+              <TableCell label="Full or part time" className="text-xs text-text-muted">{basis(p.contractedHours, fullTimeHours)}</TableCell>
               <TableCell label="Start" className="text-xs tabular-nums">{formatDate(p.start)}</TableCell>
               <TableCell label="End" empty={!p.end} className="text-xs tabular-nums">{formatDate(p.end)}</TableCell>
               <TableCell label="State"><StatePill testId={tid.contracts.state(p.code)} state={p.state} /></TableCell>

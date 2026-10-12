@@ -13,7 +13,7 @@ import {
   approveLeave, arrangeRtw, cancelLeave, declineLeave, getEntitlement, getLeaveConfig, getMyLeave, getSicknessBoard, getTeamBalances, giveDaysBack,
   listLeavers, listTeamLeave, recordSickness, requestLeave, updateLeaveConfig,
   type BalanceView, type DaysGivenBack, type EntitlementDetail, type EntitlementView, type GiveDaysBack, type LeaveConfigRecord, type LeaveDecided,
-  type LeaveMoved, type LeaveRequested, type LeaveRequestView, type LeaveSetup, type LeaveStage, type LeaveTypeOption, type LeaveTypeRecord,
+  type LeaveMoved, type LeavePolicy, type LeaveRequested, type LeaveRequestView, type LeaveSetup, type LeaveStage, type LeaveTypeOption, type LeaveTypeRecord,
   type LeaverRow, type Leavers, type LedgerView, type MyLeave, type RecordSickness, type RequestLeave, type RtwArranged, type SickEpisodeRecord,
   type SicknessBoard, type SicknessRecorded, type SicknessRow, type TeamBalanceRow, type TeamBalances, type TeamRequests, type TeamRequestView,
   type UpdateLeaveConfig,
@@ -88,7 +88,7 @@ export const useSaveLeaveConfig = () => useRecordMutation({
 
 export type {
   BalanceView, DaysGivenBack, EntitlementDetail, EntitlementView, GiveDaysBack, LeaveConfigRecord, LeaveDecided, LeaveMoved, LeaveRequested,
-  LeaveRequestView, LeaveSetup, LeaveStage, LeaveTypeOption, LeaveTypeRecord, LeaverRow, Leavers, LedgerView, MyLeave, RecordSickness, RequestLeave,
+  LeavePolicy, LeaveRequestView, LeaveSetup, LeaveStage, LeaveTypeOption, LeaveTypeRecord, LeaverRow, Leavers, LedgerView, MyLeave, RecordSickness, RequestLeave,
   RtwArranged, SickEpisodeRecord, SicknessBoard, SicknessRecorded, SicknessRow, TeamBalanceRow, TeamBalances, TeamRequests, TeamRequestView,
   UpdateLeaveConfig,
 };

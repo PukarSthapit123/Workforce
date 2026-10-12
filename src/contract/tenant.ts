@@ -27,6 +27,7 @@ export const Tenant = RecordMeta.extend({
   name: z.string(), template: z.string(), modules: z.record(z.string(), z.boolean()), flags: z.record(z.string(), z.boolean()),
   company: Company, financialYear: FinancialYear, weekStart: z.enum(WEEK_STARTS), bankHolidays: z.array(BankHoliday),
   timezone: TimeZone, dateFormat: z.enum(DATE_FORMATS), clock: z.enum(CLOCK_STYLES),
+  fullTimeWeeklyHours: z.number(),
   /* months, from rotaConfig (its one home), 12 when Rota has never been set up */
   rotaHorizon: z.number().int(),
   extras: FlagExtras,
@@ -68,6 +69,7 @@ export const UpdateTenantSettings = z.strictObject({
   rotaHorizon: z.literal([12, 6, 3], { error: 'Choose a rota horizon of 12, 6 or 3 months.' }).optional(),
   name: z.string().trim().min(1, 'The organisation needs a name.').max(80).optional(),
   timezone: TimeZone.optional(), dateFormat: z.enum(DATE_FORMATS).optional(), clock: z.enum(CLOCK_STYLES).optional(),
+  fullTimeWeeklyHours: z.number().min(1).max(80).optional(),
   weekStart: z.enum(WEEK_STARTS).optional(),
   financialYear: z.strictObject({ start: IsoDate.optional(), end: IsoDate.optional() }).optional(),
   bankHolidays: z.array(BankHoliday).max(200).refine(rows => new Set(rows.map(x => x.date)).size === rows.length,
@@ -94,4 +96,4 @@ export const setFlag = defineEndpoint({ method: 'PATCH', path: '/api/v1/tenant/f
 export const updateTenantSettings = defineEndpoint({ method: 'PATCH', path: '/api/v1/tenant/settings', request: UpdateTenantSettings,
   response: mutation(Tenant), capability: 'master_data', versioned: true,
   errors: [409],
-  summary: 'Change tenant date and time settings, the financial year, bank holidays, rota horizon, organisation name or company details (If-Match: the tenant\'s version)' });
+  summary: 'Change tenant date and time settings, full-time weekly hours, the financial year, bank holidays, rota horizon, organisation name or company details (If-Match: the tenant\'s version)' });

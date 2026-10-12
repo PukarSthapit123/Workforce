@@ -13,7 +13,7 @@ import { bump, refuse } from './http';
 import { serve } from './serve';
 import { actor, requireCapability } from './auth';
 import { writeAudit } from './audit';
-import { people, recordAt } from './world';
+import { codesOf, people, recordAt } from './world';
 import { requireWeekStartChangeAllowed, rotaActor, rotaOff, rotaOn, saveTenant, sitesOff, tenantRec, tsConfig, view, type StoredTenant } from './tenant';
 import meta from './seed/meta.json';
 import { chainRecord, chainsNow, writeChain } from './approvals';
@@ -27,6 +27,9 @@ import {
 import type { TimesheetConfig } from '@/contract/timesheets';
 import type { EmployeeType } from '@/contract/employee-types';
 import type { UserType } from '@/contract/access';
+import type { LeaveConfigData, LeaveConfigRecord } from '@/contract/leave';
+import { leaveConfigProblem } from '@/domain/leave';
+import { leaveConfigChangeProblem } from './leave-config-usage';
 import { notRestoredText, type Refusal as DomainRefusal } from '@/domain/modules';
 import type { RotaActor } from '@/domain/rota';
 import {
@@ -41,6 +44,17 @@ interface Saved extends Meta {
 }
 interface Row extends Meta { code: string; name: string }
 interface Task extends Meta { projectCode: string; name: string; group: string; billable: boolean }
+const leaveConfigNow = () => recordAt(store.coll<LeaveConfigRecord>('leaveConfig'), 'leaveConfig');
+const leaveConfigValues = (c: LeaveConfigRecord): LeaveConfigData => ({
+  slaDays: c.slaDays, toilMax: c.toilMax, toilWindow: c.toilWindow, bhPaid: c.bhPaid,
+  absenceTrigger: c.absenceTrigger, autoEntitlement: c.autoEntitlement, blocksTimesheet: c.blocksTimesheet, affectsRota: c.affectsRota,
+  minNotice: c.minNotice, cancelWindow: c.cancelWindow, sicknessReasons: c.sicknessReasons, types: c.types, policies: c.policies,
+  stages: c.stages, typeLeave: c.typeLeave,
+});
+const leaveTemplateConfig = () => {
+  const c = leaveConfigNow();
+  return c ? leaveConfigValues(c) : undefined;
+};
 
 const COLL = 'templates';
 const saved = () => store.coll<Saved>(COLL);
@@ -89,8 +103,10 @@ function stateOf(t: StoredTenant): TenantState {
     extras: v.extras, labels: labelsNow(), employeeTypes: typesNow(), roleNames: roleNamesNow(),
     tenantSettings: {
       timezone: t.timezone, dateFormat: t.dateFormat, clock: t.clock, weekStart: t.weekStart,
+      fullTimeWeeklyHours: t.fullTimeWeeklyHours,
       financialYear: { start: t.financialYear.start, end: t.financialYear.end },
     },
+    ...(leaveTemplateConfig() ? { leaveConfig: leaveTemplateConfig() } : {}),
     chains: Object.fromEntries(CHAIN_MODULES.map(m => [m, chainRecord(m).steps])) as Record<ChainModule, ChainStep[]>,
     structure: Object.fromEntries(STRUCTURE_KINDS.map(k => [k, codes(k)])) as Record<StructureKind, string[]>,
     onboarding: onboardingNow(),
@@ -197,6 +213,7 @@ function carryOut(t: StoredTenant, plan: ApplyPlan, key: string, by: RotaActor):
     ...(s.tenantSettings.dateFormat ? { dateFormat: s.tenantSettings.dateFormat } : {}),
     ...(s.tenantSettings.clock ? { clock: s.tenantSettings.clock } : {}),
     ...(s.tenantSettings.weekStart ? { weekStart: s.tenantSettings.weekStart } : {}),
+    ...(s.tenantSettings.fullTimeWeeklyHours !== undefined ? { fullTimeWeeklyHours: s.tenantSettings.fullTimeWeeklyHours } : {}),
   });
   const notRestored = s.modules.some(m => m.code === 'R' && m.on) ? rotaOn(by).notRestored : 0;
   return { tenant: saved, notRestored };
@@ -221,8 +238,10 @@ export const templateHandlers = [
       employeeTypes: typesNow(), roleNames: roleNamesNow(), chain: chainsNow(), structure: structureNow(), onboarding: onboardingNow(),
       tenantSettings: {
         timezone: t.timezone, dateFormat: t.dateFormat, clock: t.clock, weekStart: t.weekStart,
+        fullTimeWeeklyHours: t.fullTimeWeeklyHours,
         financialYear: { start: t.financialYear.start, end: t.financialYear.end },
       },
+      ...(leaveTemplateConfig() ? { leaveConfig: leaveTemplateConfig() } : {}),
     });
     const key = templateKey(template.name);
     const who = actor(session);
@@ -245,14 +264,37 @@ export const templateHandlers = [
     if (hasStructure(template)) requireCapability(session, 'master_data');
     const plan = planApply(template, stateOf(t), { mayRenameRoles: session.caps.includes('perm_cfg'), mayChangeChains: session.caps.includes('framework'), mayChangeTypes: session.caps.includes('type_cfg'), mayChangeOnboarding: session.caps.includes('onb_cfg') });
     if (plan.steps.tenantSettings.weekStart) requireWeekStartChangeAllowed(t, plan.steps.tenantSettings.weekStart);
+    const currentLeave = leaveConfigNow();
+    if (plan.steps.leaveConfig && currentLeave) {
+      const nextLeave: LeaveConfigRecord = { ...currentLeave, ...plan.steps.leaveConfig,
+        finYearStart: `${t.financialYear.start.slice(8, 10)}/${t.financialYear.start.slice(5, 7)}` };
+      const usageProblem = leaveConfigChangeProblem(currentLeave, nextLeave.types, nextLeave.policies, nextLeave.typeLeave);
+      if (usageProblem) refuse(409, usageProblem);
+      const problem = leaveConfigProblem(nextLeave, nextLeave.types, nextLeave.policies, nextLeave.stages, nextLeave.typeLeave, codesOf('employeeTypes'));
+      if (problem) refuse(422, { code: 'invalid', field: problem.field, message: problem.message, next: problem.next });
+    }
     const pv = planView(params.key, template, plan);
     const message = `${template.name} applied. ${pv.summary}`;
     if (!plan.changes.length && !plan.added.length && t.template === params.key) return { record: view(t), auditId: null, plan: pv, message };
     const { tenant: done, notRestored } = carryOut(t, plan, params.key, rotaActor(session));
+    /* Leave setup is its own versioned record, but the apply is one mutation: its before and after ride in the one audit row (review I4) */
+    let leaveBefore: Partial<LeaveConfigData> = {}, leaveAfter: Partial<LeaveConfigData> = {};
+    if (plan.steps.leaveConfig && currentLeave) {
+      const values = plan.steps.leaveConfig;
+      const savedLeave = bump(currentLeave, { ...values, finYearStart: `${done.financialYear.start.slice(8, 10)}/${done.financialYear.start.slice(5, 7)}` });
+      store.coll<LeaveConfigRecord>('leaveConfig')[currentLeave.id] = savedLeave;
+      const was = leaveConfigValues(currentLeave), now = leaveConfigValues(savedLeave);
+      const changed = (Object.keys(now) as (keyof LeaveConfigData)[]).filter(k => JSON.stringify(was[k]) !== JSON.stringify(now[k]));
+      leaveBefore = Object.fromEntries(changed.map(k => [k, was[k]]));
+      leaveAfter = Object.fromEntries(changed.map(k => [k, now[k]]));
+    }
+    const leaveChanged = Object.keys(leaveAfter).length > 0;
     const held = notRestoredText(notRestored);
     const auditId = writeAudit({ who: actor(session), act: 'Template applied', entity: 'template', entityId: params.key,
-      before: { template: t.template }, after: { template: params.key, name: template.name, detail: [pv.summary, held].filter(Boolean).join(' '),
-        changed: plan.changes.map(l => l.text), added: plan.added.map(l => l.text), leftAlone: plan.leftAlone.map(l => l.text) } });
+      before: { template: t.template, ...(leaveChanged ? { leaveSetup: leaveBefore } : {}) },
+      after: { template: params.key, name: template.name, detail: [pv.summary, held].filter(Boolean).join(' '),
+        changed: plan.changes.map(l => l.text), added: plan.added.map(l => l.text), leftAlone: plan.leftAlone.map(l => l.text),
+        ...(leaveChanged ? { leaveSetup: leaveAfter } : {}) } });
     return { record: view(done), auditId, plan: pv, message: [message, held].filter(Boolean).join(' ') };
   }),
 

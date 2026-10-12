@@ -9952,25 +9952,11 @@
                         "slaDays": {
                           "type": "number"
                         },
-                        "escalateTo": {
-                          "type": "string",
-                          "maxLength": 40
-                        },
-                        "unit": {
-                          "type": "string",
-                          "maxLength": 40
-                        },
-                        "carry": {
-                          "type": "number"
-                        },
                         "toilMax": {
                           "type": "number"
                         },
                         "toilWindow": {
                           "type": "number"
-                        },
-                        "buySell": {
-                          "type": "boolean"
                         },
                         "bhPaid": {
                           "type": "boolean"
@@ -9993,11 +9979,17 @@
                         "cancelWindow": {
                           "type": "number"
                         },
-                        "finYearStart": {
-                          "type": "string",
-                          "maxLength": 5
+                        "sicknessReasons": {
+                          "maxItems": 30,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 40
+                          }
                         },
                         "types": {
+                          "maxItems": 30,
                           "type": "array",
                           "items": {
                             "type": "object",
@@ -10056,6 +10048,7 @@
                           }
                         },
                         "policies": {
+                          "maxItems": 20,
                           "type": "array",
                           "items": {
                             "type": "object",
@@ -10067,7 +10060,14 @@
                                 "type": "string"
                               },
                               "method": {
-                                "type": "string"
+                                "type": "string",
+                                "enum": [
+                                  "accrual",
+                                  "fixed",
+                                  "none",
+                                  "external",
+                                  "sickness"
+                                ]
                               },
                               "unit": {
                                 "type": "string",
@@ -10080,14 +10080,31 @@
                               "base": {
                                 "type": "number"
                               },
-                              "statutory": {
-                                "type": "number"
-                              },
-                              "serviceRule": {
-                                "type": "string"
+                              "serviceRules": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "afterYears": {
+                                      "type": "number"
+                                    },
+                                    "add": {
+                                      "type": "number"
+                                    },
+                                    "cap": {
+                                      "type": "number"
+                                    }
+                                  },
+                                  "required": [
+                                    "afterYears",
+                                    "add",
+                                    "cap"
+                                  ],
+                                  "additionalProperties": false
+                                }
                               },
                               "prorata": {
-                                "type": "string"
+                                "type": "boolean"
                               },
                               "carry": {
                                 "type": "number"
@@ -10096,15 +10113,24 @@
                                 "type": "boolean"
                               },
                               "sla": {
-                                "type": "integer",
-                                "minimum": -9007199254740991,
-                                "maximum": 9007199254740991
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
                               },
-                              "escalate": {
-                                "type": "boolean"
-                              },
-                              "bh": {
-                                "type": "string"
+                              "bankHolidayHandling": {
+                                "type": "string",
+                                "enum": [
+                                  "working-days",
+                                  "included",
+                                  "not-applicable"
+                                ]
                               }
                             },
                             "required": [
@@ -10113,19 +10139,18 @@
                               "method",
                               "unit",
                               "base",
-                              "statutory",
-                              "serviceRule",
+                              "serviceRules",
                               "prorata",
                               "carry",
                               "approval",
                               "sla",
-                              "escalate",
-                              "bh"
+                              "bankHolidayHandling"
                             ],
                             "additionalProperties": false
                           }
                         },
                         "stages": {
+                          "maxItems": 10,
                           "type": "array",
                           "items": {
                             "type": "object",
@@ -10186,6 +10211,10 @@
                             ],
                             "additionalProperties": false
                           }
+                        },
+                        "finYearStart": {
+                          "type": "string",
+                          "maxLength": 5
                         }
                       },
                       "required": [
@@ -10193,12 +10222,8 @@
                         "version",
                         "updatedAt",
                         "slaDays",
-                        "escalateTo",
-                        "unit",
-                        "carry",
                         "toilMax",
                         "toilWindow",
-                        "buySell",
                         "bhPaid",
                         "absenceTrigger",
                         "autoEntitlement",
@@ -10206,11 +10231,12 @@
                         "affectsRota",
                         "minNotice",
                         "cancelWindow",
-                        "finYearStart",
+                        "sicknessReasons",
                         "types",
                         "policies",
                         "stages",
-                        "typeLeave"
+                        "typeLeave",
+                        "finYearStart"
                       ],
                       "additionalProperties": false
                     },
@@ -10426,25 +10452,11 @@
                   "slaDays": {
                     "type": "number"
                   },
-                  "escalateTo": {
-                    "type": "string",
-                    "maxLength": 40
-                  },
-                  "unit": {
-                    "type": "string",
-                    "maxLength": 40
-                  },
-                  "carry": {
-                    "type": "number"
-                  },
                   "toilMax": {
                     "type": "number"
                   },
                   "toilWindow": {
                     "type": "number"
-                  },
-                  "buySell": {
-                    "type": "boolean"
                   },
                   "bhPaid": {
                     "type": "boolean"
@@ -10466,6 +10478,15 @@
                   },
                   "cancelWindow": {
                     "type": "number"
+                  },
+                  "sicknessReasons": {
+                    "maxItems": 30,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 40
+                    }
                   },
                   "types": {
                     "maxItems": 30,
@@ -10541,7 +10562,14 @@
                           "maxLength": 60
                         },
                         "method": {
-                          "type": "string"
+                          "type": "string",
+                          "enum": [
+                            "accrual",
+                            "fixed",
+                            "none",
+                            "external",
+                            "sickness"
+                          ]
                         },
                         "unit": {
                           "type": "string",
@@ -10554,14 +10582,30 @@
                         "base": {
                           "type": "number"
                         },
-                        "statutory": {
-                          "type": "number"
-                        },
-                        "serviceRule": {
-                          "type": "string"
+                        "serviceRules": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "afterYears": {
+                                "type": "number"
+                              },
+                              "add": {
+                                "type": "number"
+                              },
+                              "cap": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "afterYears",
+                              "add",
+                              "cap"
+                            ]
+                          }
                         },
                         "prorata": {
-                          "type": "string"
+                          "type": "boolean"
                         },
                         "carry": {
                           "type": "number"
@@ -10570,15 +10614,24 @@
                           "type": "boolean"
                         },
                         "sla": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         },
-                        "escalate": {
-                          "type": "boolean"
-                        },
-                        "bh": {
-                          "type": "string"
+                        "bankHolidayHandling": {
+                          "type": "string",
+                          "enum": [
+                            "working-days",
+                            "included",
+                            "not-applicable"
+                          ]
                         }
                       },
                       "required": [
@@ -10587,14 +10640,12 @@
                         "method",
                         "unit",
                         "base",
-                        "statutory",
-                        "serviceRule",
+                        "serviceRules",
                         "prorata",
                         "carry",
                         "approval",
                         "sla",
-                        "escalate",
-                        "bh"
+                        "bankHolidayHandling"
                       ]
                     }
                   },
@@ -10695,25 +10746,11 @@
                         "slaDays": {
                           "type": "number"
                         },
-                        "escalateTo": {
-                          "type": "string",
-                          "maxLength": 40
-                        },
-                        "unit": {
-                          "type": "string",
-                          "maxLength": 40
-                        },
-                        "carry": {
-                          "type": "number"
-                        },
                         "toilMax": {
                           "type": "number"
                         },
                         "toilWindow": {
                           "type": "number"
-                        },
-                        "buySell": {
-                          "type": "boolean"
                         },
                         "bhPaid": {
                           "type": "boolean"
@@ -10736,11 +10773,17 @@
                         "cancelWindow": {
                           "type": "number"
                         },
-                        "finYearStart": {
-                          "type": "string",
-                          "maxLength": 5
+                        "sicknessReasons": {
+                          "maxItems": 30,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 40
+                          }
                         },
                         "types": {
+                          "maxItems": 30,
                           "type": "array",
                           "items": {
                             "type": "object",
@@ -10799,6 +10842,7 @@
                           }
                         },
                         "policies": {
+                          "maxItems": 20,
                           "type": "array",
                           "items": {
                             "type": "object",
@@ -10810,7 +10854,14 @@
                                 "type": "string"
                               },
                               "method": {
-                                "type": "string"
+                                "type": "string",
+                                "enum": [
+                                  "accrual",
+                                  "fixed",
+                                  "none",
+                                  "external",
+                                  "sickness"
+                                ]
                               },
                               "unit": {
                                 "type": "string",
@@ -10823,14 +10874,31 @@
                               "base": {
                                 "type": "number"
                               },
-                              "statutory": {
-                                "type": "number"
-                              },
-                              "serviceRule": {
-                                "type": "string"
+                              "serviceRules": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "afterYears": {
+                                      "type": "number"
+                                    },
+                                    "add": {
+                                      "type": "number"
+                                    },
+                                    "cap": {
+                                      "type": "number"
+                                    }
+                                  },
+                                  "required": [
+                                    "afterYears",
+                                    "add",
+                                    "cap"
+                                  ],
+                                  "additionalProperties": false
+                                }
                               },
                               "prorata": {
-                                "type": "string"
+                                "type": "boolean"
                               },
                               "carry": {
                                 "type": "number"
@@ -10839,15 +10907,24 @@
                                 "type": "boolean"
                               },
                               "sla": {
-                                "type": "integer",
-                                "minimum": -9007199254740991,
-                                "maximum": 9007199254740991
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
                               },
-                              "escalate": {
-                                "type": "boolean"
-                              },
-                              "bh": {
-                                "type": "string"
+                              "bankHolidayHandling": {
+                                "type": "string",
+                                "enum": [
+                                  "working-days",
+                                  "included",
+                                  "not-applicable"
+                                ]
                               }
                             },
                             "required": [
@@ -10856,19 +10933,18 @@
                               "method",
                               "unit",
                               "base",
-                              "statutory",
-                              "serviceRule",
+                              "serviceRules",
                               "prorata",
                               "carry",
                               "approval",
                               "sla",
-                              "escalate",
-                              "bh"
+                              "bankHolidayHandling"
                             ],
                             "additionalProperties": false
                           }
                         },
                         "stages": {
+                          "maxItems": 10,
                           "type": "array",
                           "items": {
                             "type": "object",
@@ -10929,6 +11005,10 @@
                             ],
                             "additionalProperties": false
                           }
+                        },
+                        "finYearStart": {
+                          "type": "string",
+                          "maxLength": 5
                         }
                       },
                       "required": [
@@ -10936,12 +11016,8 @@
                         "version",
                         "updatedAt",
                         "slaDays",
-                        "escalateTo",
-                        "unit",
-                        "carry",
                         "toilMax",
                         "toilWindow",
-                        "buySell",
                         "bhPaid",
                         "absenceTrigger",
                         "autoEntitlement",
@@ -10949,11 +11025,12 @@
                         "affectsRota",
                         "minNotice",
                         "cancelWindow",
-                        "finYearStart",
+                        "sicknessReasons",
                         "types",
                         "policies",
                         "stages",
-                        "typeLeave"
+                        "typeLeave",
+                        "finYearStart"
                       ],
                       "additionalProperties": false
                     },
@@ -10985,6 +11062,16 @@
           },
           "403": {
             "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The change is refused because of the state of the data",
             "content": {
               "application/json": {
                 "schema": {
@@ -11138,7 +11225,14 @@
                               "type": "string"
                             },
                             "method": {
-                              "type": "string"
+                              "type": "string",
+                              "enum": [
+                                "accrual",
+                                "fixed",
+                                "none",
+                                "external",
+                                "sickness"
+                              ]
                             },
                             "unit": {
                               "type": "string",
@@ -11151,14 +11245,31 @@
                             "base": {
                               "type": "number"
                             },
-                            "statutory": {
-                              "type": "number"
-                            },
-                            "serviceRule": {
-                              "type": "string"
+                            "serviceRules": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "afterYears": {
+                                    "type": "number"
+                                  },
+                                  "add": {
+                                    "type": "number"
+                                  },
+                                  "cap": {
+                                    "type": "number"
+                                  }
+                                },
+                                "required": [
+                                  "afterYears",
+                                  "add",
+                                  "cap"
+                                ],
+                                "additionalProperties": false
+                              }
                             },
                             "prorata": {
-                              "type": "string"
+                              "type": "boolean"
                             },
                             "carry": {
                               "type": "number"
@@ -11167,15 +11278,24 @@
                               "type": "boolean"
                             },
                             "sla": {
-                              "type": "integer",
-                              "minimum": -9007199254740991,
-                              "maximum": 9007199254740991
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
                             },
-                            "escalate": {
-                              "type": "boolean"
-                            },
-                            "bh": {
-                              "type": "string"
+                            "bankHolidayHandling": {
+                              "type": "string",
+                              "enum": [
+                                "working-days",
+                                "included",
+                                "not-applicable"
+                              ]
                             }
                           },
                           "required": [
@@ -11184,14 +11304,12 @@
                             "method",
                             "unit",
                             "base",
-                            "statutory",
-                            "serviceRule",
+                            "serviceRules",
                             "prorata",
                             "carry",
                             "approval",
                             "sla",
-                            "escalate",
-                            "bh"
+                            "bankHolidayHandling"
                           ],
                           "additionalProperties": false
                         },
@@ -11826,7 +11944,14 @@
                               "type": "string"
                             },
                             "method": {
-                              "type": "string"
+                              "type": "string",
+                              "enum": [
+                                "accrual",
+                                "fixed",
+                                "none",
+                                "external",
+                                "sickness"
+                              ]
                             },
                             "unit": {
                               "type": "string",
@@ -11839,14 +11964,31 @@
                             "base": {
                               "type": "number"
                             },
-                            "statutory": {
-                              "type": "number"
-                            },
-                            "serviceRule": {
-                              "type": "string"
+                            "serviceRules": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "afterYears": {
+                                    "type": "number"
+                                  },
+                                  "add": {
+                                    "type": "number"
+                                  },
+                                  "cap": {
+                                    "type": "number"
+                                  }
+                                },
+                                "required": [
+                                  "afterYears",
+                                  "add",
+                                  "cap"
+                                ],
+                                "additionalProperties": false
+                              }
                             },
                             "prorata": {
-                              "type": "string"
+                              "type": "boolean"
                             },
                             "carry": {
                               "type": "number"
@@ -11855,15 +11997,24 @@
                               "type": "boolean"
                             },
                             "sla": {
-                              "type": "integer",
-                              "minimum": -9007199254740991,
-                              "maximum": 9007199254740991
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
                             },
-                            "escalate": {
-                              "type": "boolean"
-                            },
-                            "bh": {
-                              "type": "string"
+                            "bankHolidayHandling": {
+                              "type": "string",
+                              "enum": [
+                                "working-days",
+                                "included",
+                                "not-applicable"
+                              ]
                             }
                           },
                           "required": [
@@ -11872,14 +12023,12 @@
                             "method",
                             "unit",
                             "base",
-                            "statutory",
-                            "serviceRule",
+                            "serviceRules",
                             "prorata",
                             "carry",
                             "approval",
                             "sla",
-                            "escalate",
-                            "bh"
+                            "bankHolidayHandling"
                           ],
                           "additionalProperties": false
                         },
@@ -47317,6 +47466,9 @@
                             "12h"
                           ]
                         },
+                        "fullTimeWeeklyHours": {
+                          "type": "number"
+                        },
                         "rotaHorizon": {
                           "type": "integer",
                           "minimum": -9007199254740991,
@@ -47392,6 +47544,7 @@
                         "timezone",
                         "dateFormat",
                         "clock",
+                        "fullTimeWeeklyHours",
                         "rotaHorizon",
                         "extras",
                         "restore",
@@ -47431,7 +47584,8 @@
                                   "structure",
                                   "people",
                                   "organisation",
-                                  "onboarding"
+                                  "onboarding",
+                                  "leave"
                                 ]
                               },
                               "text": {
@@ -47462,7 +47616,8 @@
                                   "structure",
                                   "people",
                                   "organisation",
-                                  "onboarding"
+                                  "onboarding",
+                                  "leave"
                                 ]
                               },
                               "text": {
@@ -47493,7 +47648,8 @@
                                   "structure",
                                   "people",
                                   "organisation",
-                                  "onboarding"
+                                  "onboarding",
+                                  "leave"
                                 ]
                               },
                               "text": {
@@ -47558,6 +47714,16 @@
           },
           "404": {
             "description": "The record does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The change is refused because of the state of the data",
             "content": {
               "application/json": {
                 "schema": {
@@ -48266,6 +48432,11 @@
                                 "Saturday"
                               ]
                             },
+                            "fullTimeWeeklyHours": {
+                              "type": "number",
+                              "minimum": 1,
+                              "maximum": 80
+                            },
                             "financialYear": {
                               "type": "object",
                               "properties": {
@@ -48292,7 +48463,294 @@
                             "dateFormat",
                             "clock",
                             "weekStart",
+                            "fullTimeWeeklyHours",
                             "financialYear"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "leaveConfig": {
+                          "type": "object",
+                          "properties": {
+                            "slaDays": {
+                              "type": "number"
+                            },
+                            "toilMax": {
+                              "type": "number"
+                            },
+                            "toilWindow": {
+                              "type": "number"
+                            },
+                            "bhPaid": {
+                              "type": "boolean"
+                            },
+                            "absenceTrigger": {
+                              "type": "number"
+                            },
+                            "autoEntitlement": {
+                              "type": "boolean"
+                            },
+                            "blocksTimesheet": {
+                              "type": "boolean"
+                            },
+                            "affectsRota": {
+                              "type": "boolean"
+                            },
+                            "minNotice": {
+                              "type": "number"
+                            },
+                            "cancelWindow": {
+                              "type": "number"
+                            },
+                            "sicknessReasons": {
+                              "maxItems": 30,
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 40
+                              }
+                            },
+                            "types": {
+                              "maxItems": 30,
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "code": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 10
+                                  },
+                                  "name": {
+                                    "type": "string",
+                                    "maxLength": 60
+                                  },
+                                  "icon": {
+                                    "type": "string",
+                                    "maxLength": 4
+                                  },
+                                  "short": {
+                                    "type": "string",
+                                    "maxLength": 20
+                                  },
+                                  "policy": {
+                                    "type": "string",
+                                    "maxLength": 10
+                                  },
+                                  "paid": {
+                                    "type": "boolean"
+                                  },
+                                  "evidence": {
+                                    "type": "boolean"
+                                  },
+                                  "unit": {
+                                    "type": "string",
+                                    "enum": [
+                                      "days",
+                                      "hours",
+                                      "weeks"
+                                    ]
+                                  },
+                                  "active": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "code",
+                                  "name",
+                                  "icon",
+                                  "short",
+                                  "policy",
+                                  "paid",
+                                  "evidence",
+                                  "unit",
+                                  "active"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "policies": {
+                              "maxItems": 20,
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "code": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "method": {
+                                    "type": "string",
+                                    "enum": [
+                                      "accrual",
+                                      "fixed",
+                                      "none",
+                                      "external",
+                                      "sickness"
+                                    ]
+                                  },
+                                  "unit": {
+                                    "type": "string",
+                                    "enum": [
+                                      "days",
+                                      "hours",
+                                      "weeks"
+                                    ]
+                                  },
+                                  "base": {
+                                    "type": "number"
+                                  },
+                                  "serviceRules": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "afterYears": {
+                                          "type": "number"
+                                        },
+                                        "add": {
+                                          "type": "number"
+                                        },
+                                        "cap": {
+                                          "type": "number"
+                                        }
+                                      },
+                                      "required": [
+                                        "afterYears",
+                                        "add",
+                                        "cap"
+                                      ],
+                                      "additionalProperties": false
+                                    }
+                                  },
+                                  "prorata": {
+                                    "type": "boolean"
+                                  },
+                                  "carry": {
+                                    "type": "number"
+                                  },
+                                  "approval": {
+                                    "type": "boolean"
+                                  },
+                                  "sla": {
+                                    "anyOf": [
+                                      {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      {
+                                        "type": "null"
+                                      }
+                                    ]
+                                  },
+                                  "bankHolidayHandling": {
+                                    "type": "string",
+                                    "enum": [
+                                      "working-days",
+                                      "included",
+                                      "not-applicable"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "code",
+                                  "name",
+                                  "method",
+                                  "unit",
+                                  "base",
+                                  "serviceRules",
+                                  "prorata",
+                                  "carry",
+                                  "approval",
+                                  "sla",
+                                  "bankHolidayHandling"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "stages": {
+                              "maxItems": 10,
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "n": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "who": {
+                                    "type": "string"
+                                  },
+                                  "action": {
+                                    "type": "string"
+                                  },
+                                  "wait": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "channel": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "n",
+                                  "who",
+                                  "action",
+                                  "wait",
+                                  "channel"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "typeLeave": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "type": "object",
+                                "properties": {
+                                  "policy": {
+                                    "type": "string",
+                                    "maxLength": 10
+                                  },
+                                  "unit": {
+                                    "type": "string",
+                                    "enum": [
+                                      "days",
+                                      "hours"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "policy",
+                                  "unit"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "slaDays",
+                            "toilMax",
+                            "toilWindow",
+                            "bhPaid",
+                            "absenceTrigger",
+                            "autoEntitlement",
+                            "blocksTimesheet",
+                            "affectsRota",
+                            "minNotice",
+                            "cancelWindow",
+                            "sicknessReasons",
+                            "types",
+                            "policies",
+                            "stages",
+                            "typeLeave"
                           ],
                           "additionalProperties": false
                         }
@@ -48428,7 +48886,8 @@
                               "structure",
                               "people",
                               "organisation",
-                              "onboarding"
+                              "onboarding",
+                              "leave"
                             ]
                           },
                           "text": {
@@ -48459,7 +48918,8 @@
                               "structure",
                               "people",
                               "organisation",
-                              "onboarding"
+                              "onboarding",
+                              "leave"
                             ]
                           },
                           "text": {
@@ -48490,7 +48950,8 @@
                               "structure",
                               "people",
                               "organisation",
-                              "onboarding"
+                              "onboarding",
+                              "leave"
                             ]
                           },
                           "text": {
@@ -49539,6 +50000,9 @@
                             "12h"
                           ]
                         },
+                        "fullTimeWeeklyHours": {
+                          "type": "number"
+                        },
                         "rotaHorizon": {
                           "type": "integer",
                           "minimum": -9007199254740991,
@@ -49614,6 +50078,7 @@
                         "timezone",
                         "dateFormat",
                         "clock",
+                        "fullTimeWeeklyHours",
                         "rotaHorizon",
                         "extras",
                         "restore",
@@ -49955,6 +50420,9 @@
                             "12h"
                           ]
                         },
+                        "fullTimeWeeklyHours": {
+                          "type": "number"
+                        },
                         "rotaHorizon": {
                           "type": "integer",
                           "minimum": -9007199254740991,
@@ -50030,6 +50498,7 @@
                         "timezone",
                         "dateFormat",
                         "clock",
+                        "fullTimeWeeklyHours",
                         "rotaHorizon",
                         "extras",
                         "restore",
@@ -50212,7 +50681,7 @@
     },
     "/api/v1/tenant/settings": {
       "patch": {
-        "summary": "Change tenant date and time settings, the financial year, bank holidays, rota horizon, organisation name or company details (If-Match: the tenant's version)",
+        "summary": "Change tenant date and time settings, full-time weekly hours, the financial year, bank holidays, rota horizon, organisation name or company details (If-Match: the tenant's version)",
         "security": [
           {
             "bearer": []
@@ -50271,6 +50740,11 @@
                       "24h",
                       "12h"
                     ]
+                  },
+                  "fullTimeWeeklyHours": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 80
                   },
                   "weekStart": {
                     "type": "string",
@@ -50569,6 +51043,9 @@
                             "12h"
                           ]
                         },
+                        "fullTimeWeeklyHours": {
+                          "type": "number"
+                        },
                         "rotaHorizon": {
                           "type": "integer",
                           "minimum": -9007199254740991,
@@ -50644,6 +51121,7 @@
                         "timezone",
                         "dateFormat",
                         "clock",
+                        "fullTimeWeeklyHours",
                         "rotaHorizon",
                         "extras",
                         "restore",
@@ -50925,6 +51403,9 @@
                         "12h"
                       ]
                     },
+                    "fullTimeWeeklyHours": {
+                      "type": "number"
+                    },
                     "rotaHorizon": {
                       "type": "integer",
                       "minimum": -9007199254740991,
@@ -51000,6 +51481,7 @@
                     "timezone",
                     "dateFormat",
                     "clock",
+                    "fullTimeWeeklyHours",
                     "rotaHorizon",
                     "extras",
                     "restore",

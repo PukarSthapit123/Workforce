@@ -71,6 +71,20 @@ test('the editable financial year saves with one audit row', async () => {
   expect(audits().filter(a => a.entity === 'tenant')).toHaveLength(1);
 });
 
+test('full-time weekly hours save with the calendar settings, with one audit row; an out-of-range value is refused on its field', async () => {
+  await open();
+  expect(screen.getByTestId(tid.acal.fullTimeHours)).toHaveValue(37.5);
+  fireEvent.change(screen.getByTestId(tid.acal.fullTimeHours), { target: { value: '90' } });
+  await userEvent.click(screen.getByTestId(tid.acal.settingsSave));
+  await waitFor(() => expect(screen.getByTestId(tid.acal.fullTimeHours)).toHaveAttribute('aria-invalid', 'true'));
+  expect(audits().filter(a => a.entity === 'tenant')).toHaveLength(0);
+  fireEvent.change(screen.getByTestId(tid.acal.fullTimeHours), { target: { value: '40' } });
+  await userEvent.click(screen.getByTestId(tid.acal.settingsSave));
+  await waitFor(() => expect(store.coll<{ fullTimeWeeklyHours: number }>('tenant').tenant?.fullTimeWeeklyHours).toBe(40));
+  expect(audits().filter(a => a.entity === 'tenant')).toEqual([expect.objectContaining({ act: 'Calendar settings changed',
+    before: { fullTimeWeeklyHours: 37.5 }, after: { fullTimeWeeklyHours: 40 } })]);
+});
+
 test('bank holidays can be added, edited and removed with one audit row per change', async () => {
   await open();
   fireEvent.change(screen.getByTestId(tid.acal.newHolidayDate), { target: { value: '2026-09-07' } });

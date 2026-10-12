@@ -15,6 +15,7 @@
    sentence (listed in the module report). */
 import { FULFIL_CHANNELS, LEAVE, SICK, onShift, rotaWeekId, type CellWrite, type Line, type RotaActor } from './rota';
 import { addDays, addMonths, daysBetween, formatDay, formatDmy, isIsoDate, parseIso, periodStart } from './time';
+import { LEAVE_CODE } from './codes';
 
 /* A refusal the server sends as it is: code, message and what to do next. */
 export interface LeaveRefusal { code: string; message: string; next: string; field?: string }
@@ -29,9 +30,22 @@ export type LeaveUnit = (typeof LEAVE_UNITS)[number];
 /* The unit a balance is held and shown in: the employee type's display unit. */
 export type BalanceUnit = 'days' | 'hours';
 export interface LeaveType { code: string; name: string; icon: string; short: string; policy: string; paid: boolean; evidence: boolean; unit: LeaveUnit; active: boolean }
+export const LEAVE_METHODS = ['accrual', 'fixed', 'none', 'external', 'sickness'] as const;
+export type LeaveMethod = (typeof LEAVE_METHODS)[number];
+/* What a method and a bank-holiday handling read as on screen and in the trace (review M4) */
+export const LEAVE_METHOD_LABEL: Readonly<Record<LeaveMethod, string>> = {
+  accrual: 'Accrues from hours worked', fixed: 'A set allowance each year', none: 'No balance kept', external: 'Held outside Workforce',
+  sickness: 'Sickness scheme, no balance',
+};
+export const BANK_HOLIDAY_HANDLING = ['working-days', 'included', 'not-applicable'] as const;
+export type BankHolidayHandling = (typeof BANK_HOLIDAY_HANDLING)[number];
+export const BANK_HOLIDAY_HANDLING_LABEL: Readonly<Record<BankHolidayHandling, string>> = {
+  'working-days': 'Deduct scheduled working days', included: 'Included in allowance', 'not-applicable': 'Not applicable',
+};
+export interface ServiceRule { afterYears: number; add: number; cap: number }
 export interface LeavePolicy {
-  code: string; name: string; method: string; unit: LeaveUnit; base: number; statutory: number; serviceRule: string; prorata: string;
-  carry: number; approval: boolean; sla: number; escalate: boolean; bh: string;
+  code: string; name: string; method: LeaveMethod; unit: LeaveUnit; base: number; serviceRules: ServiceRule[]; prorata: boolean;
+  carry: number; approval: boolean; sla: number | null; bankHolidayHandling: BankHolidayHandling;
 }
 /* LEAVE_STAGES: the booking workflow, staged and timed. */
 export interface LeaveStage { n: number; who: string; action: string; wait: number; channel: string }
@@ -39,18 +53,18 @@ export const STAGE_CHANNELS = FULFIL_CHANNELS;
 /* The employee type's leave policy and display unit (typeLeave), kept in the leave config by type code (D11). */
 export interface TypeLeave { policy: string; unit: BalanceUnit }
 export const DEFAULT_TYPE_LEAVE: TypeLeave = { policy: 'STD', unit: 'days' };
-export const ESCALATE_TO = ['Service Manager', 'HR administrator', 'Head of Operations'] as const;
-export const RECORD_UNITS = ['Days and hours', 'Days only', 'Hours only'] as const;
 export const TOIL_WINDOWS = [3, 6, 12] as const;
 export interface LeaveConfig {
-  slaDays: number; escalateTo: string; unit: string; carry: number; toilMax: number; toilWindow: number; buySell: boolean;
+  slaDays: number; toilMax: number; toilWindow: number;
   finYearStart: string; bhPaid: boolean; absenceTrigger: number; autoEntitlement: boolean; blocksTimesheet: boolean;
-  affectsRota: boolean; minNotice: number; cancelWindow: number;
+  affectsRota: boolean; minNotice: number; cancelWindow: number; sicknessReasons: string[];
+  types: LeaveType[]; policies: LeavePolicy[]; stages: LeaveStage[]; typeLeave: Record<string, TypeLeave>;
 }
 export const DEFAULT_LEAVE_CONFIG: LeaveConfig = {
-  slaDays: 5, escalateTo: 'Service Manager', unit: 'Days and hours', carry: 5, toilMax: 24, toilWindow: 3, buySell: false,
+  slaDays: 5, toilMax: 24, toilWindow: 3,
   finYearStart: '01/04', bhPaid: true, absenceTrigger: 100, autoEntitlement: true, blocksTimesheet: true, affectsRota: true,
-  minNotice: 7, cancelWindow: 7,
+  minNotice: 7, cancelWindow: 7, sicknessReasons: ['Cold or flu', 'Stomach upset', 'Musculoskeletal', 'Mental health', 'Other'],
+  types: [], policies: [], stages: [], typeLeave: {},
 };
 
 /* policyBy: an unknown code falls back to the first policy, as the prototype's does. */
@@ -66,14 +80,14 @@ export const dailyHours = (contractedHours: number) => (contractedHours > 0 ? co
 export function typeBalanceText(t: LeaveType, policy: LeavePolicy | undefined, al: string, toil: { hours: number; useBy: string }): string {
   if (t.code === 'AL') return al;
   if (t.code === 'TOIL') return `${toil.hours} hours built up${toil.useBy ? ` · use by ${formatDmy(toil.useBy)}` : ''}`;
-  if (policy?.code === 'NONE') return 'No limit. Unpaid.';
-  if (policy?.code === 'FIX') return `${policy.base} days a year`;
-  if (policy?.code === 'HRIS') return 'Held in the HRIS';
-  if (policy?.code === 'SICK') return 'Occupational scheme applies';
+  if (policy?.method === 'none') return 'No limit. Unpaid.';
+  if (policy?.method === 'fixed') return `${policy.base} ${policy.unit} a year`;
+  if (policy?.method === 'external') return 'Held outside Workforce';
+  if (policy?.method === 'sickness') return 'Occupational scheme applies';
   return '—';
 }
 
-/* Leave setup (D11): what a save must hold. Stages 1 and 2 are fixed, so at least two stay. */
+/* Leave setup (D11): what a save must hold. */
 const wholeIn = (n: unknown, lo: number, hi: number) => typeof n === 'number' && Number.isInteger(n) && n >= lo && n <= hi;
 const numIn = (n: unknown, lo: number, hi: number) => typeof n === 'number' && Number.isFinite(n) && n >= lo && n <= hi;
 const FIN_START = /^(\d{2})\/(\d{2})$/;
@@ -81,9 +95,6 @@ export function leaveConfigProblem(c: LeaveConfig, types: readonly LeaveType[], 
   typeLeave: Readonly<Record<string, TypeLeave>>, employeeTypes: readonly string[]): LeaveRefusal | null {
   const bad = (field: string, message: string, next: string): LeaveRefusal => ({ code: 'VALIDATION', message, next, field });
   if (!wholeIn(c.slaDays, 1, 60)) return bad('slaDays', 'The approval SLA is a whole number of days from 1 to 60.', 'Enter the days a manager has to decide.');
-  if (!(ESCALATE_TO as readonly string[]).includes(c.escalateTo)) return bad('escalateTo', 'Choose who a request escalates to from the list.', 'Pick an approver.');
-  if (!(RECORD_UNITS as readonly string[]).includes(c.unit)) return bad('unit', 'Choose how leave is recorded from the list.', 'Pick a unit.');
-  if (!numIn(c.carry, 0, 40)) return bad('carry', 'Carry-over is a number of days from 0 to 40.', 'Enter the days that can carry over.');
   if (!numIn(c.toilMax, 0, 400)) return bad('toilMax', 'The TOIL limit is a number of hours from 0 to 400.', 'Enter the hours that can build up.');
   if (!(TOIL_WINDOWS as readonly number[]).includes(c.toilWindow)) return bad('toilWindow', 'Choose the TOIL window from the list.', 'Pick 3, 6 or 12 months.');
   const fy = FIN_START.exec(c.finYearStart);
@@ -93,17 +104,28 @@ export function leaveConfigProblem(c: LeaveConfig, types: readonly LeaveType[], 
   if (!wholeIn(c.cancelWindow, 0, 365)) return bad('cancelWindow', 'The cancellation window is a whole number of days from 0 to 365.', 'Enter the days before leave starts.');
   const pcodes = policies.map(p => p.code);
   for (const [i, t] of types.entries()) {
+    if (!LEAVE_CODE.test(t.code)) return bad(`types.${i}.code`, `The leave type code ${t.code} is not a valid code.`, 'Use up to 10 capital letters, digits, dashes or underscores, starting with a letter.');
     if (!t.name.trim()) return bad(`types.${i}.name`, `Leave type ${t.code} needs a name.`, 'Name every leave type.');
     if (!pcodes.includes(t.policy)) return bad(`types.${i}.policy`, `Leave type ${t.code} names a policy that does not exist.`, 'Pick a policy from the list.');
     if (!(LEAVE_UNITS as readonly string[]).includes(t.unit)) return bad(`types.${i}.unit`, `Leave type ${t.code} needs a unit of days, hours or weeks.`, 'Pick a unit.');
   }
   if (new Set(types.map(t => t.code)).size !== types.length) return bad('types', 'Two leave types share a code.', 'Give each leave type its own code.');
+  if (new Set(policies.map(p => p.code)).size !== policies.length) return bad('policies', 'Two policies share a code.', 'Give each policy its own code.');
   for (const [i, p] of policies.entries()) {
-    if (!numIn(p.base, 0, 400) || !numIn(p.carry, 0, 40) || !wholeIn(p.sla, 0, 60))
-      return bad(`policies.${i}`, `Policy ${p.name} needs a base from 0 to 400, carry-over from 0 to 40 and an SLA from 0 to 60 days.`, 'Correct the policy numbers.');
+    if (!LEAVE_CODE.test(p.code)) return bad(`policies.${i}.code`, `The policy code ${p.code} is not a valid code.`, 'Use up to 10 capital letters, digits, dashes or underscores, starting with a letter.');
+    if (!p.name.trim()) return bad(`policies.${i}.name`, 'Every policy needs a name.', 'Name every leave policy.');
+    if (!numIn(p.base, 0, 400) || !numIn(p.carry, 0, 40) || (p.sla !== null && !wholeIn(p.sla, 1, 60)))
+      return bad(`policies.${i}`, `Policy ${p.name} needs a base and carry cap from 0 to 400 and 0 to 40, and an optional SLA from 1 to 60 days.`, 'Correct the policy numbers.');
     if (!(LEAVE_UNITS as readonly string[]).includes(p.unit)) return bad(`policies.${i}.unit`, `Policy ${p.name} needs a unit of days, hours or weeks.`, 'Pick a unit.');
+    if (!(LEAVE_METHODS as readonly string[]).includes(p.method)) return bad(`policies.${i}.method`, `Policy ${p.name} needs a supported entitlement method.`, 'Pick a method.');
+    for (const [j, rule] of p.serviceRules.entries()) {
+      if (!wholeIn(rule.afterYears, 1, 60) || !numIn(rule.add, 0, 400) || !numIn(rule.cap, 0, 400))
+        return bad(`policies.${i}.serviceRules.${j}`, `Policy ${p.name} has an invalid service rule.`, 'Enter years, addition and cap as numbers.');
+    }
   }
-  if (stages.length < 2) return bad('stages', 'Keep the first two workflow stages.', 'The employee and line manager stages cannot be removed.');
+  if (!Array.isArray(c.sicknessReasons) || c.sicknessReasons.length < 1 || c.sicknessReasons.some(x => !x.trim()) || new Set(c.sicknessReasons.map(x => x.trim().toLowerCase())).size !== c.sicknessReasons.length)
+    return bad('sicknessReasons', 'Add at least one unique sickness reason.', 'Name each reason once.');
+  if (stages.length < 2) return bad('stages', 'Keep the employee and manager escalation stages.', 'The first two escalation stages cannot be removed.');
   for (const [i, s] of stages.entries()) {
     if (!s.who.trim() || !s.action.trim()) return bad(`stages.${i}`, `Stage ${s.n} needs an approver and an action.`, 'Fill in every stage.');
     if (!wholeIn(s.wait, 0, 60)) return bad(`stages.${i}.wait`, `Stage ${s.n} waits a whole number of days from 0 to 60.`, 'Correct the wait.');
@@ -119,9 +141,11 @@ export function leaveConfigProblem(c: LeaveConfig, types: readonly LeaveType[], 
 /* lvt-add and lvst-add. */
 export const newLeaveType = (n: number): LeaveType => ({ code: `NEW${n}`, name: 'New leave type', icon: '•', short: 'New', policy: 'FIX', paid: true,
   evidence: false, unit: 'days', active: false });
+export const newLeavePolicy = (n: number): LeavePolicy => ({ code: `NEWP${n}`, name: 'New policy', method: 'fixed', unit: 'days', base: 0,
+  serviceRules: [], prorata: false, carry: 0, approval: true, sla: null, bankHolidayHandling: 'not-applicable' });
 export const newLeaveStage = (n: number): LeaveStage => ({ n, who: 'New approver', action: 'Decision required', wait: 2, channel: 'In-app + email' });
 export const renumberLeaveStages = (stages: readonly LeaveStage[]) => stages.map((s, i) => ({ ...s, n: i + 1 }));
-export const LEAVE_TYPE_ADDED = 'Leave type added. Name it and pick its policy.';
+export const LEAVE_TYPE_ADDED = 'Leave type added. Pick its policy.';
 /* Rota and leave (D7): leave reaches the rota only with the Rota module and LV_ROTA on. */
 export const leaveWritesRota = (modules: Readonly<Record<string, boolean>>, flags: Readonly<Record<string, boolean>>) => !!modules.R && !!flags.LV_ROTA;
 
@@ -152,7 +176,7 @@ export function yearShares(r: { from: string; to: string }, total: { days: numbe
 export interface PersonLeaveFacts { contractedHours: number; start: string; accruedHours?: number }
 export interface CalcLine { label: string; value: string }
 export interface Entitlement { days: number; hours: number; policy: LeavePolicy; years: number; lines: CalcLine[] }
-export const FULL_TIME_HOURS = 37.5;
+export const DEFAULT_FULL_TIME_WEEKLY_HOURS = 37.5;
 export const ACCRUAL_RATE = 0.1207;
 /* yearsService: whole years from the start date to the clock. A record with no start date has none. */
 export const yearsService = (start: string, today: string) =>
@@ -161,41 +185,59 @@ export const yearsService = (start: string, today: string) =>
    capped at 5". The prototype tested the rule for the word "service", which the
    Standard policy's rule does not contain, so it never added the bonus it
    showed; here the rule applies. */
-const SERVICE_RULE = /\+(\d+(?:\.\d+)?) days? per (\d+) years?(?:,? capped at (\d+(?:\.\d+)?))?/i;
-export function serviceBonus(policy: Pick<LeavePolicy, 'serviceRule'>, years: number): number {
-  const m = SERVICE_RULE.exec(policy.serviceRule || '');
-  if (!m) return 0;
-  const each = Number(m[1]), per = Number(m[2]), cap = m[3] === undefined ? Infinity : Number(m[3]);
-  return per > 0 ? Math.min(cap, Math.floor(years / per) * each) : 0;
+export function serviceBonus(policy: Pick<LeavePolicy, 'serviceRules'>, years: number): number {
+  return policy.serviceRules.reduce((total, rule) =>
+    total + Math.min(rule.cap, Math.floor(years / rule.afterYears) * rule.add), 0);
 }
+/* carry: the unused days brought from the year before (yearBalance works them out), for the methods that keep a balance */
+export interface EntitlementOptions {
+  fullTimeWeeklyHours?: number; bhPaid?: boolean; workingBankHolidays?: number; carry?: { days: number; from: string };
+}
+const carryLine = (policy: LeavePolicy, carry: EntitlementOptions['carry']): CalcLine[] => (policy.carry > 0 && carry
+  ? [{ label: 'Carry-over', value: `${carry.days} of ${policy.carry} days carried from ${carry.from}` }] : []);
 /* entitlement: a full, traceable calculation, not just a number. */
-export function entitlement(p: PersonLeaveFacts, policy: LeavePolicy, today: string): Entitlement {
+export function entitlement(p: PersonLeaveFacts, policy: LeavePolicy, today: string, options: EntitlementOptions = {}): Entitlement {
   const years = yearsService(p.start, today), lines: CalcLine[] = [], day = dailyHours(p.contractedHours);
+  const fullTime = options.fullTimeWeeklyHours ?? DEFAULT_FULL_TIME_WEEKLY_HOURS;
+  const ratio = p.contractedHours > 0 && policy.prorata ? Math.min(1, p.contractedHours / fullTime) : (p.contractedHours > 0 ? 1 : 0);
+  const carried = policy.carry > 0 ? Math.max(0, options.carry?.days ?? 0) : 0;
   let days = 0, hours = 0;
-  if (policy.code === 'ACC') {
+  if (policy.method === 'accrual') {
     const worked = (p.accruedHours ?? 0) / ACCRUAL_RATE;
     hours = round1(worked * ACCRUAL_RATE);
     lines.push({ label: 'Hours worked to date', value: `${worked.toFixed(1)} h` }, { label: 'Accrual rate', value: '12.07%' },
       { label: 'Entitlement accrued', value: `${hours.toFixed(1)} h` });
     days = round1(hours / day);
-  } else if (policy.code === 'NONE' || policy.code === 'HRIS') {
-    lines.push({ label: 'Policy', value: policy.method });
+    if (policy.carry > 0 && options.carry) {
+      days = round1(days + carried); hours = round2(hours + carried * day);
+      lines.push(...carryLine(policy, options.carry), { label: 'Entitlement', value: `${plural(days, 'day')} · ${hours.toFixed(2)} hours` });
+    }
+  } else if (policy.method === 'none' || policy.method === 'external' || policy.method === 'sickness') {
+    /* no balance, so no carry-over: the one line says why (review M7) */
+    lines.push({ label: 'Policy', value: LEAVE_METHOD_LABEL[policy.method] });
   } else {
+    const unitDays = policy.unit === 'hours' ? 1 / day : policy.unit === 'weeks' ? 5 : 1;
     const bonus = serviceBonus(policy, years);
-    const ratio = p.contractedHours > 0 ? Math.min(1, p.contractedHours / FULL_TIME_HOURS) : 0;
-    days = round1((policy.base + bonus) * ratio);
+    days = round1((policy.base + bonus) * unitDays * ratio);
+    const deduction = options.bhPaid === false && policy.bankHolidayHandling === 'working-days'
+      ? Math.min(days, Math.max(0, options.workingBankHolidays ?? 0)) : 0;
+    days = round1(Math.max(0, days - deduction) + carried);
     hours = round2(days * day);
-    lines.push({ label: 'Policy base', value: plural(policy.base, 'day') },
+    lines.push({ label: 'Policy base', value: `${policy.base} ${policy.unit}` },
       { label: `Service (${plural(years, 'year')})`, value: bonus ? `+${plural(bonus, 'day')}` : 'no addition' },
-      { label: 'Contracted hours', value: `${p.contractedHours} h of ${FULL_TIME_HOURS} h full time` },
+      { label: 'Contracted hours', value: `${p.contractedHours} h of ${fullTime} h full time` },
       { label: 'Pro-rata factor', value: `${(ratio * 100).toFixed(1)}%` },
+      { label: 'Bank holidays', value: options.bhPaid === false
+        ? (policy.bankHolidayHandling === 'working-days' ? `${deduction} working bank holiday day(s) deducted` : 'No working bank holiday deduction for this policy')
+        : 'On top of entitlement' },
+      ...carryLine(policy, options.carry),
       { label: 'Entitlement', value: `${plural(days, 'day')} · ${hours.toFixed(2)} hours` });
   }
   return { days, hours, policy, years, lines };
 }
 /* The "Simulate an hours change" dialog (D3): computed on the client, nothing written. */
-export function proRataSimulation(p: PersonLeaveFacts, newHours: number, policy: LeavePolicy, today: string) {
-  const before = entitlement(p, policy, today), after = entitlement({ ...p, contractedHours: newHours }, policy, today);
+export function proRataSimulation(p: PersonLeaveFacts, newHours: number, policy: LeavePolicy, today: string, options: EntitlementOptions = {}) {
+  const before = entitlement(p, policy, today, options), after = entitlement({ ...p, contractedHours: newHours }, policy, today, options);
   const delta = round1(after.days - before.days);
   return { before, after, delta, text: `${delta >= 0 ? '+' : ''}${delta} days` };
 }
@@ -328,7 +370,10 @@ export const NOT_YOUR_REQUEST = 'You can cancel only your own requests.';
 /* The per-person base: what was taken this leave year before the seeded
    records, in the type's display unit, plus the TOIL bank and its use-by date.
    accruedHours is the bank worker's accrual to date (ACC policy). */
-export interface LeaveBase { unit: BalanceUnit; taken: number; toil: number; toilBy: string; accruedHours?: number }
+export interface LeaveBase {
+  unit: BalanceUnit; taken: number; toil: number; toilBy: string; accruedHours?: number; year?: string;
+  carryBaselineYear?: string; carryBaselineTakenD?: number;
+}
 export interface LeaveRecord { type: string; from: string; to: string; part: LeavePart; qty: number; unit: BalanceUnit; state: string }
 /* A ledger row. qty is signed, positive adds to the balance. `counts` marks
    a row that moves what is taken (days returned); an informational row (opening
@@ -365,16 +410,26 @@ export function balanceOf(o: { ent: Entitlement; base: LeaveBase; contractedHour
   return { ent: o.ent, unit: o.base.unit, takenD, takenH, pending, pendingH, leftD: round1(o.ent.days - takenD - pending),
     leftH: round2(o.ent.hours - takenH - pendingH), toil, toilPending, toilLeft: round2(toil - toilPending), toilBy: o.base.toilBy };
 }
-/* The balance of one leave year (review I2). This year's is entitlement at
-   the clock less the seeded base and this year's requests. Another year's
-   takes the same policy and contracted hours with service counted to that
-   year's start, nothing taken before it and no carry-over (LV-17 is out of
-   scope). */
+/* The balance of one leave year. Legacy seed bases carry an explicit opening-
+   used baseline so enabling carry-over does not invent a previous-year balance. */
 export interface YearBalanceInput { facts: PersonLeaveFacts; policy: LeavePolicy; base: LeaveBase; requests: readonly LeaveRecord[]; ledger: readonly LedgerRow[];
-  today: string; finYearStart: string }
+  today: string; finYearStart: string; fullTimeWeeklyHours?: number; bhPaid?: boolean; workingBankHolidays?: (year: LeaveYearSpan) => number }
 export function yearBalance(o: YearBalanceInput, year: LeaveYearSpan): Balance {
   const current = inYear(o.today, year);
-  return balanceOf({ ent: entitlement(o.facts, o.policy, current ? o.today : year.start), base: current ? o.base : { ...o.base, taken: 0 },
+  const options: EntitlementOptions = { fullTimeWeeklyHours: o.fullTimeWeeklyHours, bhPaid: o.bhPaid,
+    workingBankHolidays: o.workingBankHolidays?.(year) ?? 0 };
+  const priorYear = leaveYear(addDays(year.start, -1), o.finYearStart);
+  const priorOptions: EntitlementOptions = { ...options, workingBankHolidays: o.workingBankHolidays?.(priorYear) ?? 0 };
+  const priorEnt = entitlement(o.facts, o.policy, priorYear.start, priorOptions);
+  const baselineTakenD = o.base.carryBaselineYear === priorYear.start ? o.base.carryBaselineTakenD : undefined;
+  const baselineTaken = baselineTakenD !== undefined
+    ? (o.base.unit === 'hours' ? baselineTakenD * dailyHours(o.facts.contractedHours) : baselineTakenD)
+    : o.base.year === priorYear.label ? o.base.taken : 0;
+  const priorBalance = balanceOf({ ent: priorEnt, base: { ...o.base, taken: baselineTaken }, contractedHours: o.facts.contractedHours,
+    requests: o.requests, ledger: o.ledger, today: o.today, finYearStart: o.finYearStart, year: priorYear });
+  const carry = Math.max(0, Math.min(o.policy.carry, priorBalance.leftD));
+  const ent = entitlement(o.facts, o.policy, current ? o.today : year.start, { ...options, carry: { days: round1(carry), from: priorYear.label } });
+  return balanceOf({ ent, base: current ? o.base : { ...o.base, taken: 0 },
     contractedHours: o.facts.contractedHours, requests: o.requests, ledger: o.ledger, today: o.today, finYearStart: o.finYearStart, year });
 }
 /* What a balance reads as: "13.5 of 25 days left", or hours for a bank worker. */
@@ -388,10 +443,22 @@ export const ledgerQty = (l: Pick<LedgerRow, 'qty' | 'unit'>) => `${l.qty > 0 ? 
 export interface SlaState { daysLeft: number; escalated: boolean; stage: number; tone: 'warn' | 'err' }
 /* Derived from the date raised, the SLA and the clock. No timer: a request is
    escalated once its days run out, or where the seed says it already was. */
-export function slaOf(r: { raised: string; escalated?: boolean }, slaDays: number, today: string, stageCount: number): SlaState {
-  const daysLeft = slaDays - daysBetween(r.raised, today);
+export function slaOf(r: { raised: string; escalated?: boolean }, slaDays: number, today: string, stages: number | readonly LeaveStage[]): SlaState {
+  const daysLeft = slaDays - daysBetween(r.raised, today), elapsed = daysBetween(r.raised, today);
+  const stageCount = typeof stages === 'number' ? stages : stages.length;
   const escalated = !!r.escalated || daysLeft < 0;
-  return { daysLeft, escalated, stage: Math.min(escalated ? 3 : 2, Math.max(1, stageCount)), tone: daysLeft <= 1 || escalated ? 'err' : 'warn' };
+  let stage = Math.min(2, Math.max(1, stageCount));
+  if (escalated) {
+    stage = Math.min(3, stageCount);
+    if (typeof stages !== 'number') {
+      let threshold = slaDays;
+      stages.slice(2).forEach((entry, i) => {
+        if (elapsed > threshold) stage = Math.min(i + 3, stageCount);
+        threshold += entry.wait;
+      });
+    }
+  }
+  return { daysLeft, escalated, stage, tone: daysLeft <= 1 || escalated ? 'err' : 'warn' };
 }
 export const slaPillText = (s: SlaState, slaDays: number, escalateTo: string) =>
   (s.escalated ? `Escalated · ${escalateTo}` : `${Math.max(0, s.daysLeft)} of ${slaDays} days left`);
@@ -448,7 +515,6 @@ export const daysReturnedToast = (n: number, name: string) => `${plural(n, 'day'
 export const tellManagerToast = (manager: string) => `Messaging is not built yet. Nothing has been sent to ${manager}.`;
 
 /* ---------------------------------------------- sickness (D9) */
-export const SICK_REASONS = ['Cold or flu', 'Stomach upset', 'Musculoskeletal', 'Mental health', 'Other'] as const;
 export interface RtwRequest { requestedAt: string; by: RotaActor }
 /* to is '' while the colleague is still off. */
 export interface SickEpisode { id: string; personCode: string; from: string; to: string; reason: string; note: string; rtw: RtwRequest | null }
@@ -461,10 +527,10 @@ export type SickPlan = { kind: 'new'; from: string; to: string } | { kind: 'exte
    extends it rather than starting a new spell. A range that touches several
    episodes joins them all into the earliest, from its first day to the
    latest last day (open if any is), so Bradford counts one spell. */
-export function recordSicknessPlan(episodes: readonly Pick<SickEpisode, 'id' | 'from' | 'to'>[], input: SickInput, today: string): { ok: true; plan: SickPlan } | { ok: false; problem: LeaveRefusal } {
+export function recordSicknessPlan(episodes: readonly Pick<SickEpisode, 'id' | 'from' | 'to'>[], input: SickInput, today: string, reasons: readonly string[]): { ok: true; plan: SickPlan } | { ok: false; problem: LeaveRefusal } {
   if (!isIsoDate(input.from)) return { ok: false, problem: { code: 'VALIDATION', message: 'Pick the first day off.', next: 'Choose the day the absence began.', field: 'from' } };
   if (input.to && (!isIsoDate(input.to) || input.to < input.from)) return { ok: false, problem: { code: 'VALIDATION', message: LAST_BEFORE_FIRST, next: 'Correct the dates.', field: 'to' } };
-  if (!(SICK_REASONS as readonly string[]).includes(input.reason)) return { ok: false, problem: { code: 'VALIDATION', message: 'Choose the reason given.', next: 'Pick a reason from the list.', field: 'reason' } };
+  if (!reasons.includes(input.reason)) return { ok: false, problem: { code: 'VALIDATION', message: 'Choose the reason given.', next: 'Pick a reason from the list.', field: 'reason' } };
   const newEnd = input.to || input.from;
   const touched = [...episodes].sort((a, b) => a.from.localeCompare(b.from) || a.id.localeCompare(b.id))
     .filter(e => !(input.from > addDays(episodeEnd(e, today), 1) || newEnd < addDays(e.from, -1)));

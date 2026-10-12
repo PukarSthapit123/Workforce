@@ -43,6 +43,8 @@ import {
   type OnboardingConfig, type OnbPolicy, type OnbStepId, type Verifier,
 } from './onboarding';
 import type { ClockStyle, DateFormat, WeekStart } from './time';
+import { formatDmy } from './time';
+import type { LeaveConfig } from './leave';
 
 /* ------------------------------------------------------------- shapes */
 export type TemplateScope = 'config' | 'structure';
@@ -87,8 +89,10 @@ export interface TemplateOnbPolicy { id: string; label: string; ver: string; sum
 export interface TemplateOnboarding { steps: TemplateOnbStep[]; documents: TemplateOnbDocument[]; policies: TemplateOnbPolicy[] }
 export interface TemplateTenantSettings {
   timezone: string; dateFormat: DateFormat; clock: ClockStyle; weekStart: WeekStart;
+  fullTimeWeeklyHours: number;
   financialYear: { start: string; end: string };
 }
+export type TemplateLeaveConfig = Omit<LeaveConfig, 'finYearStart'>;
 export interface Template {
   name: string; description: string; scope: TemplateScope;
   /* every switch: Workforce core, Timesheet and its capabilities, Rota, Leave, Onboarding */
@@ -104,11 +108,12 @@ export interface Template {
   structure?: Partial<TemplateStructure>;
   onboarding?: TemplateOnboarding;
   tenantSettings?: TemplateTenantSettings;
+  leaveConfig?: TemplateLeaveConfig;
 }
 
 export const TEMPLATE_SCOPES: readonly { key: TemplateScope; label: string; note: string }[] = [
   { key: 'config', label: 'Configuration only',
-    note: 'Modules, features, employee types, labels, the capture layout, the approval chain, role names and the onboarding setup. Nothing about this organisation’s structure or people.' },
+    note: 'Modules, features, employee types, labels, the capture layout, the approval chain, role names, Leave setup and onboarding. Nothing about this organisation’s structure or people.' },
   { key: 'structure', label: 'Configuration and structure',
     note: 'The above, plus locations, departments, cost centres, job profiles and contracts. Never its people.' },
 ];
@@ -272,6 +277,7 @@ export interface CaptureSource {
   /* the onboarding setup and its policies, when this tenant has them */
   onboarding?: { config: OnboardingConfig; policies: readonly OnbPolicy[] };
   tenantSettings?: TemplateTenantSettings;
+  leaveConfig?: TemplateLeaveConfig;
 }
 /* The onboarding part (D12): the prototype's onbDocs and onbPolicies, with the step switches. */
 export function captureOnboarding(o: { config: OnboardingConfig; policies: readonly OnbPolicy[] }): TemplateOnboarding {
@@ -296,6 +302,7 @@ export function captureTemplate(name: string, description: string, scope: Templa
     approvalChain: src.chain.map(x => ({ ...x })),
   };
   if (src.tenantSettings) t.tenantSettings = structuredClone(src.tenantSettings);
+  if (src.leaveConfig) t.leaveConfig = structuredClone(src.leaveConfig);
   if (src.onboarding) t.onboarding = captureOnboarding(src.onboarding);
   if (scope === 'structure') t.structure = structuredClone(src.structure);
   return t;
@@ -309,7 +316,7 @@ export const templateFileName = (key: string) => `qnipay-template-${key}.json`;
 /* The keys a template may hold, at each level. Anything else in a file is
    left out and listed (D3): the prototype's company details, pay codes, pay
    rules, allowances and roster among them. */
-const TOP = ['name', 'description', 'scope', 'modules', 'flags', 'extras', 'labels', 'employeeTypes', 'roleNames', 'approvalChain', 'structure', 'onboarding', 'tenantSettings'];
+const TOP = ['name', 'description', 'scope', 'modules', 'flags', 'extras', 'labels', 'employeeTypes', 'roleNames', 'approvalChain', 'structure', 'onboarding', 'tenantSettings', 'leaveConfig'];
 const EXTRA_KEYS = ['weekGrid', 'weekLayout', 'breaksMax', 'vehiclesMax'];
 const ROW_KEYS: Record<string, readonly string[]> = {
   employeeTypes: ['code', 'name', 'category', 'mode', 'uom', 'capabilities'],
@@ -360,7 +367,12 @@ export function readTemplateFile(text: string): FileRead {
     if ('policies' in o) o.policies = rows(o.policies, 'onbPolicies', 'onboarding.policies');
     t.onboarding = o;
   }
-  if (isObj(t.tenantSettings)) t.tenantSettings = keep(t.tenantSettings, ['timezone', 'dateFormat', 'clock', 'weekStart', 'financialYear'], 'tenantSettings');
+  if (isObj(t.tenantSettings)) t.tenantSettings = keep(t.tenantSettings, ['timezone', 'dateFormat', 'clock', 'weekStart', 'fullTimeWeeklyHours', 'financialYear'], 'tenantSettings');
+  if (isObj(t.leaveConfig)) {
+    const allowed = ['slaDays', 'toilMax', 'toilWindow', 'bhPaid', 'absenceTrigger', 'autoEntitlement', 'blocksTimesheet',
+      'affectsRota', 'minNotice', 'cancelWindow', 'sicknessReasons', 'types', 'policies', 'stages', 'typeLeave'];
+    t.leaveConfig = keep(t.leaveConfig, allowed, 'leaveConfig');
+  }
   if (isObj(t.structure)) {
     if (t.scope !== 'structure') { ignored.add('structure'); delete t.structure; }
     else {
@@ -397,8 +409,9 @@ export interface TenantState {
      the people still onboarding who hold an acknowledgement of it (those a new wording asks again) */
   onboarding?: { config: OnboardingConfig; policies: readonly OnbPolicy[]; acknowledged?: Readonly<Record<string, number>> };
   tenantSettings?: TemplateTenantSettings;
+  leaveConfig?: TemplateLeaveConfig;
 }
-export type PlanArea = 'modules' | 'features' | 'labels' | 'types' | 'roles' | 'chain' | 'structure' | 'people' | 'organisation' | 'onboarding';
+export type PlanArea = 'modules' | 'features' | 'labels' | 'types' | 'roles' | 'chain' | 'structure' | 'people' | 'organisation' | 'onboarding' | 'leave';
 export interface PlanLine { area: PlanArea; text: string }
 export interface ApplySteps {
   /* module switches in the order they run, and where they leave the tenant */
@@ -418,6 +431,7 @@ export interface ApplySteps {
     policiesUpdated: (Pick<TemplateOnbPolicy, 'id' | 'label' | 'ver' | 'sum' | 'body'> & { reask: boolean })[]; policiesAdded: TemplateOnbPolicy[];
   };
   tenantSettings: Partial<TemplateTenantSettings>;
+  leaveConfig?: TemplateLeaveConfig;
 }
 export interface ApplyPlan { changes: PlanLine[]; added: PlanLine[]; leftAlone: PlanLine[]; steps: ApplySteps }
 
@@ -567,17 +581,22 @@ export function planApply(t: Template, s: TenantState,
 
   if (t.tenantSettings && s.tenantSettings) {
     const wanted = t.tenantSettings, held = s.tenantSettings;
-    const scalar: (keyof Omit<TemplateTenantSettings, 'financialYear'>)[] = ['timezone', 'dateFormat', 'clock', 'weekStart'];
+    const scalar: (keyof Omit<TemplateTenantSettings, 'financialYear'>)[] = ['timezone', 'dateFormat', 'clock', 'weekStart', 'fullTimeWeeklyHours'];
     for (const key of scalar) {
       if (wanted[key] === held[key]) continue;
       Object.assign(steps.tenantSettings, { [key]: wanted[key] });
-      const label = key === 'dateFormat' ? 'Date format' : key === 'weekStart' ? 'Week starts on' : key === 'clock' ? 'Clock' : 'Time zone';
+      const label = key === 'dateFormat' ? 'Date format' : key === 'weekStart' ? 'Week starts on' : key === 'clock' ? 'Clock'
+        : key === 'fullTimeWeeklyHours' ? 'Full-time weekly hours' : 'Time zone';
       changes.push({ area: 'organisation', text: `${label}: ${wanted[key]}.` });
     }
     if (wanted.financialYear.start !== held.financialYear.start || wanted.financialYear.end !== held.financialYear.end) {
       steps.tenantSettings.financialYear = { ...wanted.financialYear };
-      changes.push({ area: 'organisation', text: `Financial year: ${wanted.financialYear.start} to ${wanted.financialYear.end}.` });
+      changes.push({ area: 'organisation', text: `Financial year: ${formatDmy(wanted.financialYear.start)} to ${formatDmy(wanted.financialYear.end)}.` });
     }
+  }
+  if (t.leaveConfig && s.leaveConfig && JSON.stringify(t.leaveConfig) !== JSON.stringify(s.leaveConfig)) {
+    steps.leaveConfig = structuredClone(t.leaveConfig);
+    changes.push({ area: 'leave', text: 'Leave setup settings, policies, types, sickness reasons and escalation changed.' });
   }
 
   /* structure: new codes are added, held codes stay exactly as they are */

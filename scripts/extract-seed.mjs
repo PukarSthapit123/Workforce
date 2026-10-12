@@ -11,7 +11,8 @@ import { tsImport } from 'tsx/esm/api';
 const here = dirname(fileURLToPath(import.meta.url));
 const SRC = process.env.PROTOTYPE_PATH || resolve(here, '../../Qnipay workforce cc/mockup/qnipay-workforce-v15.html');
 const html = readFileSync(SRC, 'utf8');
-const OUT = resolve(here, '../src/mocks/seed');
+/* SEED_OUT writes elsewhere, so the drift test (src/mocks/seed/extract.test.ts) can compare a fresh run with the committed seeds. */
+const OUT = process.env.SEED_OUT ? resolve(process.env.SEED_OUT) : resolve(here, '../src/mocks/seed');
 /* Built in UTC, not with local-time arguments: the latter makes FROZEN.getTime()
    (and so STAMP, and so every record's updatedAt) shift with the host machine's
    timezone offset, which means a re-run on a different machine rewrites every
@@ -136,7 +137,7 @@ function shape(tenantKey, data, PERMS_META, PERM_GROUPS, PROFILE_CHANGES, ref) {
   const capabilityGroups = PERM_GROUPS.map((g, i) => meta({ id: g.k, label: g.label, description: g.desc, order: i }));
   const rotaData = (data.CFG || {}).modules?.R ? rota(data, people) : {};
   const tenant = meta({ id: 'tenant', name: (data.TENANT || {}).name || tenantKey, template: (data.CFG || {}).template || tenantKey,
-    modules: (data.CFG || {}).modules || {}, flags: (data.CFG || {}).flags || {}, ...tenantSettings(data) });
+    modules: (data.CFG || {}).modules || {}, flags: tenantFlags((data.CFG || {}).flags), ...tenantSettings(data) });
   /* 1c group 6 (D10): the prototype's ver is the notice's textVersion (its
      words); version is the record's concurrency counter. Its 'DD/MM/YYYY HH:MM'
      London stamps become instants, and an acknowledgement names a person by code. */
@@ -231,20 +232,33 @@ function delegationSeed(people) {
    maximum, CFG.maxVehicles), and the restore memory (MOD_RESTORE), empty.
    The weekly grid's capture and layout already live on timesheetConfig and
    the rota horizon on rotaConfig, so they are not repeated here (D6). The
-   pay-period cut-off lives on timesheetConfig too. */
+   pay-period cut-off lives on timesheetConfig too. Module 8: the time zone,
+   date format, clock and week start are the defaults in src/domain/time.ts
+   (D6), and full-time weekly hours the default in src/domain/leave.ts (D3). */
+/* Module 8: a switch whose rule is not built says so (brief: "works or says
+   plainly that it is not built yet"). PAY_SELF (Payroll self-service) has never
+   been carried, in the catalogue or on a tenant: payslips and tax documents
+   belong to the parked Payroll module. */
+const NOT_BUILT_FLAGS = {
+  AUTO_OT: { label: 'Weekly overtime split (not built yet)', desc: 'Not built yet. The timesheet rules do not split hours past a weekly threshold.' },
+};
+const LEFT_BEHIND_FLAGS = new Set(['PAY_SELF']);
+const tenantFlags = flags => Object.fromEntries(Object.entries(flags || {}).filter(([k]) => !LEFT_BEHIND_FLAGS.has(k)));
 function tenantSettings(data) {
   const T = data.TENANT || {};
   return {
     company: { registration: T.reg || '', address: T.addr || '', country: T.country || 'United Kingdom', nmwCheck: T.nmw !== false,
       bankHolidayRegion: T.bh || 'England & Wales', payFrequency: T.freq || 'Weekly', weekEnding: T.weekEnd || 'Sunday', firstPayDate: iso(T.firstPay) },
     financialYear: { start: iso(literalFinYear.start), end: iso(literalFinYear.end), label: literalFinYear.label },
-    weekStart: 'Monday',
+    timezone: timeRules.DEFAULT_LOCALE.timezone, dateFormat: timeRules.DEFAULT_LOCALE.dateFormat, clock: timeRules.DEFAULT_LOCALE.clock,
+    weekStart: timeRules.DEFAULT_LOCALE.weekStart,
     bankHolidays: Object.entries(literalBankHolidays).map(([k, name]) => {
       const [y, m, d] = k.split('-').map(Number);
       return { date: `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`, name };
     }).sort((a, b) => a.date.localeCompare(b.date)),
     extras: { breaksMax: literalRepeats.breaks.max, vehiclesMax: (data.CFG || {}).maxVehicles ?? 4 },
     restore: {},
+    fullTimeWeeklyHours: leaveRules.DEFAULT_FULL_TIME_WEEKLY_HOURS,
   };
 }
 
@@ -257,6 +271,34 @@ function tenantSettings(data) {
    the order timesheets used (D10 of module 2): the signed-in employee's
    records first. The leaver goes to the first of those reports who has left
    (state leaver, else archived). */
+/* Module 8 group 3: P's policies describe their rules in words. Each method
+   becomes the method the entitlement maths reads, with what P said about it
+   (D6: every number shown stays the same):
+   - prorata: the fixed methods were always pro-rated by contracted hours; the
+     rest show no balance, so it is off where P said "Not applied" or "Accrues".
+   - bankHolidayHandling: STD's working days come out of entitlement when bank
+     holidays are not paid on top; ACC's are in its rate; the rest have none.
+   - approval: P's Sickness "approval: false" meant a manager records it, so a
+     sickness request still waits for a manager (review I3).
+   - sla: none of its own, so the tenant SLA times every request, as it did in
+     P (P showed each policy's figure but only ever read LEAVE_CFG.slaDays).
+   The free-text serviceRule becomes rules P's maths
+     read ("+1 day per 3 years, capped at 5"); "statutory", "escalate" and "bh"
+     are not carried, as nothing reads them. */
+const POLICY_METHOD = {
+  'Statutory + service': 'fixed', 'Fixed days per year': 'fixed', '12.07% of hours worked': 'accrual', 'Banked from approved overtime': 'none',
+  'Unpaid, no balance': 'none', 'Occupational scheme': 'sickness', 'Statutory scheme, managed outside Workforce': 'external',
+};
+const SERVICE_RULE = /^\+(\d+(?:\.\d+)?) days? per (\d+) years?(?:,? capped at (\d+(?:\.\d+)?))?$/i;
+function leavePolicy(p) {
+  const method = POLICY_METHOD[p.method];
+  if (!method) throw new Error('extractor: no leave method for the policy method ' + p.method);
+  const rule = SERVICE_RULE.exec(p.serviceRule || '');
+  return { code: p.code, name: p.name, method, unit: p.unit, base: p.base,
+    prorata: method === 'fixed', carry: p.carry, approval: method === 'sickness' ? true : !!p.approval, sla: null,
+    serviceRules: rule ? [{ afterYears: Number(rule[2]), add: Number(rule[1]), cap: Number(rule[3] ?? 400) }] : [],
+    bankHolidayHandling: /^Included/.test(p.bh) ? 'included' : method === 'fixed' && /^On top/.test(p.bh) ? 'working-days' : 'not-applicable' };
+}
 const LEAVE_ROLES = ['CP-1042', 'CP-1201', 'CP-1402', 'CP-1088', 'CP-1153', 'CP-1266'];
 const LEAVE_STATE = { Pending: 'pending', Approved: 'approved', Rejected: 'declined', Cancelled: 'cancelled' };
 const dayStamp = isoDate => `${isoDate}T08:00:00.000Z`;   // 09:00 in London summer time
@@ -287,13 +329,14 @@ function leave(data, people, ref, rotaWeeks) {
   const actor = p => ({ personCode: p.code, name: p.name });
   const deciderFor = (name, p) => people.find(x => norm(x.name) === norm(name))
     || people.find(x => managers.has(x.code) && x.location === p.location);
-  const cfg = { ...literalLeaveCfg };
+  /* Module 8 group 3: escalation comes from the stages, the unit and carry-over from each policy, and buy and sell is Payroll's */
+  const cfg = Object.fromEntries(Object.entries(literalLeaveCfg).filter(([k]) => !['escalateTo', 'unit', 'carry', 'buySell'].includes(k)));
   const typeLeave = Object.fromEntries(Object.entries(data.TYPES || {}).map(([k, t]) => [k, { policy: (t.leave || {}).policy || 'STD', unit: (t.leave || {}).unit || 'days' }]));
   const types = (data.LEAVE_TYPES || []).map(t => ({ code: t.code, name: t.name, icon: t.icon, short: t.short, policy: t.policy, paid: !!t.paid,
     evidence: !!t.evidence, unit: t.unit, active: t.active !== false }));
-  const policies = literalLeavePolicies.map(p => ({ ...p, method: plain(p.method) }));
+  const policies = literalLeavePolicies.map(leavePolicy);
   const stages = literalLeaveStages.map(s => ({ n: s.n, who: s.who, action: plain(s.action), wait: s.wait, channel: s.ch }));
-  const leaveConfig = meta({ id: 'leaveConfig', ...cfg, types, policies, stages, typeLeave });
+  const leaveConfig = meta({ id: 'leaveConfig', ...cfg, types, policies, stages, typeLeave, sicknessReasons: [...R.DEFAULT_LEAVE_CONFIG.sicknessReasons] });
   const rotaOn = R.leaveWritesRota(CFG.modules || {}, CFG.flags || {});
 
   /* Requests: P's states, dates and SLA facts; the cover effect as P stored it at send. */
@@ -324,6 +367,7 @@ function leave(data, people, ref, rotaWeeks) {
      lowered to the half day that fits, so no colleague starts over their balance. */
   const leavers = new Set(literalLeavers.map(L => mapped(L.eid)).filter(Boolean));
   const bases = {}, clamped = [];
+  const thisYear = R.leaveYear(today, cfg.finYearStart), lastYear = R.leaveYear(addIsoDays(thisYear.start, -1), cfg.finYearStart);
   for (const p of people) {
     const lv = lvOf(p.code), unit = lv.unit === 'hours' ? 'hours' : 'days';
     const tl = R.typeLeaveFor(typeLeave, p.employeeType), pol = R.policyBy(policies, tl.policy);
@@ -336,8 +380,13 @@ function leave(data, people, ref, rotaWeeks) {
       if (taken > room) { clamped.push(`${p.code} ${taken}→${room}`); taken = room; }
     }
     const id = `lb_${p.code}`;
-    bases[id] = meta({ id, personCode: p.code, year: R.leaveYear(today, cfg.finYearStart).label, unit, taken: Math.max(0, Number(taken.toFixed(2))),
-      toil: lv.toil || 0, toilBy: iso(lv.toilBy), ...(unit === 'hours' ? { accruedHours: lv.entH || 0 } : {}) });
+    /* Module 8 group 3: P keeps no record of last year, so last year counts as
+       fully used and nobody seeded carries days over (D6: the balances shown stay
+       as they were). A policy with no carry cap carries nothing either way. */
+    const usedLastYear = pol.carry > 0 ? R.entitlement(facts, pol, lastYear.start).days : 0;
+    bases[id] = meta({ id, personCode: p.code, year: thisYear.label, unit, taken: Math.max(0, Number(taken.toFixed(2))),
+      toil: lv.toil || 0, toilBy: iso(lv.toilBy), ...(unit === 'hours' ? { accruedHours: lv.entH || 0 } : {}),
+      carryBaselineYear: lastYear.start, carryBaselineTakenD: usedLastYear });
   }
   if (clamped.length) console.log('leave base lowered to fit the entitlement:', clamped.join(', '));
 
@@ -375,7 +424,7 @@ function leave(data, people, ref, rotaWeeks) {
     spans.push([latestFrom, latestDays]);
     spans.forEach(([from, len], i) => {
       const id = `sk_${String(++n).padStart(3, '0')}`, last = i === spans.length - 1;
-      episodes[id] = meta({ id, personCode: code, from, to: addIsoDays(from, len - 1), reason: R.SICK_REASONS[(n - 1) % R.SICK_REASONS.length],
+      episodes[id] = meta({ id, personCode: code, from, to: addIsoDays(from, len - 1), reason: SICK_REASONS[(n - 1) % SICK_REASONS.length],
         note: last && !a.trig && a.stage !== 'No action' ? a.stage : '', rtw: null });
     });
   }
@@ -467,6 +516,10 @@ function rota(data, people) {
 }
 
 /* ---- module 2: timesheets ---- */
+/* Module 8 group 2: no rule reads a weekly overtime threshold, so P's otWeekly
+   and each type's overtime block (t.ot) are left behind, and the AUTO_OT switch
+   says it is not built (NOT_BUILT_FLAGS). The daily threshold, otDaily, stays. */
+const withoutWeeklyOvertime = rules => Object.fromEntries(Object.entries(rules).filter(([k]) => k !== 'otWeekly'));
 /* No money crosses into the app (brief D11): an allowance's £ value, a flat pay
    code's value, a rule value in pounds and the expenses-to-claim field all stay behind. */
 const MONEY_FIELDS = new Set(['expenses']);
@@ -577,12 +630,10 @@ function timesheets(data, people) {
     fields: Object.fromEntries(Object.entries(t.fields || {}).filter(([c]) => !MONEY_FIELDS.has(c))),
     allowances: t.allow || [],
     rules: (t.rules || []).map(r => ({ trigger: plain(r.trig), when: r.when || '', code: r.code, value: isMoney(r.val) ? '' : (r.val || ''), how: r.how || 'Auto (BC)' })),
-    overtime: (t.uom || 'hour') === 'day' ? null : {
-      threshold: Number(t.ot?.threshold ?? 40), multiplier: Number(t.ot?.mult ?? 1.5), weekendMultiplier: Number(t.ot?.wbh ?? 1.5) },
   }]));
   const allowances = Object.fromEntries(Object.entries(literalAllowanceLib).map(([code, a]) => [code,
     { code, label: a.label, payCode: a.pay, tier: a.tier, element: `PE-${code.split('_')[0]}`, basis: 'flat' }]));
-  const config = meta({ id: 'timesheetConfig', rules: data.TS_RULES || {}, cutoff: TENANT.cutoff || 'Monday 12:00',
+  const config = meta({ id: 'timesheetConfig', rules: withoutWeeklyOvertime(data.TS_RULES || {}), cutoff: TENANT.cutoff || 'Monday 12:00',
     timeFormat: TENANT.timeFmt === 'HH:MM' ? 'HH:MM' : 'h m', returnReasonRequired: TENANT.returnReason !== false,
     weekGrid: CFG.weekGrid || 'hours', weekLayout: CFG.weekLayout || 'classic',
     fieldDefaults: Object.fromEntries(Object.entries(CFG.fields || {}).filter(([c]) => !MONEY_FIELDS.has(c))),
@@ -636,6 +687,8 @@ const literalDelegations = literal('DELEGATIONS');
 const literalDocuments = literal('DOCUMENTS');
 const literalPayrollDocs = literal('PAYROLL_DOCS');
 const leaveRules = await tsImport('../src/domain/leave.ts', import.meta.url);
+const timeRules = await tsImport('../src/domain/time.ts', import.meta.url);
+const SICK_REASONS = leaveRules.DEFAULT_LEAVE_CONFIG.sicknessReasons;
 /* Module 5: the onboarding stores, read from the source when the store lacks them. */
 const literalOnbSteps = literal('ONB_STEPS');
 const literalOnbDocs = literal('ONB_DOCS');
@@ -672,8 +725,9 @@ const renameTenant = json => json.replace(/qcic/g, 'qnipay').replace(/QCIC/g, 'Q
   .replace('"template": "qnipay"', '"template": "qcic"');
 writeFileSync(resolve(OUT, 'qnipay.json'), renameTenant(JSON.stringify(shape('qnipay', qnipay, PERMS_META, PERM_GROUPS, PROFILE_CHANGES, social), null, 1)) + '\n');
 writeFileSync(resolve(OUT, 'social.json'), JSON.stringify(shape('social', social, PERMS_META, PERM_GROUPS, PROFILE_CHANGES, social), null, 1) + '\n');
+const flagCatalogue = literal('FLAGS').filter(f => !LEFT_BEHIND_FLAGS.has(f.code)).map(f => ({ ...f, ...NOT_BUILT_FLAGS[f.code] }));
 writeFileSync(resolve(OUT, 'meta.json'), JSON.stringify({
-  flags: literal('FLAGS'), modules: literal('MODULES'), permGroups: literal('PERM_GROUPS'), empStates: literal('EMP_STATES'),
+  flags: flagCatalogue, modules: literal('MODULES'), permGroups: literal('PERM_GROUPS'), empStates: literal('EMP_STATES'),
   supportLevels: literal('SUPPORT_LEVELS'), typeArchetypes, typeCapabilities: literal('CAPS'), selfFields: literal('SELF_FIELDS'),
   timesheetFields, timesheetRepeats: literal('REPEATS'),
 }, null, 1) + '\n');

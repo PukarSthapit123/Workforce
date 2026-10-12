@@ -22,6 +22,14 @@ test('contracts list every person with their hours, with full test id coverage',
   expect(screen.getByTestId(tid.contracts.row('CP-1288'))).toBeInTheDocument();
   expectTestIdCoverage(document.body);
 });
+test('full or part time follows the tenant full-time week, which is changed on Calendar (D3)', async () => {
+  const t = store.coll<{ fullTimeWeeklyHours: number }>('tenant').tenant;
+  if (t) t.fullTimeWeeklyHours = 30;
+  renderPage(<ContractsPage />);
+  expect(await screen.findByTestId(tid.contracts.fullTime)).toHaveTextContent('Full time is 30 hours a week or more.');
+  expect(screen.getByTestId(tid.contracts.fullTimeLink)).toHaveAttribute('href', '/setup/acal');
+  expect(screen.getByTestId(tid.contracts.row('CP-1088'))).toHaveTextContent('Full time');
+});
 test('an hours change is saved through the person record and audited, with full test id coverage on the form', async () => {
   const v = personOf('CP-1042').version;
   await openEdit('CP-1042');

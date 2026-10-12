@@ -14,6 +14,7 @@ const DEFAULT_LABELS: Record<string, string> = Object.fromEntries(meta.timesheet
 const EXTRAS: FlagExtras = { weekGrid: 'times', weekLayout: 'classic', breaksMax: 5, vehiclesMax: 4 };
 const EMPTY: TemplateStructure = { departments: [], costCentres: [], locations: [], jobProfiles: [], contracts: [] };
 const TENANT_SETTINGS = { timezone: 'Europe/London', dateFormat: 'dd/mm/yyyy' as const, clock: '24h' as const, weekStart: 'Monday' as const,
+  fullTimeWeeklyHours: 37.5,
   financialYear: { start: '2026-04-01', end: '2027-03-31' } };
 const DEFAULT_CHAINS = Object.fromEntries(CHAIN_MODULES.map(m => [m, defaultChainFor(m)])) as Record<ChainModule, ChainStep[]>;
 
@@ -192,14 +193,14 @@ describe('the apply plan (D1)', () => {
   });
   test('tenant date, time, week and financial-year settings are planned as configuration', () => {
     const t: Template = { ...shipped('social'), tenantSettings: {
-      timezone: 'Pacific/Auckland', dateFormat: 'yyyy-mm-dd', clock: '12h', weekStart: 'Sunday',
+      timezone: 'Pacific/Auckland', dateFormat: 'yyyy-mm-dd', clock: '12h', weekStart: 'Sunday', fullTimeWeeklyHours: 40,
       financialYear: { start: '2026-07-01', end: '2027-06-30' },
     } };
     const p = planApply(t, socialState(), { mayRenameRoles: true, mayChangeChains: true, mayChangeTypes: true });
     expect(p.steps.tenantSettings).toEqual(t.tenantSettings);
     expect(p.changes.filter(x => x.area === 'organisation').map(x => x.text)).toEqual([
       'Time zone: Pacific/Auckland.', 'Date format: yyyy-mm-dd.', 'Clock: 12h.', 'Week starts on: Sunday.',
-      'Financial year: 2026-07-01 to 2027-06-30.',
+      'Full-time weekly hours: 40.', 'Financial year: 01/07/2026 to 30/06/2027.',
     ]);
   });
 });

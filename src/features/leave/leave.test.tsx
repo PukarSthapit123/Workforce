@@ -170,7 +170,10 @@ describe('My leave', () => {
     expect(screen.getByTestId(tid.leave.entPolicy)).toHaveTextContent('Standard annual leave');
     expect(screen.getByTestId(tid.leave.entLine(0))).toHaveTextContent('24 days');
     expect(screen.getByTestId(tid.leave.entLine(2))).toHaveTextContent('40 h of 37.5 h full time');
-    expect(screen.getByTestId(tid.leave.entLine(4))).toHaveTextContent('24 days · 192.00 hours');
+    /* module 8: the trace now says how bank holidays and carry-over were treated, and ends with the entitlement */
+    expect(screen.getByTestId(tid.leave.entLine(4))).toHaveTextContent('On top of entitlement');
+    expect(screen.getByTestId(tid.leave.entLine(5))).toHaveTextContent('0 of 5 days carried from 2025/26');
+    expect(screen.getByTestId(tid.leave.entLine(6))).toHaveTextContent('24 days · 192.00 hours');
     expect(screen.getByTestId(tid.leave.entRemaining)).toHaveTextContent('12.5 days · 100.00 hours');
     expect(screen.getByTestId(tid.leave.entCarry)).toHaveTextContent('5 days');
     expect(screen.queryByTestId(tid.leave.simulate)).toBeNull();

@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { CalendarDays, Folder } from 'lucide-react';
 import { tid } from '@/testids';
-import { AdminCard, Button, ConfirmModal, Page, PageHead, Pill, Row, SettingRow, SettingSelect, SettingText, toastInfo, toastRefusal } from '@/ui';
+import { AdminCard, Button, ConfirmModal, Page, PageHead, Pill, Row, SettingRow, SettingSelect, SettingText, UnitInput, toastInfo, toastRefusal } from '@/ui';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import { ApiError } from '@/api/client';
 import { useTenant, useUpdateTenantSettings, type Tenant } from '@/api/tenant';
 import type { BankHolidayRecord } from '@/contract/tenant';
 import { bankHolidaysFor, type BankHolidayRegion } from '@/domain/bank-holidays';
 import { useLeaveConfig } from '@/api/leave';
+import { BANK_HOLIDAY_HANDLING_LABEL } from '@/domain/leave';
 import { useRotaConfig } from '@/api/rota';
 import { useExportSavedData, useResetSavedData, useRestoreSavedData, useSavedData } from '@/api/saved-data';
 import { useCaps } from '@/shell/useCaps';
@@ -20,7 +21,6 @@ import { WEEK_STARTS, addMonths, DOW_SHORT, dowMon, formatDmy } from '@/domain/t
    selected region. */
 const HORIZONS = [12, 6, 3] as const;
 const REGIONS: readonly BankHolidayRegion[] = ['England & Wales', 'Scotland', 'Northern Ireland', 'None'];
-const STD = 'STD';
 
 export function CalendarPage() {
   const tenant = useTenant();
@@ -41,13 +41,16 @@ function YearCard({ tenant }: { tenant: Tenant }) {
   const save = useUpdateTenantSettings();
   const fy = tenant.financialYear;
   const [start, setStart] = useState(fy.start), [end, setEnd] = useState(fy.end), [weekStart, setWeekStart] = useState(tenant.weekStart);
-  const dirty = start !== fy.start || end !== fy.end || weekStart !== tenant.weekStart;
+  const [fullTime, setFullTime] = useState(String(tenant.fullTimeWeeklyHours));
+  const fullTimeChanged = Number(fullTime) !== tenant.fullTimeWeeklyHours || fullTime.trim() === '';
+  const dirty = start !== fy.start || end !== fy.end || weekStart !== tenant.weekStart || fullTimeChanged;
   const apply = () => {
     if (!dirty) return;
-    save.mutate({ change: { financialYear: { start, end }, weekStart }, ifMatch: tenant.version },
-      { onSuccess: out => { if (out.auditId) toastInfo('Calendar settings saved.', 'The financial year and week start are live for everyone now.'); } });
+    save.mutate({ change: { financialYear: { start, end }, weekStart, ...(fullTimeChanged ? { fullTimeWeeklyHours: Number(fullTime) } : {}) }, ifMatch: tenant.version },
+      { onSuccess: out => { if (out.auditId) toastInfo('Calendar settings saved.', 'They are live for everyone now.'); } });
   };
-  const cancel = () => { setStart(fy.start); setEnd(fy.end); setWeekStart(tenant.weekStart); };
+  const cancel = () => { setStart(fy.start); setEnd(fy.end); setWeekStart(tenant.weekStart); setFullTime(String(tenant.fullTimeWeeklyHours)); save.clearFieldErrors(); };
+  const fullTimeError = save.fieldError('fullTimeWeeklyHours');
   const choose = (v: number) => {
     const h = HORIZONS.find(x => x === v);
     if (h === undefined || h === tenant.rotaHorizon) return;
@@ -73,6 +76,14 @@ function YearCard({ tenant }: { tenant: Tenant }) {
           {WEEK_STARTS.map(day => <option key={day} value={day}>{day}</option>)}
         </SettingSelect>
       </SettingRow>
+      {/* D3: the one full-time week, read by leave pro-rata and by Contracts' full or part time */}
+      <SettingRow title="Full-time weekly hours" desc="Leave pro-rata and the Contracts page compare contracted hours with this">
+        <div className="flex flex-col items-end max-md:items-start">
+          <UnitInput testId={tid.acal.fullTimeHours} unit="hrs" aria-label="Full-time weekly hours" type="number" inputMode="decimal" min="1" max="80" step="0.5"
+            value={fullTime} disabled={save.anyPending} aria-invalid={fullTimeError ? true : undefined} onChange={e => setFullTime(e.target.value)} />
+          {fullTimeError && <p role="alert" className="mt-xs text-xs text-err">{fullTimeError}</p>}
+        </div>
+      </SettingRow>
       <SettingRow title="Rota horizon" desc="How far ahead rota entries are generated from patterns">
         <div className="flex flex-col items-end max-md:items-start">
           <SettingSelect testId={tid.acal.horizon} aria-label="Rota horizon" value={tenant.rotaHorizon} disabled={save.anyPending}
@@ -97,8 +108,11 @@ function useTreatment(tenant: Tenant): string {
   const cfg = caps.has('mod_cfg');
   const leaveOn = tenant.modules.L === true, rotaOn = tenant.modules.R === true;
   const leave = useLeaveConfig(cfg && leaveOn), rota = useRotaConfig(cfg && rotaOn);
-  const policies = leave.data?.config.policies;
-  const bh = (policies?.find(p => p.code === STD) ?? policies?.[0])?.bh;
+  const cfgLeave = leave.data?.config;
+  const annual = cfgLeave?.types.find(t => t.code === 'AL');
+  const policy = annual ? cfgLeave?.policies.find(p => p.code === annual.policy) : undefined;
+  /* annual leave's policy: on top while bank holidays are paid on top (P's words), else how that policy handles them */
+  const bh = policy ? (cfgLeave?.bhPaid ? 'On top of entitlement' : BANK_HOLIDAY_HANDLING_LABEL[policy.bankHolidayHandling]) : undefined;
   const lv = !leaveOn ? 'module off' : bh ?? 'see Leave setup';
   const rt = !rotaOn ? 'module off' : rota.data ? (rota.data.config.bhEnhanced ? 'enhanced rate flagged' : 'standard') : 'see Rota setup';
   return `Leave: ${lv} · Rota: ${rt} · Timesheet: date-derived premium`;

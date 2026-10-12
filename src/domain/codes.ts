@@ -48,6 +48,17 @@ export function typeCodeProblem(code: string, existing: readonly string[]): Prob
   return null;
 }
 
+/* Module 8 group 3: a leave type's or a leave policy's code, given when it is
+   added (AL, STD). Requests, ledger rows and employee types name it. */
+export const LEAVE_CODE = /^[A-Z][A-Z0-9_-]{0,9}$/;
+export function leaveCodeProblem(code: string, existing: readonly string[]): Problem | null {
+  const c = normaliseCode(code);
+  if (!c) return { field: 'code', message: 'Code is required.' };
+  if (!LEAVE_CODE.test(c)) return { field: 'code', message: 'A code starts with a capital letter and has up to 10 capital letters, digits, dashes or underscores.' };
+  if (taken(c, existing)) return { field: 'code', message: `${c} already exists. Leave records name a type or policy by its code.` };
+  return null;
+}
+
 /* A patch that carries a different code is refused, whatever else it changes. */
 export function codeChangeProblem(field: string, label: string, before: string, patch: Record<string, unknown>): Problem | null {
   if (!(field in patch)) return null;

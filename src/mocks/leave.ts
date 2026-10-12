@@ -14,6 +14,7 @@ import { bump, refuse } from './http';
 import { serve } from './serve';
 import { actor, capsFor, requireCapability } from './auth';
 import { writeAudit } from './audit';
+import { leaveConfigChangeProblem } from './leave-config-usage';
 import { invalid } from './people';
 import { notifyEvent } from './notify';
 import { rotaCoverDays, writeAbsence, type AbsenceWritten } from './rota';
@@ -25,10 +26,10 @@ import {
   type SickEpisodeRecord, type TeamRequestView, type UpdateLeaveConfig,
 } from '@/contract/leave';
 import {
-  CANCELLED_TOAST, LEAVE_STATE, NOT_YOUR_REQUEST, ROTA_OFF_IMPACT, RTW_TOAST, SETTLED_IN_PAYROLL, SICK_REASONS, TRIGGER_NOTE,
+  CANCELLED_TOAST, LEAVE_STATE, NOT_YOUR_REQUEST, ROTA_OFF_IMPACT, RTW_TOAST, SETTLED_IN_PAYROLL, TRIGGER_NOTE,
   absenceMark, absenceOn, absenceRecordOn, approvedNotice, approvedToast, balanceText, bookedLeaveDates, bradford, bradfordTip, cancelTip,
   cancelWindowAdvisory, cancelledNotice, coverImpact, daysReturnedNotice, daysReturnedToast, daysToTakeText, decidedAudit, declineReasonProblem,
-  declinedNotice, declinedToast, entitlement, giveBackProblem, giveBackRow, isLeaveState, latestAbsenceText, leaveConfigProblem, leaveCoverReason,
+  declinedNotice, declinedToast, giveBackProblem, giveBackRow, isLeaveState, latestAbsenceText, leaveConfigProblem, leaveCoverReason,
   leaveRange, leaveTransitionProblem, leaveTypeName, leaveWritesRota, leaveYear, ledgerQty, monthsWorked, nextStepText, noticeAdvisory, policyBy,
   qtyText, reconcileLeaver, recordSicknessPlan, renumberLeaveStages, requestProblem, requestedAudit, requestedNotice, requestedToast,
   rtwNotices, rtwProblem, selfApprovalProblem, sentNotice, sickDuringLeave, sicknessDates, sicknessNotice, sicknessToast, slaBreachedText,
@@ -42,10 +43,16 @@ import { addDays, clockFromIso, daysBetween } from '@/domain/time';
 interface Meta { id: string; version: number; updatedAt: string }
 type StoredRequest = LeaveRequestRecord;
 type StoredEpisode = SickEpisodeRecord;
-type StoredLedger = Meta & LedgerRow & { personCode: string; by: RotaActor | null };
-interface StoredBase extends Meta { personCode: string; unit: BalanceUnit; taken: number; toil: number; toilBy: string; accruedHours?: number }
+type StoredLedger = Meta & LedgerRow & { personCode: string; by: RotaActor | null; leaveType?: string };
+interface StoredBase extends Meta {
+  personCode: string; unit: BalanceUnit; taken: number; toil: number; toilBy: string; accruedHours?: number; year?: string;
+  carryBaselineYear?: string; carryBaselineTakenD?: number;
+}
 interface StoredLeaver extends Meta { personCode: string; leaveDate: string; note: string }
-interface Tenant { modules: Record<string, boolean>; flags: Record<string, unknown> }
+interface Tenant {
+  modules: Record<string, boolean>; flags: Record<string, unknown>; fullTimeWeeklyHours: number;
+  bankHolidays: { date: string; name: string }[];
+}
 
 function tenant(): Tenant {
   const t = recordAt(store.coll<Tenant>('tenant'), 'tenant');
@@ -68,6 +75,12 @@ function config(): LeaveConfigRecord {
   if (!start) throw new Error('the tenant has no financial year');
   return { ...c, finYearStart: `${start.slice(8, 10)}/${start.slice(5, 7)}` };
 }
+const policySla = (c: LeaveConfigRecord, typeCode: string) => {
+  const type = c.types.find(t => t.code === typeCode);
+  const policy = type ? c.policies.find(p => p.code === type.policy) : undefined;
+  return policy?.sla ?? c.slaDays;
+};
+const escalationTarget = (c: LeaveConfigRecord, stage: number) => c.stages[stage - 1]?.who ?? c.stages.at(-1)?.who ?? '';
 const requests = () => store.coll<StoredRequest>('leaveRequests');
 const ledgerColl = () => store.coll<StoredLedger>('leaveLedger');
 const episodesColl = () => store.coll<StoredEpisode>('sickEpisodes');
@@ -120,11 +133,15 @@ function leaveOf(p: StoredPerson) {
   const base = stored ?? { unit: tl.unit, taken: 0, toil: 0, toilBy: '' };
   const contractedHours = Math.max(0, p.contractedHours);
   const facts = { contractedHours, start: p.start, ...(stored?.accruedHours !== undefined ? { accruedHours: stored.accruedHours } : {}) };
-  const ent = entitlement(facts, policy, today());
   const mine = requestsOf(p.code), ledger = ledgerOf(p.code);
-  const input = { facts, policy, base: { unit: base.unit, taken: base.taken, toil: base.toil, toilBy: base.toilBy }, requests: mine, ledger,
-    today: today(), finYearStart: c.finYearStart };
+  const bankHolidays = tenant().bankHolidays.map(h => h.date);
+  const workingBankHolidays = (year: LeaveYearSpan) => rotaCoverDays(p.code, bankHolidays.filter(d => d >= year.start && d <= year.end))
+    .filter(d => d.working).length;
+  const input = { facts, policy, base: { unit: base.unit, taken: base.taken, toil: base.toil, toilBy: base.toilBy, year: stored?.year,
+    carryBaselineYear: stored?.carryBaselineYear, carryBaselineTakenD: stored?.carryBaselineTakenD }, requests: mine, ledger,
+    today: today(), finYearStart: c.finYearStart, fullTimeWeeklyHours: tenant().fullTimeWeeklyHours, bhPaid: c.bhPaid, workingBankHolidays };
   const bal = yearBalance(input, leaveYear(today(), c.finYearStart));
+  const ent = bal.ent;
   /* any leave year's balance: a request is charged to the year(s) its days fall in (review I2) */
   return { policy, unit: base.unit, facts, ent, bal, mine, ledger, balIn: (y: LeaveYearSpan) => yearBalance(input, y) };
 }
@@ -192,7 +209,10 @@ export function leaveTypeInfo(code: string): { name: string; short: string; icon
 /* LEAVE_CFG.blocksTimesheet, while the Leave module is on. */
 export const leaveBlocksTimesheet = () => Boolean(tenant().modules.L) && Boolean(recordAt(store.coll<LeaveConfigRecord>('leaveConfig'), 'leaveConfig')?.blocksTimesheet);
 
-const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+const canonicalJson = (value: unknown): string => JSON.stringify(value, (_key, entry: unknown) =>
+  entry && typeof entry === 'object' && !Array.isArray(entry)
+    ? Object.fromEntries(Object.entries(entry as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b))) : entry);
+const sameJson = (a: unknown, b: unknown) => canonicalJson(a) === canonicalJson(b);
 
 export const leaveHandlers = [
   /* -------------------------------------------------------------- my leave */
@@ -211,7 +231,8 @@ export const leaveHandlers = [
       requests: [...L.mine].sort(newestFirst(r => r.raisedAt)).map(requestView),
       ledger: [...L.ledger].sort(newestFirst(l => l.date)).map(ledgerView),
       cancelTip: cancelTip(c.cancelWindow),
-      rules: { entitlement: flagOn('LV_ENT'), toil: toilOn, toilMax: c.toilMax, toilWindow: c.toilWindow, slaDays: c.slaDays, escalateTo: c.escalateTo },
+      rules: { entitlement: flagOn('LV_ENT'), toil: toilOn, toilMax: c.toilMax, toilWindow: c.toilWindow,
+        slaDays: policySla(c, 'AL'), escalateTo: escalationTarget(c, Math.min(3, c.stages.length)) },
     };
   }),
 
@@ -224,18 +245,34 @@ export const leaveHandlers = [
         leftIn: y => L.balIn(y).leftD, booked: L.mine });
     if (!checked.ok) return refuseLeave(checked.problem);
     const s = checked.shape, who = by(session), at = store.now();
+    const leaveType = c.types.find(t => t.code === body.type);
+    const policy = c.policies.find(p => p.code === leaveType?.policy);
+    /* approval off approves at once, but never a type that needs evidence: a manager has to see it first (review I3) */
+    const automatic = policy?.approval === false && leaveType?.evidence !== true;
+    const systemActor: RotaActor = { personCode: 'leave-policy', name: 'Leave policy' };
     const impact = tenant().modules.R ? coverImpact(rotaCoverDays(p.code, datesBetween(s.from, s.to))) : { text: ROTA_OFF_IMPACT, short: false };
     const id = nextNumId(requests(), 'lr');
     const rec: StoredRequest = { id, version: 1, updatedAt: at, personCode: p.code, type: body.type, from: s.from, to: s.to, part: s.part, qty: s.qty,
-      unit: s.unit, state: 'pending', raisedAt: at, note: body.note?.trim() ?? '', impact: impact.text, short: impact.short, escalated: false,
-      decidedAt: '', decidedBy: null, reason: '', history: [{ from: '', to: 'pending', by: who, at, reason: '' }] };
+      unit: s.unit, state: automatic ? 'approved' : 'pending', raisedAt: at, note: body.note?.trim() ?? '', impact: impact.text, short: impact.short, escalated: false,
+      decidedAt: automatic ? at : '', decidedBy: automatic ? systemActor : null, reason: '',
+      history: [{ from: '', to: automatic ? 'approved' : 'pending', by: automatic ? systemActor : who, at,
+        reason: automatic ? 'Approval is not required by this policy.' : '' }] };
     requests()[id] = rec;
     const typeName = leaveTypeName(c.types, rec.type), range = leaveRange(rec.from, rec.to);
-    notifyEvent('lv_req', 'actor', approversAt(p.location, p.code), requestedNotice(p.name, typeName, range, s.label, c.slaDays));
-    notifyEvent('lv_req', 'subject', [p.code], sentNotice(range, s.label, managerOf(p)));
-    const auditId = writeAudit({ who: actor(session), act: 'Leave requested', entity: 'leaveRequest', entityId: id, before: null,
-      after: { state: 'pending', type: rec.type, from: rec.from, to: rec.to, qty: rec.qty, unit: rec.unit, detail: requestedAudit(typeName, range, s.label) } });
-    return { record: requestView(rec), hint: checked.hint, summary: requestedToast(typeName, s.label, managerOf(p)), auditId };
+    let rota = NO_ROTA;
+    if (automatic) {
+      const mark = absenceMark(rec.type);
+      if (rotaLinked()) rota = writeAbsence({ personCode: p.code, dates: datesBetween(s.from, s.to), mark, by: systemActor, coverReason: leaveCoverReason(mark) });
+      notifyEvent('lv_req', 'subject', [p.code], approvedNotice(range, typeName));
+    } else {
+      notifyEvent('lv_req', 'actor', approversAt(p.location, p.code), requestedNotice(p.name, typeName, range, s.label, policySla(c, body.type)));
+      notifyEvent('lv_req', 'subject', [p.code], sentNotice(range, s.label, managerOf(p)));
+    }
+    const auditId = writeAudit({ who: actor(session), act: automatic ? 'Leave approved automatically' : 'Leave requested', entity: 'leaveRequest', entityId: id, before: null,
+      after: { state: rec.state, type: rec.type, from: rec.from, to: rec.to, qty: rec.qty, unit: rec.unit,
+        detail: requestedAudit(typeName, range, s.label), ...(automatic ? rotaAfter(rota) : {}) } });
+    return { record: requestView(rec), hint: checked.hint,
+      summary: automatic ? `${typeName} approved automatically · ${s.label}` : requestedToast(typeName, s.label, managerOf(p)), auditId };
   }),
 
   serve(cancelLeave, ({ session, params, checkVersion }) => {
@@ -266,9 +303,11 @@ export const leaveHandlers = [
     }).sort((a, b) => a.r.raisedAt.localeCompare(b.r.raisedAt) || a.r.id.localeCompare(b.r.id));
     const views: TeamRequestView[] = pend.map(({ r, p }) => {
       const raised = clockFromIso(r.raisedAt).date;
-      const sla = slaOf({ raised, escalated: r.escalated }, c.slaDays, now, c.stages.length);
+      const slaDays = policySla(c, r.type);
+      const sla = slaOf({ raised, escalated: r.escalated }, slaDays, now, c.stages);
+      const target = escalationTarget(c, sla.stage);
       return { ...requestView(r), name: p.name, location: p.location, balance: balanceText(leaveOf(p).bal),
-        sla: { daysLeft: sla.daysLeft, escalated: sla.escalated, tone: sla.tone, text: slaPillText(sla, c.slaDays, c.escalateTo) },
+        sla: { daysLeft: sla.daysLeft, escalated: sla.escalated, tone: sla.tone, text: slaPillText(sla, slaDays, target) },
         stage: { n: sla.stage, text: stageText(c.stages, sla.stage), action: c.stages[sla.stage - 1]?.action ?? '' },
         advisories: [noticeAdvisory(r.from, raised, c.minNotice), cancelWindowAdvisory(r.from, now, c.cancelWindow)].filter((x): x is string => !!x) };
     });
@@ -276,8 +315,12 @@ export const leaveHandlers = [
     const shown = views.filter(v => (!q || v.name.toLowerCase().includes(q) || v.personCode.toLowerCase().includes(q))
       && (!query.type || v.type === query.type) && (query.short !== 'true' || v.short));
     const escalated = views.filter(v => v.sla.escalated).length;
-    return { requests: shown, counts: { pending: views.length, escalated, shown: shown.length }, breached: escalated ? slaBreachedText(escalated, c.slaDays) : '',
-      escalateTo: c.escalateTo, slaDays: c.slaDays, stages: c.stages, types: c.types.filter(t => t.active).map(t => ({ code: t.code, name: t.name })),
+    /* each policy may set its own SLA: P's sentence names the days while the breached requests share one */
+    const breachedSlas = new Set(views.filter(v => v.sla.escalated).map(v => policySla(c, v.type)));
+    const [oneSla] = breachedSlas.size === 1 ? [...breachedSlas] : [];
+    return { requests: shown, counts: { pending: views.length, escalated, shown: shown.length },
+      breached: !escalated ? '' : oneSla !== undefined ? slaBreachedText(escalated, oneSla) : `${escalated} requests have breached their policy’s approval SLA`,
+      escalateTo: escalationTarget(c, Math.min(3, c.stages.length)), slaDays: c.slaDays, stages: c.stages, types: c.types.filter(t => t.active).map(t => ({ code: t.code, name: t.name })),
       locations: managedLocations(session) };
   }),
 
@@ -367,7 +410,7 @@ export const leaveHandlers = [
     return {
       rows, banner: first ? { personCode: first.personCode, text: triggerBannerText(first.name, first.score, c.absenceTrigger), note: TRIGGER_NOTE, episode: first.episode } : null,
       counts: { triggered: rows.filter(r => r.triggered).length, colleagues: rows.length }, trigger: c.absenceTrigger, tip: bradfordTip(c.absenceTrigger), today: now,
-      colleagues: team.filter(isActive).map(p => ({ code: p.code, name: p.name })), reasons: [...SICK_REASONS], sickOnLeave,
+      colleagues: team.filter(isActive).map(p => ({ code: p.code, name: p.name })), reasons: [...config().sicknessReasons], sickOnLeave,
     };
   }),
 
@@ -376,7 +419,7 @@ export const leaveHandlers = [
     const p = personOf(body.personCode);
     requireTeamScope(session, p, 'record sickness');
     const now = today(), eps = episodesOf(p.code);
-    const planned = recordSicknessPlan(eps, { from: body.from, to: body.to, reason: body.reason }, now);
+    const planned = recordSicknessPlan(eps, { from: body.from, to: body.to, reason: body.reason }, now, config().sicknessReasons);
     if (!planned.ok) return refuseLeave(planned.problem);
     const plan = planned.plan, was = plan.kind === 'extend' ? eps.find(e => e.id === plan.id) : undefined;
     /* review I3: the later episodes the range bridged join the earliest, which keeps its reason, note and return to work */
@@ -432,7 +475,7 @@ export const leaveHandlers = [
     const row = giveBackRow(body.dates, candidates, L.unit, L.facts.contractedHours, now);
     const days = Number(candidates.filter(x => body.dates.includes(x.date)).reduce((n, x) => n + x.days, 0).toFixed(2));
     const id = nextNumId(ledgerColl(), 'led', 3), who = by(session);
-    const rec: StoredLedger = { id, version: 1, updatedAt: store.now(), personCode: p.code, ...row, by: who };
+    const rec: StoredLedger = { id, version: 1, updatedAt: store.now(), personCode: p.code, ...row, leaveType: 'AL', by: who };
     ledgerColl()[id] = rec;
     /* the returned days are sickness now, not leave: S over exactly those days (D10) */
     const rota = rotaLinked() ? writeAbsence({ personCode: p.code, dates: row.dates ?? [], mark: SICK, by: who, coverReason: leaveCoverReason(SICK) }) : NO_ROTA;
@@ -460,6 +503,8 @@ export const leaveHandlers = [
     const { typeLeave, stages, ...rest } = body;
     const next: LeaveConfigRecord = { ...c, ...rest, typeLeave: { ...c.typeLeave, ...typeLeave },
       stages: stages ? renumberLeaveStages(stages.map(s => ({ ...s, n: s.n ?? 0 }))) : c.stages };
+    const usageProblem = leaveConfigChangeProblem(c, next.types, next.policies, next.typeLeave);
+    if (usageProblem) refuse(409, usageProblem);
     const problem = leaveConfigProblem(next, next.types, next.policies, next.stages, next.typeLeave, codesOf('employeeTypes'));
     if (problem) invalid({ field: problem.field ?? 'config', message: problem.message });
     const before: Record<string, unknown> = {}, after: Record<string, unknown> = {};

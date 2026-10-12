@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { store } from '@/mocks/store';
 import { tid } from '@/testids';
@@ -9,9 +9,8 @@ import { audits, resetTo, signInAs, snapshot } from '@/test/api-helpers';
 import { LeaveSetupPage } from './LeaveSetupPage';
 
 /* The social seed: Leave, Rota and every LV_* flag on, eight leave types,
-   seven policies, four workflow stages, an SLA of 5 days, leave blocking the
-   timesheet, and per-type policies for shift, casual (accrual, hours) and
-   salaried. CP-1288 is leaving on 30/09/2026. */
+   seven policies, four escalation stages, an SLA of 5 days, leave blocking
+   the timesheet, and per-type policies for shift, casual and salaried. */
 withFakeServer();
 beforeEach(async () => { resetTo('social'); await signInAs('admin'); });
 const config = () => {
@@ -23,6 +22,15 @@ const setupAudits = () => audits().filter(a => a.entity === 'leaveConfig');
 const toasts = (id: string = tid.toast.info) => screen.queryAllByTestId(id).map(t => t.textContent ?? '').join(' | ');
 const expectToast = (text: string | RegExp, id: string = tid.toast.info) => waitFor(() => expect(toasts(id)).toMatch(text));
 const type = (testId: string, value: string) => fireEvent.change(screen.getByTestId(testId), { target: { value } });
+/* the Add dialog: the code and name are given once */
+const addWithCode = async (button: string, code: string, name: string) => {
+  fireEvent.click(screen.getByTestId(button));
+  const modal = await screen.findByTestId(tid.modal.root);
+  type(tid.mleave.addCode, code);
+  type(tid.mleave.addName, name);
+  fireEvent.click(within(modal).getByTestId(tid.mleave.addSave));
+  await waitFor(() => expect(screen.queryByTestId(tid.modal.root)).toBeNull());
+};
 const open = () => {
   renderPage(<LeaveSetupPage />, '/setup/mleave');
   return screen.findByTestId(tid.mleave.card('types'));
@@ -31,7 +39,7 @@ const open = () => {
 describe('Leave setup', () => {
   test('every card renders, the LV_* switches are shown as they stand, and full test id coverage', async () => {
     await open();
-    for (const k of ['types', 'policies', 'entitlement', 'workflow', 'rota', 'leavers', 'typeLeave']) expect(screen.getByTestId(tid.mleave.card(k))).toBeInTheDocument();
+    for (const k of ['types', 'policies', 'entitlement', 'workflow', 'rota', 'leavers', 'typeLeave', 'sicknessReasons']) expect(screen.getByTestId(tid.mleave.card(k))).toBeInTheDocument();
     expect(screen.getByText('Modules · Leave · Leave setup')).toBeInTheDocument();
     for (const f of ['LV_ENT', 'LV_PRORATA', 'LV_LEAVER', 'LV_SLA', 'LV_ROTA']) {
       expect(screen.getByTestId(tid.mleave.flag(f))).toBeDisabled();
@@ -40,7 +48,15 @@ describe('Leave setup', () => {
     expect(screen.getByTestId(tid.mleave.card('rota'))).toHaveTextContent('Switched on or off under Modules & features.');
     expect(screen.getAllByTestId(/^mleave-type-\d+$/)).toHaveLength(8);
     expect(screen.getByTestId(tid.mleave.typeCount(0))).toHaveTextContent('4');
-    expect(screen.getByTestId(tid.mleave.type(5))).toHaveTextContent('Unpaid');
+    expect(screen.getByTestId(tid.mleave.typeName(5))).toHaveValue('Unpaid leave');
+    /* D3: the financial year and full-time hours are the tenant's, shown in its format, changed on Calendar */
+    expect(screen.getByTestId(tid.mleave.finYear)).toHaveTextContent('01/04/2026 – 31/03/2027');
+    expect(screen.getByTestId(tid.mleave.fullTimeHours)).toHaveTextContent('37.5 hours a week');
+    expect(screen.getByTestId(tid.mleave.fullTimeLink)).toHaveAttribute('href', '/setup/acal');
+    /* what is not built, and what went, say so plainly */
+    expect(screen.getByTestId(tid.mleave.buySell)).toHaveTextContent('Buy and sell leaveNot built yet. It belongs with Payroll and Business Central.');
+    expect(screen.getByTestId(tid.mleave.recordUnit)).toHaveTextContent('Leave is recorded in each policy’s unit.');
+    expect(screen.getByTestId(tid.mleave.policyMethod(0))).toHaveDisplayValue('A set allowance each year');
     expect(screen.getAllByTestId(/^mleave-policy-\d+$/)).toHaveLength(7);
     expect(screen.getAllByTestId(/^mleave-stage-\d+$/)).toHaveLength(4);
     /* the employee and line manager stages cannot be removed */
@@ -73,6 +89,54 @@ describe('Leave setup', () => {
       before: { blocksTimesheet: true, slaDays: 5 }, after: { blocksTimesheet: false, slaDays: 3 } });
     await waitFor(() => expect(screen.queryByTestId(tid.mleave.dirty)).toBeNull());
   });
+  test('policy fields and leave-type paid and evidence settings edit, and save together', async () => {
+    await open();
+    type(tid.mleave.policyName(0), 'Annual leave policy');
+    type(tid.mleave.policyMethod(0), 'none');
+    type(tid.mleave.policyNum(0, 'base'), '26');
+    type(tid.mleave.serviceRule(0, 0, 'add'), '2');
+    type(tid.mleave.policyBh(0), 'included');
+    fireEvent.click(screen.getByTestId(tid.mleave.policyApproval(0)));
+    fireEvent.click(screen.getByTestId(tid.mleave.typePaid(0)));
+    fireEvent.click(screen.getByTestId(tid.mleave.typeEvidence(0)));
+    await userEvent.click(screen.getByTestId(tid.mleave.save));
+    await expectToast('Leave setup saved');
+    expect(config().policies[0]).toMatchObject({ name: 'Annual leave policy', method: 'none', base: 26, approval: false, bankHolidayHandling: 'included',
+      serviceRules: [{ afterYears: 3, add: 2, cap: 5 }] });
+    expect(config().types[0]).toMatchObject({ paid: false, evidence: true });
+    expect(setupAudits()).toHaveLength(1);
+  });
+  test('a policy and a leave type are added with their codes, and removed again while unused', async () => {
+    await open();
+    await addWithCode(tid.mleave.policyAdd, 'study', 'Study allowance');
+    await addWithCode(tid.mleave.typeAdd, 'STUDY', 'Study leave');
+    fireEvent.click(screen.getByTestId(tid.mleave.save));
+    await expectToast('Leave setup saved');
+    expect(config().policies[7]).toMatchObject({ code: 'STUDY', name: 'Study allowance', method: 'fixed', sla: null });
+    expect(config().types[8]).toMatchObject({ code: 'STUDY', name: 'Study leave', active: false });
+    await waitFor(() => expect(screen.queryByTestId(tid.mleave.dirty)).toBeNull());
+    fireEvent.click(screen.getByTestId(tid.mleave.policyRemove(7)));
+    fireEvent.click(screen.getByTestId(tid.mleave.typeRemove(8)));
+    fireEvent.click(screen.getByTestId(tid.mleave.save));
+    await waitFor(() => expect(config().types).toHaveLength(8));
+    expect(config().policies).toHaveLength(7);
+  });
+  test('a code is given once when adding: an existing or malformed code cannot be added, and it is read-only after', async () => {
+    await open();
+    await userEvent.click(screen.getByTestId(tid.mleave.typeAdd));
+    const modal = await screen.findByTestId(tid.modal.root);
+    type(tid.mleave.addName, 'Another annual leave');
+    type(tid.mleave.addCode, 'al');
+    expect(modal).toHaveTextContent('AL already exists.');
+    expect(within(modal).getByTestId(tid.mleave.addSave)).toBeDisabled();
+    type(tid.mleave.addCode, '1X');
+    expect(modal).toHaveTextContent('A code starts with a capital letter');
+    await userEvent.click(within(modal).getByTestId(tid.mleave.addCancel));
+    await waitFor(() => expect(screen.queryByTestId(tid.modal.root)).toBeNull());
+    expect(screen.getAllByTestId(/^mleave-type-\d+$/)).toHaveLength(8);
+    /* a saved code is text, not an input */
+    expect(within(screen.getByTestId(tid.mleave.type(0))).getByText('AL').tagName).toBe('TD');
+  });
 
   test('a refusal names its field, inline, and nothing is stored', async () => {
     await open();
@@ -97,15 +161,15 @@ describe('Leave setup', () => {
     const c = config();
     store.coll<LeaveConfigRecord>('leaveConfig').leaveConfig = { ...c, version: c.version + 1, slaDays: 9 };
     store.save();
-    await userEvent.click(screen.getByTestId(tid.mleave.toggle('buySell')));
+    await userEvent.click(screen.getByTestId(tid.mleave.toggle('blocksTimesheet')));
     await userEvent.click(screen.getByTestId(tid.mleave.save));
     expect(await screen.findByTestId(tid.toast.error)).toBeInTheDocument();
     await waitFor(() => expect(screen.getByTestId(tid.mleave.num('slaDays'))).toHaveValue(9));
-    expect(screen.getByTestId(tid.mleave.toggle('buySell'))).toHaveAttribute('aria-checked', 'false');
-    await userEvent.click(screen.getByTestId(tid.mleave.toggle('buySell')));
+    expect(screen.getByTestId(tid.mleave.toggle('blocksTimesheet'))).toHaveAttribute('aria-checked', 'true');
+    await userEvent.click(screen.getByTestId(tid.mleave.toggle('blocksTimesheet')));
     await userEvent.click(screen.getByTestId(tid.mleave.save));
     await expectToast('Leave setup saved');
-    expect(config()).toMatchObject({ version: c.version + 2, slaDays: 9, buySell: true });
+    expect(config()).toMatchObject({ version: c.version + 2, slaDays: 9, blocksTimesheet: false });
   });
 
   test('Cancel discards added types, removed stages and edits, and nothing is stored', async () => {
@@ -114,8 +178,8 @@ describe('Leave setup', () => {
     await userEvent.click(screen.getByTestId(tid.mleave.stageRemove(3)));
     await expectToast('Stage removed');
     await userEvent.click(screen.getByTestId(tid.mleave.stageAdd));
-    await userEvent.click(screen.getByTestId(tid.mleave.typeAdd));
-    await expectToast('Leave type added. Name it and pick its policy.');
+    await addWithCode(tid.mleave.typeAdd, 'STUDY', 'Study leave');
+    await expectToast('Leave type added. Pick its policy.');
     expect(screen.getAllByTestId(/^mleave-type-\d+$/)).toHaveLength(9);
     expect(screen.getByTestId(tid.mleave.typeActive(8))).toHaveAttribute('aria-checked', 'false');
     type(tid.mleave.stageWho(0), 'Colleague');
@@ -132,7 +196,7 @@ describe('Leave setup', () => {
     const before = config();
     await userEvent.click(screen.getByTestId(tid.mleave.empType('casual')));
     expect(screen.getByTestId(tid.mleave.tlPolicy)).toHaveValue('ACC');
-    expect(screen.getByTestId(tid.mleave.tlNote)).toHaveTextContent('Policy: 12.07% of hours worked');
+    expect(screen.getByTestId(tid.mleave.tlNote)).toHaveTextContent('Policy: Accrues from hours worked · pro-rata off · 0 days carry-over.');
     type(tid.mleave.tlPolicy, 'STD');
     type(tid.mleave.tlUnit, 'days');
     await userEvent.click(screen.getByTestId(tid.mleave.save));

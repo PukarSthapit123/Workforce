@@ -14,6 +14,7 @@ import { WeekGrid, WeekLayout } from './timesheets';
 import { EntryMode, PayBasis, TypeCapability, WorkerCategory } from './employee-types';
 import { OnbStepId, Verifier } from './onboarding';
 import { isTimeZone } from '@/domain/time';
+import { LeaveConfigData } from './leave';
 
 const Text = (max: number) => z.string().trim().max(max);
 const Code = z.string().trim().regex(/^[A-Z0-9][A-Z0-9_.-]{0,19}$/, 'A code is capital letters, digits, a dash, a dot or an underscore, with no spaces.');
@@ -43,6 +44,7 @@ const Onboarding = z.object({
 const RoleNames = z.object({ employee: Text(24).min(1), manager: Text(24).min(1), admin: Text(24).min(1) });
 const TenantSettings = z.object({
   timezone: z.string().refine(isTimeZone), dateFormat: z.enum(DATE_FORMATS), clock: z.enum(CLOCK_STYLES), weekStart: z.enum(WEEK_STARTS),
+  fullTimeWeeklyHours: z.number().min(1).max(80),
   financialYear: z.object({ start: IsoDate, end: IsoDate }).refine(x => x.start <= x.end),
 });
 export const Template = z.object({
@@ -52,7 +54,7 @@ export const Template = z.object({
   labels: z.record(z.string(), Text(60).min(1)),
   employeeTypes: z.array(TemplateType).max(50),
   roleNames: RoleNames.optional(), approvalChain: z.array(ChainStep).max(40).optional(), structure: Structure.optional(), onboarding: Onboarding.optional(),
-  tenantSettings: TenantSettings.optional(),
+  tenantSettings: TenantSettings.optional(), leaveConfig: LeaveConfigData.optional(),
 });
 export type Template = z.infer<typeof Template>;
 export const TemplateFile = z.object({ kind: z.literal('qnipay.template'), v: z.literal(1), key: z.string(), template: Template });
@@ -75,7 +77,7 @@ export const TemplateList = z.object({ templates: z.array(TemplateRow), inUse: z
 export type TemplateList = z.infer<typeof TemplateList>;
 
 export const PlanLine = z.object({
-  area: z.enum(['modules', 'features', 'labels', 'types', 'roles', 'chain', 'structure', 'people', 'organisation', 'onboarding']), text: z.string(),
+  area: z.enum(['modules', 'features', 'labels', 'types', 'roles', 'chain', 'structure', 'people', 'organisation', 'onboarding', 'leave']), text: z.string(),
 });
 export type PlanLine = z.infer<typeof PlanLine>;
 /* D1: what an apply changes, what it adds and what it leaves alone. */
@@ -103,7 +105,7 @@ export const saveTemplate = defineEndpoint({ method: 'POST', path: '/api/v1/temp
 export const getTemplatePlan = defineEndpoint({ method: 'GET', path: '/api/v1/templates/:key/plan', params: KeyParams, response: TemplatePlan, capability: cap,
   errors: [404], summary: 'What applying a template would change, add and leave alone, read before it is applied' });
 export const applyTemplate = defineEndpoint({ method: 'POST', path: '/api/v1/templates/:key/apply', params: KeyParams, response: TemplateApplied, capability: cap,
-  versioned: true, errors: [404], summary: 'Apply a template (If-Match: the tenant\'s version). Sets configuration and adds structure whose codes are new; never deletes or overwrites people or structure, never renames the organisation. One audit row.' });
+  versioned: true, errors: [404, 409], summary: 'Apply a template (If-Match: the tenant\'s version). Sets configuration and adds structure whose codes are new; never deletes or overwrites people or structure, never renames the organisation. One audit row.' });
 export const exportTemplate = defineEndpoint({ method: 'GET', path: '/api/v1/templates/:key/export', params: KeyParams, response: TemplateFile, capability: cap,
   errors: [404], summary: 'A template as a file to keep or hand over' });
 export const importTemplate = defineEndpoint({ method: 'POST', path: '/api/v1/templates/import', request: ImportTemplate, response: TemplateImported, capability: cap,

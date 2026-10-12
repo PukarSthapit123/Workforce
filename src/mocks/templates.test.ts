@@ -3,7 +3,7 @@ import { store } from './store';
 import { Refusal } from '@/contract/common';
 import { getTenant } from '@/contract/tenant';
 import { ApprovalSetup } from '@/contract/approvals';
-import { TemplateApplied, TemplateFile, TemplateImported, TemplateList, TemplatePlan } from '@/contract/templates';
+import { TemplateApplied, TemplateFile, TemplateImported, TemplateList, TemplatePlan, type Template } from '@/contract/templates';
 import { OnboardingSetup } from '@/contract/onboarding';
 import { ONB_LEFT_ALONE, SHIPPED_TEMPLATES, TEMPLATE_NAME_SHIPPED, TYPES_LEFT_ALONE } from '@/domain/templates';
 import { FROZEN, accountOf, audits, caller, fault, resetTo, snapshot, tokenFor, type Persona } from '@/test/api-helpers';
@@ -15,7 +15,7 @@ let admin: Awaited<ReturnType<typeof as>>;
 beforeEach(async () => { resetTo('social'); admin = await as('admin'); });
 const T = '/api/v1/templates';
 const PLAN = (k: string) => `${T}/${k}/plan`, APPLY = (k: string) => `${T}/${k}/apply`, EXPORT = (k: string) => `${T}/${k}/export`, ONE = (k: string) => `${T}/${k}`;
-const WRITES = ['tenant', 'templates', 'timesheetConfig', 'employeeTypes', 'userTypes', 'departments', 'costCentres', 'locations', 'jobProfiles',
+const WRITES = ['tenant', 'templates', 'leaveConfig', 'timesheetConfig', 'employeeTypes', 'userTypes', 'departments', 'costCentres', 'locations', 'jobProfiles',
   'projects', 'projectTasks', 'rotaWeeks', 'rotaSetAside', 'people', 'approvalChains', 'onboardingConfig', 'onboardingPolicies', 'onboardingCases', 'audit'];
 const chainOf = async (m: string) => ApprovalSetup.parse((await admin('GET', '/api/v1/approvals/chains')).body).chains.find(c => c.module === m);
 const tenantVer = () => store.coll<{ version: number }>('tenant').tenant?.version ?? -1;
@@ -105,13 +105,19 @@ describe('saving (D2)', () => {
     expect(kept?.template).toMatchObject({ name: 'Care, two-stage approval', description: 'Saved from Brightpath Support Services', scope: 'config',
       labels: expect.objectContaining({ project: 'Funded programme' }), roleNames: { employee: 'Employee', manager: 'Manager', admin: 'Admin' } });
     expect(kept?.template.tenantSettings).toEqual({
-      timezone: 'Europe/London', dateFormat: 'dd/mm/yyyy', clock: '24h', weekStart: 'Monday',
+      timezone: 'Europe/London', dateFormat: 'dd/mm/yyyy', clock: '24h', weekStart: 'Monday', fullTimeWeeklyHours: 37.5,
       financialYear: { start: '2026-04-01', end: '2027-03-31' },
     });
+    expect(kept?.template.leaveConfig).toMatchObject({ sicknessReasons: ['Cold or flu', 'Stomach upset', 'Musculoskeletal', 'Mental health', 'Other'] });
+    const leaveConfig = kept?.template.leaveConfig as { policies?: unknown } | undefined;
+    expect(leaveConfig?.policies).toEqual(expect.arrayContaining([
+      expect.objectContaining({ method: 'fixed', serviceRules: [{ afterYears: 3, add: 1, cap: 5 }] }),
+    ]));
+    expect(kept?.template.leaveConfig).not.toHaveProperty('finYearStart');
     expect(kept?.template.tenantSettings).not.toHaveProperty('bankHolidays');
     expect(kept?.template).not.toHaveProperty('structure');
     /* a policy's wording is prose a new starter reads (the code of conduct names a gifts limit), not a money field: its keys are checked instead */
-    expect(JSON.stringify({ ...kept?.template, onboarding: undefined })).not.toMatch(/currency|[£€$]|payCode|allowance|"rules"|budget|people/i);
+    expect(JSON.stringify({ ...kept?.template, onboarding: undefined })).not.toMatch(/currency|[£€$]|payCode|"allowance"\s*:|"rules"|budget|people/i);
     const onb = kept?.template.onboarding as { policies: Record<string, unknown>[] } | undefined;
     expect(onb?.policies.map(p => Object.keys(p).join())).toEqual(Array(4).fill('id,label,ver,sum,body'));
     expect(kept?.from).toBe('Brightpath Support Services');
@@ -139,6 +145,39 @@ describe('applying (D1, Review Focus 3)', () => {
     expect(p.leftAlone.map(l => l.area)).toEqual(expect.arrayContaining(['people', 'organisation']));
     expect(snapshot(...WRITES)).toEqual(before);
     expect((await admin('GET', PLAN('nope'))).status).toBe(404);
+  });
+  test('a config template restores tenant full-time hours and every Leave setting on their own versioned records', async () => {
+    const key = 'tpl_leave_configuration';
+    expect((await save('Leave configuration')).status).toBe(200);
+    const saved = store.coll<{ version: number; template: Template }>('templates')[key];
+    if (!saved?.template.tenantSettings || !saved.template.leaveConfig) throw new Error('saved config template is incomplete');
+    saved.template.tenantSettings.fullTimeWeeklyHours = 40;
+    saved.template.leaveConfig.sicknessReasons = ['Template reason'];
+    const leaveBefore = store.coll<{ version: number }>('leaveConfig').leaveConfig?.version;
+    const tenantBefore = tenantVer(), n = audits().length;
+    const result = await admin('POST', APPLY(key), undefined, tenantBefore);
+    expect(result.status).toBe(200);
+    expect(store.coll<{ fullTimeWeeklyHours: number; version: number }>('tenant').tenant?.fullTimeWeeklyHours).toBe(40);
+    expect(store.coll<{ sicknessReasons: string[]; version: number }>('leaveConfig').leaveConfig).toMatchObject({
+      version: (leaveBefore ?? 0) + 1, sicknessReasons: ['Template reason'],
+    });
+    /* one mutation, one audit row: the Leave setup's before and after ride in it (review I4) */
+    const rows = audits().slice(n);
+    expect(rows.map(a => a.act)).toEqual(['Template applied']);
+    expect(rows[0]).toMatchObject({ before: { leaveSetup: { sicknessReasons: expect.arrayContaining(['Cold or flu']) } },
+      after: { leaveSetup: { sicknessReasons: ['Template reason'] } } });
+  });
+  test('applying a config template cannot bypass leave-type in-use protection', async () => {
+    const key = 'tpl_remove_used_leave_type';
+    expect((await save('Remove used leave type')).status).toBe(200);
+    const saved = store.coll<{ version: number; template: Template }>('templates')[key];
+    if (!saved?.template.leaveConfig) throw new Error('saved config template has no Leave settings');
+    saved.template.leaveConfig.types = saved.template.leaveConfig.types.filter(type => type.code !== 'AL');
+    const before = snapshot('tenant', 'leaveConfig', 'templates', 'audit');
+    const result = await admin('POST', APPLY(key), undefined, tenantVer());
+    expect(result.status).toBe(409);
+    expect(refusal(result.body)).toMatchObject({ code: 'in-use', usedBy: [expect.objectContaining({ kind: 'leave requests' })] });
+    expect(snapshot('tenant', 'leaveConfig', 'templates', 'audit')).toEqual(before);
   });
   test('Fusion III makes the tenant read through the template: start and finish on a grid, Contract and Cost code, Rota off', async () => {
     const people = snapshot('people'), heldCc = store.coll('costCentres')['cc_CC-104'], heldLoc = snapshot('locations');

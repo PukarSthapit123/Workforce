@@ -3,7 +3,7 @@ import { tid } from '@/testids';
 import { Banner, Button, Fact, Field, FieldGrid, FormWarn, GroupLabel, Modal, SelectBox, Small, TextInput, toastInfo } from '@/ui';
 import { useRequestLeave, type MyLeave } from '@/api/leave';
 import {
-  CHOOSE_TYPE, LEAVE_PARTS, PART_LABEL, SIMULATION_NOTE, balanceCheck, isLeavePart, leaveShape, leaveWritesRota, overlapProblem, proRataSimulation,
+  BANK_HOLIDAY_HANDLING_LABEL, CHOOSE_TYPE, DEFAULT_FULL_TIME_WEEKLY_HOURS, LEAVE_METHOD_LABEL, LEAVE_PARTS, PART_LABEL, SIMULATION_NOTE, balanceCheck, isLeavePart, leaveShape, leaveWritesRota, overlapProblem, proRataSimulation,
   type LeavePart,
 } from '@/domain/leave';
 import { addDays } from '@/domain/time';
@@ -122,7 +122,7 @@ export function EntitlementDialog({ m, onClose, onSimulate }: { m: EntitlementOf
         <Button testId={tid.leave.entClose} kind="ghost" onClick={onClose}>Close</Button>
         {onSimulate && <Button testId={tid.leave.simulate} kind="primary" onClick={onSimulate}>Simulate an hours change</Button>}
       </>}>
-      <Banner testId={tid.leave.entPolicy} tone="info" title={pol.name}>{pol.method} · {pol.prorata}</Banner>
+      <Banner testId={tid.leave.entPolicy} tone="info" title={pol.name}>{LEAVE_METHOD_LABEL[pol.method]} · {pol.prorata ? 'Pro-rated by contracted hours' : 'Not pro-rated'}</Banner>
       <GroupLabel>Calculation</GroupLabel>
       {e.lines.map((l, i) => <Fact key={l.label} label={l.label} testId={tid.leave.entLine(i)}><span className="font-mono">{l.value}</span></Fact>)}
       <GroupLabel className="mt-[18px]">Balance today</GroupLabel>
@@ -131,12 +131,12 @@ export function EntitlementDialog({ m, onClose, onSimulate }: { m: EntitlementOf
       <Fact label="Awaiting a decision" testId={tid.leave.entPending}><span className="font-mono">{b.pending} days</span></Fact>
       <Fact label="Remaining" testId={tid.leave.entRemaining}><span className="font-mono">{daysHours(b.leftD, b.leftH)}</span></Fact>
       <GroupLabel className="mt-[18px]">Policy rules applied</GroupLabel>
-      <Fact label="Statutory floor" testId={tid.leave.entStatutory}>{pol.statutory ? `${pol.statutory} days including bank holidays` : 'Not applicable'}</Fact>
-      <Fact label="Service rule" testId={tid.leave.entService}>{pol.serviceRule}</Fact>
-      <Fact label="Carry-over" testId={tid.leave.entCarry}>{pol.carry} days</Fact>
-      <Fact label="Bank holidays" testId={tid.leave.entBh}>{pol.bh}</Fact>
-      <Small className="mt-[14px]">Both units are always available: the same entitlement is held in days and in hours, and the display unit follows
-        the employee type’s policy. Change the contracted hours on the person record in People and this recalculates on a pro-rata basis.</Small>
+      <Fact label="Service rules" testId={tid.leave.entService}>{pol.serviceRules.length
+        ? pol.serviceRules.map(r => `After ${r.afterYears} years, add ${r.add} (cap ${r.cap})`).join('; ') : 'None'}</Fact>
+      <Fact label="Carry-over cap" testId={tid.leave.entCarry}>{pol.carry} days</Fact>
+      <Fact label="Bank-holiday handling" testId={tid.leave.entBh}>{BANK_HOLIDAY_HANDLING_LABEL[pol.bankHolidayHandling]}</Fact>
+      <Small className="mt-[14px]">The employee type chooses the display unit. The policy decides whether contracted hours are pro-rated.
+        Change contracted hours on the person record in People and leave entitlement recalculates from that record.</Small>
     </Modal>);
 }
 
@@ -144,11 +144,12 @@ export function EntitlementDialog({ m, onClose, onSimulate }: { m: EntitlementOf
    person record, so this works the new entitlement out on the screen and
    writes nothing. People owns contracted hours. */
 export function SimulateDialog({ m, onClose }: { m: EntitlementOf; onClose: () => void }) {
+  const tenant = useTenant().data;
   const [hours, setHours] = useState(String(m.facts.contractedHours >= 30 ? 22.5 : 37.5));
   const n = Number(hours), valid = hours.trim() !== '' && Number.isFinite(n) && n >= 0 && n <= 48;
   const facts = { contractedHours: m.facts.contractedHours, start: m.facts.start,
     ...(m.facts.accruedHours !== undefined ? { accruedHours: m.facts.accruedHours } : {}) };
-  const sim = valid ? proRataSimulation(facts, n, m.entitlement.policy, m.today) : null;
+  const sim = valid ? proRataSimulation(facts, n, m.entitlement.policy, m.today, { fullTimeWeeklyHours: tenant?.fullTimeWeeklyHours ?? DEFAULT_FULL_TIME_WEEKLY_HOURS }) : null;
   return (
     <Modal open onOpenChange={o => { if (!o) onClose(); }} title={`Simulate an hours change for ${firstName(m.person.name)}`}
       description="Changing contracted hours on the shared workforce record recalculates leave entitlement on a pro-rata basis and updates the balance. Rota and Timesheet pick the new contracted hours up at the same moment."

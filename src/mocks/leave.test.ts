@@ -48,6 +48,41 @@ const decline = (call: Call, id: string, reason: string, v = 1) => call('POST', 
 const cancel = (call: Call, id: string, v = 1) => call('POST', `/api/v1/leave/requests/${id}/cancel`, undefined, v);
 const myLeave = async (call: Call) => MyLeave.parse((await call('GET', '/api/v1/leave/me')).body);
 
+/* Module 8 group 3: the policies moved from words to methods, and carry-over and
+   bank-holiday handling were added, without moving any seeded number (D6).
+   Every person on both tenants, as the entitlement read gave them before the
+   change (040cbe8): entitlement days and hours, taken, waiting, and left in
+   days and hours. The admin is given both leave reads so nobody is out of reach. */
+const SEEDED_BALANCES: Record<'social' | 'qnipay', Record<string, number[]>> = {
+  social: {
+    'CP-1042': [25, 187.5, 9.5, 2, 13.5, 101.25], 'CP-1088': [20, 120, 15, 0, 5, 30], 'CP-1153': [26, 195, 11, 0, 15, 112.5],
+    'CP-1201': [14.4, 64.8, 9, 5, 0.4, 1.8], 'CP-1266': [22.9, 151.14, 6, 0, 16.9, 111.54], 'CP-1402': [25, 187.5, 8, 0, 17, 127.5],
+    'CP-1310': [5.1, 38.6, 0, 0, 5.1, 38.6], 'CP-1455': [6.9, 52.1, 1, 0, 5.9, 44.6], 'CP-1377': [2.2, 16.4, 0, 0, 2.2, 16.4],
+    'CP-1490': [3.2, 24.2, 0, 0, 3.2, 24.2], 'CP-1001': [27, 202.5, 12, 0, 15, 112.5], 'CP-1002': [27, 202.5, 5, 0, 22, 165],
+    'CP-1288': [14.4, 64.8, 16, 0, -1.6, -7.2], 'EMP-2044': [25, 200, 10, 0, 15, 120], 'EMP-2062': [25, 187.5, 7, 0, 18, 135],
+    'EMP-2071': [25, 200, 4, 0, 21, 168], 'EMP-2088': [24, 180, 9, 0, 15, 112.5], 'CP-1501': [24, 180, 0, 0, 24, 180],
+    'CP-1502': [19.2, 115.2, 0, 0, 19.2, 115.2],
+  },
+  qnipay: {
+    EMP001: [24, 180, 0, 0, 24, 180], EMP002: [24, 180, 0, 0, 24, 180], EMP003: [24, 192, 0, 0, 24, 192], EMP004: [24, 192, 9.5, 2, 12.5, 100],
+    EMP005: [24, 180, 11.5, 5, 7.5, 56.25], EMP006: [24, 180, 0, 0, 24, 180], EMP007: [24, 180, 8, 0, 16, 120], EMP008: [24, 180, 16, 0, 8, 60],
+    EMP009: [24, 180, 15, 0, 9, 67.5], EMP010: [24, 180, 11, 0, 13, 97.5], EMP011: [24, 180, 6, 0, 18, 135], EMP012: [24, 192, 0, 0, 24, 192],
+    EMP013: [24, 192, 0, 0, 24, 192], EMP014: [24, 192, 0, 0, 24, 192], EMP015: [24, 192, 0, 0, 24, 192], EMP016: [24, 192, 0, 0, 24, 192],
+    EMP017: [24, 192, 0, 0, 24, 192], EMP018: [24, 180, 0, 0, 24, 180], EMP019: [24, 180, 0, 0, 24, 180], EMP020: [24, 180, 0, 0, 24, 180],
+  },
+};
+test.each(['social', 'qnipay'] as const)('every seeded person on %s keeps the entitlement and balance they had before leave became configurable', async tenant => {
+  resetTo(tenant);
+  const admin = store.coll<{ capabilities: string[] }>('userTypes').admin;
+  admin?.capabilities.push('team_leave', 'own_leave');
+  const call = await as('admin'), seen: Record<string, number[]> = {};
+  for (const code of Object.values(store.coll<{ code: string }>('people')).map(p => p.code)) {
+    const { entitlement: e, balance: b } = EntitlementDetail.parse((await call('GET', `/api/v1/leave/entitlement/${code}`)).body);
+    seen[code] = [e.days, e.hours, b.takenD, b.pending, b.leftD, b.leftH];
+  }
+  expect(seen).toEqual(SEEDED_BALANCES[tenant]);
+});
+
 describe('requesting leave (Review Focus 2)', () => {
   test('an employee asks for leave: a waiting record, the balance holds it back, the manager and the employee are told, one audit row', async () => {
     const call = await as('employee'), before = await myLeave(call);
@@ -415,6 +450,16 @@ describe('sickness episodes, Bradford and return to work (Review Focus 6, D9)', 
     expect(refusal(b)).toMatchObject({ code: 'invalid', field: 'reason', message: 'Choose the reason given.' });
     expect(snapshot(...WRITES)).toEqual(before);
   });
+  test('configured sickness reasons are returned by the board and enforced on writes', async () => {
+    const admin = await as('admin'), manager = await as('manager');
+    const config = LeaveSetup.parse((await admin('GET', '/api/v1/leave/config')).body).config;
+    expect((await admin('PATCH', '/api/v1/leave/config', { sicknessReasons: ['New reason'] }, config.version)).status).toBe(200);
+    expect(SicknessBoard.parse((await manager('GET', '/api/v1/leave/sickness')).body).reasons).toEqual(['New reason']);
+    const saved = await manager('POST', '/api/v1/leave/sickness', { personCode: 'CP-1088', from: '2026-10-05', to: '2026-10-05', reason: 'New reason' });
+    expect(SicknessRecorded.parse(saved.body).record.reason).toBe('New reason');
+    const refused = await manager('POST', '/api/v1/leave/sickness', { personCode: 'CP-1088', from: '2026-10-07', to: '2026-10-07', reason: 'Other' });
+    expect(refusal(refused)).toMatchObject({ code: 'invalid', field: 'reason', message: 'Choose the reason given.' });
+  });
   test('arranging a return to work is stored on the episode, notified and audited once; a second request is refused', async () => {
     const call = await as('manager');
     const r = RtwArranged.parse((await call('POST', '/api/v1/leave/sickness/sk_004/rtw', undefined, 1)).body);
@@ -436,6 +481,7 @@ describe('giving days back (D10, Review Focus 3)', () => {
     const before = await ent();
     const r = DaysGivenBack.parse((await call('POST', '/api/v1/leave/give-back', { personCode: 'CP-1088', dates: ['2026-08-11'] })).body);
     expect(r.record).toMatchObject({ type: 'Days returned', qty: 1, unit: 'days', counts: true, dates: ['2026-08-11'], qtyText: '+1 days' });
+    expect(store.coll<{ leaveType?: string }>('leaveLedger')[r.record.id]?.leaveType).toBe('AL');
     expect(r.summary).toBe('1 day returned to Marcus Reilly’s annual leave balance');
     const after = await ent();
     expect(after.leftD).toBe(Number((before.leftD + 1).toFixed(1)));
@@ -488,6 +534,12 @@ describe('team reads', () => {
 });
 
 describe('leave setup (D11)', () => {
+  test('an unchanged policy array is a no-op with a null audit id', async () => {
+    const admin = await as('admin'), config = LeaveSetup.parse((await admin('GET', '/api/v1/leave/config')).body).config;
+    const result = await admin('PATCH', '/api/v1/leave/config', { policies: config.policies }, config.version);
+    expect(result.body).toMatchObject({ record: { version: config.version }, auditId: null });
+    expect(leaveAudits()).toEqual([]);
+  });
   test('a save is versioned, merges the per-type policy and writes one audit row with before and after', async () => {
     const admin = await as('admin');
     const s = LeaveSetup.parse((await admin('GET', '/api/v1/leave/config')).body);
@@ -508,6 +560,96 @@ describe('leave setup (D11)', () => {
     expect(refusal(r)).toMatchObject({ code: 'invalid', field: 'slaDays', message: 'The approval SLA is a whole number of days from 1 to 60.' });
     expect(refusal(await manager('PATCH', '/api/v1/leave/config', { slaDays: 3 }, 1)).code).toBe('capability');
     expect(snapshot(...WRITES)).toEqual(before);
+  });
+  test('a policy in use and a leave type with request history cannot be removed', async () => {
+    const admin = await as('admin');
+    const config = LeaveSetup.parse((await admin('GET', '/api/v1/leave/config')).body).config;
+    const policyRefusal = await admin('PATCH', '/api/v1/leave/config', { policies: config.policies.filter(p => p.code !== 'STD') }, config.version);
+    expect(policyRefusal.status).toBe(409);
+    expect(refusal(policyRefusal)).toMatchObject({ code: 'in-use', usedBy: [expect.objectContaining({ kind: 'leave types', examples: expect.arrayContaining([expect.stringContaining('AL')]) }),
+      expect.objectContaining({ kind: 'employee types', examples: expect.arrayContaining(['Support Worker (shift)']) })] });
+    const typeRefusal = await admin('PATCH', '/api/v1/leave/config', { types: config.types.filter(t => t.code !== 'AL') }, config.version);
+    expect(typeRefusal.status).toBe(409);
+    expect(refusal(typeRefusal)).toMatchObject({ code: 'in-use', usedBy: [expect.objectContaining({ kind: 'leave requests', examples: expect.arrayContaining([expect.stringContaining('(')]) })] });
+    /* M6: a policy used only by an employee type's leave policy names it */
+    const acc = await admin('PATCH', '/api/v1/leave/config', { policies: config.policies.filter(p => p.code !== 'ACC') }, config.version);
+    expect(acc.status).toBe(409);
+    expect(refusal(acc)).toMatchObject({ code: 'in-use', field: 'policies.1',
+      usedBy: [{ kind: 'employee types', count: 1, examples: [expect.stringContaining('(casual)')] }] });
+  });
+  test('a type is known by its code: removing an unused type and adding a new one in one save is allowed (M6)', async () => {
+    const admin = await as('admin'), n = leaveAudits().length;
+    const config = LeaveSetup.parse((await admin('GET', '/api/v1/leave/config')).body).config;
+    const jury = config.types.findIndex(t => t.code === 'JURY');
+    const added = { code: 'STUDY', name: 'Study leave', icon: '•', short: 'Study', policy: 'FIX', paid: true, evidence: false, unit: 'days' as const, active: true };
+    const types = [...config.types.filter(t => t.code !== 'JURY'), added];
+    const r = await admin('PATCH', '/api/v1/leave/config', { types }, config.version);
+    expect(r.status).toBe(200);
+    expect(jury).toBeGreaterThan(-1);
+    expect(store.coll<{ types: { code: string }[] }>('leaveConfig').leaveConfig?.types.map(t => t.code)).toEqual([...config.types.map(t => t.code).filter(c => c !== 'JURY'), 'STUDY']);
+    expect(leaveAudits().slice(n).map(a => a.act)).toEqual(['Leave setup saved']);
+    /* a code that is not a code is refused, naming the field */
+    const bad = await admin('PATCH', '/api/v1/leave/config', { types: [...types, { ...added, code: 'not ok' }] }, config.version + 1);
+    expect(refusal(bad)).toMatchObject({ code: 'invalid', field: `types.${types.length}.code` });
+  });
+  test('a leave type used by a ledger row is also protected from removal', async () => {
+    const admin = await as('admin');
+    const requests = store.coll<{ id: string; type: string }>('leaveRequests');
+    store.db.leaveRequests = Object.fromEntries(Object.entries(requests).filter(([, record]) => record.type !== 'AL'));
+    store.coll<Record<string, unknown>>('leaveLedger').led_type = {
+      id: 'led_type', version: 1, updatedAt: '2026-08-13T14:30:00.000Z', personCode: 'CP-1042',
+      date: '2026-08-13', type: 'Days returned', leaveType: 'AL', qty: 1, unit: 'days', why: 'Test', counts: true, by: null,
+    };
+    const config = LeaveSetup.parse((await admin('GET', '/api/v1/leave/config')).body).config;
+    const result = await admin('PATCH', '/api/v1/leave/config', { types: config.types.filter(t => t.code !== 'AL') }, config.version);
+    expect(refusal(result)).toMatchObject({ code: 'in-use', usedBy: [expect.objectContaining({ kind: 'leave ledger', examples: expect.arrayContaining([expect.stringContaining('Amara Okafor')]) })] });
+  });
+  test('the policy approval setting auto-approves requests when approval is not required with one audit row', async () => {
+    const admin = await as('admin'), employee = await as('employee');
+    const config = LeaveSetup.parse((await admin('GET', '/api/v1/leave/config')).body).config;
+    const policies = config.policies.map(p => p.code === 'STD' ? { ...p, approval: false } : p);
+    await admin('PATCH', '/api/v1/leave/config', { policies }, config.version);
+    const before = leaveAudits().filter(a => a.act === 'Leave approved automatically').length;
+    const result = LeaveRequested.parse((await ask(employee, { from: '2026-11-09', to: '2026-11-09' })).body);
+    expect(result.record).toMatchObject({ state: 'approved', decidedBy: { name: 'Leave policy' }, history: [{ to: 'approved', reason: 'Approval is not required by this policy.' }] });
+    expect(result.summary).toBe('Annual leave approved automatically · 1 day · 7.50 hours');
+    expect(leaveAudits().filter(a => a.act === 'Leave approved automatically')).toHaveLength(before + 1);
+  });
+  test('a policy\'s own SLA times its requests; a policy with none uses the tenant default', async () => {
+    const admin = await as('admin'), manager = await as('manager');
+    const left = async () => Object.fromEntries(TeamRequests.parse((await manager('GET', '/api/v1/leave/team/requests')).body).requests.map(r => [r.id, r.sla.daysLeft]));
+    /* 13/08: lr_2 (TOIL) raised 11/08 and lr_3 (annual leave, STD) raised 12/08; the seeded policies have no SLA, so the tenant's 5 days time both */
+    expect(await left()).toMatchObject({ lr_2: 3, lr_3: 4 });
+    const config = LeaveSetup.parse((await admin('GET', '/api/v1/leave/config')).body).config;
+    const policies = config.policies.map(p => p.code === 'STD' ? { ...p, sla: 7 } : p);
+    expect((await admin('PATCH', '/api/v1/leave/config', { policies, slaDays: 9 }, config.version)).status).toBe(200);
+    expect(await left()).toMatchObject({ lr_2: 7, lr_3: 6 });
+  });
+  test('with bank holidays not paid on top, a bank holiday the published rota has someone working comes out of their entitlement, and the trace says so', async () => {
+    const admin = await as('admin'), employee = await as('employee');
+    const before = await myLeave(employee);
+    const line = week('WH', '2026-08-10')?.lines['CP-1042'] ?? [];
+    const worked = line.findIndex(c => c !== '' && c !== 'V' && c !== 'S');
+    expect(worked).toBeGreaterThan(-1);
+    const tenant = store.coll<{ bankHolidays: { date: string; name: string }[] }>('tenant').tenant;
+    tenant?.bankHolidays.push({ date: `2026-08-${String(10 + worked).padStart(2, '0')}`, name: 'Test holiday' });
+    const config = LeaveSetup.parse((await admin('GET', '/api/v1/leave/config')).body).config;
+    expect((await admin('PATCH', '/api/v1/leave/config', { bhPaid: false }, config.version)).status).toBe(200);
+    const after = await myLeave(employee);
+    expect(after.entitlement.days).toBe(before.entitlement.days - 1);
+    expect(after.entitlement.lines).toContainEqual({ label: 'Bank holidays', value: '1 working bank holiday day(s) deducted' });
+    expect(before.entitlement.lines).toContainEqual({ label: 'Bank holidays', value: 'On top of entitlement' });
+  });
+  test('seeded sickness still waits for a manager, and approval off never approves a type that needs evidence (review I3)', async () => {
+    const admin = await as('admin'), employee = await as('employee');
+    const sick = LeaveRequested.parse((await ask(employee, { type: 'SICK', from: '2026-11-09', to: '2026-11-09' })).body);
+    expect(sick.record.state).toBe('pending');
+    const config = LeaveSetup.parse((await admin('GET', '/api/v1/leave/config')).body).config;
+    const policies = config.policies.map(p => p.code === 'SICK' ? { ...p, approval: false } : p);
+    expect((await admin('PATCH', '/api/v1/leave/config', { policies }, config.version)).status).toBe(200);
+    const again = LeaveRequested.parse((await ask(employee, { type: 'SICK', from: '2026-11-16', to: '2026-11-16' })).body);
+    expect(again.record).toMatchObject({ state: 'pending', decidedBy: null });
+    expect(leaveAudits().filter(a => a.act === 'Leave approved automatically')).toEqual([]);
   });
 });
 

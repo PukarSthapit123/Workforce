@@ -210,6 +210,10 @@ export const tenantHandlers = [
       if (value === undefined || value === t[key]) continue;
       before[key] = t[key]; after[key] = value;
     }
+    if (body.fullTimeWeeklyHours !== undefined && body.fullTimeWeeklyHours !== t.fullTimeWeeklyHours) {
+      before.fullTimeWeeklyHours = t.fullTimeWeeklyHours;
+      after.fullTimeWeeklyHours = body.fullTimeWeeklyHours;
+    }
     if (body.financialYear) {
       const financialYear = { ...t.financialYear, ...body.financialYear };
       if (financialYear.start > financialYear.end) refuse(422, {
@@ -250,11 +254,12 @@ export const tenantHandlers = [
       ...(body.dateFormat !== undefined ? { dateFormat: body.dateFormat } : {}),
       ...(body.clock !== undefined ? { clock: body.clock } : {}),
       ...(body.weekStart !== undefined ? { weekStart: body.weekStart } : {}),
+      ...(body.fullTimeWeeklyHours !== undefined ? { fullTimeWeeklyHours: body.fullTimeWeeklyHours } : {}),
       ...(nextFinancialYear ? { financialYear: nextFinancialYear } : {}),
       ...(body.bankHolidays !== undefined ? { bankHolidays: body.bankHolidays } : {}),
     });
     const auditId = writeAudit({ who: actor(session), act: Object.keys(after).every(k => k === 'rotaHorizon') ? 'Rota horizon changed'
-      : Object.keys(after).some(k => ['timezone', 'dateFormat', 'clock', 'weekStart', 'financialYear', 'bankHolidays'].includes(k)) ? 'Calendar settings changed' : 'Organisation settings changed',
+      : Object.keys(after).some(k => ['timezone', 'dateFormat', 'clock', 'weekStart', 'financialYear', 'bankHolidays', 'fullTimeWeeklyHours'].includes(k)) ? 'Calendar settings changed' : 'Organisation settings changed',
       entity: 'tenant', entityId: 'settings', before, after });
     return { record: view(saved), auditId };
   }),

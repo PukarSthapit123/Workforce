@@ -1,19 +1,24 @@
-import { useState, type ReactNode } from 'react';
-import { Link2, RefreshCw, Repeat, Ruler, Tag, TriangleAlert, Upload, UsersRound } from 'lucide-react';
+import { memo, useCallback, useState, type ReactNode } from 'react';
+import { Link2, Plus, RefreshCw, Repeat, Ruler, Tag, Trash2, TriangleAlert, Upload, UsersRound } from 'lucide-react';
 import { tid } from '@/testids';
 import {
-  ActionBar, AdminCard, Button, Card, Chip, ChipPicker, Empty, FormWarn, GuideButton, InlineInput, NavLink, Page, PageHead, Pill, Row, SettingRow, SettingSelect,
-  Small, SubHead, SwitchField, UnitInput, toastInfo,
+  ActionBar, AdminCard, Button, Card, Chip, ChipPicker, Empty, Field, FormWarn, GuideButton, InlineInput, Modal, NavLink, Page, PageHead, Pill, Row, SettingRow,
+  SettingSelect, Small, SubHead, SwitchField, TextInput, UnitInput, toastInfo,
 } from '@/ui';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import { ApiError } from '@/api/client';
 import { useLeaveConfig, useSaveLeaveConfig, type LeaveSetup, type LeaveTypeRecord } from '@/api/leave';
+import type { Tenant } from '@/api/tenant';
 import { useTenant } from '@/shell/shellData';
 import { versionKey } from '@/lib/latest';
 import { cn } from '@/lib/utils';
-import { ESCALATE_TO, LEAVE_TYPE_ADDED, LEAVE_UNITS, RECORD_UNITS, STAGE_CHANNELS, TOIL_WINDOWS, type TypeLeave } from '@/domain/leave';
+import {
+  BANK_HOLIDAY_HANDLING, BANK_HOLIDAY_HANDLING_LABEL, LEAVE_METHODS, LEAVE_METHOD_LABEL, LEAVE_TYPE_ADDED, LEAVE_UNITS, STAGE_CHANNELS, TOIL_WINDOWS,
+  type ServiceRule, type TypeLeave,
+} from '@/domain/leave';
+import { leaveCodeProblem, normaliseCode } from '@/domain/codes';
 import { formatDmy } from '@/domain/time';
-import { addedType, draftOf, leaveBody, leaveUnit, newStageDraft, type LeaveDraft, type NumKey, type PolicyDraft, type StageDraft, type ToggleKey } from './setup';
+import { addedPolicy, addedType, draftOf, leaveBody, leaveMethod, leaveUnit, newStageDraft, type LeaveDraft, type NumKey, type PolicyDraft, type PolicyNumKey, type StageDraft, type ToggleKey } from './setup';
 
 /* Leave setup: the prototype's admLeave (qnipay-workforce-v15.html:8960-9071)
    with the per-type leave policy it kept on the employee type (8160-8172).
@@ -37,9 +42,9 @@ export function LeaveSetupPage() {
     <Page testId={tid.page('mleave')}>
       <Head bare={tenant.data ? !on : false} />
       {tenant.data && !on && <Card><Empty testId={tid.mleave.off}>{OFF}</Empty></Card>}
-      {on && (setup.data
+      {on && tenant.data && (setup.data
         /* the draft starts again from what the server holds whenever the config gets a new version: after a save, or after a 412 */
-        ? <SetupDraftView key={versionKey(setup.data.config)} setup={setup.data} />
+        ? <SetupDraftView key={versionKey(setup.data.config)} setup={setup.data} tenant={tenant.data} />
         : !setup.isError && <p data-testid={tid.mleave.loading} className="text-text-secondary">Loading Leave setup&hellip;</p>)}
       {(setup.isError || tenant.isError) && <p data-testid={tid.mleave.error} role="alert" className="text-err">
         {refused && refused.code !== 'network' ? `${refused.message} ${refused.next}` : 'Leave setup could not be loaded. Reload the page.'}</p>}
@@ -62,7 +67,7 @@ function Control({ error, children }: { error?: string; children: ReactNode }) {
 }
 const invalid = (error: string | undefined) => (error ? true : undefined);
 
-function SetupDraftView({ setup }: { setup: LeaveSetup }) {
+function SetupDraftView({ setup, tenant }: { setup: LeaveSetup; tenant: Tenant }) {
   const { config, employeeTypes, flags } = setup;
   const typeCodes = employeeTypes.map(t => t.code);
   const [draft, setDraft] = useState<LeaveDraft>(() => draftOf(config, typeCodes));
@@ -70,7 +75,13 @@ function SetupDraftView({ setup }: { setup: LeaveSetup }) {
   const save = useSaveLeaveConfig();
   const body = leaveBody(config, draft);
   const dirty = Object.keys(body).length > 0;
-  const fe = save.fieldError;
+  /* the field a refusal names, read from the refusal (field errors and the refusal are set and cleared together), so the
+     function, and the memoised tables below, stay the same while someone types elsewhere on the page */
+  const refusal = save.refusal;
+  const fe = useCallback((field: string) => (refusal?.field === field ? refusal.message : undefined), [refusal]);
+  const setTypes = useCallback((types: LeaveTypeRecord[]) => setDraft(d => ({ ...d, types })), []);
+  const setPolicies = useCallback((policies: PolicyDraft[]) => setDraft(d => ({ ...d, policies })), []);
+  const setStages = useCallback((stages: StageDraft[]) => setDraft(d => ({ ...d, stages })), []);
   const set = (patch: Partial<LeaveDraft>) => setDraft(d => ({ ...d, ...patch }));
   const setNum = (k: NumKey, v: string) => setDraft(d => ({ ...d, nums: { ...d.nums, [k]: v } }));
   const setToggle = (k: ToggleKey, v: boolean) => setDraft(d => ({ ...d, toggles: { ...d.toggles, [k]: v } }));
@@ -100,25 +111,25 @@ function SetupDraftView({ setup }: { setup: LeaveSetup }) {
 
   return (
     <>
-      <TypesCard setup={setup} types={draft.types} fe={fe} onChange={types => set({ types })} />
-      <PoliciesCard setup={setup} policies={draft.policies} fe={fe} onChange={policies => set({ policies })} />
+      <TypesCard setup={setup} policies={draft.policies} types={draft.types} fe={fe} onChange={setTypes} />
+      <PoliciesCard policies={draft.policies} fe={fe} onChange={setPolicies} />
 
       <AdminCard testId={tid.mleave.card('entitlement')} icon={<RefreshCw />} title="Entitlement rules" desc="How annual leave is derived and expressed">
         {flagRow('LV_ENT', 'Automatic entitlement calculation', 'Derive entitlement from working hours, pattern, service and policy rather than entering it by hand')}
         {flagRow('LV_PRORATA', 'Pro-rata recalculation', 'Recalculate automatically when contracted hours or working arrangements change')}
         {flagRow('LV_LEAVER', 'Leaver reconciliation', 'Settle over- or under-taken leave against pro-rata entitlement at the leaving date')}
-        <SettingRow title="Record leave in" desc="Both units are always held; this sets the default display">
-          <Control error={fe('unit')}>
-            <SettingSelect testId={tid.mleave.unit} aria-label="Record leave in" value={draft.unit} aria-invalid={invalid(fe('unit'))}
-              onChange={e => set({ unit: e.target.value })}>
-              {RECORD_UNITS.map(o => <option key={o} value={o}>{o}</option>)}</SettingSelect></Control>
-        </SettingRow>
-        <SettingRow title="Financial year" desc={`Entitlement and leaver reconciliation use the year set on Calendar. Start: ${config.finYearStart}.`}>
-          <span data-testid={tid.mleave.finYear} className="text-xs text-text-muted">{config.finYearStart}</span>
+        {/* D3: the financial year and full-time hours are the tenant's, set on Calendar and shown here as they stand */}
+        <SettingRow title="Financial year" desc="Entitlement and leaver reconciliation use the year set on Calendar.">
+          <span data-testid={tid.mleave.finYear} className="text-xs text-text-muted tabular-nums">
+            {formatDmy(tenant.financialYear.start)} – {formatDmy(tenant.financialYear.end)}</span>
           <NavLink testId={tid.mleave.finYearLink} to="/setup/acal" className="text-xs font-semibold text-brand underline dark:text-brand-accent">Change it on Calendar</NavLink>
         </SettingRow>
-        {numRow('carry', 'Days that can carry over', undefined, 'days')}
-        {toggleRow('bhPaid', 'Bank holidays paid on top of entitlement')}
+        <SettingRow title="Full-time weekly hours" desc="A pro-rated policy divides contracted hours by this.">
+          <span data-testid={tid.mleave.fullTimeHours} className="text-xs text-text-muted tabular-nums">{tenant.fullTimeWeeklyHours} hours a week</span>
+          <NavLink testId={tid.mleave.fullTimeLink} to="/setup/acal" className="text-xs font-semibold text-brand underline dark:text-brand-accent">Change it on Calendar</NavLink>
+        </SettingRow>
+        <SettingRow testId={tid.mleave.recordUnit} title="Record leave in" desc="Leave is recorded in each policy’s unit.">{null}</SettingRow>
+        {toggleRow('bhPaid', 'Bank holidays are on top of entitlement', 'When off, a scheduled working bank holiday is deducted from entitlement.')}
         {flags.LV_TOIL === true && <>
           {numRow('toilMax', 'Most TOIL anyone can build up', undefined, 'hrs')}
           <SettingRow title="TOIL must be used within">
@@ -128,24 +139,20 @@ function SetupDraftView({ setup }: { setup: LeaveSetup }) {
                 {TOIL_WINDOWS.map(m => <option key={m} value={m}>{m} months</option>)}</SettingSelect></Control>
           </SettingRow>
         </>}
-        {toggleRow('buySell', 'Let colleagues buy and sell leave', 'Off until the policy is agreed')}
+        {/* D7: buying and selling leave settles in money, so it waits for Payroll */}
+        <SettingRow testId={tid.mleave.buySell} title="Buy and sell leave" desc="Not built yet. It belongs with Payroll and Business Central.">{null}</SettingRow>
         {numRow('absenceTrigger', 'Absence trigger score', 'Bradford factor threshold that starts the return-to-work steps', 'pts')}
       </AdminCard>
+      <SicknessReasonsCard reasons={draft.sicknessReasons} onChange={sicknessReasons => set({ sicknessReasons })} />
 
-      <AdminCard testId={tid.mleave.card('workflow')} icon={<Repeat />} title="Leave booking workflow" tipTestId={tid.mleave.tip('workflow')}
-        tip="The workflow is automated, timed, reportable and generates notifications to configured stakeholders."
+      <AdminCard testId={tid.mleave.card('workflow')} icon={<Repeat />} title="Escalation" tipTestId={tid.mleave.tip('workflow')}
+        tip="Requests move through this timed escalation ladder until a decision is made."
         desc="Stages, waits and escalation for a leave request">
         {flagRow('LV_SLA', 'Approval SLA and escalation', 'Escalate a request that is not decided within the SLA')}
-        {numRow('slaDays', 'Days to decide a request', 'Then it escalates to the next approver', 'days')}
-        <SettingRow title="Escalate to">
-          <Control error={fe('escalateTo')}>
-            <SettingSelect testId={tid.mleave.escalateTo} aria-label="Escalate to" value={draft.escalateTo} aria-invalid={invalid(fe('escalateTo'))}
-              onChange={e => set({ escalateTo: e.target.value })}>
-              {ESCALATE_TO.map(o => <option key={o} value={o}>{o}</option>)}</SettingSelect></Control>
-        </SettingRow>
+        {numRow('slaDays', 'Tenant SLA default', 'A policy can set its own SLA. This is used when its SLA is blank.', 'days')}
         {numRow('minNotice', 'Minimum notice', 'How far ahead a request must be made', 'days')}
         {numRow('cancelWindow', 'Cancellation window', 'How close to the start date a colleague may still cancel', 'days')}
-        <StagesTable stages={draft.stages} fe={fe} onChange={stages => set({ stages })} />
+        <StagesTable stages={draft.stages} fe={fe} onChange={setStages} />
       </AdminCard>
 
       <AdminCard testId={tid.mleave.card('rota')} icon={<Link2 />} title="Leave and Rota" desc="How approved leave affects availability">
@@ -174,17 +181,18 @@ function SetupDraftView({ setup }: { setup: LeaveSetup }) {
 type FieldError = (field: string) => string | undefined;
 
 /* ------------------------------------------------------------ leave types */
-function TypesCard({ setup, types, fe, onChange }: {
-  setup: LeaveSetup; types: LeaveTypeRecord[]; fe: FieldError; onChange(types: LeaveTypeRecord[]): void;
+const TypesCard = memo(function TypesCard({ setup, policies, types, fe, onChange }: {
+  setup: LeaveSetup; policies: PolicyDraft[]; types: LeaveTypeRecord[]; fe: FieldError; onChange(types: LeaveTypeRecord[]): void;
 }) {
-  const names = setup.config.policies;
+  const names = policies;
+  const [adding, setAdding] = useState(false);
   const setType = (i: number, patch: Partial<LeaveTypeRecord>) => onChange(types.map((t, j) => (j === i ? { ...t, ...patch } : t)));
   return (
     <AdminCard testId={tid.mleave.card('types')} icon={<Tag />} title="Leave types" desc="What a colleague can request. The exact list is configurable.">
       <Table>
         <TableHeader><TableRow>
           <TableHead>Code</TableHead><TableHead>Leave type</TableHead><TableHead>Policy</TableHead><TableHead>Paid</TableHead>
-          <TableHead>Evidence required</TableHead><TableHead>Unit</TableHead><TableHead className="text-right">Requests</TableHead><TableHead>Active</TableHead>
+          <TableHead>Evidence required</TableHead><TableHead>Unit</TableHead><TableHead className="text-right">Requests</TableHead><TableHead>Active</TableHead><TableHead><span className="sr-only">Remove</span></TableHead>
         </TableRow></TableHeader>
         <TableBody>{types.map((t, i) => {
           const at = (k: string) => fe(`types.${i}.${k}`);
@@ -197,8 +205,10 @@ function TypesCard({ setup, types, fe, onChange }: {
                 <SettingSelect testId={tid.mleave.typePolicy(i)} small aria-label={`Policy for ${t.name || t.code}`} value={t.policy}
                   aria-invalid={invalid(at('policy'))} onChange={e => setType(i, { policy: e.target.value })}>
                   {names.map(p => <option key={p.code} value={p.code}>{p.name}</option>)}</SettingSelect><Err text={at('policy')} /></TableCell>
-              <TableCell>{t.paid ? <Pill tone="ok" glyph="✓">Paid</Pill> : <Pill tone="neu" glyph="—">Unpaid</Pill>}</TableCell>
-              <TableCell>{t.evidence ? <Pill tone="warn" glyph={<TriangleAlert aria-hidden="true" />}>Yes</Pill> : <span className="text-xs text-text-muted">—</span>}</TableCell>
+              <TableCell><SwitchField testId={tid.mleave.typePaid(i)} aria-label={`${t.name || t.code} paid`} checked={t.paid}
+                onCheckedChange={v => setType(i, { paid: v })} /></TableCell>
+              <TableCell><SwitchField testId={tid.mleave.typeEvidence(i)} aria-label={`${t.name || t.code} evidence required`} checked={t.evidence}
+                onCheckedChange={v => setType(i, { evidence: v })} /></TableCell>
               <TableCell>
                 <SettingSelect testId={tid.mleave.typeUnit(i)} small aria-label={`Unit for ${t.name || t.code}`} value={t.unit}
                   aria-invalid={invalid(at('unit'))} onChange={e => { const u = leaveUnit(e.target.value); if (u) setType(i, { unit: u }); }}>
@@ -206,68 +216,149 @@ function TypesCard({ setup, types, fe, onChange }: {
               <TableCell data-testid={tid.mleave.typeCount(i)} className="text-right tabular-nums">{setup.requestCounts[t.code] ?? 0}</TableCell>
               <TableCell><SwitchField testId={tid.mleave.typeActive(i)} aria-label={`${t.name || t.code} active`} checked={t.active}
                 onCheckedChange={v => setType(i, { active: v })} /></TableCell>
+              <TableCell className="text-right"><Button testId={tid.mleave.typeRemove(i)} kind="ghost" small onClick={() => {
+                onChange(types.filter((_, j) => j !== i));
+                toastInfo('Leave type removed from the draft', SAVE_NOTE);
+              }}><Trash2 aria-hidden="true" />Remove</Button></TableCell>
             </Row>);
         })}</TableBody>
       </Table>
       <Err text={fe('types')} />
       <div className="mt-lg flex flex-wrap justify-end gap-sm">
-        <Button testId={tid.mleave.typeAdd} kind="ghost" small onClick={() => {
-          onChange([...types, addedType(types)]);
-          toastInfo(LEAVE_TYPE_ADDED, SAVE_NOTE);
-        }}>Add leave type</Button></div>
+        <Button testId={tid.mleave.typeAdd} kind="ghost" small onClick={() => setAdding(true)}>Add leave type</Button></div>
+      {adding && <AddWithCode title="Add leave type" existing={types.map(t => t.code)} onClose={() => setAdding(false)} onAdd={(code, name) => {
+        onChange([...types, addedType(code, name, policies)]);
+        toastInfo(LEAVE_TYPE_ADDED, SAVE_NOTE);
+      }} />}
     </AdminCard>);
-}
+});
 
 /* --------------------------------------------------------- leave policies */
-function PoliciesCard({ setup, policies, fe, onChange }: {
-  setup: LeaveSetup; policies: PolicyDraft[]; fe: FieldError; onChange(policies: PolicyDraft[]): void;
+/* P's dense policy table (v15:9245-9262), one row per policy, with every field
+   now editable: the method is a choice the maths reads, the service rule a list
+   of { after years, add, cap }, pro-rata and approval are switches, and a blank
+   SLA uses the tenant default. */
+const PoliciesCard = memo(function PoliciesCard({ policies, fe, onChange }: {
+  policies: PolicyDraft[]; fe: FieldError; onChange(policies: PolicyDraft[]): void;
 }) {
+  const [adding, setAdding] = useState(false);
   const setPolicy = (i: number, patch: Partial<PolicyDraft>) => onChange(policies.map((p, j) => (j === i ? { ...p, ...patch } : p)));
+  const setRule = (i: number, j: number, patch: Partial<ServiceRule>) => setPolicy(i, {
+    serviceRules: policies[i]?.serviceRules.map((r, n) => n === j ? { ...r, ...patch } : r) ?? [],
+  });
   return (
     <AdminCard testId={tid.mleave.card('policies')} icon={<Ruler />} title="Leave policies" tipTestId={tid.mleave.tip('policies')}
-      tip="A policy defines the calculation, not just the number: method, unit, pattern treatment, service rules, pro-rata, carry-over, approval, SLA and escalation."
+      tip="A policy defines the calculation, not just the number: method, unit, service rules, pro-rata, carry-over, approval, SLA and bank-holiday handling."
       desc="Entitlement is calculated automatically from these rules">
       <Table dense>
         <TableHeader><TableRow>
           <TableHead>Policy</TableHead><TableHead>Method</TableHead><TableHead>Unit</TableHead><TableHead className="text-right">Base</TableHead>
-          <TableHead className="text-right">Statutory</TableHead><TableHead>Service rule</TableHead><TableHead>Pro-rata</TableHead>
-          <TableHead className="text-right">Carry</TableHead><TableHead>Approval</TableHead><TableHead className="text-right">SLA</TableHead>
-          <TableHead>Escalates</TableHead><TableHead>Bank holidays</TableHead>
+          <TableHead>Pro-rata</TableHead><TableHead className="text-right">Carry cap</TableHead>
+          <TableHead>Approval</TableHead><TableHead className="text-right">SLA</TableHead><TableHead><span className="sr-only">Remove</span></TableHead>
         </TableRow></TableHeader>
-        <TableBody>{setup.config.policies.map((p, i) => {
-          const d = policies[i];
-          if (!d) return null;
-          const rowErr = fe(`policies.${i}`), unitErr = fe(`policies.${i}.unit`);
-          const numCell = (k: 'base' | 'carry' | 'sla', unit: string, label: string) => (
-            <TableCell className="text-right">
-              <UnitInput testId={tid.mleave.policyNum(i, k)} unit={unit} aria-label={`${label} for ${p.name}`} type="number" inputMode="decimal" min="0"
-                className="ml-auto" value={d.nums[k]} aria-invalid={invalid(rowErr)}
-                onChange={e => setPolicy(i, { nums: { ...d.nums, [k]: e.target.value } })} /></TableCell>);
-          return (
+        <TableBody>{policies.map((p, i) => {
+          const rowErr = fe(`policies.${i}`) ?? fe(`policies.${i}.name`), unitErr = fe(`policies.${i}.unit`), methodErr = fe(`policies.${i}.method`);
+          const short = p.unit.slice(0, 1);
+          const numInput = (key: PolicyNumKey, unit: string, label: string, step = '1', placeholder?: string) => (
+            <UnitInput testId={tid.mleave.policyNum(i, key)} unit={unit} aria-label={`${label} for ${p.name}`} type="number" inputMode="decimal" min="0" step={step}
+              placeholder={placeholder} className="ml-auto" value={p.nums[key]} aria-invalid={invalid(rowErr)}
+              onChange={e => setPolicy(i, { nums: { ...p.nums, [key]: e.target.value } })} />);
+          const ruleInput = (j: number, field: keyof ServiceRule, unit: string, label: string, value: number) => (
+            <UnitInput testId={tid.mleave.serviceRule(i, j, field)} unit={unit} aria-label={`${p.name} service rule ${j + 1}: ${label}`}
+              type="number" min="0" step={field === 'afterYears' ? '1' : '0.1'} value={value} onChange={e => setRule(i, j, { [field]: Number(e.target.value) })} />);
+          return [
             <Row key={p.code} testId={tid.mleave.policy(i)}>
-              <TableCell><strong>{p.name}</strong><div className="font-mono text-xs text-text-muted">{p.code}</div><Err text={rowErr} /></TableCell>
-              <TableCell className="text-xs">{p.method}</TableCell>
               <TableCell>
-                <SettingSelect testId={tid.mleave.policyUnit(i)} small aria-label={`Unit for ${p.name}`} value={d.unit} aria-invalid={invalid(unitErr)}
-                  onChange={e => { const u = leaveUnit(e.target.value); if (u) setPolicy(i, { unit: u }); }}>
-                  {LEAVE_UNITS.map(u => <option key={u} value={u}>{u}</option>)}</SettingSelect><Err text={unitErr} /></TableCell>
-              {numCell('base', d.unit.charAt(0), 'Base')}
-              <TableCell className="text-right font-mono tabular-nums">{p.statutory || '—'}</TableCell>
-              <TableCell className="text-xs">{p.serviceRule}</TableCell>
-              <TableCell className="text-xs">{p.prorata}</TableCell>
-              {numCell('carry', 'd', 'Carry-over')}
-              <TableCell>{p.approval ? <Pill tone="ok" glyph="✓">Yes</Pill> : <span className="text-xs text-text-muted">—</span>}</TableCell>
-              {numCell('sla', 'd', 'SLA')}
-              <TableCell>{p.escalate ? <Pill tone="warn" glyph={<TriangleAlert aria-hidden="true" />}>Yes</Pill> : <span className="text-xs text-text-muted">—</span>}</TableCell>
-              <TableCell className="text-xs">{p.bh}</TableCell>
-            </Row>);
+                <InlineInput testId={tid.mleave.policyName(i)} aria-label={`Name of policy ${p.code}`} value={p.name} maxLength={60}
+                  aria-invalid={invalid(rowErr)} onChange={e => setPolicy(i, { name: e.target.value })} />
+                <div className="font-mono text-xs text-text-muted">{p.code}</div><Err text={rowErr} /></TableCell>
+              <TableCell>
+                <SettingSelect testId={tid.mleave.policyMethod(i)} small aria-label={`Method for ${p.name}`} value={p.method} aria-invalid={invalid(methodErr)}
+                  onChange={e => { const method = leaveMethod(e.target.value); if (method) setPolicy(i, { method }); }}>
+                  {LEAVE_METHODS.map(method => <option key={method} value={method}>{LEAVE_METHOD_LABEL[method]}</option>)}</SettingSelect><Err text={methodErr} /></TableCell>
+              <TableCell>
+                <SettingSelect testId={tid.mleave.policyUnit(i)} small aria-label={`Unit for ${p.name}`} value={p.unit} aria-invalid={invalid(unitErr)}
+                  onChange={e => { const unit = leaveUnit(e.target.value); if (unit) setPolicy(i, { unit }); }}>
+                  {LEAVE_UNITS.map(unit => <option key={unit} value={unit}>{unit}</option>)}</SettingSelect><Err text={unitErr} /></TableCell>
+              <TableCell className="text-right">{numInput('base', short, 'Base', '0.1')}</TableCell>
+              <TableCell><SwitchField testId={tid.mleave.policyProrata(i)} aria-label={`Pro-rata by contracted hours for ${p.name}`} checked={p.prorata}
+                onCheckedChange={prorata => setPolicy(i, { prorata })} /></TableCell>
+              <TableCell className="text-right">{numInput('carry', 'd', 'Carry-over cap', '0.1')}</TableCell>
+              <TableCell><SwitchField testId={tid.mleave.policyApproval(i)} aria-label={`Approval needed for ${p.name}`} checked={p.approval}
+                onCheckedChange={approval => setPolicy(i, { approval })} /></TableCell>
+              <TableCell className="text-right">{numInput('sla', 'd', 'SLA')}</TableCell>
+              <TableCell className="text-right"><Button testId={tid.mleave.policyRemove(i)} kind="ghost" small aria-label={`Remove ${p.name}`}
+                onClick={() => { onChange(policies.filter((_, j) => j !== i)); toastInfo('Policy removed from the draft', SAVE_NOTE); }}>
+                <Trash2 aria-hidden="true" /></Button></TableCell>
+            </Row>,
+            /* under each policy: how it treats bank holidays, and its service rules (after so many years, add so much, up to a cap) */
+            <Row key={`${p.code}-rules`} testId={tid.mleave.policyRules(i)}>
+              <TableCell colSpan={9} className="pt-0">
+                <div className="flex flex-wrap items-center gap-x-lg gap-y-xs pl-md text-xs text-text-secondary">
+                  <span className="flex items-center gap-xs whitespace-nowrap">Bank holidays
+                    <SettingSelect testId={tid.mleave.policyBh(i)} small aria-label={`Bank-holiday handling for ${p.name}`} value={p.bankHolidayHandling}
+                      onChange={e => { const bh = BANK_HOLIDAY_HANDLING.find(x => x === e.target.value); if (bh) setPolicy(i, { bankHolidayHandling: bh }); }}>
+                      {BANK_HOLIDAY_HANDLING.map(bh => <option key={bh} value={bh}>{BANK_HOLIDAY_HANDLING_LABEL[bh]}</option>)}</SettingSelect></span>
+                  {p.serviceRules.map((rule, j) => (
+                    <span key={j} className="flex items-center gap-xs whitespace-nowrap">
+                      Service rule {j + 1}: after {ruleInput(j, 'afterYears', 'y', 'after years', rule.afterYears)} add {ruleInput(j, 'add', short, 'add', rule.add)}
+                      up to {ruleInput(j, 'cap', short, 'cap', rule.cap)}
+                      <Button testId={tid.mleave.serviceRuleRemove(i, j)} kind="ghost" small aria-label={`Remove ${p.name} service rule ${j + 1}`}
+                        onClick={() => setPolicy(i, { serviceRules: p.serviceRules.filter((_, n) => n !== j) })}><Trash2 aria-hidden="true" /></Button>
+                    </span>))}
+                  <Button testId={tid.mleave.serviceRuleAdd(i)} kind="ghost" small
+                    onClick={() => setPolicy(i, { serviceRules: [...p.serviceRules, { afterYears: 1, add: 1, cap: 1 }] })}><Plus aria-hidden="true" />Add service rule</Button>
+                </div></TableCell>
+            </Row>];
         })}</TableBody>
       </Table>
+      <p className="mt-sm text-xs text-text-muted">A blank SLA uses the tenant default under Escalation. With approval off, a request is approved at once, unless its leave type needs evidence.</p>
+      <Err text={fe('policies')} />
+      <div className="mt-lg flex justify-end"><Button testId={tid.mleave.policyAdd} kind="ghost" small onClick={() => setAdding(true)}>
+        <Plus aria-hidden="true" />Add policy</Button></div>
+      {adding && <AddWithCode title="Add leave policy" existing={policies.map(p => p.code)} onClose={() => setAdding(false)} onAdd={(code, name) => {
+        onChange([...policies, addedPolicy(code, name)]);
+        toastInfo('Policy added', SAVE_NOTE);
+      }} />}
     </AdminCard>);
+});
+
+function SicknessReasonsCard({ reasons, onChange }: { reasons: string[]; onChange(reasons: string[]): void }) {
+  return <AdminCard testId={tid.mleave.card('sicknessReasons')} icon={<Tag />} title="Sickness reasons" desc="The reasons available when recording an absence">
+    {reasons.map((reason, i) => <div key={i} className="flex items-center gap-sm border-b py-sm">
+      <InlineInput testId={tid.mleave.sicknessReason(i)} aria-label={`Sickness reason ${i + 1}`} value={reason}
+        onChange={e => onChange(reasons.map((r, j) => j === i ? e.target.value : r))} />
+      <Button testId={tid.mleave.sicknessReasonRemove(i)} kind="ghost" small onClick={() => onChange(reasons.filter((_, j) => j !== i))}>
+        <Trash2 aria-hidden="true" />Remove</Button>
+    </div>)}
+    <div className="mt-md flex justify-end"><Button testId={tid.mleave.sicknessReasonAdd} kind="ghost" small onClick={() => onChange([...reasons, 'New reason'])}>
+      <Plus aria-hidden="true" />Add reason</Button></div>
+  </AdminCard>;
+}
+
+/* Module 8 group 3: a leave type's or policy's code is given here, once, and is read-only from then on */
+function AddWithCode({ title, existing, onClose, onAdd }: { title: string; existing: readonly string[]; onClose(): void; onAdd(code: string, name: string): void }) {
+  const [code, setCode] = useState(''), [name, setName] = useState('');
+  const problem = code.trim() ? leaveCodeProblem(code, existing) : null;
+  const ready = code.trim() !== '' && !problem && name.trim() !== '';
+  const add = () => { if (!ready) return; onAdd(normaliseCode(code), name.trim()); onClose(); };
+  return (
+    <Modal open onOpenChange={o => { if (!o) onClose(); }} title={title}
+      footer={<>
+        <Button testId={tid.mleave.addCancel} kind="ghost" onClick={onClose}>Cancel</Button>
+        <Button testId={tid.mleave.addSave} kind="primary" disabled={!ready} onClick={add}>Add</Button>
+      </>}>
+      <Field label="Code" required error={problem?.message} hint="Up to 10 capital letters, digits, dashes or underscores. It cannot change once added.">
+        <TextInput testId={tid.mleave.addCode} className="uppercase" maxLength={10} value={code} onChange={e => setCode(e.target.value)} />
+      </Field>
+      <Field label="Name" required>
+        <TextInput testId={tid.mleave.addName} maxLength={60} value={name} onChange={e => setName(e.target.value)} />
+      </Field>
+    </Modal>);
 }
 
 /* -------------------------------------------------------- workflow stages */
-function StagesTable({ stages, fe, onChange }: { stages: StageDraft[]; fe: FieldError; onChange(stages: StageDraft[]): void }) {
+const StagesTable = memo(function StagesTable({ stages, fe, onChange }: { stages: StageDraft[]; fe: FieldError; onChange(stages: StageDraft[]): void }) {
   const setStage = (i: number, patch: Partial<StageDraft>) => onChange(stages.map((s, j) => (j === i ? { ...s, ...patch } : s)));
   return (
     <>
@@ -310,7 +401,7 @@ function StagesTable({ stages, fe, onChange }: { stages: StageDraft[]; fe: Field
           toastInfo('Leave workflow stage added', SAVE_NOTE);
         }}>Add stage</Button></div>
     </>);
-}
+});
 
 /* -------------------------------------------------- leaver reconciliation */
 /* Days and the direction only; payroll settles the money (D13). */
@@ -353,9 +444,9 @@ function TypeLeaveCard({ setup, policies, typeLeave, picked, onPick, fe, onChang
   const current = types.find(t => t.code === picked) ?? types[0];
   const code = current?.code ?? '';
   const t = Object.hasOwn(typeLeave, code) ? typeLeave[code] : undefined;
-  const i = setup.config.policies.findIndex(p => p.code === t?.policy);
-  const policy = setup.config.policies[i];
-  const carry = policies[i]?.nums.carry ?? String(policy?.carry ?? 0);
+  const i = policies.findIndex(p => p.code === t?.policy);
+  const policy = policies[i];
+  const carry = policy?.nums.carry ?? '0';
   const polErr = fe(`typeLeave.${code}.policy`) ?? fe(`typeLeave.${code}`), unitErr = fe(`typeLeave.${code}.unit`);
   return (
     <AdminCard testId={tid.mleave.card('typeLeave')} icon={<UsersRound />} title="Leave policy by employee type"
@@ -368,7 +459,7 @@ function TypeLeaveCard({ setup, policies, typeLeave, picked, onPick, fe, onChang
           <Control error={polErr}>
             <SettingSelect testId={tid.mleave.tlPolicy} aria-label={`Leave policy for ${current.name}`} value={t.policy} aria-invalid={invalid(polErr)}
               onChange={e => onChange(code, { ...t, policy: e.target.value })}>
-              {setup.config.policies.map(p => <option key={p.code} value={p.code}>{p.name}</option>)}</SettingSelect></Control>
+              {policies.map(p => <option key={p.code} value={p.code}>{p.name}</option>)}</SettingSelect></Control>
         </SettingRow>
         <SettingRow title="Display unit" desc="How balances are shown to this type. Both are always held.">
           <Control error={unitErr}>
@@ -377,7 +468,7 @@ function TypeLeaveCard({ setup, policies, typeLeave, picked, onPick, fe, onChang
               <option value="days">Days</option><option value="hours">Hours</option></SettingSelect></Control>
         </SettingRow>
         {policy && <p data-testid={tid.mleave.tlNote} className="mt-sm text-xs text-text-muted">
-          Policy: <b>{policy.method}</b> · pro-rata {policy.prorata.toLowerCase()} · {carry} days carry-over.</p>}
+          Policy: <b>{LEAVE_METHOD_LABEL[policy.method]}</b> · pro-rata {policy.prorata ? 'on' : 'off'} · {carry} days carry-over.</p>}
       </>}
     </AdminCard>);
 }
