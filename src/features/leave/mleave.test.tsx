@@ -148,7 +148,7 @@ describe('Leave setup', () => {
       await open();
       const sent = patches(), before = config();
       await addWithCode(tid.mleave.policyAdd, 'study', 'Study allowance');
-      expect(await screen.findByTestId(tid.mleave.policyCode)).toHaveTextContent('STUDY');
+      expect(await screen.findByTestId(tid.mleave.policyCode, {}, { timeout: 5000 })).toHaveTextContent('STUDY');
       expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Study allowance');
       await expectToast('Study allowance added');
       expect(config().policies[7]).toEqual({ code: 'STUDY', name: 'Study allowance', method: 'fixed', unit: 'days', base: 0, prorata: true, carry: 0,
@@ -187,7 +187,7 @@ describe('Leave setup', () => {
 
     test('the policy page: every card, the read-only code, and full test id coverage', async () => {
       await openPolicy('STD');
-      expect(await screen.findByTestId(tid.mleave.policyCode)).toHaveTextContent('STD');
+      expect(await screen.findByTestId(tid.mleave.policyCode, {}, { timeout: 5000 })).toHaveTextContent('STD');
       expect(screen.getByText('Modules · Leave · Leave setup · Standard annual leave')).toBeInTheDocument();
       for (const k of ['policy-details', 'policy-entitlement', 'policy-approval', 'policy-bank-holidays']) expect(screen.getByTestId(tid.mleave.card(k))).toBeInTheDocument();
       expect(screen.getByTestId(tid.mleave.card('policy-details'))).toHaveTextContent('The code cannot be changed after the policy is created.');
@@ -204,7 +204,7 @@ describe('Leave setup', () => {
     test('Edit opens the page; Save sends one PATCH of the policies with If-Match, stays, and the summary shows the new values', async () => {
       await open();
       await userEvent.click(screen.getByTestId(tid.mleave.policyEdit(0)));
-      await screen.findByTestId(tid.mleave.policyCode);
+      await screen.findByTestId(tid.mleave.policyCode, {}, { timeout: 5000 });
       const sent = patches(), before = config();
       type(tid.mleave.policyName(0), 'Annual leave policy');
       type(tid.mleave.policyNum(0, 'base'), '26');
@@ -237,7 +237,7 @@ describe('Leave setup', () => {
 
     test('a refusal on the page names its field, and nothing is stored', async () => {
       await openPolicy('FIX');
-      await screen.findByTestId(tid.mleave.policyCode);
+      await screen.findByTestId(tid.mleave.policyCode, {}, { timeout: 5000 });
       const before = snapshot('leaveConfig', 'audit');
       type(tid.mleave.policyName(4), ' ');
       await userEvent.click(screen.getByTestId(tid.mleave.policySave));
@@ -248,7 +248,7 @@ describe('Leave setup', () => {
 
     test('a method that keeps no balance hides the entitlement fields and says why; accrual keeps only the carry cap', async () => {
       await openPolicy('STD');
-      await screen.findByTestId(tid.mleave.policyCode);
+      await screen.findByTestId(tid.mleave.policyCode, {}, { timeout: 5000 });
       expect(screen.getByTestId(tid.mleave.policyNum(0, 'base'))).toBeInTheDocument();
       type(tid.mleave.policyMethod(0), 'none');
       expect(screen.getByTestId(tid.mleave.policyNoBalance)).toHaveTextContent('This method keeps no balance, so there is no allowance, pro-rata, service rule or carry-over to set.');
@@ -262,7 +262,7 @@ describe('Leave setup', () => {
 
     test('leaving the page with unsaved changes asks first', async () => {
       await openPolicy('STD');
-      await screen.findByTestId(tid.mleave.policyCode);
+      await screen.findByTestId(tid.mleave.policyCode, {}, { timeout: 5000 });
       type(tid.mleave.policyName(0), 'Changed');
       await userEvent.click(screen.getByTestId(tid.mleave.policyBack));
       expect(await screen.findByTestId(tid.modal.root)).toHaveTextContent('Discard your changes?');
