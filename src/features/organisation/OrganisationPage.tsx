@@ -1,4 +1,4 @@
-import { useRef, useState, type ChangeEvent, type ReactNode } from 'react';
+import { useId, useRef, useState, type ChangeEvent, type ReactNode } from 'react';
 import { Building2, CalendarDays, Factory, ShieldCheck, Workflow } from 'lucide-react';
 import { tid } from '@/testids';
 import { cn } from '@/lib/utils';
@@ -19,7 +19,7 @@ import { useCaps } from '@/shell/useCaps';
 import { downloadText } from '@/lib/download';
 import { formatDateTime } from '@/lib/format';
 import { CLOCK_STYLES, DATE_FORMATS } from '@/contract/tenant';
-import { DEFAULT_ZONE, supportedTimeZones } from '@/domain/time';
+import { DEFAULT_ZONE, isTimeZone, supportedTimeZones } from '@/domain/time';
 import { MODULES, moduleLive } from '@/domain/modules';
 import { TEMPLATE_SCOPES, scopeLabel, templateFileName, type TemplateScope } from '@/domain/templates';
 
@@ -332,6 +332,54 @@ function CompanyCard({ tenant }: { tenant: Tenant }) {
     </AdminCard>);
 }
 
+/* The time zone: a text box with a list of the IANA zones under it, narrowed
+   to the ones that contain what is typed (a space reads as "_", so "new york"
+   finds America/New_York). Picking a zone from the list saves it; a typed
+   zone saves when the box is left or Enter is pressed. A name that is not a
+   zone is not sent: it is shown as an error under the box. Escape puts back
+   the saved zone. Nothing is sent while a save is under way. Keyed by the
+   stored zone, like TextSetting. */
+function TimeZoneSetting({ value, disabled, serverError, onSave }: {
+  value: string; disabled?: boolean; serverError?: string; onSave(zone: string): void;
+}) {
+  const [draft, setDraft] = useState(value);
+  const [error, setError] = useState('');
+  const listId = useId();
+  const q = draft.trim().toLowerCase().replace(/\s+/g, '_');
+  const zones = supportedTimeZones();
+  const shown = q && draft !== value ? zones.filter(z => z.toLowerCase().includes(q)) : zones;
+  const commit = (zone: string) => {
+    const z = zone.trim();
+    if (disabled) return;
+    if (z === value) { setError(''); return; }
+    if (!isTimeZone(z)) { setError(z ? `${z} is not a time zone. Choose one from the list, for example Europe/London.` : 'Choose a time zone from the list.'); return; }
+    setError('');
+    onSave(z);
+  };
+  const shownError = error || serverError;
+  return (
+    <div data-testid={tid.aorg.timeZones} className="flex flex-col items-end max-md:w-full max-md:items-start">
+      <SettingText testId={tid.aorg.timezone} aria-label="Time zone" value={draft} list={listId} autoComplete="off" spellCheck={false}
+        disabled={disabled} aria-invalid={shownError ? true : undefined} placeholder="Type to search, for example London"
+        onChange={e => {
+          const v = e.currentTarget.value, ne = e.nativeEvent;
+          setDraft(v);
+          if (error) setError('');
+          /* a pick from the list arrives as one replacement, not as typing */
+          if (ne instanceof InputEvent && ne.inputType === 'insertReplacementText' && isTimeZone(v)) commit(v);
+        }}
+        onBlur={() => commit(draft)}
+        onKeyDown={e => {
+          if (e.key === 'Enter') commit(draft);
+          if (e.key === 'Escape') { setDraft(value); setError(''); }
+        }} />
+      <datalist id={listId} data-testid={tid.aorg.timezoneList}>
+        {shown.map(zone => <option key={zone} value={zone} />)}
+      </datalist>
+      {shownError && <p role="alert" data-testid={tid.aorg.timezoneError} className="mt-xs text-xs text-err">{shownError}</p>}
+    </div>);
+}
+
 const DATE_FORMAT_LABELS: Record<(typeof DATE_FORMATS)[number], string> = {
   'dd/mm/yyyy': 'Day / month / year', 'yyyy-mm-dd': 'Year / month / day', 'mm/dd/yyyy': 'Month / day / year',
 };
@@ -342,19 +390,9 @@ function DateTimeCard({ tenant }: { tenant: Tenant }) {
     <AdminCard testId={tid.aorg.card('date-time')} icon={<CalendarDays />} title="Date and time" tipTestId={tid.aorg.tip('date-time')}
       tip="Dates, times and the working day follow this organisation’s settings.">
       <SettingRow title="Time zone" desc="Choose an IANA time zone. Changes apply from the next request.">
-        <div data-testid={tid.aorg.timeZones} className="flex flex-col items-end max-md:w-full max-md:items-start">
-          <SettingSelect testId={tid.aorg.timezone} aria-label="Time zone" value={tenant.timezone || DEFAULT_ZONE}
-            disabled={busy} aria-invalid={s.error('timezone') ? true : undefined}
-            onChange={e => {
-              const zone = e.currentTarget.value;
-              if (zone !== tenant.timezone) s.save.mutate({
-                change: { timezone: zone }, ifMatch: tenant.version,
-              }, { onSuccess: out => { if (out.auditId) toastInfo('Time zone saved.', 'It applies from the next request.'); } });
-            }}>
-            {supportedTimeZones().map(zone => <option key={zone} value={zone}>{zone}</option>)}
-          </SettingSelect>
-          {s.error('timezone') && <p role="alert" className="mt-xs text-xs text-err">{s.error('timezone')}</p>}
-        </div>
+        <TimeZoneSetting key={tenant.timezone} value={tenant.timezone || DEFAULT_ZONE} disabled={busy} serverError={s.error('timezone')}
+          onSave={zone => s.save.mutate({ change: { timezone: zone }, ifMatch: tenant.version },
+            { onSuccess: out => { if (out.auditId) toastInfo('Time zone saved.', 'It applies from the next request.'); } })} />
       </SettingRow>
       <SettingRow title="Date format">
         <SettingSelect testId={tid.aorg.dateFormat} aria-label="Date format" value={tenant.dateFormat} disabled={busy}

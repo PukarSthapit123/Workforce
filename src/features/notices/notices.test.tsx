@@ -41,7 +41,7 @@ test('an acknowledgement date follows the tenant date format', async () => {
   if (!tenant) throw new Error('the social tenant is not loaded');
   tenant.dateFormat = 'yyyy-mm-dd';
   await open();
-  expect(screen.getByTestId(tid.notices.you('NTC-0001'))).toHaveTextContent('Acknowledged 2026-08-10');
+  expect(screen.getByTestId(tid.notices.you('NTC-0001'))).toHaveTextContent(/Acknowledged 08-10$/);
 });
 
 test('reading a notice and acknowledging it records the version I read, once, and the row says so', async () => {

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Ban, Check, CircleAlert, CircleCheck, Clock, Hourglass, Info, PencilLine, RotateCw } from 'lucide-react';
 import { Pill } from '@/ui';
-import { formatAtDate } from '@/domain/time';
+import { formatAtDayMonth } from '@/domain/time';
 import type { NoticeStatus, ReaderState } from '@/api/notices';
 import { NOTICE_STATUS } from '@/domain/notices';
 
@@ -20,7 +20,7 @@ export function NoticeMarks({ urgent, pinned }: { urgent: boolean; pinned: boole
    again after an edit, or still to acknowledge. */
 export function ReaderPill({ testId, you, at }: { testId?: string; you: ReaderState; at: string | null }) {
   if (you === 'info') return <Pill testId={testId} tone="neu" glyph={<Info />}>For information</Pill>;
-  if (you === 'acknowledged') return <Pill testId={testId} tone="ok" glyph={<Check />}>Acknowledged {at ? formatAtDate(at) : ''}</Pill>;
+  if (you === 'acknowledged') return <Pill testId={testId} tone="ok" glyph={<Check />}>Acknowledged {at ? formatAtDayMonth(at) : ''}</Pill>;
   if (you === 'again') return <Pill testId={testId} tone="warn" glyph={<RotateCw />}>Updated, acknowledge again</Pill>;
   return <Pill testId={testId} tone="warn" glyph={<CircleAlert />}>Acknowledge</Pill>;
 }

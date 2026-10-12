@@ -424,6 +424,7 @@ export const tid = {
     nmw: 'aorg-nmw', bankHolidays: 'aorg-bank-holidays', payFrequency: 'aorg-pay-frequency', weekEnding: 'aorg-week-ending',
     firstPayDate: 'aorg-first-pay-date', cutoff: 'aorg-cutoff', cutoffLink: 'aorg-cutoff-link',
     timezone: 'aorg-timezone', timeZones: 'aorg-time-zones', dateFormat: 'aorg-date-format', clock: 'aorg-clock',
+    timezoneList: 'aorg-timezone-list', timezoneError: 'aorg-timezone-error',
   },
   /* 1c group 4: the bell's inbox panel (D9) */
   inbox: {

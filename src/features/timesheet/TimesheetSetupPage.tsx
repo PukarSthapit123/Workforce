@@ -126,9 +126,9 @@ function SetupDraftView({ setup, types, env, picked, onPick }: {
               <Err text={fe(`rules.${r.key}`)} />
             </div>
           </SettingRow>))}
-        <SettingRow title="Minimum net time (hours)" desc="The minimum recorded time after breaks">
+        <SettingRow title="Minimum net time" desc="The minimum recorded time after breaks">
           <div className="flex flex-col items-end max-md:items-start">
-            <UnitInput testId={tid.mts.rule('minNet')} unit="hours" aria-label="Minimum net time (hours)" type="number" inputMode="decimal" step="0.25" min="0"
+            <UnitInput testId={tid.mts.rule('minNet')} unit="hours" aria-label="Minimum net time" type="number" inputMode="decimal" step="0.25" min="0"
               value={draft.rules.minNet} aria-invalid={fe('rules.minNet') ? true : undefined}
               onChange={e => setRule('minNet', Number(e.target.value))} />
             <Err text={fe('rules.minNet')} />
@@ -148,7 +148,7 @@ function SetupDraftView({ setup, types, env, picked, onPick }: {
           </div>
         </SettingRow>
         {([
-          ['otDaily', 'Daily overtime threshold (hours)', 'Hours in one day before the daily overtime trigger applies', 24],
+          ['otDaily', 'Daily overtime threshold', 'Hours in one day before the daily overtime trigger applies', 24],
         ] as const).map(([key, title, desc, max]) => (
           <SettingRow key={key} title={title} desc={desc}>
             <div className="flex flex-col items-end max-md:items-start">
@@ -171,7 +171,7 @@ function SetupDraftView({ setup, types, env, picked, onPick }: {
               aria-invalid={fe('cutoff') ? true : undefined} onChange={e => setCutoff(e.target.value, cutoffTime)}>
               {CUTOFF_DAYS.map(day => <option key={day} value={day}>{day}</option>)}
             </Asel>
-            <SettingText testId={tid.mts.cutoffTime} aria-label="Pay-period cut-off time" type="time" value={cutoffTime}
+            <SettingText testId={tid.mts.cutoffTime} className="w-[130px]" aria-label="Pay-period cut-off time" type="time" value={cutoffTime}
               aria-invalid={fe('cutoff') ? true : undefined} onChange={e => setCutoff(cutoffDay, e.target.value)} />
             <Err text={fe('cutoff')} />
           </div>
@@ -187,8 +187,7 @@ function SetupDraftView({ setup, types, env, picked, onPick }: {
         {/* D6: what the weekly grid captures and how it is laid out live on the
             Weekly grid feature's row in Modules & features; this is a pointer to it */}
         {env.flags.WEEKLY && <SettingRow title="Weekly grid"
-          desc={<span data-testid={tid.mtsPointer.weekly}>{WEEK_GRID_LABEL[config.weekGrid]}. {WEEK_LAYOUT_LABEL[config.weekLayout]}. Set on the Weekly grid row in Modules &amp; features.</span>}>
-          <span className="text-xs text-text-muted">Set on the Weekly grid row in Modules &amp; features.</span>
+          desc={<span data-testid={tid.mtsPointer.weekly}>{WEEK_GRID_LABEL[config.weekGrid]}. {WEEK_LAYOUT_LABEL[config.weekLayout]}. Set on the Weekly grid row in Modules &amp; features.</span>}>{null}
         </SettingRow>}
       </AdminCard>
 

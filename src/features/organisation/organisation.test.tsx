@@ -50,16 +50,43 @@ test('a company setting saves when it is chosen, with one audit row', async () =
   expect(audits().filter(a => a.entity === 'tenant').map(a => a.act)).toEqual(['Organisation settings changed']);
 });
 
-test('the timezone dropdown offers IANA zones and saves the selected identifier, not an offset', async () => {
+const zoneOptions = () => [...screen.getByTestId(tid.aorg.timezoneList).querySelectorAll('option')].map(o => o.value);
+test('the time zone is searchable: the list narrows as the admin types, and a picked IANA zone saves, not an offset', async () => {
   await open();
-  const select = screen.getByTestId(tid.aorg.timezone);
-  expect(select.tagName).toBe('SELECT');
-  expect(screen.getByTestId(tid.aorg.timeZones)).toContainElement(within(select).getByRole('option', { name: 'Asia/Kathmandu' }));
-  expect(within(select).getByRole('option', { name: 'America/New_York' })).toBeInTheDocument();
-  fireEvent.change(select, { target: { value: 'Asia/Kathmandu' } });
+  const box = screen.getByTestId(tid.aorg.timezone);
+  expect(box).toHaveValue('Europe/London');
+  expect(screen.getByTestId(tid.aorg.timeZones)).toContainElement(screen.getByTestId(tid.aorg.timezoneList));
+  expect(zoneOptions()).toEqual(expect.arrayContaining(['Asia/Kathmandu', 'America/New_York', 'UTC']));
+  await userEvent.clear(box);
+  await userEvent.type(box, 'kathm');
+  expect(zoneOptions()).toEqual(['Asia/Kathmandu']);
+  await userEvent.clear(box);
+  await userEvent.type(box, 'new york');
+  expect(zoneOptions()).toContain('America/New_York');
+  expect(zoneOptions().every(z => z.toLowerCase().includes('new_york'))).toBe(true);
+  await userEvent.clear(box);
+  await userEvent.type(box, 'Asia/Kathmandu{Enter}');
   expect(await screen.findByText('Time zone saved.')).toBeInTheDocument();
   expect(tenant()?.timezone).toBe('Asia/Kathmandu');
   expect(audits().filter(a => a.entity === 'tenant')).toHaveLength(1);
+  expectTestIdCoverage(document.body);
+});
+
+test('an unknown time zone is not sent: it shows an inline error, and UTC is still a zone that saves', async () => {
+  await open();
+  const box = screen.getByTestId(tid.aorg.timezone);
+  await userEvent.clear(box);
+  await userEvent.type(box, 'Mars/Olympus{Enter}');
+  expect(screen.getByTestId(tid.aorg.timezoneError)).toHaveTextContent('Mars/Olympus is not a time zone. Choose one from the list, for example Europe/London.');
+  expect(box).toHaveAttribute('aria-invalid', 'true');
+  expect(tenant()?.timezone).toBe('Europe/London');
+  expect(audits().filter(a => a.entity === 'tenant')).toHaveLength(0);
+  await userEvent.clear(box);
+  await userEvent.type(box, 'UTC');
+  expect(screen.queryByTestId(tid.aorg.timezoneError)).toBeNull();
+  fireEvent.blur(box);
+  expect(await screen.findByText('Time zone saved.')).toBeInTheDocument();
+  expect(tenant()?.timezone).toBe('UTC');
 });
 
 test('save a template: a name is needed, then it is listed as saved here with what it keeps', async () => {

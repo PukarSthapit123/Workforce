@@ -91,6 +91,12 @@ export const formatDmy = (iso: string, fmt: DateFormat = active.dateFormat) => {
   const d = parseIso(iso), dd = pad(d.getUTCDate()), mm = pad(d.getUTCMonth() + 1), y = d.getUTCFullYear();
   return fmt === 'yyyy-mm-dd' ? `${y}-${mm}-${dd}` : fmt === 'mm/dd/yyyy' ? `${mm}/${dd}/${y}` : `${dd}/${mm}/${y}`;
 };
+/* A day and month in the tenant's format, without the year: "13/08", "08-13"
+   or "08/13". For short labels such as the acknowledged pill. */
+export const formatDayMonth = (iso: string, fmt: DateFormat = active.dateFormat) => {
+  const d = parseIso(iso), dd = pad(d.getUTCDate()), mm = pad(d.getUTCMonth() + 1);
+  return fmt === 'yyyy-mm-dd' ? `${mm}-${dd}` : fmt === 'mm/dd/yyyy' ? `${mm}/${dd}` : `${dd}/${mm}`;
+};
 /* A date typed in the tenant's format back to "2026-08-13"; '' when it is not a date. */
 export const dmyToIso = (s: string, fmt: DateFormat = active.dateFormat) => {
   const t = String(s || '').trim();
@@ -169,6 +175,8 @@ export function formatTime(hhmm: string, clock: ClockStyle = active.clock): stri
 export const formatDateTime = (iso: string) => { const c = clockFromIso(iso); return `${formatDmy(c.date)} ${formatTime(c.time)}`; };
 /* An instant's date in the tenant's zone and format, never its UTC date. */
 export const formatAtDate = (iso: string) => formatDmy(clockFromIso(iso).date);
+/* An instant's day and month in the tenant's zone and format: "13/08". */
+export const formatAtDayMonth = (iso: string) => formatDayMonth(clockFromIso(iso).date);
 
 /* Rest between a shift and the others in its rota week, in hours; negative when
    they overlap, 99 when there is nothing to compare. Hours run from Monday 00:00

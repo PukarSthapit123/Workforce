@@ -1,4 +1,4 @@
-import { addMonths, clockAt, daysBetween, dayIndex, dmyToIso, fmtMin, formatDmy, formatTime, isIsoDate, isTimeZone, periodStart, setActiveLocale,
+import { addMonths, clockAt, daysBetween, dayIndex, dmyToIso, fmtMin, formatAtDayMonth, formatDayMonth, formatDmy, formatTime, isIsoDate, isTimeZone, periodStart, setActiveLocale,
   supportedTimeZones, weekDates, weekHeads } from './time';
 
 describe('shared date helpers', () => {
@@ -26,6 +26,12 @@ describe('shared date helpers', () => {
       clockAt('2026-03-08T06:30:00.000Z', 'America/New_York'),
       clockAt('2026-03-08T07:30:00.000Z', 'America/New_York'),
     ]).toEqual([{ date: '2026-03-08', time: '01:30' }, { date: '2026-03-08', time: '03:30' }]);
+  });
+  test('a short day and month follows the tenant date format, and an instant reads in the tenant zone', () => {
+    expect([formatDayMonth('2026-08-03', 'dd/mm/yyyy'), formatDayMonth('2026-08-03', 'mm/dd/yyyy'), formatDayMonth('2026-08-03', 'yyyy-mm-dd')])
+      .toEqual(['03/08', '08/03', '08-03']);
+    expect(formatDayMonth('2026-08-03')).toBe('03/08');
+    expect(formatAtDayMonth('2026-07-10T23:30:00.000Z')).toBe('11/07');
   });
   test('date, clock and week formatting follow the active tenant settings', () => {
     setActiveLocale({ timezone: 'Europe/London', dateFormat: 'mm/dd/yyyy', clock: '12h', weekStart: 'Sunday' });
