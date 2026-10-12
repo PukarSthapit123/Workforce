@@ -1,5 +1,7 @@
-/* The setup draft stays local until its versioned Leave config save succeeds. */
-import type { LeaveConfigRecord, LeavePolicy, LeaveStage, LeaveTypeRecord, UpdateLeaveConfig } from '@/api/leave';
+/* The setup draft stays local until its versioned Leave config save succeeds.
+   Policies are catalogue rows (D1): each is added, removed or saved on its own
+   page at once, so they are not part of this draft. */
+import type { LeaveConfigRecord, LeavePolicy, LeaveSetup, LeaveStage, LeaveTypeRecord, UpdateLeaveConfig } from '@/api/leave';
 import {
   LEAVE_METHODS, LEAVE_UNITS, newLeavePolicy, newLeaveStage, newLeaveType, renumberLeaveStages, typeLeaveFor,
   type LeaveMethod, type LeaveUnit, type TypeLeave,
@@ -19,7 +21,7 @@ export interface PolicyDraft {
 export interface StageDraft { who: string; action: string; wait: string; channel: string }
 export interface LeaveDraft {
   nums: Record<NumKey, string>; toggles: Record<ToggleKey, boolean>; toilWindow: number;
-  types: LeaveTypeRecord[]; policies: PolicyDraft[]; stages: StageDraft[]; typeLeave: Record<string, TypeLeave>; sicknessReasons: string[];
+  types: LeaveTypeRecord[]; stages: StageDraft[]; typeLeave: Record<string, TypeLeave>; sicknessReasons: string[];
 }
 
 export const leaveUnit = (v: string): LeaveUnit | undefined => LEAVE_UNITS.find(u => u === v);
@@ -31,45 +33,51 @@ const sameTypes = (a: readonly LeaveTypeRecord[], b: readonly LeaveTypeRecord[])
   a.length === b.length && a.every((t, i) => { const u = b[i]; return !!u && TYPE_KEYS.every(k => t[k] === u[k]); });
 const sameStages = (a: readonly LeaveStage[], b: readonly LeaveStage[]) => a.length === b.length
   && a.every((s, i) => { const t = b[i]; return !!t && s.who === t.who && s.action === t.action && s.wait === t.wait && s.channel === t.channel; });
-const samePolicies = (a: readonly LeavePolicy[], b: readonly LeavePolicy[]) => a.length === b.length
-  && a.every((p, i) => {
-    const q = b[i];
-    return !!q && p.code === q.code && p.name === q.name && p.method === q.method && p.unit === q.unit && p.base === q.base
-      && p.prorata === q.prorata && p.carry === q.carry && p.approval === q.approval && p.sla === q.sla
-      && p.bankHolidayHandling === q.bankHolidayHandling && p.serviceRules.length === q.serviceRules.length
-      && p.serviceRules.every((r, j) => {
-        const s = q.serviceRules[j];
-        return !!s && r.afterYears === s.afterYears && r.add === s.add && r.cap === s.cap;
-      });
+export const samePolicy = (p: LeavePolicy, q: LeavePolicy) => p.code === q.code && p.name === q.name && p.method === q.method && p.unit === q.unit
+  && p.base === q.base && p.prorata === q.prorata && p.carry === q.carry && p.approval === q.approval && p.sla === q.sla
+  && p.bankHolidayHandling === q.bankHolidayHandling && p.serviceRules.length === q.serviceRules.length
+  && p.serviceRules.every((r, j) => {
+    const s = q.serviceRules[j];
+    return !!s && r.afterYears === s.afterYears && r.add === s.add && r.cap === s.cap;
   });
 const stageDraft = (s: LeaveStage): StageDraft => ({ who: s.who, action: s.action, wait: String(s.wait), channel: s.channel });
-const policyDraft = (p: LeavePolicy): PolicyDraft => ({
-  ...p, nums: { base: String(p.base), carry: String(p.carry), sla: p.sla === null ? '' : String(p.sla) },
+export const policyDraft = (p: LeavePolicy): PolicyDraft => ({
+  ...p, serviceRules: p.serviceRules.map(r => ({ ...r })), nums: { base: String(p.base), carry: String(p.carry), sla: p.sla === null ? '' : String(p.sla) },
 });
 
 export function draftOf(c: LeaveConfigRecord, typeCodes: readonly string[]): LeaveDraft {
   return {
     nums: pick(NUM_KEYS, k => String(c[k])), toggles: pick(TOGGLE_KEYS, k => c[k]),
     toilWindow: c.toilWindow,
-    types: c.types.map(t => ({ ...t })), policies: c.policies.map(policyDraft),
+    types: c.types.map(t => ({ ...t })),
     stages: c.stages.map(stageDraft), sicknessReasons: [...c.sicknessReasons],
     typeLeave: Object.fromEntries(typeCodes.map(code => [code, { ...typeLeaveFor(c.typeLeave, code) }])),
   };
 }
 
 /* Module 8 group 3: the code and name are given in the Add dialog, and the code is read-only from then on */
-export function addedType(code: string, name: string, policies: readonly PolicyDraft[]): LeaveTypeRecord {
+export function addedType(code: string, name: string, policies: readonly Pick<LeavePolicy, 'code'>[]): LeaveTypeRecord {
   const policy = policies.some(p => p.code === 'FIX') ? 'FIX' : policies[0]?.code ?? '';
   return { ...newLeaveType(0), code, name, short: name.slice(0, 20), policy };
 }
-export const addedPolicy = (code: string, name: string): PolicyDraft => policyDraft({ ...newLeavePolicy(0), code, name });
+/* A new policy is saved at once with these defaults, then opened on its own page:
+   a set allowance in days from 0, pro-rata, no carry-over, approval needed, and the tenant SLA. */
+export const addedPolicy = (code: string, name: string): LeavePolicy => ({ ...newLeavePolicy(0), code, name, prorata: true });
 export const newStageDraft = (n: number): StageDraft => stageDraft(newLeaveStage(n));
 
-const policyOf = (p: PolicyDraft): LeavePolicy => ({
+export const policyOf = (p: PolicyDraft): LeavePolicy => ({
   code: p.code, name: p.name, method: p.method, unit: p.unit, prorata: p.prorata, approval: p.approval,
   bankHolidayHandling: p.bankHolidayHandling, serviceRules: p.serviceRules,
   base: num(p.nums.base), carry: num(p.nums.carry), sla: p.nums.sla.trim() ? num(p.nums.sla) : null,
 });
+/* The policy page's save: the whole list, with this one replaced where it stands. */
+export const policiesWith = (policies: readonly LeavePolicy[], i: number, p: LeavePolicy): LeavePolicy[] =>
+  policies.map((q, j) => (j === i ? p : q));
+/* How many leave types and employee types use a policy, from the setup read (an employee type with no entry uses the default). */
+export function policyUses(setup: Pick<LeaveSetup, 'config' | 'employeeTypes'>, code: string): number {
+  const { types, typeLeave } = setup.config;
+  return types.filter(t => t.policy === code).length + setup.employeeTypes.filter(t => typeLeaveFor(typeLeave, t.code).policy === code).length;
+}
 
 export function leaveBody(c: LeaveConfigRecord, d: LeaveDraft): UpdateLeaveConfig {
   const body: UpdateLeaveConfig = {};
@@ -77,8 +85,6 @@ export function leaveBody(c: LeaveConfigRecord, d: LeaveDraft): UpdateLeaveConfi
   for (const k of TOGGLE_KEYS) if (d.toggles[k] !== c[k]) body[k] = d.toggles[k];
   if (d.toilWindow !== c.toilWindow) body.toilWindow = d.toilWindow;
   if (!sameTypes(d.types, c.types)) body.types = d.types;
-  const policies = d.policies.map(policyOf);
-  if (!samePolicies(policies, c.policies)) body.policies = policies;
   const stages = renumberLeaveStages(d.stages.map(s => ({ n: 0, who: s.who, action: s.action, wait: num(s.wait), channel: s.channel })));
   if (!sameStages(stages, c.stages)) body.stages = stages;
   if (JSON.stringify(d.sicknessReasons) !== JSON.stringify(c.sicknessReasons)) body.sicknessReasons = d.sicknessReasons;

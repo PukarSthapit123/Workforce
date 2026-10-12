@@ -372,6 +372,13 @@ export const tid = {
     fullTimeHours: 'mleave-full-time-hours', fullTimeLink: 'mleave-full-time-link', recordUnit: 'mleave-record-unit', buySell: 'mleave-buy-sell',
     addCode: 'mleave-add-code', addName: 'mleave-add-name', addSave: 'mleave-add-save', addCancel: 'mleave-add-cancel',
     policyRules: (i: number) => k('mleave-policy-rules', i),
+    /* module 8: the policies card is a summary, and each policy is edited on its own page (?policy=CODE) */
+    policyEdit: (i: number) => k('mleave-policy-edit', i), policyEnt: (i: number) => k('mleave-policy-ent', i),
+    policyUsedBy: (i: number) => k('mleave-policy-used-by', i), policyWarn: 'mleave-policy-warn', policyLocked: 'mleave-policy-locked',
+    policyBack: 'mleave-policy-back', policyMissing: 'mleave-policy-missing', policyCode: 'mleave-policy-code',
+    policySave: 'mleave-policy-save', policyCancel: 'mleave-policy-cancel', policyDirty: 'mleave-policy-dirty',
+    policyNoBalance: 'mleave-policy-no-balance', policyEscalation: 'mleave-policy-escalation', policyRule: (i: number, j: number) => k('mleave-policy-rule', i, j),
+    policyRulesNone: 'mleave-policy-rules-none',
   },
   /* module 4 links: proxy entry on a day of leave or sickness (D8) */
   leaveLink: { proxyAnyway: 'proxy-worked-anyway' },

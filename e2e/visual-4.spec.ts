@@ -9,9 +9,10 @@ import { AMARA, DEE, RACHEL } from './support/rota';
    frozen clock, where Leave, Rota and every LV_* flag are on: My leave for
    Amara Okafor, Team leave (with the escalated banner and the rota link) and
    Sickness (the trigger banner, Bradford table and sickness during booked
-   leave) for Rachel Hussain, and Leave setup for Dee Fitzgerald. These record
-   the screens as ported; refresh them deliberately, with --update-snapshots,
-   only after comparing a change against the prototype. */
+   leave) for Rachel Hussain, and Leave setup and its Standard annual leave
+   policy page for Dee Fitzgerald. These record the screens as ported;
+   refresh them deliberately, with --update-snapshots, only after comparing
+   a change against the prototype. */
 const WIDTHS = [{ w: 1440, h: 1000 }, { w: 390, h: 844 }] as const;
 const THEMES = ['light', 'dark'] as const;
 test.beforeEach(async ({ api }) => { await api.seed('social'); await api.setClock(FROZEN); });
@@ -56,6 +57,10 @@ for (const { w, h } of WIDTHS) {
       await page.getByTestId(tid.mleave.card('rota')).waitFor();
       await page.getByTestId(tid.mleave.leavers).waitFor();
       await shot('mleave');
+
+      await page.goto('/setup/mleave?policy=STD');
+      await page.getByTestId(tid.mleave.card('policy-bank-holidays')).waitFor();
+      await shot('mleave-policy');
     });
   }
 }

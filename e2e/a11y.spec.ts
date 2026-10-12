@@ -244,7 +244,8 @@ test.describe('module 3 pages', () => {
    are on: My leave with its request and entitlement dialogs for Amara Okafor;
    Team leave (with the escalated banner) with its decline, entitlement and
    pro-rata simulation dialogs, and Sickness with its give-back dialog, for
-   Rachel Hussain; Leave setup for Dee Fitzgerald. */
+   Rachel Hussain; Leave setup, its remove-policy confirm and a policy's own
+   page for Dee Fitzgerald. */
 const PAGES_4: [string, Step[]][] = [
   [AMARA, [
     ['/work/leave', open('/work/leave', tid.leave.cards)],
@@ -261,6 +262,8 @@ const PAGES_4: [string, Step[]][] = [
   ]],
   [DEE, [
     ['/setup/mleave', async page => { await open('/setup/mleave', tid.mleave.card('rota'))(page); await page.getByTestId(tid.mleave.leavers).waitFor(); }],
+    ['remove policy confirm', click(tid.mleave.policyRemove(0), tid.modal.confirm)],
+    ['/setup/mleave?policy=STD', async page => { await escape(page); await open('/setup/mleave?policy=STD', tid.mleave.card('policy-bank-holidays'))(page); }],
   ]],
 ];
 test.describe('module 4 pages', () => {

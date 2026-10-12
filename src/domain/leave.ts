@@ -146,6 +146,17 @@ export const newLeavePolicy = (n: number): LeavePolicy => ({ code: `NEWP${n}`, n
 export const newLeaveStage = (n: number): LeaveStage => ({ n, who: 'New approver', action: 'Decision required', wait: 2, channel: 'In-app + email' });
 export const renumberLeaveStages = (stages: readonly LeaveStage[]) => stages.map((s, i) => ({ ...s, n: i + 1 }));
 export const LEAVE_TYPE_ADDED = 'Leave type added. Pick its policy.';
+/* The methods that keep no balance: no allowance, pro-rata, service rule or carry-over applies (entitlement's one-line trace). */
+export const keepsBalance = (method: LeaveMethod) => method === 'fixed' || method === 'accrual';
+const UNIT_ONE: Readonly<Record<LeaveUnit, string>> = { days: 'day', hours: 'hour', weeks: 'week' };
+const unitQty = (n: number, unit: LeaveUnit) => `${n} ${n === 1 ? UNIT_ONE[unit] : unit}`;
+/* Leave setup's policy summary, as entitlement works it out: "24 days, pro-rata, +1 day per 3 years up to 5". */
+export function policyEntitlementSummary(p: Pick<LeavePolicy, 'method' | 'unit' | 'base' | 'prorata' | 'serviceRules'>): string {
+  if (p.method === 'accrual') return LEAVE_METHOD_LABEL.accrual;
+  if (!keepsBalance(p.method)) return 'No balance';
+  const rules = p.serviceRules.map(r => `+${unitQty(r.add, p.unit)} per ${r.afterYears === 1 ? 'year' : `${r.afterYears} years`} up to ${r.cap}`);
+  return [unitQty(p.base, p.unit), ...(p.prorata ? ['pro-rata'] : []), ...rules].join(', ');
+}
 /* Rota and leave (D7): leave reaches the rota only with the Rota module and LV_ROTA on. */
 export const leaveWritesRota = (modules: Readonly<Record<string, boolean>>, flags: Readonly<Record<string, boolean>>) => !!modules.R && !!flags.LV_ROTA;
 

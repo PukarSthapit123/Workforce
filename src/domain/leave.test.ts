@@ -5,7 +5,7 @@ import {
   daysReturnedToast, daysToTakeText, declineReasonProblem, declinedNotice, declinedToast, entitlement, episodeDays, episodeEnd, escalationText,
   giveBackProblem, giveBackRow, halfDaySingle, latestAbsenceText, leaveCan, leaveConfigProblem, leaveCoverReason, leaveRange, leaveRotaWhy, leaveShape,
   leaveTransitionProblem, leaveTypeName, leaveWritesRota, leaveYear, ledgerQty, monthsWorked, moreThanLeft, newLeaveStage, newLeaveType, nextStepText,
-  noticeAdvisory, policyBy, proRataSimulation, reconcileLeaver, recordSicknessPlan, renumberLeaveStages, requestDays, requestProblem, requestedNotice,
+  keepsBalance, noticeAdvisory, policyBy, policyEntitlementSummary, proRataSimulation, reconcileLeaver, recordSicknessPlan, renumberLeaveStages, requestDays, requestProblem, requestedNotice,
   requestedToast, rtwNotices, rtwProblem, selfApprovalProblem, sentNotice, serviceBonus, shortDays, sickDuringLeave, sicknessToast, slaBreachedText,
   slaOf, slaPillText, stageText, tellManagerToast, triggerBannerText, typeBalanceText, typeLeaveFor, wouldRemain, yearBalance, yearShares, yearsService,
   type LeavePolicy, type LeaveRecord, type LeaveStage, type LeaveType, type LedgerRow,
@@ -592,5 +592,18 @@ describe('leave to timesheet (D8)', () => {
   test('a day held back for absence says which day and why', () => {
     expect(absenceHeldReason('2026-08-11', 'S')).toBe('Tue 11 Aug was held back. Sickness is recorded for that day, and approved absence blocks timesheet capture while “Leave blocks timesheet capture” is on.');
     expect(absenceHeldReason('2026-08-10', 'V')).toMatch(/^Mon 10 Aug was held back\. Annual leave is recorded for that day,/);
+  });
+});
+
+describe('the policy summary on Leave setup', () => {
+  test('a set allowance reads its base, pro-rata and service rules; accrual and the no-balance methods say so', () => {
+    expect(policyEntitlementSummary(STD)).toBe('24 days, pro-rata, +1 day per 3 years up to 5');
+    expect(policyEntitlementSummary(FIX)).toBe('5 days, pro-rata');
+    expect(policyEntitlementSummary({ ...FIX, base: 1, prorata: false, unit: 'weeks', serviceRules: [{ afterYears: 1, add: 2, cap: 4 }] }))
+      .toBe('1 week, +2 weeks per year up to 4');
+    expect(policyEntitlementSummary(ACC)).toBe('Accrues from hours worked');
+    for (const p of [NONE, HRIS, SICKP, TOILP]) expect(policyEntitlementSummary(p)).toBe('No balance');
+    expect(keepsBalance('fixed') && keepsBalance('accrual')).toBe(true);
+    expect(keepsBalance('none') || keepsBalance('external') || keepsBalance('sickness')).toBe(false);
   });
 });
