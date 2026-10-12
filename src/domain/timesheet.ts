@@ -10,17 +10,20 @@ import type { Problem } from './codes';
 import { addDays, dowMon, formatDay, formatDmy, formatTime, pad, toMin, weekDates, periodStart, type Clock } from './time';
 
 /* ---------------------------------------------------------------- states (D2) */
-export const TS_STATES = ['draft', 'pend', 'back', 'resub', 'ok'] as const;
+/* mgrok (module 8 group 4): the line manager has approved and a later layer
+   of the Timesheet chain, payroll, still has to. */
+export const TS_STATES = ['draft', 'pend', 'back', 'resub', 'ok', 'mgrok'] as const;
 export type TsState = (typeof TS_STATES)[number];
 export type TsTone = 'neu' | 'info' | 'err' | 'ok';
 export interface TsStateInfo { label: string; tone: TsTone; glyph: string; next: readonly TsState[] }
 
 export const TS_STATE: Record<TsState, TsStateInfo> = {
   draft: { label: 'Draft', tone: 'neu', glyph: '—', next: ['pend'] },
-  pend: { label: 'Awaiting approval', tone: 'info', glyph: '◷', next: ['ok', 'back'] },
+  pend: { label: 'Awaiting approval', tone: 'info', glyph: '◷', next: ['ok', 'back', 'mgrok'] },
   back: { label: 'Sent back', tone: 'err', glyph: '✕', next: ['resub'] },
-  resub: { label: 'Resubmitted', tone: 'info', glyph: '↻', next: ['ok', 'back'] },
+  resub: { label: 'Resubmitted', tone: 'info', glyph: '↻', next: ['ok', 'back', 'mgrok'] },
   ok: { label: 'Approved', tone: 'ok', glyph: '✓', next: [] },
+  mgrok: { label: 'Approved by manager, waiting on payroll', tone: 'info', glyph: '◷', next: ['ok', 'back'] },
 };
 
 export const isTsState = (s: unknown): s is TsState => typeof s === 'string' && (TS_STATES as readonly string[]).includes(s);
@@ -29,6 +32,8 @@ export const tsStateInfo = (s: string): TsStateInfo => (isTsState(s) ? TS_STATE[
 export const tsCan = (from: string, to: string): boolean => isTsState(from) && isTsState(to) && TS_STATE[from].next.includes(to);
 /* Awaiting a manager decision: a first submission or a resubmission. */
 export const tsPending = (s: string): boolean => s === 'pend' || s === 'resub';
+/* Still open: awaiting a decision at some layer of the chain, the manager's or a later one. */
+export const tsOpen = (s: string): boolean => tsPending(s) || s === 'mgrok';
 
 const article = (word: string) => (/^[aeiou]/i.test(word) ? 'An' : 'A');
 const listStates = (states: readonly TsState[]) => {
@@ -47,10 +52,20 @@ export function tsTransitionProblem(from: string, to: string): { message: string
 }
 
 export interface TsActor { personCode: string; name: string }
-export interface TsHistoryEntry { from: TsState; to: TsState; by: TsActor; at: string; reason: string }
+/* layer: the chain role a sign-off was made as (module 8), on an approval only */
+export interface TsHistoryEntry { from: TsState; to: TsState; by: TsActor; at: string; reason: string; layer?: string }
 /* The history row a transition appends; the audit text that goes with it. */
-export const historyEntry = (from: TsState, to: TsState, by: TsActor, at: string, reason = ''): TsHistoryEntry =>
-  ({ from, to, by, at, reason });
+export const historyEntry = (from: TsState, to: TsState, by: TsActor, at: string, reason = '', layer = ''): TsHistoryEntry =>
+  ({ from, to, by, at, reason, ...(layer ? { layer } : {}) });
+/* The chain roles that have signed the day off since it was last submitted or resubmitted (module 8). */
+export function signedLayers(history: readonly Pick<TsHistoryEntry, 'to' | 'layer'>[]): string[] {
+  let out: string[] = [];
+  for (const h of history) {
+    if (h.to === 'pend' || h.to === 'resub' || h.to === 'back') out = [];
+    else if (h.to === 'mgrok' && h.layer) out.push(h.layer);
+  }
+  return out;
+}
 export const transitionAuditText = (personName: string, date: string, from: TsState, to: TsState, reason = '') =>
   `${personName} · ${formatDmy(date)} · ${TS_STATE[from].label} → ${TS_STATE[to].label}${reason ? ` · "${reason}"` : ''}`;
 
@@ -302,6 +317,12 @@ export const PAY_BASIS = {
 } as const;
 export type PayBasis = keyof typeof PAY_BASIS;
 const baseCode = (codes: readonly PayCode[], c: string) => codes.find(x => x.code === c);
+/* A premium work type (module 8, the "Only above a premium threshold" condition):
+   its pay code is a multiplier above the base rate, as overtime, nights and weekends are. */
+export const isPremium = (codes: readonly PayCode[], c: string) => {
+  const x = baseCode(codes, c);
+  return x?.basis === 'multiplier' && Number(x.value) > 1;
+};
 const hasAllowance = (lib: Record<string, AllowanceDef>, c: string) => Object.hasOwn(lib, c);
 export const payLabel = (codes: readonly PayCode[], c: string) => baseCode(codes, c)?.label || c;
 export const payElement = (codes: readonly PayCode[], lib: Record<string, AllowanceDef>, c: string) =>

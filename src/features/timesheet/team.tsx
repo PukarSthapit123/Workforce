@@ -27,12 +27,13 @@ export const historyText = (r: Pick<QueueRow, 'history'>) => r.history.map(h =>
   `${tsStateInfo(h.from).label} → ${tsStateInfo(h.to).label} · ${h.by.name}${h.reason ? ` · "${h.reason}"` : ''}`).join(' | ');
 
 /* tsPill: TS_STATE's label and tone, with the glyphs the day chip draws from the shared icon set. */
-const GLYPH: Record<string, ReactNode> = { draft: <Minus />, pend: <Clock />, back: <X />, resub: <RotateCw />, ok: <Check /> };
+const GLYPH: Record<string, ReactNode> = { draft: <Minus />, pend: <Clock />, back: <X />, resub: <RotateCw />, ok: <Check />, mgrok: <Clock /> };
 export function statePill(state: string): { label: string; tone: Tone; glyph: ReactNode } {
   const s = tsStateInfo(state);
   return { label: s.label, tone: s.tone, glyph: GLYPH[state] ?? GLYPH.draft };
 }
-export const isPending = (state: string) => state === 'pend' || state === 'resub';
+/* still awaiting a decision at some layer of the approval chain (module 8: mgrok waits on payroll) */
+export const isPending = (state: string) => state === 'pend' || state === 'resub' || state === 'mgrok';
 
 /* The matrix pip (mgrTeamMatrix, v15:7076-7097, and .pip, 1387-1393): leave (AL)
    or sickness (S) on the published rota first, then the submitted day

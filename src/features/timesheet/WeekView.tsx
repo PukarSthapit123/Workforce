@@ -25,7 +25,7 @@ const DRAFT_CHIP = { label: 'Draft · not submitted', tone: 'neu' as Tone, glyph
 export function weekChip(week: TimesheetWeek) {
   const states = week.days.filter(d => d.record).map(d => d.state);
   const key = states.includes('back') ? 'back' : !states.length || states.includes('draft') ? 'draft'
-    : states.some(s => s === 'pend' || s === 'resub') ? 'pend' : 'ok';
+    : states.some(s => s === 'pend' || s === 'resub' || s === 'mgrok') ? 'pend' : 'ok';
   return WEEK_CHIP[key] ?? DRAFT_CHIP;
 }
 

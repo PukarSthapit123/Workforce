@@ -17,8 +17,6 @@ import { BulkApproveDialog } from './TeamDialogs';
    under the banner with the reason for each (D7). */
 type View = 'day' | 'week';
 interface HeldRow { id: string; who: string; reason: string }
-/* The approval SLA for the timesheet layer (APPROVAL_CHAIN); the approvals setup page is plan 1c. */
-const SLA = '24 hours';
 
 export function TeamTimesheetsPage() {
   const session = useCurrentSession();
@@ -59,7 +57,7 @@ export function TeamTimesheetsPage() {
       {q && (n > 0
         ? <Banner testId={tid.tteam.pending} tone="warn" icon={<Clock />} title={`${n} timesheet${n > 1 ? 's' : ''} awaiting your decision`}
             actions={<Button testId={tid.tteam.approveAll} kind="primary" small onClick={openBulk}>Review and approve {q.bulk.ids.length} pending</Button>}>
-            {q.oldestPending && <>The oldest was submitted on {formatDmy(q.oldestPending)}. </>}The approval SLA for this layer is {SLA}.</Banner>
+            {q.oldestPending && <>The oldest was submitted on {formatDmy(q.oldestPending)}. </>}{q.sla && <>The approval SLA for this layer is {q.sla}.</>}</Banner>
         : <Banner testId={tid.tteam.clear} tone="ok" icon={<CircleCheck />} title="Nothing waiting on you">
             Every submitted timesheet for this period has been decided.</Banner>)}
       {held.length > 0 && <Banner testId={tid.tteam.held} tone="info" icon={<Info />} title={`${held.length} timesheet${held.length > 1 ? 's' : ''} held back`}>

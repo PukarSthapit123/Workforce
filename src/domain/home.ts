@@ -78,6 +78,8 @@ export const GLYPH_ORDER: readonly GlyphKey[] = ['ok', 'pend', 'resub', 'back', 
    recorded is flagged; anything else is plain. */
 export function dayGlyph(d: { absence: '' | 'V' | 'S'; ts: TsState | null; shift: boolean; past: boolean }): GlyphKey | null {
   if (d.absence) return null;
+  /* approved by the manager and waiting on payroll is still awaiting a decision (module 8) */
+  if (d.ts === 'mgrok') return 'pend';
   if (d.ts) return d.ts;
   return d.shift && d.past ? 'none' : null;
 }

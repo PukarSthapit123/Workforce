@@ -106,6 +106,9 @@ export function buildNav({ caps, modules, flags, onboarding }: NavInput): NavGro
     [can('team_people'), tab('team', 'tpeople', 'People', { group: 'People', groupKey: 'people' })],
     [(can('onb_track') || can('onb_verify')) && on('ON'), tab('team', 'tonb', 'Onboarding', { group: 'People', groupKey: 'people' })],
     [can('notice_post') && flag('NOTICES'), tab('team', 'tnotices', 'Notices', { group: 'People', groupKey: 'people' })],
+    /* module 8: payroll signs off the Timesheet chain's payroll layer from the same queue. Someone who
+       holds only that comes to it last, so an administrator still lands where they did */
+    [!can('team_ts') && can('pay_appr') && ts, tab('team', 'tteam', 'Approvals')],
   ];
   const keep = (xs: [boolean, NavTab][]) => xs.filter(([ok]) => ok).map(([, t]) => t);
   const sections = setupSections(can, on, flag, ts)

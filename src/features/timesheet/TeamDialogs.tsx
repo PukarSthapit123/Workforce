@@ -25,8 +25,9 @@ export function BulkApproveDialog({ queue, where, onClose, onDone }: {
     if (!n) { onClose(); toastInfo('Nothing to approve'); return; }
     if (!ack) { setWarn(true); return; }
     bulk.mutate({ ids: s.ids, checksum: s.checksum }, { onSuccess: res => {
-      const k = res.approved.length;
-      if (k) toastInfo(`${k} approved · ${queueHours(res.minutes)} · ${res.people} colleague(s) · queued for Business Central`
+      const k = res.approved.length, onward = res.approved.filter(d => d.state === 'mgrok').length;
+      if (k) toastInfo(`${k} approved · ${queueHours(res.minutes)} · ${res.people} colleague(s) · `
+        + (onward ? `${k - onward} queued for Business Central · ${onward} now waiting on payroll` : 'queued for Business Central')
         + (flagged.length ? ` · ${flagged.length} had exceptions` : ''));
       onDone(res);
     } });

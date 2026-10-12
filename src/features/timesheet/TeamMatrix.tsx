@@ -7,7 +7,7 @@ import { useApprovalQueue, useBulkApprove, type BulkApproved, type QueueRow } fr
 import { usePeople } from '@/api/people';
 import { addDays, dowMon, isoWeek, periodStart, queueChecksum } from '@/domain/timesheet';
 import { DOW_SHORT, parseIso } from '@/domain/time';
-import { PIP, isPending, pipFor } from './team';
+import { PIP, pipFor } from './team';
 
 /* mgrTeamMatrix (qnipay-workforce-v15.html:7076-7097) and approve-matrix
    (11904-11920): everyone at the approver's location against the days of
@@ -35,14 +35,16 @@ export function TeamMatrix({ today, self, rota, onDone }: {
 
   const approve = () => {
     if (!chosen.size) { toastRefusal({ message: 'Select at least one person to approve.', next: 'Tick the people whose week you have checked.' }); return; }
-    const targets = rows.filter(r => isPending(r.state) && chosen.has(r.personCode));
+    /* only the days whose current approval layer is the reader's (module 8) */
+    const targets = rows.filter(r => r.decide && chosen.has(r.personCode));
     if (!targets.length) {
       toastRefusal({ message: `Nothing pending for the ${chosen.size} person(s) selected on this week.`, next: 'Choose another week or other people.' });
       return;
     }
     bulk.mutate({ ids: targets.map(r => r.id), checksum: queueChecksum(targets) }, { onSuccess: res => {
-      const n = res.approved.length, people = res.people;
-      if (n) toastInfo(`${n} day${n > 1 ? 's' : ''} approved · ${people} employee${people > 1 ? 's' : ''} · queued for Business Central`);
+      const n = res.approved.length, people = res.people, onward = res.approved.filter(d => d.state === 'mgrok').length;
+      if (n) toastInfo(`${n} day${n > 1 ? 's' : ''} approved · ${people} employee${people > 1 ? 's' : ''} · `
+        + (onward ? `${n - onward} queued for Business Central · ${onward} now waiting on payroll` : 'queued for Business Central'));
       setChosen(new Set());
       onDone(res, targets);
     } });

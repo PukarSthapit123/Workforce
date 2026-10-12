@@ -50,9 +50,36 @@ export const PROFILE_ROLES: readonly ApproverRole[] = ['Line manager', 'Payroll'
 /* The conditions a module's layer may carry: the Profile chain its own two,
    since they decide which fields go to whom; every other chain any of the
    prototype's, less the posting step's and the Profile two. */
+/* Module 8 group 4: a Timesheet layer may only carry a condition the
+   server can read off the day, so each one it offers works. */
+export const TIMESHEET_WHEN = ['Every timesheet', 'Only above a premium threshold', 'Only for absence or non-working days', 'Only for proxy entries'] as const;
 export const whenOptions = (m: ChainModule): readonly string[] =>
-  m === 'Profile' ? PROFILE_WHEN : CHAIN_WHEN.filter(w => w !== POSTS && !(PROFILE_WHEN as readonly string[]).includes(w));
-export const roleOptions = (m: ChainModule): readonly ApproverRole[] => (m === 'Profile' ? PROFILE_ROLES : APPROVER_ROLES);
+  m === 'Profile' ? PROFILE_WHEN : m === 'Timesheet' ? TIMESHEET_WHEN
+    : CHAIN_WHEN.filter(w => w !== POSTS && !(PROFILE_WHEN as readonly string[]).includes(w));
+
+/* Module 8 group 4: the one table of who may sign off each role of each
+   module's chain. A role is the capability that decides it; a scoped role
+   is decided only for people in the approver's own access scope (their
+   location, or everyone with Workforce master data), as a manager's team
+   is. A role a module has no row for cannot be put in its chain, since
+   nothing would decide it. Line manager and payroll are what the seeded
+   Timesheet and Profile chains use; the Service Manager rows are what the
+   seeded Leave and Rota chains use. */
+export interface RoleRule { capability: string; scoped: boolean }
+export const CHAIN_ROLE_RULES: Readonly<Record<ChainModule, Partial<Readonly<Record<ApproverRole, RoleRule>>>>> = {
+  Timesheet: { 'Line manager': { capability: 'team_ts', scoped: true }, Payroll: { capability: 'pay_appr', scoped: false } },
+  Profile: { 'Line manager': { capability: 'profile_appr', scoped: true }, Payroll: { capability: 'bank_verify', scoped: false } },
+  Leave: { 'Line manager': { capability: 'team_leave', scoped: true }, 'Service Manager': { capability: 'team_leave', scoped: true } },
+  Rota: { 'Service Manager': { capability: 'team_rota', scoped: true } },
+};
+export const roleRule = (m: ChainModule, role: string): RoleRule | undefined => (isApproverRole(role) ? CHAIN_ROLE_RULES[m][role] : undefined);
+export const roleOptions = (m: ChainModule): readonly ApproverRole[] => APPROVER_ROLES.filter(r => CHAIN_ROLE_RULES[m][r] !== undefined);
+/* every capability that decides some layer of the module's chain */
+export const chainCapabilities = (m: ChainModule): string[] => [...new Set(roleOptions(m).flatMap(r => CHAIN_ROLE_RULES[m][r]?.capability ?? []))];
+const ROLE_PHRASE: Record<ApproverRole, string> = { 'Line manager': 'a line manager', 'Service Manager': 'a Service Manager', Payroll: 'payroll', 'HR administrator': 'an HR administrator' };
+const andList = (xs: readonly string[]) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1] ?? ''}`);
+/* who a layer waits on, in a sentence: "the line manager", "payroll" */
+export const roleWaiting = (role: string) => (role === 'Line manager' ? 'the line manager' : role === 'Payroll' ? 'payroll' : role === 'Service Manager' ? 'the Service Manager' : role);
 
 export const POSTING_ROLE = 'Business Central';
 export const POSTING_STEP: ChainStep = { module: 'Timesheet', role: POSTING_ROLE, scope: '—', when: POSTS, sla: '—', fixed: true };
@@ -126,17 +153,25 @@ export function chainProblem(m: ChainModule, steps: readonly ChainStep[]): Refus
   for (const [i, s] of steps.entries()) {
     if (s.fixed) continue;
     if (!isApproverRole(s.role)) return invalid(`steps.${i}.role`, `${s.role || 'That'} is not an approver role. Choose a line manager, a Service Manager, payroll or an HR administrator.`, 'Choose a role from the list.');
-    if (!roles.includes(s.role)) return invalid(`steps.${i}.role`, 'The Profile chain can only have a line manager and payroll.', 'Choose one of those two.');
+    if (!roles.includes(s.role)) return invalid(`steps.${i}.role`, `The ${m} chain can only have ${andList(roles.map(r => ROLE_PHRASE[r]))}.`,
+      roles.length === 2 ? 'Choose one of those two.' : roles.length === 1 ? 'Choose that role from the list.' : 'Choose one of those.');
     if (!(STEP_SCOPES as readonly string[]).includes(s.scope)) return invalid(`steps.${i}.scope`, `${s.scope || 'That'} is not a scope an approver can have.`, 'Choose a scope from the list.');
     if (!whens.includes(s.when)) return invalid(`steps.${i}.when`, `A ${m} layer cannot apply "${s.when}".`, 'Choose when it applies from the list.');
     const sla = slaProblem(s.sla);
     if (sla) return invalid(`steps.${i}.sla`, sla, 'Change the SLA, then save.');
   }
-  if (m === 'Profile') {
-    for (const r of PROFILE_ROLES) if (layers.filter(s => s.role === r).length > 1)
-      return invalid('steps', `${r} appears twice in the Profile chain. Each approver signs off once.`, 'Remove one of them, then save.');
-    if (!layers.some(s => s.when === 'Every contact detail change'))
-      return invalid('steps', 'Every contact detail change needs an approver.', 'Set one layer to apply to every contact detail change.');
+  if (m === 'Profile' || m === 'Timesheet') {
+    for (const r of roles) if (layers.filter(s => s.role === r).length > 1)
+      return invalid('steps', `${r} appears twice in the ${m} chain. Each approver signs off once.`, 'Remove one of them, then save.');
+  }
+  if (m === 'Profile' && !layers.some(s => s.when === 'Every contact detail change'))
+    return invalid('steps', 'Every contact detail change needs an approver.', 'Set one layer to apply to every contact detail change.');
+  if (m === 'Timesheet') {
+    /* a day reads "approved by manager, waiting on payroll", so the line manager goes first */
+    const lm = layers.findIndex(s => s.role === 'Line manager');
+    if (lm > 0) return invalid(`steps.${lm}.role`, 'The line manager signs off first in the Timesheet chain.', 'Make layer 1 the line manager, then save.');
+    if (!layers.some(s => s.when === 'Every timesheet'))
+      return invalid('steps', 'Every timesheet needs an approver.', 'Set one layer to apply to every timesheet.');
   }
   return null;
 }
@@ -255,4 +290,117 @@ export function whoDecides(steps: readonly ChainStep[], m: ChainModule, personCo
   delegations: readonly Delegation[]): LayerDeciders[] {
   return steps.filter(s => !s.fixed).map(s => ({ role: s.role, scope: s.scope, when: s.when, sla: s.sla,
     deciders: approversFor(s.role, s.scope, personCode, world).map(a => ({ approver: a, acting: actingFor(a, m, date, delegations) })) }));
+}
+
+/* ------------------------------------------- walking a chain (module 8) */
+/* What the server knows about one item that a layer's condition can test.
+   Each module fills in the facts it has; a fact left out is false. */
+export interface ItemFacts {
+  /* Timesheet: the day's work type pays above the base rate */
+  premium?: boolean;
+  /* Timesheet: a non-working day, or time on a day of leave or sickness */
+  absence?: boolean;
+  /* Timesheet: entered by a manager on the person's behalf */
+  proxy?: boolean;
+  /* Profile: the change is to bank details */
+  bankDetails?: boolean;
+  /* Leave: the layer before has not decided within its SLA */
+  slaBreached?: boolean;
+  /* Rota: the week books agency staff */
+  agency?: boolean;
+}
+export type Conditions = Readonly<Record<string, (f: ItemFacts) => boolean>>;
+/* Every condition a layer can carry, read off the facts. */
+export const CONDITIONS: Conditions = {
+  'Every timesheet': () => true,
+  'Every contact detail change': () => true,
+  'Every leave request': () => true,
+  'Only bank details': f => f.bankDetails === true,
+  'Only above a premium threshold': f => f.premium === true,
+  'Only for absence or non-working days': f => f.absence === true,
+  'Only for proxy entries': f => f.proxy === true,
+  'Only when the SLA is breached': f => f.slaBreached === true,
+  'Only for agency booking': f => f.agency === true,
+};
+
+/* Someone who might decide a layer: what the server knows of their record and access. */
+export interface DeciderPerson {
+  code: string; location: string; department: string; active: boolean; caps: readonly string[];
+  /* their access covers every location (Workforce master data), not only their own */
+  allLocations: boolean;
+}
+export interface ChainItem { personCode: string; location: string; department: string; facts: ItemFacts }
+export interface WalkInput {
+  module: ChainModule; steps: readonly ChainStep[]; item: ChainItem;
+  /* the roles that have signed the item off since it was last submitted */
+  signed: readonly string[];
+  /* the day delegations are read on */
+  date: string;
+  people: readonly DeciderPerson[]; delegations: readonly Delegation[];
+  conditions?: Conditions;
+}
+export interface WalkLayer { step: ChainStep; holders: string[]; deciders: string[] }
+export interface ChainWalk {
+  /* the layers whose condition applies, in chain order, each with who may decide it */
+  layers: WalkLayer[];
+  /* the layer the item waits on: the first applicable one not yet signed. Once
+     every one has signed, the last (a chain changed under the item), and null
+     when no layer applies at all, so nothing needs to sign. */
+  current: WalkLayer | null;
+  /* signing the current layer finishes the chain */
+  final: boolean;
+}
+
+const layerApplies = (s: ChainStep, facts: ItemFacts, conditions: Conditions) => !s.fixed && (conditions[s.when]?.(facts) ?? false);
+/* The layer's own scope, against the approver's record. Named employees has no list in this build, so it reads as all. */
+function inLayerScope(scope: string, p: DeciderPerson, item: ChainItem): boolean {
+  if (scope === 'Own department') return p.department === item.department;
+  if (scope === 'Own location' || scope === 'Own site') return p.location === item.location;
+  return true;
+}
+/* Holds the layer's role for this item: the role's capability, the item in
+   their access scope when the role is scoped, and in the layer's own scope.
+   Never the item's own person. */
+export function holdsLayer(m: ChainModule, s: ChainStep, p: DeciderPerson, item: ChainItem): boolean {
+  const rule = roleRule(m, s.role);
+  if (!rule || !p.active || p.code === item.personCode || !p.caps.includes(rule.capability)) return false;
+  if (rule.scoped && !p.allLocations && p.location !== item.location) return false;
+  return inLayerScope(s.scope, p, item);
+}
+/* The holders of a layer, then, while a delegation for the module is in
+   force on the day, whoever covers each of them, as decidersToday does for
+   Profile. A delegate never decides their own item. */
+function layerDeciders(m: ChainModule, s: ChainStep, input: WalkInput): WalkLayer {
+  const holders = input.people.filter(p => holdsLayer(m, s, p, input.item)).map(p => p.code);
+  const active = (code: string) => input.people.some(p => p.code === code && p.active);
+  const deciders = [...new Set(holders.flatMap(h => {
+    const to = actingFor(h, m, input.date, input.delegations);
+    return to !== h && to !== input.item.personCode && active(to) ? [h, to] : [h];
+  }))];
+  return { step: s, holders, deciders };
+}
+
+/* The shared layer walker (module 8 group 4): Timesheet uses it now, and
+   Leave and Rota walk their chains through it the same way. */
+export function walkChain(input: WalkInput): ChainWalk {
+  const conditions = input.conditions ?? CONDITIONS;
+  const layers = input.steps.filter(s => layerApplies(s, input.item.facts, conditions)).map(s => layerDeciders(input.module, s, input));
+  const left = layers.filter(l => !input.signed.includes(l.step.role));
+  const current = left[0] ?? layers[layers.length - 1] ?? null;
+  return { layers, current, final: left.length <= 1 };
+}
+
+/* Why someone may not decide the item at its current layer, or null when
+   they may: it is their own; they hold the current layer's role but the
+   item is outside their scope; they sign off another layer of this chain;
+   or nothing in the chain is theirs. */
+export type DecisionBlock = 'self' | 'scope' | 'layer' | 'capability';
+export function decisionBlock(walk: ChainWalk, input: Pick<WalkInput, 'module' | 'item' | 'people'>, code: string): DecisionBlock | null {
+  if (code === input.item.personCode) return 'self';
+  if (walk.current?.deciders.includes(code)) return null;
+  const caps = input.people.find(p => p.code === code)?.caps ?? [];
+  const rule = walk.current ? roleRule(input.module, walk.current.step.role) : undefined;
+  if (rule && caps.includes(rule.capability)) return 'scope';
+  if (walk.layers.some(l => l.deciders.includes(code)) || chainCapabilities(input.module).some(c => caps.includes(c))) return 'layer';
+  return 'capability';
 }

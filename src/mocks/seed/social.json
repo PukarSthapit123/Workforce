@@ -800,7 +800,8 @@
      "notice_org",
      "perm_cfg",
      "integration",
-     "bank_verify"
+     "bank_verify",
+     "pay_appr"
     ]
    }
   },
@@ -1093,6 +1094,15 @@
     "group": "team",
     "label": "Verify bank detail changes",
     "gate": "The bank detail queue on Qnipay setup → People",
+    "lockedFor": []
+   },
+   "pay_appr": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "pay_appr",
+    "group": "team",
+    "label": "Approve timesheets for payroll",
+    "gate": "My team → Approvals, for the payroll layer of the Timesheet approval chain",
     "lockedFor": []
    }
   },

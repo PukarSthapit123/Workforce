@@ -52,10 +52,11 @@ const rotaConfig = () => recordAt(store.coll<RotaConfigRecord>('rotaConfig'), 'r
 const setAside = () => recordAt(store.coll<SetAside>(SET_ASIDE), SET_ASIDE);
 const count = (coll: string) => Object.keys(store.coll(coll)).length;
 
+/* D4: open work counts every timesheet day still awaiting a decision, mgrok (with payroll) included (module 8 group 4). */
 export function requireWeekStartChangeAllowed(t: Pick<StoredTenant, 'weekStart'>, next: Tenant['weekStart']) {
   if (next === t.weekStart) return;
   const timesheets = Object.values(store.coll<{ state: string }>('timesheetDays'))
-    .filter(d => d.state === 'pend' || d.state === 'back' || d.state === 'resub').length;
+    .filter(d => d.state === 'pend' || d.state === 'back' || d.state === 'resub' || d.state === 'mgrok').length;
   const rotas = Object.values(store.coll<{ state: string }>('rotaWeeks'))
     .filter(w => w.state === 'draft' || w.state === 'review' || w.state === 'amendment').length;
   if (timesheets || rotas) refuse(409, {

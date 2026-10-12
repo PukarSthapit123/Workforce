@@ -1164,13 +1164,12 @@
     },
     "/api/v1/approvals/timesheets/bulk": {
       "post": {
-        "summary": "Approve the listed days, checked against the checksum of what the approver was shown. Any change since refuses the whole batch (QUEUE_CHANGED).",
+        "summary": "Approve the listed days, each at its current layer, checked against the checksum of what the approver was shown. Any change since refuses the whole batch (QUEUE_CHANGED). A day the approver may not decide at its current layer comes back held with the reason.",
         "security": [
           {
             "bearer": []
           }
         ],
-        "x-capability": "team_ts",
         "requestBody": {
           "required": true,
           "content": {
@@ -1243,7 +1242,8 @@
                               "pend",
                               "back",
                               "resub",
-                              "ok"
+                              "ok",
+                              "mgrok"
                             ]
                           },
                           "entries": {
@@ -1382,7 +1382,8 @@
                                     "pend",
                                     "back",
                                     "resub",
-                                    "ok"
+                                    "ok",
+                                    "mgrok"
                                   ]
                                 },
                                 "to": {
@@ -1392,7 +1393,8 @@
                                     "pend",
                                     "back",
                                     "resub",
-                                    "ok"
+                                    "ok",
+                                    "mgrok"
                                   ]
                                 },
                                 "by": {
@@ -1417,6 +1419,9 @@
                                   "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                 },
                                 "reason": {
+                                  "type": "string"
+                                },
+                                "layer": {
                                   "type": "string"
                                 }
                               },
@@ -1584,13 +1589,12 @@
     },
     "/api/v1/approvals/timesheets": {
       "get": {
-        "summary": "The approver's queue at their location, cursor-paged. Query: status (pend, all, resub, ok, back), q, cursor, weekStart. A weekStart read returns the whole week in one page. Reading it runs the posting dispatcher.",
+        "summary": "The approver's queue: the days they take part in at any layer of the Timesheet chain, cursor-paged. Query: status (pend is everything awaiting your decision; all, resub, ok, back, mgrok), q, cursor, weekStart. A weekStart read returns the whole week in one page. Reading it runs the posting dispatcher.",
         "security": [
           {
             "bearer": []
           }
         ],
-        "x-capability": "team_ts",
         "parameters": [
           {
             "name": "status",
@@ -1604,7 +1608,8 @@
                 "all",
                 "resub",
                 "ok",
-                "back"
+                "back",
+                "mgrok"
               ]
             }
           },
@@ -1682,7 +1687,8 @@
                               "pend",
                               "back",
                               "resub",
-                              "ok"
+                              "ok",
+                              "mgrok"
                             ]
                           },
                           "entries": {
@@ -1821,7 +1827,8 @@
                                     "pend",
                                     "back",
                                     "resub",
-                                    "ok"
+                                    "ok",
+                                    "mgrok"
                                   ]
                                 },
                                 "to": {
@@ -1831,7 +1838,8 @@
                                     "pend",
                                     "back",
                                     "resub",
-                                    "ok"
+                                    "ok",
+                                    "mgrok"
                                   ]
                                 },
                                 "by": {
@@ -1856,6 +1864,9 @@
                                   "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                 },
                                 "reason": {
+                                  "type": "string"
+                                },
+                                "layer": {
                                   "type": "string"
                                 }
                               },
@@ -1940,6 +1951,9 @@
                               "closedLate"
                             ],
                             "additionalProperties": false
+                          },
+                          "decide": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -1967,7 +1981,8 @@
                           "personName",
                           "location",
                           "locationName",
-                          "flags"
+                          "flags",
+                          "decide"
                         ],
                         "additionalProperties": false
                       }
@@ -2001,6 +2016,11 @@
                           "minimum": -9007199254740991,
                           "maximum": 9007199254740991
                         },
+                        "mgrok": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
                         "all": {
                           "type": "integer",
                           "minimum": -9007199254740991,
@@ -2012,6 +2032,7 @@
                         "resub",
                         "ok",
                         "back",
+                        "mgrok",
                         "all"
                       ],
                       "additionalProperties": false
@@ -2119,6 +2140,9 @@
                     "returnReasonRequired": {
                       "type": "boolean"
                     },
+                    "sla": {
+                      "type": "string"
+                    },
                     "rota": {
                       "type": "object",
                       "propertyNames": {
@@ -2175,7 +2199,8 @@
                     "oldestPending",
                     "bulk",
                     "now",
-                    "returnReasonRequired"
+                    "returnReasonRequired",
+                    "sla"
                   ],
                   "additionalProperties": false
                 }
@@ -2866,7 +2891,8 @@
                                 "pend",
                                 "back",
                                 "resub",
-                                "ok"
+                                "ok",
+                                "mgrok"
                               ]
                             },
                             "entries": {
@@ -3005,7 +3031,8 @@
                                       "pend",
                                       "back",
                                       "resub",
-                                      "ok"
+                                      "ok",
+                                      "mgrok"
                                     ]
                                   },
                                   "to": {
@@ -3015,7 +3042,8 @@
                                       "pend",
                                       "back",
                                       "resub",
-                                      "ok"
+                                      "ok",
+                                      "mgrok"
                                     ]
                                   },
                                   "by": {
@@ -3040,6 +3068,9 @@
                                     "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                   },
                                   "reason": {
+                                    "type": "string"
+                                  },
+                                  "layer": {
                                     "type": "string"
                                   }
                                 },
@@ -3451,7 +3482,8 @@
                                 "pend",
                                 "back",
                                 "resub",
-                                "ok"
+                                "ok",
+                                "mgrok"
                               ]
                             },
                             "entries": {
@@ -3590,7 +3622,8 @@
                                       "pend",
                                       "back",
                                       "resub",
-                                      "ok"
+                                      "ok",
+                                      "mgrok"
                                     ]
                                   },
                                   "to": {
@@ -3600,7 +3633,8 @@
                                       "pend",
                                       "back",
                                       "resub",
-                                      "ok"
+                                      "ok",
+                                      "mgrok"
                                     ]
                                   },
                                   "by": {
@@ -3625,6 +3659,9 @@
                                     "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                   },
                                   "reason": {
+                                    "type": "string"
+                                  },
+                                  "layer": {
                                     "type": "string"
                                   }
                                 },
@@ -4016,7 +4053,8 @@
                                 "pend",
                                 "back",
                                 "resub",
-                                "ok"
+                                "ok",
+                                "mgrok"
                               ]
                             },
                             "entries": {
@@ -4155,7 +4193,8 @@
                                       "pend",
                                       "back",
                                       "resub",
-                                      "ok"
+                                      "ok",
+                                      "mgrok"
                                     ]
                                   },
                                   "to": {
@@ -4165,7 +4204,8 @@
                                       "pend",
                                       "back",
                                       "resub",
-                                      "ok"
+                                      "ok",
+                                      "mgrok"
                                     ]
                                   },
                                   "by": {
@@ -4190,6 +4230,9 @@
                                     "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                   },
                                   "reason": {
+                                    "type": "string"
+                                  },
+                                  "layer": {
                                     "type": "string"
                                   }
                                 },
@@ -4581,7 +4624,8 @@
                                 "pend",
                                 "back",
                                 "resub",
-                                "ok"
+                                "ok",
+                                "mgrok"
                               ]
                             },
                             "entries": {
@@ -4720,7 +4764,8 @@
                                       "pend",
                                       "back",
                                       "resub",
-                                      "ok"
+                                      "ok",
+                                      "mgrok"
                                     ]
                                   },
                                   "to": {
@@ -4730,7 +4775,8 @@
                                       "pend",
                                       "back",
                                       "resub",
-                                      "ok"
+                                      "ok",
+                                      "mgrok"
                                     ]
                                   },
                                   "by": {
@@ -4755,6 +4801,9 @@
                                     "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                   },
                                   "reason": {
+                                    "type": "string"
+                                  },
+                                  "layer": {
                                     "type": "string"
                                   }
                                 },
@@ -5756,7 +5805,8 @@
                                 "pend",
                                 "back",
                                 "resub",
-                                "ok"
+                                "ok",
+                                "mgrok"
                               ]
                             },
                             "entries": {
@@ -5895,7 +5945,8 @@
                                       "pend",
                                       "back",
                                       "resub",
-                                      "ok"
+                                      "ok",
+                                      "mgrok"
                                     ]
                                   },
                                   "to": {
@@ -5905,7 +5956,8 @@
                                       "pend",
                                       "back",
                                       "resub",
-                                      "ok"
+                                      "ok",
+                                      "mgrok"
                                     ]
                                   },
                                   "by": {
@@ -5930,6 +5982,9 @@
                                     "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                   },
                                   "reason": {
+                                    "type": "string"
+                                  },
+                                  "layer": {
                                     "type": "string"
                                   }
                                 },
@@ -8552,7 +8607,8 @@
                                       "pend",
                                       "back",
                                       "resub",
-                                      "ok"
+                                      "ok",
+                                      "mgrok"
                                     ]
                                   },
                                   "minutes": {
@@ -8902,7 +8958,8 @@
                                     "pend",
                                     "back",
                                     "resub",
-                                    "ok"
+                                    "ok",
+                                    "mgrok"
                                   ]
                                 },
                                 "minutes": {
@@ -52507,13 +52564,12 @@
     },
     "/api/v1/timesheet-days/{id}/transition": {
       "post": {
-        "summary": "Approve or return one day (If-Match). Approval queues a posting for Business Central; it never posts.",
+        "summary": "Approve or return one day at its current approval layer (If-Match). Approval with a later layer to come moves the day to mgrok; only the last layer's approval queues a posting for Business Central, and it never posts. Refused with SELF_APPROVAL, scope, WRONG_LAYER or capability.",
         "security": [
           {
             "bearer": []
           }
         ],
-        "x-capability": "team_ts",
         "parameters": [
           {
             "name": "id",
@@ -52604,7 +52660,8 @@
                             "pend",
                             "back",
                             "resub",
-                            "ok"
+                            "ok",
+                            "mgrok"
                           ]
                         },
                         "entries": {
@@ -52743,7 +52800,8 @@
                                   "pend",
                                   "back",
                                   "resub",
-                                  "ok"
+                                  "ok",
+                                  "mgrok"
                                 ]
                               },
                               "to": {
@@ -52753,7 +52811,8 @@
                                   "pend",
                                   "back",
                                   "resub",
-                                  "ok"
+                                  "ok",
+                                  "mgrok"
                                 ]
                               },
                               "by": {
@@ -52778,6 +52837,9 @@
                                 "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                               },
                               "reason": {
+                                "type": "string"
+                              },
+                              "layer": {
                                 "type": "string"
                               }
                             },
@@ -53199,7 +53261,8 @@
                             "pend",
                             "back",
                             "resub",
-                            "ok"
+                            "ok",
+                            "mgrok"
                           ]
                         },
                         "entries": {
@@ -53338,7 +53401,8 @@
                                   "pend",
                                   "back",
                                   "resub",
-                                  "ok"
+                                  "ok",
+                                  "mgrok"
                                 ]
                               },
                               "to": {
@@ -53348,7 +53412,8 @@
                                   "pend",
                                   "back",
                                   "resub",
-                                  "ok"
+                                  "ok",
+                                  "mgrok"
                                 ]
                               },
                               "by": {
@@ -53373,6 +53438,9 @@
                                 "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                               },
                               "reason": {
+                                "type": "string"
+                              },
+                              "layer": {
                                 "type": "string"
                               }
                             },
@@ -53725,7 +53793,8 @@
                             "pend",
                             "back",
                             "resub",
-                            "ok"
+                            "ok",
+                            "mgrok"
                           ]
                         },
                         "entries": {
@@ -53864,7 +53933,8 @@
                                   "pend",
                                   "back",
                                   "resub",
-                                  "ok"
+                                  "ok",
+                                  "mgrok"
                                 ]
                               },
                               "to": {
@@ -53874,7 +53944,8 @@
                                   "pend",
                                   "back",
                                   "resub",
-                                  "ok"
+                                  "ok",
+                                  "mgrok"
                                 ]
                               },
                               "by": {
@@ -53899,6 +53970,9 @@
                                 "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                               },
                               "reason": {
+                                "type": "string"
+                              },
+                              "layer": {
                                 "type": "string"
                               }
                             },
@@ -54175,7 +54249,8 @@
                                     "pend",
                                     "back",
                                     "resub",
-                                    "ok"
+                                    "ok",
+                                    "mgrok"
                                   ]
                                 },
                                 "entries": {
@@ -54314,7 +54389,8 @@
                                           "pend",
                                           "back",
                                           "resub",
-                                          "ok"
+                                          "ok",
+                                          "mgrok"
                                         ]
                                       },
                                       "to": {
@@ -54324,7 +54400,8 @@
                                           "pend",
                                           "back",
                                           "resub",
-                                          "ok"
+                                          "ok",
+                                          "mgrok"
                                         ]
                                       },
                                       "by": {
@@ -54349,6 +54426,9 @@
                                         "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                       },
                                       "reason": {
+                                        "type": "string"
+                                      },
+                                      "layer": {
                                         "type": "string"
                                       }
                                     },
@@ -54713,7 +54793,8 @@
                               "pend",
                               "back",
                               "resub",
-                              "ok"
+                              "ok",
+                              "mgrok"
                             ]
                           },
                           "entries": {
@@ -54852,7 +54933,8 @@
                                     "pend",
                                     "back",
                                     "resub",
-                                    "ok"
+                                    "ok",
+                                    "mgrok"
                                   ]
                                 },
                                 "to": {
@@ -54862,7 +54944,8 @@
                                     "pend",
                                     "back",
                                     "resub",
-                                    "ok"
+                                    "ok",
+                                    "mgrok"
                                   ]
                                 },
                                 "by": {
@@ -54887,6 +54970,9 @@
                                   "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                 },
                                 "reason": {
+                                  "type": "string"
+                                },
+                                "layer": {
                                   "type": "string"
                                 }
                               },
@@ -55239,7 +55325,8 @@
                                       "pend",
                                       "back",
                                       "resub",
-                                      "ok"
+                                      "ok",
+                                      "mgrok"
                                     ]
                                   },
                                   "entries": {
@@ -55378,7 +55465,8 @@
                                             "pend",
                                             "back",
                                             "resub",
-                                            "ok"
+                                            "ok",
+                                            "mgrok"
                                           ]
                                         },
                                         "to": {
@@ -55388,7 +55476,8 @@
                                             "pend",
                                             "back",
                                             "resub",
-                                            "ok"
+                                            "ok",
+                                            "mgrok"
                                           ]
                                         },
                                         "by": {
@@ -55413,6 +55502,9 @@
                                           "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                                         },
                                         "reason": {
+                                          "type": "string"
+                                        },
+                                        "layer": {
                                           "type": "string"
                                         }
                                       },
@@ -55486,7 +55578,8 @@
                                   "pend",
                                   "back",
                                   "resub",
-                                  "ok"
+                                  "ok",
+                                  "mgrok"
                                 ]
                               },
                               {

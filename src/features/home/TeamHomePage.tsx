@@ -46,7 +46,8 @@ function TeamCard({ tab }: { tab: NavTab }) {
 const waiting = (n: number | undefined, unit = 'waiting') => (n === undefined ? null : n === 0 ? 'Nothing waiting' : `${n} ${unit}`);
 function ApprovalsCard({ tab }: { tab: NavTab }) {
   const c = useApprovalQueue({ status: 'pend' }).data?.counts;
-  return <Card tab={tab} text={waiting(c ? c.pend + c.resub : undefined)} has={Boolean(c && c.pend + c.resub)} />;
+  /* pend is everything awaiting the reader's decision, resubmissions and payroll's layer included */
+  return <Card tab={tab} text={waiting(c?.pend)} has={Boolean(c?.pend)} />;
 }
 function RequestsCard({ tab }: { tab: NavTab }) {
   const n = useTeamLeave().data?.counts.pending;

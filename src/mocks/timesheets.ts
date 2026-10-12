@@ -15,6 +15,9 @@ import { leaveAbsenceOn, leaveBlocksTimesheet } from './leave';
 import { invalid } from './people';
 import meta from './seed/meta.json';
 import { effectiveCode, inScope, nameOf, personByCode, recordAt, scopeOf, type Signed, type StoredPerson } from './world';
+import { approvesIn, chainPeople, slaFor, walkNow } from './approvals';
+import { notifyEvent } from './notify';
+import { roleRule, roleWaiting, type ChainItem, type ChainWalk, type DecisionBlock, type DeciderPerson, type ItemFacts } from '@/domain/approvals';
 import {
   bulkApproveTimesheets, getTimesheetConfig, getTimesheetWeek, listTimesheetApprovals, retryIntegrationAttempt, saveTimesheetDay,
   submitMultiweek, submitTimesheetDay, submitTimesheetWeek, transitionTimesheetDay, updateTimesheetConfig,
@@ -25,9 +28,9 @@ import { clockHeldReason, clockRunning, clockState, isOpenState, type ClockEvent
 import { absenceBlockedProblem, absenceHeldReason } from '@/domain/leave';
 import {
   APPROVAL_AUDIT_SUFFIX, TS_STATE, advisoryFlags, allSubmittedMessage, alreadySubmittedMessage, clockFromIso, dayMinutes,
-  deriveWorkType, dispatchAttempt, formatDmy, formatMinutes, historyEntry, isoWeek, lockNote, missingMandatory,
+  deriveWorkType, dispatchAttempt, formatDmy, formatMinutes, historyEntry, isPremium, isoWeek, lockNote, missingMandatory,
   periodLocked, periodStart, planWeekSubmit, queueChecksum, queuedAttempt, retryAttempt, retryAuditText, retryProblem,
-  returnReasonProblem, rotaFor, timesheetConfigProblem, toMin, transitionAuditText, tsCan, tsPending, tsTransitionProblem,
+  returnReasonProblem, rotaFor, signedLayers, timesheetConfigProblem, toMin, transitionAuditText, tsOpen, tsTransitionProblem,
   validateTimes, weekBlockedMessage, weekDates, weekDayOutcome, weekLabel, weekModel, weekTotals, NOTHING_TO_SUBMIT,
   allocationProblem, type AllowanceDef, type CheckContext, type FieldEnv, type PayCode, type TsState, type WeekDayInput,
 } from '@/domain/timesheet';
@@ -190,8 +193,8 @@ function applyInput(p: StoredPerson, base: StoredDay, input: DayInput, check: Da
   };
 }
 const by = (s: Signed) => { const w = actor(s); return { personCode: w.personCode, name: w.name }; };
-function moved(d: StoredDay, to: TsState, s: Signed, reason = ''): Partial<StoredDay> {
-  return { state: to, history: [...d.history, historyEntry(d.state, to, by(s), store.now(), reason)] };
+function moved(d: StoredDay, to: TsState, s: Signed, reason = '', layer = ''): Partial<StoredDay> {
+  return { state: to, history: [...d.history, historyEntry(d.state, to, by(s), store.now(), reason, layer)] };
 }
 const save = (base: StoredDay, changes: Partial<StoredDay>): StoredDay => {
   const rec = { ...bump(base, changes) };
@@ -231,10 +234,68 @@ function queuePosting(p: StoredPerson, d: StoredDay): StoredAttempt {
   attempts()[id] = a;
   return a;
 }
-function approve(p: StoredPerson, d: StoredDay, s: Signed) {
+/* ------------------------------------------- the approval chain (module 8) */
+/* What a layer's condition reads off the day: a premium work type, a
+   non-working day or time on a day of leave or sickness, a proxy entry. */
+function factsOf(d: StoredDay): ItemFacts {
+  return { premium: isPremium(payCodes(), d.workType), proxy: d.captureSource === 'proxy',
+    absence: d.nonWorkingReason.trim() !== '' || absenceOf(d.personCode, d.date) !== '' };
+}
+const itemOf = (d: StoredDay, p: StoredPerson): ChainItem => ({ personCode: p.code, location: p.location, department: p.department, facts: factsOf(d) });
+/* The day's walk along the Timesheet chain as it stands, with the layers signed since it was last submitted. */
+const walkOf = (d: StoredDay, p: StoredPerson, everyone?: readonly DeciderPerson[]) => walkNow('Timesheet', itemOf(d, p), signedLayers(d.history), everyone);
+const capLabel = (cap: string) => store.coll<{ label?: string }>('capabilities')[cap]?.label ?? cap;
+const waitingOn = (w: ChainWalk) => roleWaiting(w.current?.step.role ?? 'Line manager');
+const upper = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
+/* Why the reader may not decide the day at its current layer, as a refusal and as a held row's reason. */
+function blocked(block: DecisionBlock, w: ChainWalk): { status: number; code: string; message: string; next: string } {
+  if (block === 'self') return { status: 403, code: 'SELF_APPROVAL', message: 'You cannot approve or return your own timesheet.', next: 'Ask another approver at your location.' };
+  if (block === 'scope') return { status: 403, code: 'scope', message: 'This timesheet belongs to someone outside the people you look after.', next: 'Their own manager decides it.' };
+  if (block === 'layer') return { status: 403, code: 'WRONG_LAYER', message: `This timesheet is waiting on ${waitingOn(w)}, not on a layer you sign off.`, next: `${upper(waitingOn(w))} decides it now.` };
+  const cap = roleRule('Timesheet', w.current?.step.role ?? 'Line manager')?.capability ?? 'team_ts';
+  return { status: 403, code: 'capability', message: `This needs "${capLabel(cap)}", which your access does not include.`, next: 'Ask an administrator to grant it on Qnipay setup → Permissions.' };
+}
+const HELD_REASON: Partial<Record<DecisionBlock, string>> = { self: 'This is your own timesheet. Ask another approver at your location.' };
+/* Reading or deciding the queue needs a capability that decides some layer of the chain, or a delegation in force from someone who has one. */
+function requireApprover(s: Signed) {
+  if (!approvesIn('Timesheet', effectiveCode(s), s.caps)) requireCapability(s, 'team_ts');
+}
+
+/* Signs the day off at its current layer (D4, module 8): with a later layer
+   to come the day moves to mgrok; the last layer's approval moves it to ok
+   and queues a posting, and never posts. */
+function signOff(p: StoredPerson, d: StoredDay, s: Signed, w: ChainWalk): { rec: StoredDay; a: StoredAttempt | null } {
+  const layer = w.current?.step.role ?? '';
+  if (!w.final) return { rec: save(d, moved(d, 'mgrok', s, '', layer)), a: null };
   const a = queuePosting(p, d);
-  const rec = save(d, { ...moved(d, 'ok', s), integrationAttemptId: a.id });
-  return { rec, a };
+  return { rec: save(d, { ...moved(d, 'ok', s, '', layer), integrationAttemptId: a.id }), a };
+}
+
+/* ----------------------------------------------------------- notifications */
+/* ts_submitted, ts_approved and ts_returned (module 8 group 4), raised as
+   Profile raises pf_req and pf_done: to the people who decide the day's
+   current layer (its holders and anyone covering them), never to whoever
+   just acted; and to the person once it is approved or sent back. */
+const daysText = (list: readonly StoredDay[]) => {
+  const dates = list.map(d => d.date).sort(), first = dates[0] ?? '', last = dates[dates.length - 1] ?? '';
+  return dates.length === 1 ? formatDmy(first) : `${dates.length} days, ${formatDmy(first)} to ${formatDmy(last)}`;
+};
+const minutesOf = (list: readonly StoredDay[]) => list.reduce((n, d) => n + dayMinutes(d.entries), 0);
+function tellApprovers(p: StoredPerson, recs: readonly StoredDay[], s: Signed, by?: { name: string; layer: string }) {
+  const everyone = chainPeople(), me = s.account.personCode, to = new Map<string, StoredDay[]>();
+  for (const d of recs) for (const code of walkOf(d, p, everyone).walk.current?.deciders ?? [])
+    if (code !== me) to.set(code, [...(to.get(code) ?? []), d]);
+  for (const [code, list] of to) {
+    const what = `${p.name} (${p.code}). ${daysText(list)}. ${hm(minutesOf(list))}.`;
+    notifyEvent('ts_submitted', 'actor', [code], by
+      ? { title: 'Timesheet awaiting approval', body: `${what} Approved by ${by.name}, now waiting on ${by.layer}.` }
+      : { title: 'Timesheet submitted', body: `${what} Awaiting approval.` });
+  }
+}
+function tellApproved(p: StoredPerson, list: readonly StoredDay[], s: Signed) {
+  if (!list.length) return;
+  notifyEvent('ts_approved', 'subject', [p.code], { title: 'Timesheet approved',
+    body: `${daysText(list)}. ${hm(minutesOf(list))}. Approved by ${actor(s).name} and queued for Business Central.` });
 }
 /* The dispatcher (D4): the only thing that resolves an attempt, run on each
    read of the approvals queue. An attempt with a cause fails every time; a
@@ -283,7 +344,7 @@ function earlierWeeks(p: StoredPerson) {
   }
   return [...byWeek].map(([ws, list]) => {
     const ready = list.some(d => (d.state === 'draft' || d.state === 'back') && dayMinutes(d.entries) > 0);
-    const waiting = list.some(d => tsPending(d.state));
+    const waiting = list.some(d => tsOpen(d.state));
     if (!ready && !waiting) return null;
     const locked = isLocked(ws);
     return { weekStart: ws, label: weekLabel(ws), minutes: list.reduce((n, d) => n + dayMinutes(d.entries), 0),
@@ -385,8 +446,8 @@ function clockMark(code: string, date: string) {
   const r = recordAt(store.coll<ClockRec>('clockRecords'), `clk_${code}_${date}`);
   return r ? { clock: { late: Boolean(r.late), closedLate: r.closedLate != null } } : {};
 }
-const rowOf = ({ d, p }: Located): QueueRow =>
-  ({ ...dayView(d), personName: p.name, location: p.location, locationName: nameOf('locations', p.location), flags: flagsFor(d), ...clockMark(p.code, d.date) });
+const rowOf = ({ d, p }: Located, decide: boolean): QueueRow =>
+  ({ ...dayView(d), personName: p.name, location: p.location, locationName: nameOf('locations', p.location), flags: flagsFor(d), ...clockMark(p.code, d.date), decide });
 
 /* The matrix's rota: everyone on a published week in the approver's scope (module 3, gap 6). */
 function weekRota(sc: ReturnType<typeof scopeOf>, weekStart: string): Record<string, RotaDay[]> {
@@ -438,7 +499,7 @@ export const timesheetHandlers = [
     const p = personFor(params.personId), mode = access(session, p, true);
     const existing = recordAt(days(), dayId(p.code, params.date));
     /* D8: a retried submit finds the first one and is refused before the version is read */
-    if (existing && (tsPending(existing.state) || existing.state === 'ok')) alreadySubmitted(existing);
+    if (existing && (tsOpen(existing.state) || existing.state === 'ok')) alreadySubmitted(existing);
     if (clockRunsOn(p.code, params.date)) refuse(409, clockRunning(params.date, mode === 'proxy'));
     const base = existing ?? blankDay(p, params.date);
     checkVersion(base);
@@ -451,6 +512,7 @@ export const timesheetHandlers = [
     const detail = transitionAuditText(p.name, rec.date, base.state, to, reason) + (mode === 'proxy' ? ` · ${hm(dayMinutes(rec.entries))} · entered on their behalf` : '');
     const auditId = writeAudit({ who: actor(session), act: mode === 'proxy' ? 'Proxy timesheet submitted' : stateAct(to), entity: 'timesheetDay',
       entityId: rec.id, before: { state: base.state }, after: { state: to, detail } });
+    tellApprovers(p, [rec], session);
     return { record: dayView(rec), warnings: check.warnings, auditId };
   }),
 
@@ -505,6 +567,7 @@ export const timesheetHandlers = [
     const auditId = writeAudit({ who: actor(session), act: mode === 'proxy' ? 'Proxy timesheet week submitted' : 'Timesheet week submitted',
       entity: 'timesheetDay', entityId: `${p.code} week ${isoWeek(params.weekStart)}`, before: null,
       after: { days: made.map(d => d.date), held: plan.held.length, detail } });
+    tellApprovers(p, made, session);
     return { submitted: made.map(dayView), held: plan.held, flagged: plan.flagged,
       warnings: made.filter(d => d.warnings.length).map(d => ({ date: d.date, warnings: d.warnings })), weekMinutes, auditId };
   }),
@@ -544,88 +607,121 @@ export const timesheetHandlers = [
       entity: 'timesheetDay', entityId: `${p.code} ${sent.map(w => `week ${isoWeek(w.weekStart)}`).join(', ')}`, before: null,
       after: { weeks: sent.map(w => w.label), days: n, held: out.length - sent.length,
         detail: `${sent.length} week${sent.length > 1 ? 's' : ''} · ${n} day${n > 1 ? 's' : ''} · each routes through approval separately` } });
+    for (const w of sent) tellApprovers(p, w.submitted.flatMap(x => recordAt(days(), x.id) ?? []), session);
     return { weeks: out, auditId };
   }),
 
   serve(transitionTimesheetDay, ({ session, params, body: { to, reason }, checkVersion }) => {
+    requireApprover(session);
     const d = recordAt(days(), params.id) ?? refuse(404, { code: 'not-found', message: 'That timesheet no longer exists.', next: 'Reload the queue.' });
     const p = personByCode(d.personCode) ?? refuse(404, { code: 'not-found', message: 'That person record no longer exists.', next: 'Reload the queue.' });
-    if (!inScope(session, p.location)) refuse(403, { code: 'scope', message: 'This timesheet belongs to someone outside the people you look after.', next: 'Their own manager decides it.' });
-    /* D5 */
-    if (d.personCode === effectiveCode(session)) refuse(403, { code: 'SELF_APPROVAL', message: 'You cannot approve or return your own timesheet.', next: 'Ask another approver at your location.' });
-    const problem = tsTransitionProblem(d.state, to);
+    /* D5 and module 8: the reader must decide the day's current layer of the chain;
+       a day no longer open is refused as a transition below, whoever asks */
+    const { walk, block } = walkOf(d, p), why = block(effectiveCode(session));
+    if (why && (why !== 'layer' || tsOpen(d.state))) { const { status, ...r } = blocked(why, walk); refuse(status, r); }
+    const target: TsState = to === 'ok' && !walk.final ? 'mgrok' : to;
+    const problem = tsTransitionProblem(d.state, target);
     if (problem) refuse(409, { code: 'TRANSITION_NOT_ALLOWED', ...problem });
     checkVersion(d);
-    const why = reason.trim();
-    const rp = returnReasonProblem(why, to === 'back' && config().returnReasonRequired);
+    const reasonText = reason.trim();
+    const rp = returnReasonProblem(reasonText, to === 'back' && config().returnReasonRequired);
     if (rp) invalid(rp);
     const from = d.state;
     let rec: StoredDay, attempt: StoredAttempt | null = null;
-    if (to === 'ok') ({ rec, a: attempt } = approve(p, d, session));
-    else rec = save(d, { ...moved(d, 'back', session, why), returnReason: why });
-    const detail = transitionAuditText(p.name, d.date, from, to, why) + (to === 'ok' ? ` · ${APPROVAL_AUDIT_SUFFIX}` : '');
-    const auditId = writeAudit({ who: actor(session), act: stateAct(to), entity: 'timesheetDay', entityId: d.id,
-      before: { state: from }, after: { state: to, detail, ...(attempt ? { posting: attempt.id } : {}) }, ...(why ? { reason: why } : {}) });
+    if (to === 'ok') ({ rec, a: attempt } = signOff(p, d, session, walk));
+    else rec = save(d, { ...moved(d, 'back', session, reasonText, walk.current?.step.role ?? ''), returnReason: reasonText });
+    const next = rec.state === 'mgrok' ? walkOf(rec, p).walk : null;
+    const detail = transitionAuditText(p.name, d.date, from, rec.state, reasonText)
+      + (rec.state === 'ok' ? ` · ${APPROVAL_AUDIT_SUFFIX}` : next ? ` · now waiting on ${waitingOn(next)}` : '');
+    const act = rec.state === 'mgrok' && next ? `Timesheet passed to ${waitingOn(next)}` : stateAct(rec.state);
+    const auditId = writeAudit({ who: actor(session), act, entity: 'timesheetDay', entityId: d.id,
+      before: { state: from }, after: { state: rec.state, detail, ...(attempt ? { posting: attempt.id } : {}) }, ...(reasonText ? { reason: reasonText } : {}) });
+    if (rec.state === 'ok') tellApproved(p, [rec], session);
+    else if (next) tellApprovers(p, [rec], session, { name: actor(session).name, layer: waitingOn(next) });
+    else notifyEvent('ts_returned', 'subject', [p.code], { title: 'Timesheet returned',
+      body: `${formatDmy(d.date)}. Sent back by ${actor(session).name}${reasonText ? `: "${reasonText}"` : ''}. Correct it and submit it again.` });
     return { record: dayView(rec), attempt, auditId };
   }),
 
   serve(listTimesheetApprovals, ({ session, query }) => {
+    requireApprover(session);
     dispatch();
-    const sc = scopeOf(session), self = effectiveCode(session);
-    const submitted = located().filter(x => x.d.state !== 'draft' && x.d.personCode !== self);
-    const mine = submitted.filter(x => sc.all || x.p.location === sc.location);
+    const sc = scopeOf(session), self = effectiveCode(session), everyone = chainPeople();
+    /* Module 8: every submitted day, walked along the chain once. The reader
+       takes part in a day when they decide any of its applicable layers, and
+       may decide it now when it is open and its current layer is theirs. */
+    const walked = located().filter(x => x.d.state !== 'draft' && x.d.personCode !== self)
+      .map(x => { const w = walkOf(x.d, x.p, everyone); return { ...x, w: w.walk, block: w.block(self) }; });
+    const mine = walked.filter(x => x.w.layers.some(l => l.deciders.includes(self)));
+    const decidable = walked.filter(x => tsOpen(x.d.state) && x.block === null);
     const week = query.weekStart ? weekDates(query.weekStart) : null;
     const inWeek = week ? mine.filter(x => week.includes(x.d.date)) : mine;
     const status = query.status ?? 'pend', q = (query.q ?? '').trim().toLowerCase();
-    const rows = inWeek
-      .filter(x => status === 'all' || (status === 'pend' ? tsPending(x.d.state) : x.d.state === status))
+    const rows = (status === 'pend' ? (week ? decidable.filter(x => week.includes(x.d.date)) : decidable) : inWeek)
+      .filter(x => status === 'all' || status === 'pend' || x.d.state === status)
       .filter(x => !q || [x.p.name.toLowerCase(), x.d.date, formatDmy(x.d.date)].some(s => s.includes(q)))
       .sort((a, b) => b.d.date.localeCompare(a.d.date) || a.p.name.localeCompare(b.p.name) || a.d.id.localeCompare(b.d.id));
     /* A week read (the matrix) is bounded by people × 7, so it comes whole: Approve selected
        must see every day of the week, never only the first page of it. */
     const offset = Number(query.cursor ?? '0'), size = week ? Math.max(1, rows.length) : PAGE;
-    const pending = mine.filter(x => tsPending(x.d.state));
-    const flagged = pending.map(x => ({ x, why: flagsFor(x.d).map(f => f.text) })).filter(f => f.why.length)
+    const flagged = decidable.map(x => ({ x, why: flagsFor(x.d).map(f => f.text) })).filter(f => f.why.length)
       .map(({ x, why }) => ({ id: x.d.id, personName: x.p.name, date: x.d.date, why }));
-    const oldest = pending.map(x => x.d.submittedAt).filter(Boolean).sort()[0];
+    const oldest = decidable.map(x => x.d.submittedAt).filter(Boolean).sort()[0];
     const count = (s: TsState) => inWeek.filter(x => x.d.state === s).length;
     return {
-      rows: rows.slice(offset, offset + size).map(rowOf), nextCursor: offset + size < rows.length ? String(offset + size) : null,
-      counts: { pend: inWeek.filter(x => tsPending(x.d.state)).length, resub: count('resub'), ok: count('ok'), back: count('back'), all: inWeek.length },
+      rows: rows.slice(offset, offset + size).map(x => rowOf(x, tsOpen(x.d.state) && x.block === null)), nextCursor: offset + size < rows.length ? String(offset + size) : null,
+      counts: { pend: (week ? decidable.filter(x => week.includes(x.d.date)) : decidable).length, resub: count('resub'), ok: count('ok'), back: count('back'),
+        mgrok: count('mgrok'), all: inWeek.length },
       oldestPending: oldest ? clockFromIso(oldest).date : null,
-      bulk: { ids: pending.map(x => x.d.id).sort(), checksum: queueChecksum(pending.map(x => x.d)), people: new Set(pending.map(x => x.p.code)).size,
-        minutes: pending.reduce((n, x) => n + dayMinutes(x.d.entries), 0), flagged,
-        outside: submitted.filter(x => tsPending(x.d.state) && !(sc.all || x.p.location === sc.location)).length },
-      now: now(), returnReasonRequired: config().returnReasonRequired,
+      bulk: { ids: decidable.map(x => x.d.id).sort(), checksum: queueChecksum(decidable.map(x => x.d)), people: new Set(decidable.map(x => x.p.code)).size,
+        minutes: decidable.reduce((n, x) => n + dayMinutes(x.d.entries), 0), flagged,
+        /* open days at a layer the reader holds the role of, outside their scope */
+        outside: walked.filter(x => tsOpen(x.d.state) && x.block === 'scope').length },
+      now: now(), returnReasonRequired: config().returnReasonRequired, sla: slaFor('Timesheet', everyone.find(x => x.code === self)?.caps ?? session.caps),
       ...(query.weekStart && tenant().modules.R ? { rota: weekRota(sc, query.weekStart) } : {}),
     };
   }),
 
+  /* Bulk approval works per layer (module 8): each day moves on one layer,
+     and only a day whose current layer the approver decides is approved. */
   serve(bulkApproveTimesheets, ({ session, body }) => {
+    requireApprover(session);
     const ids = [...new Set(body.ids)];
     const found = ids.map(id => recordAt(days(), id));
     const changed = (): never => refuse(409, { code: 'QUEUE_CHANGED', message: 'The queue changed since you opened it, so nothing was approved.',
       next: 'Reload the queue, check it again, then approve.' });
     const recs = found.filter((d): d is StoredDay => d !== undefined);
     if (recs.length !== ids.length || queueChecksum(recs) !== body.checksum) changed();
-    const self = effectiveCode(session);
-    const held: { id: string; code: string; reason: string }[] = [], ready: Located[] = [];
+    const self = effectiveCode(session), everyone = chainPeople();
+    const held: { id: string; code: string; reason: string }[] = [], ready: (Located & { w: ChainWalk })[] = [];
     for (const d of recs) {
       const p = personByCode(d.personCode);
-      if (d.personCode === self) held.push({ id: d.id, code: 'SELF_APPROVAL', reason: 'This is your own timesheet. Ask another approver at your location.' });
-      else if (!p || !inScope(session, p.location)) held.push({ id: d.id, code: 'scope', reason: 'This timesheet belongs to someone outside the people you look after.' });
-      else if (!tsCan(d.state, 'ok')) held.push({ id: d.id, code: 'TRANSITION_NOT_ALLOWED', reason: tsTransitionProblem(d.state, 'ok')?.message ?? '' });
-      else ready.push({ d, p });
+      if (!p) { held.push({ id: d.id, code: 'scope', reason: 'This timesheet belongs to someone outside the people you look after.' }); continue; }
+      const { walk, block } = walkOf(d, p, everyone), why = block(self);
+      if (why && (why !== 'layer' || tsOpen(d.state))) { const b = blocked(why, walk); held.push({ id: d.id, code: b.code, reason: HELD_REASON[why] ?? b.message }); }
+      else if (!tsOpen(d.state)) held.push({ id: d.id, code: 'TRANSITION_NOT_ALLOWED', reason: tsTransitionProblem(d.state, 'ok')?.message ?? '' });
+      else ready.push({ d, p, w: walk });
     }
     if (!ready.length) return { approved: [], held, people: 0, minutes: 0, auditId: null };
     const flaggedCount = ready.filter(x => flagsFor(x.d).length).length;
-    const approved = ready.map(({ d, p }) => approve(p, d, session).rec);
+    const done = ready.map(({ d, p, w }) => ({ p, rec: signOff(p, d, session, w).rec }));
+    const approved = done.map(x => x.rec), passed = approved.filter(d => d.state === 'mgrok').length;
     const people = new Set(ready.map(x => x.p.code)).size, minutes = approved.reduce((n, d) => n + dayMinutes(d.entries), 0);
     const where = [...new Set(ready.map(x => nameOf('locations', x.p.location)))].join(', ');
+    const posted = approved.length - passed;
     const detail = `${approved.length} record(s) · ${people} employee(s) · ${hm(minutes)} · ${where}`
-      + `${flaggedCount ? ` · ${flaggedCount} with exceptions` : ''} · ${APPROVAL_AUDIT_SUFFIX}`;
+      + `${flaggedCount ? ` · ${flaggedCount} with exceptions` : ''}`
+      + (passed ? `${posted ? ` · ${posted} ${APPROVAL_AUDIT_SUFFIX}` : ''} · ${passed} passed to the next layer` : ` · ${APPROVAL_AUDIT_SUFFIX}`);
     const auditId = writeAudit({ who: actor(session), act: 'Bulk approval', entity: 'timesheetDay', entityId: approved.map(d => d.id).join(', '),
-      before: { state: 'awaiting approval' }, after: { state: 'approved', days: approved.map(d => d.id), held: held.length, detail } });
+      before: { state: 'awaiting approval' }, after: { state: passed === approved.length ? 'approved by manager' : 'approved', days: approved.map(d => d.id), held: held.length, detail } });
+    for (const code of new Set(done.map(x => x.p.code))) {
+      const p = done.find(x => x.p.code === code)?.p;
+      if (!p) continue;
+      const mineNow = done.filter(x => x.p.code === code).map(x => x.rec);
+      tellApproved(p, mineNow.filter(d => d.state === 'ok'), session);
+      const onward = mineNow.filter(d => d.state === 'mgrok');
+      if (onward[0]) tellApprovers(p, onward, session, { name: actor(session).name, layer: waitingOn(walkOf(onward[0], p, everyone).walk) });
+    }
     return { approved: approved.map(dayView), held, people, minutes, auditId };
   }),
 

@@ -7,13 +7,15 @@ import { useApprovalQueue, useDecideDay, type QueueRow, type QueueStatus } from 
 import { formatDmy } from '@/domain/timesheet';
 import { latest } from '@/lib/latest';
 import { ReturnDialog } from './TeamDialogs';
-import { HistoryCount, PostingDot, isPending, payElements, queueHours, rotaLine, statePill } from './team';
+import { HistoryCount, PostingDot, payElements, queueHours, rotaLine, statePill } from './team';
 
 /* mgrTeamDay (qnipay-workforce-v15.html:7035-7075): the approver's queue.
    "Needs approval" is anything awaiting a decision, so a corrected
    resubmission cannot fall out of it. Approve writes and toasts once the
    server has answered; Return opens the dialog. */
 const FILTERS: QueueStatus[] = ['pend', 'all', 'resub', 'ok', 'back'];
+/* Module 8: "Waiting on payroll" joins the filters while there is a day in that state, or it is the filter chosen. */
+const WITH_PAYROLL: QueueStatus[] = [...FILTERS, 'mgrok'];
 
 export function TeamQueue({ returnReasonRequired }: { returnReasonRequired: boolean }) {
   const [status, setStatus] = useState<QueueStatus>('pend');
@@ -23,16 +25,18 @@ export function TeamQueue({ returnReasonRequired }: { returnReasonRequired: bool
   const [returning, setReturning] = useState<QueueRow | null>(null);
   const counts = list.data?.counts;
   const label = (f: QueueStatus) => f === 'pend' ? `Needs approval · ${counts?.pend ?? 0}` : f === 'all' ? 'All'
-    : f === 'resub' ? `Resubmitted · ${counts?.resub ?? 0}` : f === 'ok' ? 'Approved' : 'Sent back';
+    : f === 'resub' ? `Resubmitted · ${counts?.resub ?? 0}` : f === 'ok' ? 'Approved' : f === 'mgrok' ? `Waiting on payroll · ${counts?.mgrok ?? 0}` : 'Sent back';
+  const filters = (counts?.mgrok ?? 0) > 0 || status === 'mgrok' ? WITH_PAYROLL : FILTERS;
+  /* module 8: an approval with payroll still to come says so, rather than claiming a posting */
   const approve = (r: QueueRow) => decide.mutate({ day: r, to: 'ok', reason: '' },
-    { onSuccess: () => toastInfo(`Approved · ${r.personName} · queued for Business Central`) });
+    { onSuccess: res => toastInfo(res.record.state === 'mgrok' ? `Approved · ${r.personName} · now waiting on payroll` : `Approved · ${r.personName} · queued for Business Central`) });
   const rows = list.data?.rows ?? [];
   /* the dialog works on the row as last read, so a retry after a 412 sends the fresh version */
   const ret = returning && latest(returning, rows);
   return (
     <>
       <FilterBar>
-        {FILTERS.map(f => <ChipButton key={f} testId={tid.tteam.filter(f)} on={status === f} onClick={() => setStatus(f)}>{label(f)}</ChipButton>)}
+        {filters.map(f => <ChipButton key={f} testId={tid.tteam.filter(f)} on={status === f} onClick={() => setStatus(f)}>{label(f)}</ChipButton>)}
         <SearchFilter testId={tid.tteam.search} label="Search employee or date" placeholder="Search employee or date" value={q} onChange={e => setQ(e.target.value)} />
       </FilterBar>
       {list.isError && <p data-testid={tid.tteam.error} role="alert" className="text-err">The queue could not be loaded. Reload the page to try again.</p>}
@@ -46,7 +50,7 @@ export function TeamQueue({ returnReasonRequired }: { returnReasonRequired: bool
         <TableBody>
           {list.data && !rows.length && <Row testId={tid.tteam.empty}><TableCell colSpan={7}><Empty>Nothing matches that filter</Empty></TableCell></Row>}
           {rows.map(r => {
-            const pill = statePill(r.state), open = isPending(r.state), busy = decide.isPending(r.id);
+            const pill = statePill(r.state), open = r.decide, busy = decide.isPending(r.id);
             return (
               <Row key={r.id} testId={tid.tteam.row(r.id)}>
                 <TableCell kind="title">

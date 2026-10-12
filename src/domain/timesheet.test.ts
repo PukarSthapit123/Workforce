@@ -21,7 +21,8 @@ const day = (start: string, finish: string, breaks: [string, string][] = []): Ti
 const messages = (r: { errors: { message: string }[] }) => r.errors.map(e => e.message);
 
 describe('state machine (D2)', () => {
-  const ALLOWED: Record<TsState, TsState[]> = { draft: ['pend'], pend: ['ok', 'back'], back: ['resub'], resub: ['ok', 'back'], ok: [] };
+  /* module 8: a day the line manager approves with payroll still to come moves to mgrok */
+  const ALLOWED: Record<TsState, TsState[]> = { draft: ['pend'], pend: ['ok', 'back', 'mgrok'], back: ['resub'], resub: ['ok', 'back', 'mgrok'], ok: [], mgrok: ['ok', 'back'] };
   for (const from of TS_STATES) for (const to of TS_STATES) {
     const allowed = ALLOWED[from].includes(to);
     test(`${from} → ${to} is ${allowed ? 'allowed' : 'refused'}`, () => {
@@ -31,7 +32,8 @@ describe('state machine (D2)', () => {
   }
   test('labels, tones and glyphs are the prototype\'s', () => {
     expect(TS_STATES.map(s => [TS_STATE[s].label, TS_STATE[s].tone, TS_STATE[s].glyph])).toEqual([
-      ['Draft', 'neu', '—'], ['Awaiting approval', 'info', '◷'], ['Sent back', 'err', '✕'], ['Resubmitted', 'info', '↻'], ['Approved', 'ok', '✓']]);
+      ['Draft', 'neu', '—'], ['Awaiting approval', 'info', '◷'], ['Sent back', 'err', '✕'], ['Resubmitted', 'info', '↻'], ['Approved', 'ok', '✓'],
+      ['Approved by manager, waiting on payroll', 'info', '◷']]);
   });
   test('a refused move uses the prototype\'s message as plain sentences', () => {
     expect(tsTransitionProblem('back', 'ok')).toEqual({
@@ -39,7 +41,7 @@ describe('state machine (D2)', () => {
     expect(tsTransitionProblem('pend', 'resub')?.message).toBe('Not allowed. An awaiting approval timesheet cannot move to resubmitted.');
     expect(tsTransitionProblem('ok', 'back')).toEqual({
       message: 'Not allowed. An approved timesheet cannot move to sent back.', next: 'An approved timesheet is final.' });
-    expect(tsTransitionProblem('pend', 'draft')?.next).toBe('From awaiting approval it can move to approved or sent back.');
+    expect(tsTransitionProblem('pend', 'draft')?.next).toBe('From awaiting approval it can move to approved, sent back or approved by manager, waiting on payroll.');
   });
   test('unknown states never move and read as draft', () => {
     expect(tsCan('posted', 'ok')).toBe(false);

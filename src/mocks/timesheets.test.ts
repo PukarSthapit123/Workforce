@@ -444,7 +444,7 @@ describe('GET /api/v1/approvals/timesheets and the dispatcher (Review Focus 4)',
   test('the queue holds the pending days at the approver\'s location, with counts and the bulk set', async () => {
     const q = await queue(await as('manager'));
     expect(q.rows.map(r => r.personCode)).toEqual(['CP-1042', 'CP-1153', 'CP-1266']);
-    expect(q.counts).toEqual({ pend: 3, resub: 0, ok: 2, back: 1, all: 6 });
+    expect(q.counts).toEqual({ pend: 3, resub: 0, ok: 2, back: 1, mgrok: 0, all: 6 });
     expect(q.bulk).toMatchObject({ ids: ['tsd_CP-1042_2026-08-12', 'tsd_CP-1153_2026-08-11', 'tsd_CP-1266_2026-08-10'], people: 3, outside: 0 });
     expect(q.oldestPending).toBe('2026-08-11');
     const all = await queue(await as('manager'), '?status=all');

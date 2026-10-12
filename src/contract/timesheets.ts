@@ -9,7 +9,8 @@ import { defineEndpoint } from './endpoints';
 import { IsoDateTime, RecordMeta, mutation } from './common';
 import { IsoDate } from './people';
 
-export const TsState = z.enum(['draft', 'pend', 'back', 'resub', 'ok']);
+/* mgrok (module 8): approved by the line manager, waiting on a later layer of the chain (payroll) */
+export const TsState = z.enum(['draft', 'pend', 'back', 'resub', 'ok', 'mgrok']);
 export type TsStateKey = z.infer<typeof TsState>;
 export const BreakInput = z.object({ start: z.string().max(5), end: z.string().max(5) });
 const FieldValue = z.union([z.string().max(500), z.boolean()]);
@@ -21,7 +22,8 @@ export const TimeEntry = z.object({
 });
 export type TimeEntry = z.infer<typeof TimeEntry>;
 const Actor = z.object({ personCode: z.string(), name: z.string() });
-export const TsHistory = z.object({ from: TsState, to: TsState, by: Actor, at: IsoDateTime, reason: z.string() });
+/* layer: the approval chain role a sign-off was made as (module 8), on an approval only */
+export const TsHistory = z.object({ from: TsState, to: TsState, by: Actor, at: IsoDateTime, reason: z.string(), layer: z.string().optional() });
 export const AttemptState = z.enum(['queued', 'posted', 'failed']);
 /* What the approver's dot shows: the last state the server read (D4). */
 export const PostingState = z.enum(['none', 'queued', 'posted', 'failed']);
@@ -187,10 +189,12 @@ export const DayTransition = z.object({ to: z.enum(['ok', 'back']), reason: z.st
 export const DayDecided = z.object({ record: TimesheetDay, attempt: IntegrationAttempt.nullable(), auditId: z.string() });
 
 /* ----------------------------------------------------------------- queue */
-export const QueueStatus = z.enum(['pend', 'all', 'resub', 'ok', 'back']);
+/* pend: everything awaiting your decision, at whichever layer of the chain is yours; mgrok: approved by the manager, waiting on payroll */
+export const QueueStatus = z.enum(['pend', 'all', 'resub', 'ok', 'back', 'mgrok']);
 /* clock: as WeekDay.clock, for the Late and closed-later pills on a clocked day (module 2b D5, D6) */
+/* decide: the day waits on a layer of the approval chain the reader may decide now (module 8) */
 export const QueueRow = TimesheetDay.extend({ personName: z.string(), location: z.string(), locationName: z.string(), flags: z.array(AdvisoryFlag),
-  clock: ClockMark.optional() });
+  clock: ClockMark.optional(), decide: z.boolean() });
 export type QueueRow = z.infer<typeof QueueRow>;
 /* What "approve all" would do, computed by the server over every pending day
    the approver may decide (IMP-008), with the checksum the bulk call returns. */
@@ -201,10 +205,12 @@ export const BulkSet = z.object({
 });
 export const ApprovalQueue = z.object({
   rows: z.array(QueueRow), nextCursor: z.string().nullable(),
-  counts: z.object({ pend: z.number().int(), resub: z.number().int(), ok: z.number().int(), back: z.number().int(), all: z.number().int() }),
+  counts: z.object({ pend: z.number().int(), resub: z.number().int(), ok: z.number().int(), back: z.number().int(), mgrok: z.number().int(), all: z.number().int() }),
   oldestPending: IsoDate.nullable(), bulk: BulkSet,
   /* the server's clock (the matrix opens on its week) and whether a return needs a reason (returnBox) */
   now: Clock, returnReasonRequired: z.boolean(),
+  /* the SLA of the first chain layer the reader decides, as the Approvals page sets it; empty when they decide none */
+  sla: z.string(),
   /* On a weekStart read with the Rota module on: each person's published rota
      for the week, Monday first, by person code, for the people in the approver's scope. */
   rota: z.record(z.string(), z.array(RotaDay).length(7)).optional(),
@@ -255,15 +261,20 @@ export const submitTimesheetWeek = defineEndpoint({ method: 'POST', path: '/api/
 export const submitMultiweek = defineEndpoint({ method: 'POST', path: '/api/v1/timesheets/:personId/multiweek/submit', params: PersonOnly,
   request: MultiweekSubmit, response: MultiweekSubmitted, errors: [403, 404],
   summary: 'Submit selected earlier weeks. Each week routes separately; a week in a closed period is held back with the lock note.' });
+/* Module 8 group 4: no single capability on the three approval endpoints. A
+   day walks the Timesheet approval chain, and each layer is decided by its
+   role's capability (team_ts for the line manager, pay_appr for payroll) or
+   by a delegate covering a holder. Anyone holding neither, and covering
+   nobody, is refused with 403 capability. */
 export const transitionTimesheetDay = defineEndpoint({ method: 'POST', path: '/api/v1/timesheet-days/:id/transition', params: ById,
-  request: DayTransition, response: DayDecided, capability: 'team_ts', versioned: true, errors: [404, 409],
-  summary: 'Approve or return one day (If-Match). Approval queues a posting for Business Central; it never posts.' });
+  request: DayTransition, response: DayDecided, versioned: true, errors: [403, 404, 409],
+  summary: 'Approve or return one day at its current approval layer (If-Match). Approval with a later layer to come moves the day to mgrok; only the last layer\'s approval queues a posting for Business Central, and it never posts. Refused with SELF_APPROVAL, scope, WRONG_LAYER or capability.' });
 export const listTimesheetApprovals = defineEndpoint({ method: 'GET', path: '/api/v1/approvals/timesheets', query: QueueQuery,
-  response: ApprovalQueue, capability: 'team_ts',
-  summary: 'The approver\'s queue at their location, cursor-paged. Query: status (pend, all, resub, ok, back), q, cursor, weekStart. A weekStart read returns the whole week in one page. Reading it runs the posting dispatcher.' });
+  response: ApprovalQueue, errors: [403],
+  summary: 'The approver\'s queue: the days they take part in at any layer of the Timesheet chain, cursor-paged. Query: status (pend is everything awaiting your decision; all, resub, ok, back, mgrok), q, cursor, weekStart. A weekStart read returns the whole week in one page. Reading it runs the posting dispatcher.' });
 export const bulkApproveTimesheets = defineEndpoint({ method: 'POST', path: '/api/v1/approvals/timesheets/bulk', request: BulkApprove,
-  response: BulkApproved, capability: 'team_ts', errors: [409],
-  summary: 'Approve the listed days, checked against the checksum of what the approver was shown. Any change since refuses the whole batch (QUEUE_CHANGED).' });
+  response: BulkApproved, errors: [403, 409],
+  summary: 'Approve the listed days, each at its current layer, checked against the checksum of what the approver was shown. Any change since refuses the whole batch (QUEUE_CHANGED). A day the approver may not decide at its current layer comes back held with the reason.' });
 export const getTimesheetConfig = defineEndpoint({ method: 'GET', path: '/api/v1/timesheet-config', response: TimesheetSetup, capability: 'mod_cfg',
   summary: 'Timesheet setup: capture rules, fields per employee type, allowances and pay rules per type, overtime, weekly layout' });
 export const updateTimesheetConfig = defineEndpoint({ method: 'PATCH', path: '/api/v1/timesheet-config', request: UpdateTimesheetConfig,

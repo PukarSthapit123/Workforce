@@ -19,6 +19,7 @@ const CHIP: Record<string, { label: string; tone: Tone; glyph: ReactNode }> = {
   ok: { label: 'Approved', tone: 'ok', glyph: <Check /> },
   pend: { label: 'Awaiting approval', tone: 'info', glyph: <Clock /> },
   resub: { label: 'Awaiting approval', tone: 'info', glyph: <Clock /> },
+  mgrok: { label: 'Approved by manager, waiting on payroll', tone: 'info', glyph: <Clock /> },
   draft: { label: 'Draft · not submitted', tone: 'neu', glyph: <Minus /> },
   back: { label: 'Sent back', tone: 'err', glyph: <X /> },
   leave: { label: 'Annual leave', tone: 'neu', glyph: <Lock /> },

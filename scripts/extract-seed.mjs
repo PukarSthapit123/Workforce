@@ -112,6 +112,9 @@ const SENSITIVE = new Set(['bankAcc', 'bankSort']);
 /* Not in the prototype (plan 1b decision D3): payroll's half of a bank detail change. */
 const BANK_VERIFY = { c: 'bank_verify', g: 'team', label: 'Verify bank detail changes',
   gate: 'The bank detail queue on Qnipay setup → People', emp: 0, mgr: 0, adm: 1 };
+/* Not in the prototype (module 8 group 4): the payroll layer of the Timesheet approval chain. */
+const PAY_APPR = { c: 'pay_appr', g: 'team', label: 'Approve timesheets for payroll',
+  gate: 'My team → Approvals, for the payroll layer of the Timesheet approval chain', emp: 0, mgr: 0, adm: 1 };
 
 function shape(tenantKey, data, PERMS_META, PERM_GROUPS, PROFILE_CHANGES, ref) {
   const ROLE_OF = { emp: 'employee', mgr: 'manager', adm: 'admin' };
@@ -126,7 +129,7 @@ function shape(tenantKey, data, PERMS_META, PERM_GROUPS, PROFILE_CHANGES, ref) {
   const accounts = Object.entries(data.USERS || {}).map(([email, u]) => meta({
     id: `acc_${email}`, email, personCode: u.eid, userType: u.role, grants: [], revocations: [] }));
   const base = data.PERMS || PERMS_META;
-  const perms = base.some(p => p.c === BANK_VERIFY.c) ? base : [...base, BANK_VERIFY];
+  const perms = [...base, ...[BANK_VERIFY, PAY_APPR].filter(x => !base.some(p => p.c === x.c))];
   const userTypes = Object.entries(ROLE_OF).map(([col, role]) => meta({
     id: role, name: (data.ROLE_NAMES || {})[role] || role[0].toUpperCase() + role.slice(1),
     description: { employee: 'Their own work: timesheet, shifts and leave', manager: 'Everything an employee can do, plus their team', admin: 'Configure how this workforce operates' }[role],

@@ -11,7 +11,7 @@ import {
   type TimesheetWeek, type UpdateTimesheetConfig, type WeekSubmit,
 } from '@/contract/timesheets';
 
-export type QueueStatus = 'pend' | 'all' | 'resub' | 'ok' | 'back';
+export type QueueStatus = 'pend' | 'all' | 'resub' | 'ok' | 'back' | 'mgrok';
 export const timesheetKeys = {
   all: ['timesheets'] as const,
   week: (personId: string, weekStart: string) => ['timesheets', 'week', personId, weekStart] as const,
