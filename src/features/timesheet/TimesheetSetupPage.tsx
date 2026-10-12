@@ -4,7 +4,7 @@ import { useLocation } from 'react-router';
 import { tid } from '@/testids';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import {
-  ActionBar, AdminCard, Button, Chip, ChipPicker, Empty, Field, FormWarn, GroupLabel, GuideButton, Modal, NavLink, Page, PageHead, Pill, Row, ScopeBadge,
+  ActionBar, AdminCard, Button, Chip, ChipPicker, Empty, Field, FormWarn, GroupLabel, GuideButton, Modal, Page, PageHead, Pill, Row, ScopeBadge,
   SettingRow, SettingSelect as Asel, SettingText, Small, SubHead, SwitchField, TextInput, Tip, UnitInput, toastInfo,
 } from '@/ui';
 import { useSaveTimesheetConfig, useTimesheetConfig, type TimesheetConfig, type TimesheetSetup } from '@/api/timesheets';
@@ -122,7 +122,7 @@ function SetupDraftView({ setup, types, env, picked, onPick }: {
             <div className="flex flex-col items-end max-md:items-start">
               <Asel testId={tid.mts.rule(r.key)} aria-label={r.title} aria-invalid={fe(`rules.${r.key}`) ? true : undefined}
                 value={draft.rules[r.key]} onChange={e => setRule(r.key, Number(e.target.value))}>
-                {withValue(r.opts, draft.rules[r.key]).map(o => <option key={o} value={o}>{o} hours</option>)}</Asel>
+                {withValue(r.opts, draft.rules[r.key]).map(o => <option key={o} value={o}>{o}</option>)}</Asel>
               <Err text={fe(`rules.${r.key}`)} />
             </div>
           </SettingRow>))}
@@ -137,11 +137,11 @@ function SetupDraftView({ setup, types, env, picked, onPick }: {
         <SettingRow title="Night or unsocial window" desc="The time range used by automatic pay rules">
           <div className="flex flex-wrap items-center justify-end gap-sm max-md:justify-start">
             <label className="flex items-center gap-xs text-xs text-text-secondary">From
-              <SettingText testId={tid.mts.rule('nightFrom')} aria-label="Night window starts at" type="time" value={draft.rules.nightFrom}
+              <SettingText testId={tid.mts.rule('nightFrom')} className="w-[130px]" aria-label="Night window starts at" type="time" value={draft.rules.nightFrom}
                 aria-invalid={fe('rules.nightFrom') ? true : undefined} onChange={e => setRule('nightFrom', e.target.value)} />
             </label>
             <label className="flex items-center gap-xs text-xs text-text-secondary">to
-              <SettingText testId={tid.mts.rule('nightTo')} aria-label="Night window ends at" type="time" value={draft.rules.nightTo}
+              <SettingText testId={tid.mts.rule('nightTo')} className="w-[130px]" aria-label="Night window ends at" type="time" value={draft.rules.nightTo}
                 aria-invalid={fe('rules.nightTo') ? true : undefined} onChange={e => setRule('nightTo', e.target.value)} />
             </label>
             {(fe('rules.nightFrom') || fe('rules.nightTo')) && <Err text={fe('rules.nightFrom') ?? fe('rules.nightTo')} />}
@@ -188,7 +188,7 @@ function SetupDraftView({ setup, types, env, picked, onPick }: {
             Weekly grid feature's row in Modules & features; this is a pointer to it */}
         {env.flags.WEEKLY && <SettingRow title="Weekly grid"
           desc={<span data-testid={tid.mtsPointer.weekly}>{WEEK_GRID_LABEL[config.weekGrid]}. {WEEK_LAYOUT_LABEL[config.weekLayout]}. Set on the Weekly grid row in Modules &amp; features.</span>}>
-          <NavLink testId={tid.mtsPointer.link} to="/setup/amods?m=TS" className="text-xs font-semibold text-brand underline dark:text-brand-accent">Open Modules &amp; features</NavLink>
+          <span className="text-xs text-text-muted">Set on the Weekly grid row in Modules &amp; features.</span>
         </SettingRow>}
       </AdminCard>
 
@@ -199,30 +199,33 @@ function SetupDraftView({ setup, types, env, picked, onPick }: {
             <EmployeeTypeChip key={t.code} type={t} testId={tid.mts.type(t.code)} selected={t.code === code} onClick={() => onPick(t.code)} />))}
         </ChipPicker>
         {current && <>
-          <SubHead>Settings for {current.name}</SubHead>
           <SubHead>Allowances this type can claim <span className={SUB_NOTE}>· the employee ticks these on the day; the value is what Business Central posts</span></SubHead>
-          <div>
-            {/* An allowance the type lacks the capability for is not dimmed as a whole row, as the
-                prototype did: at half opacity its name and line fall below AA contrast. Its switch
-                is disabled and the line says which capability it needs. */}
+          <Table variant="matrix" data-testid={tid.mts.allowTable}>
+            <TableHeader><TableRow>
+              <TableHead>Allowance</TableHead>
+              <TableHead>Payroll mapping</TableHead>
+              <TableHead className="text-center">Claimable</TableHead>
+            </TableRow></TableHeader>
+            <TableBody>
+            {/* Keep unavailable allowances legible; disable only their claim switch and explain why. */}
             {Object.values(draft.allowances).map(a => {
               const need = allowanceNeed(a.tier), blocked = Boolean(need && !(current.capabilities as readonly string[]).includes(need));
               const on = type.allowances.includes(a.code), err = fe(`allowances.${a.code}.label`);
               return (
-                <div key={a.code} data-testid={tid.mts.allowRow(a.code)} className="flex flex-wrap items-center gap-md border-b py-[10px] last:border-b-0">
-                  <div className="min-w-[200px] flex-1">
-                    <Field label="Allowance name" error={err}>
-                      <TextInput testId={tid.mts.allowLabel(a.code)} value={a.label}
-                        onChange={e => setDraft(d => ({ ...d, allowances: { ...d.allowances, [a.code]: { ...a, label: e.target.value } } }))} />
-                    </Field>
-                    <span className="mt-px block text-xs text-text-muted">{blocked && need ? `Needs the ${need} capability`
-                      : <>Employee-declared · posts {a.code} to <b className="tabular-nums">{payElement(payCodes, draft.allowances, a.code)}</b></>}</span>
-                  </div>
-                  <SwitchField testId={tid.mts.allowOn(a.code)} aria-label={`${a.label} for ${current.name}`} checked={on} disabled={blocked}
-                    onCheckedChange={() => setType(t => ({ ...t, allowances: on ? t.allowances.filter(x => x !== a.code) : [...t.allowances, a.code] }))} />
-                </div>);
+                <Row key={a.code} testId={tid.mts.allowRow(a.code)}>
+                  <TableCell className="min-w-[220px]">
+                    <TextInput testId={tid.mts.allowLabel(a.code)} aria-label={`${a.label} allowance name`} aria-invalid={err ? true : undefined} value={a.label}
+                      onChange={e => setDraft(d => ({ ...d, allowances: { ...d.allowances, [a.code]: { ...a, label: e.target.value } } }))} />
+                    <Err text={err} />
+                  </TableCell>
+                  <TableCell className="text-xs text-text-muted">{blocked && need ? `Needs the ${need} capability`
+                    : <>Employee-declared · posts {a.code} to <b className="tabular-nums">{payElement(payCodes, draft.allowances, a.code)}</b></>}</TableCell>
+                  <TableCell className="text-center"><SwitchField testId={tid.mts.allowOn(a.code)} aria-label={`${a.label} for ${current.name}`} checked={on} disabled={blocked}
+                    onCheckedChange={() => setType(t => ({ ...t, allowances: on ? t.allowances.filter(x => x !== a.code) : [...t.allowances, a.code] }))} /></TableCell>
+                </Row>);
             })}
-          </div>
+            </TableBody>
+          </Table>
           <Err text={fe(`types.${code}.allowances`)} />
           <div className="mt-lg flex flex-wrap justify-end gap-sm">
             <Button testId={tid.mts.allowAdd} kind="ghost" small onClick={() => setAdding(true)}>Add allowance</Button></div>

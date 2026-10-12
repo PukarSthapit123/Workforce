@@ -40,6 +40,17 @@ test('the page shows every card and explains weekly overtime is not built', asyn
   expect(screen.getByTestId(tid.mts.returnReasonRequired)).toHaveAttribute('aria-checked', 'true');
   expect(screen.getByTestId(tid.mts.fieldRow('start'))).toHaveClass('!bg-surface-card');
   expect(screen.getByTestId(tid.mts.fieldRow('finish'))).toHaveClass('!bg-surface-sunken');
+  expect(screen.queryByText(/Settings for/)).toBeNull();
+  expect(screen.getByText(/Allowances this type can claim/)).toBeInTheDocument();
+  expect(screen.getByTestId(tid.mts.allowTable)).toHaveAttribute('data-variant', 'matrix');
+  expect(screen.getByRole('columnheader', { name: 'Allowance' })).toBeInTheDocument();
+  expect(screen.getByRole('columnheader', { name: 'Payroll mapping' })).toBeInTheDocument();
+  expect(screen.getByRole('columnheader', { name: 'Claimable' })).toBeInTheDocument();
+  expect(screen.getByTestId(tid.mts.allowRow('LATE_FINISH')).tagName).toBe('TR');
+  expect(screen.getByTestId(tid.mts.rule('nightFrom'))).toHaveClass('w-[130px]');
+  expect(screen.getByTestId(tid.mts.rule('nightTo'))).toHaveClass('w-[130px]');
+  expect(screen.getByRole('option', { name: '16' })).toBeInTheDocument();
+  expect(screen.queryByRole('option', { name: '16 hours' })).toBeNull();
   expect(screen.getByTestId(tid.mts.save)).toBeDisabled();
   expectTestIdCoverage(document.body);
   await userEvent.click(screen.getByTestId(tid.mts.type('salaried')));
@@ -163,13 +174,13 @@ test('the page guide states the rules that are always refused, overlapping break
 /* D6: the weekly grid's capture and layout are set on its row in Modules &
    features (src/features/modules/modules.test.tsx changes them there); here
    they are a read-only pointer to that row */
-test('the weekly grid shows what it captures and its layout, read-only, with a link to its row in Modules & features', async () => {
+test('the weekly grid shows what it captures and its layout, read-only, with a plain pointer to Modules & features', async () => {
   await open();
   expect(screen.queryByTestId(tid.mts.weekLayout)).toBeNull();
   expect(screen.queryByTestId(tid.mts.weekGrid)).toBeNull();
   expect(screen.getByTestId(tid.mtsPointer.weekly)).toHaveTextContent(
     'Captures start & finish. Classic · allocation in the first column. Set on the Weekly grid row in Modules & features.');
-  expect(screen.getByTestId(tid.mtsPointer.link)).toHaveAttribute('href', '/setup/amods?m=TS');
+  expect(screen.queryByTestId(tid.mtsPointer.link)).toBeNull();
 });
 
 /* fidelity gap 10: Save and Cancel stay in reach while a lower card is edited */
