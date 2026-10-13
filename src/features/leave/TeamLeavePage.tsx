@@ -81,6 +81,7 @@ function RequestCard({ r, slaDays, escalateTo, onDecline, onEntitlement }: {
         <div className="min-w-0">
           <div className="text-sm font-semibold">{r.name} <span className="font-mono text-xs font-normal text-text-muted">{r.personCode}</span></div>
           <Small>{r.typeName} · {r.range} · {r.qtyText} · requested {formatDmy(clockFromIso(r.raisedAt).date)}</Small>
+          {r.layer.of > 1 && <Small testId={tid.tleave.layer(r.id)} className="mt-[2px] text-info">{r.layer.text}</Small>}
         </div>
         <div className="ml-auto flex items-center">
           {r.sla.escalated

@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { tid } from '@/testids';
 import {
-  Banner, Button, Empty, Fact, Field, Modal, Row, RuledOutList, RuledOutRow, SelectBox, Small, SugCard, SwitchField, Tip, toastInfo, toastRefusal,
+  Banner, Button, Empty, Fact, Field, Modal, Row, RuledOutList, RuledOutRow, SelectBox, Small, SugCard, SwitchField, TextArea, Tip, toastInfo, toastRefusal,
 } from '@/ui';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
-import { useCellSuggestions, useClearWeek, useOpenCover, useRepeatWeek, type RotaRow, type RotaWeekView } from '@/api/rota';
+import { useCellSuggestions, useClearWeek, useOpenCover, useRepeatWeek, useSignOffWeek, type RotaRow, type RotaWeekView } from '@/api/rota';
 import { addDays, addMonths, formatDay, formatTime, periodStart } from '@/domain/time';
 import {
   COVER_REASONS, NOBODY_CAN_TAKE, NO_REASONS_WHY, REPEAT_WEEKS, clearPreview, restAround, shiftBy, shiftHours, shiftName, shiftTime, thinnest,
@@ -176,6 +176,26 @@ export function ClearDialog({ view, onClose }: { view: RotaWeekView; onClose: ()
         <Banner tone="warn" title="This cannot be undone from here">
           Every removal is recorded against the week, so you can see what was cleared. Putting them back means assigning them again.</Banner>
       </div>
+    </Modal>);
+}
+
+/* Module 8: a sign-off holder sends a week waiting on them back to draft,
+   with a reason the rota manager sees. Built on the leave decline dialog. */
+export function SendBackDialog({ view, onClose }: { view: RotaWeekView; onClose: () => void }) {
+  const [reason, setReason] = useState('');
+  const signOff = useSignOffWeek();
+  const send = () => signOff.mutate({ ...ref(view), to: 'draft', reason: reason.trim() }, { onSuccess: r => { onClose(); toastInfo(r.summary); } });
+  return (
+    <Modal open onOpenChange={o => { if (!o) onClose(); }} title={`Send week ${view.isoWeek} back`}
+      footer={<>
+        <Button testId={tid.trota.sendBackCancel} kind="ghost" onClick={onClose}>Cancel</Button>
+        <Button testId={tid.trota.sendBackConfirm} kind="danger" pending={signOff.anyPending} onClick={send}>Send back</Button>
+      </>}>
+      <Small className="mb-md">{view.location.name} · {weekRange(view.weekStart)}{view.signoff ? ` · sent to publish by ${view.signoff.requestedBy.name}` : ''}</Small>
+      <Field label="Reason" required error={signOff.fieldError('reason')}>
+        <TextArea testId={tid.trota.sendBackReason} value={reason} maxLength={300} placeholder="Sent to the rota manager with the week"
+          onChange={e => { setReason(e.target.value); signOff.clearFieldErrors(); }} />
+      </Field>
     </Modal>);
 }
 

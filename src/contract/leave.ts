@@ -27,7 +27,9 @@ export const LeaveMethod = z.enum(LEAVE_METHODS);
 export const ServiceRule = z.object({ afterYears: z.number(), add: z.number(), cap: z.number() });
 
 /* ----------------------------------------------------------- the request */
-export const LeaveMove = z.object({ from: z.string(), to: z.string(), by: Actor, at: IsoDateTime, reason: z.string() });
+/* layer: the approval chain role an approval was made as (module 8 group 4B). A layer that
+   is not the last is a move from pending to pending: the request still waits on the next. */
+export const LeaveMove = z.object({ from: z.string(), to: z.string(), by: Actor, at: IsoDateTime, reason: z.string(), layer: z.string().optional() });
 export const LeaveRequestRecord = RecordMeta.extend({
   personCode: z.string(), type: z.string(), from: IsoDate, to: IsoDate, part: LeavePart, qty: z.number(), unit: BalanceUnit, state: LeaveState,
   raisedAt: IsoDateTime, note: z.string(),
@@ -38,7 +40,9 @@ export const LeaveRequestRecord = RecordMeta.extend({
   reason: z.string(), history: z.array(LeaveMove),
 });
 export type LeaveRequestRecord = z.infer<typeof LeaveRequestRecord>;
-/* As My requests lists it: the type's name, "24/08/2026 – 28/08/2026", "5 days", and the state pill. */
+/* As My requests lists it: the type's name, "24/08/2026 – 28/08/2026", "5 days", and the state pill.
+   A request one layer of the approval chain has approved and a later one has still
+   to reads "Approved by the line manager, waiting on the Service Manager" (module 8). */
 export const LeaveRequestView = LeaveRequestRecord.extend({
   typeName: z.string(), range: z.string(), qtyText: z.string(), stateLabel: z.string(), tone: Tone, glyph: z.string(),
 });
@@ -115,6 +119,10 @@ export const TeamRequestView = LeaveRequestView.extend({
   name: z.string(), location: z.string(), balance: z.string(),
   sla: z.object({ daysLeft: z.number().int(), escalated: z.boolean(), tone: z.enum(['warn', 'err']), text: z.string() }),
   stage: z.object({ n: z.number().int(), text: z.string(), action: z.string() }),
+  /* the approval chain layer the reader decides (module 8 group 4B): n of the layers this
+     request needs, its role, and who approved the layers before it. text is shown once
+     the request needs more than one layer. */
+  layer: z.object({ n: z.number().int(), of: z.number().int(), role: z.string(), text: z.string() }),
   /* minNotice and cancelWindow advise the approver; they never block (D6) */
   advisories: z.array(z.string()),
 });
@@ -247,13 +255,18 @@ export const requestLeave = defineEndpoint({ method: 'POST', path: '/api/v1/leav
   summary: 'Ask for leave. Validated on the server (dates, half days, the annual leave balance with pending held back); the manager is notified.' });
 export const cancelLeave = defineEndpoint({ method: 'POST', path: '/api/v1/leave/requests/:id/cancel', params: ById, response: LeaveMoved,
   capability: 'own_leave', versioned: true, errors: [404, 409], summary: 'Cancel one of my own waiting requests (If-Match)' });
+/* Module 8 group 4B: no single capability on the queue and the two decisions. A
+   request walks the Leave approval chain, and each layer is decided by its role's
+   capability (team_leave for the line manager and the Service Manager) or by a
+   delegate covering a holder. Anyone holding neither, and covering nobody, is
+   refused with 403 capability. */
 export const listTeamLeave = defineEndpoint({ method: 'GET', path: '/api/v1/leave/team/requests', query: TeamRequestsQuery, response: TeamRequests,
-  capability: 'team_leave', summary: 'Waiting requests at the locations this person decides for, with balance, effect on cover, stage and SLA' });
+  errors: [403], summary: 'Waiting requests whose current approval layer this person decides, with balance, effect on cover, layer, stage and the SLA of that layer' });
 export const approveLeave = defineEndpoint({ method: 'POST', path: '/api/v1/leave/requests/:id/approve', params: ById, response: LeaveDecided,
-  capability: 'team_leave', versioned: true, errors: [404, 409],
-  summary: 'Approve a waiting request (If-Match). With Rota and Leave to rota on, the days go onto the rota as leave and cover opens below the minimum.' });
+  versioned: true, errors: [403, 404, 409],
+  summary: 'Approve a waiting request at its current approval layer (If-Match). With a later layer to come it stays waiting, on that layer. Only an approval at the last layer approves it; with Rota and Leave to rota on, the days then go onto the rota as leave and cover opens below the minimum. Refused with SELF_APPROVAL, ALREADY_SIGNED, scope, WRONG_LAYER or capability.' });
 export const declineLeave = defineEndpoint({ method: 'POST', path: '/api/v1/leave/requests/:id/decline', params: ById, request: DeclineLeave, response: LeaveMoved,
-  capability: 'team_leave', versioned: true, errors: [404, 409], summary: 'Decline a waiting request with a reason the colleague sees (If-Match)' });
+  versioned: true, errors: [403, 404, 409], summary: 'Decline a waiting request at its current approval layer, with a reason the colleague sees (If-Match)' });
 export const getTeamBalances = defineEndpoint({ method: 'GET', path: '/api/v1/leave/team/balances', response: TeamBalances, capability: 'team_leave',
   summary: 'Entitlement, taken and remaining for everyone at the locations this person looks after' });
 /* No single capability: your own needs own_leave; someone else's needs team_leave and their location. */

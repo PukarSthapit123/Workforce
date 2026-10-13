@@ -74,7 +74,7 @@ function SetupDraftView({ setup }: { setup: OnboardingSetup }) {
           const err = fe(`steps.${s.id}`);
           return (
             <SettingRow key={s.id} testId={tid.monb.step(s.id)}
-              title={<>{s.label}{s.fixed && <ScopeBadge>Always asked</ScopeBadge>}</>}
+              title={<>{s.label}{s.fixed && <span className="ml-[6px]"><ScopeBadge>Always asked</ScopeBadge></span>}</>}
               desc={<>{s.desc}
                 {!available && <span data-testid={tid.monb.stepNeeds(s.id)} className="mt-px block text-warn">
                   {STEP_UNAVAILABLE}{at?.needs ? ` It needs ${at.needs}.` : ''}</span>}

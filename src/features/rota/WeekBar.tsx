@@ -9,7 +9,8 @@ import { weekRange } from './week';
    10662-10692, CSS 365-371 and 1542-1551). It sits under the tab strip, sticky
    at 100px (56px on a phone, where the strip becomes the bottom bar), and reads
    the week's own record: its state, its version and the changes made since it
-   was published. Publish is disabled while gaps block it or the week is live;
+   was published. Publish is disabled while gaps block it, the week is live or
+   it waits on sign-off by a later layer of the Rota approval chain (module 8);
    Copy and Clear while colleagues can see the week, amended included. */
 export interface WeekActions {
   onWeek: (step: -1 | 1 | 0) => void; onHorizon: () => void; onCopy: () => void; onRepeat: () => void; onClear: () => void;
@@ -21,7 +22,8 @@ export function WeekBar({ view, atCurrent, busy, actions }: { view: RotaWeekView
   const blocked = view.rules.publishBlockOnGap && view.gapDays.length > 0;
   const note = live ? `Published ${view.publishedAt ? formatDateTime(view.publishedAt) : ''} · visible to colleagues`
     : view.state === 'amendment' ? `${amend} unpublished change(s) since v${view.publishVersion}`
-      : view.state === 'review' ? 'Sent for review · not visible yet' : 'Not published · not visible yet';
+      : view.signoff ? `Waiting on sign-off by ${view.signoff.waitingOn} · not visible yet`
+        : view.state === 'review' ? 'Sent for review · not visible yet' : 'Not published · not visible yet';
   return (
     <div data-testid={tid.trota.weekbar}
       className="sticky top-[100px] z-[55] flex flex-wrap items-center gap-md border-b bg-surface-card px-xl py-[9px] max-lg:px-md max-md:top-14">
@@ -41,8 +43,8 @@ export function WeekBar({ view, atCurrent, busy, actions }: { view: RotaWeekView
           title={seen ? `This week is ${s.label.toLowerCase()}. Clear it by amending the shifts you want removed.` : undefined}>Clear week</Button>
         {view.state === 'draft' && <Button testId={tid.trota.review} kind="ghost" small pending={busy} onClick={actions.onReview}>Send for review</Button>}
         <Button testId={tid.trota.adhoc} kind="ghost" small onClick={actions.onAdhoc}>Add an extra shift</Button>
-        <Button testId={tid.trota.publish} kind="primary" small pending={busy} disabled={blocked || live} onClick={actions.onPublish}
-          title={blocked ? 'Coverage gaps block publishing' : live ? `Already ${s.label.toLowerCase()} at v${view.publishVersion}` : undefined}>
+        <Button testId={tid.trota.publish} kind="primary" small pending={busy} disabled={blocked || live || !!view.signoff} onClick={actions.onPublish}
+          title={view.signoff ? `Waiting on sign-off by ${view.signoff.waitingOn}` : blocked ? 'Coverage gaps block publishing' : live ? `Already ${s.label.toLowerCase()} at v${view.publishVersion}` : undefined}>
           {view.state === 'amendment' ? 'Republish' : 'Publish'}</Button>
       </span>
     </div>);

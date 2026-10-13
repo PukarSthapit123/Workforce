@@ -85,6 +85,17 @@ export const RotaWeekView = z.object({
   }),
   /* recent publications at the locations this person may manage, newest first */
   publications: z.array(Publication),
+  /* Module 8 group 4B: a week sent to publish while a later layer of the Rota approval
+     chain applies waits in review until that layer signs it off. requestedBy sent it;
+     signed are the layers signed so far, the publisher's first; waitingOn is who signs
+     next ("the Service Manager"); decide says the reader may sign it off or send it back
+     now, and why says why not when they may not. null while nothing waits on sign-off. */
+  signoff: z.object({
+    requestedBy: Actor, at: IsoDateTime, signed: z.array(z.object({ layer: z.string(), by: Actor, at: IsoDateTime })),
+    waitingOn: z.string(), final: z.boolean(), decide: z.boolean(), why: z.string(),
+  }).nullable(),
+  /* the last time a sign-off holder sent the week back to draft, with the reason; null otherwise */
+  sentBack: z.object({ by: Actor, at: IsoDateTime, reason: z.string() }).nullable(),
 });
 export type RotaWeekView = z.infer<typeof RotaWeekView>;
 
@@ -131,6 +142,10 @@ export type CellInput = z.infer<typeof CellInput>;
 export const CellSaved = z.object({ week: RotaWeekView, advisories: z.array(HoursFlag), cover: CoverView.nullable(), auditId: z.string() });
 export type CellSaved = z.infer<typeof CellSaved>;
 export const WeekTransition = z.object({ to: z.enum(['review', 'draft', 'published']) });
+/* A sign-off holder's decision on a week waiting on them (module 8): sign it off (published, once
+   the last layer has), or send it back to draft with a reason the rota manager sees. */
+export const WeekSignOff = z.object({ to: z.enum(['published', 'draft']), reason: z.string().max(300).optional() });
+export type WeekSignOff = z.infer<typeof WeekSignOff>;
 export const WeekMoved = z.object({ week: RotaWeekView, summary: z.string(), auditId: z.string() });
 export type WeekMoved = z.infer<typeof WeekMoved>;
 export const Counts = z.object({ written: z.number().int(), occupied: z.number().int(), absence: z.number().int() });
@@ -263,7 +278,9 @@ const WEEK = '/api/v1/rota/weeks/:location/:weekStart';
 
 /* Where Team rota opens: the locations this person may manage (D5), the one to start on
    (their own), and the server's today with its week, so the screen never guesses either. */
-export const RotaHome = z.object({ locations: z.array(LocationOption), location: z.string(), today: IsoDate, weekStart: IsoDate });
+/* awaiting (module 8): the weeks waiting on this person's sign-off, at any location they hold the layer for; left out when there are none. */
+export const RotaHome = z.object({ locations: z.array(LocationOption), location: z.string(), today: IsoDate, weekStart: IsoDate,
+  awaiting: z.array(z.object({ id: z.string(), location: z.string(), locationName: z.string(), weekStart: IsoDate, isoWeek: z.number().int(), requestedBy: z.string() })).optional() });
 export type RotaHome = z.infer<typeof RotaHome>;
 export const getRotaHome = defineEndpoint({ method: 'GET', path: '/api/v1/rota/home', response: RotaHome, capability: 'team_rota',
   summary: 'Where Team rota opens: the locations this person may manage, the one to start on, and today\'s week' });
@@ -274,7 +291,13 @@ export const writeRotaCell = defineEndpoint({ method: 'PUT', path: `${WEEK}/cell
   summary: 'Assign, change or remove one cell (If-Match: the week\'s version). Eligibility is checked here (ROTA_INELIGIBLE); a change to a live week records an amendment.' });
 export const transitionRotaWeek = defineEndpoint({ method: 'POST', path: `${WEEK}/transition`, params: LocWeek, request: WeekTransition, response: WeekMoved,
   capability: 'team_rota', versioned: true, errors: [404, 409],
-  summary: 'Send for review, return to draft, or publish (republish an amended week). Publishing is refused with COVERAGE_GAPS while gaps block it.' });
+  summary: 'Send for review, return to draft, or publish (republish an amended week). Publishing is refused with COVERAGE_GAPS while gaps block it. With a later layer of the Rota approval chain applying, publish signs the layer of the rota manager and moves the week to review until that layer signs it off; a week waiting on sign-off is refused with AWAITING_SIGNOFF. An amended week republishes as before.' });
+/* Module 8 group 4B: no single capability. The layer's role decides it (team_rota for a Service
+   Manager), or a delegate covering a holder; anyone holding neither, and covering nobody, is
+   refused with 403 capability. */
+export const signOffRotaWeek = defineEndpoint({ method: 'POST', path: `${WEEK}/sign-off`, params: LocWeek, request: WeekSignOff, response: WeekMoved,
+  versioned: true, errors: [403, 404, 409],
+  summary: 'Sign off a week waiting on the Rota approval chain at its current layer (If-Match), which publishes it after the last layer, or send it back to draft with a reason. Refused with ALREADY_SIGNED for whoever signed an earlier layer, scope, WRONG_LAYER or capability.' });
 export const copyRotaWeek = defineEndpoint({ method: 'POST', path: `${WEEK}/copy`, params: LocWeek, response: WeekCopied, capability: 'team_rota',
   versioned: true, errors: [404, 409], summary: 'Copy the previous week\'s shifts into empty cells of this week. Filled cells, leave and sickness are left alone.' });
 export const repeatRotaWeek = defineEndpoint({ method: 'POST', path: `${WEEK}/repeat`, params: LocWeek, request: RepeatInput, response: WeekRepeated,

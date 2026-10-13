@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Lock } from 'lucide-react';
 import { tid } from '@/testids';
-import { AddLine, Button, CheckboxField, CheckRow, Field, FieldGrid, FormWarn, Modal, NativeSelect, Pill, Row, SettingSelect, TextInput, Tip, toastInfo } from '@/ui';
+import { AddLine, Button, CheckboxField, CheckRow, Field, FieldGrid, FormWarn, Modal, NativeSelect, Pill, Row, SettingSelect, Small, TextInput, Tip, toastInfo } from '@/ui';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import { useCreateDelegation, useSaveChain, type ApprovalChain, type ChainLayer, type ChainModule, type Delegations } from '@/api/approvals';
 import { CHAIN_MODULES, FIXED_TIP, SLA_UNITS, STEP_SCOPES, parseSla, roleOptions, slaText, whenOptions, withLayer, type SlaUnit } from '@/domain/approvals';
@@ -86,6 +86,9 @@ export function ChainDialog({ chain, onClose }: { chain: ApprovalChain; onClose:
         </TableBody>
       </Table>
       <AddLine testId={tid.aappr.add} label="Add approval layer" note={m === 'Timesheet' ? 'It goes in before the posting step.' : undefined} onClick={add} />
+      {/* module 8 group 4B: say plainly which SLA a Leave or Rota layer runs to */}
+      {m === 'Leave' && <Small className="mt-sm">Leave layers are timed against the leave policy’s SLA, or the default on Leave setup, from when a request reaches the layer. The SLA set here is not used for leave.</Small>}
+      {m === 'Rota' && <Small className="mt-sm">The first layer that applies is the rota manager’s, signed when they publish. Later layers sign the week off before colleagues see it. A sign-off is not timed yet, so the SLA set here is not used for rota weeks.</Small>}
       {general && <FormWarn testId={tid.aappr.chainWarn}>{general.message} <span className="opacity-90">{general.next}</span></FormWarn>}
     </Modal>);
 }

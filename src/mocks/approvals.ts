@@ -17,7 +17,7 @@ import {
 } from '@/contract/approvals';
 import {
   CHAIN_MODULES, CHAIN_ROLE_RULES, actingFor, approversFor, chainCapabilities, chainId, chainModuleOf, chainProblem, chainText, decisionBlock,
-  defaultChainFor, roleRule, delegationActive, delegationProblem, delegationText, walkChain,
+  defaultChainFor, roleRule, delegationActive, delegationProblem, delegationText, walkChain, walkProgress,
   type ApproverWorld, type ChainItem, type ChainModule, type ChainStep, type ChainWalk, type DecisionBlock, type DeciderPerson, type Delegation,
 } from '@/domain/approvals';
 import type { Refusal as DomainRefusal } from '@/domain/modules';
@@ -60,7 +60,7 @@ function signOff(): SignOff {
 
 /* ------------------------------------------------------------ approvers */
 /* Someone can approve, and so give or cover a queue, while they are active and hold any approving capability. */
-const APPROVING = ['team_ts', 'team_leave', 'profile_appr', 'bank_verify', 'pay_appr'];
+const APPROVING = ['team_ts', 'team_leave', 'team_rota', 'profile_appr', 'bank_verify', 'pay_appr'];
 const capsOf = (code: string) => { const a = accountForPerson(code); return a ? capsFor(a) : []; };
 const isActive = (code: string) => personByCode(code)?.state === 'active';
 export const canApprove = (code: string) => isActive(code) && capsOf(code).some(c => APPROVING.includes(c));
@@ -90,11 +90,14 @@ export function chainPeople(): DeciderPerson[] {
   });
 }
 /* One item's walk along its module's chain as it stands today, with today's
-   delegations. Leave and Rota walk theirs through here too. */
-export function walkNow(m: ChainModule, item: ChainItem, signed: readonly string[], everyone: readonly DeciderPerson[] = chainPeople()) {
-  const input = { module: m, steps: chainRecord(m).steps, item, signed, date: today(), people: everyone, delegations: delegationList() };
+   delegations. Leave and Rota walk theirs through here too, naming the people
+   who signed an earlier layer, who decide no later one. */
+export function walkNow(m: ChainModule, item: ChainItem, signed: readonly string[], everyone: readonly DeciderPerson[] = chainPeople(),
+  signers?: readonly string[]) {
+  const input = { module: m, steps: chainRecord(m).steps, item, signed, date: today(), people: everyone, delegations: delegationList(),
+    ...(signers ? { signers } : {}) };
   const walk: ChainWalk = walkChain(input);
-  return { walk, block: (code: string): DecisionBlock | null => decisionBlock(walk, input, code) };
+  return { walk, block: (code: string): DecisionBlock | null => decisionBlock(walk, input, code), progress: () => walkProgress(input) };
 }
 /* The SLA of the first layer of the module's chain the person holds the role of, or '' when they hold none. */
 export function slaFor(m: ChainModule, caps: readonly string[]): string {

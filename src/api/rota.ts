@@ -11,7 +11,7 @@ import { notificationKeys } from './notifications';
 import {
   acceptRotaPlan, addPatternPeople, askAllCover, assignCover, claimCover, clearRotaWeek, confirmFilled, copyRotaWeek, createPattern,
   createShiftType, deletePattern, deleteShiftType, escalateCover, fillCover, generatePattern, getMyShifts, getRotaConfig, getRotaHome, getRotaWeek,
-  listCover, listItRequests, listPatterns, listShiftTypes, openCover, planRotaWeek, repeatRotaWeek, setCoverReason, suggestRotaCell, transitionRotaWeek,
+  listCover, listItRequests, listPatterns, listShiftTypes, openCover, planRotaWeek, repeatRotaWeek, setCoverReason, signOffRotaWeek, suggestRotaCell, transitionRotaWeek,
   updatePattern, updateRotaConfig, updateShiftType, writeRotaCell,
   type AcceptPlan, type AddPatternPeople, type CellInput, type CellSaved, type CellSuggestions, type CoverBoard, type CoverFilled,
   type CoverSaved, type CoverView, type CreatePattern, type CreateShiftType, type FilledConfirmed, type FilledView, type GeneratePattern, type ItRequest, type ItRequestList,
@@ -86,6 +86,12 @@ export const useWriteCell = () => useRecordMutation({
 });
 export const useMoveWeek = () => useRecordMutation({
   mutationFn: (v: WeekRef & { to: 'review' | 'draft' | 'published' }) => api(transitionRotaWeek, { params: weekParams(v), body: { to: v.to }, ifMatch: v.version }),
+  recordKey: weekKey, invalidates: AFTER,
+});
+/* Module 8: a sign-off holder signs off a week waiting on the Rota approval chain, or sends it back with a reason. */
+export const useSignOffWeek = () => useRecordMutation({
+  mutationFn: (v: WeekRef & { to: 'published' | 'draft'; reason?: string }) =>
+    api(signOffRotaWeek, { params: weekParams(v), body: { to: v.to, ...(v.reason !== undefined ? { reason: v.reason } : {}) }, ifMatch: v.version }),
   recordKey: weekKey, invalidates: AFTER,
 });
 export const useCopyWeek = () => useRecordMutation({

@@ -16,6 +16,7 @@
 import { FULFIL_CHANNELS, LEAVE, SICK, onShift, rotaWeekId, type CellWrite, type Line, type RotaActor } from './rota';
 import { addDays, addMonths, daysBetween, formatDay, formatDmy, isIsoDate, parseIso, periodStart } from './time';
 import { LEAVE_CODE } from './codes';
+import { roleWaiting } from './approvals';
 
 /* A refusal the server sends as it is: code, message and what to do next. */
 export interface LeaveRefusal { code: string; message: string; next: string; field?: string }
@@ -524,6 +525,44 @@ export const sicknessToast = (short: boolean) => (short ? 'Sickness recorded. Sh
 export const RTW_TOAST = 'Return-to-work meeting requested. The colleague and HR have been notified.';
 export const daysReturnedToast = (n: number, name: string) => `${plural(n, 'day')} returned to ${name}’s annual leave balance`;
 export const tellManagerToast = (manager: string) => `Messaging is not built yet. Nothing has been sent to ${manager}.`;
+
+/* ------------------------------ the approval chain's layers (module 8 group 4B) */
+/* A request walks the Leave approval chain. It stays pending until the last
+   layer that applies approves it, so its days count as waiting in the balance
+   and reach the rota only then. Each layer's approval is a history row from
+   pending, naming the layer's role. */
+export interface LeaveSign { from: string; to: string; by: { personCode: string; name: string }; at: string; layer?: string }
+const signsOf = (history: readonly LeaveSign[]) => history.filter(h => h.from === 'pending' && (h.to === 'pending' || h.to === 'approved') && !!h.layer);
+/* the roles that have approved the request, in order, and who approved as each */
+export const leaveSignedLayers = (history: readonly LeaveSign[]) => signsOf(history).map(h => h.layer ?? '');
+export const leaveSigners = (history: readonly LeaveSign[]) => signsOf(history).map(h => h.by.personCode);
+/* when the request reached the layer it waits on: its last layer's approval, else when it was raised */
+export const layerStartedAt = (history: readonly LeaveSign[], raisedAt: string) => signsOf(history).at(-1)?.at ?? raisedAt;
+/* The escalation condition ("Only when the SLA is breached"): the first layer
+   did not decide within the SLA, counted in days from the date raised to its
+   approval, or to today while it has not approved. A seeded escalated request
+   is breached already. */
+export function firstLayerBreached(r: { raised: string; escalated?: boolean; firstSigned?: string | null }, slaDays: number, today: string): boolean {
+  return !!r.escalated || daysBetween(r.raised, r.firstSigned ?? today) > slaDays;
+}
+const upperFirst = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
+/* "Approved by the line manager, waiting on the Service Manager": a request one layer has approved and a later one has still to. */
+export const layerWaitingLabel = (approvedAs: string, waitingOn: string) => `Approved by ${roleWaiting(approvedAs)}, waiting on ${roleWaiting(waitingOn)}`;
+/* "Layer 2 of 2 · Service Manager. Approved by Rachel Hussain as the line manager." */
+export function layerText(n: number, of: number, role: string, signs: readonly { layer: string; name: string }[]): string {
+  const by = signs.map(x => `${x.name} as ${roleWaiting(x.layer)}`).join(', then ');
+  return `Layer ${n} of ${of} · ${role}.${by ? ` Approved by ${by}.` : ''}`;
+}
+export const passedNotice = (name: string, typeName: string, range: string, by: string, waitingOn: string) =>
+  ({ title: 'Leave request awaiting approval', body: `${name} · ${typeName} · ${range}. Approved by ${by}, now waiting on ${roleWaiting(waitingOn)}.` });
+export const movedOnNotice = (range: string, by: string, waitingOn: string) =>
+  ({ title: 'Leave request moved on', body: `${range}. Approved by ${by}. ${upperFirst(roleWaiting(waitingOn))} decides it next.` });
+export const passedToast = (first: string, waitingOn: string) => `${first}’s request approved by you. It now waits on ${roleWaiting(waitingOn)}.`;
+export const passedAct = (waitingOn: string) => `Leave passed to ${roleWaiting(waitingOn)}`;
+/* The refusals of a decision at the wrong layer of the chain. */
+export const SIGNED_EARLIER = 'You approved this request at an earlier layer. Another approver decides the next one.';
+export const wrongLayerProblem = (waitingOn: string): LeaveRefusal => ({ code: 'WRONG_LAYER',
+  message: `This request is waiting on ${roleWaiting(waitingOn)}, not on a layer you decide.`, next: `${upperFirst(roleWaiting(waitingOn))} decides it now.` });
 
 /* ---------------------------------------------- sickness (D9) */
 export interface RtwRequest { requestedAt: string; by: RotaActor }

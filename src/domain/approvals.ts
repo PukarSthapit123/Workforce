@@ -40,22 +40,29 @@ export interface ChainStep { module: string; role: string; scope: string; when: 
 export const CHAIN_SCOPES = ['Own department', 'Own site', 'Own location', 'All departments', 'Named employees', '—'] as const;
 /* the dash belongs to the posting step alone */
 export const STEP_SCOPES = CHAIN_SCOPES.filter(s => s !== '—');
+/* 'Every rota week' is not the prototype's (module 8 group 4): without it no
+   Rota layer could apply to every week, so no sign-off could be asked for. */
 export const CHAIN_WHEN = ['Every timesheet', 'Every contact detail change', 'Only bank details', 'Every leave request', 'Only above a premium threshold',
   'Only for absence or non-working days', 'Only for proxy entries', 'Only when the SLA is breached',
-  'Only for agency booking', 'Posts on final approval'] as const;
+  'Only for agency booking', 'Every rota week', 'Posts on final approval'] as const;
 export const POSTS = 'Posts on final approval';
 export const PROFILE_WHEN = ['Every contact detail change', 'Only bank details'] as const;
 export const PROFILE_ROLES: readonly ApproverRole[] = ['Line manager', 'Payroll'];
 
 /* The conditions a module's layer may carry: the Profile chain its own two,
-   since they decide which fields go to whom; every other chain any of the
-   prototype's, less the posting step's and the Profile two. */
-/* Module 8 group 4: a Timesheet layer may only carry a condition the
-   server can read off the day, so each one it offers works. */
+   since they decide which fields go to whom. Module 8 group 4: a Timesheet
+   layer may only carry a condition the server can read off the day, so each
+   one it offers works. */
 export const TIMESHEET_WHEN = ['Every timesheet', 'Only above a premium threshold', 'Only for absence or non-working days', 'Only for proxy entries'] as const;
-export const whenOptions = (m: ChainModule): readonly string[] =>
-  m === 'Profile' ? PROFILE_WHEN : m === 'Timesheet' ? TIMESHEET_WHEN
-    : CHAIN_WHEN.filter(w => w !== POSTS && !(PROFILE_WHEN as readonly string[]).includes(w));
+/* Module 8 group 4B: the same for Leave and Rota. A leave layer applies to
+   every request, or, as an escalation, to one whose first layer has not
+   decided within the SLA; a rota layer to every week, or to a week with a
+   shift that has gone to agency partners for cover. */
+export const ESCALATION_WHEN = 'Only when the SLA is breached';
+export const LEAVE_WHEN = ['Every leave request', ESCALATION_WHEN] as const;
+export const ROTA_WHEN = ['Every rota week', 'Only for agency booking'] as const;
+const MODULE_WHEN: Readonly<Record<ChainModule, readonly string[]>> = { Profile: PROFILE_WHEN, Timesheet: TIMESHEET_WHEN, Leave: LEAVE_WHEN, Rota: ROTA_WHEN };
+export const whenOptions = (m: ChainModule): readonly string[] => MODULE_WHEN[m];
 
 /* Module 8 group 4: the one table of who may sign off each role of each
    module's chain. A role is the capability that decides it; a scoped role
@@ -166,6 +173,8 @@ export function chainProblem(m: ChainModule, steps: readonly ChainStep[]): Refus
   }
   if (m === 'Profile' && !layers.some(s => s.when === 'Every contact detail change'))
     return invalid('steps', 'Every contact detail change needs an approver.', 'Set one layer to apply to every contact detail change.');
+  if (m === 'Leave' && !layers.some(s => s.when === 'Every leave request'))
+    return invalid('steps', 'Every leave request needs an approver.', 'Set one layer to apply to every leave request.');
   if (m === 'Timesheet') {
     /* a day reads "approved by manager, waiting on payroll", so the line manager goes first */
     const lm = layers.findIndex(s => s.role === 'Line manager');
@@ -304,9 +313,9 @@ export interface ItemFacts {
   proxy?: boolean;
   /* Profile: the change is to bank details */
   bankDetails?: boolean;
-  /* Leave: the layer before has not decided within its SLA */
+  /* Leave: the request's first layer has not decided within the SLA */
   slaBreached?: boolean;
-  /* Rota: the week books agency staff */
+  /* Rota: a shift of the week has gone to agency partners for cover */
   agency?: boolean;
 }
 export type Conditions = Readonly<Record<string, (f: ItemFacts) => boolean>>;
@@ -321,6 +330,7 @@ export const CONDITIONS: Conditions = {
   'Only for proxy entries': f => f.proxy === true,
   'Only when the SLA is breached': f => f.slaBreached === true,
   'Only for agency booking': f => f.agency === true,
+  'Every rota week': () => true,
 };
 
 /* Someone who might decide a layer: what the server knows of their record and access. */
@@ -329,7 +339,11 @@ export interface DeciderPerson {
   /* their access covers every location (Workforce master data), not only their own */
   allLocations: boolean;
 }
-export interface ChainItem { personCode: string; location: string; department: string; facts: ItemFacts }
+/* An item of a chain. personCode is '' for a rota week, which belongs to no
+   one; department is left out for one, so Own department reads as its
+   location. manager is the employee code of the person's line manager, who
+   holds a Line manager layer for them whatever their department (Leave). */
+export interface ChainItem { personCode: string; location: string; department?: string; manager?: string; facts: ItemFacts }
 export interface WalkInput {
   module: ChainModule; steps: readonly ChainStep[]; item: ChainItem;
   /* the roles that have signed the item off since it was last submitted */
@@ -338,6 +352,10 @@ export interface WalkInput {
   date: string;
   people: readonly DeciderPerson[]; delegations: readonly Delegation[];
   conditions?: Conditions;
+  /* Leave and Rota (module 8 group 4B): the people who signed an earlier
+     layer. Every role of those chains needs the same capability, so without
+     this one person could sign every layer; they decide no later one. */
+  signers?: readonly string[];
 }
 export interface WalkLayer { step: ChainStep; holders: string[]; deciders: string[] }
 export interface ChainWalk {
@@ -350,11 +368,13 @@ export interface ChainWalk {
   /* signing the current layer finishes the chain */
   final: boolean;
 }
+/* How far an item has gone (module 8 group 4B): the layers already signed, and those an escalation layer took over from. */
+export interface WalkProgress { signed: WalkLayer[]; passed: WalkLayer[] }
 
 const layerApplies = (s: ChainStep, facts: ItemFacts, conditions: Conditions) => !s.fixed && (conditions[s.when]?.(facts) ?? false);
 /* The layer's own scope, against the approver's record. Named employees has no list in this build, so it reads as all. */
 function inLayerScope(scope: string, p: DeciderPerson, item: ChainItem): boolean {
-  if (scope === 'Own department') return p.department === item.department;
+  if (scope === 'Own department') return item.department === undefined ? p.location === item.location : p.department === item.department;
   if (scope === 'Own location' || scope === 'Own site') return p.location === item.location;
   return true;
 }
@@ -365,38 +385,61 @@ export function holdsLayer(m: ChainModule, s: ChainStep, p: DeciderPerson, item:
   const rule = roleRule(m, s.role);
   if (!rule || !p.active || p.code === item.personCode || !p.caps.includes(rule.capability)) return false;
   if (rule.scoped && !p.allLocations && p.location !== item.location) return false;
+  if (s.role === 'Line manager' && item.manager !== undefined && item.manager === p.code) return true;
   return inLayerScope(s.scope, p, item);
 }
 /* The holders of a layer, then, while a delegation for the module is in
    force on the day, whoever covers each of them, as decidersToday does for
    Profile. A delegate never decides their own item. */
 function layerDeciders(m: ChainModule, s: ChainStep, input: WalkInput): WalkLayer {
-  const holders = input.people.filter(p => holdsLayer(m, s, p, input.item)).map(p => p.code);
+  const signers = input.signers ?? [];
+  const holders = input.people.filter(p => holdsLayer(m, s, p, input.item) && !signers.includes(p.code)).map(p => p.code);
   const active = (code: string) => input.people.some(p => p.code === code && p.active);
   const deciders = [...new Set(holders.flatMap(h => {
     const to = actingFor(h, m, input.date, input.delegations);
-    return to !== h && to !== input.item.personCode && active(to) ? [h, to] : [h];
+    return to !== h && to !== input.item.personCode && !signers.includes(to) && active(to) ? [h, to] : [h];
   }))];
   return { step: s, holders, deciders };
 }
 
-/* The shared layer walker (module 8 group 4): Timesheet uses it now, and
-   Leave and Rota walk their chains through it the same way. */
-export function walkChain(input: WalkInput): ChainWalk {
+/* The shared layer walker (module 8 group 4): Timesheet, Leave and Rota walk
+   their chains through it. Each signed role signs off the first applicable
+   layer of that role not yet signed, so a chain may hold one role twice (a
+   Rota chain is Service Managers only). An escalation layer that applies
+   (the SLA is breached) takes over from the unsigned layers before it: they
+   are passed, and the item waits on the escalation layer. */
+function walkParts(input: WalkInput) {
   const conditions = input.conditions ?? CONDITIONS;
   const layers = input.steps.filter(s => layerApplies(s, input.item.facts, conditions)).map(s => layerDeciders(input.module, s, input));
-  const left = layers.filter(l => !input.signed.includes(l.step.role));
+  const pool = [...input.signed], done = new Set<number>();
+  layers.forEach((l, i) => {
+    const k = pool.indexOf(l.step.role);
+    if (k >= 0) { pool.splice(k, 1); done.add(i); }
+  });
+  const lastEscalation = layers.reduce((at, l, i) => (l.step.when === ESCALATION_WHEN && !done.has(i) ? i : at), -1);
+  const passed = new Set(layers.flatMap((_, i) => (i < lastEscalation && !done.has(i) ? [i] : [])));
+  const left = layers.filter((_, i) => !done.has(i) && !passed.has(i));
+  return { layers, left, signed: layers.filter((_, i) => done.has(i)), passed: layers.filter((_, i) => passed.has(i)) };
+}
+export function walkChain(input: WalkInput): ChainWalk {
+  const { layers, left } = walkParts(input);
   const current = left[0] ?? layers[layers.length - 1] ?? null;
   return { layers, current, final: left.length <= 1 };
 }
+export function walkProgress(input: WalkInput): WalkProgress {
+  const { signed, passed } = walkParts(input);
+  return { signed, passed };
+}
 
 /* Why someone may not decide the item at its current layer, or null when
-   they may: it is their own; they hold the current layer's role but the
-   item is outside their scope; they sign off another layer of this chain;
-   or nothing in the chain is theirs. */
-export type DecisionBlock = 'self' | 'scope' | 'layer' | 'capability';
-export function decisionBlock(walk: ChainWalk, input: Pick<WalkInput, 'module' | 'item' | 'people'>, code: string): DecisionBlock | null {
+   they may: it is their own; they signed an earlier layer of it (Leave and
+   Rota); they hold the current layer's role but the item is outside their
+   scope; they sign off another layer of this chain; or nothing in the chain
+   is theirs. */
+export type DecisionBlock = 'self' | 'signed' | 'scope' | 'layer' | 'capability';
+export function decisionBlock(walk: ChainWalk, input: Pick<WalkInput, 'module' | 'item' | 'people' | 'signers'>, code: string): DecisionBlock | null {
   if (code === input.item.personCode) return 'self';
+  if (input.signers?.includes(code)) return 'signed';
   if (walk.current?.deciders.includes(code)) return null;
   const caps = input.people.find(p => p.code === code)?.caps ?? [];
   const rule = walk.current ? roleRule(input.module, walk.current.step.role) : undefined;

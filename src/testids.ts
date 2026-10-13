@@ -214,6 +214,10 @@ export const tid = {
     horizonPublish: 'trota-horizon-publish',
     adhocDay: 'trota-adhoc-day', adhocCode: 'trota-adhoc-code', adhocWhy: 'trota-adhoc-why', adhocUrgent: 'trota-adhoc-urgent',
     adhocSuggest: 'trota-adhoc-suggest', adhocAdvertise: 'trota-adhoc-advertise', adhocTip: 'trota-adhoc-tip',
+    /* module 8: a week waiting on sign-off by a later layer of the Rota approval chain, and the weeks waiting on the reader */
+    signoff: 'trota-signoff', signOff: 'trota-sign-off', sendBack: 'trota-send-back', sendBackReason: 'trota-send-back-reason',
+    sendBackConfirm: 'trota-send-back-confirm', sendBackCancel: 'trota-send-back-cancel', returned: 'trota-returned',
+    awaiting: 'trota-awaiting', awaitingWeek: (id: string) => k('trota-awaiting-week', id),
   },
   /* module 3: Shift catalogue (tshifts) and its body, shared with Rota setup */
   tshifts: {
@@ -330,6 +334,8 @@ export const tid = {
     leaverAction: (code: string) => k('tleave-leaver-action', code), leaverRow: (code: string, row: string) => k('tleave-leaver-row', code, row),
     /* the decline dialog: the reason the colleague sees (D4) */
     reason: 'tleave-reason', declineConfirm: 'tleave-decline-confirm', declineCancel: 'tleave-decline-cancel', declineWarn: 'tleave-decline-warn',
+    /* module 8: the approval chain layer a request waits on */
+    layer: (id: string) => k('tleave-layer', id),
   },
   /* module 4: Sickness (tsick): the trigger banner, the Bradford table, recording an absence, and sickness during booked leave */
   tsick: {

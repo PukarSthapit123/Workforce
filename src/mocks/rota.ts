@@ -9,24 +9,26 @@
 import { store } from './store';
 import { bump, refuse } from './http';
 import { serve } from './serve';
-import { actor, capsFor } from './auth';
+import { actor, capsFor, requireCapability } from './auth';
 import { writeAudit } from './audit';
 import { invalid } from './people';
 import { notifyEvent } from './notify';
+import { approvesIn, chainPeople, walkNow } from './approvals';
+import { roleWaiting, type ChainItem, type ChainWalk, type DecisionBlock, type DeciderPerson } from '@/domain/approvals';
 import {
   accountOfPerson, accounts, codesOf, effectiveCode, nameOf, people, personByCode, recordAt, scopeOf, today, type Signed, type StoredPerson,
 } from './world';
 import {
   acceptRotaPlan, addPatternPeople, askAllCover, assignCover, claimCover, clearRotaWeek, confirmFilled, copyRotaWeek, createPattern,
   createShiftType, deletePattern, deleteShiftType, escalateCover, fillCover, generatePattern, getMyShifts, getRotaConfig, getRotaHome, getRotaWeek,
-  listCover, listItRequests, listPatterns, listShiftTypes, openCover, planRotaWeek, repeatRotaWeek, setCoverReason, suggestRotaCell, transitionRotaWeek,
+  listCover, listItRequests, listPatterns, listShiftTypes, openCover, planRotaWeek, repeatRotaWeek, setCoverReason, signOffRotaWeek, suggestRotaCell, transitionRotaWeek,
   updatePattern, updateRotaConfig, updateShiftType, writeRotaCell,
   type CoverRecord, type CoverView, type FilledShift, type HoursFlag, type ItRequest, type PatternRecord, type RotaConfigRecord,
   type RotaWeekView, type ShiftTypeRecord, type Suggestion as SuggestionView, type UpdateRotaConfig,
 } from '@/contract/rota';
 import type { AuditEntry } from '@/contract/audit';
 import { dayMinutes, type RotaInput, type TimeEntry } from '@/domain/timesheet';
-import { addDays, dayIndex, isWeekStart, isoWeek, periodStart, weekDates, weekLabel } from '@/domain/time';
+import { addDays, dayIndex, formatDmy, isWeekStart, isoWeek, periodStart, weekDates, weekLabel } from '@/domain/time';
 import {
   COVER_REASONS, DEFAULT_ROTA_CONFIG, CLAIM_NOT_PERMITTED, NOBODY_ELIGIBLE, NO_LANDING, REASON_BEFORE_CLOSE, ACTIVATE_EMPTY, TICK_SOMEONE,
   alreadyOnPattern, amendedAuditText, amendedNotice, applyPattern, assignCheck, claimRefusal, clearAuditText, clearProblem, clearSummary,
@@ -46,7 +48,13 @@ import { absenceCellWrites, shortDays, type CellPlanWeek, type CoverDay } from '
 
 /* ------------------------------------------------------------- the world */
 interface Meta { id: string; version: number; updatedAt: string }
-type StoredWeek = Meta & RotaWeekCore;
+/* Module 8 group 4B: a week sent to publish while a later layer of the Rota
+   chain applies keeps who sent it and the layers signed so far, until the last
+   signs it off or a holder sends it back; sentBack is the last send-back. */
+interface WeekSignOff { requestedBy: RotaActor; at: string; signed: { layer: string; by: RotaActor; at: string }[] }
+interface WeekSentBack { by: RotaActor; at: string; reason: string }
+interface WeekChain { signoff?: WeekSignOff | null; sentBack?: WeekSentBack | null }
+type StoredWeek = Meta & RotaWeekCore & WeekChain;
 interface Tenant { modules: Record<string, boolean>; flags: Record<string, unknown>; weekStart: string }
 interface StoredLocation { code: string; name: string; area?: string; level?: string; minPerShift?: number; active?: boolean }
 interface RotaProfile { personCode: string; cleared: boolean; dbsExpiry: string; qualifications: string; favourite: boolean; preferredDays: number[] }
@@ -172,9 +180,9 @@ function cellPlanAt(loc: string, dates: readonly string[]): CellPlanWeek[] {
   }
   return out;
 }
-function saveWeek(core: RotaWeekCore): StoredWeek {
+function saveWeek(core: RotaWeekCore, chain: WeekChain = {}): StoredWeek {
   const id = rotaWeekId(core.location, core.weekStart), old = recordAt(weeks(), id);
-  const rec: StoredWeek = old ? bump(old, core) : { id, version: 1, updatedAt: store.now(), ...core };
+  const rec: StoredWeek = old ? bump(old, { ...core, ...chain }) : { id, version: 1, updatedAt: store.now(), ...core, ...chain };
   weeks()[id] = rec;
   return rec;
 }
@@ -190,6 +198,56 @@ function publications(s: Signed) {
       return [{ location: x.location, locationName: locName(x.location), weekStart: x.weekStart, version: Number(x.version) || 0, at: a.at, notified: Number(x.notified) || 0 }];
     })
     .sort((a, b) => b.at.localeCompare(a.at)).slice(0, 6);
+}
+
+/* -------------------------------- the approval chain (module 8 group 4B) */
+/* Publishing walks the Rota approval chain. The rota manager's publish signs
+   the first layer that applies, under today's rule (Plan and publish rota at
+   the location); every later layer is a sign-off by someone who holds it and
+   did not sign an earlier one. A week belongs to its location and to no one,
+   so Own department reads as the location. A shift has gone to agency when its
+   open cover request has reached the Agency partners stage. */
+function agencyIn(loc: string, ws: string): boolean {
+  const dates = weekDates(ws), stages = config().fulfilStages;
+  return Object.values(covers()).some(c => c.location === loc && c.open && dates.includes(c.date)
+    && stages.find(st => st.n === c.stage)?.audience === 'Agency partners');
+}
+const weekItem = (loc: string, ws: string): ChainItem => ({ personCode: '', location: loc, facts: { agency: agencyIn(loc, ws) } });
+const signedOf = (rec: StoredWeek | undefined) => rec?.signoff?.signed ?? [];
+const weekWalk = (rec: StoredWeek | undefined, loc: string, ws: string, everyone?: readonly DeciderPerson[]) =>
+  walkNow('Rota', weekItem(loc, ws), signedOf(rec).map(x => x.layer), everyone, signedOf(rec).map(x => x.by.personCode));
+const waitingOn = (w: ChainWalk) => roleWaiting(w.current?.step.role ?? 'Service Manager');
+const upperFirst = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
+/* Signing off needs a capability that decides some layer of the Rota chain, or a delegation in force from someone who has one. */
+function requireRotaApprover(s: Signed) {
+  if (!approvesIn('Rota', effectiveCode(s), s.caps)) requireCapability(s, 'team_rota');
+}
+/* Why the reader may not sign the week off at its current layer. */
+function signOffBlocked(why: DecisionBlock, w: ChainWalk, rec: StoredWeek, l: StoredLocation, me: string): { status: number; code: string; message: string; next: string } {
+  if (why === 'signed' || why === 'self') return { status: 403, code: 'ALREADY_SIGNED',
+    message: rec.signoff?.requestedBy.personCode === me ? 'You sent this week to be published, so someone else signs it off.'
+      : 'You signed off an earlier layer of this week, so someone else signs off the next.',
+    next: `${upperFirst(waitingOn(w))} signs it off.` };
+  if (why === 'scope') return { status: 403, code: 'scope', message: `This week is at ${l.name}, outside the locations you sign off rotas for.`, next: `${upperFirst(waitingOn(w))} there signs it off.` };
+  if (why === 'layer') return { status: 403, code: 'WRONG_LAYER', message: `This week is waiting on ${waitingOn(w)}, not on a layer you sign off.`, next: `${upperFirst(waitingOn(w))} signs it off.` };
+  const label = store.coll<{ label?: string }>('capabilities').team_rota?.label ?? 'team_rota';
+  return { status: 403, code: 'capability', message: `This needs "${label}", which your access does not include.`, next: 'Ask an administrator to grant it on Qnipay setup → Permissions.' };
+}
+function signoffView(s: Signed, rec: StoredWeek | undefined, l: StoredLocation, ws: string): RotaWeekView['signoff'] {
+  const so = rec?.signoff;
+  if (!rec || !so) return null;
+  const me = effectiveCode(s), { walk, block } = weekWalk(rec, l.code, ws), why = block(me);
+  return { requestedBy: so.requestedBy, at: so.at, signed: so.signed, waitingOn: waitingOn(walk), final: walk.final, decide: why === null,
+    why: why ? signOffBlocked(why, walk, rec, l, me).message : '' };
+}
+/* The weeks waiting on the reader's sign-off, at any location. */
+function awaitingFor(s: Signed) {
+  const me = effectiveCode(s), everyone = chainPeople();
+  return Object.values(weeks()).filter(w => w.signoff && w.state === 'review')
+    .filter(w => weekWalk(w, w.location, w.weekStart, everyone).block(me) === null)
+    .sort((a, b) => a.weekStart.localeCompare(b.weekStart) || a.location.localeCompare(b.location))
+    .map(w => ({ id: w.id, location: w.location, locationName: locName(w.location), weekStart: w.weekStart, isoWeek: isoWeek(w.weekStart),
+      requestedBy: w.signoff?.requestedBy.name ?? '' }));
 }
 function weekView(s: Signed, l: StoredLocation, ws: string): RotaWeekView {
   const rec = weekRec(l.code, ws), w = rec ? coreOf(rec) : emptyWeek(l.code, ws), cfg = config(), sh = shiftList();
@@ -213,6 +271,7 @@ function weekView(s: Signed, l: StoredLocation, ws: string): RotaWeekView {
       minStaff: flagOn('MINSTAFF'), safeWorker: flagOn('SAFEWORKER'), fulfil: flagOn('FULFIL'), patterns: flagOn('PATTERNS'),
       horizon: cfg.horizon, outlook: cfg.outlook },
     publications: publications(s),
+    signoff: signoffView(s, rec, l, ws), sentBack: w.state === 'draft' ? rec?.sentBack ?? null : null,
   };
 }
 
@@ -488,7 +547,8 @@ export const rotaHandlers = [
     const ls = manageable(session), sc = scopeOf(session), now = today();
     const own = sc.all ? personByCode(effectiveCode(session))?.location : sc.location;
     const location = ls.find(l => l.code === own)?.code ?? ls[0]?.code ?? '';
-    return { locations: ls, location, today: now, weekStart: location ? weekOn(location, now).weekStart : periodStart(now) };
+    const awaiting = awaitingFor(session);
+    return { locations: ls, location, today: now, weekStart: location ? weekOn(location, now).weekStart : periodStart(now), ...(awaiting.length ? { awaiting } : {}) };
   }),
 
   serve(getRotaWeek, ({ session, params }) => {
@@ -537,13 +597,33 @@ export const rotaHandlers = [
     const l = locationFor(session, params.location), ws = params.weekStart;
     requireMonday(l.code, ws);
     checkVersion(weekMeta(l.code, ws));
-    const w = weekCore(l.code, ws);
+    const w = weekCore(l.code, ws), rec = weekRec(l.code, ws);
     if (body.to === 'published') {
+      /* module 8: a week already waiting on sign-off is signed off by its holder, not published again */
+      if (rec?.signoff) {
+        const waiting = waitingOn(weekWalk(rec, l.code, ws).walk);
+        refuse(409, { code: 'AWAITING_SIGNOFF', message: `Week ${isoWeek(ws)} is waiting on sign-off by ${waiting}.`,
+          next: `${upperFirst(waiting)} signs it off or sends it back. You can return it to draft.` });
+      }
       const roster = rosterOf(l.code, w);
       const problem = publishProblem(w, gapsAt(roster.map(p => lineOf(w, p.code)), minAt(l)), config().publishBlockOnGap);
       if (problem) refuse(409, problem);
+      /* Module 8: publishing signs the chain's first layer that applies. With a later layer to
+         come, the week goes to review until that layer signs it off. An amended week is
+         already in front of colleagues, so it republishes as before. */
+      const walk = w.state === 'amendment' ? null : weekWalk(undefined, l.code, ws).walk;
+      if (walk?.current && !walk.final) {
+        const who = by(session), at = store.now();
+        const saved = saveWeek({ ...w, state: 'review' }, { signoff: { requestedBy: who, at, signed: [{ layer: walk.current.step.role, by: who, at }] }, sentBack: null });
+        const next = weekWalk(saved, l.code, ws).walk, waiting = waitingOn(next);
+        notifyEvent('rt_pub', 'actor', (next.current?.deciders ?? []).filter(c => c !== who.personCode),
+          { title: 'Rota waiting on your sign-off', body: `${l.name} · ${formatDmy(ws)} – ${formatDmy(addDays(ws, 6))}. Sent to publish by ${who.name}.` });
+        const auditId = writeAudit({ who: actor(session), act: 'Rota sent for sign-off', entity: 'rotaWeek', entityId: rotaWeekId(l.code, ws),
+          before: { state: w.state }, after: { state: 'review', layer: walk.current.step.role, detail: `${l.name} · week ${isoWeek(ws)} · waiting on ${waiting}` } });
+        return { week: weekView(session, l, ws), summary: `Week ${isoWeek(ws)} sent for sign-off. It is published once ${waiting} signs it off.`, auditId };
+      }
       const r = publishWeek(w, by(session), store.now());
-      saveWeek(r.week);
+      saveWeek(r.week, { signoff: null, sentBack: null });
       notifyEvent('rt_pub', 'subject', roster.map(p => p.code), publishNotice(l.name, ws, r.version, r.republished));
       const auditId = writeAudit({ who: actor(session), act: r.republished ? 'Rota republished' : 'Rota published', entity: 'rotaWeek',
         entityId: rotaWeekId(l.code, ws), before: { state: w.state, version: w.publishVersion },
@@ -552,11 +632,60 @@ export const rotaHandlers = [
     }
     const problem = rotaTransitionProblem(w.state, body.to);
     if (problem) refuse(409, problem);
-    saveWeek({ ...w, state: body.to });
+    /* returning a week to draft withdraws it from sign-off */
+    saveWeek({ ...w, state: body.to }, { signoff: null, sentBack: null });
     const label = rotaState(body.to).label;
     const auditId = writeAudit({ who: actor(session), act: body.to === 'review' ? 'Rota sent for review' : 'Rota returned to draft', entity: 'rotaWeek',
       entityId: rotaWeekId(l.code, ws), before: { state: w.state }, after: { state: body.to, detail: `${l.name} · week ${isoWeek(ws)} · ${label}` } });
     return { week: weekView(session, l, ws), summary: `Week ${isoWeek(ws)} · ${label}`, auditId };
+  }),
+
+  /* Module 8 group 4B: the sign-off holder's decision on a week waiting on the Rota chain. */
+  serve(signOffRotaWeek, ({ session, params, body, checkVersion }) => {
+    requireRota(); requireRotaApprover(session);
+    const l = locationBy(params.location) ?? NOT_FOUND('location', 'Choose a location from the list.'), ws = params.weekStart;
+    requireMonday(l.code, ws);
+    const rec = weekRec(l.code, ws);
+    if (!rec?.signoff || rec.state !== 'review') return refuse(409, {
+      code: 'NOT_AWAITING_SIGNOFF', message: `Week ${isoWeek(ws)} at ${l.name} is not waiting on sign-off.`, next: 'Reload the rota.' });
+    const me = effectiveCode(session), { walk, block } = weekWalk(rec, l.code, ws), why = block(me);
+    if (why) { const { status, ...r } = signOffBlocked(why, walk, rec, l, me); refuse(status, r); }
+    checkVersion(rec);
+    const w = coreOf(rec), who = by(session), at = store.now(), layer = walk.current?.step.role ?? 'Service Manager';
+    const requester = rec.signoff?.requestedBy, signed = signedOf(rec);
+    if (body.to === 'draft') {
+      const reason = (body.reason ?? '').trim();
+      if (!reason) invalid({ field: 'reason', message: 'Give a reason for sending it back. The rota manager sees it.' });
+      saveWeek({ ...w, state: 'draft' }, { signoff: null, sentBack: { by: who, at, reason } });
+      if (requester && requester.personCode !== me)
+        notifyEvent('rt_pub', 'actor', [requester.personCode], { title: 'Rota sent back', body: `${l.name} · week ${isoWeek(ws)}. Sent back by ${who.name}: "${reason}".` });
+      const auditId = writeAudit({ who: actor(session), act: 'Rota sent back', entity: 'rotaWeek', entityId: rec.id, before: { state: 'review', layer },
+        after: { state: 'draft', detail: `${l.name} · week ${isoWeek(ws)} · sent back as ${layer}` }, reason });
+      return { week: weekView(session, l, ws), summary: `Week ${isoWeek(ws)} sent back to ${requester?.name ?? 'the rota manager'}.`, auditId };
+    }
+    const nowSigned = [...signed, { layer, by: who, at }];
+    if (!walk.final) {
+      const saved = saveWeek(w, { signoff: { requestedBy: requester ?? who, at: rec.signoff?.at ?? at, signed: nowSigned } });
+      const next = weekWalk(saved, l.code, ws).walk, waiting = waitingOn(next);
+      notifyEvent('rt_pub', 'actor', (next.current?.deciders ?? []).filter(c => c !== me),
+        { title: 'Rota waiting on your sign-off', body: `${l.name} · ${formatDmy(ws)} – ${formatDmy(addDays(ws, 6))}. Signed off by ${who.name}, now waiting on ${waiting}.` });
+      const auditId = writeAudit({ who: actor(session), act: 'Rota signed off', entity: 'rotaWeek', entityId: rec.id, before: { state: 'review', layer },
+        after: { state: 'review', layer: next.current?.step.role ?? '', detail: `${l.name} · week ${isoWeek(ws)} · signed off as ${layer} · now waiting on ${waiting}` } });
+      return { week: weekView(session, l, ws), summary: `Week ${isoWeek(ws)} signed off. It now waits on ${waiting}.`, auditId };
+    }
+    /* the last layer: published, as the rota manager's publish would have been */
+    const roster = rosterOf(l.code, w);
+    const problem = publishProblem(w, gapsAt(roster.map(p => lineOf(w, p.code)), minAt(l)), config().publishBlockOnGap);
+    if (problem) refuse(409, problem);
+    const r = publishWeek(w, who, at);
+    saveWeek(r.week, { signoff: null, sentBack: null });
+    notifyEvent('rt_pub', 'subject', roster.map(p => p.code), publishNotice(l.name, ws, r.version, r.republished));
+    if (requester && requester.personCode !== me)
+      notifyEvent('rt_pub', 'actor', [requester.personCode], { title: 'Rota signed off', body: `${l.name} · week ${isoWeek(ws)}. Signed off by ${who.name} and published.` });
+    const auditId = writeAudit({ who: actor(session), act: 'Rota published', entity: 'rotaWeek', entityId: rec.id, before: { state: 'review', version: w.publishVersion },
+      after: { location: l.code, weekStart: ws, state: r.week.state, version: r.version, notified: roster.length,
+        detail: `${publishAuditText(l.name, ws, r.version, r.amended)} · signed off as ${layer}` } });
+    return { week: weekView(session, l, ws), summary: `${publishSummary(r.version, roster.length, r.amended, r.republished)} · signed off`, auditId };
   }),
 
   serve(copyRotaWeek, ({ session, params, checkVersion }) => {

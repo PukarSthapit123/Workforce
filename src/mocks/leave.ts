@@ -18,6 +18,7 @@ import { leaveConfigChangeProblem } from './leave-config-usage';
 import { invalid } from './people';
 import { notifyEvent } from './notify';
 import { rotaCoverDays, writeAbsence, type AbsenceWritten } from './rota';
+import { approvesIn, chainPeople, walkNow } from './approvals';
 import { accounts, codesOf, effectiveCode, inScope, nameOf, people, personByCode, recordAt, scopeOf, today, type Signed, type StoredPerson } from './world';
 import {
   approveLeave, arrangeRtw, cancelLeave, declineLeave, getEntitlement, getLeaveConfig, getMyLeave, getSicknessBoard, getTeamBalances, giveDaysBack,
@@ -26,17 +27,19 @@ import {
   type SickEpisodeRecord, type TeamRequestView, type UpdateLeaveConfig,
 } from '@/contract/leave';
 import {
-  CANCELLED_TOAST, LEAVE_STATE, NOT_YOUR_REQUEST, ROTA_OFF_IMPACT, RTW_TOAST, SETTLED_IN_PAYROLL, TRIGGER_NOTE,
+  CANCELLED_TOAST, LEAVE_STATE, NOT_YOUR_REQUEST, SELF_APPROVAL, SIGNED_EARLIER, firstLayerBreached, layerStartedAt, layerText, layerWaitingLabel,
+  leaveSignedLayers, leaveSigners, movedOnNotice, passedAct, passedNotice, passedToast, wrongLayerProblem, ROTA_OFF_IMPACT, RTW_TOAST, SETTLED_IN_PAYROLL, TRIGGER_NOTE,
   absenceMark, absenceOn, absenceRecordOn, approvedNotice, approvedToast, balanceText, bookedLeaveDates, bradford, bradfordTip, cancelTip,
   cancelWindowAdvisory, cancelledNotice, coverImpact, daysReturnedNotice, daysReturnedToast, daysToTakeText, decidedAudit, declineReasonProblem,
   declinedNotice, declinedToast, giveBackProblem, giveBackRow, isLeaveState, latestAbsenceText, leaveConfigProblem, leaveCoverReason,
   leaveRange, leaveTransitionProblem, leaveTypeName, leaveWritesRota, leaveYear, ledgerQty, monthsWorked, nextStepText, noticeAdvisory, policyBy,
   qtyText, reconcileLeaver, recordSicknessPlan, renumberLeaveStages, requestProblem, requestedAudit, requestedNotice, requestedToast,
-  rtwNotices, rtwProblem, selfApprovalProblem, sentNotice, sickDuringLeave, sicknessDates, sicknessNotice, sicknessToast, slaBreachedText,
+  rtwNotices, rtwProblem, sentNotice, sickDuringLeave, sicknessDates, sicknessNotice, sicknessToast, slaBreachedText,
   slaOf, slaPillText, stageText, triggerBannerText, typeBalanceText, typeLeaveFor, yearBalance,
   type Balance, type LeaveYearSpan, type BalanceUnit, type LeavePart, type Entitlement, type LeaveRefusal, type LedgerRow,
 } from '@/domain/leave';
 import { SICK, isActive, type RotaActor } from '@/domain/rota';
+import { ESCALATION_WHEN, type ChainItem, type ChainWalk, type DecisionBlock, type DeciderPerson } from '@/domain/approvals';
 import { addDays, clockFromIso, daysBetween } from '@/domain/time';
 
 /* ------------------------------------------------------------- the world */
@@ -101,15 +104,51 @@ function nextNumId(coll: Record<string, unknown>, prefix: string, pad = 0) {
   for (const id of Object.keys(coll)) max = Math.max(max, Number(re.exec(id)?.[1] ?? 0));
   return `${prefix}_${String(max + 1).padStart(pad, '0')}`;
 }
-/* The approvers at a location (team_leave), never the person themselves. */
-const approversAt = (loc: string, except: string) => Object.values(accounts())
-  .filter(a => a.personCode !== except && personByCode(a.personCode)?.location === loc && capsFor(a).includes('team_leave')).map(a => a.personCode);
 const administrators = () => Object.values(accounts()).filter(a => capsFor(a).includes('mod_cfg')).map(a => a.personCode);
 
 /* A refusal from the domain, with the status its code carries. */
 const STATUS: Record<string, number> = { SELF_APPROVAL: 403, TRANSITION_NOT_ALLOWED: 409, OVERLAPS: 409, ALREADY_RECORDED: 409, ALREADY_REQUESTED: 409, NO_ABSENCE: 409 };
 const refuseLeave = (p: LeaveRefusal): never =>
   refuse(STATUS[p.code] ?? 422, { ...p, code: p.code === 'VALIDATION' ? 'invalid' : p.code });
+
+/* ---------------------------------------- the approval chain (module 8 group 4B) */
+/* A request walks the Leave approval chain, through the shared walker. The
+   escalation layer ("Only when the SLA is breached") applies once the first
+   layer has not decided within the policy's SLA, or the tenant's (D3). The
+   person's own line manager holds the Line manager layer whatever their
+   department. */
+const managerCode = (p: StoredPerson) => Object.values(people()).find(x => x.name === p.manager.trim() && x.code !== p.code)?.code;
+function itemOf(r: StoredRequest, p: StoredPerson): ChainItem {
+  const first = r.history.find(h => h.from === 'pending' && !!h.layer);
+  const slaBreached = firstLayerBreached({ raised: clockFromIso(r.raisedAt).date, escalated: r.escalated, firstSigned: first ? clockFromIso(first.at).date : null },
+    policySla(config(), r.type), today());
+  const manager = managerCode(p);
+  return { personCode: p.code, location: p.location, department: p.department, ...(manager ? { manager } : {}), facts: { slaBreached } };
+}
+/* The request's walk along the Leave chain as it stands, with the layers signed and who signed them. */
+const walkOf = (r: StoredRequest, p: StoredPerson, everyone?: readonly DeciderPerson[]) =>
+  walkNow('Leave', itemOf(r, p), leaveSignedLayers(r.history), everyone, leaveSigners(r.history));
+const waitingRole = (w: ChainWalk) => w.current?.step.role ?? 'Line manager';
+/* Reading the queue or deciding needs a capability that decides some layer of the chain, or a delegation in force from someone who has one. */
+function requireApprover(s: Signed) {
+  if (!approvesIn('Leave', effectiveCode(s), s.caps)) requireCapability(s, 'team_leave');
+}
+/* Why the reader may not decide the request at its current layer, as a refusal. */
+function refuseBlocked(why: DecisionBlock, w: ChainWalk, s: Signed, p: StoredPerson): never {
+  if (why === 'self') return refuseLeave({ code: 'SELF_APPROVAL', message: SELF_APPROVAL, next: 'Ask another approver at your location.' });
+  if (why === 'signed') return refuse(403, { code: 'ALREADY_SIGNED', message: SIGNED_EARLIER, next: 'Another approver decides the next layer.' });
+  if (why === 'scope') {
+    requireTeamScope(s, p, 'decide leave');
+    return refuse(403, { code: 'scope', message: 'This request is for someone outside the people you decide leave for.', next: 'Their own manager decides it.' });
+  }
+  if (why === 'layer') return refuse(403, wrongLayerProblem(waitingRole(w)));
+  const label = store.coll<{ label?: string }>('capabilities').team_leave?.label ?? 'team_leave';
+  return refuse(403, { code: 'capability', message: `This needs "${label}", which your access does not include.`, next: 'Ask an administrator to grant it on Qnipay setup → Permissions.' });
+}
+/* A decision at the wrong layer is refused only while the request still waits; a decided one is refused as a transition. */
+const refusesNow = (why: DecisionBlock, r: StoredRequest) => r.state === 'pending' || (why !== 'layer' && why !== 'signed');
+/* Who decides the request's current layer, never whoever just acted. */
+const decidersOf = (w: ChainWalk, except: string) => (w.current?.deciders ?? []).filter(c => c !== except);
 
 /* ------------------------------------------------------------- scope (D5) */
 function requireTeamScope(s: Signed, p: StoredPerson, what: string) {
@@ -151,7 +190,13 @@ const balanceView = (b: Balance): BalanceView => ({ unit: b.unit, takenD: b.take
 function requestView(r: StoredRequest): LeaveRequestView {
   const s = isLeaveState(r.state) ? LEAVE_STATE[r.state] : LEAVE_STATE.pending;
   return { ...r, typeName: leaveTypeName(config().types, r.type), range: leaveRange(r.from, r.to), qtyText: qtyText(r.qty, r.unit),
-    stateLabel: s.label, tone: s.tone, glyph: s.glyph };
+    stateLabel: waitingLabel(r) ?? s.label, tone: s.tone, glyph: s.glyph };
+}
+/* "Approved by the line manager, waiting on the Service Manager", while a later layer has still to approve (module 8). */
+function waitingLabel(r: StoredRequest): string | null {
+  const last = leaveSignedLayers(r.history).at(-1), p = personByCode(r.personCode);
+  if (r.state !== 'pending' || !last || !p) return null;
+  return layerWaitingLabel(last, waitingRole(walkOf(r, p).walk));
 }
 const ledgerView = (l: StoredLedger): LedgerView => ({ id: l.id, date: l.date, type: l.type, qty: l.qty, unit: l.unit, why: l.why, counts: l.counts,
   ...(l.dates ? { dates: l.dates } : {}), qtyText: ledgerQty(l) });
@@ -179,8 +224,8 @@ function requestFor(id: string): StoredRequest {
 function personOf(code: string): StoredPerson {
   return personByCode(code) ?? NOT_FOUND('person record');
 }
-function moved(r: StoredRequest, to: StoredRequest['state'], who: RotaActor, reason = ''): Partial<StoredRequest> {
-  return { state: to, history: [...r.history, { from: r.state, to, by: who, at: store.now(), reason }] };
+function moved(r: StoredRequest, to: StoredRequest['state'], who: RotaActor, reason = '', layer = ''): Partial<StoredRequest> {
+  return { state: to, history: [...r.history, { from: r.state, to, by: who, at: store.now(), reason, ...(layer ? { layer } : {}) }] };
 }
 const NO_ROTA: AbsenceWritten = { written: 0, weeks: [], amended: false, covers: [] };
 /* D7: only with the Rota module and LV_ROTA on. */
@@ -265,7 +310,7 @@ export const leaveHandlers = [
       if (rotaLinked()) rota = writeAbsence({ personCode: p.code, dates: datesBetween(s.from, s.to), mark, by: systemActor, coverReason: leaveCoverReason(mark) });
       notifyEvent('lv_req', 'subject', [p.code], approvedNotice(range, typeName));
     } else {
-      notifyEvent('lv_req', 'actor', approversAt(p.location, p.code), requestedNotice(p.name, typeName, range, s.label, policySla(c, body.type)));
+      notifyEvent('lv_req', 'actor', decidersOf(walkOf(rec, p).walk, p.code), requestedNotice(p.name, typeName, range, s.label, policySla(c, body.type)));
       notifyEvent('lv_req', 'subject', [p.code], sentNotice(range, s.label, managerOf(p)));
     }
     const auditId = writeAudit({ who: actor(session), act: automatic ? 'Leave approved automatically' : 'Leave requested', entity: 'leaveRequest', entityId: id, before: null,
@@ -286,7 +331,7 @@ export const leaveHandlers = [
     const p = personOf(r.personCode);
     const saved = bump(r, moved(r, 'cancelled', by(session)));
     requests()[r.id] = saved;
-    notifyEvent('lv_req', 'actor', approversAt(p.location, p.code), cancelledNotice(p.name, r.from));
+    notifyEvent('lv_req', 'actor', decidersOf(walkOf(r, p).walk, p.code), cancelledNotice(p.name, r.from));
     const auditId = writeAudit({ who: actor(session), act: 'Leave request cancelled', entity: 'leaveRequest', entityId: r.id,
       before: { state: r.state }, after: { state: 'cancelled', detail: decidedAudit(p.name, r.from) } });
     return { record: requestView(saved), summary: CANCELLED_TOAST, auditId };
@@ -294,21 +339,30 @@ export const leaveHandlers = [
 
   /* ------------------------------------------------------------ team leave */
   serve(listTeamLeave, ({ session, query }) => {
-    requireLeave();
-    const c = config(), now = today(), self = effectiveCode(session), mine = inMyScope(session);
-    /* the approver's own request is not theirs to decide (D5), as module 2's queue leaves out their own timesheet */
+    requireLeave(); requireApprover(session);
+    const c = config(), now = today(), self = effectiveCode(session), everyone = chainPeople();
+    /* the approver's own request is not theirs to decide (D5), as module 2's queue leaves out their own timesheet.
+       Module 8: a request is in the queue while its current layer of the chain is the reader's to decide. */
     const pend = Object.values(requests()).flatMap(r => {
       const p = r.state === 'pending' && r.personCode !== self ? personByCode(r.personCode) : undefined;
-      return p && mine(p) ? [{ r, p }] : [];
+      if (!p) return [];
+      const { walk, block, progress } = walkOf(r, p, everyone);
+      return block(self) === null ? [{ r, p, walk, progress: progress() }] : [];
     }).sort((a, b) => a.r.raisedAt.localeCompare(b.r.raisedAt) || a.r.id.localeCompare(b.r.id));
-    const views: TeamRequestView[] = pend.map(({ r, p }) => {
-      const raised = clockFromIso(r.raisedAt).date;
+    const views: TeamRequestView[] = pend.map(({ r, p, walk, progress }) => {
+      /* the SLA job, per layer: the layer's wait from when the request reached it, against the
+         policy's SLA or the tenant's (D3). The escalation layer is reached by the breach, so it
+         reads as escalated from the date raised, as before. */
+      const escalation = walk.current?.step.when === ESCALATION_WHEN, signs = r.history.filter(h => h.from === 'pending' && !!h.layer);
+      const raised = clockFromIso(escalation ? r.raisedAt : layerStartedAt(r.history, r.raisedAt)).date;
       const slaDays = policySla(c, r.type);
-      const sla = slaOf({ raised, escalated: r.escalated }, slaDays, now, c.stages);
+      const sla = slaOf({ raised, escalated: escalation || (r.escalated && !signs.length) }, slaDays, now, c.stages);
+      const of = Math.max(1, walk.layers.length - progress.passed.length), n = Math.min(of, progress.signed.length + 1), role = waitingRole(walk);
       const target = escalationTarget(c, sla.stage);
       return { ...requestView(r), name: p.name, location: p.location, balance: balanceText(leaveOf(p).bal),
         sla: { daysLeft: sla.daysLeft, escalated: sla.escalated, tone: sla.tone, text: slaPillText(sla, slaDays, target) },
         stage: { n: sla.stage, text: stageText(c.stages, sla.stage), action: c.stages[sla.stage - 1]?.action ?? '' },
+        layer: { n, of, role, text: layerText(n, of, role, signs.map(h => ({ layer: h.layer ?? '', name: h.by.name }))) },
         advisories: [noticeAdvisory(r.from, raised, c.minNotice), cancelWindowAdvisory(r.from, now, c.cancelWindow)].filter((x): x is string => !!x) };
     });
     const q = (query.q ?? '').trim().toLowerCase();
@@ -325,16 +379,27 @@ export const leaveHandlers = [
   }),
 
   serve(approveLeave, ({ session, params, checkVersion }) => {
-    requireLeave();
+    requireLeave(); requireApprover(session);
     const r = requestFor(params.id), p = personOf(r.personCode);
-    requireTeamScope(session, p, 'decide leave');
-    const self = selfApprovalProblem(r.personCode, effectiveCode(session));
-    if (self) refuseLeave(self);
+    /* D5 and module 8: the reader must decide the request's current layer of the chain */
+    const { walk, block } = walkOf(r, p), why = block(effectiveCode(session));
+    if (why && refusesNow(why, r)) refuseBlocked(why, walk, session, p);
     const t = leaveTransitionProblem(r.state, 'approved');
     if (t) refuseLeave(t);
     checkVersion(r);
-    const who = by(session), c = config();
-    const saved = bump(r, { ...moved(r, 'approved', who), decidedAt: store.now(), decidedBy: who });
+    const who = by(session), c = config(), layer = waitingRole(walk);
+    if (!walk.final) {
+      /* a later layer applies: the request stays waiting, now on that layer, and nothing reaches the rota or the days taken */
+      const saved = bump(r, { history: [...r.history, { from: 'pending', to: 'pending', by: who, at: store.now(), reason: '', layer }] });
+      requests()[r.id] = saved;
+      const next = walkOf(saved, p).walk, waiting = waitingRole(next), range = leaveRange(r.from, r.to);
+      notifyEvent('lv_esc', 'actor', decidersOf(next, who.personCode), passedNotice(p.name, leaveTypeName(c.types, r.type), range, who.name, waiting));
+      notifyEvent('lv_esc', 'subject', [p.code], movedOnNotice(range, who.name, waiting));
+      const auditId = writeAudit({ who: actor(session), act: passedAct(waiting), entity: 'leaveRequest', entityId: r.id,
+        before: { state: r.state, layer }, after: { state: 'pending', layer: waiting, detail: `${decidedAudit(p.name, r.from)} · approved as ${layer} · now waiting on ${waiting}` } });
+      return { record: requestView(saved), summary: passedToast(firstName(p.name), waiting), rota: NO_ROTA, auditId };
+    }
+    const saved = bump(r, { ...moved(r, 'approved', who, '', layer), decidedAt: store.now(), decidedBy: who });
     requests()[r.id] = saved;
     notifyEvent('lv_ok', 'subject', [p.code], approvedNotice(leaveRange(r.from, r.to), leaveTypeName(c.types, r.type)));
     const mark = absenceMark(r.type);
@@ -345,18 +410,17 @@ export const leaveHandlers = [
   }),
 
   serve(declineLeave, ({ session, params, body, checkVersion }) => {
-    requireLeave();
+    requireLeave(); requireApprover(session);
     const r = requestFor(params.id), p = personOf(r.personCode);
-    requireTeamScope(session, p, 'decide leave');
-    const self = selfApprovalProblem(r.personCode, effectiveCode(session));
-    if (self) refuseLeave(self);
+    const { walk, block } = walkOf(r, p), why = block(effectiveCode(session));
+    if (why && refusesNow(why, r)) refuseBlocked(why, walk, session, p);
     const t = leaveTransitionProblem(r.state, 'declined');
     if (t) refuseLeave(t);
     checkVersion(r);
     const reason = body.reason.trim(), rp = declineReasonProblem(reason);
     if (rp) refuseLeave(rp);
     const who = by(session);
-    const saved = bump(r, { ...moved(r, 'declined', who, reason), decidedAt: store.now(), decidedBy: who, reason });
+    const saved = bump(r, { ...moved(r, 'declined', who, reason, waitingRole(walk)), decidedAt: store.now(), decidedBy: who, reason });
     requests()[r.id] = saved;
     notifyEvent('lv_no', 'subject', [p.code], declinedNotice(leaveRange(r.from, r.to), reason));
     const auditId = writeAudit({ who: actor(session), act: 'Leave declined', entity: 'leaveRequest', entityId: r.id,

@@ -12436,6 +12436,9 @@
                                 },
                                 "reason": {
                                   "type": "string"
+                                },
+                                "layer": {
+                                  "type": "string"
                                 }
                               },
                               "required": [
@@ -12656,13 +12659,12 @@
     },
     "/api/v1/leave/requests/{id}/approve": {
       "post": {
-        "summary": "Approve a waiting request (If-Match). With Rota and Leave to rota on, the days go onto the rota as leave and cover opens below the minimum.",
+        "summary": "Approve a waiting request at its current approval layer (If-Match). With a later layer to come it stays waiting, on that layer. Only an approval at the last layer approves it; with Rota and Leave to rota on, the days then go onto the rota as leave and cover opens below the minimum. Refused with SELF_APPROVAL, ALREADY_SIGNED, scope, WRONG_LAYER or capability.",
         "security": [
           {
             "bearer": []
           }
         ],
-        "x-capability": "team_leave",
         "parameters": [
           {
             "name": "id",
@@ -12843,6 +12845,9 @@
                                 "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                               },
                               "reason": {
+                                "type": "string"
+                              },
+                              "layer": {
                                 "type": "string"
                               }
                             },
@@ -13234,6 +13239,9 @@
                               },
                               "reason": {
                                 "type": "string"
+                              },
+                              "layer": {
+                                "type": "string"
                               }
                             },
                             "required": [
@@ -13403,13 +13411,12 @@
     },
     "/api/v1/leave/requests/{id}/decline": {
       "post": {
-        "summary": "Decline a waiting request with a reason the colleague sees (If-Match)",
+        "summary": "Decline a waiting request at its current approval layer, with a reason the colleague sees (If-Match)",
         "security": [
           {
             "bearer": []
           }
         ],
-        "x-capability": "team_leave",
         "parameters": [
           {
             "name": "id",
@@ -13610,6 +13617,9 @@
                                 "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                               },
                               "reason": {
+                                "type": "string"
+                              },
+                              "layer": {
                                 "type": "string"
                               }
                             },
@@ -13985,6 +13995,9 @@
                                 "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                               },
                               "reason": {
+                                "type": "string"
+                              },
+                              "layer": {
                                 "type": "string"
                               }
                             },
@@ -15223,13 +15236,12 @@
     },
     "/api/v1/leave/team/requests": {
       "get": {
-        "summary": "Waiting requests at the locations this person decides for, with balance, effect on cover, stage and SLA",
+        "summary": "Waiting requests whose current approval layer this person decides, with balance, effect on cover, layer, stage and the SLA of that layer",
         "security": [
           {
             "bearer": []
           }
         ],
-        "x-capability": "team_leave",
         "parameters": [
           {
             "name": "q",
@@ -15426,6 +15438,9 @@
                                 },
                                 "reason": {
                                   "type": "string"
+                                },
+                                "layer": {
+                                  "type": "string"
                                 }
                               },
                               "required": [
@@ -15523,6 +15538,34 @@
                             ],
                             "additionalProperties": false
                           },
+                          "layer": {
+                            "type": "object",
+                            "properties": {
+                              "n": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "of": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "role": {
+                                "type": "string"
+                              },
+                              "text": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "n",
+                              "of",
+                              "role",
+                              "text"
+                            ],
+                            "additionalProperties": false
+                          },
                           "advisories": {
                             "type": "array",
                             "items": {
@@ -15562,6 +15605,7 @@
                           "balance",
                           "sla",
                           "stage",
+                          "layer",
                           "advisories"
                         ],
                         "additionalProperties": false
@@ -37676,6 +37720,45 @@
                       "type": "string",
                       "format": "date",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    "awaiting": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "location": {
+                            "type": "string"
+                          },
+                          "locationName": {
+                            "type": "string"
+                          },
+                          "weekStart": {
+                            "type": "string",
+                            "format": "date",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                          },
+                          "isoWeek": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "requestedBy": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "location",
+                          "locationName",
+                          "weekStart",
+                          "isoWeek",
+                          "requestedBy"
+                        ],
+                        "additionalProperties": false
+                      }
                     }
                   },
                   "required": [
@@ -41163,6 +41246,141 @@
                             ],
                             "additionalProperties": false
                           }
+                        },
+                        "signoff": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "requestedBy": {
+                                  "type": "object",
+                                  "properties": {
+                                    "personCode": {
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "personCode",
+                                    "name"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "at": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                },
+                                "signed": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "layer": {
+                                        "type": "string"
+                                      },
+                                      "by": {
+                                        "type": "object",
+                                        "properties": {
+                                          "personCode": {
+                                            "type": "string"
+                                          },
+                                          "name": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "personCode",
+                                          "name"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": [
+                                      "layer",
+                                      "by",
+                                      "at"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                },
+                                "waitingOn": {
+                                  "type": "string"
+                                },
+                                "final": {
+                                  "type": "boolean"
+                                },
+                                "decide": {
+                                  "type": "boolean"
+                                },
+                                "why": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "requestedBy",
+                                "at",
+                                "signed",
+                                "waitingOn",
+                                "final",
+                                "decide",
+                                "why"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "sentBack": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "by": {
+                                  "type": "object",
+                                  "properties": {
+                                    "personCode": {
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "personCode",
+                                    "name"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "at": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                },
+                                "reason": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "by",
+                                "at",
+                                "reason"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -41189,7 +41407,9 @@
                         "key",
                         "shifts",
                         "rules",
-                        "publications"
+                        "publications",
+                        "signoff",
+                        "sentBack"
                       ],
                       "additionalProperties": false
                     },
@@ -42124,6 +42344,141 @@
                             ],
                             "additionalProperties": false
                           }
+                        },
+                        "signoff": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "requestedBy": {
+                                  "type": "object",
+                                  "properties": {
+                                    "personCode": {
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "personCode",
+                                    "name"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "at": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                },
+                                "signed": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "layer": {
+                                        "type": "string"
+                                      },
+                                      "by": {
+                                        "type": "object",
+                                        "properties": {
+                                          "personCode": {
+                                            "type": "string"
+                                          },
+                                          "name": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "personCode",
+                                          "name"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": [
+                                      "layer",
+                                      "by",
+                                      "at"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                },
+                                "waitingOn": {
+                                  "type": "string"
+                                },
+                                "final": {
+                                  "type": "boolean"
+                                },
+                                "decide": {
+                                  "type": "boolean"
+                                },
+                                "why": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "requestedBy",
+                                "at",
+                                "signed",
+                                "waitingOn",
+                                "final",
+                                "decide",
+                                "why"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "sentBack": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "by": {
+                                  "type": "object",
+                                  "properties": {
+                                    "personCode": {
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "personCode",
+                                    "name"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "at": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                },
+                                "reason": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "by",
+                                "at",
+                                "reason"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -42150,7 +42505,9 @@
                         "key",
                         "shifts",
                         "rules",
-                        "publications"
+                        "publications",
+                        "signoff",
+                        "sentBack"
                       ],
                       "additionalProperties": false
                     },
@@ -42915,6 +43272,141 @@
                             ],
                             "additionalProperties": false
                           }
+                        },
+                        "signoff": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "requestedBy": {
+                                  "type": "object",
+                                  "properties": {
+                                    "personCode": {
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "personCode",
+                                    "name"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "at": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                },
+                                "signed": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "layer": {
+                                        "type": "string"
+                                      },
+                                      "by": {
+                                        "type": "object",
+                                        "properties": {
+                                          "personCode": {
+                                            "type": "string"
+                                          },
+                                          "name": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "personCode",
+                                          "name"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": [
+                                      "layer",
+                                      "by",
+                                      "at"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                },
+                                "waitingOn": {
+                                  "type": "string"
+                                },
+                                "final": {
+                                  "type": "boolean"
+                                },
+                                "decide": {
+                                  "type": "boolean"
+                                },
+                                "why": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "requestedBy",
+                                "at",
+                                "signed",
+                                "waitingOn",
+                                "final",
+                                "decide",
+                                "why"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "sentBack": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "by": {
+                                  "type": "object",
+                                  "properties": {
+                                    "personCode": {
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "personCode",
+                                    "name"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "at": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                },
+                                "reason": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "by",
+                                "at",
+                                "reason"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -42941,7 +43433,9 @@
                         "key",
                         "shifts",
                         "rules",
-                        "publications"
+                        "publications",
+                        "signoff",
+                        "sentBack"
                       ],
                       "additionalProperties": false
                     },
@@ -43735,6 +44229,141 @@
                             ],
                             "additionalProperties": false
                           }
+                        },
+                        "signoff": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "requestedBy": {
+                                  "type": "object",
+                                  "properties": {
+                                    "personCode": {
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "personCode",
+                                    "name"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "at": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                },
+                                "signed": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "layer": {
+                                        "type": "string"
+                                      },
+                                      "by": {
+                                        "type": "object",
+                                        "properties": {
+                                          "personCode": {
+                                            "type": "string"
+                                          },
+                                          "name": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "personCode",
+                                          "name"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": [
+                                      "layer",
+                                      "by",
+                                      "at"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                },
+                                "waitingOn": {
+                                  "type": "string"
+                                },
+                                "final": {
+                                  "type": "boolean"
+                                },
+                                "decide": {
+                                  "type": "boolean"
+                                },
+                                "why": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "requestedBy",
+                                "at",
+                                "signed",
+                                "waitingOn",
+                                "final",
+                                "decide",
+                                "why"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "sentBack": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "by": {
+                                  "type": "object",
+                                  "properties": {
+                                    "personCode": {
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "personCode",
+                                    "name"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "at": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                },
+                                "reason": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "by",
+                                "at",
+                                "reason"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -43761,7 +44390,9 @@
                         "key",
                         "shifts",
                         "rules",
-                        "publications"
+                        "publications",
+                        "signoff",
+                        "sentBack"
                       ],
                       "additionalProperties": false
                     },
@@ -44714,6 +45345,141 @@
                             ],
                             "additionalProperties": false
                           }
+                        },
+                        "signoff": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "requestedBy": {
+                                  "type": "object",
+                                  "properties": {
+                                    "personCode": {
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "personCode",
+                                    "name"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "at": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                },
+                                "signed": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "layer": {
+                                        "type": "string"
+                                      },
+                                      "by": {
+                                        "type": "object",
+                                        "properties": {
+                                          "personCode": {
+                                            "type": "string"
+                                          },
+                                          "name": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "personCode",
+                                          "name"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": [
+                                      "layer",
+                                      "by",
+                                      "at"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                },
+                                "waitingOn": {
+                                  "type": "string"
+                                },
+                                "final": {
+                                  "type": "boolean"
+                                },
+                                "decide": {
+                                  "type": "boolean"
+                                },
+                                "why": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "requestedBy",
+                                "at",
+                                "signed",
+                                "waitingOn",
+                                "final",
+                                "decide",
+                                "why"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "sentBack": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "by": {
+                                  "type": "object",
+                                  "properties": {
+                                    "personCode": {
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "personCode",
+                                    "name"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "at": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                },
+                                "reason": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "by",
+                                "at",
+                                "reason"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -44740,7 +45506,9 @@
                         "key",
                         "shifts",
                         "rules",
-                        "publications"
+                        "publications",
+                        "signoff",
+                        "sentBack"
                       ],
                       "additionalProperties": false
                     },
@@ -44801,6 +45569,939 @@
           },
           "404": {
             "description": "The record does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "The record changed since it was read (If-Match is stale)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid; field names the part to correct",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "If-Match is missing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any other refusal or failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rota/weeks/{location}/{weekStart}/sign-off": {
+      "post": {
+        "summary": "Sign off a week waiting on the Rota approval chain at its current layer (If-Match), which publishes it after the last layer, or send it back to draft with a reason. Refused with ALREADY_SIGNED for whoever signed an earlier layer, scope, WRONG_LAYER or capability.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "location",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "weekStart",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "description": "The version of the record the change is based on, as a bare whole number such as 3 (no quotes, no W/ prefix)",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "to": {
+                    "type": "string",
+                    "enum": [
+                      "published",
+                      "draft"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string",
+                    "maxLength": 300
+                  }
+                },
+                "required": [
+                  "to"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "week": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "version": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "location": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "area": {
+                              "type": "string"
+                            },
+                            "level": {
+                              "type": "string"
+                            },
+                            "minPerShift": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "code",
+                            "name",
+                            "area",
+                            "level",
+                            "minPerShift"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "locations": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "code": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "code",
+                              "name"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "weekStart": {
+                          "type": "string",
+                          "format": "date",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                        },
+                        "label": {
+                          "type": "string"
+                        },
+                        "isoWeek": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "today": {
+                          "type": "string",
+                          "format": "date",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                        },
+                        "prevWeek": {
+                          "type": "string",
+                          "format": "date",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                        },
+                        "nextWeek": {
+                          "type": "string",
+                          "format": "date",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                        },
+                        "state": {
+                          "type": "string",
+                          "enum": [
+                            "draft",
+                            "review",
+                            "published",
+                            "amendment",
+                            "republished"
+                          ]
+                        },
+                        "publishVersion": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "publishedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "string",
+                              "const": ""
+                            }
+                          ]
+                        },
+                        "publishedBy": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "personCode": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "personCode",
+                                "name"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "changes": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "at": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              "by": {
+                                "type": "object",
+                                "properties": {
+                                  "personCode": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "personCode",
+                                  "name"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "personCode": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "date": {
+                                "type": "string",
+                                "format": "date",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                              },
+                              "from": {
+                                "type": "string"
+                              },
+                              "to": {
+                                "type": "string"
+                              },
+                              "why": {
+                                "type": "string"
+                              },
+                              "afterPublish": {
+                                "type": "boolean"
+                              },
+                              "version": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": [
+                              "at",
+                              "by",
+                              "personCode",
+                              "name",
+                              "date",
+                              "from",
+                              "to",
+                              "why",
+                              "afterPublish",
+                              "version"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "min": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "gapDays": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 6
+                          }
+                        },
+                        "onShift": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "coverage": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "propertyNames": {
+                              "type": "string"
+                            },
+                            "additionalProperties": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          }
+                        },
+                        "rows": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "personCode": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "jobProfile": {
+                                "type": "string"
+                              },
+                              "jobProfileName": {
+                                "type": "string"
+                              },
+                              "category": {
+                                "type": "string"
+                              },
+                              "employeeType": {
+                                "type": "string"
+                              },
+                              "typeName": {
+                                "type": "string"
+                              },
+                              "contractedHours": {
+                                "type": "number"
+                              },
+                              "line": {
+                                "minItems": 7,
+                                "maxItems": 7,
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "hours": {
+                                "type": "object",
+                                "properties": {
+                                  "con": {
+                                    "type": "number"
+                                  },
+                                  "rot": {
+                                    "type": "number"
+                                  },
+                                  "wk": {
+                                    "type": "number"
+                                  },
+                                  "rotaVar": {
+                                    "type": "number"
+                                  },
+                                  "workVar": {
+                                    "type": "number"
+                                  },
+                                  "schedVar": {
+                                    "type": "number"
+                                  },
+                                  "flags": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "k": {
+                                          "type": "string"
+                                        },
+                                        "c": {
+                                          "type": "string",
+                                          "enum": [
+                                            "warn",
+                                            "info",
+                                            "err",
+                                            "neu"
+                                          ]
+                                        }
+                                      },
+                                      "required": [
+                                        "k",
+                                        "c"
+                                      ],
+                                      "additionalProperties": false
+                                    }
+                                  },
+                                  "cap": {
+                                    "type": "number"
+                                  }
+                                },
+                                "required": [
+                                  "con",
+                                  "rot",
+                                  "wk",
+                                  "rotaVar",
+                                  "workVar",
+                                  "schedVar",
+                                  "flags",
+                                  "cap"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "restIssues": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "i": {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 6
+                                    },
+                                    "rest": {
+                                      "type": "number"
+                                    }
+                                  },
+                                  "required": [
+                                    "i",
+                                    "rest"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              }
+                            },
+                            "required": [
+                              "personCode",
+                              "name",
+                              "jobProfile",
+                              "jobProfileName",
+                              "category",
+                              "employeeType",
+                              "typeName",
+                              "contractedHours",
+                              "line",
+                              "hours",
+                              "restIssues"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "key": {
+                          "type": "object",
+                          "properties": {
+                            "shifts": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string"
+                              },
+                              "additionalProperties": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "leave": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "sick": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "empty": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "shifts",
+                            "leave",
+                            "sick",
+                            "empty"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "shifts": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "version": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "updatedAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              "code": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "from": {
+                                "type": "string"
+                              },
+                              "to": {
+                                "type": "string"
+                              },
+                              "breakMinutes": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "night": {
+                                "type": "boolean"
+                              },
+                              "tone": {
+                                "type": "string",
+                                "enum": [
+                                  "E",
+                                  "L",
+                                  "N"
+                                ]
+                              },
+                              "hours": {
+                                "type": "number"
+                              },
+                              "cross": {
+                                "type": "boolean"
+                              },
+                              "start": {
+                                "type": "number"
+                              },
+                              "end": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "version",
+                              "updatedAt",
+                              "code",
+                              "name",
+                              "from",
+                              "to",
+                              "breakMinutes",
+                              "night",
+                              "tone",
+                              "hours",
+                              "cross",
+                              "start",
+                              "end"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "rules": {
+                          "type": "object",
+                          "properties": {
+                            "publishBlockOnGap": {
+                              "type": "boolean"
+                            },
+                            "restWarn": {
+                              "type": "boolean"
+                            },
+                            "restHours": {
+                              "type": "number"
+                            },
+                            "restRule": {
+                              "type": "boolean"
+                            },
+                            "minStaff": {
+                              "type": "boolean"
+                            },
+                            "safeWorker": {
+                              "type": "boolean"
+                            },
+                            "fulfil": {
+                              "type": "boolean"
+                            },
+                            "patterns": {
+                              "type": "boolean"
+                            },
+                            "horizon": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "outlook": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "publishBlockOnGap",
+                            "restWarn",
+                            "restHours",
+                            "restRule",
+                            "minStaff",
+                            "safeWorker",
+                            "fulfil",
+                            "patterns",
+                            "horizon",
+                            "outlook"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "publications": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "location": {
+                                "type": "string"
+                              },
+                              "locationName": {
+                                "type": "string"
+                              },
+                              "weekStart": {
+                                "type": "string",
+                                "format": "date",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                              },
+                              "version": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "at": {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              "notified": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": [
+                              "location",
+                              "locationName",
+                              "weekStart",
+                              "version",
+                              "at",
+                              "notified"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "signoff": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "requestedBy": {
+                                  "type": "object",
+                                  "properties": {
+                                    "personCode": {
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "personCode",
+                                    "name"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "at": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                },
+                                "signed": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "layer": {
+                                        "type": "string"
+                                      },
+                                      "by": {
+                                        "type": "object",
+                                        "properties": {
+                                          "personCode": {
+                                            "type": "string"
+                                          },
+                                          "name": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "personCode",
+                                          "name"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": [
+                                      "layer",
+                                      "by",
+                                      "at"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                },
+                                "waitingOn": {
+                                  "type": "string"
+                                },
+                                "final": {
+                                  "type": "boolean"
+                                },
+                                "decide": {
+                                  "type": "boolean"
+                                },
+                                "why": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "requestedBy",
+                                "at",
+                                "signed",
+                                "waitingOn",
+                                "final",
+                                "decide",
+                                "why"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "sentBack": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "by": {
+                                  "type": "object",
+                                  "properties": {
+                                    "personCode": {
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "personCode",
+                                    "name"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "at": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                },
+                                "reason": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "by",
+                                "at",
+                                "reason"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "version",
+                        "location",
+                        "locations",
+                        "weekStart",
+                        "label",
+                        "isoWeek",
+                        "today",
+                        "prevWeek",
+                        "nextWeek",
+                        "state",
+                        "publishVersion",
+                        "publishedAt",
+                        "publishedBy",
+                        "changes",
+                        "min",
+                        "gapDays",
+                        "onShift",
+                        "coverage",
+                        "rows",
+                        "key",
+                        "shifts",
+                        "rules",
+                        "publications",
+                        "signoff",
+                        "sentBack"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "summary": {
+                      "type": "string"
+                    },
+                    "auditId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "week",
+                    "summary",
+                    "auditId"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Signed out, or the credentials do not match",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The record does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The change is refused because of the state of the data",
             "content": {
               "application/json": {
                 "schema": {
@@ -45051,7 +46752,7 @@
     },
     "/api/v1/rota/weeks/{location}/{weekStart}/transition": {
       "post": {
-        "summary": "Send for review, return to draft, or publish (republish an amended week). Publishing is refused with COVERAGE_GAPS while gaps block it.",
+        "summary": "Send for review, return to draft, or publish (republish an amended week). Publishing is refused with COVERAGE_GAPS while gaps block it. With a later layer of the Rota approval chain applying, publish signs the layer of the rota manager and moves the week to review until that layer signs it off; a week waiting on sign-off is refused with AWAITING_SIGNOFF. An amended week republishes as before.",
         "security": [
           {
             "bearer": []
@@ -45713,6 +47414,141 @@
                             ],
                             "additionalProperties": false
                           }
+                        },
+                        "signoff": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "requestedBy": {
+                                  "type": "object",
+                                  "properties": {
+                                    "personCode": {
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "personCode",
+                                    "name"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "at": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                },
+                                "signed": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "layer": {
+                                        "type": "string"
+                                      },
+                                      "by": {
+                                        "type": "object",
+                                        "properties": {
+                                          "personCode": {
+                                            "type": "string"
+                                          },
+                                          "name": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        "required": [
+                                          "personCode",
+                                          "name"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                      }
+                                    },
+                                    "required": [
+                                      "layer",
+                                      "by",
+                                      "at"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                },
+                                "waitingOn": {
+                                  "type": "string"
+                                },
+                                "final": {
+                                  "type": "boolean"
+                                },
+                                "decide": {
+                                  "type": "boolean"
+                                },
+                                "why": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "requestedBy",
+                                "at",
+                                "signed",
+                                "waitingOn",
+                                "final",
+                                "decide",
+                                "why"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "sentBack": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "by": {
+                                  "type": "object",
+                                  "properties": {
+                                    "personCode": {
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "personCode",
+                                    "name"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "at": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                },
+                                "reason": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "by",
+                                "at",
+                                "reason"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -45739,7 +47575,9 @@
                         "key",
                         "shifts",
                         "rules",
-                        "publications"
+                        "publications",
+                        "signoff",
+                        "sentBack"
                       ],
                       "additionalProperties": false
                     },
@@ -46470,6 +48308,141 @@
                         ],
                         "additionalProperties": false
                       }
+                    },
+                    "signoff": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "requestedBy": {
+                              "type": "object",
+                              "properties": {
+                                "personCode": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "personCode",
+                                "name"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "at": {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            "signed": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "layer": {
+                                    "type": "string"
+                                  },
+                                  "by": {
+                                    "type": "object",
+                                    "properties": {
+                                      "personCode": {
+                                        "type": "string"
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "personCode",
+                                      "name"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "at": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  }
+                                },
+                                "required": [
+                                  "layer",
+                                  "by",
+                                  "at"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "waitingOn": {
+                              "type": "string"
+                            },
+                            "final": {
+                              "type": "boolean"
+                            },
+                            "decide": {
+                              "type": "boolean"
+                            },
+                            "why": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "requestedBy",
+                            "at",
+                            "signed",
+                            "waitingOn",
+                            "final",
+                            "decide",
+                            "why"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "sentBack": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "by": {
+                              "type": "object",
+                              "properties": {
+                                "personCode": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "personCode",
+                                "name"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "at": {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            "reason": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "by",
+                            "at",
+                            "reason"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
                   "required": [
@@ -46496,7 +48469,9 @@
                     "key",
                     "shifts",
                     "rules",
-                    "publications"
+                    "publications",
+                    "signoff",
+                    "sentBack"
                   ],
                   "additionalProperties": false
                 }

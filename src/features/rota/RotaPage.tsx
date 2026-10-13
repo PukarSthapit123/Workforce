@@ -6,17 +6,18 @@ import {
   Banner, Button, Count, FilterBar, GuideButton, Page, PageHead, SearchFilter, SelectFilter, ChipButton, toastInfo, toastRefusal,
 } from '@/ui';
 import {
-  useAcceptPlan, useCopyWeek, useMoveWeek, useRotaHome, useRotaPlan, useRotaWeek, useWriteCell, type CellSaved, type RotaRow, type RotaWeekView,
+  useAcceptPlan, useCopyWeek, useMoveWeek, useRotaHome, useRotaPlan, useRotaWeek, useSignOffWeek, useWriteCell, type CellSaved, type RotaRow, type RotaWeekView,
 } from '@/api/rota';
+import { formatDateTime } from '@/lib/format';
 import { useCaps } from '@/shell/useCaps';
 import { MONTH_SHORT, addDays, daysBetween, parseIso } from '@/domain/time';
 import { OVER_MAXIMUM_NOTE, clearProblem, gapBannerText, isAbsence, overMaximumText, shiftBy, shiftName, shiftTime } from '@/domain/rota';
-import type { PlanItem } from '@/contract/rota';
+import type { PlanItem, RotaHome } from '@/contract/rota';
 import { Palette } from './Palette';
 import { DayView, RotaGrid } from './RotaGrid';
 import { PlanPanel, RotaHistory } from './Panels';
 import { WeekBar } from './WeekBar';
-import { AddShiftDialog, AdhocDialog, ClearDialog, GapDialog, HorizonDialog, RepeatDialog, ShiftDialog, askFirst } from './Dialogs';
+import { AddShiftDialog, AdhocDialog, ClearDialog, GapDialog, HorizonDialog, RepeatDialog, SendBackDialog, ShiftDialog, askFirst } from './Dialogs';
 import { NO_FILTERS, dow, filterRows, overCap, shortDay, type RotaFilters } from './week';
 
 /* Team rota: the prototype's mgrRota (qnipay-workforce-v15.html:7071-7106).
@@ -46,7 +47,8 @@ export function RotaPage() {
   return (
     <>
       {view && home.data && <Board key={location} view={view} loading={view.weekStart !== weekStart} thisWeek={home.data.weekStart}
-        initialPlan={location === home.data.location && view.weekStart === home.data.weekStart ? sent : null} onLocation={setLoc} onWeek={setWs} />}
+        initialPlan={location === home.data.location && view.weekStart === home.data.weekStart ? sent : null} onLocation={setLoc} onWeek={setWs}
+        awaiting={home.data.awaiting ?? []} onOpen={(l, w) => { setLoc(l); setWs(w); }} />}
       {!view && (
         <Page testId={tid.page('trota')}>
           <PageHead title="Team rota" crumb="My team · Team rota" />
@@ -59,7 +61,8 @@ export function RotaPage() {
     </>);
 }
 
-type Box = { k: 'add' | 'shift'; person: string; day: number } | { k: 'gap'; day: number } | { k: 'clear' | 'repeat' | 'horizon' | 'adhoc' } | null;
+type Box = { k: 'add' | 'shift'; person: string; day: number } | { k: 'gap'; day: number } | { k: 'clear' | 'repeat' | 'horizon' | 'adhoc' | 'sendBack' } | null;
+type Awaiting = NonNullable<RotaHome['awaiting']>;
 /* A V or S cell is written from the leave record (module 4 D7), never by hand: the note says so, and names
    the page that changes it for someone who may use it. */
 const FROM_LEAVE = 'Leave and sickness come from the leave record. Change them there.';
@@ -68,8 +71,9 @@ const absenceNote = (code: string, caps: ReadonlySet<string>) => {
   return { message: leave ? 'Annual leave' : 'Sickness', next: page ? `${FROM_LEAVE} Go to ${page}.` : FROM_LEAVE };
 };
 
-function Board({ view, loading, thisWeek, initialPlan, onLocation, onWeek }: {
+function Board({ view, loading, thisWeek, initialPlan, onLocation, onWeek, awaiting, onOpen }: {
   view: RotaWeekView; loading: boolean; thisWeek: string; initialPlan: PlanItem[] | null; onLocation: (code: string) => void; onWeek: (weekStart: string) => void;
+  awaiting: Awaiting; onOpen: (location: string, weekStart: string) => void;
 }) {
   const caps = useCaps();
   const [filters, setFilters] = useState<RotaFilters>(NO_FILTERS);
@@ -77,7 +81,7 @@ function Board({ view, loading, thisWeek, initialPlan, onLocation, onWeek }: {
   const [plan, setPlan] = useState<PlanItem[] | null>(initialPlan);
   const [lifted, setLifted] = useState<string | null>(null);
   const [box, setBox] = useState<Box>(null);
-  const write = useWriteCell(), move = useMoveWeek(), copy = useCopyWeek(), accept = useAcceptPlan();
+  const write = useWriteCell(), move = useMoveWeek(), copy = useCopyWeek(), accept = useAcceptPlan(), signOff = useSignOffWeek();
   const planQ = useRotaPlan(view.location.code, view.weekStart, false);
   const ref = { location: view.location.code, weekStart: view.weekStart, version: view.version };
   const shifts = view.shifts, rows = filterRows(view.rows, filters), close = () => setBox(null);
@@ -143,6 +147,7 @@ function Board({ view, loading, thisWeek, initialPlan, onLocation, onWeek }: {
   const review = () => move.mutate({ ...ref, to: 'review' }, { onSuccess: () =>
     toastInfo(`Week ${view.isoWeek} sent for review`, 'Not yet visible to colleagues.') });
   const doCopy = () => copy.mutate(ref, { onSuccess: r => toastInfo(r.summary) });
+  const doSignOff = () => signOff.mutate({ ...ref, to: 'published' }, { onSuccess: r => toastInfo(r.summary) });
   const openClear = () => {
     const p = clearProblem({ state: view.state, weekStart: view.weekStart, lines: Object.fromEntries(view.rows.map(r => [r.personCode, [...r.line]])) },
       view.rows.map(r => r.personCode), view.location.name);
@@ -177,6 +182,21 @@ function Board({ view, loading, thisWeek, initialPlan, onLocation, onWeek }: {
               onValueChange={l => { if (l !== view.location.code) { onLocation(l); toastInfo(`Now working in ${view.locations.find(x => x.code === l)?.name ?? l}`); } }} />
             <GuideButton view="trota" />
           </>} />
+        {awaiting.length > 0 && <Banner testId={tid.trota.awaiting} tone="info"
+          title={`${awaiting.length} week${awaiting.length > 1 ? 's' : ''} waiting on your sign-off`}
+          actions={awaiting.map(a => <Button key={a.id} testId={tid.trota.awaitingWeek(a.id)} kind="ghost" small
+            onClick={() => { setPlan(null); setBox(null); setLifted(null); onOpen(a.location, a.weekStart); }}>{a.locationName} · week {a.isoWeek}</Button>)}>
+          Sent to publish by {[...new Set(awaiting.map(a => a.requestedBy))].join(', ')}. Colleagues see a week once it is signed off.</Banner>}
+        {view.signoff && <Banner testId={tid.trota.signoff} tone="warn" title={`Waiting on sign-off by ${view.signoff.waitingOn}`}
+          actions={view.signoff.decide ? <>
+            <Button testId={tid.trota.signOff} kind="primary" small pending={signOff.anyPending} onClick={doSignOff}>
+              {view.signoff.final ? 'Sign off and publish' : 'Sign off'}</Button>
+            <Button testId={tid.trota.sendBack} kind="ghost" small disabled={signOff.anyPending} onClick={() => setBox({ k: 'sendBack' })}>Send back</Button>
+          </> : undefined}>
+          Sent to publish by {view.signoff.requestedBy.name} on {formatDateTime(view.signoff.at)}. Colleagues see the week once it is signed off.
+          {view.signoff.why ? ` ${view.signoff.why}` : ''}</Banner>}
+        {view.sentBack && <Banner testId={tid.trota.returned} tone="err" title={`Sent back by ${view.sentBack.by.name}`}>
+          “{view.sentBack.reason}” Change the week, then publish it again.</Banner>}
         {view.rules.minStaff && (gaps.length
           ? <Banner testId={tid.trota.gaps} tone="err"
               title={`${gaps.length} shift${gaps.length > 1 ? 's' : ''} uncovered · ${gaps.map(i => shortDay(view.weekStart, i)).join(', ')} ${MONTH_SHORT[parseIso(view.weekStart).getUTCMonth()] ?? ''}`}
@@ -227,6 +247,7 @@ function Board({ view, loading, thisWeek, initialPlan, onLocation, onWeek }: {
       {box?.k === 'gap' && <GapDialog view={view} day={box.day} busy={write.anyPending}
         onAssign={(p, code) => assign(p, box.day, code, 'Assigned', close)} onClose={close} />}
       {box?.k === 'clear' && <ClearDialog view={view} onClose={close} />}
+      {box?.k === 'sendBack' && <SendBackDialog view={view} onClose={close} />}
       {box?.k === 'repeat' && <RepeatDialog view={view} onClose={close} />}
       {box?.k === 'horizon' && <HorizonDialog view={view} onClose={close} onJump={goWeek} />}
       {box?.k === 'adhoc' && <AdhocDialog view={view} onClose={close} onPlan={setPlan} />}
