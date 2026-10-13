@@ -15,7 +15,7 @@ import { leaveAbsenceOn, leaveBlocksTimesheet } from './leave';
 import { invalid } from './people';
 import meta from './seed/meta.json';
 import { effectiveCode, inScope, nameOf, personByCode, recordAt, scopeOf, type Signed, type StoredPerson } from './world';
-import { approvesIn, chainPeople, slaFor, walkNow } from './approvals';
+import { approvesIn, chainPeople, lineManagerCode, slaFor, walkNow } from './approvals';
 import { notifyEvent } from './notify';
 import { roleRule, roleWaiting, type ChainItem, type ChainWalk, type DecisionBlock, type DeciderPerson, type ItemFacts } from '@/domain/approvals';
 import {
@@ -30,7 +30,7 @@ import {
   APPROVAL_AUDIT_SUFFIX, TS_STATE, advisoryFlags, allSubmittedMessage, alreadySubmittedMessage, clockFromIso, dayMinutes,
   deriveWorkType, dispatchAttempt, formatDmy, formatMinutes, historyEntry, isPremium, isoWeek, lockNote, missingMandatory,
   periodLocked, periodStart, planWeekSubmit, queueChecksum, queuedAttempt, retryAttempt, retryAuditText, retryProblem,
-  returnReasonProblem, rotaFor, signedLayers, timesheetConfigProblem, toMin, transitionAuditText, tsOpen, tsTransitionProblem,
+  returnReasonProblem, rotaFor, signedLayers, daySigners, SIGNED_EARLIER, timesheetConfigProblem, toMin, transitionAuditText, tsOpen, tsTransitionProblem,
   validateTimes, weekBlockedMessage, weekDates, weekDayOutcome, weekLabel, weekModel, weekTotals, NOTHING_TO_SUBMIT,
   allocationProblem, type AllowanceDef, type CheckContext, type FieldEnv, type PayCode, type TsState, type WeekDayInput,
 } from '@/domain/timesheet';
@@ -241,15 +241,22 @@ function factsOf(d: StoredDay): ItemFacts {
   return { premium: isPremium(payCodes(), d.workType), proxy: d.captureSource === 'proxy',
     absence: d.nonWorkingReason.trim() !== '' || absenceOf(d.personCode, d.date) !== '' };
 }
-const itemOf = (d: StoredDay, p: StoredPerson): ChainItem => ({ personCode: p.code, location: p.location, department: p.department, facts: factsOf(d) });
-/* The day's walk along the Timesheet chain as it stands, with the layers signed since it was last submitted. */
-const walkOf = (d: StoredDay, p: StoredPerson, everyone?: readonly DeciderPerson[]) => walkNow('Timesheet', itemOf(d, p), signedLayers(d.history), everyone);
+/* The person's own line manager holds the Line manager layer for them whatever their department, as for Leave (review I2). */
+function itemOf(d: StoredDay, p: StoredPerson): ChainItem {
+  const manager = lineManagerCode(p);
+  return { personCode: p.code, location: p.location, department: p.department, ...(manager ? { manager } : {}), facts: factsOf(d) };
+}
+/* The day's walk along the Timesheet chain as it stands, with the layers signed since it was last submitted and who signed
+   them, who decide no later layer (review I1). */
+const walkOf = (d: StoredDay, p: StoredPerson, everyone?: readonly DeciderPerson[]) =>
+  walkNow('Timesheet', itemOf(d, p), signedLayers(d.history), everyone, daySigners(d.history));
 const capLabel = (cap: string) => store.coll<{ label?: string }>('capabilities')[cap]?.label ?? cap;
 const waitingOn = (w: ChainWalk) => roleWaiting(w.current?.step.role ?? 'Line manager');
 const upper = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 /* Why the reader may not decide the day at its current layer, as a refusal and as a held row's reason. */
 function blocked(block: DecisionBlock, w: ChainWalk): { status: number; code: string; message: string; next: string } {
   if (block === 'self') return { status: 403, code: 'SELF_APPROVAL', message: 'You cannot approve or return your own timesheet.', next: 'Ask another approver at your location.' };
+  if (block === 'signed') return { status: 403, code: 'ALREADY_SIGNED', message: SIGNED_EARLIER, next: `${upper(waitingOn(w))} decides it now.` };
   if (block === 'scope') return { status: 403, code: 'scope', message: 'This timesheet belongs to someone outside the people you look after.', next: 'Their own manager decides it.' };
   if (block === 'layer') return { status: 403, code: 'WRONG_LAYER', message: `This timesheet is waiting on ${waitingOn(w)}, not on a layer you sign off.`, next: `${upper(waitingOn(w))} decides it now.` };
   const cap = roleRule('Timesheet', w.current?.step.role ?? 'Line manager')?.capability ?? 'team_ts';
@@ -652,7 +659,7 @@ export const timesheetHandlers = [
        may decide it now when it is open and its current layer is theirs. */
     const walked = located().filter(x => x.d.state !== 'draft' && x.d.personCode !== self)
       .map(x => { const w = walkOf(x.d, x.p, everyone); return { ...x, w: w.walk, block: w.block(self) }; });
-    const mine = walked.filter(x => x.w.layers.some(l => l.deciders.includes(self)));
+    const mine = walked.filter(x => x.w.layers.some(l => l.deciders.includes(self)) || daySigners(x.d.history).includes(self));
     const decidable = walked.filter(x => tsOpen(x.d.state) && x.block === null);
     const week = query.weekStart ? weekDates(query.weekStart) : null;
     const inWeek = week ? mine.filter(x => week.includes(x.d.date)) : mine;

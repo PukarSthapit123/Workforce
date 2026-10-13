@@ -116,16 +116,63 @@ describe('bulk approval works per layer', () => {
 describe('delegation applies at the payroll layer', () => {
   test('while it is in force, the delegate decides the payroll layer for the holder; before it, they are refused', async () => {
     await payrollEveryDay();
+    await decide(await as('manager'), AMARA, 'ok', 1);
+    const jo = caller(await tokenForEmail('jo.baptiste@brightpath.org'));
+    expect((await jo('POST', `/api/v1/timesheet-days/${AMARA}/transition`, { to: 'ok', reason: '' }, 2)).status).toBe(403);
+    store.coll('delegations').dlg_9 = { id: 'dlg_9', version: 1, updatedAt: FROZEN, who: 'CP-1002', to: 'CP-1153', from: '2026-08-13', until: '2026-08-20', modules: ['Timesheet'] };
+    expect((await queue(jo)).rows.map(r => [r.id, r.decide])).toContainEqual([AMARA, true]);
+    const r = DayDecided.parse((await decide(jo, AMARA, 'ok', 2)).body);
+    expect(r.record).toMatchObject({ state: 'ok', posting: 'queued' });
+    expect(r.record.history.at(-1)).toMatchObject({ layer: 'Payroll', by: { personCode: 'CP-1153' } });
+  });
+  test('a delegation of payroll to the line manager who signed the first layer does not let them sign the second (review I1)', async () => {
+    await payrollEveryDay();
     const mgr = await as('manager');
     await decide(mgr, AMARA, 'ok', 1);
-    expect(refusal(await decide(mgr, AMARA, 'ok', 2))).toMatchObject({ code: 'WRONG_LAYER', message: 'This timesheet is waiting on payroll, not on a layer you sign off.', next: 'Payroll decides it now.' });
     store.coll('delegations').dlg_9 = { id: 'dlg_9', version: 1, updatedAt: FROZEN, who: 'CP-1002', to: 'CP-1001', from: '2026-08-13', until: '2026-08-20', modules: ['Timesheet'] };
-    expect((await queue(mgr)).rows.map(r => [r.id, r.decide])).toContainEqual([AMARA, true]);
-    const r = DayDecided.parse((await decide(mgr, AMARA, 'ok', 2)).body);
-    expect(r.record).toMatchObject({ state: 'ok', posting: 'queued' });
-    expect(r.record.history.at(-1)).toMatchObject({ layer: 'Payroll', by: { personCode: 'CP-1001' } });
+    const before = snapshot(...WRITES), r = await decide(mgr, AMARA, 'ok', 2);
+    expect([r.status, refusal(r).code, refusal(r).message, refusal(r).next]).toEqual([403, 'ALREADY_SIGNED',
+      'You approved this timesheet at an earlier layer. Another approver decides the next one.', 'Payroll decides it now.']);
+    expect((await queue(mgr)).rows.map(r => r.id)).not.toContain(AMARA);
+    expect(snapshot(...WRITES)).toEqual(before);
   });
 });
+
+describe('segregation and the line-manager relationship (review I1, I2)', () => {
+  function managerHolds(cap: string) {
+    const t = store.coll<{ capabilities: string[] }>('userTypes').manager;
+    if (!t) throw new Error('no manager type');
+    t.capabilities = [...t.capabilities, cap];
+  }
+  test('one person holding both Team timesheets and payroll approval cannot take a day from awaiting approval to approved', async () => {
+    managerHolds('pay_appr');
+    await payrollEveryDay();
+    const mgr = await as('manager'), before = attempts();
+    expect(DayDecided.parse((await decide(mgr, AMARA, 'ok', 1)).body).record.state).toBe('mgrok');
+    const writes = snapshot(...WRITES), again = await decide(mgr, AMARA, 'ok', 2);
+    expect([again.status, refusal(again).code]).toEqual([403, 'ALREADY_SIGNED']);
+    expect(snapshot(...WRITES)).toEqual(writes);
+    const held = BulkApproved.parse((await mgr('POST', '/api/v1/approvals/timesheets/bulk',
+      { ids: [AMARA], checksum: queueChecksum([day(AMARA)].filter((d): d is Day => d !== undefined)) })).body);
+    expect([held.approved, held.held.map(h => h.code)]).toEqual([[], ['ALREADY_SIGNED']]);
+    expect([day(AMARA)?.state, attempts()]).toEqual(['mgrok', before]);
+    /* the other payroll holder still decides it */
+    expect(DayDecided.parse((await decide(await as('admin'), AMARA, 'ok', 2)).body).record.state).toBe('ok');
+  });
+  test('the line manager approves the timesheet of a report in another department', async () => {
+    const amara = store.coll<{ department: string }>('people')['per_CP-1042'];
+    if (!amara) throw new Error('no Amara');
+    amara.department = 'ADM';
+    const r = await decide(await as('manager'), AMARA, 'ok', 1);
+    expect(r.status).toBe(200);
+    expect(DayDecided.parse(r.body).record.state).toBe('ok');
+  });
+});
+
+async function tokenForEmail(email: string): Promise<string> {
+  const r = await fetch('/api/v1/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password: 'Qnipay@123' }) });
+  return ((await r.json()) as { token: string }).token;
+}
 
 describe('permissions on every layer', () => {
   test('self-approval is refused at both layers', async () => {
@@ -148,7 +195,8 @@ describe('permissions on every layer', () => {
     const before = snapshot(...WRITES);
     const wrong = await decide(admin, AMARA, 'ok', 1);
     expect([wrong.status, refusal(wrong).code, refusal(wrong).next]).toEqual([403, 'WRONG_LAYER', 'The line manager decides it now.']);
-    expect(refusal(await decide(mgr, waiting, 'ok', 1)).code).toBe('WRONG_LAYER');
+    /* Rachel signed the line manager's layer of it, so she signs no later one (review I1) */
+    expect(refusal(await decide(mgr, waiting, 'ok', 1)).code).toBe('ALREADY_SIGNED');
     const none = await decide(emp, AMARA, 'ok', 1);
     expect([none.status, refusal(none).code]).toEqual([403, 'capability']);
     expect((await emp('GET', '/api/v1/approvals/timesheets')).status).toBe(403);

@@ -58,15 +58,19 @@ export interface TsHistoryEntry { from: TsState; to: TsState; by: TsActor; at: s
 export const historyEntry = (from: TsState, to: TsState, by: TsActor, at: string, reason = '', layer = ''): TsHistoryEntry =>
   ({ from, to, by, at, reason, ...(layer ? { layer } : {}) });
 /* The chain roles that have signed the day off since it was last submitted or resubmitted (module 8). */
-export function signedLayers(history: readonly Pick<TsHistoryEntry, 'to' | 'layer'>[]): string[] {
-  let out: string[] = [];
+function signsSince(history: readonly Pick<TsHistoryEntry, 'to' | 'layer' | 'by'>[]) {
+  let out: Pick<TsHistoryEntry, 'layer' | 'by'>[] = [];
   for (const h of history) {
     if (h.to === 'pend' || h.to === 'resub' || h.to === 'back') out = [];
-    else if (h.to === 'mgrok' && h.layer) out.push(h.layer);
+    else if (h.to === 'mgrok' && h.layer) out.push(h);
   }
   return out;
 }
-export const transitionAuditText = (personName: string, date: string, from: TsState, to: TsState, reason = '') =>
+export const signedLayers = (history: readonly Pick<TsHistoryEntry, 'to' | 'layer' | 'by'>[]): string[] => signsSince(history).map(h => h.layer ?? '');
+/* Who signed those layers (module 8 review I1): they decide no later layer of the day, so one person never signs both. */
+export const daySigners = (history: readonly Pick<TsHistoryEntry, 'to' | 'layer' | 'by'>[]): string[] => signsSince(history).map(h => h.by.personCode);
+export const SIGNED_EARLIER = 'You approved this timesheet at an earlier layer. Another approver decides the next one.';
+export const transitionAuditText =(personName: string, date: string, from: TsState, to: TsState, reason = '') =>
   `${personName} · ${formatDmy(date)} · ${TS_STATE[from].label} → ${TS_STATE[to].label}${reason ? ` · "${reason}"` : ''}`;
 
 /* ------------------------------------------------------------- time and dates */

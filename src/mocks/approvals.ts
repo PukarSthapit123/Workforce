@@ -89,6 +89,9 @@ export function chainPeople(): DeciderPerson[] {
     return { code: p.code, location: p.location, department: p.department, active: p.state === 'active', caps, allLocations: caps.includes('master_data') };
   });
 }
+/* The employee code of a person's line manager, read off the manager's name on their record. */
+export const lineManagerCode = (p: { code: string; manager: string }): string | undefined =>
+  Object.values(people()).find(x => x.name === p.manager.trim() && x.code !== p.code)?.code;
 /* One item's walk along its module's chain as it stands today, with today's
    delegations. Leave and Rota walk theirs through here too, naming the people
    who signed an earlier layer, who decide no later one. */

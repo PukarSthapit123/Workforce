@@ -18,7 +18,7 @@ import { leaveConfigChangeProblem } from './leave-config-usage';
 import { invalid } from './people';
 import { notifyEvent } from './notify';
 import { rotaCoverDays, writeAbsence, type AbsenceWritten } from './rota';
-import { approvesIn, chainPeople, walkNow } from './approvals';
+import { approvesIn, chainPeople, lineManagerCode, walkNow } from './approvals';
 import { accounts, codesOf, effectiveCode, inScope, nameOf, people, personByCode, recordAt, scopeOf, today, type Signed, type StoredPerson } from './world';
 import {
   approveLeave, arrangeRtw, cancelLeave, declineLeave, getEntitlement, getLeaveConfig, getMyLeave, getSicknessBoard, getTeamBalances, giveDaysBack,
@@ -117,12 +117,11 @@ const refuseLeave = (p: LeaveRefusal): never =>
    layer has not decided within the policy's SLA, or the tenant's (D3). The
    person's own line manager holds the Line manager layer whatever their
    department. */
-const managerCode = (p: StoredPerson) => Object.values(people()).find(x => x.name === p.manager.trim() && x.code !== p.code)?.code;
 function itemOf(r: StoredRequest, p: StoredPerson): ChainItem {
   const first = r.history.find(h => h.from === 'pending' && !!h.layer);
   const slaBreached = firstLayerBreached({ raised: clockFromIso(r.raisedAt).date, escalated: r.escalated, firstSigned: first ? clockFromIso(first.at).date : null },
     policySla(config(), r.type), today());
-  const manager = managerCode(p);
+  const manager = lineManagerCode(p);
   return { personCode: p.code, location: p.location, department: p.department, ...(manager ? { manager } : {}), facts: { slaBreached } };
 }
 /* The request's walk along the Leave chain as it stands, with the layers signed and who signed them. */
