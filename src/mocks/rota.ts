@@ -22,7 +22,7 @@ import {
   acceptRotaPlan, addPatternPeople, askAllCover, assignCover, claimCover, clearRotaWeek, confirmFilled, copyRotaWeek, createPattern,
   createShiftType, deletePattern, deleteShiftType, escalateCover, fillCover, generatePattern, getMyShifts, getRotaConfig, getRotaHome, getRotaWeek,
   listCover, listItRequests, listPatterns, listShiftTypes, openCover, planRotaWeek, repeatRotaWeek, setCoverReason, signOffRotaWeek, suggestRotaCell, transitionRotaWeek,
-  updatePattern, updateRotaConfig, updateShiftType, writeRotaCell,
+  updatePattern, updateRotaConfig, updateShiftType, writeRotaCell, listSupportLevels,
   type CoverRecord, type CoverView, type FilledShift, type HoursFlag, type ItRequest, type PatternRecord, type RotaConfigRecord,
   type RotaWeekView, type ShiftTypeRecord, type Suggestion as SuggestionView, type UpdateRotaConfig,
 } from '@/contract/rota';
@@ -38,11 +38,11 @@ import {
   itRequestFor, itRequestNotice, lineOf, lineRestIssues, minFor, newCover, onRoster, onShift, openCoverProblem, openShiftNotice,
   openShiftsFor, patternGenerateProblem, patternProblem, patternUsage, planSummary, planWeek, publishAuditText, publishNotice,
   publishProblem, publishSummary, publishWeek, recalcShift, renumberStages, repeatAuditText, repeatProblem, repeatSummary, repeatWeek,
-  resizeCycle, restNeed, rotaConfigProblem, rotaDayOf, rotaDaysOf, rotaInputFor, rotaPolicyWithholds, rotaState, rotaTransitionProblem, rotaVisible, rotaWeekId,
+  resizeCycle, restNeed, rotaConfigProblem, changedLevelMins, supportLevelsOf, rotaDayOf, rotaDaysOf, rotaInputFor, rotaPolicyWithholds, rotaState, rotaTransitionProblem, rotaVisible, rotaWeekId,
   rotadHours, setCell, setCells, shiftAssignedNotice, shiftBy, shiftRemovalProblem, shiftTime, shiftTypeProblem, shiftUsage,
   staggerOffsets, suggest, thinnest, typeRotaFor, typesAfterNightChange, typesAfterShiftCreate, typesWithoutShift, rotaKeyCounts,
   type AssignMode, type AssignOutcome, type Candidate, type CellWrite, type PatternPersonInfo, type RotaActor, type RotaChange,
-  type RotaDay, type RotaWeekCore, type RotaWorker, type RuleContext, type Suggestion, type WeekLookup,
+  type RotaDay, type RotaWeekCore, type RotaWorker, type RuleContext, type Suggestion, type SupportLevel, type WeekLookup,
 } from '@/domain/rota';
 import { absenceCellWrites, shortDays, type CellPlanWeek, type CoverDay } from '@/domain/leave';
 
@@ -74,8 +74,9 @@ function requireFlag(flag: string, what: string) {
   if (!flagOn(flag)) refuse(403, { code: 'feature-off', message: `${what} is switched off for this organisation.`, next: 'An administrator can switch it on in Qnipay setup.' });
 }
 function config(): RotaConfigRecord {
-  return recordAt(store.coll<RotaConfigRecord>('rotaConfig'), 'rotaConfig')
-    ?? { id: 'rotaConfig', version: 0, updatedAt: store.now(), ...DEFAULT_ROTA_CONFIG, fulfilStages: [], types: {} };
+  const r = recordAt(store.coll<RotaConfigRecord>('rotaConfig'), 'rotaConfig');
+  return r ? { ...r, supportLevels: supportLevelsOf(r) }
+    : { id: 'rotaConfig', version: 0, updatedAt: store.now(), ...DEFAULT_ROTA_CONFIG, fulfilStages: [], types: {} };
 }
 const saveConfig = (c: RotaConfigRecord, changes: Partial<RotaConfigRecord>) => {
   const saved = c.version ? bump(c, changes) : { ...c, ...changes, version: 1, updatedAt: store.now() };
@@ -89,6 +90,24 @@ const locationBy = (code: string) => locations().find(l => l.code === code);
 const locName = (code: string) => nameOf('locations', code);
 const by = (s: Signed): RotaActor => { const w = actor(s); return { personCode: w.personCode, name: w.name }; };
 const NOT_FOUND = (what: string, next = 'Reload the page.') => refuse(404, { code: 'not-found', message: `That ${what} no longer exists.`, next });
+
+/* Module 8 (v15:13270): a level's new number is set on every location at
+   that level; the locations moved, by code, for the audit row. A template
+   that changes the levels goes through here too. */
+export function followLevels(before: readonly SupportLevel[], after: readonly SupportLevel[]): Record<string, number> {
+  const mins = changedLevelMins(before, after), moved: Record<string, number> = {};
+  const locs = store.coll<StoredLocation & Meta>('locations');
+  for (const [key, l] of Object.entries(locs)) {
+    const min = l.level !== undefined && Object.hasOwn(mins, l.level) ? mins[l.level] : undefined;
+    if (min === undefined || l.minPerShift === min) continue;
+    locs[key] = bump(l, { minPerShift: min });
+    moved[l.code] = min;
+  }
+  return moved;
+}
+/* Rota setup as stored, for a template to read and write (module 8). */
+export const rotaConfigNow = () => config();
+export const saveRotaConfig = (changes: Partial<RotaConfigRecord>) => saveConfig(config(), changes);
 
 /* ------------------------------------------------------------- scope (D5) */
 function requireRotaScope(s: Signed, location: string) {
@@ -1145,6 +1164,9 @@ export const rotaHandlers = [
   }),
 
   /* --------------------------------------------------------------- config */
+  /* the levels are read whether or not Rota is on: a location carries one either way */
+  serve(listSupportLevels, () => ({ items: config().supportLevels })),
+
   serve(getRotaConfig, () => {
     requireRota();
     const types = Object.values(store.coll<{ code: string; name: string }>('employeeTypes')).map(t => ({ code: t.code, name: t.name }));
@@ -1158,7 +1180,8 @@ export const rotaHandlers = [
     const { safeRules, types, fulfilStages, ...rest } = body;
     const next: RotaConfigRecord = { ...c, ...rest, safeRules: { ...c.safeRules, ...safeRules }, types: { ...c.types, ...types },
       fulfilStages: fulfilStages ? renumberStages(fulfilStages.map(s => ({ ...s, n: s.n ?? 0 }))) : c.fulfilStages };
-    const problem = rotaConfigProblem(next, next.fulfilStages, next.types, { employeeTypes: codesOf('employeeTypes'), shiftCodes: shiftList().map(s => s.code) });
+    const problem = rotaConfigProblem(next, next.fulfilStages, next.types,
+      { employeeTypes: codesOf('employeeTypes'), shiftCodes: shiftList().map(s => s.code), supportLevels: c.supportLevels });
     if (problem) invalid(problem);
     const keys = Object.keys(body) as (keyof UpdateRotaConfig)[];
     const before: Record<string, unknown> = {}, after: Record<string, unknown> = {};
@@ -1172,6 +1195,8 @@ export const rotaHandlers = [
     }
     if (!Object.keys(after).length) return { record: c, auditId: null };
     const saved = saveConfig(c, next);
+    const moved = followLevels(c.supportLevels, next.supportLevels);
+    if (Object.keys(moved).length) after.locations = moved;
     const auditId = writeAudit({ who: actor(session), act: 'Rota setup saved', entity: 'rotaConfig', entityId: c.id, before, after });
     return { record: saved, auditId };
   }),

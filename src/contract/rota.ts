@@ -251,11 +251,14 @@ export const TypeRota = z.object({
   shifts: z.array(z.string()), night: z.boolean(), maxHours: z.number(), restHours: z.number(), maxConsec: z.number().int(), flexible: z.boolean(),
 });
 export type TypeRota = z.infer<typeof TypeRota>;
+/* A support level and the people every shift at a location on it needs (v15:9073). The codes and names are fixed; the number is the tenant's. */
+export const SupportLevel = z.object({ code: z.string().max(20), label: z.string().max(40), min: z.number() });
+export type SupportLevel = z.infer<typeof SupportLevel>;
 const ConfigFields = {
   minDefault: z.number(), maxHours: z.number(), capTolerance: z.number(), restHours: z.number(), restWarn: z.boolean(), maxConsec: z.number(),
   horizon: z.number(), favHeadStart: z.number(), flexMilestones: z.array(z.number()).max(12), flexNotifyTo: z.string().max(80),
   itAccess: z.boolean(), agencyManual: z.boolean(), bhEnhanced: z.boolean(), outlook: z.boolean(), publishBlockOnGap: z.boolean(),
-  rotaBuiltBy: z.string(),
+  rotaBuiltBy: z.string(), supportLevels: z.array(SupportLevel).max(10),
 };
 export const RotaConfigRecord = RecordMeta.extend({
   ...ConfigFields, safeRules: SafeRules, fulfilStages: z.array(FulfilStage), types: z.record(z.string(), TypeRota),
@@ -371,7 +374,14 @@ export const listItRequests = defineEndpoint({ method: 'GET', path: '/api/v1/rot
 export const getMyShifts = defineEndpoint({ method: 'GET', path: '/api/v1/rota/my-shifts', query: MyShiftsQuery, response: MyShifts, capability: 'own_shifts',
   summary: 'The signed-in person\'s week once published, their next shift and who is on it, rest days, and open shifts they can claim' });
 
+/* The location form offers the support levels with their people per shift, so they are read with a session only, as the locations are. */
+export const SupportLevelList = z.object({ items: z.array(SupportLevel) });
+export type SupportLevelList = z.infer<typeof SupportLevelList>;
+export const listSupportLevels = defineEndpoint({ method: 'GET', path: '/api/v1/rota/support-levels', response: SupportLevelList,
+  summary: 'The support levels a location can carry, each with the people every shift at that level needs (set in Rota setup)' });
+
 export const getRotaConfig = defineEndpoint({ method: 'GET', path: '/api/v1/rota/config', response: RotaSetup, capability: 'mod_cfg',
   summary: 'Rota setup: staffing and rest limits, fulfilment stages, safe-worker rules, per-type rota limits' });
 export const updateRotaConfig = defineEndpoint({ method: 'PATCH', path: '/api/v1/rota/config', request: UpdateRotaConfig, response: mutation(RotaConfigRecord),
-  capability: 'mod_cfg', versioned: true, summary: 'Save Rota setup (If-Match). Types are merged by type code; stages are renumbered.' });
+  capability: 'mod_cfg', versioned: true,
+  summary: 'Save Rota setup (If-Match). Types are merged by type code; stages are renumbered. A support level\'s new people per shift is set on every location at that level.' });

@@ -8,6 +8,7 @@ import { api } from './client';
 import { useRecordMutation } from './mutation';
 import { timesheetKeys } from './timesheets';
 import { notificationKeys } from './notifications';
+import { dimensionKey } from './reference';
 import {
   acceptRotaPlan, addPatternPeople, askAllCover, assignCover, claimCover, clearRotaWeek, confirmFilled, copyRotaWeek, createPattern,
   createShiftType, deletePattern, deleteShiftType, escalateCover, fillCover, generatePattern, getMyShifts, getRotaConfig, getRotaHome, getRotaWeek,
@@ -182,7 +183,8 @@ export const useConfirmFilled = () => useRecordMutation({
 /* Rota setup (mrota): applies on Save, versioned, one audit row. */
 export const useSaveRotaConfig = () => useRecordMutation({
   mutationFn: (v: { config: Pick<RotaConfigRecord, 'version'>; body: UpdateRotaConfig }) => api(updateRotaConfig, { body: v.body, ifMatch: v.config.version }),
-  recordKey: () => 'rota/config', invalidates: AFTER,
+  /* a support level's new number is set on its locations */
+  recordKey: () => 'rota/config', invalidates: [...AFTER, dimensionKey('locations')],
 });
 
 export type {

@@ -1,9 +1,9 @@
 import { useState, type ReactNode } from 'react';
-import { Clock, Link2, RadioTower, Repeat, Shield, Target, UsersRound } from 'lucide-react';
+import { Clock, Link2, Megaphone, RadioTower, Repeat, Shield, Target, UsersRound } from 'lucide-react';
 import { tid } from '@/testids';
 import {
   ActionBar, AdminCard, Button, Card, CheckboxField, Chip, ChipPicker, ConfirmModal, Empty, FormWarn, GuideButton, InlineInput, Page, PageHead, Pill, Row,
-  SettingRow, SettingSelect, SubHead, SwitchField, Tip, UnitInput, toastInfo, toastRefusal,
+  CardNote, SettingRow, SettingSelect, SettingText, SubHead, SwitchField, Tip, UnitInput, toastInfo, toastRefusal,
 } from '@/ui';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import { ApiError } from '@/api/client';
@@ -11,8 +11,7 @@ import { useDimension, type InUseRow } from '@/api/reference';
 import { useDeletePattern, usePatterns, useRotaConfig, useSaveRotaConfig, useShiftCatalogue, type PatternRecord, type RotaSetup } from '@/api/rota';
 import { useTenant } from '@/shell/shellData';
 import { versionKey } from '@/lib/latest';
-import { FULFIL_AUDIENCES, FULFIL_CHANNELS, HORIZONS, ROTA_BUILT_BY, genLabel } from '@/domain/rota';
-import { SUPPORT_LEVELS } from '@/features/dimensions/spec';
+import { FLEX_NOTIFY_TO, FULFIL_AUDIENCES, FULFIL_CHANNELS, HORIZONS, ROTA_BUILT_BY, genLabel, milestonesText, supportLevelsOf } from '@/domain/rota';
 import { NewShiftTypeDialog, ShiftCatalogueBody } from './ShiftCatalogue';
 import { NewPatternDialog, PatternEditor, PatternPeopleDialog, activePill, type PatternCtx } from './PatternEditor';
 import { PatternUploadDialog } from './PatternUpload';
@@ -24,7 +23,11 @@ import { draftOf, newStageDraft, rotaBody, type NumKey, type RotaDraft, type Tog
    catalogue and Working patterns use, each saved on its own record. Every
    other setting edits one draft: Save sends it with If-Match and one audit
    row with the before and after, Cancel puts it back (D12). The prototype
-   applied each change as it was made. The module's feature switches belong
+   applied each change as it was made. Module 8: each support level's people
+   per shift is edited here (v15:9073) and set on every location at that
+   level, and the flexible-worker milestones and who is told (v15:8326, which
+   the prototype kept on People) are here beside the type switch that counts
+   bank weeks. The module's feature switches belong
    to Modules & features, so they are shown here as they stand. Nothing here
    carries a rate or an amount (D10). */
 const CRUMB = 'Modules · Rota · Rota setup';
@@ -187,7 +190,7 @@ function SetupDraftView({ setup, flags }: { setup: RotaSetup; flags: Record<stri
     setSeen(save.refusal);
     if (refusedType) setPicked(refusedType);
   }
-  const swOn = flags.SAFEWORKER === true;
+  const swOn = flags.SAFEWORKER === true, flexOn = flags.FLEXMON === true;
 
   const submit = () => save.mutate({ config, body }, { onSuccess: d =>
     toastInfo(d.auditId ? 'Rota setup saved. It applies across the tenant straight away.' : 'Rota setup · nothing changed') });
@@ -227,18 +230,24 @@ function SetupDraftView({ setup, flags }: { setup: RotaSetup; flags: Record<stri
               <TableHead>Support level</TableHead><TableHead className="text-right">People per shift</TableHead>
               <TableHead className="text-right">Locations</TableHead><TableHead>Locations at this level</TableHead>
             </TableRow></TableHeader>
-            <TableBody>{SUPPORT_LEVELS.map(s => {
+            <TableBody>{supportLevelsOf(config).map(s => {
               const here = (locs.data ?? []).filter((l: InUseRow) => 'level' in l && l.level === s.code);
+              const err = fe(`supportLevels.${s.code}`);
               return (
                 <Row key={s.code} testId={tid.mrota.level(s.code)}>
                   <TableCell><strong>{s.label}</strong></TableCell>
-                  <TableCell className="text-right tabular-nums">{s.min} people</TableCell>
+                  <TableCell className="text-right">
+                    <UnitInput testId={tid.mrota.levelMin(s.code)} unit="people" aria-label={`People per shift at ${s.label}`} type="number" inputMode="numeric"
+                      min="1" className="ml-auto" value={draft.levels[s.code] ?? String(s.min)} aria-invalid={err ? true : undefined}
+                      onChange={e => set({ levels: { ...draft.levels, [s.code]: e.target.value } })} />
+                    <Err text={err} /></TableCell>
                   <TableCell className="text-right tabular-nums">{here.length}</TableCell>
                   <TableCell className="text-xs text-text-muted">{here.map(l => l.name).join(', ') || '—'}</TableCell>
                 </Row>);
             })}</TableBody>
           </Table>
-          <p className="mt-sm text-xs text-text-muted">Each location's support level and people per shift are set on the location, under Locations.</p>
+          <Err text={fe('supportLevels')} />
+          <p className="mt-sm text-xs text-text-muted">Saving a new number sets it on every location at that level. A location's level, and its own people per shift, are changed on the location, under Locations.</p>
         </div>
       </AdminCard>
 
@@ -302,6 +311,24 @@ function SetupDraftView({ setup, flags }: { setup: RotaSetup; flags: Record<stri
         {numRow('restHours', 'Minimum rest between shifts', 'Default where the employee type has no stricter value', 'hrs')}
         {numRow('maxHours', 'Maximum hours anyone can be rota’d', 'The lower of this, the employee type and the person’s own maximum applies', 'hrs')}
         {numRow('maxConsec', 'Maximum consecutive days', undefined, 'days')}
+      </AdminCard>
+
+      <AdminCard testId={tid.mrota.card('flex')} icon={<Megaphone />} title="Flexible worker monitoring" tipTestId={tid.mrota.tip('flex')}
+        tip="Bank weeks are counted as they are worked. HR is notified at each configured milestone, and the notification is retained as evidence."
+        desc={`Milestones at ${milestonesText(config.flexMilestones)} · notified to ${config.flexNotifyTo}`}>
+        {flagRow('FLEXMON', 'Flexible worker monitoring', 'Counts the bank weeks of every employee type with flexible-worker behaviour.')}
+        <SettingRow title="Milestones" desc="Weeks worked at which HR is notified, earliest first, separated by commas">
+          <Control error={fe('flexMilestones')}>
+            <SettingText testId={tid.mrota.milestones} aria-label="Milestones in weeks" className="max-w-[120px]" inputMode="numeric" value={draft.milestones}
+              disabled={!flexOn} aria-invalid={fe('flexMilestones') ? true : undefined} onChange={e => set({ milestones: e.target.value })} /></Control>
+        </SettingRow>
+        <SettingRow title="Notify">
+          <Control error={fe('flexNotifyTo')}>
+            <SettingSelect testId={tid.mrota.notifyTo} aria-label="Who is notified at a milestone" value={draft.flexNotifyTo} disabled={!flexOn}
+              aria-invalid={fe('flexNotifyTo') ? true : undefined} onChange={e => set({ flexNotifyTo: e.target.value })}>
+              {FLEX_NOTIFY_TO.map(o => <option key={o} value={o}>{o}</option>)}</SettingSelect></Control>
+        </SettingRow>
+        <CardNote><span data-testid={tid.mrota.flexNote}>Counting bank weeks is not built yet, so no milestone notice is sent. The milestones are shown with the evidence on Notifications.</span></CardNote>
       </AdminCard>
 
       <AdminCard testId={tid.mrota.card('it')} icon={<Link2 />} title="IT access and calendars" desc="What happens once a shift is fulfilled">

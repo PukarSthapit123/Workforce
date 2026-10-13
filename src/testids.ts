@@ -288,6 +288,8 @@ export const tid = {
     type: (code: string) => k('mrota-type', code), typeShift: (code: string) => k('mrota-type-shift', code), typeNight: 'mrota-type-night',
     typeNum: (key: string) => k('mrota-type-num', key), typeFlexible: 'mrota-type-flexible',
     patternsBlocked: 'mrota-patterns-blocked',
+    /* module 8: each support level's people per shift, and the flexible-worker milestones and who is told */
+    levelMin: (code: string) => k('mrota-level-min', code), milestones: 'mrota-milestones', notifyTo: 'mrota-notify-to', flexNote: 'mrota-flex-note',
   },
   /* module 3: Upload working patterns (simulated): the validation preview, its error report and the import that writes nothing */
   patUpload: {
@@ -446,6 +448,8 @@ export const tid = {
     cell: (code: string, persona: string) => k('anotif-cell', code, persona), never: (code: string, persona: string) => k('anotif-never', code, persona),
     notConnected: 'anotif-not-connected', evidence: 'anotif-evidence', evidenceTip: 'anotif-evidence-tip', evidenceRow: (ref: string) => k('anotif-evidence-row', ref),
     save: 'anotif-save', cancel: 'anotif-cancel',
+    /* module 8: the flexible-worker milestones and who is told, as Rota setup sets them */
+    flexMilestones: 'anotif-flex-milestones',
   },
   /* 1c group 5: Approvals (aappr): the chain per module, sign-off settings and delegations (D8) */
   aappr: {

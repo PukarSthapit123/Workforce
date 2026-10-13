@@ -175,6 +175,32 @@ describe('Rota setup', () => {
     expect(snapshot('patterns', 'rotaWeeks', 'audit')).toEqual(before);
   });
 
+  test("module 8: a support level's people per shift and the flexible-worker milestones save together, and the level's locations follow", async () => {
+    await open();
+    expect(screen.getByTestId(tid.mrota.card('flex'))).toHaveTextContent('Milestones at 9 and 12 weeks · notified to HR administrators');
+    expect(screen.getByTestId(tid.mrota.flexNote)).toHaveTextContent('Counting bank weeks is not built yet');
+    expect(screen.getByTestId(tid.mrota.flag('FLEXMON'))).toBeDisabled();
+    type(tid.mrota.levelMin('High'), '5');
+    type(tid.mrota.milestones, '6, 10');
+    await userEvent.selectOptions(screen.getByTestId(tid.mrota.notifyTo), 'Service Manager');
+    await userEvent.click(screen.getByTestId(tid.mrota.save));
+    await expectToast('Rota setup saved. It applies across the tenant straight away.');
+    expect(config()).toMatchObject({ flexMilestones: [6, 10], flexNotifyTo: 'Service Manager' });
+    expect(config().supportLevels.find(l => l.code === 'High')?.min).toBe(5);
+    expect(Object.values(store.coll<{ code: string; minPerShift: number }>('locations')).find(l => l.code === 'WH')?.minPerShift).toBe(5);
+    expect(setupAudits()).toHaveLength(1);
+    await waitFor(() => expect(screen.getByTestId(tid.mrota.card('flex'))).toHaveTextContent('Milestones at 6 and 10 weeks · notified to Service Manager'));
+  });
+
+  test('module 8: a milestone that is not a number is refused on its field, and nothing is stored', async () => {
+    await open();
+    type(tid.mrota.milestones, '6, soon');
+    await userEvent.click(screen.getByTestId(tid.mrota.save));
+    await waitFor(() => expect(screen.getByTestId(tid.mrota.milestones)).toHaveAttribute('aria-invalid', 'true'));
+    expect(screen.getAllByText('Each milestone must be a whole number of weeks from 1 to 52.').length).toBeGreaterThan(0);
+    expect(setupAudits()).toHaveLength(0);
+  });
+
   test('with Rota off the page says so and offers nothing else', async () => {
     resetTo('qnipay');
     await signInAs('admin');

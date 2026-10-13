@@ -41,3 +41,15 @@ test('stages are sent as one list, renumbered by position, once any changes', ()
     { n: 2, audience: 'Everyone cleared organisation-wide', wait: 60, channel: 'In-app + email', next: 'Manager escalation' },
   ]);
 });
+
+test('module 8: a level\'s new number sends every level, and the milestones go as numbers, as typed', () => {
+  const d = draftOf(config, []);
+  expect(rotaBody(config, { ...d, milestones: '9,12 ' })).toEqual({});
+  d.levels = { ...d.levels, Medium: '5' };
+  d.milestones = '6, 10';
+  d.flexNotifyTo = 'Service Manager';
+  expect(rotaBody(config, d)).toEqual({
+    supportLevels: config.supportLevels.map(l => (l.code === 'Medium' ? { ...l, min: 5 } : l)),
+    flexMilestones: [6, 10], flexNotifyTo: 'Service Manager' });
+  expect(rotaBody(config, { ...d, levels: {}, flexNotifyTo: config.flexNotifyTo, milestones: '6, ten' })).toEqual({ flexMilestones: [6, -1] });
+});

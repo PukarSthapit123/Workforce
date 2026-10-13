@@ -132,15 +132,42 @@ export interface RotaConfig {
   minDefault: number; maxHours: number; capTolerance: number; restHours: number; restWarn: boolean; maxConsec: number;
   horizon: number; favHeadStart: number; flexMilestones: number[]; flexNotifyTo: string;
   itAccess: boolean; agencyManual: boolean; bhEnhanced: boolean; outlook: boolean; publishBlockOnGap: boolean;
-  rotaBuiltBy: string; safeRules: SafeRules;
+  rotaBuiltBy: string; safeRules: SafeRules; supportLevels: SupportLevel[];
 }
+/* A support level and the people every shift at a location on it needs. */
+export interface SupportLevel { code: string; label: string; min: number }
+/* The prototype's SUPPORT_LEVELS (v15:1836). */
+export const DEFAULT_SUPPORT_LEVELS: readonly SupportLevel[] = [
+  { code: 'High', label: 'High support', min: 4 }, { code: 'Medium', label: 'Medium support', min: 3 },
+  { code: 'Low', label: 'Low support', min: 2 }, { code: 'Floating', label: 'Floating support', min: 1 },
+];
+/* The prototype's flexNotifyTo choices (v15:8333). */
+export const FLEX_NOTIFY_TO = ['HR administrators', 'Service Manager', 'HR administrators and Service Manager'] as const;
 /* The prototype's ROTA_CFG. */
 export const DEFAULT_ROTA_CONFIG: RotaConfig = {
   minDefault: 4, maxHours: 45, capTolerance: 1, restHours: 11, restWarn: true, maxConsec: 6, horizon: 12, favHeadStart: 15,
   flexMilestones: [9, 12], flexNotifyTo: 'HR administrators', itAccess: true, agencyManual: true, bhEnhanced: true, outlook: true,
   publishBlockOnGap: true, rotaBuiltBy: 'Admins and managers',
   safeRules: { clearance: true, quals: true, night: true, availability: true, conflicts: true, maxHours: true, rest: true, consec: true },
+  supportLevels: DEFAULT_SUPPORT_LEVELS.map(l => ({ ...l })),
 };
+/* A config stored before support levels were the tenant's reads the prototype's. */
+export const supportLevelsOf = (c: { supportLevels?: readonly SupportLevel[] }): SupportLevel[] =>
+  (c.supportLevels?.length ? c.supportLevels : DEFAULT_SUPPORT_LEVELS).map(l => ({ ...l }));
+/* "High support · 4 per shift", as the location form offers it. */
+export const supportLevelText = (l: SupportLevel) => `${l.label} · ${l.min} per shift`;
+/* The levels whose people per shift changed, by code, with the new number (v15:13270:
+   a level's number is set on every location at that level). */
+export function changedLevelMins(before: readonly SupportLevel[], after: readonly SupportLevel[]): Record<string, number> {
+  return Object.fromEntries(after.filter(l => before.find(b => b.code === l.code)?.min !== l.min).map(l => [l.code, l.min]));
+}
+/* "9 and 12 weeks", as the prototype's flexible-worker card heads itself. */
+export function milestonesText(weeks: readonly number[]): string {
+  if (!weeks.length) return 'no milestones';
+  const w = weeks.map(String);
+  const last = w.pop() ?? '';
+  return `${w.length ? `${w.join(', ')} and ${last}` : last} weeks`;
+}
 export interface FulfilStage { n: number; audience: string; wait: number; channel: string; next: string }
 export const FULFIL_AUDIENCES = ['Employees at location', 'Favourite bank workers', 'All cleared bank workers',
   'Everyone cleared organisation-wide', 'Service Manager', 'Agency partners'] as const;
@@ -162,7 +189,7 @@ const whole = (n: unknown, lo: number, hi: number) => typeof n === 'number' && N
 const num = (n: unknown, lo: number, hi: number) => typeof n === 'number' && Number.isFinite(n) && n >= lo && n <= hi;
 /* Checked on every Rota setup save, so a config the rules could not run on is never stored. */
 export function rotaConfigProblem(c: RotaConfig, stages: readonly FulfilStage[], types: Readonly<Record<string, TypeRota>>,
-  ctx: { employeeTypes: readonly string[]; shiftCodes: readonly string[] }): Problem | null {
+  ctx: { employeeTypes: readonly string[]; shiftCodes: readonly string[]; supportLevels?: readonly SupportLevel[] }): Problem | null {
   const bad = (field: string, message: string): Problem => ({ field, message });
   if (!whole(c.minDefault, 1, 50)) return bad('minDefault', 'Default people per shift must be a whole number from 1 to 50.');
   if (!num(c.restHours, 0, 24)) return bad('restHours', 'Minimum rest must be from 0 to 24 hours.');
@@ -171,7 +198,16 @@ export function rotaConfigProblem(c: RotaConfig, stages: readonly FulfilStage[],
   if (!(HORIZONS as readonly number[]).includes(c.horizon)) return bad('horizon', 'Choose a rota horizon of 12, 6 or 3 months.');
   if (!whole(c.favHeadStart, 0, 1440)) return bad('favHeadStart', 'The favourite head start must be a whole number of minutes from 0 to 1440.');
   if (!(ROTA_BUILT_BY as readonly string[]).includes(c.rotaBuiltBy)) return bad('rotaBuiltBy', 'Choose who builds the rota from the list.');
+  if (!c.flexMilestones.length) return bad('flexMilestones', 'Give at least one milestone, in weeks.');
   if (!c.flexMilestones.every(m => whole(m, 1, 52))) return bad('flexMilestones', 'Each milestone must be a whole number of weeks from 1 to 52.');
+  if (c.flexMilestones.some((m, i) => i > 0 && m <= (c.flexMilestones[i - 1] ?? 0)))
+    return bad('flexMilestones', 'List the milestones from the earliest to the latest, each once.');
+  if (!(FLEX_NOTIFY_TO as readonly string[]).includes(c.flexNotifyTo)) return bad('flexNotifyTo', 'Choose who is notified from the list.');
+  const levels = c.supportLevels, held = ctx.supportLevels ?? levels;
+  if (levels.length !== held.length || levels.some((l, i) => l.code !== held[i]?.code || l.label !== held[i]?.label))
+    return bad('supportLevels', 'Support levels keep their names and order. Only the people per shift can be changed.');
+  const lvl = levels.find(l => !whole(l.min, 1, 50));
+  if (lvl) return bad(`supportLevels.${lvl.code}`, `${lvl.label} needs a whole number of people per shift from 1 to 50.`);
   if (!stages.length) return bad('stages', 'Keep at least one stage.');
   for (const [i, s] of stages.entries()) {
     if (!(FULFIL_AUDIENCES as readonly string[]).includes(s.audience)) return bad(`stages.${i}.audience`, 'Choose an audience from the list.');

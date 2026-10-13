@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { tid } from '@/testids';
 import { DIMENSIONS, type DimensionKind } from '@/contract/dimensions';
 import { Button, Field, FormWarn, Modal, ScopeBadge, SelectBox, Small, SwitchField, TextInput, UnitInput, toastInfo } from '@/ui';
-import { useDimension, type InUseRow } from '@/api/reference';
+import { useDimension, useSupportLevels, type InUseRow } from '@/api/reference';
 import { useCreateDimension, useRemoveDimension, useUpdateDimension } from '@/api/dimensions';
 import { DIM_SPECS, type DimField } from './spec';
 
@@ -21,7 +21,8 @@ const toBody = (fields: DimField[], v: Record<string, Value>) => Object.fromEntr
    what does. */
 export function DimensionForm({ kind, row, onClose }: { kind: DimensionKind; row?: InUseRow; onClose(): void }) {
   const spec = DIM_SPECS[kind], singular = DIMENSIONS[kind].singular;
-  const ctx = { departments: useDimension('departments').data ?? [], costCentres: useDimension('cost-centres').data ?? [], locations: useDimension('locations').data ?? [] };
+  const ctx = { departments: useDimension('departments').data ?? [], costCentres: useDimension('cost-centres').data ?? [], locations: useDimension('locations').data ?? [],
+    supportLevels: useSupportLevels().data ?? [] };
   const [v, setV] = useState<Record<string, Value>>(() => Object.fromEntries(spec.fields.map(f => {
     const cur = row?.[f.key];
     return [f.key, row ? (typeof cur === 'boolean' ? cur : String(cur ?? '')) : blank(f)];

@@ -3,9 +3,11 @@
    under the cursor; a value that is not a number is sent as -1, which the
    server refuses on that field with its own message. Only what changed is
    sent: per-type limits by type code (the server merges them), safe-worker
-   rules by rule, and the stages as one list when any of them changed. */
+   rules by rule, and the stages as one list when any of them changed. The
+   support levels go as one list when any level's number changed, and the
+   flexible-worker milestones as typed ("9, 12"), each read as a number. */
 import type { RotaConfigRecord, UpdateRotaConfig } from '@/api/rota';
-import { SAFE_RULE_KEYS, newFulfilStage, renumberStages, typeRotaFor, type FulfilStage, type SafeRules, type TypeRota } from '@/domain/rota';
+import { SAFE_RULE_KEYS, newFulfilStage, renumberStages, supportLevelsOf, typeRotaFor, type FulfilStage, type SafeRules, type TypeRota } from '@/domain/rota';
 
 export const NUM_KEYS = ['minDefault', 'favHeadStart', 'restHours', 'maxHours', 'maxConsec'] as const;
 export type NumKey = (typeof NUM_KEYS)[number];
@@ -19,6 +21,8 @@ export interface TypeDraft { shifts: string[]; night: boolean; flexible: boolean
 export interface RotaDraft {
   nums: Record<NumKey, string>; toggles: Record<ToggleKey, boolean>; horizon: number; rotaBuiltBy: string;
   safeRules: SafeRules; stages: StageDraft[]; types: Record<string, TypeDraft>;
+  /* people per shift by support level code, and the milestones as typed */
+  levels: Record<string, string>; milestones: string; flexNotifyTo: string;
 }
 
 const num = (s: string) => (s.trim() === '' || !Number.isFinite(Number(s)) ? -1 : Number(s));
@@ -27,6 +31,8 @@ const sameType = (a: TypeRota, b: TypeRota) => a.night === b.night && a.flexible
   && [...a.shifts].sort().join() === [...b.shifts].sort().join();
 const sameStages = (a: readonly FulfilStage[], b: readonly FulfilStage[]) => a.length === b.length
   && a.every((s, i) => { const t = b[i]; return !!t && s.audience === t.audience && s.wait === t.wait && s.channel === t.channel && s.next === t.next; });
+/* "9, 12" or "9 12": each part a number, or -1 so the server names the bad one */
+export const milestonesOf = (s: string) => s.split(/[s,]+/).filter(Boolean).map(num);
 const pick = <K extends string, V>(keys: readonly K[], fn: (k: K) => V) => Object.fromEntries(keys.map(k => [k, fn(k)])) as Record<K, V>;
 
 const stageDraft = (s: FulfilStage): StageDraft => ({ audience: s.audience, wait: String(s.wait), channel: s.channel, next: s.next });
@@ -39,6 +45,8 @@ export function draftOf(c: RotaConfigRecord, typeCodes: readonly string[]): Rota
     nums: pick(NUM_KEYS, k => String(c[k])), toggles: pick(TOGGLE_KEYS, k => c[k]), horizon: c.horizon, rotaBuiltBy: c.rotaBuiltBy,
     safeRules: { ...c.safeRules }, stages: c.fulfilStages.map(stageDraft),
     types: Object.fromEntries(typeCodes.map(code => [code, typeDraft(typeRotaFor(c.types, code))])),
+    levels: Object.fromEntries(supportLevelsOf(c).map(l => [l.code, String(l.min)])),
+    milestones: c.flexMilestones.join(', '), flexNotifyTo: c.flexNotifyTo,
   };
 }
 
@@ -56,5 +64,10 @@ export function rotaBody(c: RotaConfigRecord, d: RotaDraft): UpdateRotaConfig {
   if (!sameStages(stages, c.fulfilStages)) body.fulfilStages = stages;
   const types = Object.entries(d.types).filter(([code, t]) => !sameType(typeOf(t), typeRotaFor(c.types, code)));
   if (types.length) body.types = Object.fromEntries(types.map(([code, t]) => [code, typeOf(t)]));
+  const held = supportLevelsOf(c), levels = held.map(l => ({ ...l, min: Object.hasOwn(d.levels, l.code) ? num(d.levels[l.code] ?? '') : l.min }));
+  if (levels.some((l, i) => l.min !== held[i]?.min)) body.supportLevels = levels;
+  const milestones = milestonesOf(d.milestones);
+  if (milestones.join() !== c.flexMilestones.join()) body.flexMilestones = milestones;
+  if (d.flexNotifyTo !== c.flexNotifyTo) body.flexNotifyTo = d.flexNotifyTo;
   return body;
 }

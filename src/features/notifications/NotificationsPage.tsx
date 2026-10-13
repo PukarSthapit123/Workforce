@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useNotificationMatrix, useUpdateMatrix, type NotificationMatrix, type UpdateMatrix } from '@/api/notifications';
 import { NOTIF_CHANNELS, NOTIF_PERSONAS, channelLabel, isNotifChannel, type NotifChannel, type NotifPersona } from '@/domain/notifications';
 import { formatDateTime } from '@/lib/format';
+import { milestonesText } from '@/domain/rota';
 
 /* Notifications: the prototype's admNotifications (qnipay-workforce-v15.html:
    8370-8403). One row per event this tenant can raise, grouped "<Module>
@@ -89,7 +90,7 @@ function Matrix({ matrix }: { matrix: NotificationMatrix }) {
             </Fragment>))}
         </TableBody>
       </Table>
-      {matrix.evidence && <Evidence rows={matrix.evidence} />}
+      {matrix.evidence && <Evidence rows={matrix.evidence} flex={matrix.flexMonitoring} />}
       <ActionBar stuck={changed > 0}>
         {changed > 0 && <span className="mr-auto text-xs text-text-muted">{changed === 1 ? '1 change' : `${changed} changes`} not saved yet</span>}
         <Button testId={tid.anotif.cancel} kind="ghost" disabled={!changed || save.anyPending} onClick={() => setDraft({})}>Cancel</Button>
@@ -98,11 +99,13 @@ function Matrix({ matrix }: { matrix: NotificationMatrix }) {
     </>);
 }
 
-function Evidence({ rows }: { rows: NonNullable<NotificationMatrix['evidence']> }) {
+function Evidence({ rows, flex }: { rows: NonNullable<NotificationMatrix['evidence']>; flex: NotificationMatrix['flexMonitoring'] }) {
   return (
     <AdminCard testId={tid.anotif.evidence} icon={<Receipt />} title="Notification evidence" tipTestId={tid.anotif.evidenceTip}
       tip="Retained for audit: employee, milestone, timestamp, recipient, channel and reference."
-      desc="Evidence retained for flexible-worker milestones and IT access requests">
+      desc={<>Evidence retained for flexible-worker milestones and IT access requests
+        {/* v15:8323, set on Rota setup */}
+        {flex && <span data-testid={tid.anotif.flexMilestones} className="block">Milestones at {milestonesText(flex.milestones)} · notified to {flex.notifyTo}</span>}</>}>
       <Table variant="records">
         <TableHeader><TableRow>
           {['Employee', 'Employee ID', 'Event', 'Timestamp', 'Recipient', 'Channel', 'Reference'].map(h => <TableHead key={h}>{h}</TableHead>)}

@@ -13,6 +13,7 @@ import {
   type EvidenceRow, type MatrixEvent, type NotificationItem, type NotificationMatrix,
 } from '@/contract/notifications';
 import type { ItRequest } from '@/contract/rota';
+import { DEFAULT_ROTA_CONFIG, type RotaConfig } from '@/domain/rota';
 import type { AuthedSession } from './auth';
 import {
   NOTIF_EVENTS, ageText, applyMatrixChange, channelFor, deliveryOf, deliveryText, eventShown, inboxOf, isNotifChannel, linkFor, unreadOf,
@@ -54,11 +55,17 @@ function evidence(ctx: LiveContext): EvidenceRow[] | null {
     at: r.raisedAt, recipient: 'IT service desk', channel: 'System', ref: r.ref }));
   return [...kept, ...it];
 }
+/* while flexible-worker monitoring is on: the milestones and who is told, as Rota setup sets them */
+function flexMonitoring(ctx: LiveContext): NotificationMatrix['flexMonitoring'] {
+  if (!flagOn(ctx.modules, ctx.flags, 'FLEXMON')) return null;
+  const c = recordAt(store.coll<Pick<RotaConfig, 'flexMilestones' | 'flexNotifyTo'>>('rotaConfig'), 'rotaConfig') ?? DEFAULT_ROTA_CONFIG;
+  return { milestones: [...c.flexMilestones], notifyTo: c.flexNotifyTo };
+}
 function matrixView(m: StoredMatrix): NotificationMatrix {
   const ctx = liveContext();
   const events: MatrixEvent[] = NOTIF_EVENTS.filter(e => eventShown(e, ctx)).map(e => ({ code: e.code, module: e.module, label: e.label, description: e.description,
     channels: { employee: channelFor(m.events, e.code, 'employee'), manager: channelFor(m.events, e.code, 'manager'), admin: channelFor(m.events, e.code, 'admin') } }));
-  return { id: m.id, version: m.version, updatedAt: m.updatedAt, events, evidence: evidence(ctx) };
+  return { id: m.id, version: m.version, updatedAt: m.updatedAt, events, evidence: evidence(ctx), flexMonitoring: flexMonitoring(ctx) };
 }
 const PERSONA_LABEL = { employee: 'Employee', manager: 'Manager', admin: 'Admin' } as const;
 /* "Leave approved for Employee: off." One sentence per cell changed. */

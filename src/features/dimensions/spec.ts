@@ -3,12 +3,10 @@
    save path for every dimension, so no dimension behaves differently from
    another. */
 import type { DimensionKind, DimensionRow } from '@/contract/dimensions';
+import { supportLevelText, type SupportLevel } from '@/domain/rota';
 
-export const SUPPORT_LEVELS = [
-  { code: 'High', label: 'High support', min: 4 }, { code: 'Medium', label: 'Medium support', min: 3 },
-  { code: 'Low', label: 'Low support', min: 2 }, { code: 'Floating', label: 'Floating support', min: 1 },
-] as const;
-export interface DimCtx { departments: DimensionRow[]; costCentres: DimensionRow[]; locations: DimensionRow[] }
+/* The support levels, with their people per shift, are the tenant's: set in Rota setup (module 8). */
+export interface DimCtx { departments: DimensionRow[]; costCentres: DimensionRow[]; locations: DimensionRow[]; supportLevels: readonly SupportLevel[] }
 export interface DimField {
   key: string; label: string; kind: 'text' | 'number' | 'bool' | 'select' | 'date';
   required?: boolean; code?: boolean; optional?: boolean; hint?: string; wide?: boolean;
@@ -27,7 +25,7 @@ export const DIM_SPECS: Record<DimensionKind, DimSpec> = {
       { key: 'department', label: 'Department', kind: 'select', optional: true, options: c => rows(c.departments) },
       { key: 'costCentre', label: 'Cost centre', kind: 'select', optional: true, options: c => rows(c.costCentres, true) },
       { key: 'level', label: 'Support level', kind: 'select', hint: 'Sets minimum staffing, which coverage is measured against.',
-        options: () => SUPPORT_LEVELS.map(l => ({ value: l.code, label: `${l.label} · ${l.min} per shift` })) },
+        options: c => c.supportLevels.map(l => ({ value: l.code, label: supportLevelText(l) })) },
       { key: 'minPerShift', label: 'People per shift', kind: 'number' },
       { key: 'manager', label: 'Manager', kind: 'text' },
       { key: 'address', label: 'Address', kind: 'text', wide: true },

@@ -39,8 +39,10 @@ export const EvidenceRow = z.object({
   employee: z.string(), employeeId: z.string(), event: z.string(), at: IsoDateTime, recipient: z.string(), channel: z.string(), ref: z.string(),
 });
 export type EvidenceRow = z.infer<typeof EvidenceRow>;
+/* The milestones and who is told, as Rota setup sets them (module 8), shown with the evidence. */
+export const FlexMonitoring = z.object({ milestones: z.array(z.number()), notifyTo: z.string() });
 /* Only the events this tenant can raise: one whose module or feature is off is left out. */
-export const NotificationMatrix = RecordMeta.extend({ events: z.array(MatrixEvent), evidence: z.array(EvidenceRow).nullable() });
+export const NotificationMatrix = RecordMeta.extend({ events: z.array(MatrixEvent), evidence: z.array(EvidenceRow).nullable(), flexMonitoring: FlexMonitoring.nullable() });
 export type NotificationMatrix = z.infer<typeof NotificationMatrix>;
 export const UpdateMatrix = z.strictObject({
   events: z.record(z.string().max(40), z.strictObject({ employee: NotifChannel, manager: NotifChannel, admin: NotifChannel }).partial()),

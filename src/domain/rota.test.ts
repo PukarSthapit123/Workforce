@@ -1,5 +1,5 @@
 import {
-  DEFAULT_ROTA_CONFIG, applyPattern, amendedAuditText, amendedNotice, assignCheck, claimRefusal, clearPreview, clearProblem,
+  DEFAULT_ROTA_CONFIG, DEFAULT_SUPPORT_LEVELS, changedLevelMins, milestonesText, supportLevelText, supportLevelsOf, type SupportLevel, applyPattern, amendedAuditText, amendedNotice, assignCheck, claimRefusal, clearPreview, clearProblem,
   clearSummary, clearWrites, confirmEarlyProblem, confirmProblem, confirmSelfProblem, confirmSummary, consecRun, copyProblem, copySummary, copyWeek, coverAskAllMove, coverClosed,
   coverEscalateMove, coverNext, coverReasonMove, coverage, coverageIssueNotice, emptyWeek, eligibility, gapDays, gapsAt, genLabel, genRange,
   generateActivates, generateAuditText, generateSummary, hoursPosition, ineligibleMessage, isValidCell, itRequestFor, lineRestIssues, minFor, newCover,
@@ -532,5 +532,32 @@ describe('the timesheet\'s rota line (D16)', () => {
     expect(rotaDayOf('X', SHIFTS)).toMatchObject({ code: '', name: 'Rest day' });
     expect([rotaDayOf('V', SHIFTS).name, rotaDayOf('S', SHIFTS).name]).toEqual(['Annual leave', 'Sickness']);
     expect(rotaDaysOf(line('E', '', 'V'), SHIFTS).map(d => d.code)).toEqual(['E', '', 'V', '', '', '', '']);
+  });
+});
+
+describe('module 8: support levels and flexible-worker milestones', () => {
+  const ok = { employeeTypes: ['shift'], shiftCodes: ['E', 'L', 'N'], supportLevels: DEFAULT_SUPPORT_LEVELS };
+  const levels = (code: string, patch: Partial<SupportLevel>) => DEFAULT_SUPPORT_LEVELS.map(l => (l.code === code ? { ...l, ...patch } : l));
+  test('a level keeps its code, name and place; only its people per shift changes, as a whole number from 1 to 50', () => {
+    expect(rotaConfigProblem({ ...DEFAULT_ROTA_CONFIG, supportLevels: levels('High', { min: 6 }) }, STAGES, {}, ok)).toBeNull();
+    expect(rotaConfigProblem({ ...DEFAULT_ROTA_CONFIG, supportLevels: levels('High', { label: 'Top' }) }, STAGES, {}, ok)?.field).toBe('supportLevels');
+    expect(rotaConfigProblem({ ...DEFAULT_ROTA_CONFIG, supportLevels: DEFAULT_SUPPORT_LEVELS.slice(1) }, STAGES, {}, ok)?.field).toBe('supportLevels');
+    expect(rotaConfigProblem({ ...DEFAULT_ROTA_CONFIG, supportLevels: levels('Low', { min: 2.5 }) }, STAGES, {}, ok))
+      .toEqual({ field: 'supportLevels.Low', message: 'Low support needs a whole number of people per shift from 1 to 50.' });
+  });
+  test('milestones run earliest first, each once, within a year; the recipient is one of the prototype\'s three', () => {
+    const p = (o: Partial<typeof DEFAULT_ROTA_CONFIG>) => rotaConfigProblem({ ...DEFAULT_ROTA_CONFIG, ...o }, STAGES, {}, ok)?.field;
+    expect(p({ flexMilestones: [4, 8, 12], flexNotifyTo: 'HR administrators and Service Manager' })).toBeUndefined();
+    expect(p({ flexMilestones: [] })).toBe('flexMilestones');
+    expect(p({ flexMilestones: [9, 9] })).toBe('flexMilestones');
+    expect(p({ flexMilestones: [53] })).toBe('flexMilestones');
+    expect(p({ flexNotifyTo: 'Payroll' })).toBe('flexNotifyTo');
+  });
+  test('a changed level names its new number; an older config reads the prototype\'s levels', () => {
+    expect(changedLevelMins(DEFAULT_SUPPORT_LEVELS, levels('Medium', { min: 5 }))).toEqual({ Medium: 5 });
+    expect(changedLevelMins(DEFAULT_SUPPORT_LEVELS, DEFAULT_SUPPORT_LEVELS)).toEqual({});
+    expect(supportLevelsOf({})).toEqual(DEFAULT_SUPPORT_LEVELS);
+    expect(supportLevelText({ code: 'High', label: 'High support', min: 4 })).toBe('High support · 4 per shift');
+    expect([milestonesText([9, 12]), milestonesText([4, 8, 12]), milestonesText([6])]).toEqual(['9 and 12 weeks', '4, 8 and 12 weeks', '6 weeks']);
   });
 });
