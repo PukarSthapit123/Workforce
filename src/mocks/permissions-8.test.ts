@@ -1,6 +1,7 @@
 import { server } from './node';
 import { store } from './store';
 import { Refusal } from '@/contract/common';
+import { TemplateApplied } from '@/contract/templates';
 import { caller, resetTo, snapshot, tokenFor, type Persona } from '@/test/api-helpers';
 
 /* Module 8 group 6: the permission sweep. Each write module 8 added or
@@ -85,4 +86,23 @@ test('without My leave an employee cannot ask for leave or cancel her own reques
   expect(refused(await emp('POST', '/api/v1/leave/requests', { type: 'AL', part: 'full', from: '2026-09-14', to: '2026-09-14' }))).toEqual([403, 'capability']);
   expect(refused(await emp('POST', '/api/v1/leave/requests/lr_3/cancel', undefined, 1))).toEqual([403, 'capability']);
   expect(snapshot(...WRITES)).toEqual(before);
+});
+
+test('without Workforce master data, a template apply leaves the time zone and the other date and time settings alone (review I4)', async () => {
+  const admin = await as('admin');
+  const saved = await admin('POST', '/api/v1/templates', { name: 'Kept settings', description: '', scope: 'config' });
+  expect(saved.status).toBe(200);
+  const tenant = store.coll<{ version: number; timezone: string }>('tenant').tenant;
+  if (!tenant) throw new Error('no tenant');
+  tenant.timezone = 'Asia/Kathmandu';
+  revoke('admin', 'master_data');
+  const after = await as('admin'), before = snapshot('tenant');
+  expect(refused(await after('PATCH', '/api/v1/tenant/settings', { timezone: 'Europe/London' }, tenant.version))).toEqual([403, 'capability']);
+  expect(snapshot('tenant')).toEqual(before);
+  const r = await after('POST', '/api/v1/templates/tpl_kept_settings/apply', undefined, tenant.version);
+  expect(r.status).toBe(200);
+  const applied = TemplateApplied.parse(r.body);
+  expect(applied.plan.leftAlone).toContainEqual({ area: 'organisation', text: 'Date, time and calendar stay as they are. Changing them needs Workforce master data.' });
+  expect(applied.plan.changes.filter(l => l.area === 'organisation')).toEqual([]);
+  expect(store.coll<{ timezone: string }>('tenant').tenant?.timezone).toBe('Asia/Kathmandu');
 });

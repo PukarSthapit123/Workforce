@@ -3,7 +3,7 @@ import { FLAGS, SWITCH_CODES, ROLE_NAME_TAKEN, switchFlag, type FlagExtras } fro
 import {
   IN_USE, NOT_A_TEMPLATE, NO_SUCH_TEMPLATE, SHIPPED_KEYS, SHIPPED_REMOVE, SHIPPED_TEMPLATES, TEMPLATE_NAME_REQUIRED, TEMPLATE_NAME_SHIPPED,
   TEMPLATE_SCOPES, UNREADABLE, captureTemplate, planApply, planSummary, readTemplateFile, removeProblem, templateFile, templateKey,
-  ONB_LEFT_ALONE, TYPES_LEFT_ALONE, captureOnboarding, templateNameProblem, templateSummary, type CaptureSource, type Template, type TenantState, type TemplateStructure,
+  ONB_LEFT_ALONE, SETTINGS_LEFT_ALONE, TYPES_LEFT_ALONE, captureOnboarding, templateNameProblem, templateSummary, type CaptureSource, type Template, type TenantState, type TemplateStructure,
 } from './templates';
 import { CHAIN_MODULES, DEFAULT_CHAIN, defaultChainFor, type ChainModule, type ChainStep } from './approvals';
 import { DEFAULT_SUPPORT_LEVELS } from './rota';
@@ -197,12 +197,17 @@ describe('the apply plan (D1)', () => {
       timezone: 'Pacific/Auckland', dateFormat: 'yyyy-mm-dd', clock: '12h', weekStart: 'Sunday', fullTimeWeeklyHours: 40,
       financialYear: { start: '2026-07-01', end: '2027-06-30' },
     } };
-    const p = planApply(t, socialState(), { mayRenameRoles: true, mayChangeChains: true, mayChangeTypes: true });
+    const p = planApply(t, socialState(), { mayRenameRoles: true, mayChangeChains: true, mayChangeTypes: true, mayChangeSettings: true });
     expect(p.steps.tenantSettings).toEqual(t.tenantSettings);
     expect(p.changes.filter(x => x.area === 'organisation').map(x => x.text)).toEqual([
       'Time zone: Pacific/Auckland.', 'Date format: yyyy-mm-dd.', 'Clock: 12h.', 'Week starts on: Sunday.',
       'Full-time weekly hours: 40.', 'Financial year: 01/07/2026 to 30/06/2027.',
     ]);
+    /* review I4: without Workforce master data they are left alone, as PATCH /tenant/settings refuses them */
+    const no = planApply(t, socialState(), { mayRenameRoles: true, mayChangeChains: true, mayChangeTypes: true });
+    expect(no.steps.tenantSettings).toEqual({});
+    expect(no.changes.filter(x => x.area === 'organisation')).toEqual([]);
+    expect(no.leftAlone).toContainEqual({ area: 'organisation', text: SETTINGS_LEFT_ALONE });
   });
 });
 

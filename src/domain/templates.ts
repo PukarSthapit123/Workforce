@@ -485,10 +485,13 @@ function moduleSteps(t: Template, s: TenantState) {
    `mayChangeChains` is false without the approval framework: the chains are
    then left alone. `mayChangeTypes` is false without Employee types and
    configuration: employee types are then left alone (Sites off still takes the
-   site capability away, as the module switch does). */
+   site capability away, as the module switch does). `mayChangeSettings` is
+   false without Workforce master data, which PATCH /tenant/settings needs: the
+   date, time and calendar settings are then left alone (review I4). */
+export const SETTINGS_LEFT_ALONE = 'Date, time and calendar stay as they are. Changing them needs Workforce master data.';
 export const TYPES_LEFT_ALONE = 'Employee types stay as they are. Changing them needs Employee types and configuration.';
 export function planApply(t: Template, s: TenantState,
-  opts: { mayRenameRoles: boolean; mayChangeChains: boolean; mayChangeTypes: boolean; mayChangeOnboarding?: boolean }): ApplyPlan {
+  opts: { mayRenameRoles: boolean; mayChangeChains: boolean; mayChangeTypes: boolean; mayChangeOnboarding?: boolean; mayChangeSettings?: boolean }): ApplyPlan {
   const changes: PlanLine[] = [], added: PlanLine[] = [], leftAlone: PlanLine[] = [];
   const steps: ApplySteps = { modules: [], finalModules: {}, finalRestore: {}, flags: [], labels: {}, typesAdded: [], typesUpdated: [], roleNames: {}, chains: [],
     structure: { departments: [], costCentres: [], locations: [], jobProfiles: [], contracts: [] },
@@ -591,19 +594,21 @@ export function planApply(t: Template, s: TenantState,
   planOnboarding(t, s, opts.mayChangeOnboarding === true, onbFeatures(mods.modules, flags), { changes, added, leftAlone }, steps);
 
   if (t.tenantSettings && s.tenantSettings) {
-    const wanted = t.tenantSettings, held = s.tenantSettings;
+    const wanted = t.tenantSettings, held = s.tenantSettings, settings: ApplySteps['tenantSettings'] = {}, lines: PlanLine[] = [];
     const scalar: (keyof Omit<TemplateTenantSettings, 'financialYear'>)[] = ['timezone', 'dateFormat', 'clock', 'weekStart', 'fullTimeWeeklyHours'];
     for (const key of scalar) {
       if (wanted[key] === held[key]) continue;
-      Object.assign(steps.tenantSettings, { [key]: wanted[key] });
+      Object.assign(settings, { [key]: wanted[key] });
       const label = key === 'dateFormat' ? 'Date format' : key === 'weekStart' ? 'Week starts on' : key === 'clock' ? 'Clock'
         : key === 'fullTimeWeeklyHours' ? 'Full-time weekly hours' : 'Time zone';
-      changes.push({ area: 'organisation', text: `${label}: ${wanted[key]}.` });
+      lines.push({ area: 'organisation', text: `${label}: ${wanted[key]}.` });
     }
     if (wanted.financialYear.start !== held.financialYear.start || wanted.financialYear.end !== held.financialYear.end) {
-      steps.tenantSettings.financialYear = { ...wanted.financialYear };
-      changes.push({ area: 'organisation', text: `Financial year: ${formatDmy(wanted.financialYear.start)} to ${formatDmy(wanted.financialYear.end)}.` });
+      settings.financialYear = { ...wanted.financialYear };
+      lines.push({ area: 'organisation', text: `Financial year: ${formatDmy(wanted.financialYear.start)} to ${formatDmy(wanted.financialYear.end)}.` });
     }
+    if (lines.length && opts.mayChangeSettings !== true) leftAlone.push({ area: 'organisation', text: SETTINGS_LEFT_ALONE });
+    else { steps.tenantSettings = settings; changes.push(...lines); }
   }
   if (t.leaveConfig && s.leaveConfig && JSON.stringify(t.leaveConfig) !== JSON.stringify(s.leaveConfig)) {
     steps.leaveConfig = structuredClone(t.leaveConfig);

@@ -13,7 +13,7 @@ import { bump, refuse } from './http';
 import { serve } from './serve';
 import { actor, requireCapability } from './auth';
 import { writeAudit } from './audit';
-import { codesOf, people, recordAt } from './world';
+import { codesOf, people, recordAt, type Signed } from './world';
 import { requireWeekStartChangeAllowed, rotaActor, rotaOff, rotaOn, saveTenant, sitesOff, tenantRec, tsConfig, view, type StoredTenant } from './tenant';
 import meta from './seed/meta.json';
 import { chainRecord, chainsNow, writeChain } from './approvals';
@@ -56,6 +56,11 @@ const leaveTemplateConfig = () => {
   const c = leaveConfigNow();
   return c ? leaveConfigValues(c) : undefined;
 };
+
+/* What the caller may change through an apply: each part needs the capability its own page needs (review I4: the date,
+   time and calendar settings need Workforce master data, as PATCH /tenant/settings does). */
+const applyOpts = (session: Signed) => ({ mayRenameRoles: session.caps.includes('perm_cfg'), mayChangeChains: session.caps.includes('framework'),
+  mayChangeTypes: session.caps.includes('type_cfg'), mayChangeOnboarding: session.caps.includes('onb_cfg'), mayChangeSettings: session.caps.includes('master_data') });
 
 /* Module 8: the Rota setup settings a template keeps */
 const rotaTemplateConfig = () => {
@@ -265,7 +270,7 @@ export const templateHandlers = [
 
   serve(getTemplatePlan, ({ session, params }) => {
     const template = templateAt(params.key);
-    return planView(params.key, template, planApply(template, stateOf(tenantRec()), { mayRenameRoles: session.caps.includes('perm_cfg'), mayChangeChains: session.caps.includes('framework'), mayChangeTypes: session.caps.includes('type_cfg'), mayChangeOnboarding: session.caps.includes('onb_cfg') }));
+    return planView(params.key, template, planApply(template, stateOf(tenantRec()), applyOpts(session)));
   }),
 
   serve(applyTemplate, ({ session, params, checkVersion }) => {
@@ -273,7 +278,7 @@ export const templateHandlers = [
     checkVersion(t);
     const template = templateAt(params.key);
     if (hasStructure(template)) requireCapability(session, 'master_data');
-    const plan = planApply(template, stateOf(t), { mayRenameRoles: session.caps.includes('perm_cfg'), mayChangeChains: session.caps.includes('framework'), mayChangeTypes: session.caps.includes('type_cfg'), mayChangeOnboarding: session.caps.includes('onb_cfg') });
+    const plan = planApply(template, stateOf(t), applyOpts(session));
     if (plan.steps.tenantSettings.weekStart) requireWeekStartChangeAllowed(t, plan.steps.tenantSettings.weekStart);
     const currentLeave = leaveConfigNow();
     if (plan.steps.leaveConfig && currentLeave) {
