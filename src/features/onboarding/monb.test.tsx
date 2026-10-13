@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { store } from '@/mocks/store';
 import { tid } from '@/testids';
 import type { OnboardingCaseRecord, OnboardingConfigRecord, OnbPolicyRecord } from '@/contract/onboarding';
-import { POLICY_NAME_NEEDED, POLICY_NAME_TAKEN, REQUIRED_CHANGE_WARNING, STEP_UNAVAILABLE, stepSwitchText } from '@/domain/onboarding';
+import { DOC_NAME_TAKEN, POLICY_NAME_NEEDED, POLICY_NAME_TAKEN, REQUIRED_CHANGE_WARNING, STEP_UNAVAILABLE, stepSwitchText } from '@/domain/onboarding';
 import { buildNav } from '@/domain/nav';
 import { expectTestIdCoverage } from '@/test/testid-coverage';
 import { renderPage, withFakeServer } from '@/test/render-page';
@@ -203,5 +203,50 @@ describe('Onboarding setup: who reaches it', () => {
     renderPage(<OnboardingSetupPage />, '/setup/monb');
     expect(await screen.findByTestId(tid.monb.error)).toBeInTheDocument();
     expect(screen.queryByTestId(tid.monb.card('steps'))).toBeNull();
+  });
+});
+
+describe('Onboarding setup: documents the tenant adds (module 8)', () => {
+  test('Add a document checks the name in the form, then adds it optional with its hint; it is renamed and removed from its row; built-in ones have no row actions', async () => {
+    await open();
+    expect(screen.queryByTestId(tid.monb.docRename('rtw'))).toBeNull();
+    await userEvent.click(screen.getByTestId(tid.monb.docAdd));
+    await userEvent.type(screen.getByTestId(tid.monb.docName), 'photograph');
+    await userEvent.click(screen.getByTestId(tid.monb.docSave));
+    expect(screen.getByTestId(tid.monb.docWarn)).toHaveTextContent(DOC_NAME_TAKEN);
+    await userEvent.clear(screen.getByTestId(tid.monb.docName));
+    await userEvent.type(screen.getByTestId(tid.monb.docName), 'DBS check');
+    await userEvent.type(screen.getByTestId(tid.monb.docHint), 'An enhanced certificate.');
+    await userEvent.click(screen.getByTestId(tid.monb.docSave));
+    await expectToast('DBS check added. It is optional until you make it required and save.');
+    const row = await screen.findByTestId(tid.monb.doc('dbs-check'));
+    expect(row).toHaveTextContent('An enhanced certificate.');
+    expect(within(row).getByTestId(tid.monb.docCustom('dbs-check'))).toHaveTextContent('Added here');
+    expect(within(row).getByTestId(tid.monb.docReq('dbs-check'))).toHaveAttribute('aria-checked', 'false');
+    expectTestIdCoverage(document.body);
+    await userEvent.click(within(row).getByTestId(tid.monb.docRename('dbs-check')));
+    await userEvent.clear(screen.getByTestId(tid.monb.docName));
+    await userEvent.type(screen.getByTestId(tid.monb.docName), 'Enhanced DBS check');
+    await userEvent.click(screen.getByTestId(tid.monb.docSave));
+    await waitFor(() => expect(screen.getByTestId(tid.monb.doc('dbs-check'))).toHaveTextContent('Enhanced DBS check'));
+    await userEvent.click(screen.getByTestId(tid.monb.docRemove('dbs-check')));
+    await userEvent.click(within(dialog()).getByRole('button', { name: 'Remove' }));
+    await waitFor(() => expect(screen.queryByTestId(tid.monb.doc('dbs-check'))).toBeNull());
+    expect(acts()).toEqual(['Onboarding document added', 'Onboarding document renamed', 'Onboarding document removed']);
+  });
+
+  test('switching a document off waits for Save, and while it waits the row actions wait too', async () => {
+    await open();
+    await userEvent.click(screen.getByTestId(tid.monb.docAdd));
+    await userEvent.type(screen.getByTestId(tid.monb.docName), 'DBS check');
+    await userEvent.click(screen.getByTestId(tid.monb.docSave));
+    await screen.findByTestId(tid.monb.doc('dbs-check'));
+    await userEvent.click(screen.getByTestId(tid.monb.docOn('licence')));
+    expect(screen.getByTestId(tid.monb.docLocked)).toBeInTheDocument();
+    expect(screen.getByTestId(tid.monb.docAdd)).toBeDisabled();
+    expect(screen.getByTestId(tid.monb.docRemove('dbs-check'))).toBeDisabled();
+    await userEvent.click(screen.getByTestId(tid.monb.save));
+    await waitFor(() => expect(config().documents.find(d => d.id === 'licence')?.on).toBe(false));
+    await waitFor(() => expect(screen.getByTestId(tid.monb.docAdd)).toBeEnabled());
   });
 });

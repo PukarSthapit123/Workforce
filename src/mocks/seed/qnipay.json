@@ -5352,7 +5352,9 @@
       "verify": "hr",
       "blocks": true,
       "expiry": true,
-      "hint": "Passport, birth certificate, or a visa or biometric residence permit."
+      "hint": "Passport, birth certificate, or a visa or biometric residence permit.",
+      "on": true,
+      "custom": false
      },
      {
       "id": "addr",
@@ -5361,7 +5363,9 @@
       "verify": "hr",
       "blocks": false,
       "expiry": false,
-      "hint": "A utility bill or bank statement issued in the last three months."
+      "hint": "A utility bill or bank statement issued in the last three months.",
+      "on": true,
+      "custom": false
      },
      {
       "id": "photo",
@@ -5370,7 +5374,9 @@
       "verify": "either",
       "blocks": false,
       "expiry": false,
-      "hint": "A recent photograph against a plain background."
+      "hint": "A recent photograph against a plain background.",
+      "on": true,
+      "custom": false
      },
      {
       "id": "licence",
@@ -5379,7 +5385,9 @@
       "verify": "mgr",
       "blocks": false,
       "expiry": true,
-      "hint": "Only if the role involves driving."
+      "hint": "Only if the role involves driving.",
+      "on": true,
+      "custom": false
      },
      {
       "id": "cert",
@@ -5388,7 +5396,9 @@
       "verify": "mgr",
       "blocks": false,
       "expiry": true,
-      "hint": "Qualifications relevant to the role."
+      "hint": "Qualifications relevant to the role.",
+      "on": true,
+      "custom": false
      }
     ]
    }

@@ -21,7 +21,7 @@ import {
   blockerContext, caseOf, casesColl, featuresNow, onbConfig, onbModuleOn, policiesColl, policiesNow, putCase, stillOnboarding, type StoredCase, type StoredConfig, type StoredPolicy,
 } from './onboarding-cases';
 import {
-  ackOnboardingPolicy, addOnboardingPolicy, chaseStarter, editOnboardingPolicy, getMyOnboarding, getOnboardingSetup, getStarterOnboarding,
+  ackOnboardingPolicy, addOnboardingDocument, addOnboardingPolicy, removeOnboardingDocument, renameOnboardingDocument, chaseStarter, editOnboardingPolicy, getMyOnboarding, getOnboardingSetup, getStarterOnboarding,
   getTeamOnboarding, inviteStarter, readOnboardingPolicy, rejectOnboardingDocument, removeOnboardingPolicy, saveOnboardingStep, startStarter,
   submitOnboarding, updateOnboardingConfig, uploadOnboardingDocument, uploadOnboardingPolicy, verifyOnboardingDocument,
   type OnbDocumentView, type OnboardingDetail, type OnbPerson, type OnbPolicySetupView, type OnbStepView, type StarterOnboarding, type TrackerRow, type OnbQueueRow,
@@ -32,6 +32,7 @@ import {
   markRead, nextRef, noEmailText, outstandingText, policyAcknowledged, policyFromDraft, policyProblem, policyRemovedText, policySavedText,
   policyUploadedText, progress, progressText, removePolicyText, saveStep, setPolicyAck, startProblem, stepAvailable, stepNotAsked, stepOpen,
   stepSavedText, stepSwitchText, stepsAsked, submitCase, submittedText, taskState, configProblem, uploadedText, uploadProblem, verifierLabel,
+  BUILT_IN_DOC, documentAddedText, documentProblem, documentRemovedText, documentRenamedText, documentUsers, newCustomDocument,
   isStarterState, type OnbDocument, type OnboardingCase, type OnboardingConfig, type OnbFeatures, type OnbRefusal, type StepContext, type Decision,
 } from '@/domain/onboarding';
 import { LIFECYCLE, isPersonState, transitionProblem } from '@/domain/lifecycle';
@@ -47,6 +48,12 @@ const NOT_FOUND = (message: string, next = 'Reload the page.'): never => refuse(
 /* With the Onboarding module off the whole module is hidden, and so refused here. */
 function requireOnboarding() {
   if (!onbModuleOn()) refuse(403, { code: 'module-off', message: 'Onboarding is switched off for this organisation.', next: 'An administrator can switch the Onboarding module on in Qnipay setup.' });
+}
+/* A document the tenant added: a built-in one is switched off, never renamed or removed. */
+function customDoc(c: StoredConfig, id: string): OnbDocument {
+  const d = c.documents.find(x => x.id === id) ?? NOT_FOUND(`There is no document "${id}".`, 'Reload the page to see the documents.');
+  if (!d.custom) refuse(409, { code: 'built-in', field: `documents.${d.id}`, message: BUILT_IN_DOC, next: 'Switch it off and save if new starters should not be asked for it.' });
+  return d;
 }
 /* A domain refusal, with the status its code carries. */
 const STATUS: Record<string, number> = { NOT_FOUND: 404, SUBMITTED: 409, OUTSTANDING: 409, STALE: 409, FIXED: 409, FLAG_OFF: 409, NOT_READY: 409 };
@@ -354,7 +361,7 @@ export const onboardingHandlers = [
     const steps = c.steps.map((s, i) => ({ ...s, on: s.fixed ? true : body.steps[i]?.on ?? s.on }));
     const documents = c.documents.map((d, i) => {
       const n = body.documents[i];
-      return n ? { ...d, req: n.req, verify: n.verify, blocks: n.blocks, expiry: n.expiry } : d;
+      return n ? { ...d, req: n.req, verify: n.verify, blocks: n.blocks, expiry: n.expiry, on: n.on } : d;
     });
     const switched = steps.filter((s, i) => s.on !== c.steps[i]?.on);
     const docsChanged = documents.filter((d, i) => !sameJson(d, c.documents[i]));
@@ -367,6 +374,61 @@ export const onboardingHandlers = [
     const after = { ...(switched.length ? { steps: byId(switched, s => s.on) } : {}), ...(docsChanged.length ? { documents: byId(docsChanged, d => d) } : {}) };
     const summary = [...switched.map(s => stepSwitchText(s.label, s.on)), ...(docsChanged.length ? ['Document settings saved.'] : [])].join(' ');
     const auditId = writeAudit({ who: actor(session), act: 'Onboarding setup saved', entity: 'onboardingConfig', entityId: c.id, before, after: { ...after, detail: summary } });
+    return { record: saved, summary, auditId };
+  }),
+
+  /* Module 8: a document the tenant adds, renames or removes, each a write of its own on the config (If-Match), with one audit row. */
+  serve(addOnboardingDocument, ({ session, body, checkVersion }) => {
+    requireOnboarding();
+    const c = onbConfig();
+    checkVersion(c);
+    const bad = documentProblem(body, c.documents);
+    if (bad) return refuseOnb(bad);
+    if (c.documents.length >= 20) return refuseOnb({ code: 'VALIDATION', field: 'label', message: 'There can be at most 20 documents.', next: 'Remove one you added, or switch one off.' });
+    const doc = newCustomDocument(body, c.documents);
+    const saved: StoredConfig = bump(c, { documents: [...c.documents, doc] });
+    store.coll<StoredConfig>('onboardingConfig')[c.id] = saved;
+    const summary = documentAddedText(doc.label);
+    const auditId = writeAudit({ who: actor(session), act: 'Onboarding document added', entity: 'onboardingConfig', entityId: c.id, before: null,
+      after: { document: doc.id, label: doc.label, hint: doc.hint, detail: summary } });
+    return { record: saved, summary, auditId };
+  }),
+
+  serve(renameOnboardingDocument, ({ session, params, body, checkVersion }) => {
+    requireOnboarding();
+    const c = onbConfig();
+    checkVersion(c);
+    const d = customDoc(c, params.doc);
+    const bad = documentProblem(body, c.documents, d.id);
+    if (bad) return refuseOnb(bad);
+    const label = body.label.trim(), hint = (body.hint ?? '').trim(), summary = documentRenamedText(label);
+    if (label === d.label && hint === d.hint) return { record: c, summary, auditId: null };
+    const saved: StoredConfig = bump(c, { documents: c.documents.map(x => (x.id === d.id ? { ...x, label, hint } : x)) });
+    store.coll<StoredConfig>('onboardingConfig')[c.id] = saved;
+    const auditId = writeAudit({ who: actor(session), act: 'Onboarding document renamed', entity: 'onboardingConfig', entityId: c.id,
+      before: { document: d.id, label: d.label, hint: d.hint }, after: { document: d.id, label, hint } });
+    return { record: saved, summary, auditId };
+  }),
+
+  serve(removeOnboardingDocument, ({ session, params, checkVersion }) => {
+    requireOnboarding();
+    const c = onbConfig();
+    checkVersion(c);
+    const d = customDoc(c, params.doc);
+    /* D2: nothing in use is deleted; the refusal names who holds it */
+    const users = documentUsers(d.id, Object.values(casesColl()));
+    if (users.length) {
+      const names = users.map(code => personByCode(code)?.name ?? code);
+      return refuse(409, { code: 'in-use', field: `documents.${d.id}`,
+        message: `${d.label} is on the onboarding of ${names.length > 3 ? `${names.slice(0, 3).join(', ')} and ${names.length - 3} more` : names.join(', ')}, so it cannot be removed.`,
+        next: 'Switch it off instead, so new starters are no longer asked for it.',
+        usedBy: [{ kind: 'onboarding', count: users.length, examples: names.slice(0, 3) }] });
+    }
+    const saved: StoredConfig = bump(c, { documents: c.documents.filter(x => x.id !== d.id) });
+    store.coll<StoredConfig>('onboardingConfig')[c.id] = saved;
+    const summary = documentRemovedText(d.label);
+    const auditId = writeAudit({ who: actor(session), act: 'Onboarding document removed', entity: 'onboardingConfig', entityId: c.id,
+      before: { document: d.id, label: d.label, hint: d.hint }, after: null });
     return { record: saved, summary, auditId };
   }),
 

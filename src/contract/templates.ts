@@ -15,6 +15,7 @@ import { EntryMode, PayBasis, TypeCapability, WorkerCategory } from './employee-
 import { OnbStepId, Verifier } from './onboarding';
 import { isTimeZone } from '@/domain/time';
 import { LeaveConfigData } from './leave';
+import { SupportLevel } from './rota';
 
 const Text = (max: number) => z.string().trim().max(max);
 const Code = z.string().trim().regex(/^[A-Z0-9][A-Z0-9_.-]{0,19}$/, 'A code is capital letters, digits, a dash, a dot or an underscore, with no spaces.');
@@ -37,7 +38,9 @@ const Structure = z.object({
 /* D12 (module 5): the onboarding setup, as switches and settings by id and each policy's text. A policy's file never travels. */
 const Onboarding = z.object({
   steps: z.array(z.object({ id: OnbStepId, on: z.boolean() })).max(10),
-  documents: z.array(z.object({ id: z.string().max(20), req: z.boolean(), verify: Verifier, blocks: z.boolean(), expiry: z.boolean() })).max(20),
+  documents: z.array(z.object({ id: z.string().max(20), req: z.boolean(), verify: Verifier, blocks: z.boolean(), expiry: z.boolean(),
+    /* module 8: asked for, and a document the tenant added, with its name and hint */
+    on: z.boolean().optional(), custom: z.boolean().optional(), label: Text(60).optional(), hint: Text(200).optional() })).max(20),
   policies: z.array(z.object({ id: z.string().regex(/^[a-z0-9_]{1,80}$/, 'A policy id is lower-case letters, digits or an underscore.'), label: Text(80).min(1),
     ver: Text(20), sum: Text(300), body: z.array(Text(2000)).max(40) })).max(40),
 });
@@ -55,6 +58,8 @@ export const Template = z.object({
   employeeTypes: z.array(TemplateType).max(50),
   roleNames: RoleNames.optional(), approvalChain: z.array(ChainStep).max(40).optional(), structure: Structure.optional(), onboarding: Onboarding.optional(),
   tenantSettings: TenantSettings.optional(), leaveConfig: LeaveConfigData.optional(),
+  /* module 8: each support level's people per shift, and the flexible-worker milestones and who is told */
+  rotaConfig: z.object({ supportLevels: z.array(SupportLevel).max(10), flexMilestones: z.array(z.number()).max(12), flexNotifyTo: Text(80) }).optional(),
 });
 export type Template = z.infer<typeof Template>;
 export const TemplateFile = z.object({ kind: z.literal('qnipay.template'), v: z.literal(1), key: z.string(), template: Template });
@@ -77,7 +82,7 @@ export const TemplateList = z.object({ templates: z.array(TemplateRow), inUse: z
 export type TemplateList = z.infer<typeof TemplateList>;
 
 export const PlanLine = z.object({
-  area: z.enum(['modules', 'features', 'labels', 'types', 'roles', 'chain', 'structure', 'people', 'organisation', 'onboarding', 'leave']), text: z.string(),
+  area: z.enum(['modules', 'features', 'labels', 'types', 'roles', 'chain', 'structure', 'people', 'organisation', 'onboarding', 'leave', 'rota']), text: z.string(),
 });
 export type PlanLine = z.infer<typeof PlanLine>;
 /* D1: what an apply changes, what it adds and what it leaves alone. */

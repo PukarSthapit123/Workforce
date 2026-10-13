@@ -461,7 +461,7 @@ const onbSentence = s => plain(String(s || '').replace(/\s+—\s+(?=[a-z][^.—]
 function onboarding(data, people) {
   const steps = (data.ONB_STEPS || literalOnbSteps).map(s => ({ id: s.id, label: s.label, on: s.on !== false, fixed: !!s.fixed, desc: onbSentence(s.desc) }));
   const documents = (data.ONB_DOCS || literalOnbDocs).map(d => ({ id: d.id, label: d.label, req: !!d.req, verify: d.verify, blocks: !!d.blocks,
-    expiry: !!d.expiry, hint: onbSentence(d.hint) }));
+    expiry: !!d.expiry, hint: onbSentence(d.hint), on: true, custom: false }));
   const onboardingConfig = meta({ id: 'onboardingConfig', steps, documents });
   const onboardingPolicies = byId((data.ONB_POLICIES || literalOnbPolicies).map((p, i) => meta({ id: `pol_${p.id}`, label: p.label, ver: p.ver,
     sum: onbSentence(p.sum), body: (p.body || []).map(onbSentence), order: i })));
@@ -514,7 +514,9 @@ function rota(data, people) {
     shift: f.code, personCode: f.eid, name: f.by, confirmed: !!f.confirmed, itRequest: f.it || '' })));
   const fulfilStages = literalFulfilStages.map(s => ({ n: s.n, audience: s.audience, wait: s.wait, channel: s.ch, next: s.next }));
   const types = Object.fromEntries(Object.entries(data.TYPES || {}).filter(([, t]) => t.rota).map(([k, t]) => [k, { ...t.rota }]));
-  const rotaConfig = meta({ id: 'rotaConfig', ...(data.ROTA_CFG || {}), fulfilStages, types });
+  /* module 8: the support levels and their people per shift are the tenant's, kept on Rota setup */
+  const supportLevels = literalSupportLevels.map(l => ({ code: l.code, label: l.label, min: l.min }));
+  const rotaConfig = meta({ id: 'rotaConfig', ...(data.ROTA_CFG || {}), fulfilStages, types, supportLevels });
   return { shiftTypes, patterns, rotaWeeks: weeks, rotaProfiles, coverRequests, filledShifts, rotaConfig: { rotaConfig } };
 }
 
@@ -695,6 +697,7 @@ const SICK_REASONS = leaveRules.DEFAULT_LEAVE_CONFIG.sicknessReasons;
 /* Module 5: the onboarding stores, read from the source when the store lacks them. */
 const literalOnbSteps = literal('ONB_STEPS');
 const literalOnbDocs = literal('ONB_DOCS');
+const literalSupportLevels = literal('SUPPORT_LEVELS');
 const literalOnbPolicies = literal('ONB_POLICIES');
 const onboardingRules = await tsImport('../src/domain/onboarding.ts', import.meta.url);
 /* The capture field catalogue, less any money: the £ value on each allowance and the expenses-to-claim field. */

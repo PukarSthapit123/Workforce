@@ -10,14 +10,14 @@ import { useRecordMutation } from './mutation';
 import { notificationKeys } from './notifications';
 import { peopleKeys } from './people';
 import {
-  ackOnboardingPolicy, addOnboardingPolicy, chaseStarter, editOnboardingPolicy, getMyOnboarding, getOnboardingSetup, getStarterOnboarding,
+  ackOnboardingPolicy, addOnboardingDocument, addOnboardingPolicy, removeOnboardingDocument, renameOnboardingDocument, chaseStarter, editOnboardingPolicy, getMyOnboarding, getOnboardingSetup, getStarterOnboarding,
   getTeamOnboarding, inviteStarter, readOnboardingPolicy, rejectOnboardingDocument, removeOnboardingPolicy, saveOnboardingStep, startStarter,
   submitOnboarding, updateOnboardingConfig, uploadOnboardingDocument, uploadOnboardingPolicy, verifyOnboardingDocument,
   type Blocker, type CaseChanged, type CaseSubmitted, type OnbDocumentRecord, type OnbDocumentView, type OnbFeatures, type OnbFileRecord,
   type OnboardingCaseRecord, type OnboardingConfigRecord, type OnboardingConfigSaved, type OnboardingDetail, type OnboardingSetup, type OnbPerson,
   type OnbPolicySetupView, type OnbPolicyView, type OnbProgress, type OnbQueueRow, type OnbStepRecord, type OnbStepView, type PolicyDraft,
   type PolicyRemoved, type PolicySaved, type PolicyUploaded, type SaveStep, type StarterChased, type StarterMoved, type StarterOnboarding, type SubmitOnboarding,
-  type TeamOnboarding, type TrackerRow, type UpdateOnboardingConfig, type UploadFile,
+  type TeamOnboarding, type TrackerRow, type UpdateOnboardingConfig, type UploadFile, type DocumentDraft,
 } from '@/contract/onboarding';
 
 export const onboardingKeys = {
@@ -96,6 +96,21 @@ export const useSaveOnboardingConfig = () => useRecordMutation({
   mutationFn: (v: { config: Pick<OnboardingConfigRecord, 'version'>; body: UpdateOnboardingConfig }) => api(updateOnboardingConfig, { body: v.body, ifMatch: v.config.version }),
   recordKey: () => 'onboarding/config', invalidates: MINE,
 });
+/* Module 8: a document the tenant adds, renames or removes is a write of its own on the config (If-Match). */
+type ConfigRef = Pick<OnboardingConfigRecord, 'version'>;
+export const useAddOnboardingDocument = () => useRecordMutation({
+  mutationFn: (v: { config: ConfigRef; body: DocumentDraft }) => api(addOnboardingDocument, { body: v.body, ifMatch: v.config.version }),
+  recordKey: () => 'onboarding/config', invalidates: MINE,
+});
+export const useRenameOnboardingDocument = () => useRecordMutation({
+  mutationFn: (v: { config: ConfigRef; doc: string; body: DocumentDraft }) =>
+    api(renameOnboardingDocument, { params: { doc: v.doc }, body: v.body, ifMatch: v.config.version }),
+  recordKey: () => 'onboarding/config', invalidates: MINE,
+});
+export const useRemoveOnboardingDocument = () => useRecordMutation({
+  mutationFn: (v: { config: ConfigRef; doc: string }) => api(removeOnboardingDocument, { params: { doc: v.doc }, ifMatch: v.config.version }),
+  recordKey: () => 'onboarding/config', invalidates: MINE,
+});
 export const useAddOnboardingPolicy = () => useRecordMutation({
   mutationFn: (body: PolicyDraft) => api(addOnboardingPolicy, { body }), recordKey: () => 'onboarding/policy/new', invalidates: MINE,
 });
@@ -117,5 +132,5 @@ export type {
   Blocker, CaseChanged, CaseSubmitted, OnbDocumentRecord, OnbDocumentView, OnbFeatures, OnbFileRecord, OnboardingCaseRecord, OnboardingConfigRecord,
   OnboardingConfigSaved, OnboardingDetail, OnboardingSetup, OnbPerson, OnbPolicySetupView, OnbPolicyView, OnbProgress, OnbQueueRow, OnbStepRecord,
   OnbStepView, PolicyDraft, PolicyRemoved, PolicySaved, PolicyUploaded, SaveStep, StarterChased, StarterMoved, StarterOnboarding, SubmitOnboarding, TeamOnboarding,
-  TrackerRow, UpdateOnboardingConfig, UploadFile,
+  TrackerRow, UpdateOnboardingConfig, UploadFile, DocumentDraft,
 };

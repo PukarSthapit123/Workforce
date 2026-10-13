@@ -7,6 +7,7 @@ import {
   setPolicyAck, startProblem, stepAvailable, stepNotAsked, stepProblem, stepSavedText, stepSwitchProblem, stepSwitchText, stepsAsked, stillToDoText,
   submitCase, submittedText, taskState, tooLargeText, uploadProblem, uploadState, uploadedText, PERSONAL_FIELDS, CONTACT_FIELDS, QUALIFICATION_FIELDS,
   type BlockerContext, type OnbDocument, type OnbFeatures, type OnbFile, type OnbPolicy, type OnboardingCase, type OnboardingConfig, type StepContext,
+  DOC_NAME_NEEDED, DOC_NAME_TAKEN, documentProblem, documentUsers, newCustomDocument, newDocumentId,
 } from './onboarding';
 
 const TODAY = '2026-08-13';
@@ -23,11 +24,11 @@ const CONFIG: OnboardingConfig = {
     { id: 'review', label: 'Review and submit', on: true, fixed: true, desc: '' },
   ],
   documents: [
-    { id: 'rtw', label: 'Right to work', req: true, verify: 'hr', blocks: true, expiry: true, hint: '' },
-    { id: 'addr', label: 'Proof of address', req: true, verify: 'hr', blocks: false, expiry: false, hint: '' },
-    { id: 'photo', label: 'Photograph', req: true, verify: 'either', blocks: false, expiry: false, hint: '' },
-    { id: 'licence', label: 'Driving licence', req: false, verify: 'mgr', blocks: false, expiry: true, hint: '' },
-    { id: 'cert', label: 'Certificates', req: false, verify: 'mgr', blocks: false, expiry: true, hint: '' },
+    { id: 'rtw', label: 'Right to work', req: true, verify: 'hr', blocks: true, expiry: true, hint: '', on: true, custom: false },
+    { id: 'addr', label: 'Proof of address', req: true, verify: 'hr', blocks: false, expiry: false, hint: '', on: true, custom: false },
+    { id: 'photo', label: 'Photograph', req: true, verify: 'either', blocks: false, expiry: false, hint: '', on: true, custom: false },
+    { id: 'licence', label: 'Driving licence', req: false, verify: 'mgr', blocks: false, expiry: true, hint: '', on: true, custom: false },
+    { id: 'cert', label: 'Certificates', req: false, verify: 'mgr', blocks: false, expiry: true, hint: '', on: true, custom: false },
   ],
 };
 const POLICIES: OnbPolicy[] = [
@@ -377,5 +378,34 @@ describe('activation (D6)', () => {
   });
   test('an invitation needs an email address', () => {
     expect(noEmailText('Hannah Vogel')).toBe('Hannah Vogel has no email address, so there is nowhere to send an invitation. Add one on their record.');
+  });
+});
+
+describe('module 8: documents switched off, and documents the tenant adds', () => {
+  const ALL_ON = { rtw: true, conv: true, wtd: true, qual: true, pol: true, sign: true, verify: true };
+  test('a document switched off is not asked for', () => {
+    const off: OnboardingConfig = { ...CONFIG, documents: CONFIG.documents.map(d => (d.id === 'addr' ? { ...d, on: false } : d)) };
+    expect(docsAsked(off, ALL_ON).map(d => d.id)).toEqual(['rtw', 'photo', 'licence', 'cert']);
+  });
+  test('a name is needed, at most 60 characters, and not one already held, whatever its case', () => {
+    expect(documentProblem({ label: ' ' }, CONFIG.documents)?.message).toBe(DOC_NAME_NEEDED);
+    expect(documentProblem({ label: 'x'.repeat(61) }, CONFIG.documents)?.field).toBe('label');
+    expect(documentProblem({ label: 'driving LICENCE' }, CONFIG.documents)?.message).toBe(DOC_NAME_TAKEN);
+    expect(documentProblem({ label: 'Driving licence', hint: 'new' }, CONFIG.documents, 'licence')).toBeNull();
+    expect(documentProblem({ label: 'DBS check', hint: 'y'.repeat(201) }, CONFIG.documents)?.field).toBe('hint');
+  });
+  test('a new document gets a short id not already taken, starts optional and checked by HR', () => {
+    const dbs = newCustomDocument({ label: ' DBS check ', hint: 'Enhanced.' }, CONFIG.documents);
+    expect(dbs).toEqual({ id: 'dbs-check', label: 'DBS check', hint: 'Enhanced.', req: false, verify: 'hr', blocks: false, expiry: false, on: true, custom: true });
+    expect(newDocumentId('DBS check!', [...CONFIG.documents, dbs])).toBe('dbs-check-2');
+    expect(newDocumentId('Professional registration', CONFIG.documents)).toBe('professional-reg');
+  });
+  test('a document is in use once a case has uploaded, checked or been asked for it', () => {
+    const base = emptyCase('EMP002');
+    const cases: OnboardingCase[] = [
+      base, { ...emptyCase('EMP003'), docs: { dbs: 'done' } }, { ...emptyCase('EMP004'), docs: { dbs: 'todo' } },
+      { ...emptyCase('EMP005'), asked: { steps: [], documents: [{ id: 'dbs', req: true, blocks: false }] } },
+    ];
+    expect(documentUsers('dbs', cases)).toEqual(['EMP003', 'EMP005']);
   });
 });

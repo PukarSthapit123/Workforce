@@ -1,17 +1,16 @@
 import { useState } from 'react';
-import { ClipboardList, Folder } from 'lucide-react';
+import { ClipboardList } from 'lucide-react';
 import { tid } from '@/testids';
 import {
-  ActionBar, AdminCard, Button, Card, CardNote, Caution, Empty, FormWarn, Page, PageHead, Pill, Row, ScopeBadge, SettingRow, SettingSelect, SwitchField,
-  toastInfo,
+  ActionBar, AdminCard, Button, Card, CardNote, Caution, Empty, FormWarn, Page, PageHead, Pill, ScopeBadge, SettingRow, SwitchField, toastInfo,
 } from '@/ui';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import { ApiError } from '@/api/client';
 import { useOnboardingSetup, useSaveOnboardingConfig, type OnboardingSetup, type UpdateOnboardingConfig } from '@/api/onboarding';
 import { useTenant } from '@/shell/shellData';
 import { versionKey } from '@/lib/latest';
-import { ALWAYS_ASKED, REQUIRED_CHANGE_WARNING, STEP_UNAVAILABLE, isVerifier } from '@/domain/onboarding';
-import { DENSE_TEXT, PoliciesCard } from './OnbSetupPolicies';
+import { ALWAYS_ASKED, REQUIRED_CHANGE_WARNING, STEP_UNAVAILABLE } from '@/domain/onboarding';
+import { PoliciesCard } from './OnbSetupPolicies';
+import { DocumentsCard } from './OnbSetupDocuments';
 
 /* Qnipay setup → Modules → Onboarding → Onboarding setup: the prototype's
    admOnboarding (qnipay-workforce-v15.html:4672-4728) with its step switch,
@@ -49,7 +48,6 @@ export function OnboardingSetupPage() {
 
 const draftOf = (c: OnboardingSetup['config']): UpdateOnboardingConfig =>
   ({ steps: c.steps.map(s => ({ ...s })), documents: c.documents.map(d => ({ ...d })) });
-type DocKey = 'req' | 'blocks' | 'expiry';
 
 function SetupDraftView({ setup }: { setup: OnboardingSetup }) {
   const { config } = setup;
@@ -89,35 +87,7 @@ function SetupDraftView({ setup }: { setup: OnboardingSetup }) {
         <CardNote>{ALWAYS_ASKED} Everything else is your choice.</CardNote>
       </AdminCard>
 
-      <AdminCard testId={tid.monb.card('documents')} icon={<Folder />} title="Documents" tipTestId={tid.monb.tip('documents')}
-        tip="What a new starter must provide. Who verifies each one, and whether an unverified document stops them starting, are set per document.">
-        {/* a card per document on a phone (table.rec), as the prototype shows it */}
-        <Table data-testid={tid.monb.docs} variant="records" dense className={DENSE_TEXT}>
-          <TableHeader><TableRow>
-            <TableHead>Document</TableHead><TableHead>Required</TableHead><TableHead>Verified by</TableHead>
-            <TableHead>Blocks start</TableHead><TableHead>Expiry tracked</TableHead>
-          </TableRow></TableHeader>
-          <TableBody>{draft.documents.map(d => {
-            const err = fe(`documents.${d.id}.verify`) ?? fe(`documents.${d.id}`);
-            const sw = (k: DocKey, words: string, testId: string, label: string) => (
-              <TableCell label={label}>
-                <SwitchField testId={testId} aria-label={`${d.label} ${words}`} checked={d[k]} onCheckedChange={v => setDoc(d.id, { [k]: v })} /></TableCell>);
-            return (
-              <Row key={d.id} testId={tid.monb.doc(d.id)}>
-                <TableCell kind="title"><strong>{d.label}</strong><span className="block text-xs font-normal text-text-muted">{d.hint}</span></TableCell>
-                {sw('req', 'required', tid.monb.docReq(d.id), 'Required')}
-                <TableCell label="Verified by">
-                  <SettingSelect testId={tid.monb.docVerify(d.id)} small aria-label={`${d.label} verified by`} value={d.verify}
-                    aria-invalid={err ? true : undefined} onChange={e => { const v = e.target.value; if (isVerifier(v)) setDoc(d.id, { verify: v }); }}>
-                    {setup.verifiers.map(v => <option key={v.value} value={v.value}>{v.label}</option>)}</SettingSelect>
-                  {err && <p role="alert" className="mt-xs text-xs text-err">{err}</p>}
-                </TableCell>
-                {sw('blocks', 'blocks start', tid.monb.docBlocks(d.id), 'Blocks start')}
-                {sw('expiry', 'expiry tracked', tid.monb.docExpiry(d.id), 'Expiry tracked')}
-              </Row>);
-          })}</TableBody>
-        </Table>
-      </AdminCard>
+      <DocumentsCard setup={setup} docs={draft.documents} locked={dirty} fe={fe} onChange={setDoc} />
 
       {save.refusal && <FormWarn testId={tid.monb.warn}>{save.refusal.message} {save.refusal.next}</FormWarn>}
       <PoliciesCard policies={setup.policies} />

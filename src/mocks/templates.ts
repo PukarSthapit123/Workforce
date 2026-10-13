@@ -30,6 +30,7 @@ import type { UserType } from '@/contract/access';
 import type { LeaveConfigData, LeaveConfigRecord } from '@/contract/leave';
 import { leaveConfigProblem } from '@/domain/leave';
 import { leaveConfigChangeProblem } from './leave-config-usage';
+import { followLevels, rotaConfigNow, saveRotaConfig } from './rota';
 import { notRestoredText, type Refusal as DomainRefusal } from '@/domain/modules';
 import type { RotaActor } from '@/domain/rota';
 import {
@@ -54,6 +55,12 @@ const leaveConfigValues = (c: LeaveConfigRecord): LeaveConfigData => ({
 const leaveTemplateConfig = () => {
   const c = leaveConfigNow();
   return c ? leaveConfigValues(c) : undefined;
+};
+
+/* Module 8: the Rota setup settings a template keeps */
+const rotaTemplateConfig = () => {
+  const c = rotaConfigNow();
+  return { supportLevels: c.supportLevels.map(l => ({ ...l })), flexMilestones: [...c.flexMilestones], flexNotifyTo: c.flexNotifyTo };
 };
 
 const COLL = 'templates';
@@ -107,6 +114,7 @@ function stateOf(t: StoredTenant): TenantState {
       financialYear: { start: t.financialYear.start, end: t.financialYear.end },
     },
     ...(leaveTemplateConfig() ? { leaveConfig: leaveTemplateConfig() } : {}),
+    rotaConfig: rotaTemplateConfig(),
     chains: Object.fromEntries(CHAIN_MODULES.map(m => [m, chainRecord(m).steps])) as Record<ChainModule, ChainStep[]>,
     structure: Object.fromEntries(STRUCTURE_KINDS.map(k => [k, codes(k)])) as Record<StructureKind, string[]>,
     onboarding: onboardingNow(),
@@ -185,10 +193,12 @@ function carryOut(t: StoredTenant, plan: ApplyPlan, key: string, by: RotaActor):
   /* the onboarding setup (D12): switches and settings by id; a held policy's new name and wording, and with new wording a new version that asks the people still onboarding again (D10); new policies after the last */
   const o = s.onboarding;
   const cfg = recordAt(store.coll<StoredConfig>('onboardingConfig'), 'onboardingConfig');
-  if (cfg && (Object.keys(o.steps).length || Object.keys(o.documents).length)) {
+  if (cfg && (Object.keys(o.steps).length || Object.keys(o.documents).length || o.documentsAdded.length)) {
     store.coll<StoredConfig>('onboardingConfig')[cfg.id] = bump(cfg, {
       steps: cfg.steps.map(x => ({ ...x, on: x.fixed ? true : o.steps[x.id] ?? x.on })),
-      documents: cfg.documents.map(d => ({ ...d, ...(o.documents[d.id] ?? {}) })),
+      documents: [...cfg.documents.map(d => Object.assign({ on: true, custom: false }, d, o.documents[d.id] ?? {})),
+        /* module 8: the documents the template's tenant added, after the last */
+        ...o.documentsAdded.map(d => ({ ...d, label: d.label ?? d.id, hint: d.hint ?? '', on: d.on ?? true, custom: true }))],
     });
   }
   const pols = policiesColl();
@@ -242,6 +252,7 @@ export const templateHandlers = [
         financialYear: { start: t.financialYear.start, end: t.financialYear.end },
       },
       ...(leaveTemplateConfig() ? { leaveConfig: leaveTemplateConfig() } : {}),
+      rotaConfig: rotaTemplateConfig(),
     });
     const key = templateKey(template.name);
     const who = actor(session);
@@ -289,12 +300,22 @@ export const templateHandlers = [
       leaveAfter = Object.fromEntries(changed.map(k => [k, now[k]]));
     }
     const leaveChanged = Object.keys(leaveAfter).length > 0;
+    /* module 8: Rota setup's support levels and flexible-worker milestones, in the same one audit row; the locations at a level follow it */
+    let rotaBefore: Record<string, unknown> = {}, rotaAfter: Record<string, unknown> = {};
+    if (plan.steps.rotaConfig) {
+      const was = rotaConfigNow(), changes = plan.steps.rotaConfig;
+      saveRotaConfig(changes);
+      const moved = followLevels(was.supportLevels, changes.supportLevels ?? was.supportLevels);
+      rotaBefore = Object.fromEntries(Object.keys(changes).map(k => [k, was[k as keyof typeof changes]]));
+      rotaAfter = { ...changes, ...(Object.keys(moved).length ? { locations: moved } : {}) };
+    }
+    const rotaChanged = Object.keys(rotaAfter).length > 0;
     const held = notRestoredText(notRestored);
     const auditId = writeAudit({ who: actor(session), act: 'Template applied', entity: 'template', entityId: params.key,
-      before: { template: t.template, ...(leaveChanged ? { leaveSetup: leaveBefore } : {}) },
+      before: { template: t.template, ...(leaveChanged ? { leaveSetup: leaveBefore } : {}), ...(rotaChanged ? { rotaSetup: rotaBefore } : {}) },
       after: { template: params.key, name: template.name, detail: [pv.summary, held].filter(Boolean).join(' '),
         changed: plan.changes.map(l => l.text), added: plan.added.map(l => l.text), leftAlone: plan.leftAlone.map(l => l.text),
-        ...(leaveChanged ? { leaveSetup: leaveAfter } : {}) } });
+        ...(leaveChanged ? { leaveSetup: leaveAfter } : {}), ...(rotaChanged ? { rotaSetup: rotaAfter } : {}) } });
     return { record: view(done), auditId, plan: pv, message: [message, held].filter(Boolean).join(' ') };
   }),
 

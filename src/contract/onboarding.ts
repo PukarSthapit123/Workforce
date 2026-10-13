@@ -30,6 +30,8 @@ export const OnbStepRecord = z.object({ id: OnbStepId, label: z.string().max(60)
 export type OnbStepRecord = z.infer<typeof OnbStepRecord>;
 export const OnbDocumentRecord = z.object({
   id: z.string().max(20), label: z.string().max(60), req: z.boolean(), verify: Verifier, blocks: z.boolean(), expiry: z.boolean(), hint: z.string().max(200),
+  /* module 8: asked for at all; added by this tenant (renamed and removed from its row), where a built-in one is only switched off */
+  on: z.boolean(), custom: z.boolean(),
 });
 export type OnbDocumentRecord = z.infer<typeof OnbDocumentRecord>;
 /* The config record (D2): step switches and document settings. */
@@ -184,6 +186,9 @@ export const UpdateOnboardingConfig = z.strictObject({ steps: z.array(OnbStepRec
 export type UpdateOnboardingConfig = z.infer<typeof UpdateOnboardingConfig>;
 export const OnboardingConfigSaved = z.object({ record: OnboardingConfigRecord, summary: z.string(), auditId: z.string().nullable() });
 export type OnboardingConfigSaved = z.infer<typeof OnboardingConfigSaved>;
+/* Module 8: a document the tenant adds or renames, with the hint a new starter reads. */
+export const DocumentDraft = z.object({ label: z.string().max(80), hint: z.string().max(300).optional() });
+export type DocumentDraft = z.infer<typeof DocumentDraft>;
 export const PolicyDraft = z.object({ label: z.string().max(80), ver: z.string().max(20).optional(), sum: z.string().max(300).optional() });
 export type PolicyDraft = z.infer<typeof PolicyDraft>;
 export const PolicySaved = z.object({ record: OnbPolicySetupView, summary: z.string(), auditId: z.string().nullable() });
@@ -245,6 +250,15 @@ export const getOnboardingSetup = defineEndpoint({ method: 'GET', path: '/api/v1
 export const updateOnboardingConfig = defineEndpoint({ method: 'PUT', path: '/api/v1/onboarding/config', request: UpdateOnboardingConfig,
   response: OnboardingConfigSaved, capability: 'onb_cfg', versioned: true,
   summary: 'Save the step switches and document settings (If-Match). Steps are switched, never added or reordered. One audit row with before and after.' });
+export const addOnboardingDocument = defineEndpoint({ method: 'POST', path: '/api/v1/onboarding/documents', request: DocumentDraft,
+  response: OnboardingConfigSaved, capability: 'onb_cfg', versioned: true, errors: [409],
+  summary: 'Add a document new starters can be asked for (If-Match: the config). It starts optional and checked by HR. A name is needed and no two share one. One audit row.' });
+export const renameOnboardingDocument = defineEndpoint({ method: 'PATCH', path: '/api/v1/onboarding/documents/:doc', params: ByDoc, request: DocumentDraft,
+  response: OnboardingConfigSaved, capability: 'onb_cfg', versioned: true, errors: [404, 409],
+  summary: 'Rename a document this tenant added, and change its hint (If-Match: the config). A built-in document is refused. One audit row.' });
+export const removeOnboardingDocument = defineEndpoint({ method: 'DELETE', path: '/api/v1/onboarding/documents/:doc', params: ByDoc,
+  response: OnboardingConfigSaved, capability: 'onb_cfg', versioned: true, errors: [404, 409],
+  summary: 'Remove a document this tenant added (If-Match: the config). Refused for a built-in one, and with usedBy while anybody is onboarding with it. One audit row.' });
 export const addOnboardingPolicy = defineEndpoint({ method: 'POST', path: '/api/v1/onboarding/policies', request: PolicyDraft, response: PolicySaved,
   capability: 'onb_cfg', errors: [409], summary: 'Add a policy new starters are asked to read. A name is needed and no two share one.' });
 export const editOnboardingPolicy = defineEndpoint({ method: 'PATCH', path: '/api/v1/onboarding/policies/:id', params: ByPolicy, request: PolicyDraft,

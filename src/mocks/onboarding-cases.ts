@@ -30,7 +30,8 @@ export const featuresNow = () => { const t = onbTenant(); return onbFeatures(t.m
 export function onbConfig(): StoredConfig {
   const c = recordAt(store.coll<StoredConfig>('onboardingConfig'), 'onboardingConfig');
   if (!c) throw new Error('the store has no onboarding config');
-  return c;
+  /* a config stored before module 8 asks for every document, each built in */
+  return { ...c, documents: c.documents.map(d => ({ ...d, on: d.on ?? true, custom: d.custom ?? false })) };
 }
 export const blockerContext = (): BlockerContext => ({ config: onbConfig(), features: featuresNow() });
 

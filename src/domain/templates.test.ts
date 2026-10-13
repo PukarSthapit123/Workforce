@@ -6,6 +6,7 @@ import {
   ONB_LEFT_ALONE, TYPES_LEFT_ALONE, captureOnboarding, templateNameProblem, templateSummary, type CaptureSource, type Template, type TenantState, type TemplateStructure,
 } from './templates';
 import { CHAIN_MODULES, DEFAULT_CHAIN, defaultChainFor, type ChainModule, type ChainStep } from './approvals';
+import { DEFAULT_SUPPORT_LEVELS } from './rota';
 import { ALWAYS_ASKED, POLICY_NAME_TAKEN, STEP_UNAVAILABLE, type OnbPolicy, type OnbStep, type OnboardingConfig } from './onboarding';
 
 const must = <T,>(v: T | undefined, what = 'value'): T => { if (v === undefined) throw new Error(`missing ${what}`); return v; };
@@ -292,7 +293,7 @@ describe('the onboarding setup in a template (module 5, D12)', () => {
   const step = (id: OnbStep['id'], label: string, on: boolean, fixed = false): OnbStep => ({ id, label, on, fixed, desc: '' });
   const config = (): OnboardingConfig => ({
     steps: [step('personal', 'Personal details', true, true), step('emergency', 'Emergency contacts', true), step('policies', 'Policies and sign-off', false)],
-    documents: [{ id: 'addr', label: 'Proof of address', req: true, verify: 'hr', blocks: false, expiry: false, hint: '' }],
+    documents: [{ id: 'addr', label: 'Proof of address', req: true, verify: 'hr', blocks: false, expiry: false, hint: '', on: true, custom: false }],
   });
   const pol = (id: string, label: string, ver: string, extra: Partial<OnbPolicy> = {}): OnbPolicy =>
     ({ id, label, ver, sum: `${label} in one line.`, body: [`${label} says this.`], order: 0, ...extra });
@@ -313,7 +314,7 @@ describe('the onboarding setup in a template (module 5, D12)', () => {
     const t = captureTemplate('Ours', '', 'config', src());
     expect(t.onboarding).toEqual({
       steps: [{ id: 'personal', on: true }, { id: 'emergency', on: true }, { id: 'policies', on: false }],
-      documents: [{ id: 'addr', req: true, verify: 'hr', blocks: false, expiry: false }],
+      documents: [{ id: 'addr', req: true, verify: 'hr', blocks: false, expiry: false, on: true }],
       policies: [{ id: 'pol_conduct', label: 'Code of conduct', ver: 'v4.1', sum: 'Code of conduct in one line.', body: ['Code of conduct says this.'] },
         { id: 'pol_privacy', label: 'Privacy notice', ver: 'v2.0', sum: 'Privacy notice in one line.', body: ['Privacy notice says this.'] }],
     });
@@ -384,7 +385,7 @@ describe('the onboarding setup in a template (module 5, D12)', () => {
   test('without Configure onboarding the onboarding setup stays and says so; a matching one is no change', () => {
     const changed = withOnb({ steps: [{ id: 'emergency', on: false }], documents: [], policies: [] });
     const no = planApply(changed, state(), { ...ALL, mayChangeOnboarding: false });
-    expect(no.steps.onboarding).toEqual({ steps: {}, documents: {}, policiesUpdated: [], policiesAdded: [] });
+    expect(no.steps.onboarding).toEqual({ steps: {}, documents: {}, documentsAdded: [], policiesUpdated: [], policiesAdded: [] });
     expect(texts(no.leftAlone)).toEqual([ONB_LEFT_ALONE]);
     const same = planApply(withOnb(captureOnboarding({ config: config(), policies: policies() })), state(), ALL);
     expect([texts(same.changes), texts(same.added)]).toEqual([[], []]);
@@ -397,5 +398,55 @@ describe('the onboarding setup in a template (module 5, D12)', () => {
     if (!r.ok) throw new Error('refused');
     expect(r.ignored).toEqual(['onboarding.policies.file', 'onboarding.progress']);
     expect(r.template.onboarding).toEqual({ steps: [], documents: [], policies: [{ id: 'pol_x', label: 'X', ver: 'v1.0', sum: '', body: [] }] });
+  });
+});
+
+describe('module 8: the documents a tenant added, and Rota setup, in a template', () => {
+  const ALL = { mayRenameRoles: true, mayChangeChains: true, mayChangeTypes: true, mayChangeOnboarding: true };
+  const built = { id: 'addr', label: 'Proof of address', req: true, verify: 'hr' as const, blocks: false, expiry: false, hint: '', on: true, custom: false };
+  const dbs = { id: 'dbs-check', label: 'DBS check', req: true, verify: 'hr' as const, blocks: true, expiry: true, hint: 'Enhanced.', on: true, custom: true };
+  const onb = (documents: OnboardingConfig['documents']) => ({ config: { steps: [], documents }, policies: [] });
+  const lines = (p: { changes: { area: string; text: string }[]; added: { area: string; text: string }[] }, area: string) =>
+    [...p.changes, ...p.added].filter(l => l.area === area).map(l => l.text);
+
+  test('capture keeps whether each document is asked, and an added one\'s name and hint; apply adds it and switches a built-in one off', () => {
+    const t = captureOnboarding(onb([{ ...built, on: false }, dbs]));
+    expect(t.documents).toEqual([{ id: 'addr', req: true, verify: 'hr', blocks: false, expiry: false, on: false },
+      { id: 'dbs-check', req: true, verify: 'hr', blocks: true, expiry: true, on: true, custom: true, label: 'DBS check', hint: 'Enhanced.' }]);
+    const p = planApply({ ...shipped('social'), onboarding: t }, socialState({ onboarding: onb([built]) }), ALL);
+    expect(p.steps.onboarding.documents).toEqual({ addr: { req: true, verify: 'hr', blocks: false, expiry: false, on: false } });
+    expect(p.steps.onboarding.documentsAdded).toEqual([{ ...dbs }]);
+    expect(lines(p, 'onboarding')).toEqual(['Onboarding document Proof of address: not asked for.', 'Onboarding document DBS check, required.']);
+  });
+
+  test('an added document whose name the tenant already holds is not added, and says why', () => {
+    const t = captureOnboarding(onb([built, { ...dbs, label: 'proof of address', id: 'poa' }]));
+    const p = planApply({ ...shipped('social'), onboarding: t }, socialState({ onboarding: onb([built]) }), ALL);
+    expect(p.steps.onboarding.documentsAdded).toEqual([]);
+    expect(p.leftAlone.map(l => l.text)).toContain('Onboarding document proof of address is not added. A document with that name already exists.');
+  });
+
+  test('Rota setup: each level by code takes the template\'s people per shift, and the milestones and who is told; a bad value stays', () => {
+    const have = { supportLevels: DEFAULT_SUPPORT_LEVELS.map(l => ({ ...l })), flexMilestones: [9, 12], flexNotifyTo: 'HR administrators' };
+    const want = { supportLevels: [{ code: 'High', label: 'High support', min: 6 }, { code: 'Extra', label: 'Extra support', min: 8 }], flexMilestones: [6, 10], flexNotifyTo: 'Service Manager' };
+    const p = planApply({ ...shipped('social'), rotaConfig: want }, socialState({ rotaConfig: have }), ALL);
+    expect(p.steps.rotaConfig).toEqual({ supportLevels: have.supportLevels.map(l => (l.code === 'High' ? { ...l, min: 6 } : l)), flexMilestones: [6, 10], flexNotifyTo: 'Service Manager' });
+    expect(lines(p, 'rota')).toEqual(['High support: 6 people per shift, at every location at that level.',
+      'Flexible-worker milestones at 6 and 10 weeks, notified to Service Manager.']);
+    expect(p.leftAlone.filter(l => l.area === 'rota').map(l => l.text)).toEqual(['Support levels this tenant does not have are not used: Extra support.']);
+    const bad = planApply({ ...shipped('social'), rotaConfig: { ...want, supportLevels: [{ code: 'Low', label: 'Low support', min: 0 }], flexMilestones: [12, 9] } },
+      socialState({ rotaConfig: have }), ALL);
+    expect(bad.steps.rotaConfig).toBeUndefined();
+    expect(bad.leftAlone.filter(l => l.area === 'rota').map(l => l.text)).toEqual([
+      'Support levels stay as they are. Low support needs a whole number of people per shift from 1 to 50.',
+      'Flexible-worker milestones stay as they are. List the milestones from the earliest to the latest, each once.']);
+    const same = planApply({ ...shipped('social'), rotaConfig: have }, socialState({ rotaConfig: have }), ALL);
+    expect(same.steps.rotaConfig).toBeUndefined();
+  });
+
+  test('a file keeps only the Rota setup keys a template may hold', () => {
+    const r = readTemplateFile(JSON.stringify({ kind: 'qnipay.template', v: 1, key: 'x', template: {
+      name: 'X', rotaConfig: { supportLevels: [], flexMilestones: [9], flexNotifyTo: 'HR administrators', minDefault: 9 } } }));
+    expect(r.ok && r.ignored).toEqual(['rotaConfig.minDefault']);
   });
 });

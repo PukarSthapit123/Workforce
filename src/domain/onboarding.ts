@@ -37,8 +37,10 @@ export const VERIFIERS = [['hr', 'HR'], ['mgr', 'Line manager'], ['either', 'HR 
 export type Verifier = (typeof VERIFIERS)[number][0];
 export const isVerifier = (s: string): s is Verifier => VERIFIERS.some(([v]) => v === s);
 export const verifierLabel = (v: string) => VERIFIERS.find(([k]) => k === v)?.[1] ?? v;
-/* `verify` says who checks it; `blocks` whether an unverified one stops the start. */
-export interface OnbDocument { id: string; label: string; req: boolean; verify: Verifier; blocks: boolean; expiry: boolean; hint: string }
+/* `verify` says who checks it; `blocks` whether an unverified one stops the start.
+   Module 8: `on` whether it is asked for at all; `custom` one this tenant added,
+   which can be renamed and removed, where a built-in one can only be switched off. */
+export interface OnbDocument { id: string; label: string; req: boolean; verify: Verifier; blocks: boolean; expiry: boolean; hint: string; on: boolean; custom: boolean }
 export type FileKind = 'image' | 'pdf' | 'file';
 /* What is kept of an upload (D3). `at` is an instant. */
 export interface OnbFile { name: string; size: number; type: string; at: string; kind: FileKind; preview?: string }
@@ -75,9 +77,9 @@ export const ALWAYS_ASKED = 'Identity, contact and the final submission are alwa
 /* The steps a person is asked, in order: switched on (fixed ones always are) and available. */
 export const stepsAsked = (config: OnboardingConfig, f: OnbFeatures): OnbStep[] =>
   config.steps.filter(s => (s.fixed || s.on) && stepAvailable(s.id, f));
-/* The right-to-work document is collected only while ONB_RTW is on. */
+/* A document switched off is not asked for; the right-to-work document is collected only while ONB_RTW is on. */
 export const docsAsked = (config: OnboardingConfig, f: OnbFeatures): OnbDocument[] =>
-  config.documents.filter(d => d.id !== 'rtw' || f.rtw);
+  config.documents.filter(d => d.on && (d.id !== 'rtw' || f.rtw));
 
 /* --------------------------------------------------------- task states */
 export const TASK_STATES = ['todo', 'prog', 'done', 'verified', 'rejected'] as const;
@@ -587,8 +589,8 @@ export function configProblem(before: OnboardingConfig, next: OnboardingConfig, 
   }
   if (next.documents.map(d => d.id).join() !== before.documents.map(d => d.id).join())
     return { code: 'VALIDATION', field: 'documents', message: 'Documents can be set, not added, removed or reordered.', next: 'Reload the page and change the settings you need.' };
-  const renamed = next.documents.find(d => { const was = before.documents.find(x => x.id === d.id); return !was || was.label !== d.label || was.hint !== d.hint; });
-  if (renamed) return { code: 'VALIDATION', field: `documents.${renamed.id}`, message: 'Only a document\'s settings can be changed.', next: 'Reload the page and change the settings you need.' };
+  const renamed = next.documents.find(d => { const was = before.documents.find(x => x.id === d.id); return !was || was.label !== d.label || was.hint !== d.hint || was.custom !== d.custom; });
+  if (renamed) return { code: 'VALIDATION', field: `documents.${renamed.id}`, message: 'Only a document\'s settings can be changed here.', next: 'Rename a document you added from its row, then save the settings.' };
   const bad = next.documents.find(d => !isVerifier(d.verify));
   if (bad) return { code: 'VALIDATION', field: `documents.${bad.id}.verify`, message: `${bad.label} needs somebody to check it, or No check needed.`, next: 'Choose who verifies it from the list.' };
   return null;
@@ -605,3 +607,41 @@ export function startProblem(name: string, c: OnboardingCase, ctx: BlockerContex
   return bl.length ? { code: 'NOT_READY', message: notReadyText(name, bl), next: 'Chase them, or check the documents waiting on a check.' } : null;
 }
 export const noEmailText = (name: string) => `${name} has no email address, so there is nowhere to send an invitation. Add one on their record.`;
+
+/* ------------------------------------------- custom documents (module 8) */
+/* A document the tenant adds (a DBS check, a professional registration): its
+   name and the hint a new starter reads. It starts optional and checked by HR,
+   so adding one asks nobody for anything until it is made required and saved. */
+export interface DocumentDraft { label: string; hint?: string }
+export const DOC_NAME_NEEDED = 'A document needs a name.';
+export const DOC_NAME_TAKEN = 'A document with that name already exists.';
+export const BUILT_IN_DOC = 'Built-in documents can be switched off, not renamed or removed.';
+const docKey = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 16).replace(/-$/, '') || 'doc';
+export function documentProblem(draft: DocumentDraft, docs: readonly OnbDocument[], editingId?: string): OnbRefusal | null {
+  const label = draft.label.trim();
+  if (!label) return invalid('label', DOC_NAME_NEEDED, 'Give the document a name, then save.');
+  if (label.length > 60) return invalid('label', 'Keep the name to 60 characters.', 'Shorten the name, then save.');
+  if ((draft.hint ?? '').trim().length > 200) return invalid('hint', 'Keep the hint to 200 characters.', 'Shorten the hint, then save.');
+  if (docs.some(d => d.id !== editingId && d.label.trim().toLowerCase() === label.toLowerCase()))
+    return invalid('label', DOC_NAME_TAKEN, 'Choose another name, or change the one already there.');
+  return null;
+}
+/* An id that is short, stable and not taken: "DBS check" becomes dbs-check. */
+export function newDocumentId(label: string, docs: readonly OnbDocument[]): string {
+  const base = docKey(label), taken = new Set(docs.map(d => d.id));
+  let id = base;
+  for (let n = 2; taken.has(id); n++) id = `${base}-${n}`;
+  return id;
+}
+export const newCustomDocument = (draft: DocumentDraft, docs: readonly OnbDocument[]): OnbDocument => ({
+  id: newDocumentId(draft.label, docs), label: draft.label.trim(), hint: (draft.hint ?? '').trim(),
+  req: false, verify: 'hr', blocks: false, expiry: false, on: true, custom: true,
+});
+/* Who has the document on their case: uploaded, checked, sent back, or asked for it at submission (D2). */
+export function documentUsers(id: string, cases: readonly OnboardingCase[]): string[] {
+  return cases.filter(c => (c.docs[id] !== undefined && c.docs[id] !== 'todo') || Object.hasOwn(c.files, id)
+    || (c.asked?.documents ?? []).some(d => d.id === id)).map(c => c.personCode);
+}
+export const documentAddedText = (label: string) => `${label} added. It is optional until you make it required and save.`;
+export const documentRenamedText = (label: string) => `${label} saved.`;
+export const documentRemovedText = (label: string) => `${label} removed. New starters are no longer asked for it.`;

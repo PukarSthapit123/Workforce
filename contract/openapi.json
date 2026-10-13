@@ -20225,6 +20225,32 @@
                           "type": "null"
                         }
                       ]
+                    },
+                    "flexMonitoring": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "milestones": {
+                              "type": "array",
+                              "items": {
+                                "type": "number"
+                              }
+                            },
+                            "notifyTo": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "milestones",
+                            "notifyTo"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
                   "required": [
@@ -20232,7 +20258,8 @@
                     "version",
                     "updatedAt",
                     "events",
-                    "evidence"
+                    "evidence",
+                    "flexMonitoring"
                   ],
                   "additionalProperties": false
                 }
@@ -20513,6 +20540,32 @@
                               "type": "null"
                             }
                           ]
+                        },
+                        "flexMonitoring": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "milestones": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "number"
+                                  }
+                                },
+                                "notifyTo": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "milestones",
+                                "notifyTo"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
                         }
                       },
                       "required": [
@@ -20520,7 +20573,8 @@
                         "version",
                         "updatedAt",
                         "events",
-                        "evidence"
+                        "evidence",
+                        "flexMonitoring"
                       ],
                       "additionalProperties": false
                     },
@@ -20928,6 +20982,12 @@
                               "hint": {
                                 "type": "string",
                                 "maxLength": 200
+                              },
+                              "on": {
+                                "type": "boolean"
+                              },
+                              "custom": {
+                                "type": "boolean"
                               }
                             },
                             "required": [
@@ -20937,7 +20997,9 @@
                               "verify",
                               "blocks",
                               "expiry",
-                              "hint"
+                              "hint",
+                              "on",
+                              "custom"
                             ],
                             "additionalProperties": false
                           }
@@ -21303,6 +21365,12 @@
                         "hint": {
                           "type": "string",
                           "maxLength": 200
+                        },
+                        "on": {
+                          "type": "boolean"
+                        },
+                        "custom": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -21312,7 +21380,9 @@
                         "verify",
                         "blocks",
                         "expiry",
-                        "hint"
+                        "hint",
+                        "on",
+                        "custom"
                       ]
                     }
                   }
@@ -21427,6 +21497,12 @@
                               "hint": {
                                 "type": "string",
                                 "maxLength": 200
+                              },
+                              "on": {
+                                "type": "boolean"
+                              },
+                              "custom": {
+                                "type": "boolean"
                               }
                             },
                             "required": [
@@ -21436,7 +21512,9 @@
                               "verify",
                               "blocks",
                               "expiry",
-                              "hint"
+                              "hint",
+                              "on",
+                              "custom"
                             ],
                             "additionalProperties": false
                           }
@@ -21483,6 +21561,833 @@
           },
           "403": {
             "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "The record changed since it was read (If-Match is stale)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid; field names the part to correct",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "If-Match is missing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any other refusal or failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/onboarding/documents/{doc}": {
+      "delete": {
+        "summary": "Remove a document this tenant added (If-Match: the config). Refused for a built-in one, and with usedBy while anybody is onboarding with it. One audit row.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-capability": "onb_cfg",
+        "parameters": [
+          {
+            "name": "doc",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "description": "The version of the record the change is based on, as a bare whole number such as 3 (no quotes, no W/ prefix)",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]+$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "record": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "version": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "steps": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "enum": [
+                                  "personal",
+                                  "contact",
+                                  "emergency",
+                                  "additional",
+                                  "documents",
+                                  "policies",
+                                  "review"
+                                ]
+                              },
+                              "label": {
+                                "type": "string",
+                                "maxLength": 60
+                              },
+                              "on": {
+                                "type": "boolean"
+                              },
+                              "fixed": {
+                                "type": "boolean"
+                              },
+                              "desc": {
+                                "type": "string",
+                                "maxLength": 200
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "label",
+                              "on",
+                              "fixed",
+                              "desc"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "documents": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "maxLength": 20
+                              },
+                              "label": {
+                                "type": "string",
+                                "maxLength": 60
+                              },
+                              "req": {
+                                "type": "boolean"
+                              },
+                              "verify": {
+                                "type": "string",
+                                "enum": [
+                                  "hr",
+                                  "mgr",
+                                  "either",
+                                  "none"
+                                ]
+                              },
+                              "blocks": {
+                                "type": "boolean"
+                              },
+                              "expiry": {
+                                "type": "boolean"
+                              },
+                              "hint": {
+                                "type": "string",
+                                "maxLength": 200
+                              },
+                              "on": {
+                                "type": "boolean"
+                              },
+                              "custom": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "label",
+                              "req",
+                              "verify",
+                              "blocks",
+                              "expiry",
+                              "hint",
+                              "on",
+                              "custom"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "version",
+                        "updatedAt",
+                        "steps",
+                        "documents"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "summary": {
+                      "type": "string"
+                    },
+                    "auditId": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "record",
+                    "summary",
+                    "auditId"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Signed out, or the credentials do not match",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The record does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The change is refused because of the state of the data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "The record changed since it was read (If-Match is stale)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid; field names the part to correct",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "If-Match is missing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any other refusal or failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Rename a document this tenant added, and change its hint (If-Match: the config). A built-in document is refused. One audit row.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-capability": "onb_cfg",
+        "parameters": [
+          {
+            "name": "doc",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "description": "The version of the record the change is based on, as a bare whole number such as 3 (no quotes, no W/ prefix)",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "maxLength": 80
+                  },
+                  "hint": {
+                    "type": "string",
+                    "maxLength": 300
+                  }
+                },
+                "required": [
+                  "label"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "record": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "version": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "steps": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "enum": [
+                                  "personal",
+                                  "contact",
+                                  "emergency",
+                                  "additional",
+                                  "documents",
+                                  "policies",
+                                  "review"
+                                ]
+                              },
+                              "label": {
+                                "type": "string",
+                                "maxLength": 60
+                              },
+                              "on": {
+                                "type": "boolean"
+                              },
+                              "fixed": {
+                                "type": "boolean"
+                              },
+                              "desc": {
+                                "type": "string",
+                                "maxLength": 200
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "label",
+                              "on",
+                              "fixed",
+                              "desc"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "documents": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "maxLength": 20
+                              },
+                              "label": {
+                                "type": "string",
+                                "maxLength": 60
+                              },
+                              "req": {
+                                "type": "boolean"
+                              },
+                              "verify": {
+                                "type": "string",
+                                "enum": [
+                                  "hr",
+                                  "mgr",
+                                  "either",
+                                  "none"
+                                ]
+                              },
+                              "blocks": {
+                                "type": "boolean"
+                              },
+                              "expiry": {
+                                "type": "boolean"
+                              },
+                              "hint": {
+                                "type": "string",
+                                "maxLength": 200
+                              },
+                              "on": {
+                                "type": "boolean"
+                              },
+                              "custom": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "label",
+                              "req",
+                              "verify",
+                              "blocks",
+                              "expiry",
+                              "hint",
+                              "on",
+                              "custom"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "version",
+                        "updatedAt",
+                        "steps",
+                        "documents"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "summary": {
+                      "type": "string"
+                    },
+                    "auditId": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "record",
+                    "summary",
+                    "auditId"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Signed out, or the credentials do not match",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The record does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The change is refused because of the state of the data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "The record changed since it was read (If-Match is stale)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid; field names the part to correct",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "If-Match is missing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any other refusal or failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/onboarding/documents": {
+      "post": {
+        "summary": "Add a document new starters can be asked for (If-Match: the config). It starts optional and checked by HR. A name is needed and no two share one. One audit row.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-capability": "onb_cfg",
+        "parameters": [
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "description": "The version of the record the change is based on, as a bare whole number such as 3 (no quotes, no W/ prefix)",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "maxLength": 80
+                  },
+                  "hint": {
+                    "type": "string",
+                    "maxLength": 300
+                  }
+                },
+                "required": [
+                  "label"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "record": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "version": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "steps": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "enum": [
+                                  "personal",
+                                  "contact",
+                                  "emergency",
+                                  "additional",
+                                  "documents",
+                                  "policies",
+                                  "review"
+                                ]
+                              },
+                              "label": {
+                                "type": "string",
+                                "maxLength": 60
+                              },
+                              "on": {
+                                "type": "boolean"
+                              },
+                              "fixed": {
+                                "type": "boolean"
+                              },
+                              "desc": {
+                                "type": "string",
+                                "maxLength": 200
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "label",
+                              "on",
+                              "fixed",
+                              "desc"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "documents": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "maxLength": 20
+                              },
+                              "label": {
+                                "type": "string",
+                                "maxLength": 60
+                              },
+                              "req": {
+                                "type": "boolean"
+                              },
+                              "verify": {
+                                "type": "string",
+                                "enum": [
+                                  "hr",
+                                  "mgr",
+                                  "either",
+                                  "none"
+                                ]
+                              },
+                              "blocks": {
+                                "type": "boolean"
+                              },
+                              "expiry": {
+                                "type": "boolean"
+                              },
+                              "hint": {
+                                "type": "string",
+                                "maxLength": 200
+                              },
+                              "on": {
+                                "type": "boolean"
+                              },
+                              "custom": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "label",
+                              "req",
+                              "verify",
+                              "blocks",
+                              "expiry",
+                              "hint",
+                              "on",
+                              "custom"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "version",
+                        "updatedAt",
+                        "steps",
+                        "documents"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "summary": {
+                      "type": "string"
+                    },
+                    "auditId": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "record",
+                    "summary",
+                    "auditId"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Signed out, or the credentials do not match",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The change is refused because of the state of the data",
             "content": {
               "application/json": {
                 "schema": {
@@ -25043,6 +25948,12 @@
                             "type": "string",
                             "maxLength": 200
                           },
+                          "on": {
+                            "type": "boolean"
+                          },
+                          "custom": {
+                            "type": "boolean"
+                          },
                           "state": {
                             "type": "string",
                             "enum": [
@@ -25134,6 +26045,8 @@
                           "blocks",
                           "expiry",
                           "hint",
+                          "on",
+                          "custom",
                           "state",
                           "stateLabel",
                           "tone",
@@ -29135,6 +30048,12 @@
                             "type": "string",
                             "maxLength": 200
                           },
+                          "on": {
+                            "type": "boolean"
+                          },
+                          "custom": {
+                            "type": "boolean"
+                          },
                           "state": {
                             "type": "string",
                             "enum": [
@@ -29226,6 +30145,8 @@
                           "blocks",
                           "expiry",
                           "hint",
+                          "on",
+                          "custom",
                           "state",
                           "stateLabel",
                           "tone",
@@ -29762,6 +30683,12 @@
                               "hint": {
                                 "type": "string",
                                 "maxLength": 200
+                              },
+                              "on": {
+                                "type": "boolean"
+                              },
+                              "custom": {
+                                "type": "boolean"
                               }
                             },
                             "required": [
@@ -29771,7 +30698,9 @@
                               "verify",
                               "blocks",
                               "expiry",
-                              "hint"
+                              "hint",
+                              "on",
+                              "custom"
                             ],
                             "additionalProperties": false
                           },
@@ -33923,6 +34852,32 @@
                         "rotaBuiltBy": {
                           "type": "string"
                         },
+                        "supportLevels": {
+                          "maxItems": 10,
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "code": {
+                                "type": "string",
+                                "maxLength": 20
+                              },
+                              "label": {
+                                "type": "string",
+                                "maxLength": 40
+                              },
+                              "min": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "code",
+                              "label",
+                              "min"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
                         "safeRules": {
                           "type": "object",
                           "properties": {
@@ -34062,6 +35017,7 @@
                         "outlook",
                         "publishBlockOnGap",
                         "rotaBuiltBy",
+                        "supportLevels",
                         "safeRules",
                         "fulfilStages",
                         "types"
@@ -34209,7 +35165,7 @@
         }
       },
       "patch": {
-        "summary": "Save Rota setup (If-Match). Types are merged by type code; stages are renumbered.",
+        "summary": "Save Rota setup (If-Match). Types are merged by type code; stages are renumbered. A support level's new people per shift is set on every location at that level.",
         "security": [
           {
             "bearer": []
@@ -34288,6 +35244,31 @@
                   },
                   "rotaBuiltBy": {
                     "type": "string"
+                  },
+                  "supportLevels": {
+                    "maxItems": 10,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "maxLength": 20
+                        },
+                        "label": {
+                          "type": "string",
+                          "maxLength": 40
+                        },
+                        "min": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "label",
+                        "min"
+                      ]
+                    }
                   },
                   "safeRules": {
                     "type": "object",
@@ -34478,6 +35459,32 @@
                         "rotaBuiltBy": {
                           "type": "string"
                         },
+                        "supportLevels": {
+                          "maxItems": 10,
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "code": {
+                                "type": "string",
+                                "maxLength": 20
+                              },
+                              "label": {
+                                "type": "string",
+                                "maxLength": 40
+                              },
+                              "min": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "code",
+                              "label",
+                              "min"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
                         "safeRules": {
                           "type": "object",
                           "properties": {
@@ -34617,6 +35624,7 @@
                         "outlook",
                         "publishBlockOnGap",
                         "rotaBuiltBy",
+                        "supportLevels",
                         "safeRules",
                         "fulfilStages",
                         "types"
@@ -40550,6 +41558,80 @@
           },
           "422": {
             "description": "The request is not valid; field names the part to correct",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any other refusal or failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rota/support-levels": {
+      "get": {
+        "summary": "The support levels a location can carry, each with the people every shift at that level needs (set in Rota setup)",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string",
+                            "maxLength": 20
+                          },
+                          "label": {
+                            "type": "string",
+                            "maxLength": 40
+                          },
+                          "min": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "code",
+                          "label",
+                          "min"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Signed out, or the credentials do not match",
             "content": {
               "application/json": {
                 "schema": {
@@ -49617,7 +50699,8 @@
                                   "people",
                                   "organisation",
                                   "onboarding",
-                                  "leave"
+                                  "leave",
+                                  "rota"
                                 ]
                               },
                               "text": {
@@ -49649,7 +50732,8 @@
                                   "people",
                                   "organisation",
                                   "onboarding",
-                                  "leave"
+                                  "leave",
+                                  "rota"
                                 ]
                               },
                               "text": {
@@ -49681,7 +50765,8 @@
                                   "people",
                                   "organisation",
                                   "onboarding",
-                                  "leave"
+                                  "leave",
+                                  "rota"
                                 ]
                               },
                               "text": {
@@ -50373,6 +51458,20 @@
                                   },
                                   "expiry": {
                                     "type": "boolean"
+                                  },
+                                  "on": {
+                                    "type": "boolean"
+                                  },
+                                  "custom": {
+                                    "type": "boolean"
+                                  },
+                                  "label": {
+                                    "type": "string",
+                                    "maxLength": 60
+                                  },
+                                  "hint": {
+                                    "type": "string",
+                                    "maxLength": 200
                                   }
                                 },
                                 "required": [
@@ -50785,6 +51884,54 @@
                             "typeLeave"
                           ],
                           "additionalProperties": false
+                        },
+                        "rotaConfig": {
+                          "type": "object",
+                          "properties": {
+                            "supportLevels": {
+                              "maxItems": 10,
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "code": {
+                                    "type": "string",
+                                    "maxLength": 20
+                                  },
+                                  "label": {
+                                    "type": "string",
+                                    "maxLength": 40
+                                  },
+                                  "min": {
+                                    "type": "number"
+                                  }
+                                },
+                                "required": [
+                                  "code",
+                                  "label",
+                                  "min"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "flexMilestones": {
+                              "maxItems": 12,
+                              "type": "array",
+                              "items": {
+                                "type": "number"
+                              }
+                            },
+                            "flexNotifyTo": {
+                              "type": "string",
+                              "maxLength": 80
+                            }
+                          },
+                          "required": [
+                            "supportLevels",
+                            "flexMilestones",
+                            "flexNotifyTo"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
@@ -50919,7 +52066,8 @@
                               "people",
                               "organisation",
                               "onboarding",
-                              "leave"
+                              "leave",
+                              "rota"
                             ]
                           },
                           "text": {
@@ -50951,7 +52099,8 @@
                               "people",
                               "organisation",
                               "onboarding",
-                              "leave"
+                              "leave",
+                              "rota"
                             ]
                           },
                           "text": {
@@ -50983,7 +52132,8 @@
                               "people",
                               "organisation",
                               "onboarding",
-                              "leave"
+                              "leave",
+                              "rota"
                             ]
                           },
                           "text": {

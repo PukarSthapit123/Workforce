@@ -39,9 +39,10 @@ import {
 } from './modules';
 import { CHAIN_MODULES, POSTING_ROLE, POSTING_STEP, chainProblem, chainText, isChainModule, type ChainModule, type ChainStep } from './approvals';
 import {
-  STEP_UNAVAILABLE, isVerifier, nextPolVer, onbFeatures, policyProblem, stepSwitchProblem, verifierLabel,
+  STEP_UNAVAILABLE, documentProblem, isVerifier, nextPolVer, onbFeatures, policyProblem, stepSwitchProblem, verifierLabel,
   type OnboardingConfig, type OnbPolicy, type OnbStepId, type Verifier,
 } from './onboarding';
+import { DEFAULT_ROTA_CONFIG, FLEX_NOTIFY_TO, milestonesText, rotaConfigProblem, type SupportLevel } from './rota';
 import type { ClockStyle, DateFormat, WeekStart } from './time';
 import { formatDmy } from './time';
 import type { LeaveConfig } from './leave';
@@ -84,7 +85,8 @@ export const STRUCTURE_LABEL: Readonly<Record<StructureKind, { many: string; one
 };
 /* The onboarding setup a template keeps (D12): switches and settings by id, and each policy's text. No file. */
 export interface TemplateOnbStep { id: OnbStepId; on: boolean }
-export interface TemplateOnbDocument { id: string; req: boolean; verify: Verifier; blocks: boolean; expiry: boolean }
+/* Module 8: whether it is asked for, and a document the tenant added with its name and hint, which a template can add. */
+export interface TemplateOnbDocument { id: string; req: boolean; verify: Verifier; blocks: boolean; expiry: boolean; on?: boolean; custom?: boolean; label?: string; hint?: string }
 export interface TemplateOnbPolicy { id: string; label: string; ver: string; sum: string; body: string[] }
 export interface TemplateOnboarding { steps: TemplateOnbStep[]; documents: TemplateOnbDocument[]; policies: TemplateOnbPolicy[] }
 export interface TemplateTenantSettings {
@@ -93,6 +95,8 @@ export interface TemplateTenantSettings {
   financialYear: { start: string; end: string };
 }
 export type TemplateLeaveConfig = Omit<LeaveConfig, 'finYearStart'>;
+/* Module 8: the Rota setup settings a template keeps: each support level's people per shift, and the flexible-worker milestones and who is told. */
+export interface TemplateRotaConfig { supportLevels: SupportLevel[]; flexMilestones: number[]; flexNotifyTo: string }
 export interface Template {
   name: string; description: string; scope: TemplateScope;
   /* every switch: Workforce core, Timesheet and its capabilities, Rota, Leave, Onboarding */
@@ -109,6 +113,7 @@ export interface Template {
   onboarding?: TemplateOnboarding;
   tenantSettings?: TemplateTenantSettings;
   leaveConfig?: TemplateLeaveConfig;
+  rotaConfig?: TemplateRotaConfig;
 }
 
 export const TEMPLATE_SCOPES: readonly { key: TemplateScope; label: string; note: string }[] = [
@@ -278,12 +283,14 @@ export interface CaptureSource {
   onboarding?: { config: OnboardingConfig; policies: readonly OnbPolicy[] };
   tenantSettings?: TemplateTenantSettings;
   leaveConfig?: TemplateLeaveConfig;
+  rotaConfig?: TemplateRotaConfig;
 }
 /* The onboarding part (D12): the prototype's onbDocs and onbPolicies, with the step switches. */
 export function captureOnboarding(o: { config: OnboardingConfig; policies: readonly OnbPolicy[] }): TemplateOnboarding {
   return {
     steps: o.config.steps.map(x => ({ id: x.id, on: x.on })),
-    documents: o.config.documents.map(d => ({ id: d.id, req: d.req, verify: d.verify, blocks: d.blocks, expiry: d.expiry })),
+    documents: o.config.documents.map(d => ({ id: d.id, req: d.req, verify: d.verify, blocks: d.blocks, expiry: d.expiry, on: d.on,
+      ...(d.custom ? { custom: true, label: d.label, hint: d.hint } : {}) })),
     policies: o.policies.map(p => ({ id: p.id, label: p.label, ver: p.ver, sum: p.sum, body: [...p.body] })),
   };
 }
@@ -303,6 +310,7 @@ export function captureTemplate(name: string, description: string, scope: Templa
   };
   if (src.tenantSettings) t.tenantSettings = structuredClone(src.tenantSettings);
   if (src.leaveConfig) t.leaveConfig = structuredClone(src.leaveConfig);
+  if (src.rotaConfig) t.rotaConfig = structuredClone(src.rotaConfig);
   if (src.onboarding) t.onboarding = captureOnboarding(src.onboarding);
   if (scope === 'structure') t.structure = structuredClone(src.structure);
   return t;
@@ -316,7 +324,7 @@ export const templateFileName = (key: string) => `qnipay-template-${key}.json`;
 /* The keys a template may hold, at each level. Anything else in a file is
    left out and listed (D3): the prototype's company details, pay codes, pay
    rules, allowances and roster among them. */
-const TOP = ['name', 'description', 'scope', 'modules', 'flags', 'extras', 'labels', 'employeeTypes', 'roleNames', 'approvalChain', 'structure', 'onboarding', 'tenantSettings', 'leaveConfig'];
+const TOP = ['name', 'description', 'scope', 'modules', 'flags', 'extras', 'labels', 'employeeTypes', 'roleNames', 'approvalChain', 'structure', 'onboarding', 'tenantSettings', 'leaveConfig', 'rotaConfig'];
 const EXTRA_KEYS = ['weekGrid', 'weekLayout', 'breaksMax', 'vehiclesMax'];
 const ROW_KEYS: Record<string, readonly string[]> = {
   employeeTypes: ['code', 'name', 'category', 'mode', 'uom', 'capabilities'],
@@ -325,7 +333,7 @@ const ROW_KEYS: Record<string, readonly string[]> = {
   locations: ['code', 'name', 'area', 'department', 'costCentre', 'level', 'minPerShift', 'manager', 'address', 'active'],
   contracts: ['code', 'name', 'client', 'costCentre', 'manager', 'status', 'start', 'end', 'billable', 'location', 'tasks'],
   tasks: ['name', 'group', 'billable'],
-  onbSteps: ['id', 'on'], onbDocuments: ['id', 'req', 'verify', 'blocks', 'expiry'], onbPolicies: ['id', 'label', 'ver', 'sum', 'body'],
+  onbSteps: ['id', 'on'], onbDocuments: ['id', 'req', 'verify', 'blocks', 'expiry', 'on', 'custom', 'label', 'hint'], onbPolicies: ['id', 'label', 'ver', 'sum', 'body'],
 };
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 
@@ -373,6 +381,7 @@ export function readTemplateFile(text: string): FileRead {
       'affectsRota', 'minNotice', 'cancelWindow', 'sicknessReasons', 'types', 'policies', 'stages', 'typeLeave'];
     t.leaveConfig = keep(t.leaveConfig, allowed, 'leaveConfig');
   }
+  if (isObj(t.rotaConfig)) t.rotaConfig = keep(t.rotaConfig, ['supportLevels', 'flexMilestones', 'flexNotifyTo'], 'rotaConfig');
   if (isObj(t.structure)) {
     if (t.scope !== 'structure') { ignored.add('structure'); delete t.structure; }
     else {
@@ -410,8 +419,9 @@ export interface TenantState {
   onboarding?: { config: OnboardingConfig; policies: readonly OnbPolicy[]; acknowledged?: Readonly<Record<string, number>> };
   tenantSettings?: TemplateTenantSettings;
   leaveConfig?: TemplateLeaveConfig;
+  rotaConfig?: TemplateRotaConfig;
 }
-export type PlanArea = 'modules' | 'features' | 'labels' | 'types' | 'roles' | 'chain' | 'structure' | 'people' | 'organisation' | 'onboarding' | 'leave';
+export type PlanArea = 'modules' | 'features' | 'labels' | 'types' | 'roles' | 'chain' | 'structure' | 'people' | 'organisation' | 'onboarding' | 'leave' | 'rota';
 export interface PlanLine { area: PlanArea; text: string }
 export interface ApplySteps {
   /* module switches in the order they run, and where they leave the tenant */
@@ -427,11 +437,12 @@ export interface ApplySteps {
   /* the onboarding switches and settings to set by id, the held policies whose name or wording changes (reask: new wording,
      so the version goes up and the people still onboarding who acknowledged it are asked again), and the policies added */
   onboarding: {
-    steps: Record<string, boolean>; documents: Record<string, Omit<TemplateOnbDocument, 'id'>>;
+    steps: Record<string, boolean>; documents: Record<string, Omit<TemplateOnbDocument, 'id'>>; documentsAdded: TemplateOnbDocument[];
     policiesUpdated: (Pick<TemplateOnbPolicy, 'id' | 'label' | 'ver' | 'sum' | 'body'> & { reask: boolean })[]; policiesAdded: TemplateOnbPolicy[];
   };
   tenantSettings: Partial<TemplateTenantSettings>;
   leaveConfig?: TemplateLeaveConfig;
+  rotaConfig?: Partial<TemplateRotaConfig>;
 }
 export interface ApplyPlan { changes: PlanLine[]; added: PlanLine[]; leftAlone: PlanLine[]; steps: ApplySteps }
 
@@ -481,7 +492,7 @@ export function planApply(t: Template, s: TenantState,
   const changes: PlanLine[] = [], added: PlanLine[] = [], leftAlone: PlanLine[] = [];
   const steps: ApplySteps = { modules: [], finalModules: {}, finalRestore: {}, flags: [], labels: {}, typesAdded: [], typesUpdated: [], roleNames: {}, chains: [],
     structure: { departments: [], costCentres: [], locations: [], jobProfiles: [], contracts: [] },
-    onboarding: { steps: {}, documents: {}, policiesUpdated: [], policiesAdded: [] }, tenantSettings: {} };
+    onboarding: { steps: {}, documents: {}, documentsAdded: [], policiesUpdated: [], policiesAdded: [] }, tenantSettings: {} };
 
   /* modules */
   const mods = moduleSteps(t, s);
@@ -598,6 +609,7 @@ export function planApply(t: Template, s: TenantState,
     steps.leaveConfig = structuredClone(t.leaveConfig);
     changes.push({ area: 'leave', text: 'Leave setup settings, policies, types, sickness reasons and escalation changed.' });
   }
+  planRota(t.rotaConfig, s.rotaConfig, { changes, leftAlone }, steps);
 
   /* structure: new codes are added, held codes stay exactly as they are */
   const held = Object.fromEntries(STRUCTURE_KINDS.map(k => [k, new Set(s.structure[k].map(x => x.toUpperCase()))])) as Record<StructureKind, Set<string>>;
@@ -667,6 +679,9 @@ function planChains(t: Template, s: TenantState, may: boolean, changes: PlanLine
 export const ONB_LEFT_ALONE = 'Onboarding setup stays as it is. Changing it needs Configure onboarding.';
 type DocSettings = Omit<TemplateOnbDocument, 'id'>;
 const docWords = (d: DocSettings, was: DocSettings) => [
+  d.on !== undefined && d.on !== was.on ? (d.on ? 'asked for' : 'not asked for') : '',
+  d.label !== undefined && d.label !== was.label ? `renamed ${d.label}` : '',
+  d.hint !== undefined && d.hint !== was.hint ? 'a new hint' : '',
   d.req !== was.req ? (d.req ? 'required' : 'not required') : '',
   d.verify !== was.verify ? (d.verify === 'none' ? 'no check needed' : `checked by ${verifierLabel(d.verify).replace(/^Line/, 'line')}`) : '',
   d.blocks !== was.blocks ? (d.blocks ? 'blocks the start' : 'does not block the start') : '',
@@ -678,7 +693,7 @@ function planOnboarding(t: Template, s: TenantState, may: boolean, f: ReturnType
   const want = t.onboarding, have = s.onboarding;
   if (!want || !have) return;
   const changes: PlanLine[] = [], added: PlanLine[] = [], leftAlone: PlanLine[] = [];
-  const next: ApplySteps['onboarding'] = { steps: {}, documents: {}, policiesUpdated: [], policiesAdded: [] };
+  const next: ApplySteps['onboarding'] = { steps: {}, documents: {}, documentsAdded: [], policiesUpdated: [], policiesAdded: [] };
   const line = (text: string): PlanLine => ({ area: 'onboarding', text });
 
   const unknownSteps: string[] = [];
@@ -697,11 +712,27 @@ function planOnboarding(t: Template, s: TenantState, may: boolean, f: ReturnType
   if (unknownSteps.length) leftAlone.push(line(`Onboarding steps this tenant does not have are not used: ${list(unknownSteps)}.`));
 
   const unknownDocs: string[] = [];
+  /* the names a document is checked against, as each one is added */
+  const docNames = have.config.documents.map(d => ({ ...d }));
   for (const w of want.documents) {
     const h = have.config.documents.find(x => x.id === w.id);
-    if (!h) { unknownDocs.push(w.id); continue; }
     if (!isVerifier(w.verify)) continue;
-    const d: DocSettings = { req: w.req, verify: w.verify, blocks: w.blocks, expiry: w.expiry };
+    /* module 8: a document the template's tenant added comes too, optional or not as it was there, and asked for */
+    if (!h && w.custom === true && w.label !== undefined) {
+      const problem = documentProblem({ label: w.label, hint: w.hint }, docNames);
+      if (problem) { leftAlone.push(line(`Onboarding document ${w.label} is not added. ${problem.message}`)); continue; }
+      const d: TemplateOnbDocument = { id: w.id, label: w.label.trim(), hint: (w.hint ?? '').trim(), req: w.req, verify: w.verify, blocks: w.blocks,
+        expiry: w.expiry, on: w.on ?? true, custom: true };
+      next.documentsAdded.push(d);
+      docNames.push({ ...d, label: d.label ?? '', hint: d.hint ?? '', on: d.on ?? true, custom: true });
+      added.push(line(`Onboarding document ${d.label ?? w.id}, ${d.req ? 'required' : 'optional'}.`));
+      continue;
+    }
+    if (!h) { unknownDocs.push(w.id); continue; }
+    /* a built-in document keeps its name; one the tenant added takes the template's */
+    const named = h.custom && w.custom === true && w.label !== undefined
+      && !documentProblem({ label: w.label, hint: w.hint }, docNames, h.id) ? { label: w.label.trim(), hint: (w.hint ?? '').trim() } : {};
+    const d: DocSettings = { req: w.req, verify: w.verify, blocks: w.blocks, expiry: w.expiry, ...(w.on !== undefined ? { on: w.on } : {}), ...named };
     const words = docWords(d, h);
     if (!words.length) continue;
     next.documents[h.id] = d;
@@ -748,6 +779,45 @@ function planOnboarding(t: Template, s: TenantState, may: boolean, f: ReturnType
   out.leftAlone.push(line(reasked
     ? 'Uploaded policy documents stay as they are. Everybody’s onboarding progress stays too, apart from the policies they are asked to read again.'
     : 'Uploaded policy documents and everybody’s onboarding progress stay as they are.'));
+}
+
+/* Module 8: Rota setup's support levels, matched by code, each taking the
+   template's people per shift; and the flexible-worker milestones and who is
+   told. A level this tenant does not have is not used. A value the setup page
+   would refuse is left alone and said. The locations at a level follow its
+   new number, as a save on Rota setup does. */
+function planRota(want: TemplateRotaConfig | undefined, have: TemplateRotaConfig | undefined,
+  out: { changes: PlanLine[]; leftAlone: PlanLine[] }, steps: ApplySteps) {
+  if (!want || !have) return;
+  const line = (text: string): PlanLine => ({ area: 'rota', text });
+  const next: Partial<TemplateRotaConfig> = {};
+  const levels = have.supportLevels.map(h => {
+    const w = want.supportLevels.find(x => x.code === h.code);
+    return w && w.min !== h.min ? { ...h, min: w.min } : h;
+  });
+  const unknown = want.supportLevels.filter(w => !have.supportLevels.some(h => h.code === w.code)).map(w => w.label || w.code);
+  if (unknown.length) out.leftAlone.push(line(`Support levels this tenant does not have are not used: ${list(unknown)}.`));
+  const ok = { employeeTypes: [], shiftCodes: [], supportLevels: have.supportLevels };
+  const check = (c: Partial<TemplateRotaConfig>) => rotaConfigProblem({ ...DEFAULT_ROTA_CONFIG, ...have, ...c }, [{ n: 1, audience: 'Employees at location', wait: 0, channel: 'In-app', next: '' }], {}, ok);
+  if (levels.some((l, i) => l.min !== have.supportLevels[i]?.min)) {
+    const problem = check({ supportLevels: levels });
+    if (problem) out.leftAlone.push(line(`Support levels stay as they are. ${problem.message}`));
+    else {
+      next.supportLevels = levels;
+      for (const [i, l] of levels.entries()) if (l.min !== have.supportLevels[i]?.min) out.changes.push(line(`${l.label}: ${plural(l.min, 'person', 'people')} per shift, at every location at that level.`));
+    }
+  }
+  const flex = { flexMilestones: [...want.flexMilestones], flexNotifyTo: want.flexNotifyTo };
+  if (flex.flexMilestones.join() !== have.flexMilestones.join() || flex.flexNotifyTo !== have.flexNotifyTo) {
+    const problem = check(flex);
+    if (problem || !(FLEX_NOTIFY_TO as readonly string[]).includes(flex.flexNotifyTo))
+      out.leftAlone.push(line(`Flexible-worker milestones stay as they are. ${problem?.message ?? ''}`.trim()));
+    else {
+      Object.assign(next, flex);
+      out.changes.push(line(`Flexible-worker milestones at ${milestonesText(flex.flexMilestones)}, notified to ${flex.flexNotifyTo}.`));
+    }
+  }
+  if (Object.keys(next).length) steps.rotaConfig = next;
 }
 
 /* One line for the toast and the audit row. */

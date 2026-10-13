@@ -590,6 +590,10 @@ export const tid = {
     polAdd: 'monb-pol-add', filePick: 'monb-file-pick',
     /* the add and edit dialog (pol-add, pol-edit) */
     polName: 'monb-pol-name', polVersion: 'monb-pol-version', polSum: 'monb-pol-sum', polWarn: 'monb-pol-warn', polCancel: 'monb-pol-cancel', polSave: 'monb-pol-save',
+    /* module 8: a document switched off, and the documents this tenant adds, renames and removes */
+    docOn: (id: string) => k('monb-doc-on', id), docCustom: (id: string) => k('monb-doc-custom', id),
+    docRename: (id: string) => k('monb-doc-rename', id), docRemove: (id: string) => k('monb-doc-remove', id), docAdd: 'monb-doc-add', docLocked: 'monb-doc-locked',
+    docName: 'monb-doc-name', docHint: 'monb-doc-hint', docWarn: 'monb-doc-warn', docCancel: 'monb-doc-cancel', docSave: 'monb-doc-save',
   },
   /* module 3: Qnipay setup → Integrations → IT service desk (admIT, v15:9689) */
   iit: {

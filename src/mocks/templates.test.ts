@@ -167,6 +167,30 @@ describe('applying (D1, Review Focus 3)', () => {
     expect(rows[0]).toMatchObject({ before: { leaveSetup: { sicknessReasons: expect.arrayContaining(['Cold or flu']) } },
       after: { leaveSetup: { sicknessReasons: ['Template reason'] } } });
   });
+  test('module 8: a config template brings Rota setup\'s levels and milestones and an added onboarding document, in one audit row, and the level\'s locations follow', async () => {
+    const key = 'tpl_rota_and_documents';
+    const cfg = store.coll<{ version: number; documents: Record<string, unknown>[] }>('onboardingConfig').onboardingConfig;
+    if (!cfg) throw new Error('no onboarding config');
+    cfg.documents = [...cfg.documents, { id: 'dbs-check', label: 'DBS check', hint: 'Enhanced.', req: true, verify: 'hr', blocks: true, expiry: true, on: true, custom: true }];
+    expect((await save('Rota and documents')).status).toBe(200);
+    const saved = store.coll<{ version: number; template: Template }>('templates')[key];
+    if (!saved?.template.rotaConfig) throw new Error('saved config template has no Rota setup');
+    expect(saved.template.onboarding?.documents.at(-1)).toMatchObject({ id: 'dbs-check', custom: true, label: 'DBS check' });
+    saved.template.rotaConfig.supportLevels = saved.template.rotaConfig.supportLevels.map(l => (l.code === 'High' ? { ...l, min: 6 } : l));
+    saved.template.rotaConfig.flexMilestones = [6, 10];
+    cfg.documents = cfg.documents.filter(d => d.id !== 'dbs-check');
+    const n = audits().length;
+    const result = await admin('POST', APPLY(key), undefined, tenantVer());
+    expect(result.status).toBe(200);
+    const wh = Object.values(store.coll<{ code: string; minPerShift: number }>('locations')).find(l => l.code === 'WH');
+    expect(wh?.minPerShift).toBe(6);
+    expect(store.coll<{ flexMilestones: number[] }>('rotaConfig').rotaConfig?.flexMilestones).toEqual([6, 10]);
+    expect(store.coll<{ documents: { id: string }[] }>('onboardingConfig').onboardingConfig?.documents.map(d => d.id)).toContain('dbs-check');
+    const rows = audits().slice(n);
+    expect(rows.map(a => a.act)).toEqual(['Template applied']);
+    expect(rows[0]).toMatchObject({ before: { rotaSetup: { flexMilestones: [9, 12] } },
+      after: { rotaSetup: { flexMilestones: [6, 10], locations: expect.objectContaining({ WH: 6 }) } } });
+  });
   test('applying a config template cannot bypass leave-type in-use protection', async () => {
     const key = 'tpl_remove_used_leave_type';
     expect((await save('Remove used leave type')).status).toBe(200);
