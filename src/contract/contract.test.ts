@@ -94,7 +94,8 @@ function fieldNames(schema: z.ZodType): string[] {
 }
 test('no payroll schema has an amount, rate, cost or currency field', () => {
   const payroll = ENDPOINTS.filter(e => PAYROLL_PATH.test(e.path));
-  expect(payroll.map(e => e.path)).toEqual(expect.arrayContaining(['/api/v1/hours/team/export', '/api/v1/pay-codes', '/api/v1/pay-codes/:id']));
+  expect(payroll.map(e => e.path)).toEqual(expect.arrayContaining(['/api/v1/hours/team/export', '/api/v1/pay-codes', '/api/v1/pay-codes/:id',
+    '/api/v1/payroll/readiness', '/api/v1/payroll/runs/:id/export', '/api/v1/payroll/runs/:id/reconcile', '/api/v1/payroll/runs/:id/reopen']));
   const hits: string[] = [];
   for (const ep of payroll) {
     for (const [side, schema] of [['request', ep.request], ['response', ep.response]] as const) {

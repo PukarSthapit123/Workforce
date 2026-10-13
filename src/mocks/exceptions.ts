@@ -72,6 +72,9 @@ function itemOf(x: DerivedException): ExceptionItem {
     history: h?.history ?? [] };
 }
 
+/* Payroll readiness (module 6 group 4): every exception at every active location, with its handling. */
+export const exceptionsEverywhere = (): ExceptionItem[] => deriveExceptions(factsAt(activeLocations())).map(itemOf);
+
 /* ------------------------------------------------------------- the moves */
 /* The exception as it stands now, wherever it is: one outside the caller's
    location scope is refused with scope, one no longer detected is not found. */

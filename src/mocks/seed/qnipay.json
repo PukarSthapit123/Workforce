@@ -1619,6 +1619,7 @@
   },
   "audit": {},
   "exceptionHandling": {},
+  "payrollRuns": {},
   "notifications": {
    "ntf_seed_0001": {
     "version": 1,
