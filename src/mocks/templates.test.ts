@@ -153,6 +153,8 @@ describe('applying (D1, Review Focus 3)', () => {
     if (!saved?.template.tenantSettings || !saved.template.leaveConfig) throw new Error('saved config template is incomplete');
     saved.template.tenantSettings.fullTimeWeeklyHours = 40;
     saved.template.leaveConfig.sicknessReasons = ['Template reason'];
+    /* no sickness is recorded, so the template's reasons can replace every one (review M1) */
+    store.db.sickEpisodes = {};
     const leaveBefore = store.coll<{ version: number }>('leaveConfig').leaveConfig?.version;
     const tenantBefore = tenantVer(), n = audits().length;
     const result = await admin('POST', APPLY(key), undefined, tenantBefore);

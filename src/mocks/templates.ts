@@ -286,7 +286,7 @@ export const templateHandlers = [
     if (plan.steps.leaveConfig && currentLeave) {
       const nextLeave: LeaveConfigRecord = { ...currentLeave, ...plan.steps.leaveConfig,
         finYearStart: `${t.financialYear.start.slice(8, 10)}/${t.financialYear.start.slice(5, 7)}` };
-      const usageProblem = leaveConfigChangeProblem(currentLeave, nextLeave.types, nextLeave.policies, nextLeave.typeLeave);
+      const usageProblem = leaveConfigChangeProblem(currentLeave, nextLeave.types, nextLeave.policies, nextLeave.typeLeave, nextLeave.sicknessReasons);
       if (usageProblem) refuse(409, usageProblem);
       const problem = leaveConfigProblem(nextLeave, nextLeave.types, nextLeave.policies, nextLeave.stages, nextLeave.typeLeave, codesOf('employeeTypes'));
       if (problem) refuse(422, { code: 'invalid', field: problem.field, message: problem.message, next: problem.next });

@@ -453,6 +453,8 @@ describe('sickness episodes, Bradford and return to work (Review Focus 6, D9)', 
   test('configured sickness reasons are returned by the board and enforced on writes', async () => {
     const admin = await as('admin'), manager = await as('manager');
     const config = LeaveSetup.parse((await admin('GET', '/api/v1/leave/config')).body).config;
+    /* no sickness is recorded yet, so every reason can go (review M1) */
+    store.db.sickEpisodes = {};
     expect((await admin('PATCH', '/api/v1/leave/config', { sicknessReasons: ['New reason'] }, config.version)).status).toBe(200);
     expect(SicknessBoard.parse((await manager('GET', '/api/v1/leave/sickness')).body).reasons).toEqual(['New reason']);
     const saved = await manager('POST', '/api/v1/leave/sickness', { personCode: 'CP-1088', from: '2026-10-05', to: '2026-10-05', reason: 'New reason' });
@@ -591,6 +593,18 @@ describe('leave setup (D11)', () => {
     /* a code that is not a code is refused, naming the field */
     const bad = await admin('PATCH', '/api/v1/leave/config', { types: [...types, { ...added, code: 'not ok' }] }, config.version + 1);
     expect(refusal(bad)).toMatchObject({ code: 'invalid', field: `types.${types.length}.code` });
+  });
+  test('a sickness reason that recorded sickness uses cannot be removed, and the refusal names who (review M1)', async () => {
+    const admin = await as('admin'), before = snapshot(...WRITES);
+    const config = LeaveSetup.parse((await admin('GET', '/api/v1/leave/config')).body).config;
+    const r = await admin('PATCH', '/api/v1/leave/config', { sicknessReasons: config.sicknessReasons.filter(x => x !== 'Cold or flu') }, config.version);
+    expect(r.status).toBe(409);
+    expect(refusal(r)).toMatchObject({ code: 'in-use', field: 'sicknessReasons.0', message: 'Cold or flu is still the reason on recorded sickness.',
+      usedBy: [{ kind: 'sickness records', count: 2, examples: expect.arrayContaining([expect.stringContaining('(')]) }] });
+    expect(snapshot(...WRITES)).toEqual(before);
+    /* a reason nobody has been off with goes again */
+    expect((await admin('PATCH', '/api/v1/leave/config', { sicknessReasons: [...config.sicknessReasons, 'Injury at work'] }, config.version)).status).toBe(200);
+    expect((await admin('PATCH', '/api/v1/leave/config', { sicknessReasons: config.sicknessReasons }, config.version + 1)).status).toBe(200);
   });
   test('a leave type used by a ledger row is also protected from removal', async () => {
     const admin = await as('admin');

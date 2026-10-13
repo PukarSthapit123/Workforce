@@ -572,7 +572,7 @@ export const leaveHandlers = [
     const { typeLeave, stages, ...rest } = body;
     const next: LeaveConfigRecord = { ...c, ...rest, typeLeave: { ...c.typeLeave, ...typeLeave },
       stages: stages ? renumberLeaveStages(stages.map(s => ({ ...s, n: s.n ?? 0 }))) : c.stages };
-    const usageProblem = leaveConfigChangeProblem(c, next.types, next.policies, next.typeLeave);
+    const usageProblem = leaveConfigChangeProblem(c, next.types, next.policies, next.typeLeave, next.sicknessReasons);
     if (usageProblem) refuse(409, usageProblem);
     const problem = leaveConfigProblem(next, next.types, next.policies, next.stages, next.typeLeave, codesOf('employeeTypes'));
     if (problem) invalid({ field: problem.field ?? 'config', message: problem.message });
