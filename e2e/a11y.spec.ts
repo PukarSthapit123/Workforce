@@ -468,6 +468,7 @@ const pages5 = (api: Parameters<typeof completeMine>[1]): [string, Step[]][] => 
     ['/setup/monb', async page => { await open('/setup/monb', tid.monb.card('steps'))(page); await page.getByTestId(tid.monb.policies).waitFor(); }],
     ['add policy dialog', click(tid.monb.polAdd, tid.monb.polName)],
     ['remove policy confirm', async page => { await escape(page); await click(tid.monb.polRemove('pol_itsec'), tid.modal.root)(page); }],
+    ['add document dialog', async page => { await escape(page); await click(tid.monb.docAdd, tid.monb.docName)(page); }],
   ]],
 ];
 test.describe('module 5 pages', () => {

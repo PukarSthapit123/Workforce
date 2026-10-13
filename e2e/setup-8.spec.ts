@@ -3,7 +3,8 @@ import type { Page } from '@playwright/test';
 import { tid } from '../src/testids';
 import { POSTING_DOT } from '../src/domain/timesheet';
 import { sendVersioned, signInEmail } from './support/timesheet';
-import { AMARA, DEE, RACHEL, auditRows, info } from './support/config';
+import { AMARA, DEE, RACHEL, auditRows, info, refusedToast } from './support/config';
+import { TOM_SOCIAL, openPortal, pdf, uploadDoc } from './support/onboarding';
 import { myLeave, openRequest } from './support/leave';
 
 /* Module 8, setup hardening: an administrator changes a setting and the rule
@@ -194,4 +195,98 @@ test('Leave: a new policy gives the right entitlement, and carry-over appears', 
   await expect(dialog).toContainText('5 of 5 days carried from 2025/26');
   await expect(dialog.getByTestId(tid.leave.entEntitlement)).toContainText('35 days');
   await expect(dialog.getByTestId(tid.leave.entCarry)).toContainText('5 days');
+});
+
+/* Group 5: the smaller setup gaps. */
+test('Rota setup: a support level\'s new people per shift is what Team rota measures its locations against', async ({ page }) => {
+  test.setTimeout(90_000);
+  await signInEmail(page, DEE);
+  await page.goto('/setup/mrota');
+  await page.getByTestId(tid.mrota.card('staffing')).waitFor();
+  await page.getByTestId(tid.mrota.levelMin('High')).fill('5');
+  await page.getByTestId(tid.mrota.save).click();
+  await expect(info(page, 'Rota setup saved. It applies across the tenant straight away.')).toBeVisible();
+  const saved = (await auditRows(page, 'rotaConfig')).at(-1);
+  expect(saved?.after).toMatchObject({ locations: expect.objectContaining({ WH: 5 }) });
+
+  /* Willow House is a high support location: its rota now needs 5 on every shift */
+  await signInEmail(page, RACHEL);
+  await page.goto('/team/trota');
+  await page.getByTestId(tid.trota.grid).waitFor();
+  await expect(page.getByTestId(tid.trota.cov(0))).toHaveAttribute('aria-label', /of 5 on shift/);
+});
+
+test('Rota setup: new flexible-worker milestones and recipient show with the evidence on Notifications', async ({ page }) => {
+  await signInEmail(page, DEE);
+  await page.goto('/setup/mrota');
+  await page.getByTestId(tid.mrota.card('flex')).waitFor();
+  await expect(page.getByTestId(tid.mrota.flexNote)).toContainText('Counting bank weeks is not built yet');
+  await page.getByTestId(tid.mrota.milestones).fill('6, 10');
+  await page.getByTestId(tid.mrota.notifyTo).selectOption('Service Manager');
+  await page.getByTestId(tid.mrota.save).click();
+  await expect(info(page, 'Rota setup saved. It applies across the tenant straight away.')).toBeVisible();
+  await page.goto('/setup/anotif');
+  await expect(page.getByTestId(tid.anotif.flexMilestones)).toHaveText('Milestones at 6 and 10 weeks · notified to Service Manager');
+});
+
+test('Onboarding setup: a document the administrator adds and makes required is asked of a new starter, and cannot be removed once he holds it', async ({ page }) => {
+  test.setTimeout(120_000);
+  await signInEmail(page, DEE);
+  await page.goto('/setup/monb');
+  await page.getByTestId(tid.monb.docs).waitFor();
+  await page.getByTestId(tid.monb.docAdd).click();
+  await page.getByTestId(tid.monb.docName).fill('DBS check');
+  await page.getByTestId(tid.monb.docHint).fill('An enhanced certificate issued in the last three years.');
+  await page.getByTestId(tid.monb.docSave).click();
+  await expect(info(page, 'DBS check added. It is optional until you make it required and save.')).toBeVisible();
+  await page.getByTestId(tid.monb.docReq('dbs-check')).click();
+  await page.getByTestId(tid.monb.save).click();
+  await expect(page.getByTestId(tid.monb.dirty)).toHaveCount(0, { timeout: 10_000 });
+
+  /* Tom is asked for it, with its hint, and uploads it */
+  await signInEmail(page, TOM_SOCIAL);
+  await openPortal(page);
+  await page.getByTestId(tid.onb.step('documents')).click();
+  await page.getByTestId(tid.onb.body('documents')).waitFor();
+  await expect(page.getByTestId(tid.onb.doc('dbs-check'))).toContainText('An enhanced certificate issued in the last three years.');
+  await uploadDoc(page, 'dbs-check', pdf('dbs.pdf'));
+  await expect(page.getByTestId(tid.onb.docFile('dbs-check'))).toContainText('dbs.pdf');
+
+  /* now he holds it, removing it is refused and names him */
+  await signInEmail(page, DEE);
+  await page.goto('/setup/monb');
+  await page.getByTestId(tid.monb.docRemove('dbs-check')).click();
+  await page.getByTestId(tid.modal.root).getByRole('button', { name: 'Remove' }).click();
+  await expect(refusedToast(page, 'DBS check is on the onboarding of Tom Achterberg, so it cannot be removed.')).toBeVisible();
+  await expect(page.getByTestId(tid.monb.doc('dbs-check'))).toBeVisible();
+});
+
+test('Organisation: the country offers its own time zone, and taking it sets the organisation\'s', async ({ page }) => {
+  await signInEmail(page, DEE);
+  await page.goto('/setup/aorg');
+  await page.getByTestId(tid.aorg.card('pay')).waitFor();
+  await expect(page.getByTestId(tid.aorg.card('pay'))).toContainText('Used by Payroll and Business Central, which is not built yet.');
+  await page.getByTestId(tid.aorg.country).selectOption('Nepal');
+  await expect(page.getByTestId(tid.aorg.countryZone)).toContainText('Its time zone is Asia/Kathmandu. This organisation keeps Europe/London');
+  await page.getByTestId(tid.aorg.useCountryZone).click();
+  await expect(info(page, 'Time zone saved: Asia/Kathmandu.')).toBeVisible();
+  await expect(page.getByTestId(tid.aorg.timezone)).toHaveValue('Asia/Kathmandu');
+  await expect(page.getByTestId(tid.aorg.countryZone)).toContainText('Its time zone, Asia/Kathmandu, is the one set under Date and time.');
+});
+
+test('Approvals: the return-reason row opens the real control on Timesheet setup, and what is saved there shows back on Approvals', async ({ page }) => {
+  await signInEmail(page, DEE);
+  await page.goto('/setup/aappr');
+  await expect(page.getByTestId(tid.aappr.reason)).toHaveText('Required');
+  await page.getByTestId(tid.aappr.reasonLink).click();
+  await expect(page).toHaveURL(/\/setup\/mts#mts-return-reason$/);
+  const control = page.getByTestId(tid.mts.returnReasonRequired);
+  await expect(control).toBeInViewport();
+  await control.click();
+  await page.getByTestId(tid.mts.save).click();
+  await expect(page.getByTestId(tid.mts.dirty)).toHaveCount(0, { timeout: 10_000 });
+  await page.goto('/setup/aappr');
+  await expect(page.getByTestId(tid.aappr.reason)).toHaveText('Not required');
+  await page.getByTestId(tid.aappr.cutoffLink).click();
+  await expect(page.locator('#mts-cutoff')).toBeInViewport();
 });
