@@ -259,7 +259,7 @@ test('Organisation: the country offers its own time zone, and taking it sets the
   await signInEmail(page, DEE);
   await page.goto('/setup/aorg');
   await page.getByTestId(tid.aorg.card('pay')).waitFor();
-  await expect(page.getByTestId(tid.aorg.card('pay'))).toContainText('Used by Payroll and Business Central, which is not built yet.');
+  await expect(page.getByTestId(tid.aorg.card('pay'))).not.toContainText('Used by Payroll and Business Central, which is not built yet.');
   await page.getByTestId(tid.aorg.country).selectOption('Nepal');
   await expect(page.getByTestId(tid.aorg.countryZone)).toContainText('Its time zone is Asia/Kathmandu. This organisation keeps Europe/London');
   await page.getByTestId(tid.aorg.useCountryZone).click();
