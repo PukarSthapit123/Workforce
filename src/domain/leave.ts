@@ -203,10 +203,12 @@ export function serviceBonus(policy: Pick<LeavePolicy, 'serviceRules'>, years: n
 }
 /* carry: the unused days brought from the year before (yearBalance works them out), for the methods that keep a balance */
 export interface EntitlementOptions {
-  fullTimeWeeklyHours?: number; bhPaid?: boolean; workingBankHolidays?: number; carry?: { days: number; from: string };
+  fullTimeWeeklyHours?: number; bhPaid?: boolean; workingBankHolidays?: number;
+  /* note: why nothing carried, in place of the count (review I6) */
+  carry?: { days: number; from: string; note?: string };
 }
 const carryLine = (policy: LeavePolicy, carry: EntitlementOptions['carry']): CalcLine[] => (policy.carry > 0 && carry
-  ? [{ label: 'Carry-over', value: `${carry.days} of ${policy.carry} days carried from ${carry.from}` }] : []);
+  ? [{ label: 'Carry-over', value: carry.note ?? `${carry.days} of ${policy.carry} days carried from ${carry.from}` }] : []);
 /* entitlement: a full, traceable calculation, not just a number. */
 export function entitlement(p: PersonLeaveFacts, policy: LeavePolicy, today: string, options: EntitlementOptions = {}): Entitlement {
   const years = yearsService(p.start, today), lines: CalcLine[] = [], day = dailyHours(p.contractedHours);
@@ -439,8 +441,12 @@ export function yearBalance(o: YearBalanceInput, year: LeaveYearSpan): Balance {
     : o.base.year === priorYear.label ? o.base.taken : 0;
   const priorBalance = balanceOf({ ent: priorEnt, base: { ...o.base, taken: baselineTaken }, contractedHours: o.facts.contractedHours,
     requests: o.requests, ledger: o.ledger, today: o.today, finYearStart: o.finYearStart, year: priorYear });
-  const carry = Math.max(0, Math.min(o.policy.carry, priorBalance.leftD));
-  const ent = entitlement(o.facts, o.policy, current ? o.today : year.start, { ...options, carry: { days: round1(carry), from: priorYear.label } });
+  /* review I6: nothing carries from a leave year the person did not work all of. The entitlement has no
+     part-year rule to pro-rate the prior year with, so a starter after it began carries nothing. */
+  const workedPrior = !isIsoDate(o.facts.start) || o.facts.start <= priorYear.start;
+  const carry = workedPrior ? Math.max(0, Math.min(o.policy.carry, priorBalance.leftD)) : 0;
+  const ent = entitlement(o.facts, o.policy, current ? o.today : year.start, { ...options, carry: { days: round1(carry), from: priorYear.label,
+    ...(workedPrior ? {} : { note: `None from ${priorYear.label}. Started ${formatDmy(o.facts.start)}, after that leave year began` }) } });
   return balanceOf({ ent, base: current ? o.base : { ...o.base, taken: 0 },
     contractedHours: o.facts.contractedHours, requests: o.requests, ledger: o.ledger, today: o.today, finYearStart: o.finYearStart, year });
 }

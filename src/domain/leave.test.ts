@@ -323,6 +323,18 @@ describe('balance (D3): derived from base, requests and ledger', () => {
     /* the entitlement line is the total, and it is the trace's last line */
     expect(y.ent.lines.at(-1)).toEqual({ label: 'Entitlement', value: '28 days · 210.00 hours' });
   });
+  test('a new starter carries nothing from a leave year they did not work all of, and the trace says why (review I6)', () => {
+    const carryBase = { unit: 'days' as const, taken: 0, toil: 0, toilBy: '' };
+    const o = (start: string) => ({ facts: { contractedHours: 37.5, start }, policy: STD, base: carryBase, requests: [], ledger: [], today: '2026-10-13', finYearStart: '01/04' });
+    /* started this leave year, after 2025/26 ended */
+    const fresh = yearBalance(o('2026-09-01'), leaveYear('2026-10-13', '01/04'));
+    expect(fresh.ent.days).toBe(24);
+    expect(fresh.ent.lines.find(line => line.label === 'Carry-over')?.value).toBe('None from 2025/26. Started 01/09/2026, after that leave year began');
+    /* started part-way through 2025/26: no part-year rule to pro-rate it by, so nothing carries either */
+    expect(yearBalance(o('2025-11-03'), leaveYear('2026-10-13', '01/04')).ent.days).toBe(24);
+    /* on the prior year's first day or before, the unused days carry as before */
+    expect(yearBalance(o('2025-04-01'), leaveYear('2026-10-13', '01/04')).ent.days).toBe(29);
+  });
   test('a policy with no balance keeps its one line saying why: no carry-over or entitlement line (review M7)', () => {
     const facts = { contractedHours: 37.5, start: '' }, carryBase = { unit: 'days' as const, taken: 0, toil: 0, toilBy: '' };
     for (const policy of [NONE, HRIS, SICKP]) {
