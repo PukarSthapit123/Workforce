@@ -22,5 +22,6 @@ import { clockHandlers } from './clock';
 import { onboardingHandlers } from './onboarding';
 import { hoursHandlers } from './hours';
 import { exceptionHandlers } from './exceptions';
+import { payCodeHandlers } from './pay-codes';
 /* Order matters: faults first, so they can pre-empt any endpoint. */
-export const handlers = [faultsHandler, ...devHandlers, ...sessionHandlers, ...tenantHandlers, ...accessHandlers, ...auditHandlers, ...peopleHandlers, ...transitionHandlers, ...dimensionHandlers, ...employeeTypeHandlers, ...profileHandlers, ...timesheetHandlers, ...rotaHandlers, ...leaveHandlers, ...savedDataHandlers, ...templateHandlers, ...notificationHandlers, ...approvalHandlers, ...noticeHandlers, ...homeHandlers, ...clockHandlers, ...onboardingHandlers, ...hoursHandlers, ...exceptionHandlers /* feature handlers appended by later tasks */];
+export const handlers = [faultsHandler, ...devHandlers, ...sessionHandlers, ...tenantHandlers, ...accessHandlers, ...auditHandlers, ...peopleHandlers, ...transitionHandlers, ...dimensionHandlers, ...employeeTypeHandlers, ...profileHandlers, ...timesheetHandlers, ...rotaHandlers, ...leaveHandlers, ...savedDataHandlers, ...templateHandlers, ...notificationHandlers, ...approvalHandlers, ...noticeHandlers, ...homeHandlers, ...clockHandlers, ...onboardingHandlers, ...hoursHandlers, ...exceptionHandlers, ...payCodeHandlers /* feature handlers appended by later tasks */];

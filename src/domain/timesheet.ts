@@ -7,6 +7,7 @@
    line, which it does only while the Rota module is on (D9). Messages are the
    prototype's, with each em-dash aside rewritten as its own sentence. */
 import type { Problem } from './codes';
+import type { PayCodeBasis } from './pay-codes';
 import { addDays, dowMon, formatDay, formatDmy, formatTime, pad, toMin, weekDates, periodStart, type Clock } from './time';
 import { roleWaiting } from './approvals';
 
@@ -312,17 +313,19 @@ export function allocationProblem(fields: Readonly<Record<string, string | boole
 }
 
 /* ----------------------------------------------------------- rate derivation */
-/* A base pay code, read-only here (pay code upkeep is module 6). `value` holds a
-   multiplier or a unit count; a flat code's value would be money, so it is blank. */
-export interface PayCode { code: string; basis: string; value: string; element: string; label: string; workType: boolean }
+/* A base pay code, kept on Pay codes (module 6, domain/pay-codes). `value` holds a
+   multiplier or a unit count; a flat or units code has none (no money, P1). */
+export interface PayCode { code: string; basis: PayCodeBasis; value: string; element: string; label: string; workType: boolean }
 /* An allowance the employee declares on the day. No amount: the value is Business Central's (D11). */
 export interface AllowanceDef { code: string; label: string; payCode: string; tier: string; element?: string; basis?: string }
+/* No money (module 6, P1): a flat code keeps its basis but carries no value
+   here, so it has no unit; the amount is set in Business Central. */
 export const PAY_BASIS = {
   multiplier: { label: 'Multiplier on base rate', unit: '×', hint: 'value × hours × base rate' },
-  flat: { label: 'Flat amount per occurrence', unit: '£', hint: 'value posted once per shift claimed' },
+  flat: { label: 'Flat amount per occurrence', unit: '', hint: 'The amount is set in Business Central.' },
   hours: { label: 'Hours at base rate', unit: 'hrs', hint: 'value treated as hours' },
   days: { label: 'Day units', unit: 'days', hint: 'value × day rate' },
-  units: { label: 'Units (no value)', unit: '—', hint: 'posted as a marker, e.g. absence' },
+  units: { label: 'Units (no value)', unit: '', hint: 'posted as a marker, for example absence' },
 } as const;
 export type PayBasis = keyof typeof PAY_BASIS;
 const baseCode = (codes: readonly PayCode[], c: string) => codes.find(x => x.code === c);

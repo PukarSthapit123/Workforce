@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { defineEndpoint } from './endpoints';
 import { IsoDateTime, RecordMeta, mutation } from './common';
 import { IsoDate } from './people';
+import { PayCodeShape } from './pay-codes';
 
 /* mgrok (module 8): approved by the line manager, waiting on a later layer of the chain (payroll) */
 export const TsState = z.enum(['draft', 'pend', 'back', 'resub', 'ok', 'mgrok']);
@@ -86,8 +87,8 @@ export const TimesheetField = z.object({
   repeat: z.string().optional(), seq: z.number().optional(), pay: z.string().optional(),
 });
 export type TimesheetField = z.infer<typeof TimesheetField>;
-/* Read-only here; pay code upkeep is module 6. A flat code's value would be money, so it is blank. */
-export const PayCode = z.object({ code: z.string(), basis: z.string(), value: z.string(), element: z.string(), label: z.string(), workType: z.boolean() });
+/* Kept on Pay codes (contract/pay-codes.ts): a value is a multiplier or a unit count, and a flat or units code has none. */
+export const PayCode = PayCodeShape;
 export type PayCode = z.infer<typeof PayCode>;
 
 /* ------------------------------------------------------------------ week */

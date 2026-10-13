@@ -644,7 +644,8 @@ function timesheets(data, people) {
     fieldDefaults: Object.fromEntries(Object.entries(CFG.fields || {}).filter(([c]) => !MONEY_FIELDS.has(c))),
     allowances, types });
   const payCodes = byId((data.BASE_CODES || []).map(b => meta({ id: `pc_${b.code}`, code: b.code, basis: b.basis,
-    value: b.basis === 'flat' || isMoney(b.value) ? '' : String(b.value ?? ''), element: b.element, label: b.label || b.code, workType: !!b.wt })));
+    /* no money (module 6, P1): a flat code's value would be an amount, and a units code posts as a marker, so neither has one */
+    value: b.basis === 'flat' || b.basis === 'units' || isMoney(b.value) ? '' : String(b.value ?? ''), element: b.element, label: b.label || b.code, workType: !!b.wt })));
   /* Each project's own tasks (PROJECTS[].tasks), for the Job task field: a task
      belongs to its project, as Business Central's job tasks do. */
   const projectTasks = byId((data.PROJECTS || []).flatMap(pr => (pr.tasks || []).map((t, i) => meta({

@@ -3403,7 +3403,7 @@
     "id": "pc_ABS",
     "code": "ABS",
     "basis": "units",
-    "value": "1",
+    "value": "",
     "element": "PE-ABS",
     "label": "Absence",
     "workType": false
@@ -3414,7 +3414,7 @@
     "id": "pc_LVE",
     "code": "LVE",
     "basis": "units",
-    "value": "1",
+    "value": "",
     "element": "PE-LVE",
     "label": "Leave",
     "workType": false
@@ -3425,7 +3425,7 @@
     "id": "pc_SSP",
     "code": "SSP",
     "basis": "units",
-    "value": "1",
+    "value": "",
     "element": "PE-SSP",
     "label": "Statutory sick pay",
     "workType": false
