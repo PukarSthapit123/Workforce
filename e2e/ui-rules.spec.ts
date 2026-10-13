@@ -54,7 +54,6 @@ async function eachBuiltPage(page: Page, signInAs: (p: Persona) => Promise<void>
   const visit = async (path: string) => {
     await go(page, path);
     await expect(page).toHaveURL(path);
-    await page.getByTestId(tid.page(path.split('?')[0]?.split('/').pop() ?? '')).waitFor();
     await page.getByTestId(READY[path] ?? tid.page('none')).waitFor();
     await check(path);
   };
