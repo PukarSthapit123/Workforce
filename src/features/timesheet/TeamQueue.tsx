@@ -65,7 +65,9 @@ export function TeamQueue({ returnReasonRequired }: { returnReasonRequired: bool
                 <TableCell label="Pay elements" className="text-xs"><PostingDot testId={tid.tteam.dot(r.id)} posting={r.posting} />{payElements(r)}</TableCell>
                 <TableCell label="Hours" className="text-right tabular-nums">{queueHours(r.minutes)}</TableCell>
                 <TableCell label="Status">
-                  <span className="inline-flex items-center"><Pill testId={tid.tteam.state(r.id)} tone={pill.tone} glyph={pill.glyph}>{pill.label}</Pill>
+                  {/* on a phone the longest state, waiting on payroll, wraps inside its pill rather than pushing the page sideways */}
+                  <span className="inline-flex flex-wrap items-center"><Pill testId={tid.tteam.state(r.id)} tone={pill.tone} glyph={pill.glyph}
+                    className="max-md:whitespace-normal">{pill.label}</Pill>
                     <HistoryCount testId={tid.tteam.history(r.id)} row={r} /></span>
                 </TableCell>
                 <TableCell kind="foot" empty={!open} className="text-right whitespace-nowrap">
