@@ -15,12 +15,12 @@ import { tid } from '../src/testids';
    employee, Team Home and team Notices for the manager, and Organisation,
    Calendar, Modules & features (the list and a module's drill-in),
    Notifications and Approvals for the admin; and module 6's: My hours for
-   the employee, Hours position and Exceptions for the manager, and Payroll
-   readiness and Business Central for the admin. */
+   the employee, Hours position and Exceptions for the manager, and
+   Pay codes, Payroll readiness and Business Central for the admin. */
 type Persona = 'employee' | 'manager' | 'admin';
 const BUILT = ['/setup/asetup', '/setup/aperm', '/setup/iaudit', '/setup/apeople', '/setup/aloc', '/setup/aloc?d=locations', '/setup/acon', '/setup/atypes',
   '/setup/mts', '/setup/mrota', '/setup/mleave',
-  '/setup/aorg', '/setup/acal', '/setup/amods', '/setup/amods?m=TS', '/setup/anotif', '/setup/aappr', '/setup/ipay', '/setup/ibc'];
+  '/setup/aorg', '/setup/acal', '/setup/amods', '/setup/amods?m=TS', '/setup/anotif', '/setup/aappr', '/setup/mpay', '/setup/ipay', '/setup/ibc'];
 const BUILT_AS: [Persona, string][] = [['employee', '/work/ts'], ['employee', '/work/shifts'], ['employee', '/work/leave'], ['employee', '/work/home'],
   ['employee', '/work/profile'], ['employee', '/work/docs'], ['employee', '/work/notices'], ['employee', '/work/hours'], ['manager', '/team/tteam'], ['manager', '/team/trota'],
   ['manager', '/team/tshifts'], ['manager', '/team/tpat'], ['manager', '/team/tcover'], ['manager', '/team/tleave'], ['manager', '/team/tsick'],
@@ -34,7 +34,7 @@ const READY: Record<string, string> = { '/setup/asetup': tid.page('asetup'), '/s
   '/setup/aorg': tid.aorg.spine, '/setup/acal': tid.acal.card('saved'), '/setup/amods': tid.amods.card('TS'), '/setup/amods?m=TS': tid.amods.features,
   '/setup/anotif': tid.anotif.table, '/setup/aappr': tid.aappr.chainTable, '/work/home': tid.home.grid, '/work/profile': tid.profile.state,
   '/work/docs': tid.docs.card, '/work/notices': tid.notices.table, '/team/thome': tid.thome.grid, '/team/tnotices': tid.tnotices.table,
-  '/work/hours': tid.hours.days, '/team/thours': tid.thours.table, '/team/texc': tid.texc.list, '/setup/ipay': tid.ipay.banner, '/setup/ibc': tid.ibc.log };
+  '/work/hours': tid.hours.days, '/team/thours': tid.thours.table, '/team/texc': tid.texc.list, '/setup/mpay': tid.mpay.table, '/setup/ipay': tid.ipay.banner, '/setup/ibc': tid.ibc.log };
 /* The pages that register a guide (src/ui/guides.ts), by path, with the view it is registered under */
 const GUIDED: Record<string, string> = { '/work/ts': 'ts', '/team/tteam': 'tteam', '/setup/mts': 'mts', '/team/trota': 'trota', '/team/tshifts': 'tshifts',
   '/team/tpat': 'tpat', '/setup/mrota': 'mrota', '/setup/mleave': 'mleave', '/work/notices': 'notices', '/team/tnotices': 'tnotices',
