@@ -159,4 +159,16 @@ export const GUIDES: Readonly<Record<string, Guide>> = {
     ['A change is a request',
       'It is approved before it takes effect, and the old value is kept in the audit trail.'],
   ] },
+  ipay: { label: 'What readiness means', title: 'What readiness means', sections: [
+    ['The states',
+      'NOT READY means something must be cleared first. READY WITH WARNINGS means nothing blocks the handover but something should be looked at. EXPORTED and RECONCILED record what has already happened.'],
+    ['The period',
+      'The pay period comes from the pay frequency, week ending day and first pay date on Organisation. The previous period closes at the Timesheet cut-off while the period lock is enforced.'],
+    ['What blocks a handover',
+      'Missing timesheets, days not finally approved (awaiting a decision, sent back, or approved by the manager and waiting on payroll), failed postings, unresolved critical exceptions, anyone who recorded hours while not cleared to work, and anyone with hours and no Business Central resource number.'],
+    ['What only warns',
+      'Postings still in flight, unreconciled records, open exceptions below critical, and past days recorded but not yet submitted.'],
+    ['Export and reconciliation',
+      'Export produces a CSV of approved hours, with hours and pay codes only. It does not post to Business Central. Approval already queues each record individually. Reconciliation is a decision a person records, not something the platform infers.'],
+  ] },
 };

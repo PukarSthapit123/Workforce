@@ -637,4 +637,14 @@ export const tid = {
     code: 'mpay-code', label: 'mpay-label', basis: 'mpay-basis', valueInput: 'mpay-value-input', element: 'mpay-element', wt: 'mpay-wt',
     money: 'mpay-money', inUse: 'mpay-in-use', warn: 'mpay-warn', cancel: 'mpay-cancel', remove: 'mpay-remove', save: 'mpay-save',
   },
+  /* module 6: Qnipay setup → Integrations → Payroll readiness (admPayroll, v15:9855): the state banner, P's four
+     figures, the pay-period state beside the cut-off, the blockers and warnings with Open, the handover and the reopen dialog */
+  ipay: {
+    error: 'ipay-error', loading: 'ipay-loading', banner: 'ipay-banner', figure: (key: string) => k('ipay-figure', key),
+    period: 'ipay-period', current: 'ipay-current', currentState: 'ipay-current-state', closes: 'ipay-closes', frequency: 'ipay-frequency',
+    frequencyLink: 'ipay-frequency-link', previous: 'ipay-previous', previousState: 'ipay-previous-state', cutoff: 'ipay-cutoff', enforced: 'ipay-enforced',
+    blockers: 'ipay-blockers', warnings: 'ipay-warnings', item: (key: string) => k('ipay-item', key), open: (key: string) => k('ipay-open', key),
+    export: 'ipay-export', reconcile: 'ipay-reconcile', reopen: 'ipay-reopen', history: 'ipay-history',
+    reason: 'ipay-reason', cancel: 'ipay-cancel', confirm: 'ipay-confirm',
+  },
 } as const;

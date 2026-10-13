@@ -49,9 +49,11 @@ test('opening an item marks it read and goes to its page; the count follows the 
 });
 
 test('an item whose page I cannot reach is shown without a link; Mark all read clears the count', async () => {
+  /* the admin's Timesheet destination is Payroll readiness (ipay), which needs integration: this admin has it revoked */
+  const acc = accountOf('admin') as ReturnType<typeof accountOf> & { revocations: string[] };
+  acc.revocations = ['integration'];
   await signInAs('admin');
-  const admin = accountOf('admin').personCode;
-  /* the admin's Timesheet destination, Payroll (ipay), is not built yet */
+  const admin = acc.personCode;
   store.coll('notifications').ntf_test_home = { id: 'ntf_test_home', version: 1, updatedAt: '2026-08-13T14:30:00.000Z', personId: admin, area: 'Timesheet',
     title: 'Approval delegated to you', body: 'Covering Rachel Hussain', at: '2026-08-13T14:00:00.000Z', read: false };
   const unread = rows(admin).filter(n => !n.read).length;

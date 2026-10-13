@@ -97,7 +97,8 @@ describe('deep links (NOTIF_TARGETS, notifReachable)', () => {
   test('a link is offered only when the page is on that person\'s nav and built', () => {
     expect(linkFor('Rota', 'manager', nav('team_rota'))).toEqual({ view: 'trota', path: '/team/trota', label: 'Rota' });
     expect(linkFor('Rota', 'manager', nav('team_ts'))).toBeNull();
-    expect(linkFor('Timesheet', 'admin', nav('integration'))).toBeNull(); // ipay is not built yet
+    expect(linkFor('Timesheet', 'admin', nav('integration'))).toEqual({ view: 'ipay', path: '/setup/ipay', label: 'Payroll readiness' }); // built in module 6 group 4
+    expect(linkFor('Timesheet', 'admin', nav('mod_cfg'))).toBeNull(); // not on the nav without integration
     expect(linkFor('Workforce', 'employee', nav('own_home'))).toEqual({ view: 'home', path: '/work/home', label: 'Home' }); // built in 1c group 7
     expect(linkFor('Workforce', 'employee', nav('own_ts'))).toBeNull(); // not on the nav without own_home
     expect(linkFor('Workforce', 'admin', nav('mod_cfg'))).toEqual({ view: 'asetup', path: '/setup/asetup', label: 'Qnipay setup' });

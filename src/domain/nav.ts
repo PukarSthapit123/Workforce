@@ -23,8 +23,8 @@ export interface NavGroup { key: 'work' | 'team' | 'setup'; label: string; tabs:
 
 /* which sub-project brings each view; a view not listed here is built in plan 1a */
 const LATER: Record<string, string> = {
-  /* module 6: hours, team hours (group 1), exceptions (group 2) and pay codes (group 3) are built */
-  ipay: 'Payroll and Business Central', ibc: 'Payroll and Business Central',
+  /* module 6: hours, team hours (group 1), exceptions (group 2), pay codes (group 3) and payroll readiness (group 4) are built */
+  ibc: 'Payroll and Business Central',
 };
 const tab = (group: NavGroup['key'], view: string, label: string, extra: Partial<NavTab> = {}): NavTab =>
   ({ view, label, path: `/${group}/${view}`, built: !(view in LATER), ...(view in LATER ? { subProject: LATER[view] } : {}), ...extra });
