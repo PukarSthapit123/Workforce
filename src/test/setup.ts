@@ -6,6 +6,7 @@ import { faults } from '@/mocks/faults';
 import { store } from '@/mocks/store';
 import { queryClient } from '@/api/query';
 import { setToken } from '@/api/session-token';
+import { DEFAULT_LOCALE, setActiveLocale } from '@/domain/time';
 
 /* src/ test files share workers (isolate: false in vitest.config.ts), so a
    module loaded by one file is the same instance in the next. This file runs
@@ -20,6 +21,13 @@ try { localStorage.clear(); sessionStorage.clear(); } catch { /* no storage: not
 setToken(null);
 store.setClock(null);
 store.reset('social');
+/* The locale every date and week rule reads is module state: serve() sets it
+   from the tenant on each request, and a tenant read sets it in the app. A
+   file that moved the week start to Sunday, or the date format or clock,
+   would otherwise leave it so for the next file in the worker until that
+   file's first request, and a domain test makes none (src/mocks/rota.test.ts
+   then src/domain/rota.test.ts failed three tests this way). */
+setActiveLocale(DEFAULT_LOCALE);
 queryClient.clear();
 /* and the address a fresh worker starts at: a file that renders the whole
    App (a BrowserRouter) and follows a link would otherwise leave the next
