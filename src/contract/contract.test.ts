@@ -73,6 +73,41 @@ test('no schema carries money', () => {
   expect(hits).toEqual([]);
 });
 
+/* Module 6, P1: the payroll surfaces (hours, pay codes, payroll readiness,
+   Business Central, exceptions) carry hours and codes only. Stricter than the
+   lint above: no field of theirs is named for an amount, a rate, a cost or a
+   currency at all, and no value carries a currency symbol. */
+const PAYROLL_PATH = /^\/api\/v1\/(hours|payroll|pay-codes|integration|exceptions)(\/|$)/;
+const PAYROLL_MONEY = /\b(amount|amt|rate|cost|currency|price|salary|wage)\b/;
+function fieldNames(schema: z.ZodType): string[] {
+  const out: string[] = [];
+  const visit = (node: unknown) => {
+    if (!node || typeof node !== 'object') return;
+    const n = node as Record<string, unknown>;
+    if (n.properties) for (const [key, v] of Object.entries(n.properties as object)) { out.push(key); visit(v); }
+    for (const k of ['items', 'anyOf', 'oneOf', 'allOf', 'additionalProperties']) {
+      const c = n[k]; if (Array.isArray(c)) c.forEach(visit); else visit(c);
+    }
+  };
+  visit(z.toJSONSchema(schema, { unrepresentable: 'any' }));
+  return out;
+}
+test('no payroll schema has an amount, rate, cost or currency field', () => {
+  const payroll = ENDPOINTS.filter(e => PAYROLL_PATH.test(e.path));
+  expect(payroll.map(e => e.path)).toContain('/api/v1/hours/team/export');
+  const hits: string[] = [];
+  for (const ep of payroll) {
+    for (const [side, schema] of [['request', ep.request], ['response', ep.response]] as const) {
+      if (!schema) continue;
+      for (const key of fieldNames(schema)) if (PAYROLL_MONEY.test(words(key))) hits.push(`${ep.method} ${ep.path} ${side}.${key}`);
+      walk(schema, `${ep.method} ${ep.path} ${side}`, hits);
+    }
+  }
+  expect(hits).toEqual([]);
+  expect(PAYROLL_MONEY.test(words('hourlyRate'))).toBe(true);
+  expect(PAYROLL_MONEY.test(words('costCentre'))).toBe(true);
+});
+
 test('every endpoint path is under /api/v1 and unique by method', () => {
   const keys = ENDPOINTS.map(e => `${e.method} ${e.path}`);
   expect(keys.every(k => / \/api\/v1\//.test(k))).toBe(true);

@@ -9249,6 +9249,611 @@
         }
       }
     },
+    "/api/v1/hours/me": {
+      "get": {
+        "summary": "The reader's own hours position for this week: contracted, rota'd and worked, the variances and the flags, and each day against the rota",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-capability": "own_hours",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "person": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "contractedHours": {
+                          "type": "number",
+                          "minimum": 0
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "name",
+                        "contractedHours"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "weekStart": {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "rota": {
+                      "type": "boolean"
+                    },
+                    "position": {
+                      "type": "object",
+                      "properties": {
+                        "con": {
+                          "type": "number"
+                        },
+                        "rot": {
+                          "type": "number"
+                        },
+                        "wk": {
+                          "type": "number"
+                        },
+                        "rotaVar": {
+                          "type": "number"
+                        },
+                        "workVar": {
+                          "type": "number"
+                        },
+                        "schedVar": {
+                          "type": "number"
+                        },
+                        "flags": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "k": {
+                                "type": "string"
+                              },
+                              "c": {
+                                "type": "string",
+                                "enum": [
+                                  "warn",
+                                  "info",
+                                  "err",
+                                  "neu"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "k",
+                              "c"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "cap": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "con",
+                        "rot",
+                        "wk",
+                        "rotaVar",
+                        "workVar",
+                        "schedVar",
+                        "flags",
+                        "cap"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "days": {
+                      "minItems": 7,
+                      "maxItems": 7,
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "date": {
+                            "type": "string",
+                            "format": "date",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                          },
+                          "code": {
+                            "type": "string"
+                          },
+                          "line": {
+                            "type": "string"
+                          },
+                          "scheduled": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "worked": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "variance": {
+                            "type": [
+                              "number",
+                              "null"
+                            ]
+                          },
+                          "status": {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "leave",
+                                  "sickness",
+                                  "recorded",
+                                  "missing",
+                                  "upcoming",
+                                  "rest"
+                                ]
+                              },
+                              "state": {
+                                "type": "string",
+                                "enum": [
+                                  "draft",
+                                  "pend",
+                                  "back",
+                                  "resub",
+                                  "ok",
+                                  "mgrok"
+                                ]
+                              },
+                              "waitingOn": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "kind"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "date",
+                          "code",
+                          "line",
+                          "scheduled",
+                          "worked",
+                          "variance",
+                          "status"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "person",
+                    "weekStart",
+                    "label",
+                    "rota",
+                    "position",
+                    "days"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Signed out, or the credentials do not match",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any other refusal or failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hours/team/export": {
+      "post": {
+        "summary": "The rows of the hours position file for one location's week, hours only. One audit row naming the file and its row count. A location outside the reader's scope is refused with scope.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-capability": "team_hours",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "location": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 20
+                  }
+                },
+                "required": [
+                  "location"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "fileName": {
+                      "type": "string"
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "type": [
+                            "string",
+                            "number"
+                          ]
+                        }
+                      }
+                    },
+                    "count": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "auditId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "fileName",
+                    "rows",
+                    "count",
+                    "auditId"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Signed out, or the credentials do not match",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The record does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid; field names the part to correct",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any other refusal or failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hours/team": {
+      "get": {
+        "summary": "One location's hours position for this week, a row per colleague on its roster. Query: location (default: the reader's own). A location outside the reader's scope is refused with scope.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-capability": "team_hours",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "name"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "locations": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "code",
+                          "name"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "weekStart": {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "rota": {
+                      "type": "boolean"
+                    },
+                    "rows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "personCode": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "category": {
+                            "type": "string"
+                          },
+                          "jobProfileName": {
+                            "type": "string"
+                          },
+                          "contractedHours": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "position": {
+                            "type": "object",
+                            "properties": {
+                              "con": {
+                                "type": "number"
+                              },
+                              "rot": {
+                                "type": "number"
+                              },
+                              "wk": {
+                                "type": "number"
+                              },
+                              "rotaVar": {
+                                "type": "number"
+                              },
+                              "workVar": {
+                                "type": "number"
+                              },
+                              "schedVar": {
+                                "type": "number"
+                              },
+                              "flags": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "k": {
+                                      "type": "string"
+                                    },
+                                    "c": {
+                                      "type": "string",
+                                      "enum": [
+                                        "warn",
+                                        "info",
+                                        "err",
+                                        "neu"
+                                      ]
+                                    }
+                                  },
+                                  "required": [
+                                    "k",
+                                    "c"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              },
+                              "cap": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "con",
+                              "rot",
+                              "wk",
+                              "rotaVar",
+                              "workVar",
+                              "schedVar",
+                              "flags",
+                              "cap"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "personCode",
+                          "name",
+                          "category",
+                          "jobProfileName",
+                          "contractedHours",
+                          "position"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "location",
+                    "locations",
+                    "weekStart",
+                    "label",
+                    "rota",
+                    "rows"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Signed out, or the credentials do not match",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The record does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid; field names the part to correct",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any other refusal or failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/integration/attempts/{id}/retry": {
       "post": {
         "summary": "Re-queue a failed posting (If-Match). The attempt count goes up by one; the dispatcher decides the outcome.",

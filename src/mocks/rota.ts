@@ -153,6 +153,8 @@ function ctxFor(p: StoredPerson): RuleContext {
   const c = config();
   return { shifts: shiftList(), typeRota: typeRotaFor(c.types, p.employeeType), config: c, safeWorker: Boolean(tenant().modules.R) && flagOn('SAFEWORKER') };
 }
+/* Module 6: the hours position reads a person's rota rules as Team rota does. */
+export const hoursRulesFor = (p: StoredPerson) => ({ worker: worker(p), ctx: ctxFor(p) });
 const activeAt = (loc: string) => Object.values(people()).filter(p => p.location === loc && isActive(p));
 const rosterOf = (loc: string, week: RotaWeekCore) => Object.values(people()).filter(p => onRoster(p, loc, lineOf(week, p.code)));
 const candidatesAt = (loc: string, week: RotaWeekCore): Candidate[] => activeAt(loc).map(p => ({ worker: worker(p), line: lineOf(week, p.code), ctx: ctxFor(p) }));
