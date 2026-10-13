@@ -228,6 +228,13 @@ describe('module 8 group 4: the role table and the layer walker', () => {
     expect(walk({ delegations: [{ ...m, to: 'E' }] }).current?.deciders).toEqual(['M']);
     expect(walk({ delegations: [{ ...m, modules: ['Leave'] }] }).current?.deciders).toEqual(['M']);
   });
+  test('a delegate decides with the authority of whoever delegated, holding none of the layer capabilities (ruling on review M4)', () => {
+    /* D holds only Decide team leave, yet covers payroll for P, and is told nothing is missing */
+    const d: Delegation = { id: 'dlg_3', who: 'P', to: 'D', from: '2026-08-10', until: '2026-08-20', modules: ['Timesheet'] };
+    const signed = walk({ item: item({ premium: true }), signed: ['Line manager'], delegations: [d] });
+    expect(signed.current?.deciders).toEqual(['P', 'D']);
+    expect(decisionBlock(signed, { module: 'Timesheet', item: item({ premium: true }), people }, 'D')).toBeNull();
+  });
   test('why someone may not decide: their own, out of scope, another layer, or nothing in the chain', () => {
     const input = { module: 'Timesheet' as const, item: item({ premium: true }), people };
     const first = walk({ item: input.item }), second = walk({ item: input.item, signed: ['Line manager'] });

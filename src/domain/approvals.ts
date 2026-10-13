@@ -398,6 +398,7 @@ export function holdsLayer(m: ChainModule, s: ChainStep, p: DeciderPerson, item:
 /* The holders of a layer, then, while a delegation for the module is in
    force on the day, whoever covers each of them, as decidersToday does for
    Profile. A delegate never decides their own item. */
+/* Ruling (module 8 review M4): a delegate stands in for the person who delegated, with that person's authority, so needs no capability of the layer's own. */
 function layerDeciders(m: ChainModule, s: ChainStep, input: WalkInput): WalkLayer {
   const signers = input.signers ?? [];
   const holders = input.people.filter(p => holdsLayer(m, s, p, input.item) && !signers.includes(p.code)).map(p => p.code);
