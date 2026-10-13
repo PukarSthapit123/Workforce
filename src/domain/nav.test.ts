@@ -126,7 +126,8 @@ test('the module setup and integration pages the prototype\'s SETUP_NEED lists a
   expect(byView('mrota').subProject).toBeUndefined();
   expect(byView('mleave')).toMatchObject({ built: true, path: '/setup/mleave', section: 'Modules' });
   expect(byView('mleave').subProject).toBeUndefined();
-  expect(byView('mpay')).toMatchObject({ built: false, subProject: 'Payroll and Business Central', section: 'Integrations' });
+  expect(byView('mpay')).toMatchObject({ built: true, path: '/setup/mpay', section: 'Integrations' });
+  expect(byView('mpay').subProject).toBeUndefined();
   expect(byView('ipay')).toMatchObject({ built: false, subProject: 'Payroll and Business Central', section: 'Integrations' });
   expect(byView('ibc')).toMatchObject({ built: false, subProject: 'Payroll and Business Central', section: 'Integrations' });
   /* the IT service desk is Rota's (module 3), gated on integration and ITACCESS */

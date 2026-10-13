@@ -4,12 +4,13 @@ import { useLocation } from 'react-router';
 import { tid } from '@/testids';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import {
-  ActionBar, AdminCard, Button, Chip, ChipPicker, Empty, Field, FormWarn, GroupLabel, GuideButton, Modal, Page, PageHead, Pill, Row, ScopeBadge,
+  ActionBar, AdminCard, Button, Chip, ChipPicker, Empty, Field, FormWarn, GroupLabel, GuideButton, Modal, NavLink, Page, PageHead, Pill, Row, ScopeBadge,
   SettingRow, SettingSelect as Asel, SettingText, Small, SubHead, SwitchField, TextInput, Tip, UnitInput, toastInfo,
 } from '@/ui';
 import { useSaveTimesheetConfig, useTimesheetConfig, type TimesheetConfig, type TimesheetSetup } from '@/api/timesheets';
 import { useEmployeeTypes } from '@/api/reference';
-import { useTenant } from '@/shell/shellData';
+import { useShellData, useTenant } from '@/shell/shellData';
+import { buttonVariants } from '@/ui/shadcn/button';
 import type { EmployeeTypeRow } from '@/contract/employee-types';
 import type { CaptureRules, PayCode, TypeCapture } from '@/contract/timesheets';
 import type { TypeRule } from '@/domain/timesheet';
@@ -26,8 +27,8 @@ import {
    per type, overtime, and the Business Central boundary. The prototype wrote
    each change as it was made; here every change edits one draft, Save sends
    it with If-Match and one audit row, and Cancel puts the draft back (D12).
-   Pay codes are read here, never edited (module 6), and nothing carries an
-   amount (D11). */
+   Pay codes are read here and kept on Pay codes (module 6, mpay), which the
+   pay rules link to; nothing carries an amount (D11). */
 export function TimesheetSetupPage() {
   const setup = useTimesheetConfig(), types = useEmployeeTypes(), tenant = useTenant();
   const { hash } = useLocation();
@@ -302,7 +303,8 @@ function CaptureFields({ fields, env, labels, type, onChange }: {
     </Table>);
 }
 
-/* The automatic pay rules table. The code select resolves the element and its basis from the pay codes, which are read-only here. */
+/* The automatic pay rules table. The code select resolves the element and its basis from the pay codes, which are read-only here
+   and kept on Pay codes: the pointer beside Add rule is a link while this person can reach that page. */
 function PayRules({ code, rules, payCodes, draft, fe, onChange }: {
   code: string; rules: readonly TypeRule[]; payCodes: PayCode[]; draft: SetupDraft; fe(field: string): string | undefined;
   onChange(rules: TypeRule[]): void;
@@ -354,9 +356,18 @@ function PayRules({ code, rules, payCodes, draft, fe, onChange }: {
           })}
         </TableBody>
       </Table>
-      <div className="mt-lg flex flex-wrap justify-end gap-sm">
+      <div className="mt-lg flex flex-wrap items-center justify-end gap-sm">
+        <PayCodesPointer />
         <Button testId={tid.mts.payAdd} kind="ghost" small onClick={() => onChange([...rules, newRule()])}>Add rule</Button></div>
     </>);
+}
+function PayCodesPointer() {
+  const data = useShellData();
+  const reachable = data.kind === 'ready' && data.nav.some(g => g.tabs.some(t => t.view === 'mpay' && t.built));
+  const name = reachable
+    ? <NavLink testId={tid.mtsPointer.payCodesLink} to="/setup/mpay" className={buttonVariants({ variant: 'link', size: null })}>Pay codes</NavLink>
+    : 'Pay codes';
+  return <span data-testid={tid.mtsPointer.payCodes} className="mr-auto text-xs text-text-muted">Pay codes and their Business Central elements are kept on {name}.</span>;
 }
 
 /* What crosses the boundary, and what never does. Static. */

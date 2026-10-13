@@ -194,3 +194,10 @@ test('Save and Cancel rest after the last card, and stay stuck in view while a c
   await userEvent.click(screen.getByTestId(tid.mts.cancel));
   expect(bar()).not.toHaveClass('sticky');
 });
+
+/* Module 6 group 3: the pay codes the rules pick from are kept on Pay codes, which this page links to rather than editing them. */
+test('the pay rules point to the Pay codes page, as a link for the administrator', async () => {
+  await open();
+  expect(screen.getByTestId(tid.mtsPointer.payCodes)).toHaveTextContent('Pay codes and their Business Central elements are kept on Pay codes.');
+  expect(await screen.findByTestId(tid.mtsPointer.payCodesLink)).toHaveAttribute('href', '/setup/mpay');
+});

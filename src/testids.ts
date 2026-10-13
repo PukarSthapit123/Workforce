@@ -418,7 +418,9 @@ export const tid = {
   /* 1c: the Rename roles dialog on Permissions (D11) */
   roleNames: { open: 'role-names-open', field: (id: string) => k('role-names-field', id), save: 'role-names-save', cancel: 'role-names-cancel', warn: 'role-names-warn' },
   /* 1c D6: Timesheet setup points at the weekly grid's row in Modules & features */
-  mtsPointer: { weekly: 'mts-weekly-pointer', link: 'mts-weekly-link' },
+  mtsPointer: { weekly: 'mts-weekly-pointer', link: 'mts-weekly-link',
+    /* module 6: the pay codes the pay rules pick from are kept on Qnipay setup → Integrations → Pay codes */
+    payCodes: 'mts-pay-codes-pointer', payCodesLink: 'mts-pay-codes-link' },
   /* 1c: Organisation (aorg): the configuration spine, templates, company, compliance and pay periods */
   aorg: {
     error: 'aorg-error', loading: 'aorg-loading', card: (key: string) => k('aorg-card', key), tip: (key: string) => k('aorg-tip', key),
@@ -625,5 +627,14 @@ export const tid = {
     row: (id: string) => k('texc-row', id), kind: (id: string) => k('texc-kind', id), state: (id: string) => k('texc-state', id),
     meta: (id: string) => k('texc-meta', id), move: (id: string, m: string) => k('texc-move', id, m), open: (id: string) => k('texc-open', id),
     note: 'texc-note', warn: 'texc-warn', cancel: 'texc-cancel', confirm: 'texc-confirm', banner: 'texc-banner',
+  },
+  /* module 6: Qnipay setup → Integrations → Pay codes (admPayCodes, v15:9596): the table of base and allowance
+     codes, New pay code, and the new or edit dialog (payCodeBox, v15:9554) */
+  mpay: {
+    error: 'mpay-error', loading: 'mpay-loading', table: 'mpay-table', add: 'mpay-add', footer: 'mpay-footer', workTypeTip: 'mpay-work-type-tip',
+    row: (code: string) => k('mpay-row', code), workType: (code: string) => k('mpay-work-type', code), value: (code: string) => k('mpay-value', code),
+    claimed: (code: string) => k('mpay-claimed', code), edit: (code: string) => k('mpay-edit', code), readOnly: (code: string) => k('mpay-read-only', code),
+    code: 'mpay-code', label: 'mpay-label', basis: 'mpay-basis', valueInput: 'mpay-value-input', element: 'mpay-element', wt: 'mpay-wt',
+    money: 'mpay-money', inUse: 'mpay-in-use', warn: 'mpay-warn', cancel: 'mpay-cancel', remove: 'mpay-remove', save: 'mpay-save',
   },
 } as const;
