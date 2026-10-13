@@ -204,9 +204,19 @@ function cellPlanAt(loc: string, dates: readonly string[]): CellPlanWeek[] {
   }
   return out;
 }
+/* Review M2: a week waiting on sign-off stays editable, as the prototype's
+   and module 3's review weeks are, but a change to its cells undoes every
+   sign-off after the rota manager's, so each later layer signs off the rota
+   colleagues will see. Only a write that does not set the sign-off itself. */
+function resetSignOff(old: StoredWeek | undefined, core: RotaWeekCore, chain: WeekChain): WeekChain {
+  const so = old?.signoff;
+  if (!so || chain.signoff !== undefined || so.signed.length < 2 || JSON.stringify(old.lines) === JSON.stringify(core.lines)) return {};
+  return { signoff: { ...so, signed: so.signed.slice(0, 1) } };
+}
 function saveWeek(core: RotaWeekCore, chain: WeekChain = {}): StoredWeek {
   const id = rotaWeekId(core.location, core.weekStart), old = recordAt(weeks(), id);
-  const rec: StoredWeek = old ? bump(old, { ...core, ...chain }) : { id, version: 1, updatedAt: store.now(), ...core, ...chain };
+  const sign = { ...resetSignOff(old, core, chain), ...chain };
+  const rec: StoredWeek = old ? bump(old, { ...core, ...sign }) : { id, version: 1, updatedAt: store.now(), ...core, ...sign };
   weeks()[id] = rec;
   return rec;
 }

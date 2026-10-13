@@ -208,3 +208,23 @@ describe('a chain edited while a week waits on sign-off (review I5)', () => {
     expect(done.week).toMatchObject({ state: 'published', publishVersion: 1, signoff: null });
   });
 });
+
+describe('editing a week waiting on sign-off (review M2)', () => {
+  test('a change to its cells undoes the sign-offs after the rota manager\'s, so every later layer signs off what colleagues will see', async () => {
+    await chain([layer('Every rota week', 'Own location'), layer('Every rota week', 'All departments'), layer('Every rota week', 'All departments')]);
+    const jo = store.coll<{ personCode: string; grants: string[] }>('accounts')['acc_jo.baptiste@brightpath.org'];
+    if (!jo) throw new Error('no account for Jo');
+    jo.grants = ['team_rota'];
+    const mgr = await as('manager'), admin = await as('admin');
+    await publish(mgr, 0);
+    await signOff(admin, 1);
+    expect((week()?.signoff as { signed: unknown[] } | undefined)?.signed).toHaveLength(2);
+    const edited = await mgr('PUT', `${NEXT}/cells`, { personCode: 'CP-1402', day: 2, code: 'E' }, 2);
+    expect(edited.status).toBe(200);
+    expect(RotaWeekView.parse((edited.body as { week: unknown }).week).signoff).toMatchObject({ signed: [{ by: { personCode: 'CP-1001' } }], waitingOn: 'the Service Manager' });
+    /* Dee signs off again, for the rota as it now is, and Jo's sign-off publishes it */
+    expect((await view(admin)).signoff?.decide).toBe(true);
+    await signOff(admin, 3);
+    expect(WeekMoved.parse((await signOff(await asEmail('jo.baptiste@brightpath.org'), 4)).body).week.state).toBe('published');
+  });
+});
