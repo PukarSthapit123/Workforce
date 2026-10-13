@@ -102,24 +102,24 @@
    "section": "IMP-001 · A1 — approval QUEUES rather than posts",
    "text": "BC page reached",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/integration/ibc.test.tsx › the simulated banner, P's tiles, the log with its integration id and attempt, Retry on the failed row only, and the mapping card"
   },
   {
    "id": "IMP-001-A1-approval-QUEUES-rather-than-posts#6",
    "section": "IMP-001 · A1 — approval QUEUES rather than posts",
    "text": "Simulated-integration banner shown",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/integration/ibc.test.tsx › the simulated banner, P's tiles, the log with its integration id and attempt, Retry on the failed row only, and the mapping card"
   },
   {
    "id": "IMP-001-A1-approval-QUEUES-rather-than-posts#7",
    "section": "IMP-001 · A1 — approval QUEUES rather than posts",
    "text": "Queued counter present",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/integration/ibc.test.tsx › the simulated banner, P's tiles, the log with its integration id and attempt, Retry on the failed row only, and the mapping card"
   },
   {
    "id": "IMP-001-A1-approval-QUEUES-rather-than-posts#8",
@@ -134,16 +134,16 @@
    "section": "IMP-001 · A1 — approval QUEUES rather than posts",
    "text": "Integration ID rendered",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/integration/ibc.test.tsx › the simulated banner, P's tiles, the log with its integration id and attempt, Retry on the failed row only, and the mapping card"
   },
   {
    "id": "IMP-001-A1-approval-QUEUES-rather-than-posts#10",
    "section": "IMP-001 · A1 — approval QUEUES rather than posts",
    "text": "Attempt column rendered",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/integration/ibc.test.tsx › the simulated banner, P's tiles, the log with its integration id and attempt, Retry on the failed row only, and the mapping card"
   },
   {
    "id": "IMP-001-A1-approval-QUEUES-rather-than-posts#11",
@@ -182,32 +182,32 @@
    "section": "IMP-001 · A2 — dispatcher resolves the record",
    "text": "Resolution toast fired",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/integration/ibc.test.tsx › the dispatcher resolves the record on the server's answer, with P's toast: the unresolved cause fails again, a clean record posts (simulated)"
   },
   {
    "id": "IMP-001-A3-retry-re-queues-and-counts-does-not-decide#1",
    "section": "IMP-001 · A3 — retry re-queues and counts, does not decide",
    "text": "Retry offered only on the failed row",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/integration/ibc.test.tsx › the simulated banner, P's tiles, the log with its integration id and attempt, Retry on the failed row only, and the mapping card"
   },
   {
    "id": "IMP-001-A3-retry-re-queues-and-counts-does-not-decide#2",
    "section": "IMP-001 · A3 — retry re-queues and counts, does not decide",
    "text": "Retry toast says re-queued with attempt number",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/integration/ibc.test.tsx › Retry re-queues and counts, its toast never claims acceptance, and queued stays queued until the dispatcher answers"
   },
   {
    "id": "IMP-001-A3-retry-re-queues-and-counts-does-not-decide#3",
    "section": "IMP-001 · A3 — retry re-queues and counts, does not decide",
    "text": "Retry toast never claims acceptance",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/integration/ibc.test.tsx › Retry re-queues and counts, its toast never claims acceptance, and queued stays queued until the dispatcher answers"
   },
   {
    "id": "IMP-001-A3-retry-re-queues-and-counts-does-not-decide#4",
@@ -710,24 +710,24 @@
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A8 Export triggers a real download",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "e2e/payroll-6.spec.ts › manager: Team hours lists Willow House's week, and Export saves a real CSV whose row count is the toast's, with one audit row"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#19",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A8 Export toast reports a row count",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "e2e/payroll-6.spec.ts › manager: Team hours lists Willow House's week, and Export saves a real CSV whose row count is the toast's, with one audit row"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#20",
    "section": "CHUNK A — honesty pass across the remaining actions",
    "text": "A8 Export is audited",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/mocks/hours.test.ts › the file's rows, hours only, with the true count, and one audit row"
   },
   {
    "id": "CHUNK-A-honesty-pass-across-the-remaining-actions#21",
@@ -934,8 +934,8 @@
    "section": "CHUNK B — timesheet integrity",
    "text": "B2 Period state is computed next to the cut-off",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/mocks/payroll.test.ts › the period from Organisation's settings, the previous period's lock and the cut-off next to it, and P's blockers with where each is put right"
   },
   {
    "id": "CHUNK-B-timesheet-integrity#17",
@@ -1310,196 +1310,208 @@
    "section": "ITEM 3 — exception centre (IMP-015)",
    "text": "3 Exception state filters are offered",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/exceptions/texc.test.tsx › state filters with Needs action the default, a severity and state pill on each row, the severity explained, search, with full test id coverage"
   },
   {
    "id": "ITEM-3-exception-centre-IMP-015#2",
    "section": "ITEM 3 — exception centre (IMP-015)",
    "text": "3 Needs-action filter is the default",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/exceptions/texc.test.tsx › state filters with Needs action the default, a severity and state pill on each row, the severity explained, search, with full test id coverage"
   },
   {
    "id": "ITEM-3-exception-centre-IMP-015#3",
    "section": "ITEM 3 — exception centre (IMP-015)",
    "text": "3 Every exception carries a state pill",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/exceptions/texc.test.tsx › state filters with Needs action the default, a severity and state pill on each row, the severity explained, search, with full test id coverage"
   },
   {
    "id": "ITEM-3-exception-centre-IMP-015#4",
    "section": "ITEM 3 — exception centre (IMP-015)",
    "text": "3 An exception can be taken",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/exceptions/texc.test.tsx › take, then resolve: a note is required, the resolution is recorded and filterable, Reopen is offered, and each move is audited"
   },
   {
    "id": "ITEM-3-exception-centre-IMP-015#5",
    "section": "ITEM 3 — exception centre (IMP-015)",
    "text": "3 Taking it assigns an owner",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/exceptions/texc.test.tsx › take, then resolve: a note is required, the resolution is recorded and filterable, Reopen is offered, and each move is audited"
   },
   {
    "id": "ITEM-3-exception-centre-IMP-015#6",
    "section": "ITEM 3 — exception centre (IMP-015)",
    "text": "3 Owner is shown on the row",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/exceptions/texc.test.tsx › take, then resolve: a note is required, the resolution is recorded and filterable, Reopen is offered, and each move is audited"
   },
   {
    "id": "ITEM-3-exception-centre-IMP-015#7",
    "section": "ITEM 3 — exception centre (IMP-015)",
    "text": "3 In progress state is rendered",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/exceptions/texc.test.tsx › take, then resolve: a note is required, the resolution is recorded and filterable, Reopen is offered, and each move is audited"
   },
   {
    "id": "ITEM-3-exception-centre-IMP-015#8",
    "section": "ITEM 3 — exception centre (IMP-015)",
    "text": "3 A resolve control appears once in progress",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/exceptions/texc.test.tsx › take, then resolve: a note is required, the resolution is recorded and filterable, Reopen is offered, and each move is audited"
   },
   {
    "id": "ITEM-3-exception-centre-IMP-015#9",
    "section": "ITEM 3 — exception centre (IMP-015)",
    "text": "3 Resolving asks what was done",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/exceptions/texc.test.tsx › take, then resolve: a note is required, the resolution is recorded and filterable, Reopen is offered, and each move is audited"
   },
   {
    "id": "ITEM-3-exception-centre-IMP-015#10",
    "section": "ITEM 3 — exception centre (IMP-015)",
    "text": "3 Resolving without a note is refused",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/exceptions/texc.test.tsx › take, then resolve: a note is required, the resolution is recorded and filterable, Reopen is offered, and each move is audited"
   },
   {
    "id": "ITEM-3-exception-centre-IMP-015#11",
    "section": "ITEM 3 — exception centre (IMP-015)",
    "text": "3 Resolution is recorded",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/exceptions/texc.test.tsx › take, then resolve: a note is required, the resolution is recorded and filterable, Reopen is offered, and each move is audited"
   },
   {
    "id": "ITEM-3-exception-centre-IMP-015#12",
    "section": "ITEM 3 — exception centre (IMP-015)",
    "text": "3 Resolved exceptions are filterable and show the resolution",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/exceptions/texc.test.tsx › take, then resolve: a note is required, the resolution is recorded and filterable, Reopen is offered, and each move is audited"
   },
   {
    "id": "ITEM-3-exception-centre-IMP-015#13",
    "section": "ITEM 3 — exception centre (IMP-015)",
    "text": "3 A resolved exception offers Reopen",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/exceptions/texc.test.tsx › take, then resolve: a note is required, the resolution is recorded and filterable, Reopen is offered, and each move is audited"
   },
   {
    "id": "ITEM-3-exception-centre-IMP-015#14",
    "section": "ITEM 3 — exception centre (IMP-015)",
    "text": "3 Exception transitions are audited",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/exceptions/texc.test.tsx › take, then resolve: a note is required, the resolution is recorded and filterable, Reopen is offered, and each move is audited"
   },
   {
    "id": "ITEM-3-payroll-readiness-IMP-016#1",
    "section": "ITEM 3 — payroll readiness (IMP-016)",
    "text": "3 Payroll readiness page exists",
    "area": "payroll",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/payroll/ipay.test.tsx › NOT READY: the banner, P's figures, the period beside the previous period's lock and the cut-off, the blockers with Open where reachable, export held back"
   },
   {
    "id": "ITEM-3-payroll-readiness-IMP-016#2",
    "section": "ITEM 3 — payroll readiness (IMP-016)",
    "text": "3 A single readiness state is declared",
    "area": "payroll",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/payroll/ipay.test.tsx › NOT READY: the banner, P's figures, the period beside the previous period's lock and the cut-off, the blockers with Open where reachable, export held back"
   },
   {
    "id": "ITEM-3-payroll-readiness-IMP-016#3",
    "section": "ITEM 3 — payroll readiness (IMP-016)",
    "text": "3 It counts missing timesheets, approvals, failures and exceptions",
    "area": "payroll",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/payroll/ipay.test.tsx › NOT READY: the banner, P's figures, the period beside the previous period's lock and the cut-off, the blockers with Open where reachable, export held back"
   },
   {
    "id": "ITEM-3-payroll-readiness-IMP-016#4",
    "section": "ITEM 3 — payroll readiness (IMP-016)",
    "text": "3 It shows the pay-period lock state",
    "area": "payroll",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/payroll/ipay.test.tsx › NOT READY: the banner, P's figures, the period beside the previous period's lock and the cut-off, the blockers with Open where reachable, export held back"
   },
   {
    "id": "ITEM-3-payroll-readiness-IMP-016#5",
    "section": "ITEM 3 — payroll readiness (IMP-016)",
    "text": "3 It states whether the cut-off is enforced",
    "area": "payroll",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/payroll/ipay.test.tsx › NOT READY: the banner, P's figures, the period beside the previous period's lock and the cut-off, the blockers with Open where reachable, export held back"
   },
   {
    "id": "ITEM-3-payroll-readiness-IMP-016#6",
    "section": "ITEM 3 — payroll readiness (IMP-016)",
    "text": "3 Blockers are named and link to where they are fixed",
    "area": "payroll",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/payroll/ipay.test.tsx › NOT READY: the banner, P's figures, the period beside the previous period's lock and the cut-off, the blockers with Open where reachable, export held back"
   },
   {
    "id": "ITEM-3-payroll-readiness-IMP-016#7",
    "section": "ITEM 3 — payroll readiness (IMP-016)",
    "text": "3 An export control exists",
    "area": "payroll",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/payroll/ipay.test.tsx › NOT READY: the banner, P's figures, the period beside the previous period's lock and the cut-off, the blockers with Open where reachable, export held back"
   },
   {
    "id": "ITEM-3-payroll-readiness-IMP-016#8",
    "section": "ITEM 3 — payroll readiness (IMP-016)",
    "text": "3 Export produces a real payroll CSV",
    "area": "payroll",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/payroll/ipay.test.tsx › export saves the real file and moves to EXPORTED; reconcile; reopen asks for a reason; each audited"
   },
   {
    "id": "ITEM-3-payroll-readiness-IMP-016#9",
    "section": "ITEM 3 — payroll readiness (IMP-016)",
    "text": "3 State advances to EXPORTED",
    "area": "payroll",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/payroll/ipay.test.tsx › export saves the real file and moves to EXPORTED; reconcile; reopen asks for a reason; each audited"
   },
   {
    "id": "ITEM-3-payroll-readiness-IMP-016#10",
    "section": "ITEM 3 — payroll readiness (IMP-016)",
    "text": "3 Reconcile becomes available only after export",
    "area": "payroll",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/payroll/ipay.test.tsx › export saves the real file and moves to EXPORTED; reconcile; reopen asks for a reason; each audited"
   },
   {
    "id": "ITEM-3-payroll-readiness-IMP-016#11",
    "section": "ITEM 3 — payroll readiness (IMP-016)",
    "text": "3 State advances to RECONCILED",
    "area": "payroll",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/payroll/ipay.test.tsx › export saves the real file and moves to EXPORTED; reconcile; reopen asks for a reason; each audited"
   },
   {
    "id": "ITEM-3-payroll-readiness-IMP-016#12",
    "section": "ITEM 3 — payroll readiness (IMP-016)",
    "text": "3 Export is correctly disabled while NOT READY",
    "area": "payroll",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/payroll/ipay.test.tsx › NOT READY: the banner, P's figures, the period beside the previous period's lock and the cut-off, the blockers with Open where reachable, export held back"
   },
   {
    "id": "ITEM-4-actionable-notifications-and-deep-links#1",
@@ -1818,24 +1830,24 @@
    "section": "MODAL SIZING + STRUCTURE",
    "text": "M An exception dialog can be opened",
    "area": "payroll",
-   "deferredTo": "payroll",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/exceptions/texc.test.tsx › the ignore dialog: the real modal structure with the close control in its header, P's warning, and a reason"
   },
   {
    "id": "MODAL-SIZING-STRUCTURE#4",
    "section": "MODAL SIZING + STRUCTURE",
    "text": "M Exception dialog uses the real modal structure",
    "area": "payroll",
-   "deferredTo": "payroll",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/exceptions/texc.test.tsx › the ignore dialog: the real modal structure with the close control in its header, P's warning, and a reason"
   },
   {
    "id": "MODAL-SIZING-STRUCTURE#5",
    "section": "MODAL SIZING + STRUCTURE",
    "text": "M Its close control sits in the header",
    "area": "payroll",
-   "deferredTo": "payroll",
-   "status": "pending"
+   "status": "ported",
+   "test": "src/features/exceptions/texc.test.tsx › the ignore dialog: the real modal structure with the close control in its header, P's warning, and a reason"
   },
   {
    "id": "MODAL-SIZING-STRUCTURE#6",
@@ -2530,8 +2542,8 @@
    "section": "ONE HOME PER PAGE",
    "text": "H The Pay codes page still renders",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/pay-codes/mpay.test.tsx › the base codes, then the allowance codes marked read only, with their basis, value, element and claimants, and no money"
   },
   {
    "id": "ONE-HOME-PER-PAGE#11",
@@ -3674,8 +3686,8 @@
    "section": "MOBILE FOUNDATION",
    "text": "MOB Own hours is a record list, so it becomes cards rather than scrolling",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "e2e/a11y.spec.ts › phone: module 6 pages and dialogs have no horizontal overflow at 390px, and My hours is a card per day"
   },
   {
    "id": "MOBILE-FOUNDATION#31",
@@ -5234,176 +5246,176 @@
    "section": "REVIEW RUN: SYSTEM, MOBILE, DENSITY, AFFORDANCES",
    "text": "RV Exceptions explains how severity is ordered",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/exceptions/texc.test.tsx › state filters with Needs action the default, a severity and state pill on each row, the severity explained, search, with full test id coverage"
   },
   {
    "id": "PAY-CODE-CRUD#1",
    "section": "PAY CODE CRUD",
    "text": "PC An Add control exists",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/pay-codes/mpay.test.tsx › the base codes, then the allowance codes marked read only, with their basis, value, element and claimants, and no money"
   },
   {
    "id": "PAY-CODE-CRUD#2",
    "section": "PAY CODE CRUD",
    "text": "PC Rows offer Edit",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/pay-codes/mpay.test.tsx › the base codes, then the allowance codes marked read only, with their basis, value, element and claimants, and no money"
   },
   {
    "id": "PAY-CODE-CRUD#3",
    "section": "PAY CODE CRUD",
    "text": "PC Allowance rows are marked as not editable here",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/pay-codes/mpay.test.tsx › the base codes, then the allowance codes marked read only, with their basis, value, element and claimants, and no money"
   },
   {
    "id": "PAY-CODE-CRUD#4",
    "section": "PAY CODE CRUD",
    "text": "PC The form says money is not set here",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/pay-codes/mpay.test.tsx › create: each refusal is shown in the dialog, then a valid code is created, toasted with where it is available, and listed"
   },
   {
    "id": "PAY-CODE-CRUD#5",
    "section": "PAY CODE CRUD",
    "text": "PC A code is required",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/mocks/pay-codes.test.ts › %s is refused with 422 on its field, and nothing is written"
   },
   {
    "id": "PAY-CODE-CRUD#6",
    "section": "PAY CODE CRUD",
    "text": "PC The code format is checked",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/mocks/pay-codes.test.ts › %s is refused with 422 on its field, and nothing is written"
   },
   {
    "id": "PAY-CODE-CRUD#7",
    "section": "PAY CODE CRUD",
    "text": "PC A duplicate code is refused, because BC matches on it",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/mocks/pay-codes.test.ts › %s is refused with 422 on its field, and nothing is written"
   },
   {
    "id": "PAY-CODE-CRUD#8",
    "section": "PAY CODE CRUD",
    "text": "PC A pay element already mapped to another code is refused",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/mocks/pay-codes.test.ts › %s is refused with 422 on its field, and nothing is written"
   },
   {
    "id": "PAY-CODE-CRUD#9",
    "section": "PAY CODE CRUD",
    "text": "PC A value is required for a multiplier",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/mocks/pay-codes.test.ts › %s is refused with 422 on its field, and nothing is written"
   },
   {
    "id": "PAY-CODE-CRUD#10",
    "section": "PAY CODE CRUD",
    "text": "PC A valid code is created",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/pay-codes/mpay.test.tsx › create: each refusal is shown in the dialog, then a valid code is created, toasted with where it is available, and listed"
   },
   {
    "id": "PAY-CODE-CRUD#11",
    "section": "PAY CODE CRUD",
    "text": "PC ... and says where it becomes available",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/pay-codes/mpay.test.tsx › create: each refusal is shown in the dialog, then a valid code is created, toasted with where it is available, and listed"
   },
   {
    "id": "PAY-CODE-CRUD#12",
    "section": "PAY CODE CRUD",
    "text": "PC It appears on the page",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/pay-codes/mpay.test.tsx › create: each refusal is shown in the dialog, then a valid code is created, toasted with where it is available, and listed"
   },
   {
    "id": "PAY-CODE-CRUD#13",
    "section": "PAY CODE CRUD",
    "text": "PC ... and immediately as a rate type option",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/pay-codes/mpay.test.tsx › create: each refusal is shown in the dialog, then a valid code is created, toasted with where it is available, and listed"
   },
   {
    "id": "PAY-CODE-CRUD#14",
    "section": "PAY CODE CRUD",
    "text": "PC Creation is audited with basis and element",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/mocks/pay-codes.test.ts › a valid code is stored in capitals with one audit row carrying its basis and element, and is at once a rate type option"
   },
   {
    "id": "PAY-CODE-CRUD#15",
    "section": "PAY CODE CRUD",
    "text": "PC The code itself is locked once it exists",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/pay-codes/mpay.test.tsx › edit: the code is locked and says why, and the toast counts the fields changed"
   },
   {
    "id": "PAY-CODE-CRUD#16",
    "section": "PAY CODE CRUD",
    "text": "PC ... and says why",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/pay-codes/mpay.test.tsx › edit: the code is locked and says why, and the toast counts the fields changed"
   },
   {
    "id": "PAY-CODE-CRUD#17",
    "section": "PAY CODE CRUD",
    "text": "PC An edit reports how many fields changed",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/pay-codes/mpay.test.tsx › edit: the code is locked and says why, and the toast counts the fields changed"
   },
   {
    "id": "PAY-CODE-CRUD#18",
    "section": "PAY CODE CRUD",
    "text": "PC The edit is audited as a diff",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/mocks/pay-codes.test.ts › it says which fields changed and is audited as a diff; nothing changed writes nothing"
   },
   {
    "id": "PAY-CODE-CRUD#19",
    "section": "PAY CODE CRUD",
    "text": "PC A code in use cannot be removed, and says what uses it",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/pay-codes/mpay.test.tsx › remove: a code in use is refused naming what uses it; an unused code is removed and gone"
   },
   {
    "id": "PAY-CODE-CRUD#20",
    "section": "PAY CODE CRUD",
    "text": "PC An unused code can be removed",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/pay-codes/mpay.test.tsx › remove: a code in use is refused naming what uses it; an unused code is removed and gone"
   },
   {
    "id": "PAY-CODE-CRUD#21",
    "section": "PAY CODE CRUD",
    "text": "PC ... and is gone from the page",
    "area": "payroll",
-   "status": "pending",
-   "deferredTo": "payroll"
+   "status": "ported",
+   "test": "src/features/pay-codes/mpay.test.tsx › remove: a code in use is refused naming what uses it; an unused code is removed and gone"
   },
   {
    "id": "EMPLOYEE-TYPE-CRUD-pre-existing-now-covered#1",
