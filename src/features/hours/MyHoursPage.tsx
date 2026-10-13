@@ -5,7 +5,7 @@ import { Card, CardHead, CardNote, Page, PageHead, Pill, Row, Stat, Stats } from
 import { cn } from '@/lib/utils';
 import { useMyHours, type MyHours } from '@/api/hours';
 import type { HoursDay } from '@/contract/hours';
-import { checkCount, flagWarns, footHours, hasError, hoursText, isBank, varianceTone, cellHours } from '@/domain/hours';
+import { checkCount, checksTone, flagWarns, footHours, hasError, hoursText, isBank, varianceTone, cellHours } from '@/domain/hours';
 import { VARIANCE_CLASS } from './variance';
 import { tsLabel, tsStateInfo } from '@/domain/timesheet';
 import { weekdayShort } from '@/domain/time';
@@ -38,7 +38,7 @@ function HoursView({ h }: { h: MyHours }) {
           foot={!h.rota ? 'the rota is not in use' : bank ? 'scheduled this week' : `${footHours(p.rotaVar)} against contract`}>
           {h.rota ? hoursText(p.rot) : '—'}</Stat>
         <Stat label="Worked" testId={tid.hours.worked} foot={h.rota ? `${footHours(p.schedVar)} against the rota` : 'this week'}>{hoursText(p.wk)}</Stat>
-        <Stat label="Things to check" testId={tid.hours.checks} tone={hasError(p.flags) ? 'bad' : 'good'}>{checkCount(p.flags)}</Stat>
+        <Stat label="Things to check" testId={tid.hours.checks} tone={checksTone(checkCount(p.flags), hasError(p.flags))}>{checkCount(p.flags)}</Stat>
       </Stats>
       {p.flags.length > 0 && (
         <Card testId={tid.hours.flags}>

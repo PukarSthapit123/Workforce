@@ -31,9 +31,12 @@ export function positionOf(w: RotaWorker, line: Line | null, worked: number, ctx
 }
 
 /* "Things to check" and "Discrepancies to check": a flag that is only a note
-   (nights, c "neu") is shown but not counted; an error turns the tile red. */
+   (nights, c "neu") is shown but not counted. The tile is red with an error,
+   amber with only warnings, and green only with nothing to check (P showed
+   it green beside listed warnings; the module 6 review asked for this). */
 export const checkCount = (flags: readonly HoursFlag[]) => flags.filter(f => f.c !== 'neu').length;
 export const hasError = (flags: readonly HoursFlag[]) => flags.some(f => f.c === 'err');
+export const checksTone = (count: number, anyError: boolean): 'bad' | 'warn' | 'good' => (anyError ? 'bad' : count > 0 ? 'warn' : 'good');
 /* A flag a reader must look at carries the warning glyph; a note does not (v15:5718, 7745). */
 export const flagWarns = (f: HoursFlag) => f.c === 'err' || f.c === 'warn';
 

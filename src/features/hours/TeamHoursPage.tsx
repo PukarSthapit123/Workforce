@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { downloadText, toCsv } from '@/lib/download';
 import { useExportTeamHours, useTeamHours, type TeamHours, type TeamHoursRow } from '@/api/hours';
 import {
-  DOWNLOAD_BLOCKED, cellHours, exportedText, flagWarns, footHours, hoursText, isBank, teamTotals, varianceTone,
+  DOWNLOAD_BLOCKED, cellHours, checksTone, exportedText, flagWarns, footHours, hoursText, isBank, teamTotals, varianceTone,
 } from '@/domain/hours';
 import { VARIANCE_CLASS } from './variance';
 
@@ -60,7 +60,7 @@ function TeamView({ t, onLocation }: { t: TeamHours; onLocation: (code: string) 
         <Stat label="Rota’d" testId={tid.thours.rotad} foot={t.rota ? `${footHours(tot.rotaVar)} against contract` : 'the rota is not in use'}>
           {t.rota ? hoursText(tot.rot) : '—'}</Stat>
         <Stat label="Worked" testId={tid.thours.worked} foot={t.rota ? `${footHours(tot.workVar)} against the rota` : 'this week'}>{hoursText(tot.wk)}</Stat>
-        <Stat label="Discrepancies to check" testId={tid.thours.discrepancies} tone={tot.anyError ? 'bad' : 'good'}>{tot.discrepancies}</Stat>
+        <Stat label="Discrepancies to check" testId={tid.thours.discrepancies} tone={checksTone(tot.discrepancies, tot.anyError)}>{tot.discrepancies}</Stat>
       </Stats>
       <FilterBar>
         <SearchFilter testId={tid.thours.search} label="Search colleague" placeholder="Search colleague" value={search} onChange={e => setSearch(e.target.value)} />

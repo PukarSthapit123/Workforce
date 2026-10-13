@@ -1,5 +1,5 @@
 import {
-  DOWNLOAD_BLOCKED, HOURS_CSV_HEADER, cellHours, checkCount, dayStatus, dayVariance, exportedText, flagWarns, footHours, hasError,
+  DOWNLOAD_BLOCKED, HOURS_CSV_HEADER, cellHours, checkCount, checksTone, dayStatus, dayVariance, exportedText, flagWarns, footHours, hasError,
   hoursCsv, hoursCsvRow, hoursFileName, isBank, minutesToHours, positionOf, rotaLineText, teamTotals, varianceTone, type ExportMember,
 } from './hours';
 import { DEFAULT_ROTA_CONFIG, normLine, recalcShift, type RotaWorker, type RuleContext, type ShiftType, type TypeRota } from './rota';
@@ -23,12 +23,16 @@ describe('the hours position engine', () => {
     expect([p.con, p.rot, p.wk, p.rotaVar, p.workVar, p.schedVar, p.cap]).toEqual([37.5, 33, 7.5, -4.5, -30, -25.5, 45]);
     expect(p.flags).toEqual([{ k: 'Under contracted', c: 'info' }, { k: '2 nights', c: 'neu' }]);
     expect([checkCount(p.flags), hasError(p.flags)]).toEqual([1, false]);
+    /* something to check but no error: the tile is in the warn tone; green only with nothing */
+    expect(checksTone(checkCount(p.flags), hasError(p.flags))).toBe('warn');
+    expect(checksTone(0, false)).toBe('good');
   });
   test('over contracted, overtime, over maximum, rest and consecutive days are raised in the prototype\'s order', () => {
     const p = positionOf(worker({ maxHours: 40 }), line('E', 'E', 'E', 'E', 'N', 'E'), 50, ctx());
     expect(p.flags.map(f => f.k)).toEqual(['Over contracted', 'Over maximum', 'Overtime worked', 'Rest warning', '6 consecutive days', '1 night']);
     expect(p.flags.filter(flagWarns).map(f => f.c)).toEqual(['warn', 'err', 'warn', 'err', 'err']);
     expect([checkCount(p.flags), hasError(p.flags)]).toEqual([5, true]);
+    expect(checksTone(checkCount(p.flags), hasError(p.flags))).toBe('bad');
   });
   test('overtime needs more than a quarter of an hour over the rota', () => {
     expect(positionOf(worker(), line('E'), 7.75, ctx()).flags.map(f => f.k)).not.toContain('Overtime worked');

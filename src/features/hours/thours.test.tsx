@@ -46,6 +46,7 @@ describe('Hours position', () => {
     expect(screen.getByTestId(tid.thours.contracted)).toHaveTextContent('0h');
     expect(screen.getByTestId(tid.thours.rotad)).toHaveTextContent('7.5h');
     expect(screen.getByTestId(tid.thours.discrepancies)).toHaveTextContent('0');
+    expect(screen.getByTestId(tid.thours.discrepancies)).toHaveClass('text-ok');
     await userEvent.type(screen.getByTestId(tid.thours.search), 'zzz');
     expect(screen.getByTestId(tid.thours.empty)).toHaveTextContent('Nothing matches that search');
   });

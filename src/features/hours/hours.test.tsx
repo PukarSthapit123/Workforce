@@ -39,6 +39,8 @@ describe('My hours', () => {
     expect(screen.getByTestId(tid.hours.worked).parentElement).toHaveTextContent('-25.5h against the rota');
     /* one flag to check (under contracted); nights are a note, not counted */
     expect(screen.getByTestId(tid.hours.checks)).toHaveTextContent('1');
+    /* only a warning to check: the figure is in the warn ink, not the good one */
+    expect(screen.getByTestId(tid.hours.checks)).toHaveClass('text-warn');
     expect(within(screen.getByTestId(tid.hours.flags)).getAllByText(/Under contracted|2 nights/)).toHaveLength(2);
     expect(screen.getByTestId(tid.hours.flag(0))).toHaveAttribute('data-tone', 'info');
     expect(screen.getByTestId(tid.hours.flag(1))).toHaveAttribute('data-tone', 'neu');
@@ -66,6 +68,7 @@ describe('My hours', () => {
     expect(screen.getByTestId(tid.hours.rotad)).toHaveTextContent('7.5h');
     expect(screen.getByTestId(tid.hours.rotad).parentElement).toHaveTextContent('scheduled this week');
     expect(screen.getByTestId(tid.hours.checks)).toHaveTextContent('0');
+    expect(screen.getByTestId(tid.hours.checks)).toHaveClass('text-ok');
     expect(screen.queryByTestId(tid.hours.flags)).toBeNull();
   });
 });
