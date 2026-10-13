@@ -41,11 +41,20 @@ const GUIDED: Record<string, string> = { '/work/ts': 'ts', '/team/tteam': 'tteam
   '/setup/apeople': 'apeople', '/setup/aloc': 'aloc', '/setup/aloc?d=locations': 'aloc', '/setup/acon': 'acon', '/setup/aperm': 'aperm', '/work/docs': 'docs', '/work/profile': 'profile',
   '/team/thours': 'thours', '/setup/ipay': 'ipay' };
 
+/* Each page is reached as a person moves between pages, through the router,
+   not by reloading the app. A reload boots the app, the fake server and its
+   store again: two to four seconds a page, and over three minutes for the
+   walk. The page rendered, and so what each check reads, is the same. */
+const go = (page: Page, path: string) =>
+  page.evaluate(to => { history.pushState(null, '', to); dispatchEvent(new PopStateEvent('popstate')); }, path);
+
 async function eachBuiltPage(page: Page, signInAs: (p: Persona) => Promise<void>, check: (path: string) => Promise<void>) {
-  test.setTimeout(360_000); // three sign-ins and thirty-eight pages
+  test.setTimeout(150_000); // three sign-ins and thirty-eight pages
   await check('sign-in');
   const visit = async (path: string) => {
-    await page.goto(path);
+    await go(page, path);
+    await expect(page).toHaveURL(path);
+    await page.getByTestId(tid.page(path.split('?')[0]?.split('/').pop() ?? '')).waitFor();
     await page.getByTestId(READY[path] ?? tid.page('none')).waitFor();
     await check(path);
   };
