@@ -41,37 +41,52 @@ function positionFor(p: StoredPerson, w: ReturnType<typeof weekOf>) {
 
 /* -------------------------------------------------------- location scope */
 /* The locations the reader may look at: their own, or every active one with master data. */
-function viewable(s: Signed) {
+export function viewable(s: Signed) {
   const sc = scopeOf(s);
   return locations().filter(l => (sc.all ? l.active !== false : l.code === sc.location)).map(l => ({ code: l.code, name: l.name }));
 }
-function locationFor(s: Signed, code: string | undefined) {
+export function locationFor(s: Signed, code: string | undefined, what = 'hours') {
   const list = viewable(s);
   if (code === undefined) {
     const own = personByCode(effectiveCode(s))?.location;
     const first = list.find(l => l.code === own) ?? list[0];
-    return first ?? refuse(404, { code: 'not-found', message: 'There is no location whose hours you can see.', next: 'Ask an administrator to give you a location.' });
+    return first ?? refuse(404, { code: 'not-found', message: `There is no location whose ${what} you can see.`, next: 'Ask an administrator to give you a location.' });
   }
   const l = locations().find(x => x.code === code);
   if (!l) return refuse(404, { code: 'not-found', message: 'That location no longer exists.', next: 'Choose a location from the list.' });
   const sc = scopeOf(s);
-  if (!sc.all && sc.location !== l.code) refuse(403, { code: 'scope', message: `You can see hours at ${nameOf('locations', sc.location)} only.`,
-    next: 'Ask an administrator if you need hours at another location.' });
+  if (!sc.all && sc.location !== l.code) refuse(403, { code: 'scope', message: `You can see ${what} at ${nameOf('locations', sc.location)} only.`,
+    next: `Ask an administrator if you need ${what} at another location.` });
   if (l.active === false) refuse(404, { code: 'not-found', message: `${l.name} is no longer an active location.`, next: 'Choose a location from the list.' });
   return { code: l.code, name: l.name };
 }
 
 /* The location's roster for the week (rosterAt): active people there with
    contracted hours or a shift on the published week, in record order. */
-function teamAt(location: string, ws: string) {
+function rosterOf(location: string, ws: string) {
   return Object.values(people()).flatMap(p => {
     if (p.location !== location || !isActive(p)) return [];
     const w = weekOf(p, ws);
-    if (!onRoster(p, location, w.line ?? emptyLine())) return [];
+    return onRoster(p, location, w.line ?? emptyLine()) ? [{ p, w }] : [];
+  });
+}
+function teamAt(location: string, ws: string) {
+  return rosterOf(location, ws).map(({ p, w }) => {
     const row: TeamHoursRow = { personCode: p.code, name: p.name, category: p.category, jobProfileName: nameOf('jobProfiles', p.jobProfile),
       contractedHours: Math.max(0, p.contractedHours), position: positionFor(p, w) };
-    return [row];
+    return row;
   });
+}
+/* Module 6 Exceptions: the location's roster this week, each colleague with
+   their position and the days before today the rota scheduled them on with
+   nothing recorded and no leave or sickness (dayStatus missing). */
+export function rosterWeek(location: string) {
+  const now = today(), ws = weekOn(location, now).weekStart;
+  return { weekStart: ws, rows: rosterOf(location, ws).map(({ p, w }) => ({
+    person: p, position: positionFor(p, w),
+    missing: w.dates.filter((date, i) => dayStatus({ cell: w.rota?.[i]?.code ?? '', absence: leaveAbsenceOn(p.code, date), state: w.days[i]?.state ?? null,
+      scheduled: w.rota?.[i]?.hours ?? 0, future: date >= now }).kind === 'missing'),
+  })) };
 }
 
 export const hoursHandlers = [

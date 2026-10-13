@@ -528,6 +528,16 @@ export function rotaWeekDays(location: string, weekStart: string): Record<string
   const codes = [...new Set(at.flatMap(x => (x.w ? Object.keys(x.w.lines) : [])))];
   return Object.fromEntries(codes.map(code => [code, at.map(x => rotaDayOf(x.w ? lineOf(x.w, code)[x.day] ?? '' : '', sh))]));
 }
+/* Module 6 Exceptions: the days of a location's published week with fewer on
+   shift than the minimum (MINSTAFF), each with how many are on. Nothing while
+   Rota is off, the week is not published or no minimum applies. */
+export function coverageGaps(location: string, weekStart: string): { date: string; onShift: number; min: number }[] {
+  const l = locationBy(location), w = visibleWeek(location, weekStart);
+  const min = l ? minAt(l) : 0;
+  if (!l || !w || !min) return [];
+  const lines = rosterOf(l.code, w).map(p => lineOf(w, p.code));
+  return weekDates(weekStart).flatMap((date, i) => { const on = onShift(lines, i); return on < min ? [{ date, onShift: on, min }] : []; });
+}
 /* The catalogue as the timesheet's Rota line options, while the Rota module is on. */
 export const rotaLineOptions = () => (tenant().modules.R ? shiftList().map(s => ({ code: s.code, name: s.name, from: s.from, to: s.to })) : undefined);
 

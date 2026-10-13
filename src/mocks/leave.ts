@@ -256,6 +256,29 @@ export function leaveTypeInfo(code: string): { name: string; short: string; icon
   const t = recordAt(store.coll<LeaveConfigRecord>('leaveConfig'), 'leaveConfig')?.types.find(x => x.code === code);
   return t ? { name: t.name, short: t.short || t.name, icon: t.icon } : TYPE_FALLBACK[code] ?? { name: code, short: code, icon: '☀' };
 }
+/* The SLA job on one pending request, per layer: the layer's wait from when
+   the request reached it, against the policy's SLA or the tenant's (D3). The
+   escalation layer is reached by the breach, so it reads as escalated from
+   the date raised. */
+function slaFor(r: StoredRequest, walk: ChainWalk, c: LeaveConfigRecord, now: string) {
+  const escalation = walk.current?.step.when === ESCALATION_WHEN, signs = r.history.filter(h => h.from === 'pending' && !!h.layer);
+  const raised = clockFromIso(escalation ? r.raisedAt : layerStartedAt(r.history, r.raisedAt)).date;
+  const slaDays = policySla(c, r.type);
+  return { raised, slaDays, signs, sla: slaOf({ raised, escalated: escalation || (r.escalated && !signs.length) }, slaDays, now, c.stages) };
+}
+/* Module 6 Exceptions: every pending request whose approval SLA has been
+   breached, as Team leave reads it, with whom it was escalated to. Nothing
+   while the Leave module is off. */
+export function escalatedLeave(): { id: string; personCode: string; escalateTo: string }[] {
+  if (!tenant().modules.L) return [];
+  const c = config(), now = today(), everyone = chainPeople();
+  return Object.values(requests()).flatMap(r => {
+    const p = r.state === 'pending' ? personByCode(r.personCode) : undefined;
+    if (!p) return [];
+    const { sla } = slaFor(r, walkOf(r, p, everyone).walk, c, now);
+    return sla.escalated ? [{ id: r.id, personCode: p.code, escalateTo: escalationTarget(c, sla.stage) }] : [];
+  });
+}
 /* LEAVE_CFG.blocksTimesheet, while the Leave module is on. */
 export const leaveBlocksTimesheet = () => Boolean(tenant().modules.L) && Boolean(recordAt(store.coll<LeaveConfigRecord>('leaveConfig'), 'leaveConfig')?.blocksTimesheet);
 
@@ -358,10 +381,7 @@ export const leaveHandlers = [
       /* the SLA job, per layer: the layer's wait from when the request reached it, against the
          policy's SLA or the tenant's (D3). The escalation layer is reached by the breach, so it
          reads as escalated from the date raised, as before. */
-      const escalation = walk.current?.step.when === ESCALATION_WHEN, signs = r.history.filter(h => h.from === 'pending' && !!h.layer);
-      const raised = clockFromIso(escalation ? r.raisedAt : layerStartedAt(r.history, r.raisedAt)).date;
-      const slaDays = policySla(c, r.type);
-      const sla = slaOf({ raised, escalated: escalation || (r.escalated && !signs.length) }, slaDays, now, c.stages);
+      const { raised, slaDays, sla, signs } = slaFor(r, walk, c, now);
       const of = Math.max(1, walk.layers.length - progress.passed.length), n = Math.min(of, progress.signed.length + 1), role = waitingRole(walk);
       const target = escalationTarget(c, sla.stage);
       return { ...requestView(r), name: p.name, location: p.location, balance: balanceText(leaveOf(p).bal),

@@ -171,7 +171,7 @@ function shape(tenantKey, data, PERMS_META, PERM_GROUPS, PROFILE_CHANGES, ref) {
   return { version: 'extracted', tenant: tenantKey, data: {
     people: byId(people), accounts: byId(accounts), userTypes: byId(userTypes), capabilities: byId(capabilities),
     capabilityGroups: byId(capabilityGroups), tenant: { tenant }, locations, departments, costCentres, jobProfiles, projects,
-    employeeTypes, profileChanges, personHistory: {}, notices: byId(notices), audit: {}, ...notificationSeed(data, accounts), ...timesheets(data, people),
+    employeeTypes, profileChanges, personHistory: {}, notices: byId(notices), audit: {}, exceptionHandling: {}, ...notificationSeed(data, accounts), ...timesheets(data, people),
     delegations: delegationSeed(people), ...documentSeed(accounts),
     ...rotaData, ...leave(data, people, ref, rotaData.rotaWeeks), ...onboarding(data, people) } };
 }

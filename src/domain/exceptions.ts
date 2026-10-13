@@ -127,12 +127,12 @@ export const exceptionId = (key: string) => `exc_${hash64(key)}`;
 /* ----------------------------------------------------------- derivation */
 export interface PersonFacts {
   code: string; name: string; location: string;
-  /* this week's hours position flags, and the days before today scheduled with nothing recorded */
+  /* the week at their location, its hours position flags, and the days before today scheduled with nothing recorded */
+  weekStart: string;
   flags: readonly HoursFlag[]; missing: readonly string[];
   cleared: boolean; dbsExpiry: string; qualifications: string;
 }
 export interface ExceptionFacts {
-  weekStart: string;
   people: readonly PersonFacts[];
   gaps: readonly { location: string; locationName: string; date: string; onShift: number; min: number }[];
   leave: readonly { id: string; personCode: string; name: string; location: string; escalateTo: string }[];
@@ -164,7 +164,7 @@ export function deriveExceptions(f: ExceptionFacts): DerivedException[] {
     out.push({ id: exceptionId(key), key, kind, severity: SEVERITY[kind], subject, text, location, source: SOURCE_VIEW[kind] });
   };
   for (const p of f.people) {
-    for (const fl of p.flags) if (fl.c !== 'neu') add(fl.c === 'err' ? 'Compliance' : 'Hours', p.code, `${f.weekStart}|${fl.k}`, p.name, fl.k, p.location);
+    for (const fl of p.flags) if (fl.c !== 'neu') add(fl.c === 'err' ? 'Compliance' : 'Hours', p.code, `${p.weekStart}|${fl.k}`, p.name, fl.k, p.location);
     if (!p.cleared) add('Clearance', p.code, `uncleared|${p.dbsExpiry}`, p.name, clearanceText(p.dbsExpiry), p.location);
     if (expiringSoon(p.qualifications)) add('Qualification', p.code, p.qualifications, p.name, p.qualifications, p.location);
     if (p.missing.length) add('Timesheet', p.code, p.missing.join(','), p.name, missingText(p.missing.length), p.location);

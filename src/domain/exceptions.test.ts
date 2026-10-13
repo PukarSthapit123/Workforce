@@ -3,9 +3,9 @@ import {
   filterCounts, inFilter, matches, moveAuditAct, moveProblem, movesFrom, needsAction, severityTone, type ExceptionFacts, type PersonFacts,
 } from './exceptions';
 
-const person = (o: Partial<PersonFacts> = {}): PersonFacts => ({ code: 'CP-1042', name: 'Amara Okafor', location: 'WH', flags: [], missing: [],
+const person = (o: Partial<PersonFacts> = {}): PersonFacts => ({ code: 'CP-1042', name: 'Amara Okafor', location: 'WH', weekStart: '2026-08-10', flags: [], missing: [],
   cleared: true, dbsExpiry: '2027-03-31', qualifications: 'All valid', ...o });
-const facts = (o: Partial<ExceptionFacts> = {}): ExceptionFacts => ({ weekStart: '2026-08-10', people: [], gaps: [], leave: [], postings: [], ...o });
+const facts = (o: Partial<ExceptionFacts> = {}): ExceptionFacts => ({ people: [], gaps: [], leave: [], postings: [], ...o });
 const ME = { personCode: 'CP-1001', name: 'Rachel Hussain' };
 
 describe('deriving exceptions from the data', () => {

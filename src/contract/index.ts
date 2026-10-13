@@ -21,3 +21,4 @@ export * from './home';
 export * from './clock';
 export * from './onboarding';
 export * from './hours';
+export * from './exceptions';
