@@ -4939,7 +4939,7 @@
    "text": "F3 ... the pay frequency, week end and cut-off",
    "area": "1c",
    "status": "n/a",
-   "reason": "prototype-only: the pay frequency, week end and cut-off were set from the prototype’s template; the brief (D1, D3) keeps company and pay-period settings out of template content, and Organisation shows them read-only"
+   "reason": "prototype-only: the pay frequency, week end and cut-off were set from the prototype’s template; the brief (D1, D3) keeps company and pay-period settings out of template content, so an administrator sets the pay frequency and week end on Organisation and the cut-off on Timesheet setup (module 8)"
   },
   {
    "id": "FUSION3-CONFIGURED-THROUGH-THE-TEMPLATE#5",
@@ -6955,7 +6955,7 @@
    "text": "TD The app takes today from the clock, not a fixed date",
    "area": "1a",
    "status": "ported",
-   "test": "src/mocks/store.test.ts › the clock can be set and cleared"
+   "test": "e2e/setup-8.spec.ts › Organisation: a new time zone moves today at its own midnight, so My timesheet and My home open on the Kathmandu date"
   },
   {
    "id": "TODAY-IS-TODAY#2",
