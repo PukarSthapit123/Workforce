@@ -19,7 +19,7 @@ import { useCaps } from '@/shell/useCaps';
 import { downloadText } from '@/lib/download';
 import { formatDateTime } from '@/lib/format';
 import { CLOCK_STYLES, DATE_FORMATS } from '@/contract/tenant';
-import { DEFAULT_ZONE, isTimeZone, supportedTimeZones } from '@/domain/time';
+import { COUNTRY_ZONES, DEFAULT_ZONE, isTimeZone, supportedTimeZones } from '@/domain/time';
 import { MODULES, moduleLive } from '@/domain/modules';
 import { TEMPLATE_SCOPES, scopeLabel, templateFileName, type TemplateScope } from '@/domain/templates';
 
@@ -31,7 +31,11 @@ import { TEMPLATE_SCOPES, scopeLabel, templateFileName, type TemplateScope } fro
    period cut-off is Timesheet setup's, shown here and linked to it. Every
    setting saves when it is chosen or left, with the tenant's version and one
    audit row. Applying a template asks first, showing what it would change,
-   add and leave alone (D1). */
+   add and leave alone (D1). Module 8: the country names its time zone and,
+   when the organisation keeps another, offers it; pay frequency, week ending,
+   first pay date and the minimum wage check say plainly that nothing reads
+   them until Payroll and Business Central are built. */
+const PAYROLL_NOTE = 'Used by Payroll and Business Central, which is not built yet.';
 export function OrganisationPage() {
   const tenant = useTenant();
   return (
@@ -325,11 +329,29 @@ function CompanyCard({ tenant }: { tenant: Tenant }) {
         <TextSetting key={c.address} testId={tid.aorg.address} label="Registered address" value={c.address} wide disabled={busy} error={s.error('address')}
           onSave={v => s.company({ address: v }, 'Registered address saved.')} />
       </SettingRow>
-      <SettingRow title="Country">
+      <SettingRow title="Country" desc={<CountryZone tenant={tenant} />}>
         <SelectSetting testId={tid.aorg.country} label="Country" value={c.country} options={COUNTRIES} disabled={busy}
           onSave={v => s.company({ country: v }, `Country: ${v}.`)} />
       </SettingRow>
     </AdminCard>);
+}
+
+/* The country's own time zone, and the organisation's when it differs, with a
+   way to take the country's: the same versioned settings write the Date and
+   time card makes. Changing the country never moves the time zone by itself. */
+function CountryZone({ tenant }: { tenant: Tenant }) {
+  const s = useSettings(tenant);
+  const zone = COUNTRY_ZONES[tenant.company.country], held = tenant.timezone || DEFAULT_ZONE;
+  if (!zone) return null;
+  return (
+    <span data-testid={tid.aorg.countryZone}>
+      {zone === held
+        ? <>Its time zone, {zone}, is the one set under Date and time.</>
+        : <>Its time zone is {zone}. This organisation keeps {held}, set under Date and time.{' '}
+            <Button testId={tid.aorg.useCountryZone} kind="ghost" small className="mt-xs" disabled={s.save.anyPending}
+              onClick={() => s.save.mutate({ change: { timezone: zone }, ifMatch: tenant.version },
+                { onSuccess: out => { if (out.auditId) toastInfo(`Time zone saved: ${zone}.`, 'It applies from the next request.'); } })}>Use {zone}</Button></>}
+    </span>);
 }
 
 /* The time zone: a text box with a list of the IANA zones under it, narrowed
@@ -422,7 +444,7 @@ function ComplianceCard({ tenant }: { tenant: Tenant }) {
   return (
     <AdminCard testId={tid.aorg.card('compliance')} icon={<ShieldCheck />} title="Compliance" tipTestId={tid.aorg.tip('compliance')}
       tip="Checks run on submission and warn the employee and approver. They never silently change pay.">
-      <SettingRow title="National Minimum Wage check" desc="Warn if total pay ÷ hours falls below NMW">
+      <SettingRow title="National Minimum Wage check" desc={<>Warn if total pay ÷ hours falls below NMW<span className="block">{PAYROLL_NOTE}</span></>}>
         <SwitchField testId={tid.aorg.nmw} aria-label="National Minimum Wage check" checked={c.nmwCheck} disabled={busy}
           onCheckedChange={on => s.company({ nmwCheck: on }, `National Minimum Wage check ${on ? 'on' : 'off'}.`)} />
       </SettingRow>
@@ -439,15 +461,15 @@ function PayPeriodsCard({ tenant }: { tenant: Tenant }) {
   return (
     <AdminCard testId={tid.aorg.card('pay')} icon={<CalendarDays />} title="Pay periods" tipTestId={tid.aorg.tip('pay')}
       tip="Defines the window a timesheet belongs to, and therefore when it closes.">
-      <SettingRow title="Pay frequency">
+      <SettingRow title="Pay frequency" desc={PAYROLL_NOTE}>
         <SelectSetting testId={tid.aorg.payFrequency} label="Pay frequency" value={c.payFrequency} options={FREQUENCIES} disabled={busy}
           onSave={v => s.company({ payFrequency: v }, `Pay frequency: ${v}.`)} />
       </SettingRow>
-      <SettingRow title="Week ending day">
+      <SettingRow title="Week ending day" desc={PAYROLL_NOTE}>
         <SelectSetting testId={tid.aorg.weekEnding} label="Week ending day" value={c.weekEnding} options={WEEK_ENDS} disabled={busy}
           onSave={v => s.company({ weekEnding: v }, `Week ending day: ${v}.`)} />
       </SettingRow>
-      <SettingRow title="First pay date">
+      <SettingRow title="First pay date" desc={PAYROLL_NOTE}>
         <TextSetting key={c.firstPayDate} testId={tid.aorg.firstPayDate} label="First pay date" type="date" value={c.firstPayDate} disabled={busy} error={s.error('firstPayDate')}
           onSave={v => s.company({ firstPayDate: v }, v ? `First pay date saved.` : 'First pay date cleared.')} />
       </SettingRow>

@@ -21,6 +21,8 @@ export const WEEK_STARTS = ['Monday', 'Sunday', 'Saturday'] as const;
 export type WeekStart = (typeof WEEK_STARTS)[number];
 export interface Locale { timezone: string; dateFormat: DateFormat; clock: ClockStyle; weekStart: WeekStart }
 export const DEFAULT_ZONE = 'Europe/London';
+/* Module 8: the time zone each country Organisation offers keeps its clocks in. */
+export const COUNTRY_ZONES: Readonly<Record<string, string>> = { 'United Kingdom': 'Europe/London', Ireland: 'Europe/Dublin', Nepal: 'Asia/Kathmandu' };
 export const DEFAULT_LOCALE: Readonly<Locale> = Object.freeze({ timezone: DEFAULT_ZONE, dateFormat: 'dd/mm/yyyy', clock: '24h', weekStart: 'Monday' });
 
 /* supportedValuesOf omits UTC and some IANA links, including the commonly

@@ -191,3 +191,22 @@ test('a saved template says who saved it and when, in London time', async () => 
   expect(name).toBeTruthy();
   expect(within(row).getAllByRole('cell')[2]).toHaveTextContent(`13/08/2026 15:30${name ?? ''}`);
 });
+
+test('module 8: the pay settings say nothing reads them yet, and the country offers its own time zone, saved with one audit row', async () => {
+  await open();
+  for (const id of [tid.aorg.payFrequency, tid.aorg.weekEnding, tid.aorg.firstPayDate, tid.aorg.nmw]) {
+    const row = screen.getByTestId(id).closest('[data-slot="setting-row"]');
+    expect(row).toHaveTextContent('Used by Payroll and Business Central, which is not built yet.');
+  }
+  expect(screen.getByTestId(tid.aorg.countryZone)).toHaveTextContent('Its time zone, Europe/London, is the one set under Date and time.');
+  expect(screen.queryByTestId(tid.aorg.useCountryZone)).toBeNull();
+  await userEvent.selectOptions(screen.getByTestId(tid.aorg.country), 'Nepal');
+  await waitFor(() => expect(screen.getByTestId(tid.aorg.countryZone)).toHaveTextContent('Its time zone is Asia/Kathmandu. This organisation keeps Europe/London'));
+  expect(tenant()?.timezone).toBe('Europe/London');
+  const n = audits().length;
+  await userEvent.click(screen.getByTestId(tid.aorg.useCountryZone));
+  await waitFor(() => expect(tenant()?.timezone).toBe('Asia/Kathmandu'));
+  expect(audits().slice(n).map(a => a.act)).toHaveLength(1);
+  await waitFor(() => expect(screen.getByTestId(tid.aorg.timezone)).toHaveValue('Asia/Kathmandu'));
+  expect(screen.getByTestId(tid.aorg.countryZone)).toHaveTextContent('Its time zone, Asia/Kathmandu, is the one set under Date and time.');
+});

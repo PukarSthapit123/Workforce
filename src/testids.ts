@@ -433,6 +433,8 @@ export const tid = {
     firstPayDate: 'aorg-first-pay-date', cutoff: 'aorg-cutoff', cutoffLink: 'aorg-cutoff-link',
     timezone: 'aorg-timezone', timeZones: 'aorg-time-zones', dateFormat: 'aorg-date-format', clock: 'aorg-clock',
     timezoneList: 'aorg-timezone-list', timezoneError: 'aorg-timezone-error',
+    /* module 8: the country's time zone, offered when the organisation's differs */
+    countryZone: 'aorg-country-zone', useCountryZone: 'aorg-use-country-zone',
   },
   /* 1c group 4: the bell's inbox panel (D9) */
   inbox: {
