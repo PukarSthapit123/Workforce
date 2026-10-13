@@ -58,7 +58,7 @@ export function DocumentsCard({ setup, docs, locked, fe, onChange }: {
               </TableCell>
               {sw('blocks', 'blocks start', tid.monb.docBlocks(d.id), 'Blocks start')}
               {sw('expiry', 'expiry tracked', tid.monb.docExpiry(d.id), 'Expiry tracked')}
-              <TableCell kind="foot" className="text-right whitespace-nowrap">
+              <TableCell kind="foot" empty={!d.custom} className="text-right whitespace-nowrap">
                 {d.custom && <span className="inline-flex gap-[6px] max-md:grid max-md:w-full max-md:grid-cols-2">
                   <Button testId={tid.monb.docRename(d.id)} kind="ghost" small disabled={locked} onClick={() => setBox({ k: 'rename', id: d.id })}>Rename</Button>
                   <Button testId={tid.monb.docRemove(d.id)} kind="ghost" small disabled={locked} onClick={() => setBox({ k: 'remove', id: d.id })}>Remove</Button>
