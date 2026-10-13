@@ -78,7 +78,7 @@ const BANNER: Record<BannerTone, { cls: string; icon: ReactNode }> = {
 /* `icon` replaces the tone's own glyph where the prototype draws a specific
    one: a padlock for a closed period, a return arrow for a resubmission. */
 export function Banner({ tone, title, testId, actions, icon, children }: {
-  tone: BannerTone; title: string; testId?: string; actions?: ReactNode; icon?: ReactNode; children?: ReactNode;
+  tone: BannerTone; title: ReactNode; testId?: string; actions?: ReactNode; icon?: ReactNode; children?: ReactNode;
 }) {
   const b = BANNER[tone];
   return (

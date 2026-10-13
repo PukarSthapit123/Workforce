@@ -7,11 +7,13 @@ test('NV Manager navigation has two primary areas', async ({ page, signInAs }) =
   await expect(page.getByTestId(tid.nav.group('team'))).toBeVisible();
   await expect(page.getByTestId(tid.nav.group('setup'))).toHaveCount(0);
 });
-test('NV A view from a later sub-project says so and names it', async ({ page, signInAs }) => {
-  /* Business Central is module 6's, still to come; My hours, Hours position and Exceptions are built */
+test('NV Every listed view is built: Business Central, the last to come, opens its page and no not-built notice', async ({ page, signInAs }) => {
+  /* module 6 group 5 built Business Central; src/domain/nav.test.ts checks every view with every capability, module and flag */
   await signInAs('admin');
   await page.goto('/setup/ibc');
-  await expect(page.getByTestId(tid.notBuilt.subProject)).toHaveText('Payroll and Business Central');
+  await expect(page.getByTestId(tid.ibc.banner)).toContainText('Simulated integration');
+  await expect(page.getByTestId(tid.page('ibc'))).toHaveCount(1);
+  await expect(page.getByTestId(tid.notBuilt.subProject)).toHaveCount(0);
 });
 
 /* Shared by every traversal test below: after any navigation, exactly one

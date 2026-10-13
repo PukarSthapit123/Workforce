@@ -1,12 +1,13 @@
 import { test, expect, FROZEN } from './support/fixtures';
 import { tid } from '../src/testids';
 import { auditOf } from './support/read';
-import { BIGYAN, EDDIE, PUKAR, TODAY, WEEK, dayState, sendVersioned, signInEmail, weekOf } from './support/timesheet';
+import { BIGYAN, EDDIE, PUKAR, TODAY, WEEK, dayState, signInEmail, weekOf } from './support/timesheet';
 
 /* Module 2 Review Focus 6: a 500 on any timesheet write shows the refusal and
    leaves no record and no audit row. One journey across the writes: save a
    day, submit a day, submit a week, submit earlier weeks, enter a day as
-   proxy, approve, approve in bulk, save Timesheet setup and retry a posting.
+   proxy, approve, approve in bulk, save Timesheet setup and retry a posting
+   (from Business Central, module 6).
    A fault is registered after signing in, because signing in reloads the
    page and faults live in the page (fixtures.ts). */
 test.beforeEach(async ({ api }) => { await api.seed('qnipay'); await api.setClock(FROZEN); });
@@ -86,9 +87,14 @@ test('a fault on any timesheet write shows the refusal, and leaves no record and
   await expect(page.getByTestId(tid.mts.dirty)).toBeVisible();
   expect((await api.get('/api/v1/timesheet-config')).body).toEqual(config);
 
-  /* the posting retry has no screen in this module (it is module 6's), so it is called directly */
+  /* the posting retry, from Business Central (module 6): the row stays failed at its first attempt */
+  await page.goto('/setup/ibc');
+  await page.getByTestId(tid.ibc.retry('int_a1f3')).waitFor();
   await api.fault('POST', '/api/v1/integration/attempts/int_a1f3/retry', 500);
-  expect((await sendVersioned(page, 'POST', '/api/v1/integration/attempts/int_a1f3/retry', 1)).status).toBe(500);
+  await page.getByTestId(tid.ibc.retry('int_a1f3')).click();
+  await refused();
+  await expect(page.getByTestId(tid.ibc.state('int_a1f3'))).toContainText('Failed');
+  await expect(page.getByTestId(tid.ibc.attempt('int_a1f3'))).toHaveText('1');
 
   for (const entity of ['timesheetDay', 'timesheetConfig', 'integrationAttempt']) expect(await auditOf(api, entity), entity).toEqual([]);
 });

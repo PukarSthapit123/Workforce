@@ -79,11 +79,18 @@ test('someone still onboarding sees onboarding and nothing else', () => {
   const g = buildNav({ caps: caps('own_home', 'own_onb', 'own_ts'), modules: ALL_MODULES, flags, onboarding: true });
   expect(g.flatMap(x => x.tabs).map(t => t.label)).toEqual(['Onboarding']);
 });
-test('views outside plan 1a are marked not built and name their sub-project', () => {
+test('every listed view is built: with every capability, module and flag, no tab is marked not built or names a sub-project', () => {
+  const all = buildNav({ caps: { has: () => true }, modules: ALL_MODULES, flags: { ...flags, ITACCESS: true }, onboarding: false }).flatMap(x => x.tabs);
+  expect(all.map(t => t.view)).toContain('ibc');
+  expect(all.filter(t => !t.built || t.subProject !== undefined).map(t => t.view)).toEqual([]);
+});
+test('module 6 builds its views', () => {
   const g = buildNav({ caps: caps('own_home', 'own_ts', 'own_hours', 'team_hours', 'integration'), modules: ALL_MODULES, flags, onboarding: false });
   const team = must(g.find((x): x is NavGroup => x.key === 'team'));
   const setup = must(g.find((x): x is NavGroup => x.key === 'setup'));
-  expect(must(setup.tabs.find(t => t.view === 'ibc'))).toMatchObject({ built: false, subProject: 'Payroll and Business Central' });
+  /* module 6 group 5 builds Business Central, the last view still to come */
+  expect(must(setup.tabs.find(t => t.view === 'ibc'))).toMatchObject({ built: true, path: '/setup/ibc' });
+  expect(must(setup.tabs.find(t => t.view === 'ibc'))).not.toHaveProperty('subProject');
   /* module 6 group 2 builds Exceptions */
   expect(must(team.tabs.find(t => t.view === 'texc'))).toMatchObject({ built: true, path: '/team/texc' });
   expect(must(team.tabs.find(t => t.view === 'texc'))).not.toHaveProperty('subProject');
@@ -130,7 +137,8 @@ test('the module setup and integration pages the prototype\'s SETUP_NEED lists a
   expect(byView('mpay').subProject).toBeUndefined();
   expect(byView('ipay')).toMatchObject({ built: true, path: '/setup/ipay', section: 'Integrations' });
   expect(byView('ipay').subProject).toBeUndefined();
-  expect(byView('ibc')).toMatchObject({ built: false, subProject: 'Payroll and Business Central', section: 'Integrations' });
+  expect(byView('ibc')).toMatchObject({ built: true, path: '/setup/ibc', section: 'Integrations' });
+  expect(byView('ibc').subProject).toBeUndefined();
   /* the IT service desk is Rota's (module 3), gated on integration and ITACCESS */
   expect(byView('iit')).toMatchObject({ built: true, path: '/setup/iit', section: 'Integrations' });
   expect(byView('iit').subProject).toBeUndefined();

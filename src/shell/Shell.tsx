@@ -56,6 +56,7 @@ import { TeamHoursPage } from '@/features/hours/TeamHoursPage';
 import { ExceptionsPage } from '@/features/exceptions/ExceptionsPage';
 import { PayCodesPage } from '@/features/pay-codes/PayCodesPage';
 import { PayrollReadinessPage } from '@/features/payroll/PayrollReadinessPage';
+import { BusinessCentralPage } from '@/features/integration/BusinessCentralPage';
 import { moduleBy } from '@/domain/modules';
 
 const BUILT: Record<string, ComponentType> = { asetup: SetupIndex, aperm: PermissionsPage, iaudit: AuditPage,
@@ -65,7 +66,7 @@ const BUILT: Record<string, ComponentType> = { asetup: SetupIndex, aperm: Permis
   tcover: CoverPage, shifts: MyShiftsPage, mrota: RotaSetupPage, leave: LeavePage, tleave: TeamLeavePage, tsick: SicknessPage, mleave: LeaveSetupPage,
   amods: ModulesPage, acal: CalendarPage, aorg: OrganisationPage, anotif: NotificationsPage, aappr: ApprovalsPage, notices: NoticesPage, tnotices: TeamNoticesPage,
   home: HomePage, thome: TeamHomePage, docs: DocumentsPage, onb: OnboardingPage, tonb: TeamOnboardingPage,
-  monb: OnboardingSetupPage, iit: ItServiceDeskPage, hours: MyHoursPage, thours: TeamHoursPage, texc: ExceptionsPage, mpay: PayCodesPage, ipay: PayrollReadinessPage };
+  monb: OnboardingSetupPage, iit: ItServiceDeskPage, hours: MyHoursPage, thours: TeamHoursPage, texc: ExceptionsPage, mpay: PayCodesPage, ipay: PayrollReadinessPage, ibc: BusinessCentralPage };
 const THEME_KEY = 'qnipay.theme';
 
 /* Avoids a non-null assertion on role[0]: charAt(0) is always defined, even

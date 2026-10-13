@@ -647,4 +647,12 @@ export const tid = {
     export: 'ipay-export', reconcile: 'ipay-reconcile', reopen: 'ipay-reopen', history: 'ipay-history',
     reason: 'ipay-reason', cancel: 'ipay-cancel', confirm: 'ipay-confirm',
   },
+  /* module 6: Qnipay setup → Integrations → Business Central (admBC, v15:9911): the simulated-integration banner,
+     P's four tiles, the posting log with Retry on failed rows, and the pay element mapping card */
+  ibc: {
+    error: 'ibc-error', loading: 'ibc-loading', banner: 'ibc-banner', bannerTip: 'ibc-banner-tip', tile: (key: string) => k('ibc-tile', key),
+    log: 'ibc-log', empty: 'ibc-empty', row: (id: string) => k('ibc-row', id), attempt: (id: string) => k('ibc-attempt', id),
+    state: (id: string) => k('ibc-state', id), retry: (id: string) => k('ibc-retry', id), retryNote: 'ibc-retry-note',
+    mapping: 'ibc-mapping', mappingRow: (code: string) => k('ibc-mapping-row', code), payCodes: 'ibc-pay-codes',
+  },
 } as const;

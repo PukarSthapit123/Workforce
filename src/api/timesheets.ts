@@ -5,7 +5,7 @@ import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-quer
 import { api, ApiError } from './client';
 import { useRecordMutation } from './mutation';
 import {
-  bulkApproveTimesheets, getTimesheetConfig, getTimesheetWeek, listTimesheetApprovals, retryIntegrationAttempt, saveTimesheetDay,
+  bulkApproveTimesheets, getTimesheetConfig, getTimesheetWeek, listTimesheetApprovals, saveTimesheetDay,
   submitMultiweek, submitTimesheetDay, submitTimesheetWeek, transitionTimesheetDay, updateTimesheetConfig,
   type ApprovalQueue, type BulkApproved, type DayInput, type IntegrationAttempt, type QueueRow, type TimesheetConfig, type TimesheetDay, type TimesheetSetup,
   type TimesheetWeek, type UpdateTimesheetConfig, type WeekSubmit,
@@ -87,12 +87,6 @@ export const useSaveTimesheetConfig = () => useRecordMutation({
     api(updateTimesheetConfig, { body: v.body, ifMatch: v.config.version }),
   recordKey: () => 'timesheet-config',
   invalidates: [timesheetKeys.config, timesheetKeys.all],
-});
-/* No screen in this module (the Business Central page is module 6). */
-export const useRetryAttempt = () => useRecordMutation({
-  mutationFn: (a: Pick<IntegrationAttempt, 'id' | 'version'>) => api(retryIntegrationAttempt, { params: { id: a.id }, ifMatch: a.version }),
-  recordKey: a => a.id,
-  invalidates: AFTER,
 });
 
 export type { ApprovalQueue, BulkApproved, DayInput, IntegrationAttempt, QueueRow, TimesheetConfig, TimesheetDay, TimesheetSetup, TimesheetWeek, UpdateTimesheetConfig, WeekSubmit };

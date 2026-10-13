@@ -58,6 +58,8 @@ describe('Payroll readiness', () => {
     /* Open once the reader's nav is read */
     expect(await screen.findByTestId(tid.ipay.open('awaiting'))).toHaveAttribute('href', '/team/tteam');
     expect(screen.getByTestId(tid.ipay.open('resource'))).toHaveAttribute('href', '/setup/apeople');
+    /* the posting failure opens Business Central, now built */
+    expect(screen.getByTestId(tid.ipay.open('failed'))).toHaveAttribute('href', '/setup/ibc');
     /* Exceptions is the manager's, not on this administrator's nav, so it has no Open */
     expect(within(screen.getByTestId(tid.ipay.item('critical'))).queryByRole('link')).toBeNull();
     expect(screen.getByTestId(tid.ipay.warnings)).toHaveTextContent('Worth reviewing first');
