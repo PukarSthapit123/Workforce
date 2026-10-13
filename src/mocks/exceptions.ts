@@ -14,7 +14,7 @@ import { bump, refuse } from './http';
 import { serve } from './serve';
 import { actor } from './auth';
 import { writeAudit } from './audit';
-import { inScope, nameOf, personByCode, recordAt, type Signed } from './world';
+import { effectiveCode, inScope, nameOf, personByCode, recordAt, type Signed } from './world';
 import { locationFor, rosterWeek, viewable } from './hours';
 import { coverageGaps, hoursRulesFor } from './rota';
 import { escalatedLeave } from './leave';
@@ -24,7 +24,7 @@ import {
 import type { IntegrationAttempt } from '@/contract/timesheets';
 import type { RecordMeta } from '@/contract/common';
 import {
-  MOVE_TOAST, NO_EXCEPTION, UNHANDLED, applyMove, deriveExceptions, moveAuditAct, moveProblem,
+  MOVE_TOAST, NO_EXCEPTION, UNHANDLED, applyMove, deriveExceptions, moveAuditAct, moveProblem, selfProblem,
   type DerivedException, type ExceptionFacts, type ExceptionMove, type ExceptionRefusal, type Handling,
 } from '@/domain/exceptions';
 
@@ -65,24 +65,28 @@ function factsAt(locations: readonly string[]): ExceptionFacts {
 }
 
 /* ------------------------------------------------------------ the views */
-function itemOf(x: DerivedException): ExceptionItem {
+/* mine: about the reader (self), whose moves on it are refused; nobody reads as anyone for payroll readiness. */
+function itemOf(x: DerivedException, self: string | null): ExceptionItem {
   const h = recordAt(handlings(), x.id);
   return { id: x.id, version: h?.version ?? 0, key: x.key, kind: x.kind, severity: x.severity, subject: x.subject, text: x.text, location: x.location,
     source: x.source, state: h?.state ?? 'open', owner: h?.owner ?? null, resolution: h?.resolution ?? '', firstRecorded: h?.firstRecorded ?? null,
-    history: h?.history ?? [] };
+    history: h?.history ?? [], mine: self !== null && x.personCode === self };
 }
 
 /* Payroll readiness (module 6 group 4): every exception at every active location, with its handling. */
-export const exceptionsEverywhere = (): ExceptionItem[] => deriveExceptions(factsAt(activeLocations())).map(itemOf);
+export const exceptionsEverywhere = (): ExceptionItem[] => deriveExceptions(factsAt(activeLocations())).map(x => itemOf(x, null));
 
 /* ------------------------------------------------------------- the moves */
 /* The exception as it stands now, wherever it is: one outside the caller's
-   location scope is refused with scope, one no longer detected is not found. */
+   location scope is refused with scope, one no longer detected is not found,
+   and one about the caller is refused with SELF_APPROVAL, whatever the move. */
 function exceptionFor(s: Signed, id: string): DerivedException {
   const x = deriveExceptions(factsAt(activeLocations())).find(e => e.id === id) ?? refuseWith(NO_EXCEPTION);
   if (x.location !== null && !inScope(s, x.location))
     refuse(403, { code: 'scope', message: `That exception is at ${nameOf('locations', x.location)}, outside your scope.`,
       next: 'Ask a manager there, or an administrator, to handle it.' });
+  const self = selfProblem(x, effectiveCode(s));
+  if (self) return refuseWith(self);
   return x;
 }
 function move(m: ExceptionMove, s: Signed, id: string, note: string, checkVersion: (r: RecordMeta) => void) {
@@ -100,13 +104,13 @@ function move(m: ExceptionMove, s: Signed, id: string, note: string, checkVersio
   const auditId = writeAudit({ who: w, act: moveAuditAct(m), entity: 'exception', entityId: x.id,
     before: { state: was.state, owner: was.owner?.name ?? null },
     after: { state: next.state, owner: next.owner?.name ?? null, detail: `${x.kind} · ${x.subject}${n ? ` · "${n}"` : ''}` } });
-  return { record: itemOf(x), auditId, message: MOVE_TOAST[m] };
+  return { record: itemOf(x, w.personCode), auditId, message: MOVE_TOAST[m] };
 }
 
 export const exceptionHandlers = [
   serve(listExceptions, ({ session, query }) => {
     const location = locationFor(session, query.location, 'exceptions');
-    const items = deriveExceptions(factsAt([location.code])).map(itemOf);
+    const self = effectiveCode(session), items = deriveExceptions(factsAt([location.code])).map(x => itemOf(x, self));
     return { location, locations: viewable(session), items };
   }),
   serve(takeException, ({ session, params, checkVersion }) => move('take', session, params.id, '', checkVersion)),

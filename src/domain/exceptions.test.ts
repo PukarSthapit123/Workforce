@@ -1,6 +1,6 @@
 import {
-  EXC_STATES, MOVE_TO, NOTE_REQUIRED, REASON_REQUIRED, SEVERITY, UNHANDLED, applyMove, changesText, deriveExceptions, exceptionId, exceptionKey,
-  filterCounts, inFilter, matches, moveAuditAct, moveProblem, movesFrom, needsAction, severityTone, type ExceptionFacts, type PersonFacts,
+  EXC_STATES, MOVE_TO, NOTE_REQUIRED, REASON_REQUIRED, SELF_EXCEPTION_REFUSAL, SEVERITY, UNHANDLED, applyMove, changesText, deriveExceptions, exceptionId, exceptionKey,
+  filterCounts, inFilter, matches, moveAuditAct, moveProblem, movesFrom, needsAction, selfProblem, severityTone, type ExceptionFacts, type PersonFacts,
 } from './exceptions';
 
 const person = (o: Partial<PersonFacts> = {}): PersonFacts => ({ code: 'CP-1042', name: 'Amara Okafor', location: 'WH', weekStart: '2026-08-10', flags: [], missing: [],
@@ -35,6 +35,8 @@ describe('deriving exceptions from the data', () => {
     expect(xs.map(x => x.source)).toEqual(['tpeople', 'tpeople', 'trota', 'tleave', 'ibc', 'thours', 'tteam', 'thours', 'tpeople']);
     expect(xs.find(x => x.kind === 'Business Central')?.location).toBeNull();
     expect(xs.find(x => x.kind === 'Coverage')?.location).toBe('WH');
+    /* the person each is about, for the self rule; a location's coverage and a posting are about nobody */
+    expect(xs.map(x => x.personCode)).toEqual(['CP-1501', 'CP-1502', null, 'CP-1201', null, 'CP-1042', 'CP-1042', 'CP-1042', 'CP-1153']);
   });
   test('a note flag (nights) and an already expired qualification raise nothing', () => {
     expect(deriveExceptions(facts({ people: [person({ flags: [{ k: '1 night', c: 'neu' }], qualifications: 'First aid expired' })] }))).toEqual([]);
@@ -119,5 +121,15 @@ describe('the screen\'s filters', () => {
     const x = { subject: 'Amara Okafor', text: 'Over maximum', kind: 'Compliance' };
     expect([matches('amara', x), matches('compliance', x), matches('maximum', x), matches('nobody', x), matches(' ', x)]).toEqual([true, true, true, false, true]);
     expect([changesText(1), changesText(2)]).toEqual(['1 change', '2 changes']);
+  });
+});
+
+describe('the self rule', () => {
+  test('nobody handles an exception about themselves; one about nobody, or someone else, is not refused for it', () => {
+    expect(selfProblem({ personCode: 'CP-1001' }, 'CP-1001')).toEqual(SELF_EXCEPTION_REFUSAL);
+    expect(SELF_EXCEPTION_REFUSAL).toEqual({ status: 403, code: 'SELF_APPROVAL', message: 'You cannot handle an exception about yourself.',
+      next: 'Ask another manager at your location.' });
+    expect(selfProblem({ personCode: 'CP-1042' }, 'CP-1001')).toBeNull();
+    expect(selfProblem({ personCode: null }, 'CP-1001')).toBeNull();
   });
 });

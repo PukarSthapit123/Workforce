@@ -19,9 +19,10 @@ import { formatDateTime } from '@/lib/format';
    stands, highest severity first. The state filters default to Needs action
    (open, in progress, reopened); each row has its severity, its state, who
    owns it, the moves its state allows and an Open link to the screen the
-   fact is put right on. Resolve and Ignore ask for the note in a dialog
-   (excResolveBox, 10001-10022); the others act at once. Nothing changes on
-   screen until the server has answered. */
+   fact is put right on; an exception about the reader offers no moves, as
+   the server refuses them (SELF_APPROVAL). Resolve and Ignore ask for the
+   note in a dialog (excResolveBox, 10001-10022); the others act at once.
+   Nothing changes on screen until the server has answered. */
 export function ExceptionsPage() {
   const [location, setLocation] = useState('');
   const q = useExceptions(location);
@@ -85,8 +86,10 @@ function ExceptionRow({ x, openPath, pending, onMove }: { x: ExceptionItem; open
       <Pill testId={tid.texc.state(x.id)} tone={S.tone} glyph={S.glyph}>{S.label}</Pill>
       <span><strong className="font-semibold">{x.subject}</strong> · {x.text}</span>
       <span className="ml-auto flex flex-wrap gap-[6px]">
-        {movesFrom(x.state).map(mv => (
-          <Button key={mv} testId={tid.texc.move(x.id, mv)} kind="ghost" small pending={pending && !asksForNote(mv)} onClick={() => onMove(mv)}>{MOVE_LABEL[mv]}</Button>))}
+        {x.mine
+          ? <span data-testid={tid.texc.self(x.id)} className="self-center text-xs leading-[1.45] text-text-muted">This is about you, so someone else must handle it</span>
+          : movesFrom(x.state).map(mv => (
+            <Button key={mv} testId={tid.texc.move(x.id, mv)} kind="ghost" small pending={pending && !asksForNote(mv)} onClick={() => onMove(mv)}>{MOVE_LABEL[mv]}</Button>))}
         {openPath && <NavLink testId={tid.texc.open(x.id)} to={openPath} className={buttonVariants({ variant: 'ghost', size: 'sm' })}>Open</NavLink>}
       </span>
       {handled

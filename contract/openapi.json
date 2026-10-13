@@ -8413,7 +8413,7 @@
     },
     "/api/v1/exceptions/{id}/ignore": {
       "post": {
-        "summary": "Ignore it with a reason (If-Match); without one, 422 on reason. The condition is still detected. From open, in progress or reopened. One audit row.",
+        "summary": "Ignore it with a reason (If-Match); without one, 422 on reason. The condition is still detected. From open, in progress or reopened. One audit row. Refused with SELF_APPROVAL when it is about the caller.",
         "security": [
           {
             "bearer": []
@@ -8627,6 +8627,9 @@
                             ],
                             "additionalProperties": false
                           }
+                        },
+                        "mine": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -8643,7 +8646,8 @@
                         "owner",
                         "resolution",
                         "firstRecorded",
-                        "history"
+                        "history",
+                        "mine"
                       ],
                       "additionalProperties": false
                     },
@@ -8749,7 +8753,7 @@
     },
     "/api/v1/exceptions/{id}/release": {
       "post": {
-        "summary": "Back to open (If-Match), owned by nobody. From in progress only. One audit row.",
+        "summary": "Back to open (If-Match), owned by nobody. From in progress only. One audit row. Refused with SELF_APPROVAL when it is about the caller.",
         "security": [
           {
             "bearer": []
@@ -8942,6 +8946,9 @@
                             ],
                             "additionalProperties": false
                           }
+                        },
+                        "mine": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -8958,7 +8965,8 @@
                         "owner",
                         "resolution",
                         "firstRecorded",
-                        "history"
+                        "history",
+                        "mine"
                       ],
                       "additionalProperties": false
                     },
@@ -9064,7 +9072,7 @@
     },
     "/api/v1/exceptions/{id}/reopen": {
       "post": {
-        "summary": "Reopen a resolved or ignored exception (If-Match). One audit row.",
+        "summary": "Reopen a resolved or ignored exception (If-Match). One audit row. Refused with SELF_APPROVAL when it is about the caller.",
         "security": [
           {
             "bearer": []
@@ -9257,6 +9265,9 @@
                             ],
                             "additionalProperties": false
                           }
+                        },
+                        "mine": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -9273,7 +9284,8 @@
                         "owner",
                         "resolution",
                         "firstRecorded",
-                        "history"
+                        "history",
+                        "mine"
                       ],
                       "additionalProperties": false
                     },
@@ -9379,7 +9391,7 @@
     },
     "/api/v1/exceptions/{id}/resolve": {
       "post": {
-        "summary": "Resolve it with a note of what was done (If-Match); without one, 422 on note. From in progress or reopened. One audit row.",
+        "summary": "Resolve it with a note of what was done (If-Match); without one, 422 on note. From in progress or reopened. One audit row. Refused with SELF_APPROVAL when it is about the caller.",
         "security": [
           {
             "bearer": []
@@ -9593,6 +9605,9 @@
                             ],
                             "additionalProperties": false
                           }
+                        },
+                        "mine": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -9609,7 +9624,8 @@
                         "owner",
                         "resolution",
                         "firstRecorded",
-                        "history"
+                        "history",
+                        "mine"
                       ],
                       "additionalProperties": false
                     },
@@ -9715,7 +9731,7 @@
     },
     "/api/v1/exceptions/{id}/take": {
       "post": {
-        "summary": "Take it (If-Match): in progress, owned by the caller. From open or reopened; otherwise ILLEGAL_TRANSITION. One audit row.",
+        "summary": "Take it (If-Match): in progress, owned by the caller. From open or reopened; otherwise ILLEGAL_TRANSITION. One audit row. Refused with SELF_APPROVAL when it is about the caller.",
         "security": [
           {
             "bearer": []
@@ -9908,6 +9924,9 @@
                             ],
                             "additionalProperties": false
                           }
+                        },
+                        "mine": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -9924,7 +9943,8 @@
                         "owner",
                         "resolution",
                         "firstRecorded",
-                        "history"
+                        "history",
+                        "mine"
                       ],
                       "additionalProperties": false
                     },
@@ -10250,6 +10270,9 @@
                               ],
                               "additionalProperties": false
                             }
+                          },
+                          "mine": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -10266,7 +10289,8 @@
                           "owner",
                           "resolution",
                           "firstRecorded",
-                          "history"
+                          "history",
+                          "mine"
                         ],
                         "additionalProperties": false
                       }

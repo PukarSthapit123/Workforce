@@ -4,6 +4,7 @@ import { tid } from '@/testids';
 import { expectTestIdCoverage } from '@/test/testid-coverage';
 import { renderPage, withFakeServer } from '@/test/render-page';
 import { audits, resetTo, signInAs } from '@/test/api-helpers';
+import { store } from '@/mocks/store';
 import { SEVERITY_TIP } from '@/domain/exceptions';
 import { ExceptionsPage } from './ExceptionsPage';
 
@@ -106,5 +107,20 @@ describe('Exceptions', () => {
     await waitFor(() => expect(toasts()).toContain('Ignored · recorded against the exception'));
     await waitFor(() => expect(screen.getByTestId(tid.texc.state(id))).toHaveTextContent('—Ignored'));
     expect(screen.getByTestId(tid.texc.meta(id))).toHaveTextContent('Resolution: Agency cover booked for Friday');
+  });
+
+  test('an exception about the reader offers no moves, only who must handle it, while the others keep theirs', async () => {
+    /* Rachel Hussain, WH's manager, is not cleared to work */
+    store.coll<Record<string, unknown>>('rotaProfiles')['rp_CP-1001'] = { id: 'rp_CP-1001', version: 1, updatedAt: store.now(), personCode: 'CP-1001',
+      cleared: false, dbsExpiry: '2026-07-31', qualifications: 'Care Certificate', favourite: false, preferredDays: [] };
+    await open();
+    const own = rowWith('Rachel Hussain');
+    const id = idOf(own);
+    expect(within(own).getByTestId(tid.texc.self(id))).toHaveTextContent('This is about you, so someone else must handle it');
+    expect(within(own).queryByTestId(/^texc-move-/)).toBeNull();
+    expect(within(own).queryByRole('button')).toBeNull();
+    const other = rowWith('Under contracted');
+    expect(within(other).getByTestId(tid.texc.move(idOf(other), 'take'))).toBeInTheDocument();
+    expect(within(other).queryByTestId(/^texc-self-/)).toBeNull();
   });
 });

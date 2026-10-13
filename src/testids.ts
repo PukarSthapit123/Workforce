@@ -627,6 +627,8 @@ export const tid = {
     row: (id: string) => k('texc-row', id), kind: (id: string) => k('texc-kind', id), state: (id: string) => k('texc-state', id),
     meta: (id: string) => k('texc-meta', id), move: (id: string, m: string) => k('texc-move', id, m), open: (id: string) => k('texc-open', id),
     note: 'texc-note', warn: 'texc-warn', cancel: 'texc-cancel', confirm: 'texc-confirm', banner: 'texc-banner',
+    /* fix round: on an exception about the reader, in place of the moves the server refuses (SELF_APPROVAL) */
+    self: (id: string) => k('texc-self', id),
   },
   /* module 6: Qnipay setup → Integrations → Pay codes (admPayCodes, v15:9596): the table of base and allowance
      codes, New pay code, and the new or edit dialog (payCodeBox, v15:9554) */

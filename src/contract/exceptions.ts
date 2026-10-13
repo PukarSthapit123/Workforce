@@ -25,6 +25,8 @@ export const ExceptionItem = z.object({
   state: ExceptionState, owner: Who.nullable(), resolution: z.string(),
   /* when someone first acted on it; null until then, as nothing is stored for an exception before that */
   firstRecorded: IsoDateTime.nullable(), history: z.array(HandlingStep),
+  /* about the reader, who cannot handle it (SELF_APPROVAL); someone else must */
+  mine: z.boolean(),
 });
 export type ExceptionItem = z.infer<typeof ExceptionItem>;
 export const ExceptionList = z.object({
@@ -42,22 +44,23 @@ export type ExceptionMoved = z.infer<typeof ExceptionMoved>;
 
 const IdParams = z.object({ id: z.string().min(1).max(40) });
 const CAP = 'team_hours';
-const MOVE_ERRORS = [404, 409] as const;
+const MOVE_ERRORS = [403, 404, 409] as const;
+const SELF = ' Refused with SELF_APPROVAL when it is about the caller.';
 export const listExceptions = defineEndpoint({ method: 'GET', path: '/api/v1/exceptions', query: ExceptionsQuery, response: ExceptionList,
   capability: CAP, errors: [404],
   summary: 'The exceptions at one location, derived now, highest severity first, each with its handling. Query: location (default: the reader\'s own). A location outside the reader\'s scope is refused with scope.' });
 export const takeException = defineEndpoint({ method: 'POST', path: '/api/v1/exceptions/:id/take', params: IdParams, response: ExceptionMoved,
   capability: CAP, versioned: true, errors: [...MOVE_ERRORS],
-  summary: 'Take it (If-Match): in progress, owned by the caller. From open or reopened; otherwise ILLEGAL_TRANSITION. One audit row.' });
+  summary: 'Take it (If-Match): in progress, owned by the caller. From open or reopened; otherwise ILLEGAL_TRANSITION. One audit row.' + SELF });
 export const releaseException = defineEndpoint({ method: 'POST', path: '/api/v1/exceptions/:id/release', params: IdParams, response: ExceptionMoved,
   capability: CAP, versioned: true, errors: [...MOVE_ERRORS],
-  summary: 'Back to open (If-Match), owned by nobody. From in progress only. One audit row.' });
+  summary: 'Back to open (If-Match), owned by nobody. From in progress only. One audit row.' + SELF });
 export const resolveException = defineEndpoint({ method: 'POST', path: '/api/v1/exceptions/:id/resolve', params: IdParams, request: ResolveException,
   response: ExceptionMoved, capability: CAP, versioned: true, errors: [...MOVE_ERRORS],
-  summary: 'Resolve it with a note of what was done (If-Match); without one, 422 on note. From in progress or reopened. One audit row.' });
+  summary: 'Resolve it with a note of what was done (If-Match); without one, 422 on note. From in progress or reopened. One audit row.' + SELF });
 export const ignoreException = defineEndpoint({ method: 'POST', path: '/api/v1/exceptions/:id/ignore', params: IdParams, request: IgnoreException,
   response: ExceptionMoved, capability: CAP, versioned: true, errors: [...MOVE_ERRORS],
-  summary: 'Ignore it with a reason (If-Match); without one, 422 on reason. The condition is still detected. From open, in progress or reopened. One audit row.' });
+  summary: 'Ignore it with a reason (If-Match); without one, 422 on reason. The condition is still detected. From open, in progress or reopened. One audit row.' + SELF });
 export const reopenException = defineEndpoint({ method: 'POST', path: '/api/v1/exceptions/:id/reopen', params: IdParams, response: ExceptionMoved,
   capability: CAP, versioned: true, errors: [...MOVE_ERRORS],
-  summary: 'Reopen a resolved or ignored exception (If-Match). One audit row.' });
+  summary: 'Reopen a resolved or ignored exception (If-Match). One audit row.' + SELF });

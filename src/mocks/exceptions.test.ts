@@ -126,6 +126,35 @@ describe('capability, scope and version refusals', () => {
     expect([gone.status, refusal(gone).code]).toEqual([404, 'not-found']);
     expect(excAudits()).toEqual([]);
   });
+  test('an exception about the caller is marked mine, and every move on it is refused with SELF_APPROVAL, while someone else can handle it', async () => {
+    /* Rachel Hussain, WH's manager, is not cleared to work */
+    store.coll<Record<string, unknown>>('rotaProfiles')['rp_CP-1001'] = { id: 'rp_CP-1001', version: 1, updatedAt: store.now(), personCode: 'CP-1001',
+      cleared: false, dbsExpiry: '2026-07-31', qualifications: 'Care Certificate', favourite: false, preferredDays: [] };
+    const l = await list();
+    const own = l.items.find(i => i.kind === 'Clearance' && i.subject === 'Rachel Hussain');
+    if (!own) throw new Error('no clearance exception about Rachel Hussain');
+    expect(own.mine).toBe(true);
+    expect(l.items.filter(i => i.mine).every(i => i.subject === 'Rachel Hussain')).toBe(true);
+    expect(l.items.filter(i => !i.mine).length).toBeGreaterThan(0);
+    const self = { code: 'SELF_APPROVAL', message: 'You cannot handle an exception about yourself.', next: 'Ask another manager at your location.' };
+    const refusedAll = async (moves: string[], ifMatch: number) => {
+      for (const mv of moves) {
+        const r = await go('manager', own.id, mv, ifMatch, mv === 'resolve' ? { note: 'Renewed' } : mv === 'ignore' ? { reason: 'Agreed' } : undefined);
+        expect([mv, r.status, refusal(r)]).toEqual([mv, 403, self]);
+      }
+    };
+    await refusedAll(['take', 'ignore'], 0);
+    /* an administrator holding team_hours handles it instead */
+    const admin = Object.values(store.coll<{ email: string; grants: string[] }>('accounts')).find(a => a.email === accountOf('admin').email);
+    if (!admin) throw new Error('no admin account');
+    admin.grants = ['team_hours'];
+    expect((await go('admin', own.id, 'take', 0)).status).toBe(200);
+    await refusedAll(['release', 'resolve', 'ignore'], 1);
+    expect((await go('admin', own.id, 'resolve', 1, { note: 'DBS renewal booked' })).status).toBe(200);
+    await refusedAll(['reopen'], 2);
+    expect(excAudits().map(a => a.act)).toEqual(['Exception in progress', 'Exception resolved']);
+    expect((await list('admin', '?location=WH')).items.find(i => i.id === own.id)).toMatchObject({ state: 'resolved', mine: false });
+  });
   test('a stale version is 412 and a missing one 428, and neither writes', async () => {
     const x = first(await list(), 'Qualification');
     expect((await go('manager', x.id, 'take', 0)).status).toBe(200);

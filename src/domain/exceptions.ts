@@ -54,6 +54,15 @@ export const NOTE_REQUIRED: ExceptionRefusal = { status: 422, code: 'invalid', f
   message: 'A resolution note is required.', next: 'Say what was done, then resolve it.' };
 export const REASON_REQUIRED: ExceptionRefusal = { status: 422, code: 'invalid', field: 'reason',
   message: 'A reason is required to ignore an exception.', next: 'Say why it is being ignored, then ignore it.' };
+/* Nobody handles an exception about themselves (as module 2 refuses
+   self-approval of a timesheet and module 4 of a leave request): taking,
+   releasing, resolving, ignoring or reopening it would change what payroll
+   readiness counts about their own work. */
+export const SELF_EXCEPTION = 'You cannot handle an exception about yourself.';
+export const SELF_EXCEPTION_REFUSAL: ExceptionRefusal = { status: 403, code: 'SELF_APPROVAL', message: SELF_EXCEPTION,
+  next: 'Ask another manager at your location.' };
+export const selfProblem = (x: Pick<DerivedException, 'personCode'>, self: string): ExceptionRefusal | null =>
+  (x.personCode !== null && x.personCode === self ? SELF_EXCEPTION_REFUSAL : null);
 const list = (xs: readonly string[]) => (xs.length > 1 ? `${xs.slice(0, -1).join(', ')} or ${xs.at(-1) ?? ''}` : xs[0] ?? '');
 /* excTransition's refusal (v15:7764-7766): "An open exception cannot move to resolved". */
 export function illegalMove(from: ExceptionState, move: ExceptionMove): ExceptionRefusal {
@@ -143,6 +152,8 @@ export interface DerivedException {
   id: string; key: string; kind: ExceptionKind; severity: number; subject: string; text: string;
   /* where it belongs, for location scope; null for one that is every location's */
   location: string | null; source: string;
+  /* the person it is about, for the self rule; null for a location's coverage or a posting */
+  personCode: string | null;
 }
 
 export const clearanceText = (dbsExpiry: string) =>
@@ -161,7 +172,8 @@ export function deriveExceptions(f: ExceptionFacts): DerivedException[] {
   const out: DerivedException[] = [];
   const add = (kind: ExceptionKind, subjectId: string, fact: string, subject: string, text: string, location: string | null) => {
     const key = exceptionKey(kind, subjectId, fact);
-    out.push({ id: exceptionId(key), key, kind, severity: SEVERITY[kind], subject, text, location, source: SOURCE_VIEW[kind] });
+    const personCode = kind === 'Coverage' || kind === 'Business Central' ? null : subjectId;
+    out.push({ id: exceptionId(key), key, kind, severity: SEVERITY[kind], subject, text, location, source: SOURCE_VIEW[kind], personCode });
   };
   for (const p of f.people) {
     for (const fl of p.flags) if (fl.c !== 'neu') add(fl.c === 'err' ? 'Compliance' : 'Hours', p.code, `${p.weekStart}|${fl.k}`, p.name, fl.k, p.location);
