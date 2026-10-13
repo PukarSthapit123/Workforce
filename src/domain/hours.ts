@@ -111,5 +111,4 @@ export function hoursFileName(location: string, weekStart: string): string {
   return `qnipay-hours-position-${location}-${d}-${m}-${y}.csv`;
 }
 export const exportedText = (rows: number, file: string) => `Exported · ${rows} row${rows === 1 ? '' : 's'} · ${file}`;
-export const DOWNLOAD_BLOCKED = 'Download blocked by the browser. No file was produced.';
-export const exportAuditText = (file: string, rows: number) => `${file} · ${rows} row${rows === 1 ? '' : 's'}`;
+export const DOWNLOAD_BLOCKED = { message: 'Download blocked by the browser. No file was produced.', next: 'Allow downloads for this site, then export again.' };

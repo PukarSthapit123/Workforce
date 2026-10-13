@@ -602,4 +602,19 @@ export const tid = {
     error: 'iit-error', loading: 'iit-loading', banner: 'iit-banner', table: 'iit-table', empty: 'iit-empty',
     row: (ref: string) => k('iit-row', ref), status: (ref: string) => k('iit-status', ref),
   },
+  /* module 6: My work → Hours (essHours, v15:5702): the four tiles, the flags on the week, and the week day by day */
+  hours: {
+    error: 'hours-error', loading: 'hours-loading', tip: 'hours-tip',
+    contracted: 'hours-contracted', rotad: 'hours-rotad', worked: 'hours-worked', checks: 'hours-checks',
+    flags: 'hours-flags', flag: (i: number) => k('hours-flag', i), days: 'hours-days', day: (date: string) => k('hours-day', date),
+    status: (date: string) => k('hours-status', date), variance: (date: string) => k('hours-variance', date), total: 'hours-total',
+  },
+  /* module 6: My team → Hours position (mgrHours, v15:7719): the location picker, the export, the tiles, search and a row per colleague */
+  thours: {
+    error: 'thours-error', loading: 'thours-loading', location: 'thours-location', export: 'thours-export',
+    contracted: 'thours-contracted', rotad: 'thours-rotad', worked: 'thours-worked', discrepancies: 'thours-discrepancies',
+    search: 'thours-search', table: 'thours-table', flagsTip: 'thours-flags-tip', empty: 'thours-empty',
+    row: (code: string) => k('thours-row', code), rotaVar: (code: string) => k('thours-rota-var', code),
+    workVar: (code: string) => k('thours-work-var', code), flags: (code: string) => k('thours-flags', code),
+  },
 } as const;

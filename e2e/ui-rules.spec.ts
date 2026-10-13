@@ -14,15 +14,16 @@ import { tid } from '../src/testids';
    for the admin; and 1c's: My home, Profile, Documents and Notices for the
    employee, Team Home and team Notices for the manager, and Organisation,
    Calendar, Modules & features (the list and a module's drill-in),
-   Notifications and Approvals for the admin. */
+   Notifications and Approvals for the admin; and module 6's: My hours for
+   the employee and Hours position for the manager. */
 type Persona = 'employee' | 'manager' | 'admin';
 const BUILT = ['/setup/asetup', '/setup/aperm', '/setup/iaudit', '/setup/apeople', '/setup/aloc', '/setup/aloc?d=locations', '/setup/acon', '/setup/atypes',
   '/setup/mts', '/setup/mrota', '/setup/mleave',
   '/setup/aorg', '/setup/acal', '/setup/amods', '/setup/amods?m=TS', '/setup/anotif', '/setup/aappr'];
 const BUILT_AS: [Persona, string][] = [['employee', '/work/ts'], ['employee', '/work/shifts'], ['employee', '/work/leave'], ['employee', '/work/home'],
-  ['employee', '/work/profile'], ['employee', '/work/docs'], ['employee', '/work/notices'], ['manager', '/team/tteam'], ['manager', '/team/trota'],
+  ['employee', '/work/profile'], ['employee', '/work/docs'], ['employee', '/work/notices'], ['employee', '/work/hours'], ['manager', '/team/tteam'], ['manager', '/team/trota'],
   ['manager', '/team/tshifts'], ['manager', '/team/tpat'], ['manager', '/team/tcover'], ['manager', '/team/tleave'], ['manager', '/team/tsick'],
-  ['manager', '/team/thome'], ['manager', '/team/tnotices']];
+  ['manager', '/team/thome'], ['manager', '/team/tnotices'], ['manager', '/team/thours']];
 const READY: Record<string, string> = { '/setup/asetup': tid.page('asetup'), '/setup/aperm': tid.access.table, '/setup/iaudit': tid.page('iaudit'),
   '/setup/apeople': tid.people.table, '/setup/aloc': tid.dims.card('locations'), '/setup/aloc?d=locations': tid.dims.table,
   '/setup/acon': tid.contracts.table, '/setup/atypes': tid.types.detail, '/setup/mts': tid.mts.card('rules'),
@@ -31,11 +32,13 @@ const READY: Record<string, string> = { '/setup/asetup': tid.page('asetup'), '/s
   '/work/leave': tid.leave.cards, '/team/tleave': tid.tleave.balances, '/team/tsick': tid.tsick.table, '/setup/mleave': tid.mleave.card('rota'),
   '/setup/aorg': tid.aorg.spine, '/setup/acal': tid.acal.card('saved'), '/setup/amods': tid.amods.card('TS'), '/setup/amods?m=TS': tid.amods.features,
   '/setup/anotif': tid.anotif.table, '/setup/aappr': tid.aappr.chainTable, '/work/home': tid.home.grid, '/work/profile': tid.profile.state,
-  '/work/docs': tid.docs.card, '/work/notices': tid.notices.table, '/team/thome': tid.thome.grid, '/team/tnotices': tid.tnotices.table };
+  '/work/docs': tid.docs.card, '/work/notices': tid.notices.table, '/team/thome': tid.thome.grid, '/team/tnotices': tid.tnotices.table,
+  '/work/hours': tid.hours.days, '/team/thours': tid.thours.table };
 /* The pages that register a guide (src/ui/guides.ts), by path, with the view it is registered under */
 const GUIDED: Record<string, string> = { '/work/ts': 'ts', '/team/tteam': 'tteam', '/setup/mts': 'mts', '/team/trota': 'trota', '/team/tshifts': 'tshifts',
   '/team/tpat': 'tpat', '/setup/mrota': 'mrota', '/setup/mleave': 'mleave', '/work/notices': 'notices', '/team/tnotices': 'tnotices',
-  '/setup/apeople': 'apeople', '/setup/aloc': 'aloc', '/setup/aloc?d=locations': 'aloc', '/setup/acon': 'acon', '/setup/aperm': 'aperm', '/work/docs': 'docs', '/work/profile': 'profile' };
+  '/setup/apeople': 'apeople', '/setup/aloc': 'aloc', '/setup/aloc?d=locations': 'aloc', '/setup/acon': 'acon', '/setup/aperm': 'aperm', '/work/docs': 'docs', '/work/profile': 'profile',
+  '/team/thours': 'thours' };
 
 async function eachBuiltPage(page: Page, signInAs: (p: Persona) => Promise<void>, check: (path: string) => Promise<void>) {
   test.setTimeout(360_000); // three sign-ins and thirty-eight pages

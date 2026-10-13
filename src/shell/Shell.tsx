@@ -51,6 +51,8 @@ import { DocumentsPage } from '@/features/home/DocumentsPage';
 import { OnboardingPage } from '@/features/onboarding/OnboardingPage';
 import { TeamOnboardingPage } from '@/features/onboarding/TeamOnboardingPage';
 import { OnboardingSetupPage } from '@/features/onboarding/OnboardingSetupPage';
+import { MyHoursPage } from '@/features/hours/MyHoursPage';
+import { TeamHoursPage } from '@/features/hours/TeamHoursPage';
 import { moduleBy } from '@/domain/modules';
 
 const BUILT: Record<string, ComponentType> = { asetup: SetupIndex, aperm: PermissionsPage, iaudit: AuditPage,
@@ -60,7 +62,7 @@ const BUILT: Record<string, ComponentType> = { asetup: SetupIndex, aperm: Permis
   tcover: CoverPage, shifts: MyShiftsPage, mrota: RotaSetupPage, leave: LeavePage, tleave: TeamLeavePage, tsick: SicknessPage, mleave: LeaveSetupPage,
   amods: ModulesPage, acal: CalendarPage, aorg: OrganisationPage, anotif: NotificationsPage, aappr: ApprovalsPage, notices: NoticesPage, tnotices: TeamNoticesPage,
   home: HomePage, thome: TeamHomePage, docs: DocumentsPage, onb: OnboardingPage, tonb: TeamOnboardingPage,
-  monb: OnboardingSetupPage, iit: ItServiceDeskPage };
+  monb: OnboardingSetupPage, iit: ItServiceDeskPage, hours: MyHoursPage, thours: TeamHoursPage };
 const THEME_KEY = 'qnipay.theme';
 
 /* Avoids a non-null assertion on role[0]: charAt(0) is always defined, even

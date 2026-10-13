@@ -31,6 +31,14 @@ export const GUIDES: Readonly<Record<string, Guide>> = {
     ['Approving in bulk',
       'Approve all is scoped to your location and asks you to confirm the record count, the hours and any exceptions first. Each approval queues its own posting.'],
   ] },
+  thours: { label: 'Where these figures come from', title: 'Where these figures come from', sections: [
+    ['Three different sources',
+      'Contracted comes from the workforce record, rota’d from Rota, worked from Timesheet. One row per person, so the three can be compared directly.'],
+    ['Variance',
+      'Rota variance compares scheduled against contracted; worked variance compares actual against contracted. Someone with no contracted baseline is measured against a maximum instead.'],
+    ['Flags',
+      'Hours against contract, rest between shifts and consecutive days worked. These are advisory. They never block a timesheet, but they do raise exceptions.'],
+  ] },
   trota: { label: 'Where shifts come from', title: 'Where shifts come from', sections: [
     ['1 · Working patterns build the backbone',
       'Admin sets a pattern once, for example 4-on / 4-off nights, and the rota is generated from it up to the horizon. Most shifts arrive this way, carrying the pattern’s cost centre, location and job profile.'],

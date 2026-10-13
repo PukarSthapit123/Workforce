@@ -1,5 +1,5 @@
 import {
-  DOWNLOAD_BLOCKED, HOURS_CSV_HEADER, cellHours, checkCount, dayStatus, dayVariance, exportAuditText, exportedText, flagWarns, footHours, hasError,
+  DOWNLOAD_BLOCKED, HOURS_CSV_HEADER, cellHours, checkCount, dayStatus, dayVariance, exportedText, flagWarns, footHours, hasError,
   hoursCsv, hoursCsvRow, hoursFileName, isBank, minutesToHours, positionOf, rotaLineText, teamTotals, varianceTone, type ExportMember,
 } from './hours';
 import { DEFAULT_ROTA_CONFIG, normLine, recalcShift, type RotaWorker, type RuleContext, type ShiftType, type TypeRota } from './rota';
@@ -111,7 +111,6 @@ describe('the export', () => {
     expect(hoursFileName('WH', '2026-08-10')).toBe('qnipay-hours-position-WH-10-08-2026.csv');
     expect(exportedText(12, 'x.csv')).toBe('Exported · 12 rows · x.csv');
     expect(exportedText(1, 'x.csv')).toBe('Exported · 1 row · x.csv');
-    expect(exportAuditText('x.csv', 0)).toBe('x.csv · 0 rows');
-    expect(DOWNLOAD_BLOCKED).toBe('Download blocked by the browser. No file was produced.');
+    expect(DOWNLOAD_BLOCKED).toEqual({ message: 'Download blocked by the browser. No file was produced.', next: 'Allow downloads for this site, then export again.' });
   });
 });
