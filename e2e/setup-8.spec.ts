@@ -290,3 +290,85 @@ test('Approvals: the return-reason row opens the real control on Timesheet setup
   await page.getByTestId(tid.aappr.cutoffLink).click();
   await expect(page.locator('#mts-cutoff')).toBeInViewport();
 });
+
+/* Group 6. Group 1: the day changes at the tenant's own midnight. 18:30 UTC
+   on Thursday 13 August is 19:30 in London and 00:15 on Friday in
+   Kathmandu; half an hour earlier it is 23:45 there, still Thursday. */
+const KTM_BEFORE_MIDNIGHT = '2026-08-13T18:00:00.000Z', KTM_AFTER_MIDNIGHT = '2026-08-13T18:30:00.000Z';
+async function myDay(page: Page) {
+  await page.goto('/work/ts');
+  await page.getByTestId(tid.ts.view('day')).click();
+  return page.getByTestId(tid.ts.dayLabel);
+}
+
+test('Organisation: a new time zone moves today at its own midnight, so My timesheet and My home open on the Kathmandu date', async ({ page, api }) => {
+  test.setTimeout(120_000);
+  await api.setClock(KTM_AFTER_MIDNIGHT);
+  await signInEmail(page, AMARA);
+  await expect(await myDay(page)).toContainText('Thu 13 Aug');
+
+  await signInEmail(page, DEE);
+  await page.goto('/setup/aorg');
+  const zone = page.getByTestId(tid.aorg.timezone);
+  await zone.fill('Asia/Kathmandu');
+  await zone.press('Enter');
+  await expect(info(page, 'Time zone saved.')).toBeVisible();
+
+  /* 23:45 in Kathmandu: still Thursday */
+  await api.setClock(KTM_BEFORE_MIDNIGHT);
+  await signInEmail(page, AMARA);
+  await expect(await myDay(page)).toContainText('Thu 13 Aug');
+  /* past midnight there it is Friday, though London is still on Thursday evening */
+  await api.setClock(KTM_AFTER_MIDNIGHT);
+  await expect(await myDay(page)).toContainText('Fri 14 Aug');
+  await page.getByTestId(tid.ts.dayPrev).click();
+  await page.getByTestId(tid.ts.dayToday).click();
+  await expect(page.getByTestId(tid.ts.dayLabel)).toContainText('Fri 14 Aug');
+  await page.goto('/work/home');
+  await expect(page.getByTestId(tid.home.day('2026-08-14'))).not.toHaveAttribute('data-future');
+  await expect(page.getByTestId(tid.home.day('2026-08-15'))).toHaveAttribute('data-future', 'true');
+});
+
+/* Group 6: the fault journey. Two administrators have Rota setup open; the
+   second Save is based on a version the first has replaced, so it is refused
+   with 412 and the standard reload prompt, the page re-reads what is stored,
+   and nothing of the stale draft is written. */
+test('Rota setup: a Save from a second tab over a newer version is refused with the reload prompt, and only the first change and its audit row are kept', async ({ page, context }) => {
+  test.setTimeout(120_000);
+  await signInEmail(page, DEE);
+  const tabB = await context.newPage();
+  await tabB.goto('/');
+  await signInEmail(tabB, DEE);
+  await page.goto('/setup/mrota');
+  await tabB.goto('/setup/mrota');
+  await page.getByTestId(tid.mrota.card('staffing')).waitFor();
+  await tabB.getByTestId(tid.mrota.card('flex')).waitFor();
+  const seeded = await tabB.getByTestId(tid.mrota.milestones).inputValue();
+
+  await page.getByTestId(tid.mrota.levelMin('High')).fill('5');
+  await page.getByTestId(tid.mrota.save).click();
+  await expect(info(page, 'Rota setup saved. It applies across the tenant straight away.')).toBeVisible();
+
+  /* tab B still holds the version it opened, so its Save is stale */
+  await tabB.getByTestId(tid.mrota.milestones).fill('6, 10');
+  const saved = tabB.waitForResponse(r => r.url().endsWith('/api/v1/rota/config') && r.request().method() === 'PATCH');
+  await tabB.getByTestId(tid.mrota.save).click();
+  expect((await saved).status()).toBe(412);
+  const toast = refusedToast(tabB, 'Somebody changed this since you opened it. Your change has not been saved.');
+  await expect(toast).toBeVisible();
+  await expect(toast).toContainText('Reload and apply your change again');
+  /* it re-reads what is stored: the first tab's change shows, and its own draft is gone */
+  await expect(tabB.getByTestId(tid.mrota.levelMin('High'))).toHaveValue('5');
+  await expect(tabB.getByTestId(tid.mrota.milestones)).toHaveValue(seeded);
+  await expect(tabB.getByTestId(tid.mrota.dirty)).toHaveCount(0);
+  const rows = (await auditRows(page, 'rotaConfig')).map(a => a.after);
+  expect(rows).toHaveLength(1);
+  expect(rows[0]).toMatchObject({ locations: expect.objectContaining({ WH: 5 }) });
+
+  /* applied again on the fresh version, it saves */
+  await tabB.getByTestId(tid.mrota.milestones).fill('6, 10');
+  await tabB.getByTestId(tid.mrota.save).click();
+  await expect(info(tabB, 'Rota setup saved. It applies across the tenant straight away.')).toBeVisible();
+  expect(await auditRows(tabB, 'rotaConfig')).toHaveLength(2);
+  await tabB.close();
+});
