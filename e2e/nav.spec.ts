@@ -8,11 +8,9 @@ test('NV Manager navigation has two primary areas', async ({ page, signInAs }) =
   await expect(page.getByTestId(tid.nav.group('setup'))).toHaveCount(0);
 });
 test('NV A view from a later sub-project says so and names it', async ({ page, signInAs }) => {
-  /* Exceptions is module 6's, still to come; My hours and Hours position are built */
-  await signInAs('manager');
-  await page.getByTestId(tid.nav.group('team')).click();
-  await page.getByTestId(tid.nav.menu('requests')).click();
-  await page.getByTestId(tid.nav.tab('texc')).click();
+  /* Business Central is module 6's, still to come; My hours, Hours position and Exceptions are built */
+  await signInAs('admin');
+  await page.goto('/setup/ibc');
   await expect(page.getByTestId(tid.notBuilt.subProject)).toHaveText('Payroll and Business Central');
 });
 

@@ -23,8 +23,7 @@ export interface NavGroup { key: 'work' | 'team' | 'setup'; label: string; tabs:
 
 /* which sub-project brings each view; a view not listed here is built in plan 1a */
 const LATER: Record<string, string> = {
-  /* exceptions and pay codes are module 6's, not Timesheet's; hours and team hours are built (module 6 group 1) */
-  texc: 'Payroll and Business Central',
+  /* pay codes are module 6's, not Timesheet's; hours, team hours (group 1) and exceptions (group 2) are built */
   mpay: 'Payroll and Business Central',
   ipay: 'Payroll and Business Central', ibc: 'Payroll and Business Central',
 };

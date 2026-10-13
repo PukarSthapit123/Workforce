@@ -80,9 +80,13 @@ test('someone still onboarding sees onboarding and nothing else', () => {
   expect(g.flatMap(x => x.tabs).map(t => t.label)).toEqual(['Onboarding']);
 });
 test('views outside plan 1a are marked not built and name their sub-project', () => {
-  const g = buildNav({ caps: caps('own_home', 'own_ts', 'own_hours', 'team_hours'), modules: ALL_MODULES, flags, onboarding: false });
+  const g = buildNav({ caps: caps('own_home', 'own_ts', 'own_hours', 'team_hours', 'integration'), modules: ALL_MODULES, flags, onboarding: false });
   const team = must(g.find((x): x is NavGroup => x.key === 'team'));
-  expect(must(team.tabs.find(t => t.view === 'texc'))).toMatchObject({ built: false, subProject: 'Payroll and Business Central' });
+  const setup = must(g.find((x): x is NavGroup => x.key === 'setup'));
+  expect(must(setup.tabs.find(t => t.view === 'ibc'))).toMatchObject({ built: false, subProject: 'Payroll and Business Central' });
+  /* module 6 group 2 builds Exceptions */
+  expect(must(team.tabs.find(t => t.view === 'texc'))).toMatchObject({ built: true, path: '/team/texc' });
+  expect(must(team.tabs.find(t => t.view === 'texc'))).not.toHaveProperty('subProject');
   /* module 6 group 1 builds My hours and Hours position */
   expect(must(must(g[0]).tabs.find(t => t.view === 'hours'))).toMatchObject({ built: true, path: '/work/hours' });
   expect(must(team.tabs.find(t => t.view === 'thours'))).toMatchObject({ built: true, path: '/team/thours' });

@@ -617,4 +617,13 @@ export const tid = {
     row: (code: string) => k('thours-row', code), rotaVar: (code: string) => k('thours-rota-var', code),
     workVar: (code: string) => k('thours-work-var', code), flags: (code: string) => k('thours-flags', code),
   },
+  /* module 6: My team → Exceptions (mgrExceptions, v15:7821): the location picker, the severity tip, the state
+     filters, search, a row per exception with its moves and Open, and the resolve or ignore dialog */
+  texc: {
+    error: 'texc-error', loading: 'texc-loading', location: 'texc-location', severityTip: 'texc-severity-tip',
+    filter: (f: string) => k('texc-filter', f), search: 'texc-search', count: 'texc-count', list: 'texc-list', empty: 'texc-empty',
+    row: (id: string) => k('texc-row', id), kind: (id: string) => k('texc-kind', id), state: (id: string) => k('texc-state', id),
+    meta: (id: string) => k('texc-meta', id), move: (id: string, m: string) => k('texc-move', id, m), open: (id: string) => k('texc-open', id),
+    note: 'texc-note', warn: 'texc-warn', cancel: 'texc-cancel', confirm: 'texc-confirm', banner: 'texc-banner',
+  },
 } as const;
