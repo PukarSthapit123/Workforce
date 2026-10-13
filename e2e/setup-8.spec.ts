@@ -6,6 +6,7 @@ import { sendVersioned, signInEmail } from './support/timesheet';
 import { AMARA, DEE, RACHEL, auditRows, info, refusedToast } from './support/config';
 import { TOM_SOCIAL, openPortal, pdf, uploadDoc } from './support/onboarding';
 import { myLeave, openRequest } from './support/leave';
+import { grantAdmin } from './support/approvals';
 
 /* Module 8, setup hardening: an administrator changes a setting and the rule
    visibly follows. Group 4, Timesheet: a payroll layer added to the
@@ -60,13 +61,6 @@ test('a payroll layer added on Approvals: the manager\'s approval leaves the day
 /* Group 4B. Dee gives the administrator template the capability a later layer
    needs, so there is a second person to decide it, then adds that layer on
    Approvals. */
-async function grantAdmin(page: Page, api: { get(path: string): Promise<{ status: number; body: unknown }> }, cap: string) {
-  const types = (await api.get('/api/v1/user-types')).body as { id: string; version: number }[];
-  const admin = types.find(t => t.id === 'admin');
-  if (!admin) throw new Error('no admin user type');
-  expect((await sendVersioned(page, 'PUT', `/api/v1/user-types/admin/capabilities/${cap}`, admin.version, { granted: true })).status).toBe(200);
-}
-
 test('Rota: publish waits for sign-off', async ({ page, api }) => {
   test.setTimeout(120_000);
   await signInEmail(page, DEE);

@@ -5,6 +5,7 @@ import { BIGYAN, EDDIE, PUKAR, signInEmail } from './support/timesheet';
 import { AMARA, DEE, RACHEL } from './support/rota';
 import { forgetClock, london } from './support/clock';
 import { TOM, completeMine } from './support/onboarding';
+import { AMARA_DAY, PRIYA_REQUEST, waitingOnDee } from './support/approvals';
 import { CLOCK_STATUS } from '../src/domain/clock';
 import { tid } from '../src/testids';
 
@@ -491,6 +492,70 @@ test.describe('module 5 pages', () => {
     test.setTimeout(150_000);
     await page.setViewportSize({ width: 390, height: 844 });
     for (const [email, steps] of pages5(api)) {
+      await signInEmail(page, email);
+      for (const [where, go] of steps) {
+        await go(page);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), where).toBe(true);
+      }
+    }
+  });
+});
+
+/* Module 8 on the social seed: what its groups added that the sections above
+   do not reach. Calendar's Fill from region confirm, Leave setup's Add a
+   policy dialog and Organisation's country time zone note for Dee
+   Fitzgerald; then, with a second layer on all three approval chains
+   (support/approvals.ts), Team rota with a week sent for sign-off for Rachel
+   Hussain, My timesheet on a day waiting on payroll for Amara Okafor, and
+   for Dee the weeks waiting on her with the send-back dialog, Team
+   timesheets waiting on payroll and Team leave at its second layer. */
+const PAGES_8: [string, Step[]][] = [
+  [AMARA, [
+    ['/work/ts a day waiting on payroll', open('/work/ts?date=2026-08-12', tid.ts.dayState)],
+  ]],
+  [RACHEL, [
+    ['/team/trota sent for sign-off', async page => { await open('/team/trota', tid.trota.dayview)(page); await click(tid.trota.weekNext, tid.trota.signoff)(page); }],
+  ]],
+  [DEE, [
+    ['fill from region confirm', async page => { await open('/setup/acal', tid.acal.holidays)(page); await click(tid.acal.fillRegion, tid.modal.confirm)(page); }],
+    ['add policy dialog', async page => { await escape(page); await open('/setup/mleave', tid.mleave.card('types'))(page); await click(tid.mleave.policyAdd, tid.mleave.addCode)(page); }],
+    ['/setup/aorg country time zone', async page => {
+      await escape(page);
+      await open('/setup/aorg', tid.aorg.country)(page);
+      await page.getByTestId(tid.aorg.country).selectOption('Nepal');
+      await page.getByTestId(tid.aorg.useCountryZone).waitFor();
+    }],
+    ['/team/trota waiting on sign-off', async page => {
+      await open('/team/trota', tid.trota.awaiting)(page);
+      await click(tid.trota.awaitingWeek('rw_WH_2026-08-17'), tid.trota.signOff)(page);
+    }],
+    ['send back dialog', click(tid.trota.sendBack, tid.trota.sendBackReason)],
+    ['/team/tteam waiting on payroll', async page => { await escape(page); await open('/team/tteam', tid.tteam.table)(page); await click(tid.tteam.filter('mgrok'), tid.tteam.approve(AMARA_DAY))(page); }],
+    ['/team/tleave second layer', open('/team/tleave', tid.tleave.layer(PRIYA_REQUEST))],
+  ]],
+];
+test.describe('module 8 pages', () => {
+  test.beforeEach(async ({ api }) => { await api.seed('social'); await api.setClock(FROZEN); });
+  for (const theme of ['light', 'dark'] as const) {
+    test(`axe: module 8 states and dialogs have no serious issues (${theme})`, async ({ page, api }) => {
+      test.setTimeout(180_000);
+      await waitingOnDee(page, api);
+      for (const [email, steps] of PAGES_8) {
+        await signInEmail(page, email);
+        for (const [where, go] of steps) {
+          await go(page);
+          await setTheme(page, theme);
+          const r = await new AxeBuilder({ page }).analyze();
+          expect(r.violations.filter(v => ['serious', 'critical'].includes(v.impact ?? '')).map(v => `${where} ${v.id}: ${v.nodes.length}`)).toEqual([]);
+        }
+      }
+    });
+  }
+  test('phone: module 8 states and dialogs have no horizontal overflow at 390px', async ({ page, api }) => {
+    test.setTimeout(180_000);
+    await waitingOnDee(page, api);
+    await page.setViewportSize({ width: 390, height: 844 });
+    for (const [email, steps] of PAGES_8) {
       await signInEmail(page, email);
       for (const [where, go] of steps) {
         await go(page);
