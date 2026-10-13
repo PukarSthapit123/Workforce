@@ -189,6 +189,37 @@ describe('notifications', () => {
   });
 });
 
+describe('a chain edited while a request waits part-way along it (review I5)', () => {
+  const lineManagerOnly = [layer('Line manager', 'Every leave request', 'Own department')];
+  test('a save that would leave a request signed at every layer still applying, with nobody to decide it, is refused and names it', async () => {
+    await twoLayers();
+    const mine = await askFriday();
+    await approve(await as('manager'), mine.id, 1);
+    const admin = await as('admin'), before = snapshot('approvalChains', 'audit');
+    const r = await admin('PUT', '/api/v1/approvals/chains/Leave', { steps: lineManagerOnly }, 1);
+    expect([r.status, refusal(r).code, refusal(r).usedBy]).toEqual([409, 'in-use',
+      [{ kind: 'leave requests', count: 1, examples: ['Amara Okafor (CP-1042) · 14/08/2026'] }]]);
+    expect(refusal(r).message).toBe('Saving this chain would leave 1 leave request with every layer that still applies signed, and nobody left to decide it.');
+    expect(snapshot('approvalChains', 'audit')).toEqual(before);
+    /* adding a layer is saved: the request still has the Service Manager's to wait on */
+    const more = await admin('PUT', '/api/v1/approvals/chains/Leave', { steps: [...lineManagerOnly,
+      layer('Service Manager', 'Every leave request', 'All departments', '2 days'), layer('Service Manager', 'Only when the SLA is breached', 'Own location', '2 days')] }, 1);
+    expect(more.status).toBe(200);
+  });
+  test('a request whose chain changed under it anyway is settled by the next decision, its earlier signer included', async () => {
+    await twoLayers();
+    const mine = await askFriday();
+    await approve(await as('manager'), mine.id, 1);
+    const stored = store.coll<{ steps: unknown[] }>('approvalChains').chain_leave;
+    if (!stored) throw new Error('no stored Leave chain');
+    stored.steps = lineManagerOnly.map(s => ({ ...s, module: 'Leave' }));
+    expect((await queue(await as('manager'))).requests.map(r => r.id)).toContain(mine.id);
+    const r = LeaveDecided.parse((await approve(await as('manager'), mine.id, 2)).body);
+    expect(r.record).toMatchObject({ state: 'approved', decidedBy: { personCode: 'CP-1001' } });
+    expect(lineOf('CP-1042')?.[4]).toBe('V');
+  });
+});
+
 async function tokenForEmail(email: string): Promise<string> {
   const r = await fetch('/api/v1/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password: 'Qnipay@123' }) });
   return ((await r.json()) as { token: string }).token;

@@ -102,6 +102,33 @@ export function walkNow(m: ChainModule, item: ChainItem, signed: readonly string
   const walk: ChainWalk = walkChain(input);
   return { walk, block: (code: string): DecisionBlock | null => decisionBlock(walk, input, code), progress: () => walkProgress(input) };
 }
+
+/* ------------------------------------- items waiting on a chain (review I5) */
+/* Each module that walks its chain names what is waiting part-way along it:
+   a label for the refusal, the walk's item, the layers signed so far and who
+   signed them. Registered by the module itself, so this file needs none of them. */
+export interface WaitingItem { label: string; item: ChainItem; signed: readonly string[]; signers: readonly string[] }
+const waiting: Partial<Record<ChainModule, { kind: string; items: () => WaitingItem[] }>> = {};
+export function registerWaiting(m: ChainModule, kind: string, items: () => WaitingItem[]) { waiting[m] = { kind, items }; }
+/* D2's pattern for a chain: a change that would leave an item part-way along
+   it with every layer that still applies signed, and nobody left to decide
+   it, is refused, naming those items. Adding a layer, or removing one no
+   waiting item has reached, is not refused. */
+export function chainStrands(m: ChainModule, steps: readonly ChainStep[]): DomainRefusal & { usedBy: { kind: string; count: number; examples: string[] }[] } | null {
+  const src = waiting[m];
+  if (!src) return null;
+  const everyone = chainPeople(), list = delegationList(), date = today(), now = chainRecord(m).steps;
+  const doneUnder = (s: readonly ChainStep[], w: WaitingItem) =>
+    walkChain({ module: m, steps: s, item: w.item, signed: w.signed, date, people: everyone, delegations: list, signers: w.signers }).complete;
+  const stuck = src.items().filter(w => w.signed.length > 0 && !doneUnder(now, w) && doneUnder(steps, w));
+  if (!stuck.length) return null;
+  const n = stuck.length, one = n === 1;
+  return { status: 409, code: 'in-use', field: 'steps',
+    message: `Saving this chain would leave ${n} ${one ? src.kind.replace(/s$/, '') : src.kind} with every layer that still applies signed, and nobody left to decide ${one ? 'it' : 'them'}.`,
+    next: `Have ${one ? 'it' : 'them'} decided first, or keep the layer ${one ? 'it waits' : 'they wait'} on.`,
+    usedBy: [{ kind: src.kind, count: n, examples: stuck.slice(0, 3).map(w => w.label) }] };
+}
+
 /* The SLA of the first layer of the module's chain the person holds the role of, or '' when they hold none. */
 export function slaFor(m: ChainModule, caps: readonly string[]): string {
   return chainRecord(m).steps.find(s => { const cap = roleRule(m, s.role)?.capability; return !s.fixed && cap !== undefined && caps.includes(cap); })?.sla ?? '';
@@ -156,6 +183,8 @@ export const approvalHandlers = [
       return n !== undefined && s.role === n.role && s.scope === n.scope && s.when === n.when && s.sla === n.sla && s.fixed === n.fixed;
     });
     if (same) return { record: chainView(rec), auditId: null, message: 'Nothing has changed.' };
+    const strands = chainStrands(m, steps);
+    if (strands) { const { status, ...r } = strands; refuse(status, r); }
     const saved = writeChain(m, steps);
     const message = `${m} approval chain saved: ${chainText(steps)}`;
     const auditId = writeAudit({ who: actor(session), act: 'Approval chain changed', entity: 'approvalChain', entityId: saved.id,

@@ -75,7 +75,7 @@
   "paths": {
     "/api/v1/approvals/chains/{module}": {
       "put": {
-        "summary": "Save one module's chain whole (If-Match). Roles are Line manager, Service Manager, Payroll or HR administrator; the Business Central posting step stays last in the Timesheet chain (FIXED); the Profile chain has only a line manager and payroll. One audit row.",
+        "summary": "Save one module's chain whole (If-Match). Roles are Line manager, Service Manager, Payroll or HR administrator; the Business Central posting step stays last in the Timesheet chain (FIXED); the Profile chain has only a line manager and payroll. A change that would leave an item waiting part-way along the chain with every layer that still applies signed, and nobody left to decide it, is refused (409 in-use) naming the items in usedBy. One audit row.",
         "security": [
           {
             "bearer": []
@@ -279,6 +279,16 @@
           },
           "404": {
             "description": "The record does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The change is refused because of the state of the data",
             "content": {
               "application/json": {
                 "schema": {

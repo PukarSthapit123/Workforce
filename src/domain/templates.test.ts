@@ -292,6 +292,12 @@ describe('approval chains in a template (1c group 5)', () => {
       'Approval chains the template does not have stay as they are: Leave and Rota.',
       'Approval chains for modules this tenant does not have are not used: Payroll.']));
   });
+  test('a chain that would strand items waiting part-way along it stays, and says why (review I5)', () => {
+    const p = planApply(shipped('mne'), socialState(), { mayRenameRoles: true, mayChangeChains: true, mayChangeTypes: true,
+      chainBlocked: m => (m === 'Leave' ? 'Saving this chain would leave 1 leave request with nobody left to decide it.' : null) });
+    expect(p.steps.chains.map(c => c.module)).toEqual(['Timesheet', 'Profile']);
+    expect(p.leftAlone.map(l => l.text)).toContain('The Leave approval chain stays as it is. Saving this chain would leave 1 leave request with nobody left to decide it.');
+  });
 });
 
 describe('the onboarding setup in a template (module 5, D12)', () => {

@@ -178,3 +178,33 @@ describe('every consumer of week states keeps working', () => {
     expect([mine.state, mine.visible, mine.days]).toEqual(['review', false, []]);
   });
 });
+
+describe('a chain edited while a week waits on sign-off (review I5)', () => {
+  test('a save that would leave the week signed at every layer still applying, with nobody to sign it off, is refused and names it', async () => {
+    await signOffEveryWeek();
+    await publish(await as('manager'), 0);
+    const admin = await as('admin'), before = snapshot('approvalChains', 'audit');
+    const r = await admin('PUT', '/api/v1/approvals/chains/Rota', { steps: [layer('Every rota week', 'Own location', '4 hours')] }, 1);
+    expect([r.status, refusal(r).code, refusal(r).usedBy]).toEqual([409, 'in-use', [{ kind: 'rota weeks', count: 1, examples: ['Willow House · week 34'] }]]);
+    expect(snapshot('approvalChains', 'audit')).toEqual(before);
+    /* a layer that does not apply to the week can be added: it still waits on the Service Manager */
+    const more = await admin('PUT', '/api/v1/approvals/chains/Rota',
+      { steps: [layer('Every rota week', 'Own location', '4 hours'), layer('Every rota week', 'All departments'), layer('Only for agency booking', 'All departments')] }, 1);
+    expect(more.status).toBe(200);
+  });
+  test('a week whose later layer stopped applying is signed off by the next decision, the rota manager who sent it included', async () => {
+    setCfg({ fulfilStages: [...((cfg().fulfilStages as unknown[] | undefined) ?? []), { n: 5, audience: 'Agency partners', wait: 60, channel: 'Email', next: 'Manual booking' }] });
+    store.coll('coverRequests').cov_9 = { id: 'cov_9', version: 1, updatedAt: FROZEN, location: 'WH', date: '2026-08-19', shift: 'E', reason: 'Sickness', stage: 5,
+      open: true, urgent: false, openedAt: FROZEN, asked: '', log: [] };
+    await chain([layer('Every rota week', 'Own location', '4 hours'), layer('Only for agency booking', 'All departments')]);
+    const mgr = await as('manager');
+    expect(WeekMoved.parse((await publish(mgr, 0)).body).week.state).toBe('review');
+    expect((await view(mgr)).signoff?.decide).toBe(false);
+    /* the agency booking is cancelled, so only the rota manager's layer applies, and it is signed */
+    const cover = store.coll<{ open: boolean }>('coverRequests').cov_9;
+    if (cover) cover.open = false;
+    expect((await view(mgr)).signoff?.decide).toBe(true);
+    const done = WeekMoved.parse((await signOff(mgr, 1)).body);
+    expect(done.week).toMatchObject({ state: 'published', publishVersion: 1, signoff: null });
+  });
+});

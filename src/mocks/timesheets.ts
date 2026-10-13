@@ -15,7 +15,7 @@ import { leaveAbsenceOn, leaveBlocksTimesheet } from './leave';
 import { invalid } from './people';
 import meta from './seed/meta.json';
 import { effectiveCode, inScope, nameOf, personByCode, recordAt, scopeOf, type Signed, type StoredPerson } from './world';
-import { approvesIn, chainPeople, lineManagerCode, slaFor, walkNow } from './approvals';
+import { approvesIn, chainPeople, lineManagerCode, registerWaiting, slaFor, walkNow } from './approvals';
 import { notifyEvent } from './notify';
 import { roleRule, roleWaiting, type ChainItem, type ChainWalk, type DecisionBlock, type DeciderPerson, type ItemFacts } from '@/domain/approvals';
 import {
@@ -250,6 +250,12 @@ function itemOf(d: StoredDay, p: StoredPerson): ChainItem {
    them, who decide no later layer (review I1). */
 const walkOf = (d: StoredDay, p: StoredPerson, everyone?: readonly DeciderPerson[]) =>
   walkNow('Timesheet', itemOf(d, p), signedLayers(d.history), everyone, daySigners(d.history));
+/* Review I5: the days part-way along the chain, which a chain save may not strand. */
+registerWaiting('Timesheet', 'timesheet days', () => Object.values(days()).flatMap(d => {
+  const p = tsOpen(d.state) ? personByCode(d.personCode) : undefined;
+  const signed = signedLayers(d.history);
+  return p && signed.length ? [{ label: `${p.name} (${p.code}) · ${formatDmy(d.date)}`, item: itemOf(d, p), signed, signers: daySigners(d.history) }] : [];
+}));
 const capLabel = (cap: string) => store.coll<{ label?: string }>('capabilities')[cap]?.label ?? cap;
 const waitingOn = (w: ChainWalk) => roleWaiting(w.current?.step.role ?? 'Line manager');
 const upper = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);

@@ -16,7 +16,7 @@ import { writeAudit } from './audit';
 import { codesOf, people, recordAt, type Signed } from './world';
 import { requireWeekStartChangeAllowed, rotaActor, rotaOff, rotaOn, saveTenant, sitesOff, tenantRec, tsConfig, view, type StoredTenant } from './tenant';
 import meta from './seed/meta.json';
-import { chainRecord, chainsNow, writeChain } from './approvals';
+import { chainRecord, chainStrands, chainsNow, writeChain } from './approvals';
 import { casesColl, policiesColl, policiesNow, putCase, stillOnboarding, type StoredConfig } from './onboarding-cases';
 import { caseId, reaskPolicy } from '@/domain/onboarding';
 import { CHAIN_MODULES, type ChainModule, type ChainStep } from '@/domain/approvals';
@@ -60,7 +60,9 @@ const leaveTemplateConfig = () => {
 /* What the caller may change through an apply: each part needs the capability its own page needs (review I4: the date,
    time and calendar settings need Workforce master data, as PATCH /tenant/settings does). */
 const applyOpts = (session: Signed) => ({ mayRenameRoles: session.caps.includes('perm_cfg'), mayChangeChains: session.caps.includes('framework'),
-  mayChangeTypes: session.caps.includes('type_cfg'), mayChangeOnboarding: session.caps.includes('onb_cfg'), mayChangeSettings: session.caps.includes('master_data') });
+  mayChangeTypes: session.caps.includes('type_cfg'), mayChangeOnboarding: session.caps.includes('onb_cfg'), mayChangeSettings: session.caps.includes('master_data'),
+  /* review I5: a chain that would strand items waiting part-way along it stays as it is */
+  chainBlocked: (m: ChainModule, steps: readonly ChainStep[]) => chainStrands(m, steps)?.message ?? null });
 
 /* Module 8: the Rota setup settings a template keeps */
 const rotaTemplateConfig = () => {

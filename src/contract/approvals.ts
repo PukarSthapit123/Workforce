@@ -61,8 +61,8 @@ const IdParams = z.object({ id: z.string().min(1).max(40) });
 export const getApprovalSetup = defineEndpoint({ method: 'GET', path: '/api/v1/approvals/chains', response: ApprovalSetup, capability: cap,
   summary: 'Every module\'s approval chain (the prototype\'s defaults at version 0 until first saved) and the sign-off settings, read from where they live' });
 export const saveApprovalChain = defineEndpoint({ method: 'PUT', path: '/api/v1/approvals/chains/:module', params: ModuleParams, request: SaveChain,
-  response: ChainSaved, capability: cap, versioned: true, errors: [404],
-  summary: 'Save one module\'s chain whole (If-Match). Roles are Line manager, Service Manager, Payroll or HR administrator; the Business Central posting step stays last in the Timesheet chain (FIXED); the Profile chain has only a line manager and payroll. One audit row.' });
+  response: ChainSaved, capability: cap, versioned: true, errors: [404, 409],
+  summary: 'Save one module\'s chain whole (If-Match). Roles are Line manager, Service Manager, Payroll or HR administrator; the Business Central posting step stays last in the Timesheet chain (FIXED); the Profile chain has only a line manager and payroll. A change that would leave an item waiting part-way along the chain with every layer that still applies signed, and nobody left to decide it, is refused (409 in-use) naming the items in usedBy. One audit row.' });
 export const listDelegations = defineEndpoint({ method: 'GET', path: '/api/v1/approvals/delegations', response: Delegations, capability: cap,
   summary: 'Every delegation, soonest first, and the people who can approve' });
 export const createDelegation = defineEndpoint({ method: 'POST', path: '/api/v1/approvals/delegations', request: CreateDelegation, response: DelegationSaved,

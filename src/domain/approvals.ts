@@ -362,11 +362,18 @@ export interface ChainWalk {
   /* the layers whose condition applies, in chain order, each with who may decide it */
   layers: WalkLayer[];
   /* the layer the item waits on: the first applicable one not yet signed. Once
-     every one has signed, the last (a chain changed under the item), and null
-     when no layer applies at all, so nothing needs to sign. */
+     every one has signed (see complete), the layer that settles it, and null
+     when no layer applies at all and nothing has signed, so nothing needs to sign. */
   current: WalkLayer | null;
   /* signing the current layer finishes the chain */
   final: boolean;
+  /* Review I5: nothing is left to sign, though the item is still waiting: a
+     layer's condition stopped applying, or the chain changed under it. The
+     current layer is then the last one signed (or, when none applies now, the
+     chain's first that was signed), decided by any of its holders, signers
+     included, so the next decision settles the item rather than nobody
+     ever being able to. */
+  complete: boolean;
 }
 /* How far an item has gone (module 8 group 4B): the layers already signed, and those an escalation layer took over from. */
 export interface WalkProgress { signed: WalkLayer[]; passed: WalkLayer[] }
@@ -423,8 +430,11 @@ function walkParts(input: WalkInput) {
 }
 export function walkChain(input: WalkInput): ChainWalk {
   const { layers, left } = walkParts(input);
-  const current = left[0] ?? layers[layers.length - 1] ?? null;
-  return { layers, current, final: left.length <= 1 };
+  if (left[0]) return { layers, current: left[0], final: left.length <= 1, complete: false };
+  const settles = layers.at(-1)?.step
+    ?? (input.signed.length ? input.steps.find(s => !s.fixed && input.signed.includes(s.role)) ?? input.steps.find(s => !s.fixed) : undefined);
+  const current = settles ? layerDeciders(input.module, settles, { ...input, signers: [] }) : null;
+  return { layers, current, final: true, complete: true };
 }
 export function walkProgress(input: WalkInput): WalkProgress {
   const { signed, passed } = walkParts(input);
@@ -439,7 +449,8 @@ export function walkProgress(input: WalkInput): WalkProgress {
 export type DecisionBlock = 'self' | 'signed' | 'scope' | 'layer' | 'capability';
 export function decisionBlock(walk: ChainWalk, input: Pick<WalkInput, 'module' | 'item' | 'people' | 'signers'>, code: string): DecisionBlock | null {
   if (code === input.item.personCode) return 'self';
-  if (input.signers?.includes(code)) return 'signed';
+  /* a complete walk is settled by whoever holds its last layer, an earlier signer too (review I5) */
+  if (!walk.complete && input.signers?.includes(code)) return 'signed';
   if (walk.current?.deciders.includes(code)) return null;
   const caps = input.people.find(p => p.code === code)?.caps ?? [];
   const rule = walk.current ? roleRule(input.module, walk.current.step.role) : undefined;

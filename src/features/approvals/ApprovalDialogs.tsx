@@ -89,7 +89,10 @@ export function ChainDialog({ chain, onClose }: { chain: ApprovalChain; onClose:
       {/* module 8 group 4B: say plainly which SLA a Leave or Rota layer runs to */}
       {m === 'Leave' && <Small className="mt-sm">Leave layers are timed against the leave policy’s SLA, or the default on Leave setup, from when a request reaches the layer. The SLA set here is not used for leave.</Small>}
       {m === 'Rota' && <Small className="mt-sm">The first layer that applies is the rota manager’s, signed when they publish. Later layers sign the week off before colleagues see it. A sign-off is not timed yet, so the SLA set here is not used for rota weeks.</Small>}
-      {general && <FormWarn testId={tid.aappr.chainWarn}>{general.message} <span className="opacity-90">{general.next}</span></FormWarn>}
+      {general && <FormWarn testId={tid.aappr.chainWarn}>{general.message} <span className="opacity-90">{general.next}</span>
+        {/* review I5: the items a change would strand, as every D2 refusal names what uses a record */}
+        {general.usedBy?.map(u => <span key={u.kind} className="mt-xs block">{u.kind.charAt(0).toUpperCase() + u.kind.slice(1)} ({u.count}): {u.examples.join(', ')}{u.count > u.examples.length ? ' and more' : ''}</span>)}
+      </FormWarn>}
     </Modal>);
 }
 

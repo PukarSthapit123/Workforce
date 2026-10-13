@@ -18,7 +18,7 @@ import { leaveConfigChangeProblem } from './leave-config-usage';
 import { invalid } from './people';
 import { notifyEvent } from './notify';
 import { rotaCoverDays, writeAbsence, type AbsenceWritten } from './rota';
-import { approvesIn, chainPeople, lineManagerCode, walkNow } from './approvals';
+import { approvesIn, chainPeople, lineManagerCode, registerWaiting, walkNow } from './approvals';
 import { accounts, codesOf, effectiveCode, inScope, nameOf, people, personByCode, recordAt, scopeOf, today, type Signed, type StoredPerson } from './world';
 import {
   approveLeave, arrangeRtw, cancelLeave, declineLeave, getEntitlement, getLeaveConfig, getMyLeave, getSicknessBoard, getTeamBalances, giveDaysBack,
@@ -128,6 +128,12 @@ function itemOf(r: StoredRequest, p: StoredPerson): ChainItem {
 const walkOf = (r: StoredRequest, p: StoredPerson, everyone?: readonly DeciderPerson[]) =>
   walkNow('Leave', itemOf(r, p), leaveSignedLayers(r.history), everyone, leaveSigners(r.history));
 const waitingRole = (w: ChainWalk) => w.current?.step.role ?? 'Line manager';
+/* Review I5: the requests part-way along the chain, which a chain save may not strand. */
+registerWaiting('Leave', 'leave requests', () => Object.values(requests()).flatMap(r => {
+  const p = r.state === 'pending' ? personByCode(r.personCode) : undefined;
+  const signed = leaveSignedLayers(r.history);
+  return p && signed.length ? [{ label: `${p.name} (${p.code}) · ${leaveRange(r.from, r.to)}`, item: itemOf(r, p), signed, signers: leaveSigners(r.history) }] : [];
+}));
 /* Reading the queue or deciding needs a capability that decides some layer of the chain, or a delegation in force from someone who has one. */
 function requireApprover(s: Signed) {
   if (!approvesIn('Leave', effectiveCode(s), s.caps)) requireCapability(s, 'team_leave');

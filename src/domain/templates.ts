@@ -491,7 +491,9 @@ function moduleSteps(t: Template, s: TenantState) {
 export const SETTINGS_LEFT_ALONE = 'Date, time and calendar stay as they are. Changing them needs Workforce master data.';
 export const TYPES_LEFT_ALONE = 'Employee types stay as they are. Changing them needs Employee types and configuration.';
 export function planApply(t: Template, s: TenantState,
-  opts: { mayRenameRoles: boolean; mayChangeChains: boolean; mayChangeTypes: boolean; mayChangeOnboarding?: boolean; mayChangeSettings?: boolean }): ApplyPlan {
+  opts: { mayRenameRoles: boolean; mayChangeChains: boolean; mayChangeTypes: boolean; mayChangeOnboarding?: boolean; mayChangeSettings?: boolean;
+    /* why a module's chain may not change now (items waiting part-way along it would be stranded, review I5), or null */
+    chainBlocked?: (m: ChainModule, steps: readonly ChainStep[]) => string | null }): ApplyPlan {
   const changes: PlanLine[] = [], added: PlanLine[] = [], leftAlone: PlanLine[] = [];
   const steps: ApplySteps = { modules: [], finalModules: {}, finalRestore: {}, flags: [], labels: {}, typesAdded: [], typesUpdated: [], roleNames: {}, chains: [],
     structure: { departments: [], costCentres: [], locations: [], jobProfiles: [], contracts: [] },
@@ -588,7 +590,7 @@ export function planApply(t: Template, s: TenantState,
   }
 
   /* approval chains: each module the template has, set whole once it passes the Approvals page's checks */
-  planChains(t, s, opts.mayChangeChains, changes, leftAlone, steps);
+  planChains(t, s, opts.mayChangeChains, changes, leftAlone, steps, opts.chainBlocked);
 
   /* onboarding setup (D12): against the modules and features the template leaves the tenant with */
   planOnboarding(t, s, opts.mayChangeOnboarding === true, onbFeatures(mods.modules, flags), { changes, added, leftAlone }, steps);
@@ -656,7 +658,8 @@ function chainsOf(t: Template): { known: Map<ChainModule, ChainStep[]>; unknown:
 }
 const sameChain = (a: readonly ChainStep[], b: readonly ChainStep[]) => a.length === b.length &&
   a.every((x, i) => { const y = b[i]; return y !== undefined && x.role === y.role && x.scope === y.scope && x.when === y.when && x.sla === y.sla && x.fixed === y.fixed; });
-function planChains(t: Template, s: TenantState, may: boolean, changes: PlanLine[], leftAlone: PlanLine[], steps: ApplySteps) {
+function planChains(t: Template, s: TenantState, may: boolean, changes: PlanLine[], leftAlone: PlanLine[], steps: ApplySteps,
+  blocked?: (m: ChainModule, steps: readonly ChainStep[]) => string | null) {
   if (!t.approvalChain?.length) return;
   const { known, unknown } = chainsOf(t);
   const differ = CHAIN_MODULES.filter(m => known.has(m) && !sameChain(known.get(m) ?? [], s.chains[m]));
@@ -664,7 +667,8 @@ function planChains(t: Template, s: TenantState, may: boolean, changes: PlanLine
   for (const m of differ) {
     const want = known.get(m) ?? [];
     const problem = chainProblem(m, want);
-    if (problem) { leftAlone.push({ area: 'chain', text: `The ${m} approval chain stays as it is. ${problem.message}` }); continue; }
+    const why = problem?.message ?? blocked?.(m, want);
+    if (why) { leftAlone.push({ area: 'chain', text: `The ${m} approval chain stays as it is. ${why}` }); continue; }
     steps.chains.push({ module: m, steps: want });
     changes.push({ area: 'chain', text: `${m} approval chain: ${chainText(want)}` });
   }

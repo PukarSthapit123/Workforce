@@ -199,7 +199,19 @@ describe('module 8 group 4: the role table and the layer walker', () => {
     expect([signed.current?.step.role, signed.final]).toEqual(['Payroll', true]);
     /* a chain changed under the item: every layer has signed, so the last one closes it */
     expect(walk({ signed: ['Line manager'] }).current?.step.role).toBe('Line manager');
-    expect(walk({ steps: [] })).toEqual({ layers: [], current: null, final: true });
+    expect(walk({ steps: [] })).toEqual({ layers: [], current: null, final: true, complete: true });
+  });
+  test('a walk with nothing left to sign is settled by the last layer\'s holders, its signers included (review I5)', () => {
+    /* the payroll layer was taken out after the line manager signed: M settles the day */
+    const done = walk({ steps: [ts(), POSTING_STEP], item: item({ premium: true }), signed: ['Line manager'], signers: ['M'] });
+    expect([done.complete, done.final, done.current?.step.role, done.current?.deciders]).toEqual([true, true, 'Line manager', ['M']]);
+    expect(decisionBlock(done, { module: 'Timesheet', item: item({ premium: true }), people, signers: ['M'] }, 'M')).toBeNull();
+    /* while a layer is still to sign, a signer decides no later one */
+    const waiting = walk({ item: item({ premium: true }), signed: ['Line manager'], signers: ['M'] });
+    expect([waiting.complete, decisionBlock(waiting, { module: 'Timesheet', item: item({ premium: true }), people, signers: ['M'] }, 'M')]).toEqual([false, 'signed']);
+    /* no layer applies any more: the chain's layer that was signed settles it */
+    const none = walk({ steps: [ts({ when: 'Only for proxy entries' }), POSTING_STEP], signed: ['Line manager'], signers: ['M'] });
+    expect([none.layers, none.complete, none.current?.step.when, none.current?.deciders]).toEqual([[], true, 'Only for proxy entries', ['M']]);
   });
   test('scope narrows a layer: the line manager in their access scope and the layer\'s own, never the person themself', () => {
     expect(walk({ item: { ...item(), location: 'BC' } }).current?.holders).toEqual(['O']);

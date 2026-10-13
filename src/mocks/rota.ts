@@ -13,7 +13,7 @@ import { actor, capsFor, requireCapability } from './auth';
 import { writeAudit } from './audit';
 import { invalid } from './people';
 import { notifyEvent } from './notify';
-import { approvesIn, chainPeople, walkNow } from './approvals';
+import { approvesIn, chainPeople, registerWaiting, walkNow } from './approvals';
 import { roleWaiting, type ChainItem, type ChainWalk, type DecisionBlock, type DeciderPerson } from '@/domain/approvals';
 import {
   accountOfPerson, accounts, codesOf, effectiveCode, nameOf, people, personByCode, recordAt, scopeOf, today, type Signed, type StoredPerson,
@@ -236,6 +236,10 @@ const signedOf = (rec: StoredWeek | undefined) => rec?.signoff?.signed ?? [];
 const weekWalk = (rec: StoredWeek | undefined, loc: string, ws: string, everyone?: readonly DeciderPerson[]) =>
   walkNow('Rota', weekItem(loc, ws), signedOf(rec).map(x => x.layer), everyone, signedOf(rec).map(x => x.by.personCode));
 const waitingOn = (w: ChainWalk) => roleWaiting(w.current?.step.role ?? 'Service Manager');
+/* Review I5: the weeks waiting on sign-off, which a chain save may not strand. */
+registerWaiting('Rota', 'rota weeks', () => Object.values(weeks()).flatMap(w => (w.signoff && w.state === 'review'
+  ? [{ label: `${locName(w.location)} · week ${isoWeek(w.weekStart)}`, item: weekItem(w.location, w.weekStart), signed: signedOf(w).map(x => x.layer),
+    signers: signedOf(w).map(x => x.by.personCode) }] : [])));
 const upperFirst = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 /* Signing off needs a capability that decides some layer of the Rota chain, or a delegation in force from someone who has one. */
 function requireRotaApprover(s: Signed) {

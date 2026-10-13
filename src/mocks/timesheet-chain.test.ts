@@ -248,3 +248,31 @@ describe('the week start counts mgrok as open work (D4)', () => {
       'The week start cannot change while 1 timesheet day is and 0 rota weeks are open.']);
   });
 });
+
+describe('a chain edited while a day waits part-way along it (review I5)', () => {
+  const lineManagerOnly = [layer('Line manager', 'Every timesheet', 'Own department'), posting];
+  test('a save that would leave a day signed at every layer still applying, with nobody to decide it, is refused and names the day', async () => {
+    await payrollEveryDay();
+    await decide(await as('manager'), AMARA, 'ok', 1);
+    const admin = await as('admin'), before = snapshot('approvalChains', 'audit');
+    const r = await admin('PUT', '/api/v1/approvals/chains/Timesheet', { steps: lineManagerOnly }, 1);
+    expect([r.status, refusal(r).code, refusal(r).message, refusal(r).usedBy]).toEqual([409, 'in-use',
+      'Saving this chain would leave 1 timesheet day with every layer that still applies signed, and nobody left to decide it.',
+      [{ kind: 'timesheet days', count: 1, examples: ['Amara Okafor (CP-1042) · 12/08/2026'] }]]);
+    expect(snapshot('approvalChains', 'audit')).toEqual(before);
+    /* a change that leaves the day a layer to wait on is saved */
+    const sla = await admin('PUT', '/api/v1/approvals/chains/Timesheet',
+      { steps: [layer('Line manager', 'Every timesheet', 'Own department'), layer('Payroll', 'Every timesheet', 'All departments', '72 hours'), posting] }, 1);
+    expect(sla.status).toBe(200);
+  });
+  test('a day whose chain changed under it anyway is settled by the next decision, its earlier signer included', async () => {
+    await payrollEveryDay();
+    await decide(await as('manager'), AMARA, 'ok', 1);
+    const stored = store.coll<{ steps: unknown[] }>('approvalChains').chain_timesheet;
+    if (!stored) throw new Error('no stored Timesheet chain');
+    stored.steps = lineManagerOnly.map(s => ({ ...s, module: 'Timesheet' }));
+    const r = DayDecided.parse((await decide(await as('manager'), AMARA, 'ok', 2)).body);
+    expect(r.record).toMatchObject({ state: 'ok', posting: 'queued' });
+    expect(r.record.history.at(-1)).toMatchObject({ from: 'mgrok', to: 'ok', layer: 'Line manager', by: { personCode: 'CP-1001' } });
+  });
+});
