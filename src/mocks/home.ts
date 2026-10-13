@@ -12,7 +12,7 @@ import { serve } from './serve';
 import { effectiveCode, nameOf, personByCode, recordAt, type StoredPerson } from './world';
 import { tenantRec, view } from './tenant';
 import { rotaDayOn, rotaToneOf } from './rota';
-import { absenceOf, daysOf, hm, isLocked } from './timesheets';
+import { absenceOf, daysOf, hm, isLocked, waitingOnOf } from './timesheets';
 import { leaveRecordOn, leaveTypeInfo } from './leave';
 import { getDocument, getHome, listMyDocuments, type DocumentRow, type HomeDay } from '@/contract/home';
 import type { RotaDay, TimesheetDay } from '@/contract/timesheets';
@@ -24,12 +24,14 @@ import { flagOn } from '@/domain/modules';
 import { clockFromIso, periodStart, weekDates } from '@/domain/time';
 import { dayMinutes } from '@/domain/timesheet';
 
-type StoredDay = Omit<TimesheetDay, 'minutes' | 'posting' | 'enteredByName'>;
+type StoredDay = Omit<TimesheetDay, 'minutes' | 'posting' | 'enteredByName' | 'waitingOn'>;
 interface StoredPayrollDoc { id: string; name: string; category: string; note: string }
 
 const NO_PERSON = () => refuse(404, { code: 'not-found', message: 'There is no employee record behind this account.', next: 'Ask an administrator to link your account to your record.' });
 const personOf = (code: string): StoredPerson => personByCode(code) ?? NO_PERSON();
 
+/* review M3: the role an mgrok day waits on, so its pill names it */
+const waiting = (d: StoredDay) => { const w = waitingOnOf(d); return w ? { waitingOn: w } : {}; };
 /* One person's days, read once per request: the published rota by week and
    the stored timesheet days by date. */
 function reader(p: StoredPerson, today: string) {
@@ -46,7 +48,7 @@ function reader(p: StoredPerson, today: string) {
     const absence = mark ? { mark, type, ...leaveTypeInfo(type), from: rec?.from ?? null, to: rec?.to ?? null, state: rec?.state ?? 'approved' } : null;
     const d = stored.get(date), minutes = d ? dayMinutes(d.entries) : 0;
     /* a draft with nothing on it is not a record yet */
-    const ts = d && (d.state !== 'draft' || minutes > 0 || d.nonWorkingReason) ? { state: d.state, minutes, text: minutes ? hm(minutes) : '' } : null;
+    const ts = d && (d.state !== 'draft' || minutes > 0 || d.nonWorkingReason) ? { state: d.state, minutes, text: minutes ? hm(minutes) : '', ...waiting(d) } : null;
     const future = date > today, isToday = date === today;
     return {
       date, shift: absence ? null : shift, absence, ts,

@@ -19,7 +19,7 @@ import { RequestDialog } from '@/features/leave/LeaveDialogs';
 function dayPill(d: HomeDay): { label: string; tone: Tone; glyph: ReactNode } | null {
   if (d.absence?.mark === 'V') return { label: 'Leave', tone: 'neu', glyph: '—' };
   if (d.absence?.mark === 'S') return { label: 'Sickness', tone: 'err', glyph: '✕' };
-  if (d.ts) return statePill(d.ts.state);
+  if (d.ts) return statePill(d.ts.state, d.ts.waitingOn);
   if (d.future && d.shift) return { label: 'Scheduled', tone: 'neu', glyph: '—' };
   return null;
 }

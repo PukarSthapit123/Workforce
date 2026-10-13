@@ -4,6 +4,7 @@ import { tid } from '@/testids';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import { Avatar, Button, ChipButton, Empty, FilterBar, FormWarn, Pill, Row, SearchFilter, Small, Tip, toastInfo } from '@/ui';
 import { useApprovalQueue, useDecideDay, type QueueRow, type QueueStatus } from '@/api/timesheets';
+import { roleWaiting } from '@/domain/approvals';
 import { formatDmy } from '@/domain/timesheet';
 import { latest } from '@/lib/latest';
 import { ReturnDialog } from './TeamDialogs';
@@ -29,7 +30,7 @@ export function TeamQueue({ returnReasonRequired }: { returnReasonRequired: bool
   const filters = (counts?.mgrok ?? 0) > 0 || status === 'mgrok' ? WITH_PAYROLL : FILTERS;
   /* module 8: an approval with payroll still to come says so, rather than claiming a posting */
   const approve = (r: QueueRow) => decide.mutate({ day: r, to: 'ok', reason: '' },
-    { onSuccess: res => toastInfo(res.record.state === 'mgrok' ? `Approved · ${r.personName} · now waiting on payroll` : `Approved · ${r.personName} · queued for Business Central`) });
+    { onSuccess: res => toastInfo(res.record.state === 'mgrok' ? `Approved · ${r.personName} · now waiting on ${roleWaiting(res.record.waitingOn ?? 'Payroll')}` : `Approved · ${r.personName} · queued for Business Central`) });
   const rows = list.data?.rows ?? [];
   /* the dialog works on the row as last read, so a retry after a 412 sends the fresh version */
   const ret = returning && latest(returning, rows);
@@ -50,7 +51,7 @@ export function TeamQueue({ returnReasonRequired }: { returnReasonRequired: bool
         <TableBody>
           {list.data && !rows.length && <Row testId={tid.tteam.empty}><TableCell colSpan={7}><Empty>Nothing matches that filter</Empty></TableCell></Row>}
           {rows.map(r => {
-            const pill = statePill(r.state), open = r.decide, busy = decide.isPending(r.id);
+            const pill = statePill(r.state, r.waitingOn), open = r.decide, busy = decide.isPending(r.id);
             return (
               <Row key={r.id} testId={tid.tteam.row(r.id)}>
                 <TableCell kind="title">

@@ -1464,6 +1464,9 @@
                               "posted",
                               "failed"
                             ]
+                          },
+                          "waitingOn": {
+                            "type": "string"
                           }
                         },
                         "required": [
@@ -1909,6 +1912,9 @@
                               "posted",
                               "failed"
                             ]
+                          },
+                          "waitingOn": {
+                            "type": "string"
                           },
                           "personName": {
                             "type": "string"
@@ -3113,6 +3119,9 @@
                                 "posted",
                                 "failed"
                               ]
+                            },
+                            "waitingOn": {
+                              "type": "string"
                             }
                           },
                           "required": [
@@ -3704,6 +3713,9 @@
                                 "posted",
                                 "failed"
                               ]
+                            },
+                            "waitingOn": {
+                              "type": "string"
                             }
                           },
                           "required": [
@@ -4275,6 +4287,9 @@
                                 "posted",
                                 "failed"
                               ]
+                            },
+                            "waitingOn": {
+                              "type": "string"
                             }
                           },
                           "required": [
@@ -4846,6 +4861,9 @@
                                 "posted",
                                 "failed"
                               ]
+                            },
+                            "waitingOn": {
+                              "type": "string"
                             }
                           },
                           "required": [
@@ -6027,6 +6045,9 @@
                                 "posted",
                                 "failed"
                               ]
+                            },
+                            "waitingOn": {
+                              "type": "string"
                             }
                           },
                           "required": [
@@ -8628,6 +8649,9 @@
                                   },
                                   "text": {
                                     "type": "string"
+                                  },
+                                  "waitingOn": {
+                                    "type": "string"
                                   }
                                 },
                                 "required": [
@@ -8978,6 +9002,9 @@
                                   "maximum": 9007199254740991
                                 },
                                 "text": {
+                                  "type": "string"
+                                },
+                                "waitingOn": {
                                   "type": "string"
                                 }
                               },
@@ -56007,6 +56034,9 @@
                             "posted",
                             "failed"
                           ]
+                        },
+                        "waitingOn": {
+                          "type": "string"
                         }
                       },
                       "required": [
@@ -56608,6 +56638,9 @@
                             "posted",
                             "failed"
                           ]
+                        },
+                        "waitingOn": {
+                          "type": "string"
                         }
                       },
                       "required": [
@@ -57140,6 +57173,9 @@
                             "posted",
                             "failed"
                           ]
+                        },
+                        "waitingOn": {
+                          "type": "string"
                         }
                       },
                       "required": [
@@ -57596,6 +57632,9 @@
                                     "posted",
                                     "failed"
                                   ]
+                                },
+                                "waitingOn": {
+                                  "type": "string"
                                 }
                               },
                               "required": [
@@ -58140,6 +58179,9 @@
                               "posted",
                               "failed"
                             ]
+                          },
+                          "waitingOn": {
+                            "type": "string"
                           }
                         },
                         "required": [
@@ -58672,6 +58714,9 @@
                                       "posted",
                                       "failed"
                                     ]
+                                  },
+                                  "waitingOn": {
+                                    "type": "string"
                                   }
                                 },
                                 "required": [

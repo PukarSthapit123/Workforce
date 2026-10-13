@@ -6,7 +6,7 @@ import { buttonVariants } from '@/ui/shadcn/button';
 import { useMyClock, type ClockRecord, type MyClock } from '@/api/clock';
 import type { DaySaved, TimesheetWeek, WeekDay } from '@/contract/timesheets';
 import { CLOCK_OUT_FIRST } from '@/domain/clock';
-import { addDays, formatDay, formatDmy } from '@/domain/timesheet';
+import { addDays, formatDay, formatDmy, mgrokLabel } from '@/domain/timesheet';
 import { dayIndex, formatTime } from '@/domain/time';
 import { NON_WORKING_REASONS, formGroups, hm, rotaShift, valuesFromDay, valuesFromRota, varianceText } from './capture';
 import { ClockCard, ForgottenClock, clockedStart } from './ClockCard';
@@ -32,7 +32,9 @@ const NONE_CHIP = { label: 'Nothing logged', tone: 'neu' as Tone, glyph: <Minus 
 /* A day with nothing recorded is a rest day when the published rota says so (dayInfo), whether or not it has come yet. */
 export function dayChip(day: WeekDay) {
   const key = day.absence ?? (day.state !== 'none' ? day.state : day.rota?.code === '' ? 'rest' : day.future ? 'future' : 'none');
-  return CHIP[key] ?? NONE_CHIP;
+  const chip = CHIP[key] ?? NONE_CHIP;
+  /* module 8 review M3: an mgrok day names the layer it waits on */
+  return key === 'mgrok' ? { ...chip, label: mgrokLabel(day.record?.waitingOn) } : chip;
 }
 
 /* The day view: tsDayView (qnipay-workforce-v15.html:6277-6336). The panel

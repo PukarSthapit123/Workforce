@@ -39,6 +39,8 @@ test('mgrok reads "Approved by manager, waiting on payroll" on the pill and the 
   expect(statePill('mgrok').label).toBe('Approved by manager, waiting on payroll');
   const day = { date: '2026-08-12', record: null, state: 'mgrok', version: 2, minutes: 450, future: false, locked: false, lockNote: '', flags: [] } satisfies WeekDay;
   expect(dayChip(day).label).toBe('Approved by manager, waiting on payroll');
+  /* review M3: another layer is named */
+  expect(statePill('mgrok', 'Line manager').label).toBe('Approved by manager, waiting on the line manager');
 });
 
 test('the payroll holder\'s queue holds the day waiting on payroll, and their approval queues the posting', async () => {

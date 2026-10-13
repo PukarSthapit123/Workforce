@@ -6,7 +6,7 @@ import {
   payLabel, periodLocked, periodStart, planWeekSubmit, queueChecksum, queuedAttempt, readBreaks, restGap, retryAttempt,
   retryAuditText, retryProblem, retryToast, returnReasonProblem, rotaFor, toMin, transitionAuditText, tsCan, tsPending,
   tsStateInfo, tsTransitionProblem, validateTimes, weekBlockedMessage, weekDayOutcome, weekLabel, weekLayoutFor, weekModel,
-  weekTotals,
+  weekTotals, mgrokLabel, tsLabel,
   type AllowanceDef, type CheckContext, type RateContext, type FieldDef, type FieldEnv, type PayCode, type TimesInput, type TsState,
   type TypeCapture, type TypeRule,
 } from './timesheet';
@@ -59,6 +59,14 @@ describe('state machine (D2)', () => {
     expect(transitionAuditText('Bigyan Poudel', '2026-08-12', 'pend', 'back', 'Break times missing'))
       .toBe('Bigyan Poudel · 12/08/2026 · Awaiting approval → Sent back · "Break times missing"');
     expect(transitionAuditText('Bigyan Poudel', '2026-08-12', 'pend', 'ok')).toBe('Bigyan Poudel · 12/08/2026 · Awaiting approval → Approved');
+  });
+});
+
+describe('the mgrok label names the layer the day waits on (module 8 review M3)', () => {
+  test('payroll keeps the usual words; another role is named; other states keep their label', () => {
+    expect([mgrokLabel(), mgrokLabel('Payroll')]).toEqual(['Approved by manager, waiting on payroll', 'Approved by manager, waiting on payroll']);
+    expect(mgrokLabel('Line manager')).toBe('Approved by manager, waiting on the line manager');
+    expect([tsLabel('mgrok', 'Payroll'), tsLabel('pend', 'Payroll')]).toEqual(['Approved by manager, waiting on payroll', 'Awaiting approval']);
   });
 });
 

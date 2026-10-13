@@ -39,6 +39,8 @@ export const TimesheetDay = RecordMeta.extend({
   workedAnyway: z.boolean().optional(),
   /* derived on every read, never stored */
   minutes: z.number().int().nonnegative(), posting: PostingState,
+  /* mgrok only: the chain role the day waits on, "Payroll" or another (module 8 review M3); derived on every read */
+  waitingOn: z.string().optional(),
 });
 export type TimesheetDay = z.infer<typeof TimesheetDay>;
 

@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import type { Tone } from '@/ui';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/ui/shadcn/tooltip';
 import type { QueueRow, RotaDay } from '@/contract/timesheets';
-import { POSTING_DOT, formatMinutes, tsStateInfo, type PostingDot as Dot } from '@/domain/timesheet';
+import { POSTING_DOT, formatMinutes, tsLabel, tsStateInfo, type PostingDot as Dot } from '@/domain/timesheet';
 
 /* What the approver's queue and matrix show of a day: the prototype's
    mgrTeamDay and mgrTeamMatrix cells (qnipay-workforce-v15.html:6990-7070). */
@@ -26,11 +26,12 @@ export const payElements = (r: Pick<QueueRow, 'workType' | 'minutes' | 'allowanc
 export const historyText = (r: Pick<QueueRow, 'history'>) => r.history.map(h =>
   `${tsStateInfo(h.from).label} → ${tsStateInfo(h.to).label} · ${h.by.name}${h.reason ? ` · "${h.reason}"` : ''}`).join(' | ');
 
-/* tsPill: TS_STATE's label and tone, with the glyphs the day chip draws from the shared icon set. */
+/* tsPill: TS_STATE's label and tone, with the glyphs the day chip draws from the shared icon set. An mgrok
+   day's label names the layer it waits on (module 8 review M3). */
 const GLYPH: Record<string, ReactNode> = { draft: <Minus />, pend: <Clock />, back: <X />, resub: <RotateCw />, ok: <Check />, mgrok: <Clock /> };
-export function statePill(state: string): { label: string; tone: Tone; glyph: ReactNode } {
+export function statePill(state: string, waitingOn?: string): { label: string; tone: Tone; glyph: ReactNode } {
   const s = tsStateInfo(state);
-  return { label: s.label, tone: s.tone, glyph: GLYPH[state] ?? GLYPH.draft };
+  return { label: tsLabel(state, waitingOn), tone: s.tone, glyph: GLYPH[state] ?? GLYPH.draft };
 }
 /* still awaiting a decision at some layer of the approval chain (module 8: mgrok waits on payroll) */
 export const isPending = (state: string) => state === 'pend' || state === 'resub' || state === 'mgrok';

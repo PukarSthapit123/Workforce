@@ -62,7 +62,7 @@ describe('two layers: the line manager, then payroll', () => {
     expect((await queue(admin)).rows).toEqual([]);
     await decide(mgr, AMARA, 'ok', 1);
     const pay = await queue(admin);
-    expect(pay.rows.map(r => [r.id, r.state, r.decide])).toEqual([[AMARA, 'mgrok', true]]);
+    expect(pay.rows.map(r => [r.id, r.state, r.decide, r.waitingOn])).toEqual([[AMARA, 'mgrok', true, 'Payroll']]);
     expect(pay).toMatchObject({ counts: { pend: 1, mgrok: 1 }, bulk: { ids: [AMARA] }, sla: '48 hours' });
     const own = await queue(mgr);
     expect(own.rows.map(r => r.id)).not.toContain(AMARA);

@@ -36,7 +36,7 @@ import {
 } from '@/domain/timesheet';
 import { isWeekStart } from '@/domain/time';
 
-type StoredDay = Omit<TimesheetDay, 'minutes' | 'posting' | 'enteredByName'>;
+type StoredDay = Omit<TimesheetDay, 'minutes' | 'posting' | 'enteredByName' | 'waitingOn'>;
 type StoredAttempt = IntegrationAttempt;
 interface Tenant { modules: Record<string, boolean>; flags: Record<string, unknown>; weekStart: string }
 interface StoredType { code: string; name: string; capabilities: string[]; mode?: 'form' | 'grid' | 'clock' }
@@ -88,9 +88,16 @@ export const captureRules = () => config().rules;
 function attemptOf(d: StoredDay): StoredAttempt | undefined {
   return d.integrationAttemptId ? recordAt(attempts(), d.integrationAttemptId) : undefined;
 }
-export const dayView = (d: StoredDay): TimesheetDay => ({
-  ...d, enteredByName: personByCode(d.enteredBy)?.name ?? d.enteredBy, minutes: dayMinutes(d.entries), posting: attemptOf(d)?.state ?? 'none',
-});
+/* Review M3: the chain role an mgrok day waits on, so its label can name it. */
+export function waitingOnOf(d: StoredDay): string | undefined {
+  const p = d.state === 'mgrok' ? personByCode(d.personCode) : undefined;
+  return p ? walkOf(d, p).walk.current?.step.role : undefined;
+}
+export const dayView = (d: StoredDay): TimesheetDay => {
+  const waitingOn = waitingOnOf(d);
+  return { ...d, enteredByName: personByCode(d.enteredBy)?.name ?? d.enteredBy, minutes: dayMinutes(d.entries), posting: attemptOf(d)?.state ?? 'none',
+    ...(waitingOn ? { waitingOn } : {}) };
+};
 
 /* ------------------------------------------------------------ who may act */
 function personFor(personId: string): StoredPerson {

@@ -30,7 +30,8 @@ export const HomeDay = z.object({
     from: IsoDate.nullable(), to: IsoDate.nullable(), state: z.string(),
   }).nullable(),
   /* the day's timesheet record, its state and the time on it ("7h 30m") */
-  ts: z.object({ state: TsState, minutes: z.number().int().nonnegative(), text: z.string() }).nullable(),
+  /* waitingOn: mgrok only, the chain role the day waits on (module 8 review M3) */
+  ts: z.object({ state: TsState, minutes: z.number().int().nonnegative(), text: z.string(), waitingOn: z.string().optional() }).nullable(),
   glyph: GlyphKey.nullable(),
   /* the bank holiday's name, or '' */
   bankHoliday: z.string(),

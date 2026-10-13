@@ -8,6 +8,7 @@
    prototype's, with each em-dash aside rewritten as its own sentence. */
 import type { Problem } from './codes';
 import { addDays, dowMon, formatDay, formatDmy, formatTime, pad, toMin, weekDates, periodStart, type Clock } from './time';
+import { roleWaiting } from './approvals';
 
 /* ---------------------------------------------------------------- states (D2) */
 /* mgrok (module 8 group 4): the line manager has approved and a later layer
@@ -26,6 +27,10 @@ export const TS_STATE: Record<TsState, TsStateInfo> = {
   mgrok: { label: 'Approved by manager, waiting on payroll', tone: 'info', glyph: '◷', next: ['ok', 'back'] },
 };
 
+/* Review M3: mgrok's label names the layer the day waits on; payroll, the usual one, reads as TS_STATE's label. */
+export const mgrokLabel = (waitingOn?: string) => `Approved by manager, waiting on ${roleWaiting(waitingOn ?? 'Payroll')}`;
+/* A day's state label, mgrok's naming the layer it waits on. */
+export const tsLabel = (state: string, waitingOn?: string) => (state === 'mgrok' ? mgrokLabel(waitingOn) : tsStateInfo(state).label);
 export const isTsState = (s: unknown): s is TsState => typeof s === 'string' && (TS_STATES as readonly string[]).includes(s);
 /* Unknown states read as draft, as the prototype's tsState does. */
 export const tsStateInfo = (s: string): TsStateInfo => (isTsState(s) ? TS_STATE[s] : TS_STATE.draft);
