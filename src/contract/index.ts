@@ -24,3 +24,4 @@ export * from './hours';
 export * from './exceptions';
 export * from './pay-codes';
 export * from './payroll';
+export * from './integration';

@@ -328,12 +328,17 @@ function takeDispatchFault(id: string): boolean {
   f.times--;
   return true;
 }
-function dispatch() {
+/* Also run by Business Central's screen (./integration), as P's timer is. Returns what it resolved. */
+export function dispatch(): StoredAttempt[] {
+  const resolved: StoredAttempt[] = [];
   for (const a of Object.values(attempts())) {
     if (a.state !== 'queued') continue;
     const out: StoredAttempt = takeDispatchFault(a.id) ? { ...a, state: 'failed', reason: DISPATCH_FAULT } : dispatchAttempt(a);
-    attempts()[a.id] = { ...out, version: a.version + 1, updatedAt: store.now(), at: store.now() };
+    const saved = { ...out, version: a.version + 1, updatedAt: store.now(), at: store.now() };
+    attempts()[a.id] = saved;
+    resolved.push(saved);
   }
+  return resolved;
 }
 
 /* ---------------------------------------------------------------- reading */

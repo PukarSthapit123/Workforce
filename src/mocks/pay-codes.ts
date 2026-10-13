@@ -12,6 +12,7 @@ import { recordAt } from './world';
 import { FIELDS } from './timesheets';
 import { createPayCode, listPayCodes, removePayCode, updatePayCode, type PayCodeRecord } from '@/contract/pay-codes';
 import type { TimesheetConfig } from '@/contract/timesheets';
+import type { ElementMapping } from '@/contract/integration';
 import {
   claimedBy, normalisePayCode, payCodeChanges, payCodeInUse, payCodeOf, payCodeProblem, payCodeUsage, type PayUsageWorld,
 } from '@/domain/pay-codes';
@@ -41,6 +42,13 @@ function usageWorld(): PayUsageWorld {
 const claimants = (code: string, w: PayUsageWorld) => claimedBy(code, w).map(t => ({ code: t.code, name: t.name }));
 const byId = (id: string) => recordAt(codes(), id)
   ?? refuse(404, { code: 'not-found', message: 'That pay code no longer exists.', next: 'Reload the page.' });
+
+/* Every base code, then every allowance code, with its Business Central element (Business Central's mapping card). */
+export function elementMapping(): ElementMapping[] {
+  const c = config(), stored = Object.values(codes()).map(fieldsOf);
+  return [...stored.map(r => ({ code: r.code, label: r.label, basis: r.basis, element: r.element, allowance: false })),
+    ...Object.values(c.allowances).map(a => ({ code: a.code, label: a.label, basis: 'flat' as const, element: payElement(stored, c.allowances, a.code), allowance: true }))];
+}
 
 export const payCodeHandlers = [
   serve(listPayCodes, () => {

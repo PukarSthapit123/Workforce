@@ -69,6 +69,8 @@ const attemptsIn = (p: PayPeriod) => {
     return d ? inPeriod(p, d.date) : !a.dayId;
   });
 };
+/* The current pay period's postings (Business Central's Posted tile). */
+export const postingsThisPeriod = () => attemptsIn(payPeriodOn(today(), settings()));
 const activeLocations = () => new Set(Object.values(store.coll<StoredLocation>('locations')).filter(l => l.active !== false).map(l => l.code));
 /* P's missing timesheets: a day before today the published rota scheduled, with nothing recorded and no leave or sickness. Rota off: none. */
 function missingIn(p: PayPeriod, days: readonly StoredDay[]): number {

@@ -24,5 +24,6 @@ import { hoursHandlers } from './hours';
 import { exceptionHandlers } from './exceptions';
 import { payCodeHandlers } from './pay-codes';
 import { payrollHandlers } from './payroll';
+import { integrationHandlers } from './integration';
 /* Order matters: faults first, so they can pre-empt any endpoint. */
-export const handlers = [faultsHandler, ...devHandlers, ...sessionHandlers, ...tenantHandlers, ...accessHandlers, ...auditHandlers, ...peopleHandlers, ...transitionHandlers, ...dimensionHandlers, ...employeeTypeHandlers, ...profileHandlers, ...timesheetHandlers, ...rotaHandlers, ...leaveHandlers, ...savedDataHandlers, ...templateHandlers, ...notificationHandlers, ...approvalHandlers, ...noticeHandlers, ...homeHandlers, ...clockHandlers, ...onboardingHandlers, ...hoursHandlers, ...exceptionHandlers, ...payCodeHandlers, ...payrollHandlers /* feature handlers appended by later tasks */];
+export const handlers = [faultsHandler, ...devHandlers, ...sessionHandlers, ...tenantHandlers, ...accessHandlers, ...auditHandlers, ...peopleHandlers, ...transitionHandlers, ...dimensionHandlers, ...employeeTypeHandlers, ...profileHandlers, ...timesheetHandlers, ...rotaHandlers, ...leaveHandlers, ...savedDataHandlers, ...templateHandlers, ...notificationHandlers, ...approvalHandlers, ...noticeHandlers, ...homeHandlers, ...clockHandlers, ...onboardingHandlers, ...hoursHandlers, ...exceptionHandlers, ...payCodeHandlers, ...payrollHandlers, ...integrationHandlers /* feature handlers appended by later tasks */];
