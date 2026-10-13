@@ -564,3 +564,64 @@ test.describe('module 8 pages', () => {
     }
   });
 });
+
+/* Module 6, Payroll and Business Central surfaces, on social at the frozen
+   clock: My hours for Amara Okafor; Hours position and Exceptions, with its
+   ignore dialog and P's warning, for Rachel Hussain; and for Dee Fitzgerald
+   Pay codes with the new code dialog and a code in use, Payroll readiness
+   while NOT READY, with its blockers, and Business Central with its failed
+   posting. */
+const firstIgnore = (page: Page) => page.locator('[data-testid^="texc-move-"][data-testid$="-ignore"]').first();
+const PAGES_6: [string, Step[]][] = [
+  [AMARA, [
+    ['/work/hours', open('/work/hours', tid.hours.days)],
+  ]],
+  [RACHEL, [
+    ['/team/thours', open('/team/thours', tid.thours.table)],
+    ['/team/texc', open('/team/texc', tid.texc.list)],
+    ['ignore exception dialog', async page => { await firstIgnore(page).click(); await page.getByTestId(tid.texc.banner).waitFor(); }],
+  ]],
+  [DEE, [
+    ['/setup/mpay', async page => { await escape(page); await open('/setup/mpay', tid.mpay.table)(page); }],
+    ['new pay code dialog', click(tid.mpay.add, tid.mpay.code)],
+    ['pay code in use dialog', async page => { await escape(page); await click(tid.mpay.edit('STD'), tid.mpay.inUse)(page); }],
+    ['/setup/ipay not ready', async page => { await escape(page); await open('/setup/ipay', tid.ipay.blockers)(page); }],
+    ['/setup/ibc', open('/setup/ibc', tid.ibc.retry('int_a1f3'))],
+  ]],
+];
+test.describe('module 6 pages', () => {
+  test.beforeEach(async ({ api }) => { await api.seed('social'); await api.setClock(FROZEN); });
+  for (const theme of ['light', 'dark'] as const) {
+    test(`axe: module 6 pages and dialogs have no serious issues (${theme})`, async ({ page }) => {
+      test.setTimeout(120_000);
+      for (const [email, steps] of PAGES_6) {
+        await signInEmail(page, email);
+        for (const [where, go] of steps) {
+          await go(page);
+          await setTheme(page, theme);
+          const r = await new AxeBuilder({ page }).analyze();
+          expect(r.violations.filter(v => ['serious', 'critical'].includes(v.impact ?? '')).map(v => `${where} ${v.id}: ${v.nodes.length}`)).toEqual([]);
+        }
+      }
+    });
+  }
+  test('phone: module 6 pages and dialogs have no horizontal overflow at 390px, and My hours is a card per day', async ({ page }) => {
+    test.setTimeout(120_000);
+    await page.setViewportSize({ width: 390, height: 844 });
+    for (const [email, steps] of PAGES_6) {
+      await signInEmail(page, email);
+      for (const [where, go] of steps) {
+        await go(page);
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), where).toBe(true);
+        if (where === '/work/hours') {
+          /* MOBILE-FOUNDATION#30: the day-by-day table's header row is left to screen readers, and each day stands as a card */
+          expect(await page.getByTestId(tid.hours.days).locator('thead').evaluate(e => getComputedStyle(e).position)).toBe('absolute');
+          const day = page.getByTestId(tid.hours.day('2026-08-10'));
+          expect(await day.evaluate(e => getComputedStyle(e).display)).toBe('block');
+          const box = await day.boundingBox();
+          expect(box && box.x >= 0 && box.x + box.width <= 390, 'a day card within the screen').toBe(true);
+        }
+      }
+    }
+  });
+});
