@@ -32,9 +32,9 @@ import { TEMPLATE_SCOPES, scopeLabel, templateFileName, type TemplateScope } fro
    setting saves when it is chosen or left, with the tenant's version and one
    audit row. Applying a template asks first, showing what it would change,
    add and leave alone (D1). Module 8: the country names its time zone and,
-   when the organisation keeps another, offers it; pay frequency, week ending,
-   first pay date and the minimum wage check say plainly that nothing reads
-   them until Payroll and Business Central are built. */
+   when the organisation keeps another, offers it. Pay frequency, week ending
+   day and first pay date set the pay period Payroll readiness reads (module
+   6 group 4); the minimum wage check says plainly that nothing reads it yet. */
 const PAYROLL_NOTE = 'Used by Payroll and Business Central, which is not built yet.';
 export function OrganisationPage() {
   const tenant = useTenant();
@@ -461,15 +461,15 @@ function PayPeriodsCard({ tenant }: { tenant: Tenant }) {
   return (
     <AdminCard testId={tid.aorg.card('pay')} icon={<CalendarDays />} title="Pay periods" tipTestId={tid.aorg.tip('pay')}
       tip="Defines the window a timesheet belongs to, and therefore when it closes.">
-      <SettingRow title="Pay frequency" desc={PAYROLL_NOTE}>
+      <SettingRow title="Pay frequency">
         <SelectSetting testId={tid.aorg.payFrequency} label="Pay frequency" value={c.payFrequency} options={FREQUENCIES} disabled={busy}
           onSave={v => s.company({ payFrequency: v }, `Pay frequency: ${v}.`)} />
       </SettingRow>
-      <SettingRow title="Week ending day" desc={PAYROLL_NOTE}>
+      <SettingRow title="Week ending day">
         <SelectSetting testId={tid.aorg.weekEnding} label="Week ending day" value={c.weekEnding} options={WEEK_ENDS} disabled={busy}
           onSave={v => s.company({ weekEnding: v }, `Week ending day: ${v}.`)} />
       </SettingRow>
-      <SettingRow title="First pay date" desc={PAYROLL_NOTE}>
+      <SettingRow title="First pay date">
         <TextSetting key={c.firstPayDate} testId={tid.aorg.firstPayDate} label="First pay date" type="date" value={c.firstPayDate} disabled={busy} error={s.error('firstPayDate')}
           onSave={v => s.company({ firstPayDate: v }, v ? `First pay date saved.` : 'First pay date cleared.')} />
       </SettingRow>
