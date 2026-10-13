@@ -617,6 +617,30 @@ export function patternGenerateProblem(p: PatternCore, scope: string | null, loc
 }
 export const NO_LANDING = 'That run lands no shifts. Check the cycle and the start day.';
 
+/* The week a date falls in, and its day in it (module 8 D4, review C1 and I3).
+   A stored week keeps its key after the tenant's week start changes, and all
+   seven of its days: a date belongs to the stored week that covers it, the
+   earliest key in the six days up to it. A date no stored week covers falls
+   in the week the tenant's start gives, unless that week would share a day
+   with a stored week: then it starts the day after the stored week before it
+   ends, or ends the day before the stored week after it begins. So no two
+   weeks ever hold the same date, and a location that keeps planning week
+   after week keeps its stored weeks' alignment; the new start is used from
+   the first week that touches no stored week. */
+export function weekCovering(date: string, stored: (weekStart: string) => boolean): { weekStart: string; day: number } {
+  for (let back = 6; back >= 0; back--) {
+    const ws = addDays(date, -back);
+    if (stored(ws)) return { weekStart: ws, day: back };
+  }
+  const ws = periodStart(date), at = (start: string) => ({ weekStart: start, day: daysBetween(start, date) });
+  for (let k = 1; k <= 6; k++) if (stored(addDays(ws, -k))) return at(addDays(ws, 7 - k));
+  for (let k = 1; k <= 6; k++) if (stored(addDays(ws, k))) return at(addDays(ws, k - 7));
+  return { weekStart: ws, day: dayIndex(date) };
+}
+/* A stored week other than `weekStart` that shares a day with the week it names, or undefined. */
+export const overlappingWeek = (weekStart: string, stored: readonly string[]) =>
+  stored.find(k => k !== weekStart && Math.abs(daysBetween(k, weekStart)) <= 6);
+
 /* The weeks a run reads and writes: by location and Monday. */
 export interface WeekSlot { state: string; lines: Readonly<Record<string, Line>> }
 export type WeekLookup = (location: string, weekStart: string) => WeekSlot | undefined;
@@ -641,10 +665,15 @@ export function applyPattern(p: PatternCore, ctx: ApplyContext): ApplyResult {
   if (!on.length) return { ok: false, message: scope ? `Nobody on this pattern works at ${locName(scope)}.` : 'None of the people on this pattern are on the workforce record.' };
   const writes = new Map<string, WeekWrite>(), skipped = new Set<string>(), touched = new Set<string>();
   let written = 0, occupied = 0, absence = 0;
+  /* review I3: each date goes in the week that covers it, counting the weeks this run has opened, so no two weeks share a date */
+  const opened = new Set<string>();
+  const weekOf = (loc: string, dt: string) => weekCovering(dt, ws => opened.has(rotaWeekId(loc, ws)) || weekAt(loc, ws) !== undefined);
   for (let i = 0; i < r.span; i++) {
-    const dt = addDays(r.from, i), ws = periodStart(dt), dow = dayIndex(dt);
+    const dt = addDays(r.from, i);
     for (const { x, info } of on) {
+      const { weekStart: ws, day: dow } = weekOf(info.location, dt);
       const key = rotaWeekId(info.location, ws), slot = weekAt(info.location, ws);
+      opened.add(key);
       if (slot && rotaVisible(slot.state)) { skipped.add(key); continue; }
       const code = p.days[cycleIndex({ starts: base, cycle: p.cycle }, x.offset, dt)];
       if (!code) continue;

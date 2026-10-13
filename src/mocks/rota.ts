@@ -28,7 +28,7 @@ import {
 } from '@/contract/rota';
 import type { AuditEntry } from '@/contract/audit';
 import { dayMinutes, type RotaInput, type TimeEntry } from '@/domain/timesheet';
-import { addDays, dayIndex, formatDmy, isWeekStart, isoWeek, periodStart, weekDates, weekLabel } from '@/domain/time';
+import { addDays, dayIndex, daysBetween, formatDmy, isWeekStart, isoWeek, periodStart, weekDates, weekLabel } from '@/domain/time';
 import {
   COVER_REASONS, DEFAULT_ROTA_CONFIG, CLAIM_NOT_PERMITTED, NOBODY_ELIGIBLE, NO_LANDING, REASON_BEFORE_CLOSE, ACTIVATE_EMPTY, TICK_SOMEONE,
   alreadyOnPattern, amendedAuditText, amendedNotice, applyPattern, assignCheck, claimRefusal, clearAuditText, clearProblem, clearSummary,
@@ -42,7 +42,7 @@ import {
   rotadHours, setCell, setCells, shiftAssignedNotice, shiftBy, shiftRemovalProblem, shiftTime, shiftTypeProblem, shiftUsage,
   staggerOffsets, suggest, thinnest, typeRotaFor, typesAfterNightChange, typesAfterShiftCreate, typesWithoutShift, rotaKeyCounts,
   type AssignMode, type AssignOutcome, type Candidate, type CellWrite, type PatternPersonInfo, type RotaActor, type RotaChange,
-  type RotaDay, type RotaWeekCore, type RotaWorker, type RuleContext, type Suggestion, type SupportLevel, type WeekLookup,
+  weekCovering, overlappingWeek, type RotaDay, type RotaWeekCore, type RotaWorker, type RuleContext, type Suggestion, type SupportLevel, type WeekLookup,
 } from '@/domain/rota';
 import { absenceCellWrites, shortDays, type CellPlanWeek, type CoverDay } from '@/domain/leave';
 
@@ -134,7 +134,9 @@ function requireBuilder(s: Signed, cap: 'rota_pattern' | 'rota_shift') {
 /* A week is named by its first day: a day the tenant's week starts on, or the
    key of a week stored before the week start changed (D4, review C1). */
 function requireMonday(loc: string, weekStart: string, field = 'weekStart') {
-  if (!isWeekStart(weekStart) && !weekRec(loc, weekStart)) invalid({ field, message: `A week starts on a ${tenant().weekStart}.` });
+  /* review I3: or a week that keeps a stored week's alignment, as the weeks either side of one do */
+  if (isWeekStart(weekStart) || weekRec(loc, weekStart) || storedKeys(loc).some(k => daysBetween(k, weekStart) % 7 === 0)) return;
+  invalid({ field, message: `A week starts on a ${tenant().weekStart}.` });
 }
 
 /* ----------------------------------------------------------- the people */
@@ -176,17 +178,20 @@ const coreOf = (w: StoredWeek): RotaWeekCore => ({ location: w.location, weekSta
 const weekCore = (loc: string, ws: string): RotaWeekCore => { const w = weekRec(loc, ws); return w ? coreOf(w) : emptyWeek(loc, ws); };
 /* the record If-Match is checked against: the stored week, or version 0 for one not stored yet */
 const weekMeta = (loc: string, ws: string): Meta => weekRec(loc, ws) ?? { id: rotaWeekId(loc, ws), version: 0, updatedAt: store.now() };
-/* Review C1 (D4): a stored week keeps its key when the tenant's week start
-   changes, and stays readable. A date belongs to the stored week that covers
-   it, the earliest key in the six days up to it, so a week already stored
-   keeps all seven of its days. Only a date no stored week covers falls in the
-   week the tenant's start gives. */
-export function weekOn(loc: string, date: string): { weekStart: string; day: number } {
-  for (let back = 6; back >= 0; back--) {
-    const ws = addDays(date, -back);
-    if (weekRec(loc, ws)) return { weekStart: ws, day: back };
-  }
-  return { weekStart: periodStart(date), day: dayIndex(date) };
+/* Review C1 and I3 (D4): the week a date falls in at a location, from the
+   weeks stored there (weekCovering). `also` counts one more week as stored:
+   the week on screen, so the board steps to the weeks either side of it. */
+export function weekOn(loc: string, date: string, also?: string): { weekStart: string; day: number } {
+  return weekCovering(date, ws => ws === also || weekRec(loc, ws) !== undefined);
+}
+const storedKeys = (loc: string) => Object.values(weeks()).filter(w => w.location === loc).map(w => w.weekStart);
+/* Review I3: a write may not open a week that shares a day with a stored week under another key. */
+function requireOwnWeek(loc: string, ws: string) {
+  if (weekRec(loc, ws)) return;
+  const other = overlappingWeek(ws, storedKeys(loc));
+  if (other) refuse(409, { code: 'WEEK_OVERLAPS', field: 'weekStart',
+    message: `The week of ${formatDmy(ws)} shares days with the stored week of ${formatDmy(other)} at ${locName(loc)}.`,
+    next: `Open the week of ${formatDmy(weekOn(loc, ws).weekStart)}, which holds ${formatDmy(ws)}.` });
 }
 /* The dates grouped into the stored weeks that cover them (weekOn), in date
    order: datesCellPlan, but a stored week keeps its days after a change of
@@ -286,7 +291,7 @@ function weekView(s: Signed, l: StoredLocation, ws: string): RotaWeekView {
     id: rotaWeekId(l.code, ws), version: rec?.version ?? 0,
     location: { code: l.code, name: l.name, area: l.area ?? '', level: l.level ?? '', minPerShift: l.minPerShift ?? cfg.minDefault },
     locations: manageable(s), weekStart: ws, label: weekLabel(ws), isoWeek: isoWeek(ws), today: today(),
-    prevWeek: weekOn(l.code, addDays(ws, -1)).weekStart, nextWeek: weekOn(l.code, addDays(ws, 7)).weekStart,
+    prevWeek: weekOn(l.code, addDays(ws, -1), ws).weekStart, nextWeek: weekOn(l.code, addDays(ws, 7), ws).weekStart,
     state: w.state, publishVersion: w.publishVersion, publishedAt: w.publishedAt, publishedBy: w.publishedBy, changes: w.changes,
     min, gapDays: gapDays(lines, min), onShift: weekDates(ws).map((_, i) => onShift(lines, i)), coverage: coverage(lines, sh),
     rows, key: rotaKeyCounts(lines), shifts: sh,
@@ -585,6 +590,7 @@ export const rotaHandlers = [
     requireRota();
     const l = locationFor(session, params.location), ws = params.weekStart;
     requireMonday(l.code, ws);
+    requireOwnWeek(l.code, ws);
     checkVersion(weekMeta(l.code, ws));
     const p = personAt(body.personCode, l.code), week = weekCore(l.code, ws), field = cellField(p.code, body.day);
     const cur = lineOf(week, p.code)[body.day] ?? '', sh = shiftList();
@@ -619,6 +625,7 @@ export const rotaHandlers = [
     requireRota();
     const l = locationFor(session, params.location), ws = params.weekStart;
     requireMonday(l.code, ws);
+    requireOwnWeek(l.code, ws);
     checkVersion(weekMeta(l.code, ws));
     const w = weekCore(l.code, ws), rec = weekRec(l.code, ws);
     if (body.to === 'published') {
@@ -715,6 +722,7 @@ export const rotaHandlers = [
     requireRota();
     const l = locationFor(session, params.location), ws = params.weekStart, src = addDays(ws, -7);
     requireMonday(l.code, ws);
+    requireOwnWeek(l.code, ws);
     checkVersion(weekMeta(l.code, ws));
     const target = weekCore(l.code, ws), slot = weekRec(l.code, src), roster = activeAt(l.code).map(p => p.code);
     const problem = copyProblem(target, slot, roster);
@@ -733,6 +741,7 @@ export const rotaHandlers = [
     requireRota();
     const l = locationFor(session, params.location), ws = params.weekStart;
     requireMonday(l.code, ws);
+    requireOwnWeek(l.code, ws);
     checkVersion(weekMeta(l.code, ws));
     const src = weekRec(l.code, ws), roster = activeAt(l.code).map(p => p.code);
     const problem = repeatProblem(src, roster, body.weeks);
@@ -741,6 +750,7 @@ export const rotaHandlers = [
     const r = repeatWeek(l.code, ws, src, roster, body.weeks, weekAt);
     const out = { written: r.written, occupied: r.occupied, absence: r.absence, live: r.live, weeks: r.weeks, summary: repeatSummary(r) };
     if (!r.written) return { ...out, week: weekView(session, l, ws), auditId: null };
+    for (const w of r.writes) requireOwnWeek(w.location, w.weekStart);
     for (const w of r.writes) saveWeek({ ...weekCore(w.location, w.weekStart), lines: w.lines });
     const auditId = writeAudit({ who: actor(session), act: 'Rota week repeated', entity: 'rotaWeek', entityId: rotaWeekId(l.code, ws), before: null,
       after: { written: r.written, occupied: r.occupied, absence: r.absence, live: r.live, weeks: r.writes.map(w => w.weekStart), detail: repeatAuditText(l.name, ws, body.weeks, r) } });
@@ -751,6 +761,7 @@ export const rotaHandlers = [
     requireRota();
     const l = locationFor(session, params.location), ws = params.weekStart;
     requireMonday(l.code, ws);
+    requireOwnWeek(l.code, ws);
     checkVersion(weekMeta(l.code, ws));
     const w = weekCore(l.code, ws), roster = activeAt(l.code).map(p => p.code);
     const problem = clearProblem(w, roster, l.name);
@@ -777,6 +788,7 @@ export const rotaHandlers = [
     requireRota();
     const l = locationFor(session, params.location), ws = params.weekStart;
     requireMonday(l.code, ws);
+    requireOwnWeek(l.code, ws);
     checkVersion(weekMeta(l.code, ws));
     let week = weekCore(l.code, ws), amended = false;
     const advisories: HoursFlag[] = [], placedAll: { p: StoredPerson; day: number; code: string }[] = [];
@@ -974,6 +986,7 @@ export const rotaHandlers = [
     const counts = { written: r.written, occupied: r.occupied, absence: r.absence, weeks: r.weeks, live: r.live, rest: r.rest, range: r.range, people: r.people,
       summary: generateSummary(r, generateActivates(p, r) ? p.name : undefined) };
     if (!r.written) return { ...counts, record: p, auditId: null };
+    for (const w of r.writes) requireOwnWeek(w.location, w.weekStart);
     for (const w of r.writes) saveWeek({ ...weekCore(w.location, w.weekStart), lines: w.lines });
     const activated = generateActivates(p, r);
     const changed = activated || run.gen !== p.gen || run.genFrom !== p.genFrom || run.genTo !== p.genTo;

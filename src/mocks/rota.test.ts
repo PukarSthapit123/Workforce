@@ -7,6 +7,7 @@ import {
 } from '@/contract/rota';
 import { DaySaved, TimesheetWeek } from '@/contract/timesheets';
 import { HomeMonth } from '@/contract/home';
+import { addDays } from '@/domain/time';
 import { FROZEN, accountOf, audits, caller, fault, resetTo, snapshot, tokenFor, type Persona } from '@/test/api-helpers';
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' })); afterAll(() => server.close());
@@ -735,19 +736,38 @@ describe('a change of week start keeps stored weeks readable (module 8 D4, revie
     const tsSun = TimesheetWeek.parse((await me('GET', `/api/v1/timesheets/${code}/weeks/2026-08-09`)).body);
     expect(tsSun.days.slice(1).map(d => d.rota)).toEqual(tsBefore.days.slice(0, 6).map(d => d.rota));
   });
-  test('the board keeps its stored weeks and steps to new-start weeks after them', async () => {
+  test('the board keeps its stored weeks, and the next week begins the day after the last stored week ends (review I3)', async () => {
     await toSunday();
     const manager = await as('manager');
     const w = RotaWeekView.parse((await manager('GET', WH)).body);
     expect(w).toMatchObject({ weekStart: '2026-08-10', state: 'published', prevWeek: '2026-08-03' });
     const home = RotaHome.parse((await manager('GET', '/api/v1/rota/home')).body);
     expect(home.weekStart).toBe('2026-08-10');
-    /* past the stored weeks, the next week starts on a Sunday */
     let next = w;
     for (let i = 0; i < 12 && store.coll('rotaWeeks')[`rw_WH_${next.nextWeek}`]; i++)
       next = RotaWeekView.parse((await manager('GET', `/api/v1/rota/weeks/WH/${next.nextWeek}`)).body);
-    expect(new Date(`${next.nextWeek}T00:00:00Z`).getUTCDay()).toBe(0);
-    const fresh = await manager('GET', `/api/v1/rota/weeks/WH/${next.nextWeek}`);
-    expect(fresh.status).toBe(200);
+    /* a Sunday week would share the stored week's last day, so the next week begins on the Monday after it */
+    expect(next.nextWeek).toBe(addDays(next.weekStart, 7));
+    const fresh = RotaWeekView.parse((await manager('GET', `/api/v1/rota/weeks/WH/${next.nextWeek}`)).body);
+    expect([fresh.prevWeek, fresh.nextWeek]).toEqual([next.weekStart, addDays(next.nextWeek, 7)]);
+  });
+  test('a shift placed on the first day of the week after the stored weeks is the one Home, My shifts and the timesheet show (review I3)', async () => {
+    await toSunday();
+    setCfg({ publishBlockOnGap: false });
+    /* Rosa Mendes (CP-1402) works at Willow House and has no leave that week */
+    const mgr = await as('manager'), me = await asEmail('rosa.mendes@brightpath.org'), code = 'CP-1402';
+    expect(RotaWeekView.parse((await mgr('GET', WH)).body).nextWeek).toBe('2026-08-17');
+    /* the Sunday week would hold 16 August twice, so nothing can be written to it */
+    const sunday = await cell(mgr, '/api/v1/rota/weeks/WH/2026-08-16', { personCode: code, day: 1, code: 'E' }, 0);
+    expect([sunday.status, refusal(sunday).code, refusal(sunday).next]).toEqual([409, 'WEEK_OVERLAPS', 'Open the week of 10/08/2026, which holds 16/08/2026.']);
+    const placed = await cell(mgr, NEXT, { personCode: code, day: 0, code: 'E' }, 0);
+    expect(placed.status).toBe(200);
+    expect(WeekMoved.parse((await mgr('POST', `${NEXT}/transition`, { to: 'published' }, 1)).body).week.state).toBe('published');
+    const day = HomeMonth.parse((await me('GET', '/api/v1/home?month=2026-08')).body).days.find(d => d.date === '2026-08-17');
+    expect(day?.shift?.code).toBe('E');
+    const mine = MyShifts.parse((await me('GET', '/api/v1/rota/my-shifts?weekStart=2026-08-17')).body);
+    expect(mine.days.find(d => d.date === '2026-08-17')?.code).toBe('E');
+    const ts = TimesheetWeek.parse((await me('GET', `/api/v1/timesheets/${code}/weeks/2026-08-16`)).body);
+    expect(ts.days.find(d => d.date === '2026-08-17')?.rota?.code).toBe('E');
   });
 });

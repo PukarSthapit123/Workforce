@@ -9,8 +9,9 @@ import {
   setCell, setCells, shiftAssignedNotice, shiftLetter, shiftName, shiftRemovalProblem, shiftShortTime, shiftTime, shiftTypeProblem,
   shiftUsage, sortShifts, staggerOffsets, suggest, thinnest, typesAfterNightChange, typesAfterShiftCreate, typesWithoutShift,
   type Candidate, type CoverCore, type FulfilStage, type PatternCore, type RotaActor, type RotaWeekCore, type RotaWorker,
-  type RuleContext, type ShiftType, type TypeRota, type WeekSlot,
+  type RuleContext, type ShiftType, type TypeRota, type WeekSlot, overlappingWeek, weekCovering,
 } from './rota';
+import { setActiveLocale } from './time';
 
 const must = <T>(v: T | null | undefined): T => { if (v == null) throw new Error('fixture missing'); return v; };
 const E = must(recalcShift({ code: 'E', name: 'Early', from: '07:00', to: '15:00', breakMinutes: 30, night: false, tone: 'E' }));
@@ -402,7 +403,7 @@ describe('repeat, copy and clear (D6)', () => {
     expect(repeatWeek('WH', '2026-08-10', src, ['A'], 1, () => amended)).toMatchObject({ written: 0, live: 1, weeks: 0 });
     const p = pattern({ starts: '2026-08-10', gen: '1w', days: ['E', 'E', '', '', '', '', ''], people: [{ personCode: 'A', offset: 1 }] });
     const r = applyPattern(p, { today: '2026-08-10', scope: null, people: new Map([['A', { code: 'A', name: 'A', location: 'WH', state: 'active', restNeed: 11 }]]),
-      weekAt: () => amended, locName: c => c, shifts: SHIFTS });
+      weekAt: (_l, ws) => (ws === '2026-08-10' ? amended : undefined), locName: c => c, shifts: SHIFTS });
     expect(r).toMatchObject({ ok: true, written: 0, live: 1 });
   });
   test('repeatWeek writes forward into empty cells only, skipping live weeks and leave', () => {
@@ -559,5 +560,34 @@ describe('module 8: support levels and flexible-worker milestones', () => {
     expect(supportLevelsOf({})).toEqual(DEFAULT_SUPPORT_LEVELS);
     expect(supportLevelText({ code: 'High', label: 'High support', min: 4 })).toBe('High support · 4 per shift');
     expect([milestonesText([9, 12]), milestonesText([4, 8, 12]), milestonesText([6])]).toEqual(['9 and 12 weeks', '4, 8 and 12 weeks', '6 weeks']);
+  });
+});
+
+describe('weeks after a change of week start (module 8 D4, review I3)', () => {
+  afterEach(() => setActiveLocale({ timezone: 'Europe/London', dateFormat: 'dd/mm/yyyy', clock: '24h', weekStart: 'Monday' }));
+  const sunday = () => setActiveLocale({ timezone: 'Europe/London', dateFormat: 'dd/mm/yyyy', clock: '24h', weekStart: 'Sunday' });
+  test('a date takes the stored week that covers it; past it, the week begins the day after it ends, and never shares a date', () => {
+    sunday();
+    const stored = (ws: string) => ws === '2026-08-10';
+    expect(weekCovering('2026-08-16', stored)).toEqual({ weekStart: '2026-08-10', day: 6 });
+    expect(weekCovering('2026-08-17', stored)).toEqual({ weekStart: '2026-08-17', day: 0 });
+    expect(weekCovering('2026-08-22', stored)).toEqual({ weekStart: '2026-08-17', day: 5 });
+    /* before a stored week, the week ends the day before it begins */
+    expect(weekCovering('2026-08-09', stored)).toEqual({ weekStart: '2026-08-03', day: 6 });
+    /* a date far from any stored week takes the tenant's new start */
+    expect(weekCovering('2026-10-07', stored)).toEqual({ weekStart: '2026-10-04', day: 3 });
+    expect([overlappingWeek('2026-08-16', ['2026-08-10']), overlappingWeek('2026-08-17', ['2026-08-10']), overlappingWeek('2026-08-10', ['2026-08-10'])])
+      .toEqual(['2026-08-10', undefined, undefined]);
+  });
+  test('a pattern run after the change opens weeks that follow the stored week and never overlap it', () => {
+    sunday();
+    const weeks: Record<string, WeekSlot> = { 'WH|2026-08-10': { state: 'published', lines: {} } };
+    const r = applyPattern(pattern({ starts: '2026-08-16', gen: 'range', genFrom: '2026-08-16', genTo: '2026-08-30', days: ['E'], cycle: 1, people: [{ personCode: 'A', offset: 0 }] }),
+      { today: '2026-08-10', scope: null, people: new Map([['A', { code: 'A', name: 'A', location: 'WH', state: 'active', restNeed: 11 }]]),
+        weekAt: (l, ws) => weeks[`${l}|${ws}`], locName, shifts: SHIFTS });
+    if (!r.ok) throw new Error(r.message);
+    /* 16 August is in the published week, so it is skipped; the rest land in Monday weeks after it, each date once */
+    expect(r.writes.map(w => w.weekStart)).toEqual(['2026-08-17', '2026-08-24']);
+    expect([r.live, r.written]).toEqual([1, 14]);
   });
 });
