@@ -25,3 +25,49 @@ STOPPED BY USER (07/10) during group 1. No commits. Uncommitted: src/domain/time
   - **Flaky test fixed:** the mleave policy-page assertions are now given 5 s (commit before 4A).
   - **Still open:** the visual-5 monb baselines are stale from group 2's Save-bar move (intended by the brief) and need refreshing.
   - **Next:** group 4B, Leave and Rota.
+- 2026-10-13 — Group 4B (Leave and Rota chains) complete. Code commits: `a7ba3ff` (refreshed the monb baselines left stale by group 2) and `b9ccb94` (`feat(approvals): walk the Leave and Rota approval chains layer by layer`). Rota adds an 'Every rota week' condition, which the prototype does not have, so a Rota layer can apply to every week. The main session verified: typecheck and lint clean; whole unit suite 132 files, 2155/2155 passed; setup-8 e2e (4 journeys), the module 3 specs (16), the module 4 and 2 specs (14), visual-2/3/4/5 (20), a11y, mobile-1c, permissions-1c, ui-rules, admin-5 and nav (55), and trace:check all green. Next: group 5, the smaller setup gaps.
+- 2026-10-13 — Group 5 (smaller setup gaps) complete. Code commits: `5fbb87f` (support levels and flexible-worker milestones on Rota setup), `4c6f00f` (custom onboarding documents with add, rename and remove; built-in ones refused with 409 built-in, and documents in use refused with 409 in-use and usedBy), `9125704` (Organisation payroll notes and the country's time zone), `fb3d948` (UnitInput min-w-10) and `9365b43` (journeys and baselines). Approvals links were already done in group 2; only an e2e was added. Rulings:
+  - Only the people per shift is editable per support level, and it is written to every location at that level, as P does.
+  - The flexible-worker card says bank-week counting is not built, so no milestone notice is sent.
+  - New custom documents start optional.
+  - Templates capture only the group 5 Rota settings.
+  Refreshed baselines: mrota, monb, aorg and anotif. Porter verification: unit 2187/2187, and the 3, 5 and 1c specs, setup-8, a11y, the visual specs and trace:check all green. The main session re-checked typecheck, lint, testids append-only and setup-8 (9/9). Open: bank-week counting (milestone notices) is not built; the shipped templates carry no rotaConfig. Next: group 6, which needs the timezone journey (day changes at local midnight), one fault journey, a permission sweep of the new writes and the trace-filler. Then the module review.
+- 2026-10-13 — Group 6 (journeys and checks) complete. Commits:
+  - `d18b253`: 7 permission refusal tests, in src/mocks/permissions-8.test.ts.
+  - `fb16c7d`: the time zone midnight journey, plus a stale Rota setup save fault journey. It gets a 412 with the standard reload toast.
+  - `8f7d1f5`: a bug fix. The waiting-on-payroll pill overflowed Team timesheets at 390px.
+  - `4a9ed0e`: the a11y "module 8 pages" section, the new visual-8 spec (12 new baselines), and the e2e/support/approvals.ts helper.
+  - `49e8dfe`: two trace rows.
+
+  Every module 8 write is now covered by a permission refusal test; the list is in the porter's handover. Porter verification: unit 2194/2194, setup-8 11/11, a11y module 8 3/3, visual-8 4/4 (stable), visual-2 4/4, trace:check 6/6. The main session re-checked typecheck, lint, and manager-2 with visual-8 and setup-8 (18/18). Next: the module-reviewer for module 8 (040cbe8..HEAD), then one fix round.
+- 2026-10-13 — Module review done (review.md): 0 Critical, 7 Important and 4 Minor.
+  - I1: one person could sign both Timesheet layers.
+  - I2: line managers lost approval across departments (a regression).
+  - I3: new weeks overlap stored weeks after a week-start change.
+  - I4: template apply bypasses master_data.
+  - I5: items are stranded after a chain edit.
+  - I6: new starters get carry-over.
+  - I7: tests are missing for these.
+  The fix round is dispatched. Rulings:
+  - I5: refuse chain saves that would strand waiting items, with 409 and usedBy; a fully signed walk is settled by the next decider.
+  - M2: refuse grid writes to a week in review.
+  - M3: the mgrok label names the waiting role.
+  - M4: a delegate acts with the delegator's authority, as Profile does; comment only.
+  - I6: no carry-over for a prior year the person did not work.
+- 2026-10-13 — Fix round complete (one usage-limit interruption, resumed). Commits:
+  - 449b3e7: I1 and I2.
+  - 3027189: I4.
+  - 3e860c0: I5.
+  - 35df1fb: I3, weekCovering, and 409 WEEK_OVERLAPS.
+  - 5b3927e: I6, no part-year carry.
+  - e94f488: M3, waitingOn.
+  - 31b1b76: M2. The porter chose to reset signatures, because module 3 already lets review weeks be edited.
+  - 3751b14: M1.
+  - a7bca36: M4, comment and test.
+
+  Known limits:
+  - A location that keeps planning stays on its old week alignment after a week-start change.
+  - The M2 sign-off reset is not named in the cell audit row.
+
+  Porter: the specs for 2, 3 and 4, setup-8, visual-8, a11y module 8 and visual-2 are green. The main session verified typecheck and lint at exit 0, unit 135 files 2214/2214, and the 1c and module 5 specs at 22/22.
+  The main session also ran the remaining visual specs (visual, 1b, 1c, 2b, 3, 4, 5), nav, ui-rules and the employee, admin and faults specs for module 2: 46/46. MODULE 8 COMPLETE at a7bca36. Not pushed. Next per the plan: module 9, multi-company. Before starting it, ask the user about the push or merge, and about the week-alignment limit.
