@@ -17,12 +17,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",
-    "tokens": "node scripts/lift-tokens.mjs",
-    "seed": "node scripts/extract-seed.mjs",
     "openapi": "tsx scripts/openapi.ts",
-    "trace": "node scripts/trace.mjs",
-    "trace:check": "vitest run scripts/trace.test.ts",
-    "verify": "npm run typecheck && npm run lint && npm test && npm run e2e && npm run trace:check && npm run build:check"
+    "verify": "npm run typecheck && npm run lint && npm test && npm run e2e && npm run build:check"
   },
   "dependencies": {
     "@fontsource/inter": "^5.3.0",

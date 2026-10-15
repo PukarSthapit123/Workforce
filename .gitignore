@@ -9,3 +9,17 @@ e2e/.auth/
 !.env.example
 .superpowers/
 *.tsbuildinfo
+
+# Local tooling, kept out of the repository
+.claude/
+graphify-out/
+docs/plans/
+docs/specs/
+e2e/trace.json
+e2e/trace-areas.json
+scripts/extract-seed.mjs
+scripts/extract-seed.test.ts
+scripts/lift-tokens.mjs
+scripts/lift-tokens.test.ts
+scripts/trace.mjs
+scripts/trace.test.ts
