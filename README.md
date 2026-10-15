@@ -8,11 +8,12 @@ shared workforce record.
 
 These modules are built: foundation and access, people and dimensions,
 configuration and communication, timesheet, clocking in and out, rota, leave,
-and onboarding.
+onboarding, setup, and payroll and Business Central (My hours, Team hours,
+Exceptions, Pay codes, Payroll readiness and Business Central).
 
-Payroll and Business Central is parked. Its pages (Hours, Team hours,
-Exceptions, Payroll readiness, Pay codes and Business Central) show a "not built"
-notice.
+The Business Central connection is simulated. Postings are queued and
+dispatched by a stub inside the fake API, not sent to a real Business Central.
+The design for the real backend is in `docs/backend/`.
 
 The app runs against a fake API (Mock Service Worker) that sits inside the
 browser. The fake API has the same shape as the planned real API, which will
@@ -40,6 +41,12 @@ changed.
 The sign-in screen has a shortcut for one employee, one manager and one admin.
 Anybody on the demo roster can also sign in with their own email address. Every
 account uses the password `Qnipay@123`.
+
+If sign-in always fails, the fake API is not running. It only runs under
+`npm run dev` or a build made with `npm run build:demo`; a plain `npm run build`
+leaves it out on purpose. Open the app on `localhost` (or over HTTPS), not on a
+network address such as `http://192.168.x.x:5173` and not from the file on disk,
+because the browser only starts the fake API's service worker there.
 
 Each role sees a different app:
 
