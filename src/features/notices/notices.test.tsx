@@ -55,7 +55,7 @@ test('reading a notice and acknowledging it records the version I read, once, an
   expect(await screen.findByText('Acknowledged. Fire drill on Thursday at 10:00 v1. Whoever posted it can see this.')).toBeInTheDocument();
   await waitFor(() => expect(screen.queryByTestId(tid.modal.root)).toBeNull());
   await waitFor(() => expect(screen.getByTestId(tid.notices.you('NTC-0002'))).toHaveTextContent('Acknowledged 13/08'));
-  expect(ntc('NTC-0002')?.acks.filter(a => a.personCode === 'CP-1042').map(a => a.textVersion)).toEqual([1]);
+  expect(ntc('NTC-0002')?.acks.filter(a => a.employeeCode === 'CP-1042').map(a => a.textVersion)).toEqual([1]);
   expect(audits().filter(a => a.act === 'Notice acknowledged')).toHaveLength(1);
 });
 

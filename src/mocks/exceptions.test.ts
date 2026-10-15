@@ -59,8 +59,8 @@ describe('the transitions', () => {
     expect(r.status).toBe(200);
     const m = ExceptionMoved.parse(r.body);
     expect(m.message).toBe('Taken · you are now the owner');
-    expect(m.record).toMatchObject({ id: x.id, key: x.key, version: 1, state: 'prog', owner: { personCode: 'CP-1001', name: 'Rachel Hussain' },
-      firstRecorded: store.now(), history: [{ from: 'open', to: 'prog', by: { personCode: 'CP-1001' }, note: '' }] });
+    expect(m.record).toMatchObject({ id: x.id, key: x.key, version: 1, state: 'prog', owner: { employeeCode: 'CP-1001', name: 'Rachel Hussain' },
+      firstRecorded: store.now(), history: [{ from: 'open', to: 'prog', by: { employeeCode: 'CP-1001' }, note: '' }] });
     expect(excAudits()).toEqual([expect.objectContaining({ id: m.auditId, act: 'Exception in progress', entityId: x.id,
       before: { state: 'open', owner: null }, after: expect.objectContaining({ state: 'prog', owner: 'Rachel Hussain' }) })]);
     /* a re-derive finds the same exception and its handling */
@@ -128,7 +128,7 @@ describe('capability, scope and version refusals', () => {
   });
   test('an exception about the caller is marked mine, and every move on it is refused with SELF_APPROVAL, while someone else can handle it', async () => {
     /* Rachel Hussain, WH's manager, is not cleared to work */
-    store.coll<Record<string, unknown>>('rotaProfiles')['rp_CP-1001'] = { id: 'rp_CP-1001', version: 1, updatedAt: store.now(), personCode: 'CP-1001',
+    store.coll<Record<string, unknown>>('rotaProfiles')['rp_CP-1001'] = { id: 'rp_CP-1001', version: 1, updatedAt: store.now(), employeeCode: 'CP-1001',
       cleared: false, dbsExpiry: '2026-07-31', qualifications: 'Care Certificate', favourite: false, preferredDays: [] };
     const l = await list();
     const own = l.items.find(i => i.kind === 'Clearance' && i.subject === 'Rachel Hussain');

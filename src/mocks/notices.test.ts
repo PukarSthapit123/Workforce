@@ -24,7 +24,7 @@ const told = () => Object.values(store.coll<StoredNotification>('notifications')
 const WH = { kind: 'loc', code: 'WH', loc: 'WH' } as const;
 const ALL = { kind: 'all', code: '', loc: '' } as const;
 const NEW = { title: 'Hand hygiene audit next week', body: 'Every sink will be checked on Tuesday.', scope: WH, from: '', until: '', mustAck: true, pinned: false, urgent: false, post: true };
-const activeAt = (loc: string) => Object.values(store.coll<{ code: string; location: string; state: string }>('people')).filter(p => p.state === 'active' && p.location === loc);
+const activeAt = (loc: string) => Object.values(store.coll<{ code: string; location: string; state: string }>('employees')).filter(p => p.state === 'active' && p.location === loc);
 const boardOff = () => { (store.coll<{ flags: Record<string, unknown> }>('tenant').tenant ?? { flags: {} }).flags.NOTICES = false; };
 
 test('the contract\'s scope kinds are the domain\'s', () => expect(ScopeKind.options).toEqual([...SCOPE_KINDS]));
@@ -61,7 +61,7 @@ describe('acknowledging (D10)', () => {
     const a = Acknowledged.parse(r.body);
     expect(a.record).toMatchObject({ you: 'acknowledged', owed: false, acknowledgedAt: '2026-08-13T14:30:00.000Z' });
     expect(a.message).toBe('Acknowledged. Fire drill on Thursday at 10:00 v1. Whoever posted it can see this.');
-    expect(ntc('NTC-0002')?.acks.filter(x => x.personCode === 'CP-1042')).toEqual([{ personCode: 'CP-1042', textVersion: 1, at: '2026-08-13T14:30:00.000Z' }]);
+    expect(ntc('NTC-0002')?.acks.filter(x => x.employeeCode === 'CP-1042')).toEqual([{ employeeCode: 'CP-1042', textVersion: 1, at: '2026-08-13T14:30:00.000Z' }]);
     expect(own().map(x => [x.act, x.entityId])).toEqual([['Notice acknowledged', 'NTC-0002']]);
     const again = await emp('POST', '/api/v1/notices/NTC-0002/acknowledge', { textVersion: 1 });
     expect(again.status).toBe(409);
@@ -82,13 +82,13 @@ describe('acknowledging (D10)', () => {
     const n = ntc('NTC-0002');
     const e = await mgr('PATCH', '/api/v1/notices/NTC-0002', { title: n?.title, body: 'Meet at the back car park.', from: n?.from, until: n?.until, mustAck: true, pinned: false, urgent: true }, 1);
     expect(e.status).toBe(200);
-    expect(NoticeSaved.parse(e.body).message).toBe('Saved as v2. 11 people now need to acknowledge it.');
+    expect(NoticeSaved.parse(e.body).message).toBe('Saved as v2. 11 employees now need to acknowledge it.');
     const stale = await emp('POST', '/api/v1/notices/NTC-0002/acknowledge', { textVersion: 1 });
     expect(stale.status).toBe(409);
     expect(refusal(stale).code).toBe('CHANGED');
     expect((await emp('POST', '/api/v1/notices/NTC-0002/acknowledge', { textVersion: 2 })).status).toBe(200);
     /* Marcus acknowledged v1: asked again, his v1 record kept */
-    expect(ntc('NTC-0002')?.acks.filter(x => x.personCode === 'CP-1088').map(x => x.textVersion)).toEqual([1]);
+    expect(ntc('NTC-0002')?.acks.filter(x => x.employeeCode === 'CP-1088').map(x => x.textVersion)).toEqual([1]);
   });
   /* Suite NOTICE BOARD 11: revoking own_notices for employees is recorded,
      Acknowledge is then refused by the server for a session already signed
@@ -117,18 +117,18 @@ describe('posting (notice_post, notice_org; Review Focus 1, 5)', () => {
     expect(r.status).toBe(200);
     const s = NoticeSaved.parse(r.body);
     const k = activeAt('WH').length;
-    expect(s.message).toBe(`Posted. Hand hygiene audit next week. ${k} people in Willow House.`);
+    expect(s.message).toBe(`Posted. Hand hygiene audit next week. ${k} employees in Willow House.`);
     expect(s.record).toMatchObject({ id: 'NTC-0005', state: 'live', status: 'current', textVersion: 1, version: 1, audience: k, acknowledged: 0, mine: true, by: 'Rachel Hussain' });
     expect(own().map(a => [a.act, a.entityId])).toEqual([['Notice posted', 'NTC-0005']]);
-    const poster = accountOf('manager').personCode;
+    const poster = accountOf('manager').employeeCode;
     expect(activeAt('WH').some(p => p.code === poster)).toBe(true);
-    expect(told().map(t => t.personId).sort()).toEqual(activeAt('WH').map(p => p.code).filter(c => c !== poster).sort());
+    expect(told().map(t => t.employeeId).sort()).toEqual(activeAt('WH').map(p => p.code).filter(c => c !== poster).sort());
     expect(told().every(t => t.area === 'Notices' && t.ref === 'NTC-0005' && t.title === 'Notice: Hand hygiene audit next week' && t.channel === 'In-app')).toBe(true);
   });
   /* Suite NOTICE BOARD 3: the demo employee works where the manager posts,
      so My work → Notices lists the location notice for someone there. */
   test('the demo employee works where the manager posted, and their own notices list the new location notice, owed', async () => {
-    const emp = accountOf('employee').personCode;
+    const emp = accountOf('employee').employeeCode;
     expect(activeAt('WH').some(p => p.code === emp)).toBe(true);
     expect((await (await as('manager'))('POST', '/api/v1/notices', NEW)).status).toBe(200);
     const mine = MyNotices.parse((await (await as('employee'))('GET', '/api/v1/notices/mine')).body);
@@ -138,12 +138,12 @@ describe('posting (notice_post, notice_org; Review Focus 1, 5)', () => {
   test('an admin posts to everyone; everyone in the audience but the poster is told in the Employee column, the manager too (I3)', async () => {
     const r = await (await as('admin'))('POST', '/api/v1/notices', { ...NEW, scope: ALL, urgent: true });
     expect(r.status).toBe(200);
-    const people = Object.values(store.coll<{ code: string; state: string }>('people')).filter(p => p.state === 'active');
-    const poster = accountOf('admin').personCode;
-    expect(told().some(t => t.personId === accountOf('manager').personCode)).toBe(true);
-    expect(told().some(t => t.personId === poster)).toBe(false);
-    expect(told().map(t => t.personId).sort()).toEqual(people.map(p => p.code).filter(c => c !== poster).sort());
-    expect(NoticeSaved.parse(r.body).record.audience).toBe(people.length);
+    const employees = Object.values(store.coll<{ code: string; state: string }>('employees')).filter(p => p.state === 'active');
+    const poster = accountOf('admin').employeeCode;
+    expect(told().some(t => t.employeeId === accountOf('manager').employeeCode)).toBe(true);
+    expect(told().some(t => t.employeeId === poster)).toBe(false);
+    expect(told().map(t => t.employeeId).sort()).toEqual(employees.map(p => p.code).filter(c => c !== poster).sort());
+    expect(NoticeSaved.parse(r.body).record.audience).toBe(employees.length);
     expect(told()[0]?.title).toBe('Urgent notice: Hand hygiene audit next week');
   });
   test('a manager cannot reach everyone or another location, even by forcing the scope; nothing is created', async () => {
@@ -236,19 +236,19 @@ describe('editing, pinning, deleting and withdrawing (D10)', () => {
     expect(mine.items.map(n => n.id)).not.toContain('NTC-0002');
     expect(audits().find(a => a.act === 'Notice withdrawn')?.reason).toBe('Drill moved to next month');
   });
-  test('the tracker: who acknowledged which version among the people the poster can see, and the trail', async () => {
+  test('the tracker: who acknowledged which version among the employees the poster can see, and the trail', async () => {
     const mgr = await as('manager');
     await mgr('PUT', '/api/v1/notices/NTC-0002/pin', { pinned: true }, 1);
     const t = NoticeTrack.parse((await mgr('GET', '/api/v1/notices/NTC-0002/track')).body);
-    expect(t.people.length).toBe(activeAt('WH').length);
-    expect(t.people.find(p => p.code === 'CP-1088')).toMatchObject({ acknowledged: true, textVersion: 1, location: 'Willow House' });
-    expect(t.people.find(p => p.code === 'CP-1042')).toMatchObject({ acknowledged: false, textVersion: null });
+    expect(t.employees.length).toBe(activeAt('WH').length);
+    expect(t.employees.find(p => p.code === 'CP-1088')).toMatchObject({ acknowledged: true, textVersion: 1, location: 'Willow House' });
+    expect(t.employees.find(p => p.code === 'CP-1042')).toMatchObject({ acknowledged: false, textVersion: null });
     expect(t.trail.map(x => [x.act, x.detail])).toEqual([['Notice pinned', 'pinned off → on']]);
     /* a manager sees only their own location in an organisation notice's audience */
     const org = NoticeTrack.parse((await mgr('GET', '/api/v1/notices/NTC-0001/track')).body);
-    expect(org.people.every(p => p.location === 'Willow House')).toBe(true);
+    expect(org.employees.every(p => p.location === 'Willow House')).toBe(true);
     const adm = NoticeTrack.parse((await (await as('admin'))('GET', '/api/v1/notices/NTC-0001/track')).body);
-    expect(adm.people.length).toBeGreaterThan(org.people.length);
+    expect(adm.employees.length).toBeGreaterThan(org.employees.length);
   });
 });
 

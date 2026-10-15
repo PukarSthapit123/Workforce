@@ -39,12 +39,12 @@ test('approving leave puts it on the published rota as an amendment, tells the c
   const after = await rotaWeek(api, W33);
   expect(after).toMatchObject({ state: 'amendment', publishVersion: 1, version: before.version + 1 });
   expect(lineOf(after, 'CP-1042')).toEqual(['E', 'E', '', 'V', 'V', '', '']);
-  expect(after.changes.filter(c => c.personCode === 'CP-1042').map(c => [c.from, c.to, c.afterPublish])).toEqual([['N', 'V', true], ['N', 'V', true]]);
+  expect(after.changes.filter(c => c.employeeCode === 'CP-1042').map(c => [c.from, c.to, c.afterPublish])).toEqual([['N', 'V', true], ['N', 'V', true]]);
   expect(await coverOn(api, '2026-08-13', 'Annual leave cover')).toHaveLength(1);
-  const notes = (await stored<NoteRow>(page, 'notifications')).filter(n => n.personId === 'CP-1042');
+  const notes = (await stored<NoteRow>(page, 'notifications')).filter(n => n.employeeId === 'CP-1042');
   expect(notes.filter(n => n.title === 'Rota amended')).toHaveLength(1);
   /* the rota still will not take a manual shift on a day of leave */
-  const manual = await sendVersioned(page, 'PUT', `${weekPath(W33)}/cells`, after.version, { personCode: 'CP-1042', day: 3, code: 'E' });
+  const manual = await sendVersioned(page, 'PUT', `${weekPath(W33)}/cells`, after.version, { employeeCode: 'CP-1042', day: 3, code: 'E' });
   expect([manual.status, (manual.body as { code: string }).code]).toEqual([409, 'ON_LEAVE']);
 
   /* on Team rota: annual leave on both days, and the week shows as amended */
@@ -84,8 +84,8 @@ test('recording sickness puts S on the rota and opens cover; a return to work is
   await expect(info(page, 'Return-to-work meeting requested. The colleague and HR have been notified.')).toBeVisible();
   await expect(page.getByTestId(tid.tsick.arranged)).toContainText('Return-to-work meeting requested');
   await expect(page.getByTestId(tid.tsick.arrange)).toHaveCount(0);
-  const board = (await api.get('/api/v1/leave/sickness')).body as { rows: { personCode: string; episode: { id: string; rtw: unknown } }[] };
-  expect(board.rows.find(r => r.personCode === 'CP-1088')?.episode).toMatchObject({ id: 'sk_004', rtw: { by: { personCode: 'CP-1001' } } });
+  const board = (await api.get('/api/v1/leave/sickness')).body as { rows: { employeeCode: string; episode: { id: string; rtw: unknown } }[] };
+  expect(board.rows.find(r => r.employeeCode === 'CP-1088')?.episode).toMatchObject({ id: 'sk_004', rtw: { by: { employeeCode: 'CP-1001' } } });
 
   /* his sickness on Tuesday fell on a day of his approved leave: give it back */
   const ent = async () => ((await api.get('/api/v1/leave/entitlement/CP-1088')).body as { balance: { leftD: number } }).balance.leftD;

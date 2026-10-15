@@ -69,7 +69,7 @@ test('MOB a switch keeps its shape and gains a 44px hit area; a grown button gro
 test('MOB every input, select and text box is 16px on a phone, so iOS does not zoom on focus', async ({ page, signInAs }) => {
   await signInAs('admin');
   const sizes: Record<string, string[]> = {};
-  for (const [path, ready] of [['/setup/apeople', tid.people.table], ['/setup/aorg', tid.aorg.spine], ['/setup/amods?m=TS', tid.amods.features],
+  for (const [path, ready] of [['/setup/aemployees', tid.employees.table], ['/setup/aorg', tid.aorg.spine], ['/setup/amods?m=TS', tid.amods.features],
     ['/setup/mleave', tid.mleave.card('rota')]] as const) {
     await page.goto(path);
     await page.getByTestId(ready).waitFor();
@@ -92,11 +92,11 @@ test('MOB a table pins its first column, a matrix keeps scrolling, and a record 
   expect(scrolls).toBe(true);
   await expect(matrix.locator('thead')).toBeVisible();
 
-  const people = page.getByTestId(tid.access.usersTable);
-  await expect(people.locator('thead')).toHaveCSS('position', 'absolute');
-  await expect(people.locator('thead')).toHaveCSS('width', '1px');
-  await expect(people.getByRole('columnheader', { name: 'Employee ID' })).toBeAttached();
-  await expect(people.locator('tbody td[data-l="Employee ID"]').first()).toBeVisible();
+  const employees = page.getByTestId(tid.access.usersTable);
+  await expect(employees.locator('thead')).toHaveCSS('position', 'absolute');
+  await expect(employees.locator('thead')).toHaveCSS('width', '1px');
+  await expect(employees.getByRole('columnheader', { name: 'Employee ID' })).toBeAttached();
+  await expect(employees.locator('tbody td[data-l="Employee ID"]').first()).toBeVisible();
 
   await page.goto('/setup/mleave');
   const plain = page.locator('[data-slot="table"][data-variant="plain"]').first();

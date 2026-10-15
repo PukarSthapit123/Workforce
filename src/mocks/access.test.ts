@@ -5,7 +5,7 @@ beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterAll(() => server.close());
 let token = '';
 
-interface SeedAccount { email: string; version: number; userType: string; personCode: string; grants: string[]; revocations: string[] }
+interface SeedAccount { email: string; version: number; userType: string; employeeCode: string; grants: string[]; revocations: string[] }
 interface SeedUserType { version: number; capabilities: string[] }
 interface SeedAudit { act: string; before: unknown; after: unknown }
 

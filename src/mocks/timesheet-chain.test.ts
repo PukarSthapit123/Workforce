@@ -19,7 +19,7 @@ const WRITES = ['timesheetDays', 'integrationAttempts', 'notifications', 'audit'
 interface Day { id: string; version: number; state: string }
 const day = (id: string) => store.coll<Day>('timesheetDays')[id];
 const attempts = () => Object.keys(store.coll('integrationAttempts')).length;
-interface Note { personId: string; event?: string; title: string; body: string }
+interface Note { employeeId: string; event?: string; title: string; body: string }
 const told = (event: string) => Object.values(store.coll<Note>('notifications')).filter(n => n.event === event);
 const decide = (call: Call, id: string, to: 'ok' | 'back', v: number, reason = '') => call('POST', `/api/v1/timesheet-days/${id}/transition`, { to, reason }, v);
 const queue = async (call: Call, qs = '') => ApprovalQueue.parse((await call('GET', `/api/v1/approvals/timesheets${qs}`)).body);
@@ -34,12 +34,12 @@ async function payrollEveryDay(scope = 'All departments') {
 }
 function plant(code: string, date: string, o: Record<string, unknown> = {}) {
   const id = `tsd_${code}_${date}`;
-  store.coll('timesheetDays')[id] = { id, version: 1, updatedAt: FROZEN, personCode: code, date, state: 'pend',
+  store.coll('timesheetDays')[id] = { id, version: 1, updatedAt: FROZEN, employeeCode: code, date, state: 'pend',
     entries: [{ start: '07:00', finish: '15:00', breaks: [{ start: '11:00', end: '11:30' }] }], workType: 'STD', allowances: [], shift: 'E',
     nonWorkingReason: '', captureSource: 'self', enteredBy: code, submittedAt: FROZEN, returnReason: '', warnings: [], history: [], integrationAttemptId: '', ...o };
   return id;
 }
-const managerSigned = [{ from: 'pend', to: 'mgrok', by: { personCode: 'CP-1001', name: 'Rachel Hussain' }, at: FROZEN, reason: '', layer: 'Line manager' }];
+const managerSigned = [{ from: 'pend', to: 'mgrok', by: { employeeCode: 'CP-1001', name: 'Rachel Hussain' }, at: FROZEN, reason: '', layer: 'Line manager' }];
 
 describe('two layers: the line manager, then payroll', () => {
   test('a day reaches ok, and its posting is queued, only after payroll approves', async () => {
@@ -47,12 +47,12 @@ describe('two layers: the line manager, then payroll', () => {
     const mgr = await as('manager'), admin = await as('admin'), before = attempts();
     const first = DayDecided.parse((await decide(mgr, AMARA, 'ok', 1)).body);
     expect(first).toMatchObject({ record: { state: 'mgrok', posting: 'none' }, attempt: null });
-    expect(first.record.history.at(-1)).toMatchObject({ from: 'pend', to: 'mgrok', layer: 'Line manager', by: { personCode: 'CP-1001' } });
+    expect(first.record.history.at(-1)).toMatchObject({ from: 'pend', to: 'mgrok', layer: 'Line manager', by: { employeeCode: 'CP-1001' } });
     expect(attempts()).toBe(before);
     expect(audits().find(a => a.id === first.auditId)).toMatchObject({ act: 'Timesheet passed to payroll', after: { state: 'mgrok' } });
     const second = DayDecided.parse((await decide(admin, AMARA, 'ok', 2)).body);
     expect(second).toMatchObject({ record: { state: 'ok', posting: 'queued' }, attempt: { state: 'queued', dayId: AMARA } });
-    expect(second.record.history.at(-1)).toMatchObject({ from: 'mgrok', to: 'ok', layer: 'Payroll', by: { personCode: 'CP-1002' } });
+    expect(second.record.history.at(-1)).toMatchObject({ from: 'mgrok', to: 'ok', layer: 'Payroll', by: { employeeCode: 'CP-1002' } });
     expect(attempts()).toBe(before + 1);
     expect(audits().find(a => a.id === second.auditId)?.act).toBe('Timesheet approved');
   });
@@ -123,7 +123,7 @@ describe('delegation applies at the payroll layer', () => {
     expect((await queue(jo)).rows.map(r => [r.id, r.decide])).toContainEqual([AMARA, true]);
     const r = DayDecided.parse((await decide(jo, AMARA, 'ok', 2)).body);
     expect(r.record).toMatchObject({ state: 'ok', posting: 'queued' });
-    expect(r.record.history.at(-1)).toMatchObject({ layer: 'Payroll', by: { personCode: 'CP-1153' } });
+    expect(r.record.history.at(-1)).toMatchObject({ layer: 'Payroll', by: { employeeCode: 'CP-1153' } });
   });
   test('a delegation of payroll to the line manager who signed the first layer does not let them sign the second (review I1)', async () => {
     await payrollEveryDay();
@@ -144,7 +144,7 @@ describe('segregation and the line-manager relationship (review I1, I2)', () => 
     if (!t) throw new Error('no manager type');
     t.capabilities = [...t.capabilities, cap];
   }
-  test('one person holding both Team timesheets and payroll approval cannot take a day from awaiting approval to approved', async () => {
+  test('one employee holding both Team timesheets and payroll approval cannot take a day from awaiting approval to approved', async () => {
     managerHolds('pay_appr');
     await payrollEveryDay();
     const mgr = await as('manager'), before = attempts();
@@ -160,7 +160,7 @@ describe('segregation and the line-manager relationship (review I1, I2)', () => 
     expect(DayDecided.parse((await decide(await as('admin'), AMARA, 'ok', 2)).body).record.state).toBe('ok');
   });
   test('the line manager approves the timesheet of a report in another department', async () => {
-    const amara = store.coll<{ department: string }>('people')['per_CP-1042'];
+    const amara = store.coll<{ department: string }>('employees')['emp_CP-1042'];
     if (!amara) throw new Error('no Amara');
     amara.department = 'ADM';
     const r = await decide(await as('manager'), AMARA, 'ok', 1);
@@ -214,24 +214,24 @@ describe('permissions on every layer', () => {
 });
 
 describe('notifications: ts_submitted, ts_approved and ts_returned', () => {
-  test('a submission tells the line manager, the manager\'s approval tells payroll, the last approval tells the person', async () => {
+  test('a submission tells the line manager, the manager\'s approval tells payroll, the last approval tells the employee', async () => {
     await payrollEveryDay();
     const sent = await (await as('employee'))('POST', '/api/v1/timesheets/CP-1042/days/2026-08-13/submit',
       { entries: [{ start: '07:00', finish: '15:00', breaks: [{ start: '11:00', end: '11:30' }] }], shift: 'E' }, 0);
     const id = DaySaved.parse(sent.body).record.id;
-    expect(told('ts_submitted').map(n => [n.personId, n.title, n.body])).toEqual([
+    expect(told('ts_submitted').map(n => [n.employeeId, n.title, n.body])).toEqual([
       ['CP-1001', 'Timesheet submitted', 'Amara Okafor (CP-1042). 13/08/2026. 7h 30m. Awaiting approval.']]);
     await decide(await as('manager'), id, 'ok', 1);
-    expect(told('ts_submitted').slice(1).map(n => [n.personId, n.title, n.body])).toEqual([
+    expect(told('ts_submitted').slice(1).map(n => [n.employeeId, n.title, n.body])).toEqual([
       ['CP-1002', 'Timesheet awaiting approval', 'Amara Okafor (CP-1042). 13/08/2026. 7h 30m. Approved by Rachel Hussain, now waiting on payroll.']]);
     expect(told('ts_approved')).toEqual([]);
     await decide(await as('admin'), id, 'ok', 2);
-    expect(told('ts_approved').map(n => [n.personId, n.body])).toEqual([
+    expect(told('ts_approved').map(n => [n.employeeId, n.body])).toEqual([
       ['CP-1042', '13/08/2026. 7h 30m. Approved by Dee Fitzgerald and queued for Business Central.']]);
   });
-  test('a return tells the person why', async () => {
+  test('a return tells the employee why', async () => {
     await decide(await as('manager'), AMARA, 'back', 1, 'Break missing');
-    expect(told('ts_returned').map(n => [n.personId, n.title, n.body])).toEqual([
+    expect(told('ts_returned').map(n => [n.employeeId, n.title, n.body])).toEqual([
       ['CP-1042', 'Timesheet returned', '12/08/2026. Sent back by Rachel Hussain: "Break missing". Correct it and submit it again.']]);
   });
 });
@@ -273,6 +273,6 @@ describe('a chain edited while a day waits part-way along it (review I5)', () =>
     stored.steps = lineManagerOnly.map(s => ({ ...s, module: 'Timesheet' }));
     const r = DayDecided.parse((await decide(await as('manager'), AMARA, 'ok', 2)).body);
     expect(r.record).toMatchObject({ state: 'ok', posting: 'queued' });
-    expect(r.record.history.at(-1)).toMatchObject({ from: 'mgrok', to: 'ok', layer: 'Line manager', by: { personCode: 'CP-1001' } });
+    expect(r.record.history.at(-1)).toMatchObject({ from: 'mgrok', to: 'ok', layer: 'Line manager', by: { employeeCode: 'CP-1001' } });
   });
 });

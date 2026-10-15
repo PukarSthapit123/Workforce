@@ -31,7 +31,7 @@ test('Team Home: one card per My Team page, each with the count its own page rea
   await waitFor(() => expect(screen.getByTestId(tid.thome.count('tsick'))).toHaveTextContent(shown(sick.counts.triggered)));
   await waitFor(() => expect(screen.getByTestId(tid.thome.count('tcover'))).toHaveTextContent(shown(cover.counts.all)));
   await waitFor(() => expect(screen.getByTestId(tid.thome.count('tnotices'))).toHaveTextContent(notices.counts.current ? `${notices.counts.current} live` : 'Nothing live'));
-  expect(screen.getByTestId(tid.thome.count('tpeople'))).toHaveTextContent('Open');
+  expect(screen.getByTestId(tid.thome.count('temployees'))).toHaveTextContent('Open');
   expect(screen.getByTestId(tid.thome.count('texc'))).toHaveTextContent('Open');
   /* something is waiting somewhere in the seed, and a waiting count is in the warning ink */
   const waitingCounts = ['tteam', 'tleave', 'tsick', 'tcover'].map(v => screen.getByTestId(tid.thome.count(v))).filter(e => /\d+ waiting/.test(e.textContent ?? ''));

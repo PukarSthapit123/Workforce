@@ -12,7 +12,7 @@ import { DEE, RACHEL, W33, lineOf, openRota, rotaWeek, stored, type NoteRow } fr
    access request, because ITACCESS is on, once the clock reaches the shift's day. */
 test.beforeEach(async ({ api }) => { await api.seed('social'); await api.setClock(FROZEN); });
 const info = (page: import('@playwright/test').Page, text: string | RegExp) => page.getByTestId(tid.toast.info).filter({ hasText: text });
-interface Board { requests: { id: string; date: string; shift: string; reason: string; stage: number; open: boolean }[]; filled: { id: string; coverId: string; personCode: string; name: string; confirmed: boolean; itRequest: string }[] }
+interface Board { requests: { id: string; date: string; shift: string; reason: string; stage: number; open: boolean }[]; filled: { id: string; coverId: string; employeeCode: string; name: string; confirmed: boolean; itRequest: string }[] }
 
 test('a manager opens cover for a short day, gives the reason, assigns a suggested colleague, and confirms the shift, which raises an IT request', async ({ page, api }) => {
   test.setTimeout(90_000);
@@ -40,18 +40,18 @@ test('a manager opens cover for a short day, gives the reason, assigns a suggest
 
   const assign = card.locator(`[data-testid^="${tid.tcover.assign(id, '')}"]`).first();
   await expect(assign).toBeVisible();
-  const person = ((await assign.getAttribute('data-testid')) ?? '').slice(tid.tcover.assign(id, '').length);
+  const employee = ((await assign.getAttribute('data-testid')) ?? '').slice(tid.tcover.assign(id, '').length);
   await assign.click();
   await expect(info(page, /assigned and added to the rota\. Confirm it once worked\./)).toBeVisible();
   const after = await board();
   expect(after.requests.find(r => r.id === id)).toBeUndefined();
   const filled = after.filled.find(f => f.coverId === id);
   if (!filled) throw new Error('no filled shift for the request');
-  expect(filled.personCode.replace(/[^A-Za-z0-9-]+/g, '-')).toBe(person);
+  expect(filled.employeeCode.replace(/[^A-Za-z0-9-]+/g, '-')).toBe(employee);
   const week = await rotaWeek(api, W33);
-  expect(lineOf(week, filled.personCode)[4]).toBe('E');
+  expect(lineOf(week, filled.employeeCode)[4]).toBe('E');
   expect(week).toMatchObject({ state: 'amendment', gapDays: [] });
-  expect(week.changes[0]).toMatchObject({ personCode: filled.personCode, to: 'E', afterPublish: true });
+  expect(week.changes[0]).toMatchObject({ employeeCode: filled.employeeCode, to: 'E', afterPublish: true });
 
   /* a shift is confirmed as worked on or after its day, so the clock moves on to Friday evening */
   await page.getByTestId(tid.tcover.confirm(filled.id)).click();
@@ -63,9 +63,9 @@ test('a manager opens cover for a short day, gives the reason, assigns a suggest
   await expect(page.getByTestId(tid.tcover.it(filled.id))).toContainText(/IT access request ITR-\d+/);
   const done = (await board()).filled.find(f => f.id === filled.id);
   expect(done).toMatchObject({ confirmed: true, itRequest: expect.stringMatching(/^ITR-\d+$/) });
-  expect(await stored(page, 'itRequests')).toEqual([expect.objectContaining({ ref: done?.itRequest, personCode: filled.personCode, date: '2026-08-14', status: 'Raised' })]);
+  expect(await stored(page, 'itRequests')).toEqual([expect.objectContaining({ ref: done?.itRequest, employeeCode: filled.employeeCode, date: '2026-08-14', status: 'Raised' })]);
   const notes = await stored<NoteRow>(page, 'notifications');
-  expect(notes.filter(n => n.personId === filled.personCode).length).toBeGreaterThan(0);
+  expect(notes.filter(n => n.employeeId === filled.employeeCode).length).toBeGreaterThan(0);
 
   await signInEmail(page, DEE);
   expect((await auditOf(api, 'coverRequest')).map(a => a.act).sort()).toEqual(['Cover reason set', 'Cover request filled', 'Cover request opened']);

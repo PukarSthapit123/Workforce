@@ -3,8 +3,8 @@
    noticeStatus, NOTICE_STATUS, noticeFor, noticeAudience, noticeAcked,
    noticeScopes, postedNotices, noticeOrder, noticeGate and noticeAction.
 
-   Admins and managers publish notices to the people they are responsible
-   for. An acknowledgement records that a person read one version of the
+   Admins and managers publish notices to the employees they are responsible
+   for. An acknowledgement records that an employee read one version of the
    text, so an edit to the words is a new version and asks everybody again.
    Nothing that went live is deleted: it is withdrawn, with a reason, and
    stays on record. Audience is worked out from the workforce record each
@@ -33,7 +33,7 @@ export const NOTICE_STATES = ['draft', 'live', 'withdrawn'] as const;
 export type NoticeState = (typeof NOTICE_STATES)[number];
 export const NOTICE_STATUSES = ['draft', 'current', 'scheduled', 'expired', 'withdrawn'] as const;
 export type NoticeStatus = (typeof NOTICE_STATUSES)[number];
-export interface NoticeAck { personCode: string; textVersion: number; at: string }
+export interface NoticeAck { employeeCode: string; textVersion: number; at: string }
 export interface NoticeText { textVersion: number; title: string; body: string; by: string; at: string }
 export interface Notice {
   id: string; textVersion: number; title: string; body: string; scope: NoticeScope;
@@ -43,7 +43,7 @@ export interface Notice {
   state: NoticeState; by: string; at: string; withdrawReason: string;
   acks: NoticeAck[]; history: NoticeText[];
 }
-export interface NoticePerson { code: string; location: string; department: string; active: boolean }
+export interface NoticeEmployee { code: string; location: string; department: string; active: boolean }
 
 /* ---------------------------------------------------------------- status */
 /* Draft, live and withdrawn are stored. Scheduled and expired are read off
@@ -61,20 +61,20 @@ export const NOTICE_STATUS: Readonly<Record<NoticeStatus, { label: string; tone:
 };
 
 /* -------------------------------------------------------------- audience */
-export const noticeFor = (n: Pick<Notice, 'scope'>, p: Pick<NoticePerson, 'location' | 'department'> | undefined): boolean => !!p && (
+export const noticeFor = (n: Pick<Notice, 'scope'>, p: Pick<NoticeEmployee, 'location' | 'department'> | undefined): boolean => !!p && (
   n.scope.kind === 'all'
   || (n.scope.kind === 'loc' && p.location === n.scope.code)
   || (n.scope.kind === 'dept' && p.department === n.scope.code && (!n.scope.loc || p.location === n.scope.loc)));
-/* the active people a notice reaches, today */
-export const audienceOf = <P extends NoticePerson>(n: Pick<Notice, 'scope'>, people: readonly P[]): P[] => people.filter(p => p.active && noticeFor(n, p));
-export const ackedNow = (n: Pick<Notice, 'acks' | 'textVersion'>, code: string) => n.acks.some(a => a.personCode === code && a.textVersion === n.textVersion);
-export const ackedEarlier = (n: Pick<Notice, 'acks' | 'textVersion'>, code: string) => !ackedNow(n, code) && n.acks.some(a => a.personCode === code);
-/* the latest acknowledgement a person gave, at any version */
+/* the active employees a notice reaches, today */
+export const audienceOf = <P extends NoticeEmployee>(n: Pick<Notice, 'scope'>, employees: readonly P[]): P[] => employees.filter(p => p.active && noticeFor(n, p));
+export const ackedNow = (n: Pick<Notice, 'acks' | 'textVersion'>, code: string) => n.acks.some(a => a.employeeCode === code && a.textVersion === n.textVersion);
+export const ackedEarlier = (n: Pick<Notice, 'acks' | 'textVersion'>, code: string) => !ackedNow(n, code) && n.acks.some(a => a.employeeCode === code);
+/* the latest acknowledgement an employee gave, at any version */
 export const latestAck = (n: Pick<Notice, 'acks'>, code: string): NoticeAck | undefined =>
-  n.acks.filter(a => a.personCode === code).sort((a, b) => b.textVersion - a.textVersion)[0];
+  n.acks.filter(a => a.employeeCode === code).sort((a, b) => b.textVersion - a.textVersion)[0];
 
 /* What a colleague can see: live, started, and aimed at them. */
-export const myNotices = <N extends Notice>(list: readonly N[], me: NoticePerson | undefined, today: string): N[] =>
+export const myNotices = <N extends Notice>(list: readonly N[], me: NoticeEmployee | undefined, today: string): N[] =>
   list.filter(n => ['current', 'expired'].includes(noticeStatus(n, today)) && noticeFor(n, me));
 /* where a reader stands on one notice: the prototype's noticeStatePill */
 export type ReaderState = 'info' | 'acknowledged' | 'again' | 'owed';
@@ -106,9 +106,9 @@ export interface ScopeWorld {
   location: string;
   locations: readonly { code: string; name: string; active: boolean }[];
   departments: readonly { code: string; name: string }[];
-  people: readonly NoticePerson[];
+  employees: readonly NoticeEmployee[];
 }
-/* A manager works inside their own location and the departments people
+/* A manager works inside their own location and the departments employees
    there belong to. Everything wider needs notice_org, and the server asks
    again rather than trusting the picker. */
 export function noticeScopes(w: ScopeWorld): NoticeScope[] {
@@ -118,12 +118,12 @@ export function noticeScopes(w: ScopeWorld): NoticeScope[] {
     ...w.departments.map((d): NoticeScope => ({ kind: 'dept', code: d.code, loc: '' })),
   ];
   if (!w.location) return [];
-  const depts = [...new Set(w.people.filter(p => p.active && p.location === w.location).map(p => p.department).filter(Boolean))];
+  const depts = [...new Set(w.employees.filter(p => p.active && p.location === w.location).map(p => p.department).filter(Boolean))];
   return [{ kind: 'loc', code: w.location, loc: w.location }, ...depts.map((c): NoticeScope => ({ kind: 'dept', code: c, loc: w.location }))];
 }
 export const inScopes = (s: NoticeScope, scopes: readonly NoticeScope[]) => scopes.some(x => sameScope(x, s));
 /* the notices a poster manages: everything they may target, plus organisation
-   notices shown read-only so a manager knows what their people were told */
+   notices shown read-only so a manager knows what their employees were told */
 export const postedNotices = <N extends Notice>(list: readonly N[], scopes: readonly NoticeScope[]): N[] =>
   list.filter(n => inScopes(n.scope, scopes) || n.scope.kind === 'all');
 
@@ -144,7 +144,7 @@ export const outsideScope = (title: string, label: string): NoticeRefusal => ({ 
 export const cannotPostTo = (label: string): NoticeRefusal => ({ status: 403, code: 'scope', field: 'scope',
   message: `You cannot post to ${label}. It needs Post notices to everyone in Permissions.`, next: 'Choose your location or a department within it.' });
 export const AUDIENCE_FIXED: NoticeRefusal = { status: 409, code: 'AUDIENCE_FIXED', field: 'scope', message: 'The audience is fixed once a notice is live.',
-  next: 'Withdraw it and post a new one to reach different people.' };
+  next: 'Withdraw it and post a new one to reach different employees.' };
 export const WITHDRAWN: NoticeRefusal = { status: 409, code: 'WITHDRAWN', message: 'This notice has been withdrawn, so it cannot be changed.',
   next: 'It stays on record. Post a new notice instead.' };
 export const ALREADY_POSTED: NoticeRefusal = { status: 409, code: 'ALREADY_POSTED', message: 'Already posted.', next: 'It is live for everyone it reaches.' };
@@ -172,9 +172,9 @@ export function fieldsProblem(f: Pick<NoticeFields, 'title' | 'body' | 'from' | 
     next: 'Choose an end date on or after the start date, or leave it blank.' };
   return null;
 }
-/* Acknowledging: the notice is current, asks for it, reaches this person,
+/* Acknowledging: the notice is current, asks for it, reaches this employee,
    is still at the version they read, and they have not already done so. */
-export function ackProblem(n: Notice, me: NoticePerson | undefined, today: string, sentTextVersion: number): NoticeRefusal | null {
+export function ackProblem(n: Notice, me: NoticeEmployee | undefined, today: string, sentTextVersion: number): NoticeRefusal | null {
   if (!me || !noticeFor(n, me) || noticeStatus(n, today) !== 'current' || !n.mustAck) return NOT_OPEN;
   if (ackedNow(n, me.code)) return alreadyAcknowledged(n.textVersion);
   if (sentTextVersion !== n.textVersion) return CHANGED;
@@ -212,15 +212,15 @@ export function planEdit(n: Notice, f: NoticeFields, by: string, at: string): Ed
 }
 
 /* ----------------------------------------------------------------- copy */
-export const peopleIn = (k: number, label: string) => `${plural(k, 'person', 'people')} in ${label}`;
+export const employeesIn = (k: number, label: string) => `${plural(k, 'employee', 'employees')} in ${label}`;
 export const postedToast = (title: string, k: number, label: string, scheduledFrom: string | null) =>
-  `Posted. ${title}. ${peopleIn(k, label)}.${scheduledFrom ? ` They see it from ${formatDmy(scheduledFrom)}.` : ''}`;
+  `Posted. ${title}. ${employeesIn(k, label)}.${scheduledFrom ? ` They see it from ${formatDmy(scheduledFrom)}.` : ''}`;
 export const DRAFT_SAVED = 'Draft saved. Nobody sees it until you post it.';
 export const NOTHING_CHANGED = 'Nothing has changed.';
 export function editedToast(plan: EditPlan, again: number): string {
   const n = plan.next;
   if (n.state === 'draft') return DRAFT_SAVED;
-  if (plan.textChanged) return `Saved as v${n.textVersion}. ${n.mustAck ? `${plural(again, 'person', 'people')} now need to acknowledge it.` : 'Colleagues see the new text.'}`;
+  if (plan.textChanged) return `Saved as v${n.textVersion}. ${n.mustAck ? `${plural(again, 'employee', 'employees')} now need to acknowledge it.` : 'Colleagues see the new text.'}`;
   const list = plan.changes.join(', ');
   return `Saved. ${list.charAt(0).toUpperCase()}${list.slice(1)}.`;
 }

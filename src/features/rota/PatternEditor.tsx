@@ -8,7 +8,7 @@ import {
 } from '@/ui';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import {
-  useAddPatternPeople, useCreatePattern, useGeneratePattern, useUpdatePattern, type PatternGenerated, type PatternRecord, type ShiftTypeRecord, type UpdatePattern,
+  useAddPatternEmployees, useCreatePattern, useGeneratePattern, useUpdatePattern, type PatternGenerated, type PatternRecord, type ShiftTypeRecord, type UpdatePattern,
 } from '@/api/rota';
 import { addDays, periodStart } from '@/domain/time';
 import { GEN_PERIODS, clampCycle, genBy, genLabel, genRange, resizeCycle, shiftBy, shiftName, shiftTime, staggerOffsets, TICK_SOMEONE } from '@/domain/rota';
@@ -19,21 +19,21 @@ const cellHours = (s: { from: string; to: string }) =>
   activeLocale().clock === '24h' ? `${s.from.slice(0, 2)}–${s.to.slice(0, 2)}` : `${formatTime(s.from)}–${formatTime(s.to)}`;
 
 /* The working pattern windows: the prototype's patternDetail inside
-   patternWindow, patternBox and patternPersonBox (qnipay-workforce-v15.html:
+   patternWindow, patternBox and patternEmployeeBox (qnipay-workforce-v15.html:
    8865-8958, 9073-9082, 10329-10411). The editor is shared with Rota setup.
    The prototype applied each field as it changed; here the window edits one
    draft, and Save sends it with If-Match and one audit row, Cancel puts it
-   back. Generating and adding people work on the saved pattern, so they wait
+   back. Generating and adding employees work on the saved pattern, so they wait
    until the draft is saved. */
 
 export type Candidate = z.infer<typeof PatternCandidate>;
 export interface Named { code: string; name: string }
 /* What the windows need to name things and to offer choices. */
 export interface PatternCtx {
-  shifts: readonly ShiftTypeRecord[]; people: readonly Candidate[]; locations: readonly Named[]; jobs: readonly Named[]; costCentres: readonly Named[];
+  shifts: readonly ShiftTypeRecord[]; employees: readonly Candidate[]; locations: readonly Named[]; jobs: readonly Named[]; costCentres: readonly Named[];
   /* the locations a new pattern may cover: the manager's own, or every one an admin manages */
   canCover: readonly Named[]; today: string;
-  /* another location's people on a shared pattern: a manager can neither add nor take them off */
+  /* another location's employees on a shared pattern: a manager can neither add nor take them off */
   elsewhere: readonly string[];
 }
 const nameIn = (list: readonly Named[]) => (code: string) => list.find(x => x.code === code)?.name ?? code;
@@ -71,15 +71,15 @@ function PickChip({ testId, label, onRemove, children }: { testId: string; label
     </span>);
 }
 
-type Draft = Pick<PatternRecord, 'name' | 'cycle' | 'starts' | 'active' | 'days' | 'locations' | 'jobProfiles' | 'costCentre' | 'gen' | 'genFrom' | 'genTo' | 'horizon' | 'people'>;
-const DRAFT_KEYS = ['name', 'cycle', 'starts', 'active', 'days', 'locations', 'jobProfiles', 'costCentre', 'gen', 'genFrom', 'genTo', 'horizon', 'people'] as const;
+type Draft = Pick<PatternRecord, 'name' | 'cycle' | 'starts' | 'active' | 'days' | 'locations' | 'jobProfiles' | 'costCentre' | 'gen' | 'genFrom' | 'genTo' | 'horizon' | 'employees'>;
+const DRAFT_KEYS = ['name', 'cycle', 'starts', 'active', 'days', 'locations', 'jobProfiles', 'costCentre', 'gen', 'genFrom', 'genTo', 'horizon', 'employees'] as const;
 const draftOf = (p: PatternRecord): Draft => Object.fromEntries(DRAFT_KEYS.map(k => [k, structuredClone(p[k])])) as Draft;
 const changes = (p: PatternRecord, d: Draft): UpdatePattern =>
   Object.fromEntries(DRAFT_KEYS.filter(k => JSON.stringify(p[k]) !== JSON.stringify(d[k])).map(k => [k, d[k]]));
 
 /* patternWindow with patternDetail (v15:9073-9082, 8865-8958). */
-export function PatternEditor({ pattern, ctx, onClose, onAddPeople, onDelete, onUpload }: {
-  pattern: PatternRecord; ctx: PatternCtx; onClose: () => void; onAddPeople: () => void; onDelete: () => void;
+export function PatternEditor({ pattern, ctx, onClose, onAddEmployees, onDelete, onUpload }: {
+  pattern: PatternRecord; ctx: PatternCtx; onClose: () => void; onAddEmployees: () => void; onDelete: () => void;
   /* Upload patterns from a file (simulated), offered where the prototype offers it */
   onUpload?: () => void;
 }) {
@@ -166,7 +166,7 @@ export function PatternEditor({ pattern, ctx, onClose, onAddPeople, onDelete, on
                 <option value="">{d.locations.length ? 'Add another location…' : 'Choose a location…'}</option>
                 {ctx.canCover.filter(l => !d.locations.includes(l.code)).map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
               </NativeSelect></Field>
-            <Field label="Job profiles" hint="Only people on these job profiles can be put on the pattern." error={fe('jobProfiles')}>
+            <Field label="Job profiles" hint="Only employees on these job profiles can be put on the pattern." error={fe('jobProfiles')}>
               <NativeSelect testId={tid.tpat.addJob} value="" onChange={e => { if (e.target.value) set({ jobProfiles: [...d.jobProfiles, e.target.value] }); }}>
                 <option value="">{d.jobProfiles.length ? 'Add another job profile…' : 'Choose a job profile…'}</option>
                 {ctx.jobs.filter(j => !d.jobProfiles.includes(j.code)).map(j => <option key={j.code} value={j.code}>{j.name}</option>)}
@@ -196,40 +196,40 @@ export function PatternEditor({ pattern, ctx, onClose, onAddPeople, onDelete, on
         </div>
         {run.ok
           ? <Banner testId={tid.tpat.range} tone="info" title={`This run covers ${run.range}`}>
-              {pluralOf(run.span, 'day')} · {pluralOf(run.shifts, 'shift')} for {pluralOf(d.people.length, 'person', 'people')}{d.people.length ? '.' : '. Add somebody first.'}</Banner>
+              {pluralOf(run.span, 'day')} · {pluralOf(run.shifts, 'shift')} for {pluralOf(d.employees.length, 'employee', 'employees')}{d.employees.length ? '.' : '. Add somebody first.'}</Banner>
           : <Banner testId={tid.tpat.range} tone="warn" title={run.message} />}
 
-        <div className="mt-[14px] mb-sm flex items-center text-xs font-bold tracking-[.08em] text-text-muted">People on this pattern
-          <Tip testId={tid.tpat.peopleTip} text="Each person starts on a different day of the cycle, which is how one pattern covers every shift every day." /></div>
-        <Table dense data-testid={tid.tpat.people}>
+        <div className="mt-[14px] mb-sm flex items-center text-xs font-bold tracking-[.08em] text-text-muted">Employees on this pattern
+          <Tip testId={tid.tpat.employeesTip} text="Each employee starts on a different day of the cycle, which is how one pattern covers every shift every day." /></div>
+        <Table dense data-testid={tid.tpat.employees}>
           <TableHeader><TableRow>
-            <TableHead>Person</TableHead><TableHead>Job profile</TableHead><TableHead>Location</TableHead>
+            <TableHead>Employee</TableHead><TableHead>Job profile</TableHead><TableHead>Location</TableHead>
             <TableHead className="text-right">Starts on day</TableHead><TableHead>First shift they get</TableHead><TableHead><span className="sr-only">Actions</span></TableHead>
           </TableRow></TableHeader>
           <TableBody>
-            {d.people.length ? d.people.map((x, i) => {
-              const pe = ctx.people.find(c => c.code === x.personCode);
+            {d.employees.length ? d.employees.map((x, i) => {
+              const pe = ctx.employees.find(c => c.code === x.employeeCode);
               const first = d.days[(((x.offset - 1) % d.cycle) + d.cycle) % d.cycle] ?? '';
               return (
-                <Row key={x.personCode} testId={tid.tpat.person(x.personCode)}>
-                  <TableCell><div className="flex items-center gap-[10px]"><Avatar name={pe?.name ?? x.personCode} />
-                    <div><strong>{pe?.name ?? x.personCode}</strong><div className="font-mono text-xs text-text-muted">{x.personCode}</div></div></div></TableCell>
+                <Row key={x.employeeCode} testId={tid.tpat.employee(x.employeeCode)}>
+                  <TableCell><div className="flex items-center gap-[10px]"><Avatar name={pe?.name ?? x.employeeCode} />
+                    <div><strong>{pe?.name ?? x.employeeCode}</strong><div className="font-mono text-xs text-text-muted">{x.employeeCode}</div></div></div></TableCell>
                   <TableCell className="text-xs text-text-muted">{pe ? jobName(pe.jobProfile) : '—'}</TableCell>
                   <TableCell className="text-xs text-text-muted">{pe ? locName(pe.location) : '—'}</TableCell>
-                  <TableCell className="text-right"><UnitInput testId={tid.tpat.offset(x.personCode)} unit={`of ${d.cycle}`} aria-label={`${pe?.name ?? x.personCode} starts on day`}
+                  <TableCell className="text-right"><UnitInput testId={tid.tpat.offset(x.employeeCode)} unit={`of ${d.cycle}`} aria-label={`${pe?.name ?? x.employeeCode} starts on day`}
                     type="number" inputMode="numeric" min="1" max={d.cycle} className="ml-auto [&_input]:w-[46px]" value={x.offset}
-                    aria-invalid={fe(`people.${i}.offset`) ? true : undefined}
-                    onChange={e => set({ people: d.people.map((y, k) => (k === i ? { ...y, offset: Math.max(1, Math.min(d.cycle, Math.trunc(Number(e.target.value)) || 1)) } : y)) })} /></TableCell>
-                  <TableCell className="text-xs text-text-muted" data-testid={tid.tpat.first(x.personCode)}>{first ? `${shiftName(sh, first) || first} · ${shiftTime(sh, first)}` : 'Rest day'}</TableCell>
-                  <TableCell className="text-right">{!ctx.elsewhere.includes(x.personCode) && <Button testId={tid.tpat.removePerson(x.personCode)} kind="ghost" small
-                    onClick={() => set({ people: d.people.filter((_, k) => k !== i) })}>Remove</Button>}</TableCell>
+                    aria-invalid={fe(`employees.${i}.offset`) ? true : undefined}
+                    onChange={e => set({ employees: d.employees.map((y, k) => (k === i ? { ...y, offset: Math.max(1, Math.min(d.cycle, Math.trunc(Number(e.target.value)) || 1)) } : y)) })} /></TableCell>
+                  <TableCell className="text-xs text-text-muted" data-testid={tid.tpat.first(x.employeeCode)}>{first ? `${shiftName(sh, first) || first} · ${shiftTime(sh, first)}` : 'Rest day'}</TableCell>
+                  <TableCell className="text-right">{!ctx.elsewhere.includes(x.employeeCode) && <Button testId={tid.tpat.removeEmployee(x.employeeCode)} kind="ghost" small
+                    onClick={() => set({ employees: d.employees.filter((_, k) => k !== i) })}>Remove</Button>}</TableCell>
                 </Row>);
-            }) : <TableRow><TableCell colSpan={6}><div data-testid={tid.tpat.noPeople} className="px-lg py-xl text-center text-sm text-text-muted">Nobody is on this pattern yet</div></TableCell></TableRow>}
+            }) : <TableRow><TableCell colSpan={6}><div data-testid={tid.tpat.noEmployees} className="px-lg py-xl text-center text-sm text-text-muted">Nobody is on this pattern yet</div></TableCell></TableRow>}
           </TableBody>
         </Table>
         <div className="mt-lg flex flex-wrap justify-end gap-sm">
           <Button testId={tid.tpat.run} kind="secondary" disabled={dirty} title={later} pending={gen.pending(pattern.code)} onClick={() => gen.run(pattern)}>Generate the rota from this pattern</Button>
-          <Button testId={tid.tpat.editorAdd} kind="ghost" disabled={dirty} title={later} onClick={onAddPeople}>Add a person</Button>
+          <Button testId={tid.tpat.editorAdd} kind="ghost" disabled={dirty} title={later} onClick={onAddEmployees}>Add an employee</Button>
           {onUpload && <Button testId={tid.patUpload.editorOpen} kind="ghost" onClick={onUpload}>Upload patterns from a file</Button>}
           <Button testId={tid.tpat.remove} kind="danger" disabled={dirty} title={later} onClick={onDelete}>Delete this pattern</Button>
         </div>
@@ -259,7 +259,7 @@ export function NewPatternDialog({ patterns, ctx, onClose, onCreated }: {
       costCentre: f.cc || base?.costCentre || '', gen: f.gen, horizon: genBy(f.gen).months ?? 1,
     }, { onSuccess: r => {
       onCreated(r.record.code);
-      toastInfo(`${name} created as a draft`, `${base ? `Copied from ${base.name}. ` : ''}Set its cycle and add people, then generate the rota.`);
+      toastInfo(`${name} created as a draft`, `${base ? `Copied from ${base.name}. ` : ''}Set its cycle and add employees, then generate the rota.`);
     } });
   };
   const multi = (e: { target: HTMLSelectElement }) => Array.from(e.target.selectedOptions).map(o => o.value);
@@ -269,7 +269,7 @@ export function NewPatternDialog({ patterns, ctx, onClose, onCreated }: {
         <Button testId={tid.tpat.newCancel} kind="ghost" onClick={onClose}>Cancel</Button>
         <Button testId={tid.tpat.newCreate} kind="primary" pending={create.anyPending} onClick={go}>Create pattern</Button>
       </>}>
-      <Small className="mb-md">Created as a draft. Set its cycle and add people in the pattern window, then generate the rota from it.</Small>
+      <Small className="mb-md">Created as a draft. Set its cycle and add employees in the pattern window, then generate the rota from it.</Small>
       <Field label="Pattern name" required error={named ? create.fieldError('name') : 'A name is required.'}>
         <TextInput testId={tid.tpat.newName} placeholder="e.g. 3-on / 3-off twilights" value={f.name} onChange={e => { set({ name: e.target.value }); setNamed(true); }} /></Field>
       <FieldGrid>
@@ -278,7 +278,7 @@ export function NewPatternDialog({ patterns, ctx, onClose, onCreated }: {
         <Field label="First day of the cycle" hint="Patterns run in whole cycles from this day." error={create.fieldError('starts')}>
           <TextInput testId={tid.tpat.newStart} type="date" value={f.starts} onChange={e => set({ starts: e.target.value })} /></Field>
       </FieldGrid>
-      <Field label="Start from" hint="Copying brings the cycle, locations, job profiles and cost centre, not the people.">
+      <Field label="Start from" hint="Copying brings the cycle, locations, job profiles and cost centre, not the employees.">
         <NativeSelect testId={tid.tpat.newBase} value={f.base} onChange={e => set({ base: e.target.value })}>
           <option value="">Blank: every day a rest day</option>
           {patterns.map(p => <option key={p.code} value={p.code}>Copy {p.name} · {p.cycle}-day cycle</option>)}
@@ -305,16 +305,16 @@ export function NewPatternDialog({ patterns, ctx, onClose, onCreated }: {
     </Modal>);
 }
 
-/* patternPersonBox and pp-add (v15:10366-10411, 12348-12375): several people
+/* patternEmployeeBox and pp-add (v15:10366-10411, 12348-12375): several employees
    at once, staggered across the days that carry a shift, or all on one day. */
-export function PatternPeopleDialog({ pattern, ctx, onClose }: { pattern: PatternRecord; ctx: PatternCtx; onClose: () => void }) {
+export function PatternEmployeesDialog({ pattern, ctx, onClose }: { pattern: PatternRecord; ctx: PatternCtx; onClose: () => void }) {
   const [ticked, setTicked] = useState<string[]>([]);
   const [mode, setMode] = useState<'stagger' | 'same'>('stagger');
   const [start, setStart] = useState('1');
   const [warn, setWarn] = useState(false);
-  const add = useAddPatternPeople();
-  const already = new Set(pattern.people.map(x => x.personCode));
-  const pool = ctx.people.filter(x => !already.has(x.code));
+  const add = useAddPatternEmployees();
+  const already = new Set(pattern.employees.map(x => x.employeeCode));
+  const pool = ctx.employees.filter(x => !already.has(x.code));
   const fits = (x: Candidate) => (!pattern.locations.length || pattern.locations.includes(x.location)) && (!pattern.jobProfiles.length || pattern.jobProfiles.includes(x.jobProfile));
   const eligible = pool.filter(fits), others = pool.filter(x => !fits(x));
   const shiftDays = pattern.days.flatMap((c, i) => (c ? [i + 1] : []));
@@ -323,21 +323,21 @@ export function PatternPeopleDialog({ pattern, ctx, onClose }: { pattern: Patter
   const go = () => {
     if (!ticked.length) { setWarn(true); return; }
     const s = Number(start), n = ticked.length;
-    add.mutate({ pattern, body: { personCodes: ticked, start: s, mode } }, { onSuccess: () => {
+    add.mutate({ pattern, body: { employeeCodes: ticked, start: s, mode } }, { onSuccess: () => {
       onClose();
       const ring = shiftDays.length || pattern.cycle;
       toastInfo(`${n} added to ${pattern.name} · ${mode === 'same' ? `all from day ${s}` : `staggered across ${ring} day(s)`}`,
         `Starting days: ${staggerOffsets(pattern.days, s, mode, n).join(', ')}.`);
     } });
   };
-  const person = (x: Candidate) => (
+  const employee = (x: Candidate) => (
     <label key={x.code} className="flex cursor-pointer items-start gap-[9px] rounded-sm px-sm py-[7px] hover:bg-surface-tint">
       <CheckboxField testId={tid.tpat.pick(x.code)} className="mt-[2px]" checked={ticked.includes(x.code)} onCheckedChange={v => toggle(x.code, v === true)} />
       <span><strong>{x.name}</strong><span className="block text-xs text-text-muted">{jobName(x.jobProfile)} · {locName(x.location)} · {x.category}</span></span>
     </label>);
   const group = (label: string) => <div className="px-sm pt-sm pb-xs text-xs font-semibold tracking-[.04em] text-text-muted uppercase">{label}</div>;
   return (
-    <Modal open onOpenChange={o => { if (!o) onClose(); }} title={`Add people to ${pattern.name}`} width="wide"
+    <Modal open onOpenChange={o => { if (!o) onClose(); }} title={`Add employees to ${pattern.name}`} width="wide"
       footer={<>
         <Button testId={tid.tpat.pickCancel} kind="ghost" onClick={onClose}>Cancel</Button>
         <Button testId={tid.tpat.pickAdd} kind="primary" pending={add.anyPending} onClick={go}>Add to the pattern</Button>
@@ -346,8 +346,8 @@ export function PatternPeopleDialog({ pattern, ctx, onClose }: { pattern: Patter
         <div>
           <div className="mb-[6px] flex items-center text-xs font-semibold">Who to add<Tip testId={tid.tpat.pickWhoTip} text="Tick as many as you like. Everyone ticked is added in one go." /></div>
           <div className="max-h-[280px] overflow-auto rounded-sm border p-xs">
-            {eligible.length > 0 && <>{group('Matches this pattern’s locations and job profiles')}{eligible.map(person)}</>}
-            {others.length > 0 && <>{group('Everyone else')}{others.map(person)}</>}
+            {eligible.length > 0 && <>{group('Matches this pattern’s locations and job profiles')}{eligible.map(employee)}</>}
+            {others.length > 0 && <>{group('Everyone else')}{others.map(employee)}</>}
             {!pool.length && <div data-testid={tid.tpat.pickNone} className="px-lg py-xl text-center text-sm text-text-muted">Nobody left to add</div>}
           </div>
           {!eligible.length && pool.length > 0 && <Small className="mt-xs">Nobody matches this pattern’s locations and job profiles yet. The list is everyone else.</Small>}

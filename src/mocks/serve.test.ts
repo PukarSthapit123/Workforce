@@ -90,7 +90,7 @@ describe('a versioned write', () => {
     checkVersion(t);
     const next = { ...t, name: body.name, version: t.version + 1 };
     things()[t.id] = next;
-    return { record: next, auditId: writeAudit({ who: { personCode: session.account.personCode, name: 'x' }, act: 'Thing renamed', entity: 'thing', entityId: t.id }) };
+    return { record: next, auditId: writeAudit({ who: { employeeCode: session.account.employeeCode, name: 'x' }, act: 'Thing renamed', entity: 'thing', entityId: t.id }) };
   });
   test('gets typed params, body and session, and checks the version after the lookup', async () => {
     server.use(put());
@@ -129,7 +129,7 @@ test('a refusal thrown after a write undoes the write and its audit row, so a re
   server.use(serve(putThing, ({ checkVersion }) => {
     const t = t1();
     things().t1 = { ...t, name: 'Half' };
-    writeAudit({ who: { personCode: 'X', name: 'X' }, act: 'Half', entity: 'thing', entityId: 't1' });
+    writeAudit({ who: { employeeCode: 'X', name: 'X' }, act: 'Half', entity: 'thing', entityId: 't1' });
     checkVersion(t);
     return { record: t, auditId: null };
   }));

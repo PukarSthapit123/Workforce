@@ -14,7 +14,7 @@ import { bump, refuse } from './http';
 import { serve } from './serve';
 import { actor } from './auth';
 import { writeAudit } from './audit';
-import { effectiveCode, inScope, nameOf, personByCode, recordAt, type Signed } from './world';
+import { effectiveCode, inScope, nameOf, employeeByCode, recordAt, type Signed } from './world';
 import { locationFor, rosterWeek, viewable } from './hours';
 import { coverageGaps, hoursRulesFor } from './rota';
 import { escalatedLeave } from './leave';
@@ -38,30 +38,30 @@ interface StoredLocation { code: string; name: string; active?: boolean }
 const activeLocations = () => Object.values(store.coll<StoredLocation>('locations')).filter(l => l.active !== false).map(l => l.code);
 /* A posting's location is its day's colleague's; a batch (no day) is every location's. */
 function postingLocation(a: IntegrationAttempt): string | null {
-  const day = a.dayId ? recordAt(store.coll<{ personCode: string }>('timesheetDays'), a.dayId) : undefined;
-  return (day && personByCode(day.personCode)?.location) || null;
+  const day = a.dayId ? recordAt(store.coll<{ employeeCode: string }>('timesheetDays'), a.dayId) : undefined;
+  return (day && employeeByCode(day.employeeCode)?.location) || null;
 }
 function factsAt(locations: readonly string[]): ExceptionFacts {
   const at = new Set(locations);
-  const people = locations.flatMap(location => {
+  const employees = locations.flatMap(location => {
     const week = rosterWeek(location);
     return week.rows.map(r => {
-      const w = hoursRulesFor(r.person).worker;
-      return { code: r.person.code, name: r.person.name, location, weekStart: week.weekStart, flags: r.position.flags, missing: r.missing,
+      const w = hoursRulesFor(r.employee).worker;
+      return { code: r.employee.code, name: r.employee.name, location, weekStart: week.weekStart, flags: r.position.flags, missing: r.missing,
         cleared: w.cleared, dbsExpiry: w.dbsExpiry, qualifications: w.qualifications };
     });
   });
   const gaps = locations.flatMap(location => coverageGaps(location, rosterWeek(location).weekStart)
     .map(g => ({ ...g, location, locationName: nameOf('locations', location) })));
   const leave = escalatedLeave().flatMap(l => {
-    const p = personByCode(l.personCode);
+    const p = employeeByCode(l.employeeCode);
     return p && at.has(p.location) ? [{ ...l, name: p.name, location: p.location }] : [];
   });
   const postings = Object.values(store.coll<IntegrationAttempt>('integrationAttempts')).filter(a => a.state === 'failed').flatMap(a => {
     const location = postingLocation(a);
     return location === null || at.has(location) ? [{ id: a.id, ref: a.ref, attempt: a.attempt, reason: a.reason ?? a.cause ?? '', location }] : [];
   });
-  return { people, gaps, leave, postings };
+  return { employees, gaps, leave, postings };
 }
 
 /* ------------------------------------------------------------ the views */
@@ -70,7 +70,7 @@ function itemOf(x: DerivedException, self: string | null): ExceptionItem {
   const h = recordAt(handlings(), x.id);
   return { id: x.id, version: h?.version ?? 0, key: x.key, kind: x.kind, severity: x.severity, subject: x.subject, text: x.text, location: x.location,
     source: x.source, state: h?.state ?? 'open', owner: h?.owner ?? null, resolution: h?.resolution ?? '', firstRecorded: h?.firstRecorded ?? null,
-    history: h?.history ?? [], mine: self !== null && x.personCode === self };
+    history: h?.history ?? [], mine: self !== null && x.employeeCode === self };
 }
 
 /* Payroll readiness (module 6 group 4): every exception at every active location, with its handling. */
@@ -95,7 +95,7 @@ function move(m: ExceptionMove, s: Signed, id: string, note: string, checkVersio
   const was: Handling = stored ?? UNHANDLED;
   const problem = moveProblem(was.state, m, note);
   if (problem) return refuseWith(problem);
-  const w = actor(s), by = { personCode: w.personCode, name: w.name };
+  const w = actor(s), by = { employeeCode: w.employeeCode, name: w.name };
   const next = applyMove(was, m, by, now, note);
   const saved: StoredHandling = stored ? bump(stored, next)
     : { id: x.id, version: 1, updatedAt: now, key: x.key, kind: x.kind, subject: x.subject, firstRecorded: now, ...next };
@@ -104,7 +104,7 @@ function move(m: ExceptionMove, s: Signed, id: string, note: string, checkVersio
   const auditId = writeAudit({ who: w, act: moveAuditAct(m), entity: 'exception', entityId: x.id,
     before: { state: was.state, owner: was.owner?.name ?? null },
     after: { state: next.state, owner: next.owner?.name ?? null, detail: `${x.kind} · ${x.subject}${n ? ` · "${n}"` : ''}` } });
-  return { record: itemOf(x, w.personCode), auditId, message: MOVE_TOAST[m] };
+  return { record: itemOf(x, w.employeeCode), auditId, message: MOVE_TOAST[m] };
 }
 
 export const exceptionHandlers = [

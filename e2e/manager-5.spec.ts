@@ -1,6 +1,6 @@
 import { test, expect, FROZEN } from './support/fixtures';
 import { tid } from '../src/testids';
-import { personByCode } from './support/read';
+import { employeeByCode } from './support/read';
 import { signInEmail } from './support/timesheet';
 import { PRIYA, PUKAR, TOM, completeMine, myCase, onbAudit, onbNotes, openTracker, pdf, teamOf, uploadDoc } from './support/onboarding';
 
@@ -11,7 +11,7 @@ import { PRIYA, PUKAR, TOM, completeMine, myCase, onbAudit, onbNotes, openTracke
    Start them while the right to work is unverified opens the not-ready
    dialog, from which he chases; once nothing blocks, Start them makes Tom
    active and the tracker drops him. Invite moves Priya from candidate to
-   preboarding, saying no email is sent; Add a new starter opens the person
+   preboarding, saying no email is sent; Add a new starter opens the employee
    form set to candidate. Sessions switch by signing in again, as module 4. */
 test.beforeEach(async ({ api }) => { await api.seed('qnipay'); await api.setClock(FROZEN); });
 const info = (page: import('@playwright/test').Page, text: string | RegExp) => page.getByTestId(tid.toast.info).filter({ hasText: text });
@@ -33,7 +33,7 @@ test('a manager checks documents, rejects one with a reason the starter acts on,
   await page.getByTestId(tid.tonb.chase).click();
   await expect(info(page, 'Tom Achterberg reminded. 1 outstanding.')).toBeVisible();
   await expect(page.getByTestId(tid.modal.root)).toHaveCount(0);
-  expect((await personByCode(api, 'EMP003')).state).toBe('preboard');
+  expect((await employeeByCode(api, 'EMP003')).state).toBe('preboard');
 
   /* proof of address is verified */
   await page.getByTestId(tid.tonb.check('EMP003', 'addr')).click();
@@ -59,7 +59,7 @@ test('a manager checks documents, rejects one with a reason the starter acts on,
   const back = page.getByTestId(tid.onb.sentBack);
   await expect(back.getByTestId(tid.onb.docReason('rtw'))).toHaveText('Reason: The passport page is cut off. Send the whole photo page.');
   await expect(back.getByTestId(tid.onb.docState('rtw'))).toContainText('Rejected');
-  expect((await onbNotes(page)).filter(n => n.personId === 'EMP003').map(n => n.body).join(' ')).toContain('The passport page is cut off.');
+  expect((await onbNotes(page)).filter(n => n.employeeId === 'EMP003').map(n => n.body).join(' ')).toContain('The passport page is cut off.');
   await uploadDoc(page, 'rtw', pdf('passport-full.pdf'));
   await expect(info(page, 'Right to work: passport-full.pdf is waiting to be checked.')).toBeVisible();
   await back.getByTestId(tid.onb.next).click();
@@ -78,14 +78,14 @@ test('a manager checks documents, rejects one with a reason the starter acts on,
   await page.getByTestId(tid.tonb.start('EMP003')).click();
   await expect(info(page, 'Tom Achterberg is active. They can now be scheduled and paid.')).toBeVisible();
   await expect(page.getByTestId(tid.tonb.row('EMP003'))).toHaveCount(0);
-  expect((await personByCode(api, 'EMP003')).state).toBe('active');
-  expect((await teamOf(api)).rows.map(r => r.person.code)).not.toContain('EMP003');
+  expect((await employeeByCode(api, 'EMP003')).state).toBe('active');
+  expect((await teamOf(api)).rows.map(r => r.employee.code)).not.toContain('EMP003');
   const rows = await onbAudit(page);
   expect(rows.find(a => a.act === 'Employee active')).toMatchObject({ entityId: 'EMP003', reason: 'Onboarding complete' });
   expect(rows.filter(a => a.act === 'Onboarding chased')).toHaveLength(1);
 });
 
-test('Invite moves a candidate to preboarding and says no email is sent; Add a new starter opens the person form set to candidate', async ({ page, api }) => {
+test('Invite moves a candidate to preboarding and says no email is sent; Add a new starter opens the employee form set to candidate', async ({ page, api }) => {
   await signInEmail(page, PUKAR);
   await openTracker(page);
   await expect(page.getByTestId(tid.tonb.state('EMP002'))).toContainText('Candidate');
@@ -94,20 +94,20 @@ test('Invite moves a candidate to preboarding and says no email is sent; Add a n
   await expect(info(page, `Priya Raman is invited. They sign in with ${PRIYA}. Invitation emails are a future enhancement, so tell them yourself.`)).toBeVisible();
   await expect(page.getByTestId(tid.tonb.state('EMP002'))).toContainText('Preboarding');
   await expect(page.getByTestId(tid.tonb.invite('EMP002'))).toHaveCount(0);
-  expect((await personByCode(api, 'EMP002')).state).toBe('preboard');
+  expect((await employeeByCode(api, 'EMP002')).state).toBe('preboard');
   expect((await onbAudit(page)).find(a => a.act === 'Onboarding invited')).toMatchObject({ entityId: 'EMP002', reason: 'Invited to complete onboarding' });
-  expect((await onbNotes(page)).filter(n => n.personId === 'EMP002').map(n => n.title)).toEqual(['Onboarding invitation']);
+  expect((await onbNotes(page)).filter(n => n.employeeId === 'EMP002').map(n => n.title)).toEqual(['Onboarding invitation']);
 
-  /* Add a new starter: the 1b person form, starting as a candidate */
+  /* Add a new starter: the 1b employee form, starting as a candidate */
   await page.getByTestId(tid.tonb.add).click();
-  await page.getByTestId(tid.personForm.root).waitFor();
-  await expect(page.getByTestId(tid.personForm.field('state'))).toContainText('Candidate');
-  await page.getByTestId(tid.personForm.field('name')).fill('Sarah Lindqvist');
-  await page.getByTestId(tid.personForm.field('email')).fill('sarah.lindqvist@dogmagroup.co.uk');
-  await page.getByTestId(tid.personForm.save).click();
+  await page.getByTestId(tid.employeeForm.root).waitFor();
+  await expect(page.getByTestId(tid.employeeForm.field('state'))).toContainText('Candidate');
+  await page.getByTestId(tid.employeeForm.field('name')).fill('Sarah Lindqvist');
+  await page.getByTestId(tid.employeeForm.field('email')).fill('sarah.lindqvist@dogmagroup.co.uk');
+  await page.getByTestId(tid.employeeForm.save).click();
   await expect(info(page, /Sarah Lindqvist created/)).toBeVisible();
-  await expect(page.getByTestId(tid.personForm.root)).toHaveCount(0);
-  const added = (await teamOf(api)).rows.find(r => r.person.code !== 'EMP002' && r.person.code !== 'EMP003');
-  expect(added?.person.state).toBe('candidate');
-  await expect(page.getByTestId(tid.tonb.row(added?.person.code ?? ''))).toContainText('Sarah Lindqvist');
+  await expect(page.getByTestId(tid.employeeForm.root)).toHaveCount(0);
+  const added = (await teamOf(api)).rows.find(r => r.employee.code !== 'EMP002' && r.employee.code !== 'EMP003');
+  expect(added?.employee.state).toBe('candidate');
+  await expect(page.getByTestId(tid.tonb.row(added?.employee.code ?? ''))).toContainText('Sarah Lindqvist');
 });

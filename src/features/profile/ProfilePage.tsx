@@ -8,8 +8,8 @@ import { flagOn } from '@/domain/modules';
 import { buttonVariants } from '@/ui/shadcn/button';
 import { useNames } from '@/api/reference';
 import { formatDate } from '@/lib/format';
-import { StatePill } from '@/features/people/StatePill';
-import { perWeek } from '@/features/people/PersonRecord';
+import { StatePill } from '@/features/employees/StatePill';
+import { perWeek } from '@/features/employees/EmployeeRecord';
 import { ProposeChange } from './ProposeChange';
 
 /* Ported from the prototype's essProfile (qnipay-workforce-v15.html:5587-
@@ -20,7 +20,7 @@ export function ProfilePage() {
   const profile = useProfile(), names = useNames(), tenant = useTenant();
   const docs = tenant.data ? flagOn(tenant.data.modules, tenant.data.flags, 'DOCS') : false;
   const [proposing, setProposing] = useState(false);
-  const data = profile.data, p = data?.person;
+  const data = profile.data, p = data?.employee;
   return (
     <Page testId={tid.page('profile')}>
       <PageHead title="My profile" crumb="My work · Profile" actions={<GuideButton view="profile" />} />

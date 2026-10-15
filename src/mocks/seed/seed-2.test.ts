@@ -9,8 +9,8 @@ import {
 type Rec = Record<string, unknown> & { id: string };
 interface SeedFile { data: Record<string, Record<string, Rec>> }
 interface Day extends Rec {
-  personCode: string; date: string; state: string; entries: TimeEntry[]; captureSource: string; enteredBy: string;
-  history: { from: string; to: string; by: { personCode: string } }[]; returnReason: string; integrationAttemptId: string;
+  employeeCode: string; date: string; state: string; entries: TimeEntry[]; captureSource: string; enteredBy: string;
+  history: { from: string; to: string; by: { employeeCode: string } }[]; returnReason: string; integrationAttemptId: string;
 }
 interface Config extends Rec {
   rules: CaptureRules; cutoff: string; timeFormat: TimeFormat; weekGrid: string; weekLayout: string;
@@ -25,12 +25,12 @@ const NOW = clockFromIso('2026-08-13T08:12:00.000Z');
 for (const [name, raw] of Object.entries({ social, qnipay })) {
   const seed = raw as unknown as SeedFile;
   describe(`seed ${name} for module 2`, () => {
-    test('every timesheet day belongs to a person, is in a known state and has a history that got it there', () => {
-      const people = new Set(vals(seed, 'people').map(p => p.code));
+    test('every timesheet day belongs to an employee, is in a known state and has a history that got it there', () => {
+      const employees = new Set(vals(seed, 'employees').map(p => p.code));
       for (const d of vals<Day>(seed, 'timesheetDays')) {
-        expect(people.has(d.personCode) && people.has(d.enteredBy), d.id).toBe(true);
+        expect(employees.has(d.employeeCode) && employees.has(d.enteredBy), d.id).toBe(true);
         expect(TS_STATES as readonly string[], d.id).toContain(d.state);
-        expect(d.id).toBe(`tsd_${d.personCode}_${d.date}`);
+        expect(d.id).toBe(`tsd_${d.employeeCode}_${d.date}`);
         let at = 'draft';
         for (const h of d.history) { expect(h.from, d.id).toBe(at); expect(tsCan(h.from, h.to), d.id).toBe(true); at = h.to; }
         expect(at, d.id).toBe(d.state);
@@ -60,8 +60,8 @@ for (const [name, raw] of Object.entries({ social, qnipay })) {
     });
     test('the multi-week catch-up is two past weeks in draft, as days', () => {
       const drafts = vals<Day>(seed, 'timesheetDays').filter(d => d.state === 'draft');
-      const owner = drafts[0]?.personCode ?? '';
-      expect(drafts.every(d => d.personCode === owner)).toBe(true);
+      const owner = drafts[0]?.employeeCode ?? '';
+      expect(drafts.every(d => d.employeeCode === owner)).toBe(true);
       const total = (ws: string) => weekTotals(ws, drafts.map(d => ({ date: d.date, entries: d.entries }))).weekMinutes;
       expect([weekLabel('2026-08-03'), total('2026-08-03')]).toEqual(['Week 32 · 03–09 Aug 2026', 2250]);
       expect([weekLabel('2026-07-27'), total('2026-07-27')]).toEqual(['Week 31 · 27 Jul – 02 Aug 2026', 1800]);
@@ -93,9 +93,9 @@ for (const [name, raw] of Object.entries({ social, qnipay })) {
 test('qnipay maps the six submissions to Manish Nepal\'s six active reports at his location (D10)', () => {
   const s = qnipay as unknown as SeedFile;
   const subs = vals<Day>(s, 'timesheetDays').filter(d => d.state !== 'draft');
-  expect(subs.map(d => d.personCode)).toEqual(['EMP004', 'EMP005', 'EMP007', 'EMP009', 'EMP010', 'EMP011']);
+  expect(subs.map(d => d.employeeCode)).toEqual(['EMP004', 'EMP005', 'EMP007', 'EMP009', 'EMP010', 'EMP011']);
   expect(subs[5]?.enteredBy).toBe('EMP014');
-  expect(subs.flatMap(d => d.history.slice(1).map(h => h.by.personCode))).toEqual(['EMP014', 'EMP014', 'EMP014']);
+  expect(subs.flatMap(d => d.history.slice(1).map(h => h.by.employeeCode))).toEqual(['EMP014', 'EMP014', 'EMP014']);
 });
 test('meta carries the capture field catalogue without money, and the repeating groups', () => {
   const fields = meta.timesheetFields as { c: string; cat: string }[];

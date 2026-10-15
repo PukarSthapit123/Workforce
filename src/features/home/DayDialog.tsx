@@ -44,7 +44,7 @@ export function DayDialog({ m, day: d, onClose, onBook }: { m: HomeMonth; day: H
       <GroupLabel>Your shift</GroupLabel>
       <Fact label={d.shift ? d.shift.name : d.absence ? d.absence.name : 'Rest day'} testId={tid.home.dayShift}>
         {d.shift ? `${d.shift.time} · ${d.shift.hours}h` : '—'}</Fact>
-      {d.shift && <Fact label="Location" testId={tid.home.dayLocation}>{m.person.location}</Fact>}
+      {d.shift && <Fact label="Location" testId={tid.home.dayLocation}>{m.employee.location}</Fact>}
       {source && <Fact label="Where this comes from" testId={tid.home.daySource}><span className="text-xs font-normal text-text-muted">{source}</span></Fact>}
       {d.bankHoliday && <Fact label="Bank holiday" testId={tid.home.dayBank}>{d.bankHoliday}</Fact>}
       {d.shift && caps.has('own_shifts') && <NavLink testId={tid.home.dayShifts} to="/work/shifts" className={buttonVariants({ variant: 'link', size: null })}>

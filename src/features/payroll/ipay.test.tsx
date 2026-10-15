@@ -25,7 +25,7 @@ const open = async () => {
 function clearBlockers() {
   for (const d of Object.values(store.coll<{ state: string }>('timesheetDays'))) if (d.state !== 'draft') d.state = 'ok';
   for (const a of Object.values(store.coll<{ state: string }>('integrationAttempts'))) if (a.state === 'failed') a.state = 'posted';
-  for (const p of Object.values(store.coll<{ code: string; resource: string }>('people'))) p.resource = `R-${p.code}`;
+  for (const p of Object.values(store.coll<{ code: string; resource: string }>('employees'))) p.resource = `R-${p.code}`;
   const handling = store.coll('exceptionHandling');
   for (const x of exceptionsEverywhere()) handling[x.id] = { id: x.id, version: 1, updatedAt: store.now(), key: x.key, kind: x.kind, subject: x.subject,
     firstRecorded: store.now(), state: 'resolved', owner: null, resolution: 'Cleared for the test', history: [] };
@@ -57,7 +57,7 @@ describe('Payroll readiness', () => {
     expect(screen.getByTestId(tid.ipay.item('resource'))).toHaveTextContent('6 colleagues with hours in this period have no Business Central resource number');
     /* Open once the reader's nav is read */
     expect(await screen.findByTestId(tid.ipay.open('awaiting'))).toHaveAttribute('href', '/team/tteam');
-    expect(screen.getByTestId(tid.ipay.open('resource'))).toHaveAttribute('href', '/setup/apeople');
+    expect(screen.getByTestId(tid.ipay.open('resource'))).toHaveAttribute('href', '/setup/aemployees');
     /* the posting failure opens Business Central, now built */
     expect(screen.getByTestId(tid.ipay.open('failed'))).toHaveAttribute('href', '/setup/ibc');
     /* Exceptions is the manager's, not on this administrator's nav, so it has no Open */

@@ -41,7 +41,7 @@ function TeamView({ t, onLocation }: { t: TeamHours; onLocation: (code: string) 
   const [search, setSearch] = useState('');
   const exp = useExportTeamHours();
   const s = search.trim().toLowerCase();
-  const rows = t.rows.filter(r => !s || `${r.name} ${r.personCode}`.toLowerCase().includes(s));
+  const rows = t.rows.filter(r => !s || `${r.name} ${r.employeeCode}`.toLowerCase().includes(s));
   const tot = teamTotals(rows);
   const doExport = () => exp.mutate({ location: t.location.code }, { onSuccess: x => {
     if (downloadText(x.fileName, toCsv(x.rows))) toastInfo(exportedText(x.count, x.fileName));
@@ -75,32 +75,32 @@ function TeamView({ t, onLocation }: { t: TeamHours; onLocation: (code: string) 
         <TableBody>
           {!rows.length && <Row testId={tid.thours.empty}><TableCell colSpan={7}>
             <Empty>{s ? 'Nothing matches that search' : `Nobody is on the roster at ${t.location.name} this week`}</Empty></TableCell></Row>}
-          {rows.map(r => <PersonRow key={r.personCode} r={r} rota={t.rota} />)}
+          {rows.map(r => <EmployeeRow key={r.employeeCode} r={r} rota={t.rota} />)}
         </TableBody>
       </Table>
     </>);
 }
 
-function PersonRow({ r, rota }: { r: TeamHoursRow; rota: boolean }) {
+function EmployeeRow({ r, rota }: { r: TeamHoursRow; rota: boolean }) {
   const p = r.position, bank = isBank(r.contractedHours);
   const tone = (v: number) => VARIANCE_CLASS[varianceTone(v)];
   return (
-    <Row testId={tid.thours.row(r.personCode)}>
+    <Row testId={tid.thours.row(r.employeeCode)}>
       <TableCell kind="title">
         <span className="flex items-center gap-[9px]">
           <Avatar name={r.name} />
-          <span><strong className="font-semibold">{r.name}</strong><span className="block font-mono text-xs text-text-muted">{r.personCode} · {r.category}</span></span>
+          <span><strong className="font-semibold">{r.name}</strong><span className="block font-mono text-xs text-text-muted">{r.employeeCode} · {r.category}</span></span>
         </span>
       </TableCell>
       <TableCell label="Contracted" className="text-right tabular-nums">{bank ? '—' : hoursText(r.contractedHours)}</TableCell>
       <TableCell label="Rota’d" className="text-right tabular-nums">{rota ? hoursText(p.rot) : '—'}</TableCell>
       <TableCell label="Worked" className="text-right tabular-nums">{hoursText(p.wk)}</TableCell>
-      <TableCell label="Rota variance" data-testid={tid.thours.rotaVar(r.personCode)}
+      <TableCell label="Rota variance" data-testid={tid.thours.rotaVar(r.employeeCode)}
         className={cn('text-right tabular-nums', rota && !bank && tone(p.rotaVar))}>{rota && !bank ? cellHours(p.rotaVar) : '—'}</TableCell>
-      <TableCell label="Worked variance" data-testid={tid.thours.workVar(r.personCode)}
+      <TableCell label="Worked variance" data-testid={tid.thours.workVar(r.employeeCode)}
         className={cn('text-right tabular-nums', tone(bank ? p.wk : p.workVar))}>{bank ? hoursText(p.wk) : cellHours(p.workVar)}</TableCell>
       <TableCell label="Flags">
-        <span data-testid={tid.thours.flags(r.personCode)} className="inline-flex flex-wrap gap-[2px]">
+        <span data-testid={tid.thours.flags(r.employeeCode)} className="inline-flex flex-wrap gap-[2px]">
           {p.flags.length
             ? p.flags.map(f => <Pill key={f.k} tone={f.c} glyph={flagWarns(f) ? <TriangleAlert /> : undefined}>{f.k}</Pill>)
             : <Pill tone="ok" glyph="✓">Clear</Pill>}

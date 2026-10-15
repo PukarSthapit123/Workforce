@@ -3,18 +3,18 @@
    changes on screen until the server has answered and the queries below have
    been read again. Every write to a case carries If-Match on the case (D1);
    the config and each policy carry their own version (D2). Invite and Start
-   them move the person along the lifecycle, so they re-read people too. */
+   them move the employee along the lifecycle, so they re-read employees too. */
 import { useQuery } from '@tanstack/react-query';
 import { api } from './client';
 import { useRecordMutation } from './mutation';
 import { notificationKeys } from './notifications';
-import { peopleKeys } from './people';
+import { employeesKeys } from './employees';
 import {
   ackOnboardingPolicy, addOnboardingDocument, addOnboardingPolicy, removeOnboardingDocument, renameOnboardingDocument, chaseStarter, editOnboardingPolicy, getMyOnboarding, getOnboardingSetup, getStarterOnboarding,
   getTeamOnboarding, inviteStarter, readOnboardingPolicy, rejectOnboardingDocument, removeOnboardingPolicy, saveOnboardingStep, startStarter,
   submitOnboarding, updateOnboardingConfig, uploadOnboardingDocument, uploadOnboardingPolicy, verifyOnboardingDocument,
   type Blocker, type CaseChanged, type CaseSubmitted, type OnbDocumentRecord, type OnbDocumentView, type OnbFeatures, type OnbFileRecord,
-  type OnboardingCaseRecord, type OnboardingConfigRecord, type OnboardingConfigSaved, type OnboardingDetail, type OnboardingSetup, type OnbPerson,
+  type OnboardingCaseRecord, type OnboardingConfigRecord, type OnboardingConfigSaved, type OnboardingDetail, type OnboardingSetup, type OnbEmployee,
   type OnbPolicySetupView, type OnbPolicyView, type OnbProgress, type OnbQueueRow, type OnbStepRecord, type OnbStepView, type PolicyDraft,
   type PolicyRemoved, type PolicySaved, type PolicyUploaded, type SaveStep, type StarterChased, type StarterMoved, type StarterOnboarding, type SubmitOnboarding,
   type TeamOnboarding, type TrackerRow, type UpdateOnboardingConfig, type UploadFile, type DocumentDraft,
@@ -24,17 +24,17 @@ export const onboardingKeys = {
   all: ['onboarding'] as const,
   mine: ['onboarding', 'me'] as const,
   team: ['onboarding', 'team'] as const,
-  starter: (personCode: string) => ['onboarding', 'team', personCode] as const,
+  starter: (employeeCode: string) => ['onboarding', 'team', employeeCode] as const,
   setup: ['onboarding', 'setup'] as const,
 };
 
 /* ---------------------------------------------------------------- reads */
-/* Only while the signed-in person is a candidate or preboarding: refused otherwise (NOT_ONBOARDING). */
+/* Only while the signed-in employee is a candidate or preboarding: refused otherwise (NOT_ONBOARDING). */
 export const useMyOnboarding = (enabled = true) => useQuery({ queryKey: onboardingKeys.mine, queryFn: () => api(getMyOnboarding), enabled });
 export const useTeamOnboarding = (enabled = true) => useQuery({ queryKey: onboardingKeys.team, queryFn: () => api(getTeamOnboarding), enabled });
 /* The tracker's view of one starter: states, files and blockers, none of their answers. */
-export const useStarterOnboarding = (personCode: string, enabled = true) => useQuery({
-  queryKey: onboardingKeys.starter(personCode), queryFn: () => api(getStarterOnboarding, { params: { personCode } }), enabled: enabled && !!personCode,
+export const useStarterOnboarding = (employeeCode: string, enabled = true) => useQuery({
+  queryKey: onboardingKeys.starter(employeeCode), queryFn: () => api(getStarterOnboarding, { params: { employeeCode } }), enabled: enabled && !!employeeCode,
 });
 export const useOnboardingSetup = (enabled = true) => useQuery({ queryKey: onboardingKeys.setup, queryFn: () => api(getOnboardingSetup), enabled });
 
@@ -43,8 +43,8 @@ type CaseRef = Pick<OnboardingCaseRecord, 'id' | 'version'>;
 /* the starter's own writes, and the decisions that tell them */
 const MINE = [onboardingKeys.all] as const;
 const TELLS = [onboardingKeys.all, notificationKeys.all] as const;
-/* Invite and Start them change the person record too. */
-const MOVES = [onboardingKeys.all, peopleKeys.all, notificationKeys.all] as const;
+/* Invite and Start them change the employee record too. */
+const MOVES = [onboardingKeys.all, employeesKeys.all, notificationKeys.all] as const;
 
 /* All of one starter's case writes share its key, so a second waits for the first and sends the fresh version. */
 export const useSaveOnboardingStep = () => useRecordMutation({
@@ -69,26 +69,26 @@ export const useSubmitOnboarding = () => useRecordMutation({
 });
 
 export const useVerifyOnboardingDocument = () => useRecordMutation({
-  mutationFn: (v: { case: CaseRef; personCode: string; doc: string }) =>
-    api(verifyOnboardingDocument, { params: { personCode: v.personCode, doc: v.doc }, ifMatch: v.case.version }),
+  mutationFn: (v: { case: CaseRef; employeeCode: string; doc: string }) =>
+    api(verifyOnboardingDocument, { params: { employeeCode: v.employeeCode, doc: v.doc }, ifMatch: v.case.version }),
   recordKey: v => `onboarding/case/${v.case.id}`, invalidates: TELLS,
 });
 export const useRejectOnboardingDocument = () => useRecordMutation({
-  mutationFn: (v: { case: CaseRef; personCode: string; doc: string; reason: string }) =>
-    api(rejectOnboardingDocument, { params: { personCode: v.personCode, doc: v.doc }, body: { reason: v.reason }, ifMatch: v.case.version }),
+  mutationFn: (v: { case: CaseRef; employeeCode: string; doc: string; reason: string }) =>
+    api(rejectOnboardingDocument, { params: { employeeCode: v.employeeCode, doc: v.doc }, body: { reason: v.reason }, ifMatch: v.case.version }),
   recordKey: v => `onboarding/case/${v.case.id}`, invalidates: TELLS,
 });
 export const useInviteStarter = () => useRecordMutation({
-  mutationFn: (v: { case: CaseRef; personCode: string }) => api(inviteStarter, { params: { personCode: v.personCode }, ifMatch: v.case.version }),
+  mutationFn: (v: { case: CaseRef; employeeCode: string }) => api(inviteStarter, { params: { employeeCode: v.employeeCode }, ifMatch: v.case.version }),
   recordKey: v => `onboarding/case/${v.case.id}`, invalidates: MOVES,
 });
 export const useStartStarter = () => useRecordMutation({
-  mutationFn: (v: { case: CaseRef; personCode: string }) => api(startStarter, { params: { personCode: v.personCode }, ifMatch: v.case.version }),
+  mutationFn: (v: { case: CaseRef; employeeCode: string }) => api(startStarter, { params: { employeeCode: v.employeeCode }, ifMatch: v.case.version }),
   recordKey: v => `onboarding/case/${v.case.id}`, invalidates: MOVES,
 });
 export const useChaseStarter = () => useRecordMutation({
-  mutationFn: (v: { personCode: string }) => api(chaseStarter, { params: { personCode: v.personCode } }),
-  recordKey: v => `onboarding/chase/${v.personCode}`, invalidates: TELLS,
+  mutationFn: (v: { employeeCode: string }) => api(chaseStarter, { params: { employeeCode: v.employeeCode } }),
+  recordKey: v => `onboarding/chase/${v.employeeCode}`, invalidates: TELLS,
 });
 
 /* Onboarding setup (monb): the config applies on Save (D2); each policy is its own row. */
@@ -130,7 +130,7 @@ export const useRemoveOnboardingPolicy = () => useRecordMutation({
 
 export type {
   Blocker, CaseChanged, CaseSubmitted, OnbDocumentRecord, OnbDocumentView, OnbFeatures, OnbFileRecord, OnboardingCaseRecord, OnboardingConfigRecord,
-  OnboardingConfigSaved, OnboardingDetail, OnboardingSetup, OnbPerson, OnbPolicySetupView, OnbPolicyView, OnbProgress, OnbQueueRow, OnbStepRecord,
+  OnboardingConfigSaved, OnboardingDetail, OnboardingSetup, OnbEmployee, OnbPolicySetupView, OnbPolicyView, OnbProgress, OnbQueueRow, OnbStepRecord,
   OnbStepView, PolicyDraft, PolicyRemoved, PolicySaved, PolicyUploaded, SaveStep, StarterChased, StarterMoved, StarterOnboarding, SubmitOnboarding, TeamOnboarding,
   TrackerRow, UpdateOnboardingConfig, UploadFile, DocumentDraft,
 };

@@ -7,9 +7,9 @@
 import { z } from 'zod';
 import { defineEndpoint } from './endpoints';
 import { IsoDateTime, RecordMeta, mutation } from './common';
-import { IsoDate } from './people';
+import { IsoDate } from './employees';
 
-const Actor = z.object({ personCode: z.string(), name: z.string() });
+const Actor = z.object({ employeeCode: z.string(), name: z.string() });
 const Day = z.number().int().min(0).max(6);
 /* A cell: a shift code, '' (rest), 'V' (leave) or 'S' (sickness). */
 const CellCode = z.string().max(4);
@@ -42,7 +42,7 @@ export const Removed = z.object({ code: z.string(), auditId: z.string() });
 
 /* ---------------------------------------------------------------- week */
 export const RotaChange = z.object({
-  at: IsoDateTime, by: Actor, personCode: z.string(), name: z.string(), date: IsoDate, from: z.string(), to: z.string(), why: z.string(),
+  at: IsoDateTime, by: Actor, employeeCode: z.string(), name: z.string(), date: IsoDate, from: z.string(), to: z.string(), why: z.string(),
   afterPublish: z.boolean(), version: z.number().int().nonnegative(),
 });
 export type RotaChange = z.infer<typeof RotaChange>;
@@ -51,9 +51,9 @@ export type HoursFlag = z.infer<typeof HoursFlag>;
 export const HoursPosition = z.object({
   con: z.number(), rot: z.number(), wk: z.number(), rotaVar: z.number(), workVar: z.number(), schedVar: z.number(), flags: z.array(HoursFlag), cap: z.number(),
 });
-/* One person on the week's roster. restIssues: the day pairs whose rest is below their need (i is the earlier day). */
+/* One employee on the week's roster. restIssues: the day pairs whose rest is below their need (i is the earlier day). */
 export const RotaRow = z.object({
-  personCode: z.string(), name: z.string(), jobProfile: z.string(), jobProfileName: z.string(), category: z.string(),
+  employeeCode: z.string(), name: z.string(), jobProfile: z.string(), jobProfileName: z.string(), category: z.string(),
   employeeType: z.string(), typeName: z.string(), contractedHours: z.number(), line: Line, hours: HoursPosition,
   restIssues: z.array(z.object({ i: Day, rest: z.number() })),
 });
@@ -64,7 +64,7 @@ export const RotaWeekView = z.object({
   /* the If-Match a write to this week sends: its version, or 0 for a week not stored yet */
   id: z.string(), version: z.number().int().nonnegative(),
   location: z.object({ code: z.string(), name: z.string(), area: z.string(), level: z.string(), minPerShift: z.number().int() }),
-  /* the locations this person may manage: their own, or every active one with master data (D5) */
+  /* the locations this employee may manage: their own, or every active one with master data (D5) */
   locations: z.array(LocationOption),
   weekStart: IsoDate, label: z.string(), isoWeek: z.number().int(), today: IsoDate,
   /* the weeks either side: a week stored before the week start changed keeps its key (module 8 D4) */
@@ -83,7 +83,7 @@ export const RotaWeekView = z.object({
     publishBlockOnGap: z.boolean(), restWarn: z.boolean(), restHours: z.number(), restRule: z.boolean(), minStaff: z.boolean(),
     safeWorker: z.boolean(), fulfil: z.boolean(), patterns: z.boolean(), horizon: z.number().int(), outlook: z.boolean(),
   }),
-  /* recent publications at the locations this person may manage, newest first */
+  /* recent publications at the locations this employee may manage, newest first */
   publications: z.array(Publication),
   /* Module 8 group 4B: a week sent to publish while a later layer of the Rota approval
      chain applies waits in review until that layer signs it off. requestedBy sent it;
@@ -106,22 +106,22 @@ export const CoverRecord = RecordMeta.extend({
   openedAt: IsoDateTime, asked: z.string(), log: z.array(CoverLogEntry),
 });
 export type CoverRecord = z.infer<typeof CoverRecord>;
-export const Suggestion = z.object({ personCode: z.string(), name: z.string(), category: z.string(), score: z.number(), why: z.array(z.string()) });
+export const Suggestion = z.object({ employeeCode: z.string(), name: z.string(), category: z.string(), score: z.number(), why: z.array(z.string()) });
 export type Suggestion = z.infer<typeof Suggestion>;
-export const RuledOut = z.object({ personCode: z.string(), name: z.string(), rule: z.string(), reason: z.string() });
+export const RuledOut = z.object({ employeeCode: z.string(), name: z.string(), rule: z.string(), reason: z.string() });
 /* A cover request as the screen shows it: what happens next, and who could take it now. */
 export const CoverView = CoverRecord.extend({
   locationName: z.string(), shiftName: z.string(), time: z.string(), next: z.string(), suggestions: z.array(Suggestion), eligible: z.number().int(),
 });
 export type CoverView = z.infer<typeof CoverView>;
 export const FilledShift = RecordMeta.extend({
-  coverId: z.string(), location: z.string(), date: IsoDate, shift: z.string(), personCode: z.string(), name: z.string(), confirmed: z.boolean(), itRequest: z.string(),
+  coverId: z.string(), location: z.string(), date: IsoDate, shift: z.string(), employeeCode: z.string(), name: z.string(), confirmed: z.boolean(), itRequest: z.string(),
 });
 export type FilledShift = z.infer<typeof FilledShift>;
 export const FilledView = FilledShift.extend({ locationName: z.string(), shiftName: z.string(), time: z.string() });
 export type FilledView = z.infer<typeof FilledView>;
 export const ItRequest = z.object({
-  id: z.string(), ref: z.string(), personCode: z.string(), name: z.string(), location: z.string(), shift: z.string(), date: IsoDate,
+  id: z.string(), ref: z.string(), employeeCode: z.string(), name: z.string(), location: z.string(), shift: z.string(), date: IsoDate,
   worker: z.string(), status: z.string(), raisedAt: IsoDateTime, system: z.string(),
 });
 export type ItRequest = z.infer<typeof ItRequest>;
@@ -136,7 +136,7 @@ export type CoverBoard = z.infer<typeof CoverBoard>;
 
 /* ------------------------------------------------------------- week writes */
 /* One cell. code '' removes the day's shift; a filled cell is changed, an empty one assigned. */
-export const CellInput = z.object({ personCode: z.string().min(1), day: Day, code: CellCode, why: z.string().max(200).optional() });
+export const CellInput = z.object({ employeeCode: z.string().min(1), day: Day, code: CellCode, why: z.string().max(200).optional() });
 export type CellInput = z.infer<typeof CellInput>;
 /* advisories: hours and rest flags on the saved line; they never block (D4). cover: the request a removal opened. */
 export const CellSaved = z.object({ week: RotaWeekView, advisories: z.array(HoursFlag), cover: CoverView.nullable(), auditId: z.string() });
@@ -157,11 +157,11 @@ export const WeekRepeated = Counts.extend({ week: RotaWeekView, live: z.number()
 export type WeekRepeated = z.infer<typeof WeekRepeated>;
 export const WeekCleared = z.object({ week: RotaWeekView, cleared: z.number().int(), summary: z.string(), auditId: z.string() });
 export type WeekCleared = z.infer<typeof WeekCleared>;
-export const PlanItem = z.object({ day: Day, code: z.string(), none: z.boolean(), personCode: z.string(), name: z.string(), why: z.array(z.string()) });
+export const PlanItem = z.object({ day: Day, code: z.string(), none: z.boolean(), employeeCode: z.string(), name: z.string(), why: z.array(z.string()) });
 export type PlanItem = z.infer<typeof PlanItem>;
 export const WeekPlan = z.object({ items: z.array(PlanItem), summary: z.string() });
 export type WeekPlan = z.infer<typeof WeekPlan>;
-export const AcceptPlan = z.object({ items: z.array(z.object({ personCode: z.string().min(1), day: Day, code: CellCode })).min(1, 'Choose at least one suggestion.').max(50) });
+export const AcceptPlan = z.object({ items: z.array(z.object({ employeeCode: z.string().min(1), day: Day, code: CellCode })).min(1, 'Choose at least one suggestion.').max(50) });
 export type AcceptPlan = z.infer<typeof AcceptPlan>;
 export const PlanAccepted = z.object({ week: RotaWeekView, advisories: z.array(HoursFlag), summary: z.string(), auditId: z.string() });
 export type PlanAccepted = z.infer<typeof PlanAccepted>;
@@ -170,19 +170,19 @@ export type CellSuggestions = z.infer<typeof CellSuggestions>;
 export const SuggestQuery = z.object({ day: z.coerce.number().int().min(0).max(6), code: z.string().min(1).max(4) });
 
 /* ------------------------------------------------------------- patterns */
-export const PatternPerson = z.object({ personCode: z.string(), offset: z.number().int() });
+export const PatternEmployee = z.object({ employeeCode: z.string(), offset: z.number().int() });
 export const PatternRecord = RecordMeta.extend({
   code: z.string(), name: z.string(), cycle: z.number().int(), locations: z.array(z.string()), jobProfiles: z.array(z.string()), costCentre: z.string(),
   starts: z.string(), horizon: z.number().int(), gen: z.string(), genFrom: z.string(), genTo: z.string(), active: z.boolean(),
-  days: z.array(z.string()), people: z.array(PatternPerson),
+  days: z.array(z.string()), employees: z.array(PatternEmployee),
 });
 export type PatternRecord = z.infer<typeof PatternRecord>;
 export const PatternCandidate = z.object({ code: z.string(), name: z.string(), location: z.string(), jobProfile: z.string(), category: z.string() });
 /* today and canCover (the locations a pattern may cover: the manager's own, or every active one for an administrator) travel with the list, so Rota setup needs no team_rota read.
-   elsewhere: the employee IDs on the listed patterns who work at a location this person does not manage (another location's people on a shared pattern).
+   elsewhere: the employee IDs on the listed patterns who work at a location this employee does not manage (another location's employees on a shared pattern).
    They stay as they are, so the editor offers no Remove for them. Always empty for an administrator. */
 export const PatternList = z.object({
-  items: z.array(PatternRecord), people: z.array(PatternCandidate), canCover: z.array(LocationOption), today: IsoDate, elsewhere: z.array(z.string()),
+  items: z.array(PatternRecord), employees: z.array(PatternCandidate), canCover: z.array(LocationOption), today: IsoDate, elsewhere: z.array(z.string()),
 });
 export type PatternList = z.infer<typeof PatternList>;
 const PatternFields = {
@@ -194,14 +194,14 @@ const PatternFields = {
 export const CreatePattern = z.object({ ...PatternFields, days: PatternFields.days.optional(), genFrom: z.string().optional(), genTo: z.string().optional(), base: z.string().optional() });
 export type CreatePattern = z.infer<typeof CreatePattern>;
 /* A cycle change without days resizes them (shrinking drops days, growing adds rest days, offsets wrap). */
-export const UpdatePattern = z.strictObject({ ...PatternFields, active: z.boolean(), people: z.array(PatternPerson).max(200) }).partial();
+export const UpdatePattern = z.strictObject({ ...PatternFields, active: z.boolean(), employees: z.array(PatternEmployee).max(200) }).partial();
 export type UpdatePattern = z.infer<typeof UpdatePattern>;
-export const AddPatternPeople = z.object({ personCodes: z.array(z.string()).max(100), start: z.number().int().min(1), mode: z.enum(['stagger', 'same']) });
-export type AddPatternPeople = z.infer<typeof AddPatternPeople>;
+export const AddPatternEmployees = z.object({ employeeCodes: z.array(z.string()).max(100), start: z.number().int().min(1), mode: z.enum(['stagger', 'same']) });
+export type AddPatternEmployees = z.infer<typeof AddPatternEmployees>;
 export const GeneratePattern = z.object({ gen: z.string().optional(), genFrom: z.string().optional(), genTo: z.string().optional() });
 export type GeneratePattern = z.infer<typeof GeneratePattern>;
 export const PatternGenerated = Counts.extend({
-  record: PatternRecord, weeks: z.number().int(), live: z.number().int(), rest: z.array(z.string()), range: z.string(), people: z.number().int(),
+  record: PatternRecord, weeks: z.number().int(), live: z.number().int(), rest: z.array(z.string()), range: z.string(), employees: z.number().int(),
   summary: z.string(), auditId: z.string().nullable(),
 });
 export type PatternGenerated = z.infer<typeof PatternGenerated>;
@@ -211,7 +211,7 @@ export const CoverQuery = z.object({ status: CoverStatus.optional() });
 export const OpenCover = z.object({ location: z.string().min(1), date: IsoDate, shift: z.string().min(1).max(4), reason: z.string().max(40), urgent: z.boolean() });
 export type OpenCover = z.infer<typeof OpenCover>;
 export const CoverReason = z.object({ reason: z.string().max(40) });
-export const CoverAssign = z.object({ personCode: z.string().min(1) });
+export const CoverAssign = z.object({ employeeCode: z.string().min(1) });
 /* auditId is null when the reason sent is the one already stored */
 export const CoverSaved = z.object({ record: CoverView, auditId: z.string().nullable() });
 export type CoverSaved = z.infer<typeof CoverSaved>;
@@ -230,12 +230,12 @@ export type OpenShift = z.infer<typeof OpenShift>;
 /* D14: a week shows only once published (published, amendment or republished); before that
    `visible` is false and no shift times are sent. */
 export const MyShifts = z.object({
-  person: z.object({ code: z.string(), name: z.string(), location: z.string(), locationName: z.string() }),
+  employee: z.object({ code: z.string(), name: z.string(), location: z.string(), locationName: z.string() }),
   weekStart: IsoDate, label: z.string(), today: IsoDate, state: RotaState, visible: z.boolean(),
   /* only the days with a shift, when visible */
   days: z.array(MyShiftDay), restDays: z.array(IsoDate), hours: z.number(),
   next: MyShiftDay.extend({ with: z.array(z.string()) }).nullable(),
-  /* the last day of the furthest published week at the person's location, or '' */
+  /* the last day of the furthest published week at the employee's location, or '' */
   publishedTo: z.union([IsoDate, z.literal('')]),
   openShifts: z.array(OpenShift), canClaim: z.boolean(), outlook: z.boolean(), horizon: z.number().int(),
 });
@@ -251,7 +251,7 @@ export const TypeRota = z.object({
   shifts: z.array(z.string()), night: z.boolean(), maxHours: z.number(), restHours: z.number(), maxConsec: z.number().int(), flexible: z.boolean(),
 });
 export type TypeRota = z.infer<typeof TypeRota>;
-/* A support level and the people every shift at a location on it needs (v15:9073). The codes and names are fixed; the number is the tenant's. */
+/* A support level and the employees every shift at a location on it needs (v15:9073). The codes and names are fixed; the number is the tenant's. */
 export const SupportLevel = z.object({ code: z.string().max(20), label: z.string().max(40), min: z.number() });
 export type SupportLevel = z.infer<typeof SupportLevel>;
 const ConfigFields = {
@@ -279,16 +279,16 @@ const ByCode = z.object({ code: z.string().min(1) });
 const ById = z.object({ id: z.string().min(1) });
 const WEEK = '/api/v1/rota/weeks/:location/:weekStart';
 
-/* Where Team rota opens: the locations this person may manage (D5), the one to start on
+/* Where Team rota opens: the locations this employee may manage (D5), the one to start on
    (their own), and the server's today with its week, so the screen never guesses either. */
-/* awaiting (module 8): the weeks waiting on this person's sign-off, at any location they hold the layer for; left out when there are none. */
+/* awaiting (module 8): the weeks waiting on this employee's sign-off, at any location they hold the layer for; left out when there are none. */
 export const RotaHome = z.object({ locations: z.array(LocationOption), location: z.string(), today: IsoDate, weekStart: IsoDate,
   awaiting: z.array(z.object({ id: z.string(), location: z.string(), locationName: z.string(), weekStart: IsoDate, isoWeek: z.number().int(), requestedBy: z.string() })).optional() });
 export type RotaHome = z.infer<typeof RotaHome>;
 export const getRotaHome = defineEndpoint({ method: 'GET', path: '/api/v1/rota/home', response: RotaHome, capability: 'team_rota',
-  summary: 'Where Team rota opens: the locations this person may manage, the one to start on, and today\'s week' });
+  summary: 'Where Team rota opens: the locations this employee may manage, the one to start on, and today\'s week' });
 export const getRotaWeek = defineEndpoint({ method: 'GET', path: WEEK, params: LocWeek, response: RotaWeekView, capability: 'team_rota', errors: [404],
-  summary: 'One location\'s rota week: lines per person, coverage and gaps per day, hours position per person, state, version, change log and recent publications' });
+  summary: 'One location\'s rota week: lines per employee, coverage and gaps per day, hours position per employee, state, version, change log and recent publications' });
 export const writeRotaCell = defineEndpoint({ method: 'PUT', path: `${WEEK}/cells`, params: LocWeek, request: CellInput, response: CellSaved,
   capability: 'team_rota', versioned: true, errors: [404, 409],
   summary: 'Assign, change or remove one cell (If-Match: the week\'s version). Eligibility is checked here (ROTA_INELIGIBLE); a change to a live week records an amendment.' });
@@ -328,22 +328,22 @@ export const deleteShiftType = defineEndpoint({ method: 'DELETE', path: '/api/v1
   summary: 'Remove a shift type no rota or pattern day uses (If-Match). It leaves every employee type\'s rota shifts too.' });
 
 export const listPatterns = defineEndpoint({ method: 'GET', path: '/api/v1/rota/patterns', response: PatternList, capability: 'rota_pattern',
-  summary: 'Working patterns covering the locations this person manages, with the people who can be put on them' });
+  summary: 'Working patterns covering the locations this employee manages, with the employees who can be put on them' });
 export const createPattern = defineEndpoint({ method: 'POST', path: '/api/v1/rota/patterns', request: CreatePattern, response: mutation(PatternRecord),
   capability: 'rota_pattern', errors: [404], summary: 'Add a working pattern as a draft, optionally copied from another' });
 export const updatePattern = defineEndpoint({ method: 'PATCH', path: '/api/v1/rota/patterns/:code', params: ByCode, request: UpdatePattern,
-  response: mutation(PatternRecord), capability: 'rota_pattern', versioned: true, errors: [404, 409], summary: 'Change a working pattern, its cycle, its people and their starting days (If-Match)' });
+  response: mutation(PatternRecord), capability: 'rota_pattern', versioned: true, errors: [404, 409], summary: 'Change a working pattern, its cycle, its employees and their starting days (If-Match)' });
 export const deletePattern = defineEndpoint({ method: 'DELETE', path: '/api/v1/rota/patterns/:code', params: ByCode, response: Removed,
   capability: 'rota_pattern', versioned: true, errors: [404], summary: 'Remove a working pattern (If-Match). Shifts it already wrote stay on the rota.' });
-export const addPatternPeople = defineEndpoint({ method: 'POST', path: '/api/v1/rota/patterns/:code/people', params: ByCode, request: AddPatternPeople,
+export const addPatternEmployees = defineEndpoint({ method: 'POST', path: '/api/v1/rota/patterns/:code/employees', params: ByCode, request: AddPatternEmployees,
   response: mutation(PatternRecord), capability: 'rota_pattern', versioned: true, errors: [404, 409],
-  summary: 'Put people on a pattern, staggered across the days that carry a shift or all on the same day (If-Match)' });
+  summary: 'Put employees on a pattern, staggered across the days that carry a shift or all on the same day (If-Match)' });
 export const generatePattern = defineEndpoint({ method: 'POST', path: '/api/v1/rota/patterns/:code/generate', params: ByCode, request: GeneratePattern,
   response: PatternGenerated, capability: 'rota_pattern', versioned: true, errors: [404],
   summary: 'Write a pattern into the rota for a period (If-Match: the pattern). Never overwrites: filled cells, leave, sickness and published weeks are skipped and counted.' });
 
 export const listCover = defineEndpoint({ method: 'GET', path: '/api/v1/rota/cover', query: CoverQuery, response: CoverBoard, capability: 'team_cover',
-  summary: 'Open cover requests at the locations this person manages, with their stage and suggestions, and filled shifts waiting to be confirmed' });
+  summary: 'Open cover requests at the locations this employee manages, with their stage and suggestions, and filled shifts waiting to be confirmed' });
 export const openCover = defineEndpoint({ method: 'POST', path: '/api/v1/rota/cover', request: OpenCover, response: CoverSaved, capability: 'team_cover',
   errors: [404, 409], summary: 'Open a cover request, or add an urgent extra shift. One open request per location, day and shift.' });
 export const setCoverReason = defineEndpoint({ method: 'POST', path: '/api/v1/rota/cover/:id/reason', params: ById, request: CoverReason, response: CoverSaved,
@@ -354,10 +354,10 @@ export const escalateCover = defineEndpoint({ method: 'POST', path: '/api/v1/rot
   capability: 'team_cover', versioned: true, errors: [404, 409], summary: 'Escalate to the last fulfilment stage (If-Match)' });
 export const assignCover = defineEndpoint({ method: 'POST', path: '/api/v1/rota/cover/:id/assign', params: ById, request: CoverAssign, response: CoverFilled,
   capability: 'team_cover', versioned: true, errors: [404, 409],
-  summary: 'Give the shift to one person through the rota week write (eligibility, change log, amendment) and close the request (If-Match: the request)' });
+  summary: 'Give the shift to one employee through the rota week write (eligibility, change log, amendment) and close the request (If-Match: the request)' });
 export const fillCover = defineEndpoint({ method: 'POST', path: '/api/v1/rota/cover/:id/fill', params: ById, response: CoverFilled,
-  capability: 'team_cover', versioned: true, errors: [404, 409], summary: 'Give the shift to the best eligible person and close the request (If-Match)' });
-/* No single capability: claiming needs `claim`, refused with the prototype's text, and the person's own location. */
+  capability: 'team_cover', versioned: true, errors: [404, 409], summary: 'Give the shift to the best eligible employee and close the request (If-Match)' });
+/* No single capability: claiming needs `claim`, refused with the prototype's text, and the employee's own location. */
 export const claimCover = defineEndpoint({ method: 'POST', path: '/api/v1/rota/cover/:id/claim', params: ById, response: CoverFilled,
   versioned: true, errors: [404, 409], summary: 'Claim an open shift for yourself (If-Match). Only shifts you are cleared and eligible for can be claimed.' });
 export const confirmFilled = defineEndpoint({ method: 'POST', path: '/api/v1/rota/filled/:id/confirm', params: ById, response: FilledConfirmed,
@@ -372,16 +372,16 @@ export const listItRequests = defineEndpoint({ method: 'GET', path: '/api/v1/rot
   summary: 'The IT access requests raised when a filled shift was confirmed, newest first. Refused while IT access requests are switched off.' });
 
 export const getMyShifts = defineEndpoint({ method: 'GET', path: '/api/v1/rota/my-shifts', query: MyShiftsQuery, response: MyShifts, capability: 'own_shifts',
-  summary: 'The signed-in person\'s week once published, their next shift and who is on it, rest days, and open shifts they can claim' });
+  summary: 'The signed-in employee\'s week once published, their next shift and who is on it, rest days, and open shifts they can claim' });
 
-/* The location form offers the support levels with their people per shift, so they are read with a session only, as the locations are. */
+/* The location form offers the support levels with their employees per shift, so they are read with a session only, as the locations are. */
 export const SupportLevelList = z.object({ items: z.array(SupportLevel) });
 export type SupportLevelList = z.infer<typeof SupportLevelList>;
 export const listSupportLevels = defineEndpoint({ method: 'GET', path: '/api/v1/rota/support-levels', response: SupportLevelList,
-  summary: 'The support levels a location can carry, each with the people every shift at that level needs (set in Rota setup)' });
+  summary: 'The support levels a location can carry, each with the employees every shift at that level needs (set in Rota setup)' });
 
 export const getRotaConfig = defineEndpoint({ method: 'GET', path: '/api/v1/rota/config', response: RotaSetup, capability: 'mod_cfg',
   summary: 'Rota setup: staffing and rest limits, fulfilment stages, safe-worker rules, per-type rota limits' });
 export const updateRotaConfig = defineEndpoint({ method: 'PATCH', path: '/api/v1/rota/config', request: UpdateRotaConfig, response: mutation(RotaConfigRecord),
   capability: 'mod_cfg', versioned: true,
-  summary: 'Save Rota setup (If-Match). Types are merged by type code; stages are renumbered. A support level\'s new people per shift is set on every location at that level.' });
+  summary: 'Save Rota setup (If-Match). Types are merged by type code; stages are renumbered. A support level\'s new employees per shift is set on every location at that level.' });

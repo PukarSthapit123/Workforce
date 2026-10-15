@@ -4,20 +4,20 @@ import { expect, type Page } from '@playwright/test';
 
 export interface Reply { status: number; body: unknown }
 export interface Api { get(path: string): Promise<Reply> }
-export interface PersonRow {
+export interface EmployeeRow {
   id: string; version: number; code: string; name: string; state: string; end: string; location: string; email: string;
   contractedHours: number; maxHours: number; phone: string; address: string; bankAccount: string; employeeType: string; resource: string;
 }
 export interface AuditRow { act: string; entityId: string; reason?: string; before?: unknown; after?: unknown }
 
-export async function everyone(api: Api): Promise<PersonRow[]> {
-  const r = await api.get('/api/v1/people?state=all');
-  expect(r.status, 'people list').toBe(200);
-  return r.body as PersonRow[];
+export async function everyone(api: Api): Promise<EmployeeRow[]> {
+  const r = await api.get('/api/v1/employees?state=all');
+  expect(r.status, 'employees list').toBe(200);
+  return r.body as EmployeeRow[];
 }
-export async function personByCode(api: Api, code: string): Promise<PersonRow> {
+export async function employeeByCode(api: Api, code: string): Promise<EmployeeRow> {
   const p = (await everyone(api)).find(x => x.code === code);
-  if (!p) throw new Error(`no person ${code} visible to this session`);
+  if (!p) throw new Error(`no employee ${code} visible to this session`);
   return p;
 }
 export async function auditOf(api: Api, entity: string): Promise<AuditRow[]> {

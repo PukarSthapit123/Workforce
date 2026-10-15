@@ -7,12 +7,12 @@ import type { OnboardingCaseRecord } from '@/contract/onboarding';
 import { REASON_NEEDED, START_REASON, noEmailText } from '@/domain/onboarding';
 import { expectTestIdCoverage } from '@/test/testid-coverage';
 import { renderPage, withFakeServer } from '@/test/render-page';
-import { audits, personOf, resetTo } from '@/test/api-helpers';
+import { audits, employeeOf, resetTo } from '@/test/api-helpers';
 import { TeamOnboardingPage } from './TeamOnboardingPage';
 
 /* The qnipay seed at the frozen clock (13/08/2026): Pukar Sthapit (EMP001),
    the manager persona at Manchester, holds Track onboarding, Verify
-   onboarding documents and Add and edit people. Priya Raman (EMP002) is a
+   onboarding documents and Add and edit employees. Priya Raman (EMP002) is a
    candidate starting 28/09/2026 and Tom Achterberg (EMP003) is preboarding
    from 14/09/2026, both at Manchester with empty cases. The right to work
    stops a start until it is verified; proof of address and the photograph
@@ -44,7 +44,7 @@ const complete = () => Object.assign(caseOf('EMP003'), {
   docs: { rtw: 'verified', addr: 'verified', photo: 'verified' },
 });
 const revoke = (...caps: string[]) => {
-  const a = Object.values(store.coll<{ personCode: string; revocations: string[] }>('accounts')).find(x => x.personCode === 'EMP001');
+  const a = Object.values(store.coll<{ employeeCode: string; revocations: string[] }>('accounts')).find(x => x.employeeCode === 'EMP001');
   if (!a) throw new Error('no account for EMP001');
   a.revocations = caps;
 };
@@ -118,13 +118,13 @@ describe('Team onboarding', () => {
   });
 
   test('Invite without a work email is refused with the reason, and nothing is written', async () => {
-    const p = personOf('EMP002');
-    store.coll('people')[p.id] = { ...p, email: '' };
+    const p = employeeOf('EMP002');
+    store.coll('employees')[p.id] = { ...p, email: '' };
     await signIn();
     await open();
     await userEvent.click(screen.getByTestId(tid.tonb.invite('EMP002')));
     await expectToast(noEmailText('Priya Raman'), tid.toast.error);
-    expect(personOf('EMP002').state).toBe('candidate');
+    expect(employeeOf('EMP002').state).toBe('candidate');
     expect(acts()).toEqual([]);
   });
 
@@ -140,7 +140,7 @@ describe('Team onboarding', () => {
     await userEvent.click(screen.getByTestId(tid.tonb.chase));
     await expectToast(/^Tom Achterberg reminded\. \d+ outstanding\.$/);
     expect(acts()).toEqual(['Onboarding chased']);
-    expect(personOf('EMP003').state).toBe('preboard');
+    expect(employeeOf('EMP003').state).toBe('preboard');
   });
 
   test('the server stays the authority: a start it refuses as not ready opens the dialog, and closing it reads the list again', async () => {
@@ -153,7 +153,7 @@ describe('Team onboarding', () => {
     await userEvent.click(screen.getByTestId(tid.tonb.start('EMP003')));
     await expectToast('Tom Achterberg cannot start yet. 1 outstanding. Right to work not verified.', tid.toast.error);
     expect(await screen.findByTestId(tid.tonb.notReady)).toHaveTextContent('Right to work not verified');
-    expect(personOf('EMP003').state).toBe('preboard');
+    expect(employeeOf('EMP003').state).toBe('preboard');
     await userEvent.click(screen.getByTestId(tid.tonb.notReadyClose));
     await waitFor(() => expect(screen.getByTestId(tid.tonb.blocking('EMP003'))).toHaveTextContent('Right to work not verified'));
     expect(acts()).toEqual([]);
@@ -168,26 +168,26 @@ describe('Team onboarding: starting, adding and who sees which action', () => {
     await userEvent.click(screen.getByTestId(tid.tonb.start('EMP003')));
     await expectToast('Tom Achterberg is active. They can now be scheduled and paid.');
     await waitFor(() => expect(screen.queryByTestId(tid.tonb.row('EMP003'))).toBeNull());
-    expect(personOf('EMP003').state).toBe('active');
+    expect(employeeOf('EMP003').state).toBe('active');
     expect(audits().find(a => a.act === 'Employee active')?.reason).toBe(START_REASON);
   });
 
-  test('Add a new starter opens the person form already set to candidate, and the new starter appears on the tracker', async () => {
+  test('Add a new starter opens the employee form already set to candidate, and the new starter appears on the tracker', async () => {
     await signIn();
     await open();
     await userEvent.click(screen.getByTestId(tid.tonb.add));
-    await screen.findByTestId(tid.personForm.root);
-    expect(screen.getByTestId(tid.personForm.field('state'))).toHaveTextContent('Candidate');
-    fireEvent.change(screen.getByTestId(tid.personForm.field('name')), { target: { value: 'Sarah Lindqvist' } });
-    fireEvent.change(screen.getByTestId(tid.personForm.field('email')), { target: { value: 'sarah.lindqvist@dogmagroup.co.uk' } });
-    await userEvent.click(screen.getByTestId(tid.personForm.save));
-    await waitFor(() => expect(screen.queryByTestId(tid.personForm.root)).toBeNull());
+    await screen.findByTestId(tid.employeeForm.root);
+    expect(screen.getByTestId(tid.employeeForm.field('state'))).toHaveTextContent('Candidate');
+    fireEvent.change(screen.getByTestId(tid.employeeForm.field('name')), { target: { value: 'Sarah Lindqvist' } });
+    fireEvent.change(screen.getByTestId(tid.employeeForm.field('email')), { target: { value: 'sarah.lindqvist@dogmagroup.co.uk' } });
+    await userEvent.click(screen.getByTestId(tid.employeeForm.save));
+    await waitFor(() => expect(screen.queryByTestId(tid.employeeForm.root)).toBeNull());
     const row = await screen.findByText('Sarah Lindqvist');
     expect(row.closest('tr')).toHaveTextContent('0/7');
   });
 
   test('an empty tracker says nobody is onboarding here and offers Add a new starter as the way in', async () => {
-    for (const code of ['EMP002', 'EMP003']) personOf(code).state = 'active';
+    for (const code of ['EMP002', 'EMP003']) employeeOf(code).state = 'active';
     await signIn();
     await open();
     const empty = await screen.findByTestId(tid.tonb.empty);
@@ -196,8 +196,8 @@ describe('Team onboarding: starting, adding and who sees which action', () => {
     const add = within(empty).getByTestId(tid.tonb.addEmpty);
     expect(add).toHaveTextContent('Add a new starter');
     await userEvent.click(add);
-    await screen.findByTestId(tid.personForm.root);
-    expect(screen.getByTestId(tid.personForm.field('state'))).toHaveTextContent('Candidate');
+    await screen.findByTestId(tid.employeeForm.root);
+    expect(screen.getByTestId(tid.employeeForm.field('state'))).toHaveTextContent('Candidate');
   });
 
   test('each action shows only to the holder of its capability', async () => {

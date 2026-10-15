@@ -22,16 +22,16 @@ test('a manager cannot decide, read or record leave and sickness for a colleague
 
   await signInEmail(page, RACHEL);
   expect(await queue(api)).not.toContain(asked.id);
-  const scope = 'You can decide leave for people at Willow House only.';
+  const scope = 'You can decide leave for employees at Willow House only.';
   expect(said(await decide(page, asked, 'approve'))).toEqual([403, 'scope', scope]);
   expect(said(await decide(page, asked, 'decline', 'No'))).toEqual([403, 'scope', scope]);
   expect([(await api.get('/api/v1/leave/entitlement/CP-1288')).status]).toEqual([403]);
-  const sick = await api.send('POST', '/api/v1/leave/sickness', { personCode: 'CP-1288', from: '2026-08-13', to: '2026-08-13', reason: 'Other' });
-  expect(said(sick)).toEqual([403, 'scope', 'You can record sickness for people at Willow House only.']);
-  const back = await api.send('POST', '/api/v1/leave/give-back', { personCode: 'CP-1288', dates: ['2026-08-11'] });
+  const sick = await api.send('POST', '/api/v1/leave/sickness', { employeeCode: 'CP-1288', from: '2026-08-13', to: '2026-08-13', reason: 'Other' });
+  expect(said(sick)).toEqual([403, 'scope', 'You can record sickness for employees at Willow House only.']);
+  const back = await api.send('POST', '/api/v1/leave/give-back', { employeeCode: 'CP-1288', dates: ['2026-08-11'] });
   expect([back.status, code(back)]).toEqual([403, 'scope']);
-  const balances = (await api.get('/api/v1/leave/team/balances')).body as { rows: { personCode: string }[] };
-  expect(balances.rows.map(r => r.personCode)).not.toContain('CP-1288');
+  const balances = (await api.get('/api/v1/leave/team/balances')).body as { rows: { employeeCode: string }[] };
+  expect(balances.rows.map(r => r.employeeCode)).not.toContain('CP-1288');
 
   await signInEmail(page, GRACE);
   expect((await myLeave(api)).requests.find(r => r.id === asked.id)).toMatchObject({ state: 'pending', version: 1 });
@@ -69,7 +69,7 @@ test('an employee cannot decide or read the team’s leave, cancels only their o
   }
   const theirs = await sendVersioned(page, 'POST', '/api/v1/leave/requests/lr_1/cancel', 1);
   expect(said(theirs)).toEqual([403, 'NOT_YOUR_REQUEST', 'You can cancel only your own requests.']);
-  const sick = await api.send('POST', '/api/v1/leave/sickness', { personCode: 'CP-1201', from: '2026-08-13', to: '2026-08-13', reason: 'Other' });
+  const sick = await api.send('POST', '/api/v1/leave/sickness', { employeeCode: 'CP-1201', from: '2026-08-13', to: '2026-08-13', reason: 'Other' });
   expect([sick.status, code(sick)]).toEqual([403, 'capability']);
 
   /* her own waiting request (lr_3), at an older version */

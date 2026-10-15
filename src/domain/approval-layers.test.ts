@@ -1,6 +1,6 @@
 import {
   CONDITIONS, chainProblem, decisionBlock, defaultChainFor, newLayer, walkChain, walkProgress, whenOptions,
-  type ChainItem, type ChainStep, type DeciderPerson, type WalkInput,
+  type ChainItem, type ChainStep, type DeciderEmployee, type WalkInput,
 } from './approvals';
 import { firstLayerBreached, layerStartedAt, layerText, layerWaitingLabel, leaveSignedLayers, leaveSigners, type LeaveSign } from './leave';
 
@@ -8,15 +8,15 @@ import { firstLayerBreached, layerStartedAt, layerText, layerWaitingLabel, leave
    chains needs the same capability, so the walker matches a signed role to the
    first unsigned layer of that role, keeps whoever signed one layer from the
    next, lets an escalation layer take over from the layers before it, and lets
-   the person's own line manager hold the Line manager layer. */
+   the employee's own line manager hold the Line manager layer. */
 const step = (o: Partial<ChainStep> = {}): ChainStep => ({ module: 'Leave', role: 'Line manager', scope: 'Own department', when: 'Every leave request', sla: '5 days', fixed: false, ...o });
-const person = (code: string, o: Partial<DeciderPerson> = {}): DeciderPerson =>
+const employee = (code: string, o: Partial<DeciderEmployee> = {}): DeciderEmployee =>
   ({ code, location: 'WH', department: 'CARE', active: true, caps: ['team_leave'], allLocations: false, ...o });
 /* M manages the team; S is a second Service Manager at the location; A is an administrator elsewhere, and E's own line manager */
-const people = [person('M'), person('S'), person('A', { location: 'FS', department: 'ADM', allLocations: true }), person('E', { caps: [] })];
-const item = (o: Partial<ChainItem> = {}): ChainItem => ({ personCode: 'E', location: 'WH', department: 'CARE', facts: {}, ...o });
+const employees = [employee('M'), employee('S'), employee('A', { location: 'FS', department: 'ADM', allLocations: true }), employee('E', { caps: [] })];
+const item = (o: Partial<ChainItem> = {}): ChainItem => ({ employeeCode: 'E', location: 'WH', department: 'CARE', facts: {}, ...o });
 const input = (o: Partial<WalkInput> = {}): WalkInput =>
-  ({ module: 'Leave', steps: [step()], item: item(), signed: [], date: '2026-08-13', people, delegations: [], ...o });
+  ({ module: 'Leave', steps: [step()], item: item(), signed: [], date: '2026-08-13', employees, delegations: [], ...o });
 const twoLayers = [step(), step({ role: 'Service Manager', scope: 'Own location' })];
 
 describe('the conditions Leave and Rota offer are the ones the server reads', () => {
@@ -38,8 +38,8 @@ describe('the conditions Leave and Rota offer are the ones the server reads', ()
 describe('walking a Leave or Rota chain', () => {
   test('two layers of the same role are signed one at a time', () => {
     const rota = (signed: string[]) => walkChain(input({ module: 'Rota', steps: [step({ module: 'Rota', role: 'Service Manager', when: 'Every rota week' }),
-      step({ module: 'Rota', role: 'Service Manager', when: 'Every rota week', scope: 'All departments' })], item: item({ personCode: '' }),
-    people: people.map(p => ({ ...p, caps: p.caps.length ? ['team_rota'] : [] })), signed }));
+      step({ module: 'Rota', role: 'Service Manager', when: 'Every rota week', scope: 'All departments' })], item: item({ employeeCode: '' }),
+    employees: employees.map(p => ({ ...p, caps: p.caps.length ? ['team_rota'] : [] })), signed }));
     expect([rota([]).current?.step.scope, rota([]).final]).toEqual(['Own department', false]);
     expect([rota(['Service Manager']).current?.step.scope, rota(['Service Manager']).final]).toEqual(['All departments', true]);
   });
@@ -59,19 +59,19 @@ describe('walking a Leave or Rota chain', () => {
     /* the line manager signed within the SLA: the escalation does not apply */
     expect(walkChain(input({ steps, signed: ['Line manager'] })).final).toBe(true);
   });
-  test('the person\'s own line manager holds the Line manager layer whatever their department, given the capability and the access', () => {
+  test('the employee\'s own line manager holds the Line manager layer whatever their department, given the capability and the access', () => {
     expect(walkChain(input({ item: item({ manager: 'A' }) })).current?.holders).toEqual(['M', 'S', 'A']);
-    expect(walkChain(input({ item: item({ manager: 'A' }), people: people.map(p => (p.code === 'A' ? { ...p, caps: [] } : p)) })).current?.holders).toEqual(['M', 'S']);
+    expect(walkChain(input({ item: item({ manager: 'A' }), employees: employees.map(p => (p.code === 'A' ? { ...p, caps: [] } : p)) })).current?.holders).toEqual(['M', 'S']);
   });
   test('a rota week has no department, so Own department reads as its location', () => {
     const w = walkChain(input({ module: 'Rota', steps: [step({ module: 'Rota', role: 'Service Manager', when: 'Every rota week' })],
-      item: { personCode: '', location: 'WH', facts: {} }, people: people.map(p => ({ ...p, caps: p.caps.length ? ['team_rota'] : [] })) }));
+      item: { employeeCode: '', location: 'WH', facts: {} }, employees: employees.map(p => ({ ...p, caps: p.caps.length ? ['team_rota'] : [] })) }));
     expect(w.current?.holders).toEqual(['M', 'S']);
   });
 });
 
 describe('a leave request\'s layers', () => {
-  const by = (code: string, name: string) => ({ personCode: code, name });
+  const by = (code: string, name: string) => ({ employeeCode: code, name });
   const history: LeaveSign[] = [
     { from: '', to: 'pending', by: by('E', 'Amara Okafor'), at: '2026-08-12T08:00:00.000Z' },
     { from: 'pending', to: 'pending', by: by('M', 'Rachel Hussain'), at: '2026-08-14T09:00:00.000Z', layer: 'Line manager' },

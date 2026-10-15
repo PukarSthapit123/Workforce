@@ -44,10 +44,10 @@ test('a manager’s refused assign says why; an assign by the picker amends the 
   const amended = await rotaWeek(api);
   expect(amended).toMatchObject({ state: 'amendment', publishVersion: 1, version: before.version + 1, gapDays: [] });
   expect(lineOf(amended, 'CP-1402')[4]).toBe('E');
-  expect(amended.changes[0]).toMatchObject({ personCode: 'CP-1402', to: 'E', afterPublish: true, version: 1 });
+  expect(amended.changes[0]).toMatchObject({ employeeCode: 'CP-1402', to: 'E', afterPublish: true, version: 1 });
   const notes = await stored<NoteRow>(page, 'notifications');
-  /* the one new Rota item (1c seeds each person's inbox with a few more, ntf_seed_*) */
-  expect(notes.filter(n => n.personId === 'CP-1402' && n.area === 'Rota' && !n.id.startsWith('ntf_seed_')).map(n => n.title)).toEqual(['Rota amended']);
+  /* the one new Rota item (1c seeds each employee's inbox with a few more, ntf_seed_*) */
+  expect(notes.filter(n => n.employeeId === 'CP-1402' && n.area === 'Rota' && !n.id.startsWith('ntf_seed_')).map(n => n.title)).toEqual(['Rota amended']);
 
   await expect(page.getByTestId(tid.trota.publish)).toContainText('Republish');
   await page.getByTestId(tid.trota.publish).click();
@@ -124,7 +124,7 @@ test('a manager generates the rota from a working pattern; the summary counts wh
   await expect(info(page, 'Early / Late, 5 over 7 saved')).toBeVisible();
   await expect(page.getByTestId(tid.tpat.run)).toBeEnabled();
   await page.getByTestId(tid.tpat.run).click();
-  const summary = info(page, /^\d+ shift\(s\) written · 13\/08\/2026 – 09\/09\/2026 · \d+ week\(s\) · 5 people/);
+  const summary = info(page, /^\d+ shift\(s\) written · 13\/08\/2026 – 09\/09\/2026 · \d+ week\(s\) · 5 employees/);
   await expect(summary).toBeVisible();
   await expect(info(page, '1 published week(s) skipped. Amend those individually')).toBeVisible();
   const written = Number(/^(\d+)/.exec((await summary.first().textContent()) ?? '')?.[1] ?? 0);
@@ -163,8 +163,8 @@ test('the team matrix shows the published rota as scheduled hours and leave, and
   await expect(page.getByTestId(tid.tteam.pip('CP-1088', 0))).toHaveAttribute('data-state', 'off');
   await expect(page.getByText('Scheduled, not yet worked')).toBeVisible();
 
-  await page.goto('/team/tpeople');
-  await page.getByTestId(tid.people.open('CP-1266')).click();
+  await page.goto('/team/temployees');
+  await page.getByTestId(tid.employees.open('CP-1266')).click();
   await page.getByTestId(tid.proxy.open).click();
   await expect(page.getByTestId(tid.proxy.banner)).toBeVisible();
   await page.getByTestId(tid.proxy.view('week')).click();

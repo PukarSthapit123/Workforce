@@ -49,7 +49,7 @@ test('a manager approves a request, declines another only with a reason, and rea
   await expect(info(page, 'Bijay’s request declined. They have been told the reason.')).toBeVisible();
   await expect(page.getByTestId(tid.modal.root)).toHaveCount(0);
   await expect(page.getByTestId(tid.tleave.card('lr_1'))).toHaveCount(0);
-  const told = (await stored<NoteRow>(page, 'notifications')).filter(n => n.personId === 'EMP005' && n.area === 'Leave');
+  const told = (await stored<NoteRow>(page, 'notifications')).filter(n => n.employeeId === 'EMP005' && n.area === 'Leave');
   expect(told.map(n => n.body).join(' ')).toContain('Two others are already off that week');
 
   /* team balances: Bigyan's row and how his entitlement was worked out */

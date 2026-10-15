@@ -29,8 +29,8 @@ describe('my notifications (Review Focus 4)', () => {
     expect(me.items.map(i => i.link?.path ?? null)).toEqual(['/work/shifts', '/work/leave', '/work/shifts', '/work/ts']);
     const mgr = await mine(await as('manager'));
     expect(mgr.items).toHaveLength(6);
-    /* Workforce opens People for a manager; Timesheet opens Approvals */
-    expect(mgr.items.find(i => i.area === 'Workforce')?.link).toEqual({ view: 'tpeople', path: '/team/tpeople', label: 'People' });
+    /* Workforce opens Employees for a manager; Timesheet opens Approvals */
+    expect(mgr.items.find(i => i.area === 'Workforce')?.link).toEqual({ view: 'temployees', path: '/team/temployees', label: 'Employees' });
     /* the admin's Timesheet target, Payroll readiness, is not built yet: no link */
     const adm = await mine(await as('admin'));
     expect(adm.items.find(i => i.area === 'Integration')?.link).toEqual({ view: 'asetup', path: '/setup/asetup', label: 'Qnipay setup' });
@@ -93,14 +93,14 @@ describe('the matrix (Review Focus 1, 4, 7)', () => {
     expect(own()).toEqual([expect.objectContaining({ act: 'Notification settings changed', before: { 'lv_ok.employee': 'In-app + email' } })]);
     const mgr = await as('manager');
     expect((await mgr('POST', '/api/v1/leave/requests/lr_1/approve', undefined, 1)).status).toBe(200);
-    const told = Object.values(store.coll<{ personId: string; title: string }>('notifications')).filter(n => n.personId === 'CP-1201' && n.title === 'Leave approved');
+    const told = Object.values(store.coll<{ employeeId: string; title: string }>('notifications')).filter(n => n.employeeId === 'CP-1201' && n.title === 'Leave approved');
     expect(told).toEqual([]);
   });
   test('an email channel is recorded on the row as not connected and never reaches the inbox', async () => {
     const call = await as('admin');
     expect((await call('PATCH', '/api/v1/notifications/matrix', { events: { lv_ok: { employee: 'Email' } } }, 0)).status).toBe(200);
     await (await as('manager'))('POST', '/api/v1/leave/requests/lr_1/approve', undefined, 1);
-    const rows = Object.values(store.coll<{ personId: string; title: string; delivery?: unknown }>('notifications')).filter(n => n.personId === 'CP-1201' && n.title === 'Leave approved');
+    const rows = Object.values(store.coll<{ employeeId: string; title: string; delivery?: unknown }>('notifications')).filter(n => n.employeeId === 'CP-1201' && n.title === 'Leave approved');
     expect(rows).toEqual([expect.objectContaining({ delivery: { inApp: false, email: 'not-connected', sms: null } })]);
   });
   test('stale, forbidden, switched off, never-applies and a fault each leave no change and no audit row', async () => {

@@ -39,7 +39,7 @@ const mount = () => render(<QueryClientProvider client={queryClient}><AuditPage 
    same list and checking the table is gone, not merely stale underneath the
    error. */
 test('a refetch failure replaces the table with the error state, not stale rows', async () => {
-  const id = writeAudit({ who: { personCode: 'A', name: 'Dee' }, act: 'Permission changed', entity: 'userType', entityId: 'employee' });
+  const id = writeAudit({ who: { employeeCode: 'A', name: 'Dee' }, act: 'Permission changed', entity: 'userType', entityId: 'employee' });
   mount();
 
   await screen.findByTestId(tid.audit.table);

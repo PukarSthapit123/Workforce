@@ -14,7 +14,7 @@ import { PatternsPage } from './PatternsPage';
 withFakeServer();
 beforeEach(async () => { resetTo('social'); await signInAs('manager'); });
 
-interface Pattern { code: string; name: string; gen: string; active: boolean; days: string[]; people: { personCode: string; offset: number }[] }
+interface Pattern { code: string; name: string; gen: string; active: boolean; days: string[]; employees: { employeeCode: string; offset: number }[] }
 const pattern = (code: string) => store.coll<Pattern>('patterns')[`pat_${code}`];
 const acts = () => audits().filter(a => a.act !== 'Signed in').map(a => a.act);
 const toasts = (id: string = tid.toast.info) => screen.queryAllByTestId(id).map(t => t.textContent ?? '').join(' | ');
@@ -29,7 +29,7 @@ const openEditor = async (code: string) => {
 };
 
 describe('Working patterns', () => {
-  test('lists only the patterns covering the manager\'s location, and the editor shows the cycle, the run and the people, with full test id coverage', async () => {
+  test('lists only the patterns covering the manager\'s location, and the editor shows the cycle, the run and the employees, with full test id coverage', async () => {
     await open();
     expect(screen.getByTestId(tid.tpat.row('WP-01'))).toHaveTextContent('also runs at Beacon Court');
     expect(screen.getByTestId(tid.tpat.state('WP-02'))).toHaveTextContent('Active');
@@ -43,7 +43,7 @@ describe('Working patterns', () => {
     expect(screen.getByTestId(tid.tpat.day(5))).toHaveTextContent('Day 6off');
     expect(screen.getByTestId(tid.tpat.summary)).toHaveTextContent('Repeats every 7 days · 5 working days · 37.5h per cycle');
     expect(screen.getByTestId(tid.tpat.range)).toHaveTextContent('This run covers 13/08/2026 – 12/08/2027');
-    expect(screen.getByTestId(tid.tpat.person('CP-1042'))).toBeInTheDocument();
+    expect(screen.getByTestId(tid.tpat.employee('CP-1042'))).toBeInTheDocument();
     expect(screen.getByTestId(tid.tpat.save)).toBeDisabled();
     expectTestIdCoverage(document.body);
   });
@@ -62,7 +62,7 @@ describe('Working patterns', () => {
     const weeks = () => store.coll<{ lines: Record<string, string[]> }>('rotaWeeks');
     const before = structuredClone(weeks());
     await userEvent.click(screen.getByTestId(tid.tpat.run));
-    await expectToast(/\d+ shift\(s\) written · 13\/08\/2026 – 09\/09\/2026 · \d+ week\(s\) · \d+ people/);
+    await expectToast(/\d+ shift\(s\) written · 13\/08\/2026 – 09\/09\/2026 · \d+ week\(s\) · \d+ employees/);
     expect(toasts()).toContain('1 published week(s) skipped. Amend those individually');
     expect(acts()).toEqual(['Working pattern changed', 'Working pattern generated']);
     expect(weeks()['rw_WH_2026-08-17']?.lines['CP-1042']).toBeDefined();
@@ -77,7 +77,7 @@ describe('Working patterns', () => {
     expect(audits().find(a => a.act === 'Working pattern generated')?.after).toMatchObject({ written: landed, live: 1 });
   });
 
-  test('a new pattern starts as a draft; turning it on with an empty cycle is refused; people are staggered across its shift days', async () => {
+  test('a new pattern starts as a draft; turning it on with an empty cycle is refused; employees are staggered across its shift days', async () => {
     await open();
     await userEvent.click(screen.getByTestId(tid.tpat.newPattern));
     const dialog = await screen.findByTestId(tid.modal.root);
@@ -106,19 +106,19 @@ describe('Working patterns', () => {
     await userEvent.click(screen.getByTestId(tid.tpat.editorAdd));
     expect(await screen.findByTestId(tid.tpat.pickAdd)).toBeInTheDocument();
     await userEvent.click(screen.getByTestId(tid.tpat.pickAdd));
-    expect(screen.getByTestId(tid.tpat.pickWarn)).toHaveTextContent('Tick at least one person.');
+    expect(screen.getByTestId(tid.tpat.pickWarn)).toHaveTextContent('Tick at least one employee.');
     /* toasts from the saves above are still stacked, so check the dialog alone */
     expectTestIdCoverage(screen.getByTestId(tid.modal.root));
     const picks = screen.getAllByTestId(/^tpat-pick-CP-/);
     for (const p of picks.slice(0, 2)) await userEvent.click(p);
     await userEvent.click(screen.getByTestId(tid.tpat.pickAdd));
     await expectToast(`2 added to Twilights · staggered across 2 day(s)`);
-    expect(pattern(code)?.people.map(x => x.offset)).toEqual([1, 2]);
-    expect(acts()).toEqual(['Working pattern added', 'Working pattern changed', 'People added to a working pattern']);
-    /* one row for the add, naming each person and the day they start on */
-    const added = pattern(code)?.people.map(x => `${x.personCode} from day ${x.offset}`);
+    expect(pattern(code)?.employees.map(x => x.offset)).toEqual([1, 2]);
+    expect(acts()).toEqual(['Working pattern added', 'Working pattern changed', 'Employees added to a working pattern']);
+    /* one row for the add, naming each employee and the day they start on */
+    const added = pattern(code)?.employees.map(x => `${x.employeeCode} from day ${x.offset}`);
     expect(added).toHaveLength(2);
-    expect(audits().find(a => a.act === 'People added to a working pattern')?.after).toEqual({ people: 2, added });
+    expect(audits().find(a => a.act === 'Employees added to a working pattern')?.after).toEqual({ employees: 2, added });
     expect(await screen.findByTestId(tid.tpat.editor)).toBeInTheDocument();
   });
 
@@ -133,18 +133,18 @@ describe('Working patterns', () => {
     expect(within(dialog).getByTestId(tid.tpat.newStart)).toHaveAttribute('type', 'date');
   });
 
-  test('a manager is offered no Remove for another location\'s people on a shared pattern, and can still take their own off', async () => {
+  test('a manager is offered no Remove for another location\'s employees on a shared pattern, and can still take their own off', async () => {
     const wp1 = pattern('WP-01');
     if (!wp1) throw new Error('no WP-01');
-    wp1.people = [...wp1.people, { personCode: 'CP-1288', offset: 2 }];
+    wp1.employees = [...wp1.employees, { employeeCode: 'CP-1288', offset: 2 }];
     await open();
     await openEditor('WP-01');
-    expect(screen.getByTestId(tid.tpat.person('CP-1288'))).toBeInTheDocument();
-    expect(screen.queryByTestId(tid.tpat.removePerson('CP-1288'))).toBeNull();
-    await userEvent.click(screen.getByTestId(tid.tpat.removePerson('CP-1266')));
-    expect(screen.queryByTestId(tid.tpat.person('CP-1266'))).toBeNull();
+    expect(screen.getByTestId(tid.tpat.employee('CP-1288'))).toBeInTheDocument();
+    expect(screen.queryByTestId(tid.tpat.removeEmployee('CP-1288'))).toBeNull();
+    await userEvent.click(screen.getByTestId(tid.tpat.removeEmployee('CP-1266')));
+    expect(screen.queryByTestId(tid.tpat.employee('CP-1266'))).toBeNull();
     await userEvent.click(screen.getByTestId(tid.tpat.save));
     await expectToast(/ saved/);
-    expect(pattern('WP-01')?.people.map(x => x.personCode)).toEqual(['CP-1153', 'CP-1288']);
+    expect(pattern('WP-01')?.employees.map(x => x.employeeCode)).toEqual(['CP-1153', 'CP-1288']);
   });
 });

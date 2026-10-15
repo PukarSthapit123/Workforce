@@ -24,22 +24,22 @@ async function asEmail(email: string): Promise<Call> {
 }
 const refusal = (r: { body: unknown }) => Refusal.parse(r.body);
 const WRITES = ['leaveRequests', 'leaveLedger', 'sickEpisodes', 'leaveConfig', 'rotaWeeks', 'coverRequests', 'notifications', 'audit'];
-interface Week { id: string; version: number; state: string; lines: Record<string, string[]>; changes: { afterPublish: boolean; to: string; personCode: string; why: string; by: { personCode: string } }[] }
+interface Week { id: string; version: number; state: string; lines: Record<string, string[]>; changes: { afterPublish: boolean; to: string; employeeCode: string; why: string; by: { employeeCode: string } }[] }
 const week = (loc: string, ws: string) => store.coll<Week>('rotaWeeks')[`rw_${loc}_${ws}`];
-interface Note { id: string; personId: string; title: string; body: string; area: string; event?: string; channel?: string }
+interface Note { id: string; employeeId: string; title: string; body: string; area: string; event?: string; channel?: string }
 /* the rows this test raised: the seeded feeds (1c) are left out */
-const notes = (personId?: string) => Object.values(store.coll<Note>('notifications')).filter(n => !n.id.startsWith('ntf_seed_') && (!personId || n.personId === personId));
-const titles = (personId: string) => notes(personId).map(n => n.title);
+const notes = (employeeId?: string) => Object.values(store.coll<Note>('notifications')).filter(n => !n.id.startsWith('ntf_seed_') && (!employeeId || n.employeeId === employeeId));
+const titles = (employeeId: string) => notes(employeeId).map(n => n.title);
 /* the module's own rows: signing in writes one too */
 const leaveAudits = () => audits().filter(a => a.act !== 'Signed in');
-interface Req { id: string; version: number; state: string; personCode: string; reason: string; history: { from: string; to: string }[]; decidedBy: { personCode: string } | null }
+interface Req { id: string; version: number; state: string; employeeCode: string; reason: string; history: { from: string; to: string }[]; decidedBy: { employeeCode: string } | null }
 const req = (id: string) => store.coll<Req>('leaveRequests')[id];
 const setFlag = (k: string, on: boolean) => { const t = store.coll<{ flags: Record<string, boolean> }>('tenant').tenant; if (t) t.flags[k] = on; };
 const setModule = (k: string, on: boolean) => { const t = store.coll<{ modules: Record<string, boolean> }>('tenant').tenant; if (t) t.modules[k] = on; };
 /* A waiting request planted straight into the store, for scope checks. */
-function plant(id: string, personCode: string, from = '2026-09-07', to = '2026-09-08') {
+function plant(id: string, employeeCode: string, from = '2026-09-07', to = '2026-09-08') {
   const lr1 = store.coll<Record<string, unknown>>('leaveRequests').lr_1;
-  store.coll('leaveRequests')[id] = { ...lr1, id, personCode, from, to, qty: 2, history: [] };
+  store.coll('leaveRequests')[id] = { ...lr1, id, employeeCode, from, to, qty: 2, history: [] };
 }
 const AMARA = 'amara.okafor@brightpath.org', ROSA = 'rosa.mendes@brightpath.org', BIGYAN = 'bigyan.poudel@dogmagroup.co.uk', PUKAR = 'pukar.sthapit@dogmagroup.co.uk';
 const ask = (call: Call, body: Record<string, unknown>) => call('POST', '/api/v1/leave/requests', { type: 'AL', part: 'full', ...body });
@@ -50,7 +50,7 @@ const myLeave = async (call: Call) => MyLeave.parse((await call('GET', '/api/v1/
 
 /* Module 8 group 3: the policies moved from words to methods, and carry-over and
    bank-holiday handling were added, without moving any seeded number (D6).
-   Every person on both tenants, as the entitlement read gave them before the
+   Every employee on both tenants, as the entitlement read gave them before the
    change (040cbe8): entitlement days and hours, taken, waiting, and left in
    days and hours. The admin is given both leave reads so nobody is out of reach. */
 const SEEDED_BALANCES: Record<'social' | 'qnipay', Record<string, number[]>> = {
@@ -71,12 +71,12 @@ const SEEDED_BALANCES: Record<'social' | 'qnipay', Record<string, number[]>> = {
     EMP017: [24, 192, 0, 0, 24, 192], EMP018: [24, 180, 0, 0, 24, 180], EMP019: [24, 180, 0, 0, 24, 180], EMP020: [24, 180, 0, 0, 24, 180],
   },
 };
-test.each(['social', 'qnipay'] as const)('every seeded person on %s keeps the entitlement and balance they had before leave became configurable', async tenant => {
+test.each(['social', 'qnipay'] as const)('every seeded employee on %s keeps the entitlement and balance they had before leave became configurable', async tenant => {
   resetTo(tenant);
   const admin = store.coll<{ capabilities: string[] }>('userTypes').admin;
   admin?.capabilities.push('team_leave', 'own_leave');
   const call = await as('admin'), seen: Record<string, number[]> = {};
-  for (const code of Object.values(store.coll<{ code: string }>('people')).map(p => p.code)) {
+  for (const code of Object.values(store.coll<{ code: string }>('employees')).map(p => p.code)) {
     const { entitlement: e, balance: b } = EntitlementDetail.parse((await call('GET', `/api/v1/leave/entitlement/${code}`)).body);
     seen[code] = [e.days, e.hours, b.takenD, b.pending, b.leftD, b.leftH];
   }
@@ -87,7 +87,7 @@ describe('requesting leave (Review Focus 2)', () => {
   test('an employee asks for leave: a waiting record, the balance holds it back, the manager and the employee are told, one audit row', async () => {
     const call = await as('employee'), before = await myLeave(call);
     const r = LeaveRequested.parse((await ask(call, { from: '2026-09-14', to: '2026-09-15', note: 'Wedding' })).body);
-    expect(r.record).toMatchObject({ id: 'lr_6', personCode: 'CP-1042', state: 'pending', qty: 2, unit: 'days', note: 'Wedding', stateLabel: 'Waiting', range: '14/09/2026 – 15/09/2026' });
+    expect(r.record).toMatchObject({ id: 'lr_6', employeeCode: 'CP-1042', state: 'pending', qty: 2, unit: 'days', note: 'Wedding', stateLabel: 'Waiting', range: '14/09/2026 – 15/09/2026' });
     expect(r.hint).toBe(`${Number((before.balance.leftD - 2).toFixed(1))} days would remain.`);
     expect(r.summary).toBe('Annual leave requested · 2 days · 15.00 hours · sent to Rachel Hussain');
     const after = await myLeave(call);
@@ -169,21 +169,21 @@ describe('requesting leave (Review Focus 2)', () => {
 describe('scope and self (Review Focus 1)', () => {
   test('a manager cannot decide, read, record sickness or give days back for someone at another location', async () => {
     plant('lr_9', 'EMP-2044');
-    store.coll('sickEpisodes').sk_099 = { id: 'sk_099', version: 1, updatedAt: '2026-08-13T14:30:00.000Z', personCode: 'EMP-2044', from: '2026-08-03', to: '2026-08-04', reason: 'Other', note: '', rtw: null };
+    store.coll('sickEpisodes').sk_099 = { id: 'sk_099', version: 1, updatedAt: '2026-08-13T14:30:00.000Z', employeeCode: 'EMP-2044', from: '2026-08-03', to: '2026-08-04', reason: 'Other', note: '', rtw: null };
     const call = await as('manager'), before = snapshot(...WRITES);
     for (const r of [await approve(call, 'lr_9'), await decline(call, 'lr_9', 'No'), await call('GET', '/api/v1/leave/entitlement/EMP-2044'),
-      await call('POST', '/api/v1/leave/sickness', { personCode: 'EMP-2044', from: '2026-08-12', to: '2026-08-12', reason: 'Other' }),
+      await call('POST', '/api/v1/leave/sickness', { employeeCode: 'EMP-2044', from: '2026-08-12', to: '2026-08-12', reason: 'Other' }),
       await call('POST', '/api/v1/leave/sickness/sk_099/rtw', undefined, 1),
-      await call('POST', '/api/v1/leave/give-back', { personCode: 'EMP-2044', dates: ['2026-08-03'] })]) {
+      await call('POST', '/api/v1/leave/give-back', { employeeCode: 'EMP-2044', dates: ['2026-08-03'] })]) {
       expect(r.status).toBe(403);
       expect(refusal(r).code).toBe('scope');
     }
     const q = TeamRequests.parse((await call('GET', '/api/v1/leave/team/requests')).body);
     expect(q.requests.map(x => x.id)).not.toContain('lr_9');
     const b = TeamBalances.parse((await call('GET', '/api/v1/leave/team/balances')).body);
-    expect(b.rows.map(x => x.personCode)).not.toContain('EMP-2044');
+    expect(b.rows.map(x => x.employeeCode)).not.toContain('EMP-2044');
     const s = SicknessBoard.parse((await call('GET', '/api/v1/leave/sickness')).body);
-    expect(s.rows.map(x => x.personCode)).not.toContain('EMP-2044');
+    expect(s.rows.map(x => x.employeeCode)).not.toContain('EMP-2044');
     expect(snapshot(...WRITES)).toEqual(before);
   });
   test('a manager cannot approve or decline their own request, and it is not in their queue', async () => {
@@ -215,7 +215,7 @@ describe('scope and self (Review Focus 1)', () => {
       expect(r.status).toBe(403);
       expect(refusal(r).code).toBe('capability');
     }
-    expect((await myLeave(call)).requests.every(r => r.personCode === 'CP-1042')).toBe(true);
+    expect((await myLeave(call)).requests.every(r => r.employeeCode === 'CP-1042')).toBe(true);
     expect(snapshot(...WRITES)).toEqual(before);
   });
 });
@@ -287,8 +287,8 @@ describe('leave reaches the rota through the week path (Review Focus 4, D7)', ()
     expect(live?.lines['CP-1402']).toEqual(['E', 'L', 'E', '', '', 'V', 'V']);
     expect(live?.state).toBe('amendment');
     expect(live?.changes.slice(0, 2)).toEqual([
-      expect.objectContaining({ personCode: 'CP-1402', to: 'V', afterPublish: true, why: 'Leave approved', by: expect.objectContaining({ personCode: 'CP-1001' }) }),
-      expect.objectContaining({ personCode: 'CP-1402', to: 'V', afterPublish: true })]);
+      expect.objectContaining({ employeeCode: 'CP-1402', to: 'V', afterPublish: true, why: 'Leave approved', by: expect.objectContaining({ employeeCode: 'CP-1001' }) }),
+      expect.objectContaining({ employeeCode: 'CP-1402', to: 'V', afterPublish: true })]);
     expect(week('WH', '2026-08-17')).toMatchObject({ state: 'draft', version: 1, lines: { 'CP-1402': ['V', 'V', '', '', '', '', ''] } });
     const cover = store.coll<{ date: string; reason: string; open: boolean }>('coverRequests')[d.rota.covers[0] ?? ''];
     expect(cover).toMatchObject({ date: '2026-08-16', reason: 'Annual leave cover', open: true });
@@ -297,7 +297,7 @@ describe('leave reaches the rota through the week path (Review Focus 4, D7)', ()
     const rows = leaveAudits().slice(before);
     expect(rows).toEqual([expect.objectContaining({ act: 'Leave approved', after: expect.objectContaining({ rotaWeeks: ['rw_WH_2026-08-10', 'rw_WH_2026-08-17'], coversOpened: d.rota.covers }) })]);
     /* the rota still refuses a manual edit of the leave cell */
-    const edit = await (await as('manager'))('PUT', '/api/v1/rota/weeks/WH/2026-08-10/cells', { personCode: 'CP-1402', day: 5, code: '' }, live?.version);
+    const edit = await (await as('manager'))('PUT', '/api/v1/rota/weeks/WH/2026-08-10/cells', { employeeCode: 'CP-1402', day: 5, code: '' }, live?.version);
     expect(refusal(edit).code).toBe('ON_LEAVE');
   });
   test('with LV_ROTA off nothing reaches the rota', async () => {
@@ -345,7 +345,7 @@ describe('the timesheet reads leave records (Review Focus 5, D8)', () => {
     expect((await save(emp, 'CP-1042', '2026-08-11', { workedAnyway: true })).status).toBe(200);
   });
   /* review I1: a draft stored before the absence was recorded is checked again when it is sent */
-  const sick = (call: Call, code: string, from: string, to = from) => call('POST', '/api/v1/leave/sickness', { personCode: code, from, to, reason: 'Cold or flu' });
+  const sick = (call: Call, code: string, from: string, to = from) => call('POST', '/api/v1/leave/sickness', { employeeCode: code, from, to, reason: 'Cold or flu' });
   const asRead = async (call: Call, code: string, ws: string) =>
     TimesheetWeek.parse((await call('GET', `/api/v1/timesheets/${code}/weeks/${ws}`)).body).days.map(d => ({ date: d.date, version: d.version }));
   const tsDay = (code: string, date: string) => store.coll<{ state: string; workedAnyway?: boolean }>('timesheetDays')[`tsd_${code}_${date}`];
@@ -409,44 +409,44 @@ describe('the timesheet reads leave records (Review Focus 5, D8)', () => {
 describe('sickness episodes, Bradford and return to work (Review Focus 6, D9)', () => {
   /* review I3: a range that bridges two episodes merges them, with both before-states on the one audit row */
   test('a day between two episodes joins them into the earliest: the later one goes, Bradford counts one spell', async () => {
-    store.coll('sickEpisodes').sk_099 = { id: 'sk_099', version: 1, updatedAt: '2026-08-13T09:00:00.000Z', personCode: 'CP-1088', from: '2026-08-13', to: '2026-08-13',
-      reason: 'Other', note: 'Later note', rtw: { requestedAt: '2026-08-13T10:00:00.000Z', by: { personCode: 'CP-1001', name: 'Rachel Hussain' } } };
+    store.coll('sickEpisodes').sk_099 = { id: 'sk_099', version: 1, updatedAt: '2026-08-13T09:00:00.000Z', employeeCode: 'CP-1088', from: '2026-08-13', to: '2026-08-13',
+      reason: 'Other', note: 'Later note', rtw: { requestedAt: '2026-08-13T10:00:00.000Z', by: { employeeCode: 'CP-1001', name: 'Rachel Hussain' } } };
     const call = await as('manager');
-    const r = SicknessRecorded.parse((await call('POST', '/api/v1/leave/sickness', { personCode: 'CP-1088', from: '2026-08-12', to: '2026-08-12', reason: 'Other' })).body);
+    const r = SicknessRecorded.parse((await call('POST', '/api/v1/leave/sickness', { employeeCode: 'CP-1088', from: '2026-08-12', to: '2026-08-12', reason: 'Other' })).body);
     expect(r).toMatchObject({ extended: true, record: { id: 'sk_004', from: '2026-08-11', to: '2026-08-13', reason: 'Mental health', rtw: null } });
     expect(store.coll('sickEpisodes').sk_099).toBeUndefined();
     expect(leaveAudits()).toEqual([expect.objectContaining({ act: 'Sickness recorded', entityId: 'sk_004',
       before: { from: '2026-08-11', to: '2026-08-11', merged: [{ id: 'sk_099', from: '2026-08-13', to: '2026-08-13' }] } })]);
     const b = SicknessBoard.parse((await call('GET', '/api/v1/leave/sickness')).body);
-    expect(b.rows.find(x => x.personCode === 'CP-1088')).toMatchObject({ spells: 4, days: 9, score: 144 });
+    expect(b.rows.find(x => x.employeeCode === 'CP-1088')).toMatchObject({ spells: 4, days: 9, score: 144 });
   });
   test('the board scores spells squared times days over 52 weeks and raises the trigger', async () => {
     const b = SicknessBoard.parse((await (await as('manager'))('GET', '/api/v1/leave/sickness')).body);
-    expect(b.rows.find(r => r.personCode === 'CP-1088')).toMatchObject({ spells: 4, days: 7, score: 112, triggered: true, next: 'Return-to-work meeting due', latest: '11/08/2026 · 1 day' });
-    expect(b.rows.find(r => r.personCode === 'CP-1266')).toMatchObject({ spells: 1, days: 12, score: 12, triggered: false });
-    expect(b.banner).toMatchObject({ personCode: 'CP-1088', text: triggerBannerText('Marcus Reilly', 112, 100) });
-    expect(b.sickOnLeave).toEqual([{ personCode: 'CP-1088', name: 'Marcus Reilly', requestId: 'lr_4', date: '2026-08-11', days: 1 }]);
+    expect(b.rows.find(r => r.employeeCode === 'CP-1088')).toMatchObject({ spells: 4, days: 7, score: 112, triggered: true, next: 'Return-to-work meeting due', latest: '11/08/2026 · 1 day' });
+    expect(b.rows.find(r => r.employeeCode === 'CP-1266')).toMatchObject({ spells: 1, days: 12, score: 12, triggered: false });
+    expect(b.banner).toMatchObject({ employeeCode: 'CP-1088', text: triggerBannerText('Marcus Reilly', 112, 100) });
+    expect(b.sickOnLeave).toEqual([{ employeeCode: 'CP-1088', name: 'Marcus Reilly', requestId: 'lr_4', date: '2026-08-11', days: 1 }]);
   });
   test('a day next to an episode extends it, S goes on the rota, and the score moves', async () => {
     const call = await as('manager');
-    const r = SicknessRecorded.parse((await call('POST', '/api/v1/leave/sickness', { personCode: 'CP-1088', from: '2026-08-12', to: '2026-08-12', reason: 'Mental health' })).body);
+    const r = SicknessRecorded.parse((await call('POST', '/api/v1/leave/sickness', { employeeCode: 'CP-1088', from: '2026-08-12', to: '2026-08-12', reason: 'Mental health' })).body);
     expect(r).toMatchObject({ extended: true, record: { id: 'sk_004', from: '2026-08-11', to: '2026-08-12', version: 2 }, rota: { written: 1, weeks: ['rw_WH_2026-08-10'] } });
     expect(week('WH', '2026-08-10')?.lines['CP-1088']).toEqual(['V', 'V', 'S', 'L', '', 'E', '']);
     expect(week('WH', '2026-08-10')?.state).toBe('amendment');
     expect(titles('CP-1088')).toEqual(expect.arrayContaining(['Sickness recorded', 'Rota amended']));
     expect(leaveAudits()).toEqual([expect.objectContaining({ act: 'Sickness recorded', entityId: 'sk_004', before: { from: '2026-08-11', to: '2026-08-11' } })]);
     const b = SicknessBoard.parse((await call('GET', '/api/v1/leave/sickness')).body);
-    expect(b.rows.find(x => x.personCode === 'CP-1088')).toMatchObject({ spells: 4, days: 8, score: 128 });
-    const n = SicknessRecorded.parse((await call('POST', '/api/v1/leave/sickness', { personCode: 'CP-1153', from: '2026-08-12', to: '2026-08-12', reason: 'Other' })).body);
-    expect(n).toMatchObject({ extended: false, record: { id: 'sk_007', personCode: 'CP-1153' } });
-    expect(SicknessBoard.parse((await call('GET', '/api/v1/leave/sickness')).body).rows.find(x => x.personCode === 'CP-1153')).toMatchObject({ spells: 2, days: 2, score: 8 });
+    expect(b.rows.find(x => x.employeeCode === 'CP-1088')).toMatchObject({ spells: 4, days: 8, score: 128 });
+    const n = SicknessRecorded.parse((await call('POST', '/api/v1/leave/sickness', { employeeCode: 'CP-1153', from: '2026-08-12', to: '2026-08-12', reason: 'Other' })).body);
+    expect(n).toMatchObject({ extended: false, record: { id: 'sk_007', employeeCode: 'CP-1153' } });
+    expect(SicknessBoard.parse((await call('GET', '/api/v1/leave/sickness')).body).rows.find(x => x.employeeCode === 'CP-1153')).toMatchObject({ spells: 2, days: 2, score: 8 });
   });
   test('a day already inside an episode, and a reason not on the list, are refused', async () => {
     const call = await as('manager'), before = snapshot(...WRITES);
-    const a = await call('POST', '/api/v1/leave/sickness', { personCode: 'CP-1266', from: '2026-06-03', to: '2026-06-05', reason: 'Other' });
+    const a = await call('POST', '/api/v1/leave/sickness', { employeeCode: 'CP-1266', from: '2026-06-03', to: '2026-06-05', reason: 'Other' });
     expect(a.status).toBe(409);
     expect(refusal(a).code).toBe('ALREADY_RECORDED');
-    const b = await call('POST', '/api/v1/leave/sickness', { personCode: 'CP-1266', from: '2026-08-12', to: '', reason: 'Hangover' });
+    const b = await call('POST', '/api/v1/leave/sickness', { employeeCode: 'CP-1266', from: '2026-08-12', to: '', reason: 'Hangover' });
     expect(refusal(b)).toMatchObject({ code: 'invalid', field: 'reason', message: 'Choose the reason given.' });
     expect(snapshot(...WRITES)).toEqual(before);
   });
@@ -457,15 +457,15 @@ describe('sickness episodes, Bradford and return to work (Review Focus 6, D9)', 
     store.db.sickEpisodes = {};
     expect((await admin('PATCH', '/api/v1/leave/config', { sicknessReasons: ['New reason'] }, config.version)).status).toBe(200);
     expect(SicknessBoard.parse((await manager('GET', '/api/v1/leave/sickness')).body).reasons).toEqual(['New reason']);
-    const saved = await manager('POST', '/api/v1/leave/sickness', { personCode: 'CP-1088', from: '2026-10-05', to: '2026-10-05', reason: 'New reason' });
+    const saved = await manager('POST', '/api/v1/leave/sickness', { employeeCode: 'CP-1088', from: '2026-10-05', to: '2026-10-05', reason: 'New reason' });
     expect(SicknessRecorded.parse(saved.body).record.reason).toBe('New reason');
-    const refused = await manager('POST', '/api/v1/leave/sickness', { personCode: 'CP-1088', from: '2026-10-07', to: '2026-10-07', reason: 'Other' });
+    const refused = await manager('POST', '/api/v1/leave/sickness', { employeeCode: 'CP-1088', from: '2026-10-07', to: '2026-10-07', reason: 'Other' });
     expect(refusal(refused)).toMatchObject({ code: 'invalid', field: 'reason', message: 'Choose the reason given.' });
   });
   test('arranging a return to work is stored on the episode, notified and audited once; a second request is refused', async () => {
     const call = await as('manager');
     const r = RtwArranged.parse((await call('POST', '/api/v1/leave/sickness/sk_004/rtw', undefined, 1)).body);
-    expect(r.record.rtw).toMatchObject({ by: { personCode: 'CP-1001', name: 'Rachel Hussain' } });
+    expect(r.record.rtw).toMatchObject({ by: { employeeCode: 'CP-1001', name: 'Rachel Hussain' } });
     expect(r.summary).toBe('Return-to-work meeting requested. The colleague and HR have been notified.');
     expect(titles('CP-1088')).toEqual(['Return-to-work meeting requested']);
     expect(notes('CP-1002')).toEqual([expect.objectContaining({ title: 'Return-to-work meeting requested', body: 'Requested by Rachel Hussain · Willow House' })]);
@@ -481,7 +481,7 @@ describe('giving days back (D10, Review Focus 3)', () => {
     const call = await as('manager');
     const ent = async () => EntitlementDetail.parse((await call('GET', '/api/v1/leave/entitlement/CP-1088')).body).balance;
     const before = await ent();
-    const r = DaysGivenBack.parse((await call('POST', '/api/v1/leave/give-back', { personCode: 'CP-1088', dates: ['2026-08-11'] })).body);
+    const r = DaysGivenBack.parse((await call('POST', '/api/v1/leave/give-back', { employeeCode: 'CP-1088', dates: ['2026-08-11'] })).body);
     expect(r.record).toMatchObject({ type: 'Days returned', qty: 1, unit: 'days', counts: true, dates: ['2026-08-11'], qtyText: '+1 days' });
     expect(store.coll<{ leaveType?: string }>('leaveLedger')[r.record.id]?.leaveType).toBe('AL');
     expect(r.summary).toBe('1 day returned to Marcus Reilly’s annual leave balance');
@@ -491,13 +491,13 @@ describe('giving days back (D10, Review Focus 3)', () => {
     expect(week('WH', '2026-08-10')?.lines['CP-1088']?.slice(0, 2)).toEqual(['V', 'S']);
     expect(titles('CP-1088')).toEqual(expect.arrayContaining(['Entitlement changed']));
     expect(leaveAudits().map(a => a.act)).toEqual(['Days returned']);
-    const twice = await call('POST', '/api/v1/leave/give-back', { personCode: 'CP-1088', dates: ['2026-08-11'] });
+    const twice = await call('POST', '/api/v1/leave/give-back', { employeeCode: 'CP-1088', dates: ['2026-08-11'] });
     expect(twice.status).toBe(422);
     expect(refusal(twice).code).toBe('NOT_SICK_ON_LEAVE');
     expect((await ent()).leftD).toBe(after.leftD);
   });
   test('a day that is not sickness during approved leave is refused', async () => {
-    const r = await (await as('manager'))('POST', '/api/v1/leave/give-back', { personCode: 'CP-1088', dates: ['2026-08-10'] });
+    const r = await (await as('manager'))('POST', '/api/v1/leave/give-back', { employeeCode: 'CP-1088', dates: ['2026-08-10'] });
     expect(refusal(r)).toMatchObject({ code: 'NOT_SICK_ON_LEAVE', field: 'dates' });
   });
 });
@@ -518,7 +518,7 @@ describe('team reads', () => {
     resetTo('qnipay');
     const call = await asEmail(PUKAR);
     const l = Leavers.parse((await call('GET', '/api/v1/leave/leavers')).body);
-    expect(l.rows.map(r => r.personCode)).toEqual(['EMP008']);
+    expect(l.rows.map(r => r.employeeCode)).toEqual(['EMP008']);
     expect(l.rows[0]?.action).toMatch(/^(Recover|Pay) [\d.]+ days \([\d.]+ h\)( in lieu)? through the final payroll$|^No adjustment required$/);
     expect(l.settled).toBe('Workforce identifies the amount and the direction. The monetary settlement is made in payroll.');
     setFlag('LV_LEAVER', false);
@@ -611,7 +611,7 @@ describe('leave setup (D11)', () => {
     const requests = store.coll<{ id: string; type: string }>('leaveRequests');
     store.db.leaveRequests = Object.fromEntries(Object.entries(requests).filter(([, record]) => record.type !== 'AL'));
     store.coll<Record<string, unknown>>('leaveLedger').led_type = {
-      id: 'led_type', version: 1, updatedAt: '2026-08-13T14:30:00.000Z', personCode: 'CP-1042',
+      id: 'led_type', version: 1, updatedAt: '2026-08-13T14:30:00.000Z', employeeCode: 'CP-1042',
       date: '2026-08-13', type: 'Days returned', leaveType: 'AL', qty: 1, unit: 'days', why: 'Test', counts: true, by: null,
     };
     const config = LeaveSetup.parse((await admin('GET', '/api/v1/leave/config')).body).config;
@@ -673,9 +673,9 @@ describe('a fault on each write leaves nothing behind (Review Focus 7)', () => {
     ['cancel', 'employee', 'POST', '/api/v1/leave/requests/lr_3/cancel', undefined, 1],
     ['approve', 'manager', 'POST', '/api/v1/leave/requests/lr_1/approve', undefined, 1],
     ['decline', 'manager', 'POST', '/api/v1/leave/requests/lr_2/decline', { reason: 'Short-staffed' }, 1],
-    ['record sickness', 'manager', 'POST', '/api/v1/leave/sickness', { personCode: 'CP-1088', from: '2026-08-12', to: '2026-08-12', reason: 'Other' }, undefined],
+    ['record sickness', 'manager', 'POST', '/api/v1/leave/sickness', { employeeCode: 'CP-1088', from: '2026-08-12', to: '2026-08-12', reason: 'Other' }, undefined],
     ['return to work', 'manager', 'POST', '/api/v1/leave/sickness/sk_004/rtw', undefined, 1],
-    ['give days back', 'manager', 'POST', '/api/v1/leave/give-back', { personCode: 'CP-1088', dates: ['2026-08-11'] }, undefined],
+    ['give days back', 'manager', 'POST', '/api/v1/leave/give-back', { employeeCode: 'CP-1088', dates: ['2026-08-11'] }, undefined],
     ['leave setup', 'admin', 'PATCH', '/api/v1/leave/config', { slaDays: 3 }, 1],
   ];
   for (const [what, who, method, path, body, v] of writes) {

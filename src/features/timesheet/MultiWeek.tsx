@@ -11,7 +11,7 @@ import { hm } from './capture';
    (qnipay-workforce-v15.html:6358-6365) and submit-multiweek (11429-11433).
    Several past weeks go in one request and each routes through approval on
    its own; a week in a closed period comes back held with its lock note. */
-export function MultiWeek({ week, personId }: { week: TimesheetWeek; personId: string }) {
+export function MultiWeek({ week, employeeId }: { week: TimesheetWeek; employeeId: string }) {
   const c = week.capture, rows = week.earlierWeeks;
   const [picked, setPicked] = useState<ReadonlySet<string>>(() => new Set());
   const [result, setResult] = useState<MultiweekSubmitted | null>(null);
@@ -20,7 +20,7 @@ export function MultiWeek({ week, personId }: { week: TimesheetWeek; personId: s
   const toggle = (ws: string, on: boolean) => setPicked(p => { const n = new Set(p); if (on) n.add(ws); else n.delete(ws); return n; });
   const send = () => {
     if (!picked.size) { toastRefusal({ message: 'Select at least one week.', next: 'Tick the weeks you want to send, then submit them.' }); return; }
-    submit.mutate({ personId, weeks: [...picked] }, { onSuccess: res => {
+    submit.mutate({ employeeId, weeks: [...picked] }, { onSuccess: res => {
       const sent = res.weeks.filter(w => w.outcome === 'submitted').length;
       if (sent) toastInfo(`${sent} week${sent === 1 ? '' : 's'} submitted · each routes through approval separately`);
       else toastInfo('Nothing was submitted', 'Each week below says why it was held back.');
@@ -55,7 +55,7 @@ export function MultiWeek({ week, personId }: { week: TimesheetWeek; personId: s
       {held.length > 0 && <Banner testId={tid.ts.mwResult} tone="warn" title={`${held.length} week${held.length === 1 ? '' : 's'} held back`}>
         {held.map(w => <span key={w.weekStart} className="block">{w.label}: {w.reason}</span>)}</Banner>}
       {rows.length > 0 && <div className="mt-lg flex flex-wrap justify-end gap-sm">
-        <Button testId={tid.ts.mwSubmit} kind="ghost" pending={submit.isPending(`${personId}/multiweek`)} onClick={send}>Submit selected</Button>
+        <Button testId={tid.ts.mwSubmit} kind="ghost" pending={submit.isPending(`${employeeId}/multiweek`)} onClick={send}>Submit selected</Button>
       </div>}
     </Card>);
 }

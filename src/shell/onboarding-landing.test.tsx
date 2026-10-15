@@ -7,7 +7,7 @@ import { App } from '@/App';
 import { resetTo } from '@/test/api-helpers';
 import { tid } from '@/testids';
 
-/* Module 5 D8: a candidate or preboarding person signs in to the portal only.
+/* Module 5 D8: a candidate or preboarding employee signs in to the portal only.
    The shell builds the nav from session.onboarding, so their one tab is
    Onboarding and "/" lands on it. */
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
@@ -35,7 +35,7 @@ test('a candidate sees the onboarding portal and nothing else, and lands on it',
   expect(within(page).getByTestId(tid.onb.step('personal'))).toHaveAttribute('aria-current', 'step');
   expect(screen.queryByTestId(tid.notBuilt.root)).toBeNull();
 });
-test('with the Onboarding module off the same person gets the ordinary employee nav', async () => {
+test('with the Onboarding module off the same employee gets the ordinary employee nav', async () => {
   const t = store.coll<{ modules: Record<string, boolean> }>('tenant').tenant;
   if (t) t.modules.ON = false;
   const tabs = await signIn('priya.raman@brightpath.org');

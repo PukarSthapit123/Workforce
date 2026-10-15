@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { defineEndpoint } from './endpoints';
 import { RecordMeta, mutation } from './common';
-import { IsoDate } from './people';
+import { IsoDate } from './employees';
 import { WeekGrid, WeekLayout } from './timesheets';
 import { isTimeZone } from '@/domain/time';
 
@@ -46,7 +46,7 @@ export const ModuleEffect = z.object({
   /* records left exactly as they were, by kind */
   kept: z.array(z.object({ what: z.string(), count: z.number().int().nonnegative() })),
   shiftsSetAside: z.number().int().nonnegative(), shiftsRestored: z.number().int().nonnegative(),
-  /* kept shifts not put back because the person is on leave or off sick that day */
+  /* kept shifts not put back because the employee is on leave or off sick that day */
   shiftsNotRestored: z.number().int().nonnegative(),
   /* capture methods Timesheet brought back (on) or remembered (off) */
   capturesRestored: z.array(z.string()), capturesRemembered: z.array(z.string()),

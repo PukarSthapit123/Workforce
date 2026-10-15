@@ -16,7 +16,7 @@ export { Page, PageHead, SectionHead, ActionBar } from './Page';
 export { Card, CardHead, IconTile, AdminCard } from './Card';
 export { FilterBar, SearchFilter, SelectFilter, ChipButton } from './Filters';
 export { Logo } from './Logo';
-export { Avatar, PersonName, PersonBlock, CardNote, initials, Fact, GroupLabel, Stats, Stat, Banner, Empty, Count, Small, SettingRow, ChipPicker, Chip, SetupCardButton } from './Record';
+export { Avatar, EmployeeName, EmployeeBlock, CardNote, initials, Fact, GroupLabel, Stats, Stat, Banner, Empty, Count, Small, SettingRow, ChipPicker, Chip, SetupCardButton } from './Record';
 export { FormSection, Wide, FormWarn, UnitInput, ChoiceRow, ChoiceList, NativeSelect, FieldGrid, FormGroupLabel, FormExpander, AddLine, CheckRow,
   INLINE_INPUT, InlineInput, SettingSelect, SettingText, SubHead } from './FormParts';
 export { Seg } from './Seg';

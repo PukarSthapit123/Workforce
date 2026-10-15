@@ -23,7 +23,7 @@ test('a manager cannot read or write another location’s week, patterns or cove
 
   const read = await api.get(weekPath(W33, 'BC'));
   expect([read.status, code(read), message(read)]).toEqual([403, 'scope', 'You can manage the rota at Willow House only.']);
-  const write = await sendVersioned(page, 'PUT', `${weekPath(W33, 'BC')}/cells`, 0, { personCode: 'CP-1288', day: 0, code: 'E' });
+  const write = await sendVersioned(page, 'PUT', `${weekPath(W33, 'BC')}/cells`, 0, { employeeCode: 'CP-1288', day: 0, code: 'E' });
   expect([write.status, code(write)]).toEqual([403, 'scope']);
   const publish = await sendVersioned(page, 'POST', `${weekPath(W33, 'FS')}/transition`, 1, { to: 'published' });
   expect([publish.status, code(publish)]).toEqual([403, 'scope']);
@@ -90,13 +90,13 @@ test('an employee cannot write the rota, and cannot claim an open shift at anoth
   await signInEmail(page, AMARA);
   await page.goto('/work/shifts');
   await page.getByTestId(tid.shifts.cards).waitFor();
-  const cell = await sendVersioned(page, 'PUT', `${weekPath(W33)}/cells`, 1, { personCode: 'CP-1042', day: 5, code: 'E' });
+  const cell = await sendVersioned(page, 'PUT', `${weekPath(W33)}/cells`, 1, { employeeCode: 'CP-1042', day: 5, code: 'E' });
   expect([cell.status, code(cell)]).toEqual([403, 'capability']);
   const publish = await sendVersioned(page, 'POST', `${weekPath(W33)}/transition`, 1, { to: 'published' });
   expect([publish.status, code(publish)]).toEqual([403, 'capability']);
   const clear = await sendVersioned(page, 'POST', `${weekPath('2026-08-17')}/clear`, 0);
   expect([clear.status, code(clear)]).toEqual([403, 'capability']);
-  const cover = await sendVersioned(page, 'POST', '/api/v1/rota/cover/cov_1/assign', 1, { personCode: 'CP-1042' });
+  const cover = await sendVersioned(page, 'POST', '/api/v1/rota/cover/cov_1/assign', 1, { employeeCode: 'CP-1042' });
   expect([cover.status, code(cover)]).toEqual([403, 'capability']);
 
   /* Grace works at Beacon Court: Willow House's open shift is not hers to claim */

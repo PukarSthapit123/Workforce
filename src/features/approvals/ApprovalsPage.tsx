@@ -17,7 +17,7 @@ import { ChainDialog, DelegationDialog } from './ApprovalDialogs';
    setting): the approval method is the Email approval feature, the cut-off,
    its enforcement and the return reason are on Timesheet setup. Then the
    delegations, which the prototype could only add as one fixed row, with a
-   real editor. Per-person approver assignments are not here: a person's
+   real editor. Per-employee approver assignments are not here: an employee's
    approver is their manager on their record (1b). */
 export function ApprovalsPage() {
   const setup = useApprovalSetup();
@@ -81,7 +81,7 @@ function SignOffCard({ s }: { s: SignOff }) {
   const range = (p: { from: string; to: string }) => `${formatDmy(p.from)} – ${formatDmy(p.to)}`;
   return (
     <AdminCard testId={tid.aappr.signOff} icon={<Shield />} title="Sign-off settings" tipTestId={tid.aappr.signOffTip}
-      tip="Applies to every employee type. Each person's approver is the manager on their record." desc="How a period gets approved">
+      tip="Applies to every employee type. Each employee's approver is the manager on their record." desc="How a period gets approved">
       <SettingRow title={<>Approval method<Tip testId={tid.aappr.methodTip} text="An email link lets a manager approve without signing in." /></>} desc="How managers approve">
         <span data-testid={tid.aappr.method} className="text-sm">{s.emailApproval ? 'Email link (one-click)' : 'In-app only'}</span>
         <NavLink testId={tid.aappr.methodLink} to="/setup/amods?m=TS" className={LINK}>Change it in Modules and features</NavLink>

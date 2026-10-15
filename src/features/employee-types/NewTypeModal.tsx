@@ -44,7 +44,7 @@ export function NewTypeModal({ onClose, onCreated }: { onClose(): void; onCreate
         <Button testId={tid.types.newSave} kind="primary" pending={create.anyPending} onClick={submit}>Create</Button></>}>
       <Field label="Type name" required error={create.fieldError('name')}>
         <TextInput testId={tid.types.newField('name')} value={name} placeholder="For example, Waking Night Support" onChange={e => setName(e.target.value)} /></Field>
-      <Field label="Type code" error={create.fieldError('code')} tip="People reference a type by this code. It cannot change once the type exists.">
+      <Field label="Type code" error={create.fieldError('code')} tip="Employees reference a type by this code. It cannot change once the type exists.">
         <TextInput testId={tid.types.newField('code')} value={code ?? slugOf(name)} onChange={e => setCode(e.target.value)} /></Field>
       <Field label="Start from">
         <NativeSelect testId={tid.types.newField('base')} value={base} onChange={e => pickBase(e.target.value)}>

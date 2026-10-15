@@ -29,16 +29,16 @@ export function weekChip(week: TimesheetWeek) {
   return WEEK_CHIP[key] ?? DRAFT_CHIP;
 }
 
-export function WeekView({ week, today, onAnchor, personId }: {
-  week: TimesheetWeek; today: string; onAnchor: (date: string) => void; personId: string;
+export function WeekView({ week, today, onAnchor, employeeId }: {
+  week: TimesheetWeek; today: string; onAnchor: (date: string) => void; employeeId: string;
 }) {
   const submit = useSubmitWeek();
   const [result, setResult] = useState<{ weekStart: string; res: WeekSubmitted } | null>(null);
-  const c = week.capture, mgr = week.person.manager.trim() || 'your manager';
-  const pending = submit.isPending(`${personId}/week/${week.weekStart}`);
+  const c = week.capture, mgr = week.employee.manager.trim() || 'your manager';
+  const pending = submit.isPending(`${employeeId}/week/${week.weekStart}`);
   const onSubmit = (state: GridState) => {
     const m = weekModel(c.fields, typeOf(c), envOf(c), c.weekGrid);
-    submit.mutate({ personId, weekStart: week.weekStart, body: weekBody(week, state, m) }, { onSuccess: res => {
+    submit.mutate({ employeeId, weekStart: week.weekStart, body: weekBody(week, state, m) }, { onSuccess: res => {
       const n = res.submitted.length;
       toastInfo(`Week ${isoWeek(week.weekStart)} submitted · ${n} day${n === 1 ? '' : 's'} · ${hm(c, res.weekMinutes)} · routed to ${mgr}`
         + (res.held.length ? ` · ${res.held.length} day${res.held.length === 1 ? '' : 's'} held back` : ''),
@@ -54,7 +54,7 @@ export function WeekView({ week, today, onAnchor, personId }: {
       {submit.refusal && <FormWarn testId={tid.ts.banner('week-refusal')}>{refusedDay(week, submit.refusal.field)}{submit.refusal.message} <span className="opacity-90">{submit.refusal.next}</span></FormWarn>}
       {shown && shown.held.length > 0 && <Banner testId={tid.ts.weekResult} tone="info" title={`${shown.held.length} day${shown.held.length === 1 ? '' : 's'} held back`}>
         {shown.held.map(h => <span key={h.date} className="block">{h.reason}</span>)}</Banner>}
-      {flagOn(c, 'MULTIWEEK') && <MultiWeek week={week} personId={personId} />}
+      {flagOn(c, 'MULTIWEEK') && <MultiWeek week={week} employeeId={employeeId} />}
     </>);
 }
 
@@ -76,7 +76,7 @@ function WeekPanel({ week, today, onAnchor, onSubmit, pending }: {
     setState(r.state);
     toastInfo(`Filled from your rota · ${r.days} day${r.days > 1 ? 's' : ''} · check and adjust before submitting`);
   };
-  const contracted = week.person.contractedHours;
+  const contracted = week.employee.contractedHours;
   /* rotadHrs: the hours of the shifts on this week's published rota */
   const rotad = Number(week.days.reduce((n, d) => n + (rotaShift(d)?.hours ?? 0), 0).toFixed(2));
   return (

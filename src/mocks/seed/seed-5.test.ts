@@ -7,7 +7,7 @@ import {
 
 type Rec = Record<string, unknown> & { id: string };
 interface SeedFile { data: Record<string, Record<string, Rec>> }
-interface Person extends Rec { code: string; state: string }
+interface Employee extends Rec { code: string; state: string }
 interface Tenant extends Rec { modules: Record<string, boolean>; flags: Record<string, boolean> }
 const vals = <T = Rec>(s: SeedFile, c: string) => Object.values(s.data[c] ?? {}) as T[];
 const ONBOARDING = ['onboardingConfig', 'onboardingPolicies', 'onboardingCases'];
@@ -23,7 +23,7 @@ for (const [name, raw] of Object.entries({ social, qnipay })) {
   const cfg = seed.data.onboardingConfig?.onboardingConfig as Rec & OnboardingConfig;
   const policies = vals<Rec & OnbPolicy>(seed, 'onboardingPolicies');
   const cases = vals<Rec & OnboardingCase>(seed, 'onboardingCases');
-  const people = vals<Person>(seed, 'people');
+  const employees = vals<Employee>(seed, 'employees');
   const tenant = seed.data.tenant?.tenant as Tenant;
   const features = onbFeatures(tenant.modules, tenant.flags);
 
@@ -60,15 +60,15 @@ for (const [name, raw] of Object.entries({ social, qnipay })) {
         + 'a family connection to a supplier, a financial interest in a client. Declaring it is not a problem. Not declaring it is.');
     });
     test('every starter, and only a starter, has an empty case of their own', () => {
-      const starters = people.filter(p => isStarterState(p.state));
+      const starters = employees.filter(p => isStarterState(p.state));
       expect(starters.map(p => [p.code, p.state])).toEqual(STARTERS[name]);
       expect(cases.map(c => c.id).sort()).toEqual(starters.map(p => caseId(p.code)).sort());
       for (const c of cases) {
         const { id, version, updatedAt, ...rest } = c;
-        expect([id, version, typeof updatedAt], id).toEqual([caseId(c.personCode), 1, 'string']);
-        expect(rest, id).toEqual(emptyCase(c.personCode));
+        expect([id, version, typeof updatedAt], id).toEqual([caseId(c.employeeCode), 1, 'string']);
+        expect(rest, id).toEqual(emptyCase(c.employeeCode));
       }
-      for (const p of people.filter(x => !isStarterState(x.state))) expect(seed.data.onboardingCases?.[caseId(p.code)], p.code).toBeUndefined();
+      for (const p of employees.filter(x => !isStarterState(x.state))) expect(seed.data.onboardingCases?.[caseId(p.code)], p.code).toBeUndefined();
     });
     test('an empty case has every step but review and every required document outstanding, and nothing done', () => {
       expect(features).toEqual({ rtw: true, conv: true, wtd: true, qual: true, pol: true, sign: true, verify: true });

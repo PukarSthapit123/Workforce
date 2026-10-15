@@ -38,15 +38,15 @@ test('filter controls name themselves', () => {
 });
 
 test('Button renders its test id', () => {
-  render(<Button testId="people-add">Add someone</Button>);
-  expect(screen.getByTestId('people-add')).toHaveTextContent('Add someone');
+  render(<Button testId="employees-add">Add someone</Button>);
+  expect(screen.getByTestId('employees-add')).toHaveTextContent('Add someone');
 });
 test('Field wires label, hint and error to the control, and takes its test ids from the control', () => {
   render(<Field label="Email" hint="Used to sign in" error="Already used by Amara Okafor" tip="The address they sign in with.">
-    <TextInput testId="person-form-email-input" /></Field>);
-  expect(screen.getByTestId('person-form-email-input-field')).toBeInTheDocument();
-  expect(screen.getByTestId('person-form-email-input-field-tip')).toBeInTheDocument();
-  const input = screen.getByTestId('person-form-email-input');
+    <TextInput testId="employee-form-email-input" /></Field>);
+  expect(screen.getByTestId('employee-form-email-input-field')).toBeInTheDocument();
+  expect(screen.getByTestId('employee-form-email-input-field-tip')).toBeInTheDocument();
+  const input = screen.getByTestId('employee-form-email-input');
   expect(input).toHaveAccessibleName('Email');
   expect(input).toHaveAccessibleDescription(/Already used by Amara Okafor/);
   expect(input).toHaveAttribute('aria-invalid', 'true');
@@ -69,14 +69,14 @@ test('CheckboxField and SwitchField carry their test id and pass coverage', () =
   expectTestIdCoverage();
 });
 test('Modal renders its title and a labelled close control', () => {
-  render(<Modal open onOpenChange={() => {}} title="Edit person" />);
+  render(<Modal open onOpenChange={() => {}} title="Edit employee" />);
   expect(screen.getByTestId('modal')).toBeInTheDocument();
-  expect(screen.getByTestId('modal-title')).toHaveTextContent('Edit person');
+  expect(screen.getByTestId('modal-title')).toHaveTextContent('Edit employee');
   expect(screen.getByTestId('modal-close')).toBeInTheDocument();
   expectTestIdCoverage();
 });
 test('ConfirmModal wires confirm and cancel to the registry ids', () => {
-  render(<ConfirmModal open onOpenChange={() => {}} title="Remove person" body="This cannot be undone." confirmLabel="Remove" onConfirm={() => {}} />);
+  render(<ConfirmModal open onOpenChange={() => {}} title="Remove employee" body="This cannot be undone." confirmLabel="Remove" onConfirm={() => {}} />);
   expect(screen.getByTestId('modal-confirm')).toHaveTextContent('Remove');
   expect(screen.getByTestId('modal-cancel')).toHaveTextContent('Keep it as it is');
 });

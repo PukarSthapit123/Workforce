@@ -25,9 +25,9 @@ const WRITES = ['rotaWeeks', 'notifications', 'audit'];
 const NEXT = '/api/v1/rota/weeks/WH/2026-08-17';
 interface Week { id: string; version: number; state: string; publishVersion: number; signoff?: unknown }
 const week = () => store.coll<Week>('rotaWeeks')['rw_WH_2026-08-17'];
-interface Note { id: string; personId: string; event?: string; title: string; body: string }
+interface Note { id: string; employeeId: string; event?: string; title: string; body: string }
 /* the rows this test raised: the seeded feeds are left out */
-const told = (title: string) => Object.values(store.coll<Note>('notifications')).filter(n => !n.id.startsWith('ntf_seed_') && n.title === title).map(n => n.personId).sort();
+const told = (title: string) => Object.values(store.coll<Note>('notifications')).filter(n => !n.id.startsWith('ntf_seed_') && n.title === title).map(n => n.employeeId).sort();
 const cfg = () => store.coll<Record<string, unknown>>('rotaConfig').rotaConfig ?? {};
 const setCfg = (patch: Record<string, unknown>) => { store.coll('rotaConfig').rotaConfig = { ...cfg(), ...patch }; };
 const publish = (call: Call, v: number) => call('POST', `${NEXT}/transition`, { to: 'published' }, v);
@@ -72,8 +72,8 @@ describe('a later layer: publish waits for sign-off', () => {
     const sent = WeekMoved.parse((await publish(mgr, 0)).body);
     expect(sent.summary).toBe('Week 34 sent for sign-off. It is published once the Service Manager signs it off.');
     expect(sent.week).toMatchObject({ state: 'review', publishVersion: 0,
-      signoff: { requestedBy: { personCode: 'CP-1001' }, waitingOn: 'the Service Manager', final: true, decide: false,
-        why: 'You sent this week to be published, so someone else signs it off.', signed: [{ layer: 'Service Manager', by: { personCode: 'CP-1001' } }] } });
+      signoff: { requestedBy: { employeeCode: 'CP-1001' }, waitingOn: 'the Service Manager', final: true, decide: false,
+        why: 'You sent this week to be published, so someone else signs it off.', signed: [{ layer: 'Service Manager', by: { employeeCode: 'CP-1001' } }] } });
     expect(audits().find(a => a.id === sent.auditId)).toMatchObject({ act: 'Rota sent for sign-off', after: { state: 'review' } });
     expect(told('Rota waiting on your sign-off')).toEqual(['CP-1002']);
     expect(told('Rota published')).toEqual([]);
@@ -83,7 +83,7 @@ describe('a later layer: publish waits for sign-off', () => {
     expect(RotaHome.parse((await mgr('GET', '/api/v1/rota/home')).body).awaiting).toBeUndefined();
     expect((await view(admin)).signoff).toMatchObject({ decide: true, final: true, why: '' });
     const done = WeekMoved.parse((await signOff(admin, 1)).body);
-    expect(done.week).toMatchObject({ state: 'published', publishVersion: 1, signoff: null, publishedBy: { personCode: 'CP-1002' } });
+    expect(done.week).toMatchObject({ state: 'published', publishVersion: 1, signoff: null, publishedBy: { employeeCode: 'CP-1002' } });
     expect(done.summary).toMatch(/^Rota published · v1 · \d+ colleagues notified · signed off$/);
     expect(told('Rota published').length).toBeGreaterThan(0);
     expect(told('Rota signed off')).toEqual(['CP-1001']);
@@ -107,7 +107,7 @@ describe('a later layer: publish waits for sign-off', () => {
     const none = await signOff(admin, 1, 'draft', '  ');
     expect([none.status, refusal(none).field]).toEqual([422, 'reason']);
     const r = WeekMoved.parse((await signOff(admin, 1, 'draft', 'Two nights are below the minimum')).body);
-    expect(r.week).toMatchObject({ state: 'draft', signoff: null, sentBack: { by: { personCode: 'CP-1002' }, reason: 'Two nights are below the minimum' } });
+    expect(r.week).toMatchObject({ state: 'draft', signoff: null, sentBack: { by: { employeeCode: 'CP-1002' }, reason: 'Two nights are below the minimum' } });
     expect((await view(mgr)).sentBack?.reason).toBe('Two nights are below the minimum');
     expect(told('Rota sent back')).toEqual(['CP-1001']);
     expect(audits().find(a => a.id === r.auditId)).toMatchObject({ act: 'Rota sent back', reason: 'Two nights are below the minimum' });
@@ -116,7 +116,7 @@ describe('a later layer: publish waits for sign-off', () => {
   });
   test('three layers: each sign-off moves the week one layer on, and only the last publishes it', async () => {
     await chain([layer('Every rota week', 'Own location'), layer('Every rota week', 'All departments'), layer('Every rota week', 'All departments')]);
-    const jo = store.coll<{ personCode: string; grants: string[] }>('accounts')['acc_jo.baptiste@brightpath.org'];
+    const jo = store.coll<{ employeeCode: string; grants: string[] }>('accounts')['acc_jo.baptiste@brightpath.org'];
     if (!jo) throw new Error('no account for Jo');
     jo.grants = ['team_rota'];
     await publish(await as('manager'), 0);
@@ -134,7 +134,7 @@ describe('delegation applies at the sign-off layer', () => {
     await publish(await as('manager'), 0);
     store.coll('delegations').dlg_9 = { id: 'dlg_9', version: 1, updatedAt: FROZEN, who: 'CP-1002', to: 'CP-1153', from: '2026-08-13', until: '2026-08-20', modules: ['Rota'] };
     const r = WeekMoved.parse((await signOff(await asEmail('jo.baptiste@brightpath.org'), 1)).body);
-    expect(r.week).toMatchObject({ state: 'published', publishedBy: { personCode: 'CP-1153' } });
+    expect(r.week).toMatchObject({ state: 'published', publishedBy: { employeeCode: 'CP-1153' } });
   });
 });
 
@@ -212,16 +212,16 @@ describe('a chain edited while a week waits on sign-off (review I5)', () => {
 describe('editing a week waiting on sign-off (review M2)', () => {
   test('a change to its cells undoes the sign-offs after the rota manager\'s, so every later layer signs off what colleagues will see', async () => {
     await chain([layer('Every rota week', 'Own location'), layer('Every rota week', 'All departments'), layer('Every rota week', 'All departments')]);
-    const jo = store.coll<{ personCode: string; grants: string[] }>('accounts')['acc_jo.baptiste@brightpath.org'];
+    const jo = store.coll<{ employeeCode: string; grants: string[] }>('accounts')['acc_jo.baptiste@brightpath.org'];
     if (!jo) throw new Error('no account for Jo');
     jo.grants = ['team_rota'];
     const mgr = await as('manager'), admin = await as('admin');
     await publish(mgr, 0);
     await signOff(admin, 1);
     expect((week()?.signoff as { signed: unknown[] } | undefined)?.signed).toHaveLength(2);
-    const edited = await mgr('PUT', `${NEXT}/cells`, { personCode: 'CP-1402', day: 2, code: 'E' }, 2);
+    const edited = await mgr('PUT', `${NEXT}/cells`, { employeeCode: 'CP-1402', day: 2, code: 'E' }, 2);
     expect(edited.status).toBe(200);
-    expect(RotaWeekView.parse((edited.body as { week: unknown }).week).signoff).toMatchObject({ signed: [{ by: { personCode: 'CP-1001' } }], waitingOn: 'the Service Manager' });
+    expect(RotaWeekView.parse((edited.body as { week: unknown }).week).signoff).toMatchObject({ signed: [{ by: { employeeCode: 'CP-1001' } }], waitingOn: 'the Service Manager' });
     /* Dee signs off again, for the rota as it now is, and Jo's sign-off publishes it */
     expect((await view(admin)).signoff?.decide).toBe(true);
     await signOff(admin, 3);

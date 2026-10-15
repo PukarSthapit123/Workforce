@@ -169,17 +169,17 @@ describe('modules (Review Focus 2)', () => {
     await call('PATCH', MOD('R'), { on: false }, ver());
     const [id, lines] = Object.entries(original).find(([, l]) => Object.values(l).some(x => x.some(c => c && !isAbsence(c)))) ?? [];
     if (!id || !lines) throw new Error('no week with a shift');
-    const [person, line] = Object.entries(lines).find(([, x]) => x.some(c => c && !isAbsence(c))) ?? [];
-    if (!person || !line) throw new Error('no line with a shift');
+    const [employee, line] = Object.entries(lines).find(([, x]) => x.some(c => c && !isAbsence(c))) ?? [];
+    if (!employee || !line) throw new Error('no line with a shift');
     const day = line.findIndex(c => c && !isAbsence(c));
     const w = store.coll<Week>('rotaWeeks')[id];
     if (!w) throw new Error('week gone');
-    const held = w.lines[person];
+    const held = w.lines[employee];
     if (!held) throw new Error('line gone');
     held[day] = 'V';
     const on = ModuleSwitched.parse((await call('PATCH', MOD('R'), { on: true }, ver())).body);
     expect(on.effect.shiftsRestored).toBe(shifts - 1);
-    expect(store.coll<Week>('rotaWeeks')[id]?.lines[person]?.[day]).toBe('V');
+    expect(store.coll<Week>('rotaWeeks')[id]?.lines[employee]?.[day]).toBe('V');
   });
   /* I2: with Rota off, approving leave and recording sickness write nothing to the rota, so the cell is empty on restore */
   const AMARA_WEEK = 'rw_WH_2026-08-10';
@@ -193,7 +193,7 @@ describe('modules (Review Focus 2)', () => {
     expect(asked.status).toBe(200);
     const id = (asked.body as { record: { id: string } }).record.id;
     expect((await mgr('POST', `/api/v1/leave/requests/${id}/approve`, undefined, 1)).status).toBe(200);
-    expect((await mgr('POST', '/api/v1/leave/sickness', { personCode: 'CP-1042', from: '2026-08-11', to: '2026-08-11', reason: 'Other' })).status).toBe(200);
+    expect((await mgr('POST', '/api/v1/leave/sickness', { employeeCode: 'CP-1042', from: '2026-08-11', to: '2026-08-11', reason: 'Other' })).status).toBe(200);
     return { admin, shifts };
   }
   test('Rota on never puts a set-aside shift back over approved leave or sickness: the cell takes V or S with LV_ROTA on, and the count says so (I2)', async () => {
@@ -202,7 +202,7 @@ describe('modules (Review Focus 2)', () => {
     expect(amaraLine()).toEqual(['E', 'S', '', 'N', 'V', '', '']);
     expect([on.effect.shiftsRestored, on.effect.shiftsNotRestored]).toEqual([shifts - 2, 2]);
     expect(on.effect.message).toBe(`Rota turned on. It is live for everyone now. ${shifts - 2} scheduled shifts restored to the calendar. `
-      + '2 shifts were not put back because the person is on leave or off sick that day.');
+      + '2 shifts were not put back because the employee is on leave or off sick that day.');
     expect(audits().filter(a => a.id === on.auditId)).toHaveLength(1);
   });
   test('without LV_ROTA, a set-aside shift on an absence day stays empty on restore (I2)', async () => {
@@ -225,7 +225,7 @@ describe('modules (Review Focus 2)', () => {
   });
   test('Clock in / out off keeps every timesheet day and clock record, with true counts', async () => {
     const id = 'clk_CP-1042_2026-08-13';
-    store.coll('clockRecords')[id] = { id, version: 1, updatedAt: '2026-08-13T06:00:00.000Z', personCode: 'CP-1042', date: '2026-08-13',
+    store.coll('clockRecords')[id] = { id, version: 1, updatedAt: '2026-08-13T06:00:00.000Z', employeeCode: 'CP-1042', date: '2026-08-13',
       events: [{ kind: 'in', at: '2026-08-13T06:00:00.000Z' }], late: false, closedLate: null };
     const call = await as('admin');
     const off = ModuleSwitched.parse((await call('PATCH', MOD('B'), { on: false }, ver())).body);

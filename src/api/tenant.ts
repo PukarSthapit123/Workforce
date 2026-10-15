@@ -65,7 +65,7 @@ export function useRenameUserType(self: { userType: string } | null) {
   return useRecordMutation<{ id: string; name: string; ifMatch: number }, Mutation<UserType>>({
     mutationFn: vars => api(renameUserType, { params: { id: vars.id }, body: { name: vars.name }, ifMatch: vars.ifMatch }),
     recordKey: vars => vars.id,
-    invalidates: [['user-types'], ['view-as-people']],
+    invalidates: [['user-types'], ['view-as-employees']],
     refreshesSession: vars => vars.id === self?.userType,
   });
 }

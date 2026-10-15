@@ -56,7 +56,7 @@ export function ItServiceDeskPage() {
               <Row key={r.id} testId={tid.iit.row(r.ref)}>
                 <TableCell kind="title" className="tabular-nums">{r.ref}</TableCell>
                 <TableCell label="Employee" className="font-bold">{r.name}</TableCell>
-                <TableCell label="Employee ID" className="tabular-nums">{r.personCode}</TableCell>
+                <TableCell label="Employee ID" className="tabular-nums">{r.employeeCode}</TableCell>
                 <TableCell label="Location">{r.location}</TableCell>
                 <TableCell label="Shift and date" className="text-xs text-text-muted">{r.shift} · {formatDay(r.date)}</TableCell>
                 <TableCell label="Worker type">{r.worker}</TableCell>

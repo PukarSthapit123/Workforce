@@ -31,7 +31,7 @@ export function EmployeeTypesPage() {
       {types.data && (
         <AdminCard icon={<Puzzle />} title="Employee types" tipTestId={tid.types.tip}
           tip="A type is a configuration template, not a permission level. Roles stay Employee, Manager and Admin.">
-          <Small className="-mt-sm mb-md">Roles are identity. Employee types are yours to shape: each one owns how its people capture time and what they are paid per.</Small>
+          <Small className="-mt-sm mb-md">Roles are identity. Employee types are yours to shape: each one owns how its employees capture time and what they are paid per.</Small>
           <ChipPicker testId={tid.types.list}>
             {types.data.map(t => (
               <Chip key={t.code} testId={tid.types.chip(t.code)} on={t.code === current?.code} onClick={() => setSelected(t.code)}>
@@ -72,7 +72,7 @@ function TypeDetail({ type, onRemoved }: { type: EmployeeTypeRow; onRemoved(): v
       <SettingRow title="Type name" desc="What employees and managers see">
         <TextInput testId={tid.types.field('name')} aria-label="Type name" className="w-[270px] max-md:w-full" value={v.name}
           onChange={e => setV(x => ({ ...x, name: e.target.value }))} /></SettingRow>
-      <SettingRow title="Usual basis" desc="What a new person of this type is employed on">{select('category', 'Usual basis', CATEGORIES)}</SettingRow>
+      <SettingRow title="Usual basis" desc="What a new employee of this type is employed on">{select('category', 'Usual basis', CATEGORIES)}</SettingRow>
       <SettingRow title="Entry mode" desc="Day form, weekly grid, or a live clock">{select('mode', 'Entry mode', MODES)}</SettingRow>
       <SettingRow title="Pay basis" desc="Hourly types record hours for payroll; day-rate types are paid per worked day">{select('uom', 'Pay basis', UOMS)}</SettingRow>
       <h3 className={SUB}>Capabilities <span className="font-normal text-text-muted">· what the field catalogue offers this type</span></h3>
@@ -84,7 +84,7 @@ function TypeDetail({ type, onRemoved }: { type: EmployeeTypeRow; onRemoved(): v
       <SetupPointers />
       {refusal && <FormWarn testId={tid.types.warn}>{refusal.usedBy ? `${refusal.message} ${refusal.next}` : refusal.message}</FormWarn>}
       <div className="mt-lg flex flex-wrap items-center justify-end gap-sm">
-        <span data-testid={tid.types.heldBy} className="mr-auto text-xs text-text-muted">Held by {type.inUse} {type.inUse === 1 ? 'person' : 'people'} · code <span className="tabular-nums">{type.code}</span></span>
+        <span data-testid={tid.types.heldBy} className="mr-auto text-xs text-text-muted">Held by {type.inUse} {type.inUse === 1 ? 'employee' : 'employees'} · code <span className="tabular-nums">{type.code}</span></span>
         <Button testId={tid.types.remove} kind="ghost" small pending={busy} onClick={drop}>Remove this type</Button>
         <Button testId={tid.types.save} kind="primary" small pending={busy} onClick={save}>Save changes</Button>
       </div>
@@ -92,7 +92,7 @@ function TypeDetail({ type, onRemoved }: { type: EmployeeTypeRow; onRemoved(): v
 }
 
 /* Suite ADMIN LAYOUT: "it says where the fields went". Each module's setup
-   page is named, and is a link while this person can reach it. */
+   page is named, and is a link while this employee can reach it. */
 function SetupPointers() {
   const data = useShellData();
   const at = (view: string, label: string) => data.kind === 'ready' && data.nav.some(g => g.tabs.some(t => t.view === view))

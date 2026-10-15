@@ -26,7 +26,7 @@ async function readiness() {
 const post = async (id: string, act: string, ifMatch: number, body?: unknown, p: Persona = 'admin') =>
   (await as(p))('POST', `/api/v1/payroll/runs/${id}/${act}`, body, ifMatch);
 
-type Day = { personCode: string; date: string; state: string };
+type Day = { employeeCode: string; date: string; state: string };
 const days = () => store.coll<Day>('timesheetDays');
 const inPeriod = (d: Day) => d.date >= '2026-08-03' && d.date <= '2026-08-16';
 /* Clears every blocker the seed has: each submitted day approved, the failed posting posted, each
@@ -34,7 +34,7 @@ const inPeriod = (d: Day) => d.date >= '2026-08-03' && d.date <= '2026-08-16';
 function clearBlockers() {
   for (const d of Object.values(days())) if (d.state !== 'draft') d.state = 'ok';
   for (const a of Object.values(store.coll<{ state: string }>('integrationAttempts'))) if (a.state === 'failed') a.state = 'posted';
-  for (const p of Object.values(store.coll<{ code: string; resource: string }>('people'))) p.resource = `R-${p.code}`;
+  for (const p of Object.values(store.coll<{ code: string; resource: string }>('employees'))) p.resource = `R-${p.code}`;
   const handling = store.coll('exceptionHandling');
   for (const x of exceptionsEverywhere()) handling[x.id] = { id: x.id, version: 1, updatedAt: store.now(), key: x.key, kind: x.kind, subject: x.subject,
     firstRecorded: store.now(), state: 'resolved', owner: null, resolution: 'Cleared for the test', history: [] };
@@ -51,7 +51,7 @@ describe('readiness (integration)', () => {
     expect([r.cutoff, r.enforced]).toEqual(['Monday 12:00', true]);
     expect(r.state).toBe('notready');
     expect(r.blockers.map(b => [b.key, b.count, b.go])).toEqual(expect.arrayContaining([
-      ['awaiting', 3, 'tteam'], ['back', 1, 'tteam'], ['failed', 1, 'ibc'], ['resource', 6, 'apeople']]));
+      ['awaiting', 3, 'tteam'], ['back', 1, 'tteam'], ['failed', 1, 'ibc'], ['resource', 6, 'aemployees']]));
     expect(r.blockers.map(b => b.key)).toContain('missing');
     expect(r.figures.awaiting).toBe(4);
     expect(r.run).toMatchObject({ id: 'run_2026-08-03', version: 0, state: 'open', exported: null, history: [] });
@@ -110,7 +110,7 @@ describe('export, reconcile and reopen (If-Match on the run)', () => {
     expect(x.fileName).toBe('qnipay-payroll-03-08-2026.csv');
     expect(x.rows[0]).toEqual(['Employee ID', 'Name', 'Resource no.', 'Date', 'Shift', 'Pay code', 'Pay elements', 'Allowances', 'Hours', 'State', 'Integration']);
     expect([x.count, x.rows.length - 1]).toEqual([approved.length, approved.length]);
-    expect(x.rows.slice(1).map(row => row[0]).sort()).toEqual(approved.map(d => d.personCode).sort());
+    expect(x.rows.slice(1).map(row => row[0]).sort()).toEqual(approved.map(d => d.employeeCode).sort());
     expect(x.rows.slice(1).every(row => row[9] === 'Approved' && typeof row[8] === 'number')).toBe(true);
     expect(JSON.stringify(x.rows)).not.toMatch(/[£$€]|amount|rate|cost|currency/i);
     expect(x.message).toBe(`Exported · ${approved.length} approved record${approved.length === 1 ? '' : 's'} · qnipay-payroll-03-08-2026.csv`);

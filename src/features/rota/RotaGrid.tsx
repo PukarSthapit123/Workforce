@@ -31,8 +31,8 @@ export function RotaGrid({ view, rows, handlers }: { view: RotaWeekView; rows: r
   const [over, setOver] = useState<string | null>(null);
   const ws = view.weekStart, shifts = view.shifts, warnRest = view.rules.restWarn && view.rules.restRule;
   const drop = (r: RotaRow, day: number) => ({
-    onDragOver: (e: DragEvent) => { if (!handlers.lifted) return; e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; setOver(`${r.personCode}:${day}`); },
-    onDragLeave: () => setOver(o => (o === `${r.personCode}:${day}` ? null : o)),
+    onDragOver: (e: DragEvent) => { if (!handlers.lifted) return; e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; setOver(`${r.employeeCode}:${day}`); },
+    onDragLeave: () => setOver(o => (o === `${r.employeeCode}:${day}` ? null : o)),
     onDrop: (e: DragEvent) => {
       e.preventDefault(); setOver(null);
       const code = handlers.lifted ?? e.dataTransfer.getData('text/plain');
@@ -57,21 +57,21 @@ export function RotaGrid({ view, rows, handlers }: { view: RotaWeekView; rows: r
             })}
           </div>
           {rows.map(r => (
-            <div key={r.personCode} role="row" className="contents">
+            <div key={r.employeeCode} role="row" className="contents">
               <div role="rowheader" className={ROWHEAD}>
                 <div className="text-sm leading-[1.3] font-semibold">{r.name}</div>
-                <div data-testid={tid.trota.hours(r.personCode)} className={cn('text-xs text-text-muted tabular-nums', overCap(r) && 'font-bold text-err')}>{hoursLine(r)}</div>
+                <div data-testid={tid.trota.hours(r.employeeCode)} className={cn('text-xs text-text-muted tabular-nums', overCap(r) && 'font-bold text-err')}>{hoursLine(r)}</div>
               </div>
               {DAY_INDEXES.map(day => {
-                const code = r.line[day] ?? '', key = `${r.personCode}:${day}`;
+                const code = r.line[day] ?? '', key = `${r.employeeCode}:${day}`;
                 const warned = warnRest && working(r, day) && restWarnedOn(r, day);
                 return (
-                  <div key={day} role="gridcell" data-testid={tid.trota.cell(r.personCode, day)} {...drop(r, day)}
+                  <div key={day} role="gridcell" data-testid={tid.trota.cell(r.employeeCode, day)} {...drop(r, day)}
                     className={cn('flex min-h-[44px] items-stretch rounded-[7px] bg-surface-sunken', !code && 'border border-dashed border-border-strong',
                       handlers.lifted && 'outline-1 -outline-offset-1 outline-border-strong outline-dashed',
                       over === key && 'bg-surface-tint outline-2 outline-brand outline-solid')}>
                     {code
-                      ? <button type="button" data-testid={tid.trota.chip(r.personCode, day)} onClick={click(r, day)}
+                      ? <button type="button" data-testid={tid.trota.chip(r.employeeCode, day)} onClick={click(r, day)}
                           aria-label={`${cellLabel(shifts, r, ws, day)}${warned ? `. Under ${view.rules.restHours} hours rest` : ''}`}
                           className={cn('flex min-h-[44px] flex-1 cursor-pointer items-center gap-[6px] rounded-[7px] border-l-3 px-sm py-[5px] text-left text-xs',
                             'transition-colors duration-(--qp-duration-fast)', TONE_CLASS[cellTone(shifts, code)],
@@ -80,7 +80,7 @@ export function RotaGrid({ view, rows, handlers }: { view: RotaWeekView; rows: r
                           <span aria-hidden="true" className="text-xs leading-[1.25] tabular-nums">{shiftShortTime(shifts, code)}</span>
                           {warned && <span aria-hidden="true" className="ml-auto inline-flex [&_svg]:size-[13px]"><TriangleAlert /></span>}
                         </button>
-                      : <button type="button" data-testid={tid.trota.add(r.personCode, day)} onClick={click(r, day)}
+                      : <button type="button" data-testid={tid.trota.add(r.employeeCode, day)} onClick={click(r, day)}
                           aria-label={`Add a shift for ${r.name} on ${shortDay(ws, day)}`}
                           className="min-h-[44px] w-full rounded-[7px] text-base text-text-disabled hover:bg-brand-subtle hover:text-brand dark:hover:text-brand-accent">+</button>}
                   </div>);
@@ -164,7 +164,7 @@ export function DayView({ view, rows, day, onDay, onFill }: {
           {on.length ? on.map(r => {
             const code = r.line[day] ?? '';
             return (
-              <Row key={r.personCode} testId={tid.trota.dayRow(r.personCode)}>
+              <Row key={r.employeeCode} testId={tid.trota.dayRow(r.employeeCode)}>
                 <TableCell>
                   <div className="flex items-center gap-[9px]"><Avatar name={r.name} />
                     <div><strong className="font-semibold">{r.name}</strong><div className="text-xs text-text-muted">{r.jobProfileName} · {r.category}</div></div></div>

@@ -268,7 +268,7 @@ describe('Team rota', () => {
     await userEvent.click(screen.getByTestId(tid.trota.clear));
     expect(await screen.findByTestId(tid.modal.title)).toHaveTextContent('Clear week 34?');
     expect(screen.getByTestId(tid.trota.fact('clear-shifts'))).toHaveTextContent(String(copied));
-    expect(screen.getByTestId(tid.trota.fact('clear-people'))).not.toHaveTextContent('0');
+    expect(screen.getByTestId(tid.trota.fact('clear-employees'))).not.toHaveTextContent('0');
     expect(screen.getByTestId(tid.trota.clearConfirm)).toHaveTextContent(`Clear ${copied} shifts`);
     expectTestIdCoverage(document.body);
     await userEvent.click(screen.getByTestId(tid.trota.clearConfirm));
@@ -289,7 +289,7 @@ describe('Team rota', () => {
     await userEvent.click(screen.getByTestId(tid.trota.clear));
     const dialog = await screen.findByTestId(tid.modal.root);
     expect(screen.getByTestId(tid.trota.fact('clear-shifts'))).toHaveTextContent('3');
-    expect(screen.getByTestId(tid.trota.fact('clear-people'))).toHaveTextContent('2');
+    expect(screen.getByTestId(tid.trota.fact('clear-employees'))).toHaveTextContent('2');
     expect(within(dialog).getByText('2 leave or sickness day(s) will be kept')).toBeInTheDocument();
     expect(within(dialog).getByText('Approved absence is not a shift and is not removed by clearing.')).toBeInTheDocument();
     expect(within(dialog).getByText('This cannot be undone from here')).toBeInTheDocument();

@@ -30,7 +30,7 @@ export type TypeLibrary = z.infer<typeof TypeLibrary>;
 const cap = 'type_cfg';
 const TypeParams = z.object({ id: z.string().min(1) });
 export const listEmployeeTypes = defineEndpoint({ method: 'GET', path: '/api/v1/employee-types', response: z.array(EmployeeTypeRow),
-  summary: 'Employee types, each with how many people hold it' });
+  summary: 'Employee types, each with how many employees hold it' });
 export const getTypeLibrary = defineEndpoint({ method: 'GET', path: '/api/v1/employee-types/library', response: TypeLibrary, capability: cap,
   summary: 'The archetypes a new type can start from, and the capabilities a type can have' });
 export const createEmployeeType = defineEndpoint({ method: 'POST', path: '/api/v1/employee-types', request: CreateEmployeeType,

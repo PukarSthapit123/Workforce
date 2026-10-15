@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { tid } from '@/testids';
-import type { Person } from '@/contract/people';
+import type { Employee } from '@/contract/employees';
 import { Button, Field, FormWarn, GuideButton, Modal, NavLink, Page, PageHead, Row, UnitInput, toastInfo } from '@/ui';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
-import { usePeople, useUpdatePerson } from '@/api/people';
+import { useEmployees, useUpdateEmployee } from '@/api/employees';
 import { formatDate } from '@/lib/format';
 import { latest, versionKey } from '@/lib/latest';
-import { StatePill } from '@/features/people/StatePill';
+import { StatePill } from '@/features/employees/StatePill';
 import { useTenant } from '@/api/tenant';
 import { DEFAULT_FULL_TIME_WEEKLY_HOURS } from '@/domain/leave';
 
@@ -15,16 +15,16 @@ const basis = (h: number, fullTime: number) => (h >= fullTime ? 'Full time' : h 
 /* Ported from the prototype's admContracts (qnipay-workforce-v15.html:8284-
    8297): contracted hours, the one baseline Rota, Timesheet and Leave compare
    against. The prototype's inline input wrote on every keystroke without an
-   audit; here Edit opens the contract and saves it through the person
+   audit; here Edit opens the contract and saves it through the employee
    record, with If-Match and field history (plan 1b decision D2). Working
    patterns belong to Rota, which is not built. */
 export function ContractsPage() {
-  const people = usePeople('all', '');
+  const employees = useEmployees('all', '');
   const tenant = useTenant();
   const fullTimeHours = tenant.data?.fullTimeWeeklyHours ?? DEFAULT_FULL_TIME_WEEKLY_HOURS;
-  const [held, setEditing] = useState<Person | null>(null);
+  const [held, setEditing] = useState<Employee | null>(null);
   /* the form works on the record as last read, and starts again when it changes */
-  const editing = held && latest(held, people.data);
+  const editing = held && latest(held, employees.data);
   return (
     <Page testId={tid.page('acon')}>
       <PageHead title="Contracts" crumb="Qnipay setup · Contracts" tipTestId={tid.head.tip('acon')}
@@ -32,9 +32,9 @@ export function ContractsPage() {
       {/* D3: full time is the tenant's one full-time week, set on Calendar */}
       {tenant.data && <p className="mb-md text-xs text-text-muted"><span data-testid={tid.contracts.fullTime}>Full time is {fullTimeHours} hours a week or more.</span>{' '}
         <NavLink testId={tid.contracts.fullTimeLink} to="/setup/acal" className="font-semibold text-brand underline dark:text-brand-accent">Change it on Calendar</NavLink></p>}
-      {people.isPending && <p className="text-text-secondary">Loading&hellip;</p>}
-      {people.isError && <p data-testid={tid.contracts.error} role="alert" className="text-err">The contracts could not be loaded, so nothing here is current. Reload the page.</p>}
-      {people.data && (
+      {employees.isPending && <p className="text-text-secondary">Loading&hellip;</p>}
+      {employees.isError && <p data-testid={tid.contracts.error} role="alert" className="text-err">The contracts could not be loaded, so nothing here is current. Reload the page.</p>}
+      {employees.data && (
         <Table data-testid={tid.contracts.table} variant="records" dense>
           <TableHeader><TableRow>
             <TableHead>Employee</TableHead><TableHead>Employee ID</TableHead><TableHead>Category</TableHead>
@@ -42,7 +42,7 @@ export function ContractsPage() {
             <TableHead>Full or part time</TableHead><TableHead>Start</TableHead><TableHead>End</TableHead><TableHead>State</TableHead>
             <TableHead><span className="sr-only">Actions</span></TableHead>
           </TableRow></TableHeader>
-          <TableBody>{people.data.map(p => (
+          <TableBody>{employees.data.map(p => (
             <Row key={p.id} testId={tid.contracts.row(p.code)}>
               <TableCell kind="title"><strong className="font-semibold">{p.name}</strong></TableCell>
               <TableCell label="Employee ID" className="tabular-nums">{p.code}</TableCell>
@@ -56,19 +56,19 @@ export function ContractsPage() {
               <TableCell kind="foot" className="text-right"><Button testId={tid.contracts.edit(p.code)} kind="ghost" small onClick={() => setEditing(p)}>Edit</Button></TableCell>
             </Row>))}</TableBody>
         </Table>)}
-      {editing && <ContractForm key={versionKey(editing)} person={editing} onClose={() => setEditing(null)} />}
+      {editing && <ContractForm key={versionKey(editing)} employee={editing} onClose={() => setEditing(null)} />}
     </Page>);
 }
 
-function ContractForm({ person, onClose }: { person: Person; onClose(): void }) {
-  const [hours, setHours] = useState(String(person.contractedHours));
-  const [max, setMax] = useState(String(person.maxHours));
-  const save = useUpdatePerson();
-  const submit = () => save.mutate({ person, body: { contractedHours: Number(hours || 0), maxHours: Number(max || 0) } }, {
+function ContractForm({ employee, onClose }: { employee: Employee; onClose(): void }) {
+  const [hours, setHours] = useState(String(employee.contractedHours));
+  const [max, setMax] = useState(String(employee.maxHours));
+  const save = useUpdateEmployee();
+  const submit = () => save.mutate({ employee, body: { contractedHours: Number(hours || 0), maxHours: Number(max || 0) } }, {
     onSuccess: d => { toastInfo(d.changed.length ? `${d.record.name} updated · ${d.changed.length} field(s) changed` : `${d.record.name} · nothing changed`); onClose(); },
   });
   return (
-    <Modal open onOpenChange={o => { if (!o) onClose(); }} title={`${person.name} · contract`}
+    <Modal open onOpenChange={o => { if (!o) onClose(); }} title={`${employee.name} · contract`}
       description="Rota compares scheduled hours against these, Timesheet compares actual hours, and Leave pro-rates entitlement from them."
       footer={<>
         <Button testId={tid.contracts.cancel} kind="ghost" onClick={onClose}>Cancel</Button>

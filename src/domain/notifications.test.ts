@@ -65,20 +65,20 @@ describe('delivery (Review Focus 4)', () => {
   test('a recipient\'s part in the event picks the column: subject Employee, actor Manager, back office Admin (I3)', () => {
     expect(PART_COLUMN).toEqual({ subject: 'employee', actor: 'manager', backOffice: 'admin' });
     /* an administrator deciding a request is told in the Manager column; a manager who is the subject in the Employee column */
-    expect(plannedDeliveries(ev('pf_req'), [{ personCode: 'A1', persona: PART_COLUMN.actor }], DEFAULT_MATRIX, ALL, FLAGS).map(d => d.channel)).toEqual(['In-app + email']);
-    expect(plannedDeliveries(ev('lv_ok'), [{ personCode: 'M1', persona: PART_COLUMN.subject }], DEFAULT_MATRIX, ALL, FLAGS).map(d => d.channel)).toEqual(['In-app + email']);
-    expect(plannedDeliveries(ev('rt_it'), [{ personCode: 'A1', persona: PART_COLUMN.backOffice }], DEFAULT_MATRIX, ALL, FLAGS).map(d => d.channel)).toEqual(['In-app + email']);
+    expect(plannedDeliveries(ev('pf_req'), [{ employeeCode: 'A1', persona: PART_COLUMN.actor }], DEFAULT_MATRIX, ALL, FLAGS).map(d => d.channel)).toEqual(['In-app + email']);
+    expect(plannedDeliveries(ev('lv_ok'), [{ employeeCode: 'M1', persona: PART_COLUMN.subject }], DEFAULT_MATRIX, ALL, FLAGS).map(d => d.channel)).toEqual(['In-app + email']);
+    expect(plannedDeliveries(ev('rt_it'), [{ employeeCode: 'A1', persona: PART_COLUMN.backOffice }], DEFAULT_MATRIX, ALL, FLAGS).map(d => d.channel)).toEqual(['In-app + email']);
   });
   test('the matrix is read per column, and a change to it is respected', () => {
-    const people = [{ personCode: 'E1', persona: 'employee' as const }, { personCode: 'M1', persona: 'manager' as const }, { personCode: 'A1', persona: 'admin' as const }];
-    expect(plannedDeliveries(ev('lv_ok'), people, DEFAULT_MATRIX, ALL, FLAGS).map(d => [d.personCode, d.channel])).toEqual([['E1', 'In-app + email']]);
+    const employees = [{ employeeCode: 'E1', persona: 'employee' as const }, { employeeCode: 'M1', persona: 'manager' as const }, { employeeCode: 'A1', persona: 'admin' as const }];
+    expect(plannedDeliveries(ev('lv_ok'), employees, DEFAULT_MATRIX, ALL, FLAGS).map(d => [d.employeeCode, d.channel])).toEqual([['E1', 'In-app + email']]);
     const off = { ...DEFAULT_MATRIX, lv_ok: { employee: 'Off' as const, manager: 'In-app' as const, admin: 'Off' as const } };
-    expect(plannedDeliveries(ev('lv_ok'), people, off, ALL, FLAGS).map(d => d.personCode)).toEqual(['M1']);
+    expect(plannedDeliveries(ev('lv_ok'), employees, off, ALL, FLAGS).map(d => d.employeeCode)).toEqual(['M1']);
     expect(channelFor(off, 'lv_ok', 'employee')).toBe('Off');
     expect(channelFor({}, 'lv_ok', 'employee')).toBe('In-app + email');
   });
   test('an event whose module is off reaches nobody; a recipient named twice is told once', () => {
-    const p = [{ personCode: 'E1', persona: 'employee' as const }, { personCode: 'E1', persona: 'employee' as const }];
+    const p = [{ employeeCode: 'E1', persona: 'employee' as const }, { employeeCode: 'E1', persona: 'employee' as const }];
     expect(plannedDeliveries(ev('rt_pub'), p, DEFAULT_MATRIX, { ...ALL, R: false }, FLAGS)).toEqual([]);
     expect(plannedDeliveries(ev('rt_pub'), p, DEFAULT_MATRIX, ALL, FLAGS)).toHaveLength(1);
   });
@@ -87,14 +87,14 @@ describe('delivery (Review Focus 4)', () => {
 describe('deep links (NOTIF_TARGETS, notifReachable)', () => {
   const nav = (...caps: string[]) => buildNav({ caps: new Set(caps), modules: ALL, flags: FLAGS, onboarding: false });
   test('each area opens its page for each user type; an unknown area opens the Workforce one', () => {
-    expect(['Timesheet', 'Rota', 'Leave', 'DBS', 'Workforce'].map(a => targetView(a, 'manager'))).toEqual(['tteam', 'trota', 'tleave', 'tpeople', 'tpeople']);
+    expect(['Timesheet', 'Rota', 'Leave', 'DBS', 'Workforce'].map(a => targetView(a, 'manager'))).toEqual(['tteam', 'trota', 'tleave', 'temployees', 'temployees']);
     expect(['Timesheet', 'Rota', 'Leave', 'DBS', 'Workforce'].map(a => targetView(a, 'employee'))).toEqual(['ts', 'shifts', 'leave', 'profile', 'home']);
-    expect(['Timesheet', 'Rota', 'Leave', 'DBS', 'Workforce'].map(a => targetView(a, 'admin'))).toEqual(['ipay', 'mrota', 'mleave', 'apeople', 'asetup']);
+    expect(['Timesheet', 'Rota', 'Leave', 'DBS', 'Workforce'].map(a => targetView(a, 'admin'))).toEqual(['ipay', 'mrota', 'mleave', 'aemployees', 'asetup']);
     expect(targetView('Integration', 'admin')).toBe('asetup');
     expect((['employee', 'manager', 'admin'] as const).map(p => targetView('Onboarding', p))).toEqual(['onb', 'tonb', 'tonb']);
     expect(targetView('Notices', 'employee')).toBe('notices');
   });
-  test('a link is offered only when the page is on that person\'s nav and built', () => {
+  test('a link is offered only when the page is on that employee\'s nav and built', () => {
     expect(linkFor('Rota', 'manager', nav('team_rota'))).toEqual({ view: 'trota', path: '/team/trota', label: 'Rota' });
     expect(linkFor('Rota', 'manager', nav('team_ts'))).toBeNull();
     expect(linkFor('Timesheet', 'admin', nav('integration'))).toEqual({ view: 'ipay', path: '/setup/ipay', label: 'Payroll readiness' }); // built in module 6 group 4
@@ -111,10 +111,10 @@ describe('deep links (NOTIF_TARGETS, notifReachable)', () => {
 });
 
 describe('the inbox', () => {
-  const row = (id: string, area: string, at: string, read = false, over: Partial<InboxRow> = {}): InboxRow => ({ id, personId: 'E1', area, at, read, ...over });
+  const row = (id: string, area: string, at: string, read = false, over: Partial<InboxRow> = {}): InboxRow => ({ id, employeeId: 'E1', area, at, read, ...over });
   test('mine, delivered in-app, from a live source, newest first; the unread count follows it', () => {
     const rows = [row('n1', 'Rota', '2026-08-10T09:00:00.000Z'), row('n2', 'Leave', '2026-08-12T09:00:00.000Z', true), row('n3', 'Leave', '2026-08-11T09:00:00.000Z'),
-      row('n4', 'Leave', '2026-08-13T09:00:00.000Z', false, { personId: 'M1' }), row('n5', 'Leave', '2026-08-13T09:00:00.000Z', false, { delivery: { inApp: false, email: 'not-connected', sms: null } })];
+      row('n4', 'Leave', '2026-08-13T09:00:00.000Z', false, { employeeId: 'M1' }), row('n5', 'Leave', '2026-08-13T09:00:00.000Z', false, { delivery: { inApp: false, email: 'not-connected', sms: null } })];
     const mine = inboxOf(rows, 'E1', ALL, FLAGS);
     expect(mine.map(r => r.id)).toEqual(['n2', 'n3', 'n1']);
     expect(unreadOf(mine)).toBe(2);

@@ -7,7 +7,7 @@ import { bump, refuse } from './http';
 import { serve } from './serve';
 import { actor } from './auth';
 import { writeAudit } from './audit';
-import { invalid } from './people';
+import { invalid } from './employees';
 import { recordAt } from './world';
 import { FIELDS } from './timesheets';
 import { createPayCode, listPayCodes, removePayCode, updatePayCode, type PayCodeRecord } from '@/contract/pay-codes';

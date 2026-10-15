@@ -3,7 +3,7 @@ import { TriangleAlert } from 'lucide-react';
 import { tid } from '@/testids';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import {
-  Banner, Button, Card, CardHead, ChipButton, Count, EssRow, Empty, FilterBar, FormWarn, GroupLabel, NavLink, Page, PageHead, PersonName, Pill, Row, SearchFilter,
+  Banner, Button, Card, CardHead, ChipButton, Count, EssRow, Empty, FilterBar, FormWarn, GroupLabel, NavLink, Page, PageHead, EmployeeName, Pill, Row, SearchFilter,
   SectionHead, SelectFilter, Small, Tip, toastInfo,
 } from '@/ui';
 import { buttonVariants } from '@/ui/shadcn/button';
@@ -14,7 +14,7 @@ import { latest } from '@/lib/latest';
 import { cn } from '@/lib/utils';
 import { useCaps } from '@/shell/useCaps';
 import { useTenant } from '@/shell/shellData';
-import { DeclineDialog, PersonEntitlement } from './TeamLeaveDialogs';
+import { DeclineDialog, EmployeeEntitlement } from './TeamLeaveDialogs';
 
 /* Team leave: the prototype's mgrLeave (qnipay-workforce-v15.html:7838-7912).
    The requests waiting on this manager at the locations they decide for (the
@@ -56,14 +56,14 @@ export function TeamLeavePage() {
         </FilterBar>
         {d.requests.length
           ? d.requests.map(r => <RequestCard key={`${r.id}:${r.version}`} r={r} slaDays={d.slaDays} escalateTo={d.escalateTo}
-              onDecline={() => setDeclining(r)} onEntitlement={() => setEntFor(r.personCode)} />)
+              onDecline={() => setDeclining(r)} onEntitlement={() => setEntFor(r.employeeCode)} />)
           : <Card><Empty testId={tid.tleave.empty}>{filtered ? 'Nothing matches that filter' : 'Nothing waiting on you'}</Empty></Card>}
       </>}
       <TeamBalancesTable onEntitlement={setEntFor} />
       {!!flags.LV_LEAVER && <LeaverReconciliation />}
       <AwayCard />
       {dec && <DeclineDialog key={dec.id} r={dec} onClose={() => setDeclining(null)} />}
-      {entFor && <PersonEntitlement key={entFor} code={entFor} canSimulate={!!flags.LV_PRORATA} onClose={() => setEntFor(null)} />}
+      {entFor && <EmployeeEntitlement key={entFor} code={entFor} canSimulate={!!flags.LV_PRORATA} onClose={() => setEntFor(null)} />}
     </Page>);
 }
 
@@ -79,7 +79,7 @@ function RequestCard({ r, slaDays, escalateTo, onDecline, onEntitlement }: {
     <Card testId={tid.tleave.card(r.id)}>
       <div className="flex flex-wrap items-start gap-md">
         <div className="min-w-0">
-          <div className="text-sm font-semibold">{r.name} <span className="font-mono text-xs font-normal text-text-muted">{r.personCode}</span></div>
+          <div className="text-sm font-semibold">{r.name} <span className="font-mono text-xs font-normal text-text-muted">{r.employeeCode}</span></div>
           <Small>{r.typeName} · {r.range} · {r.qtyText} · requested {formatDmy(clockFromIso(r.raisedAt).date)}</Small>
           {r.layer.of > 1 && <Small testId={tid.tleave.layer(r.id)} className="mt-[2px] text-info">{r.layer.text}</Small>}
         </div>
@@ -134,27 +134,27 @@ function TeamBalancesTable({ onEntitlement }: { onEntitlement: (code: string) =>
           {toil && <TableHead>TOIL</TableHead>}<TableHead>Booked next</TableHead><TableHead><span className="sr-only">Actions</span></TableHead>
         </TableRow></TableHeader>
         <TableBody>
-          {b.data.rows.map(p => <BalanceRow key={p.personCode} p={p} toil={toil} onEntitlement={() => onEntitlement(p.personCode)} />)}
+          {b.data.rows.map(p => <BalanceRow key={p.employeeCode} p={p} toil={toil} onEntitlement={() => onEntitlement(p.employeeCode)} />)}
         </TableBody>
       </Table>
     </>);
 }
 function BalanceRow({ p, toil, onEntitlement }: { p: TeamBalanceRow; toil: boolean; onEntitlement: () => void }) {
   return (
-    <Row testId={tid.tleave.balanceRow(p.personCode)}>
-      <TableCell kind="title"><PersonName name={p.name} /></TableCell>
+    <Row testId={tid.tleave.balanceRow(p.employeeCode)}>
+      <TableCell kind="title"><EmployeeName name={p.name} /></TableCell>
       <TableCell label="Policy" className="text-xs">{p.policyName}</TableCell>
       <TableCell label="Entitlement" className="text-right tabular-nums">{p.entDays} d · {p.entHours.toFixed(1)} h</TableCell>
       <TableCell label="Taken" className="text-right tabular-nums">{p.takenD} d</TableCell>
       <TableCell label="Remaining" className="text-right tabular-nums"><strong>{p.leftD} d</strong></TableCell>
       {toil && <TableCell label="TOIL" className="text-xs">{p.toil > 0 ? `${p.toil}h${p.toilBy ? ` · use by ${formatDmy(p.toilBy)}` : ''}` : '—'}</TableCell>}
       <TableCell label="Booked next" className="text-xs">
-        <span data-testid={tid.tleave.next(p.personCode)} className="inline-flex items-center gap-[6px]">{p.next
+        <span data-testid={tid.tleave.next(p.employeeCode)} className="inline-flex items-center gap-[6px]">{p.next
           ? <>{formatDmy(p.next.from)} {p.next.state === 'pending' ? <Pill tone="warn" glyph="◷">waiting</Pill> : <Pill tone="ok" glyph="✓">approved</Pill>}</>
           : '—'}</span>
       </TableCell>
       <TableCell kind="foot" className="text-right">
-        <Button testId={tid.tleave.ent(p.personCode)} kind="ghost" small onClick={onEntitlement}>Entitlement</Button>
+        <Button testId={tid.tleave.ent(p.employeeCode)} kind="ghost" small onClick={onEntitlement}>Entitlement</Button>
       </TableCell>
     </Row>);
 }
@@ -169,7 +169,7 @@ function LeaverReconciliation() {
     <>
       <SectionHead title="Leaver reconciliation" tipTestId={tid.tleave.leaversTip}
         tip="Calculated at the leaving date against pro-rata entitlement for the period worked in the financial year." />
-      {l.data.rows.map(x => <LeaverCard key={x.personCode} x={x} settled={settled} />)}
+      {l.data.rows.map(x => <LeaverCard key={x.employeeCode} x={x} settled={settled} />)}
     </>);
 }
 function LeaverCard({ x, settled }: { x: LeaverRow; settled: string }) {
@@ -179,22 +179,22 @@ function LeaverCard({ x, settled }: { x: LeaverRow; settled: string }) {
     ['taken', 'Leave taken', `${x.taken} days`],
   ];
   return (
-    <Card testId={tid.tleave.leaver(x.personCode)}>
+    <Card testId={tid.tleave.leaver(x.employeeCode)}>
       <div className="flex flex-wrap items-start gap-md">
         <div className="min-w-0">
-          <div className="text-sm font-semibold">{x.name} <span className="font-mono text-xs font-normal text-text-muted">{x.personCode}</span></div>
+          <div className="text-sm font-semibold">{x.name} <span className="font-mono text-xs font-normal text-text-muted">{x.employeeCode}</span></div>
           <Small>Leaving {formatDmy(x.leaveDate)} · {x.months} months of the financial year worked{x.note ? ` · ${x.note}` : ''}</Small>
         </div>
-        <div className="ml-auto"><Pill testId={tid.tleave.leaverVerdict(x.personCode)} tone={x.tone} glyph={x.diff === 0 ? '✓' : <TriangleAlert aria-hidden="true" />}>{x.verdict}</Pill></div>
+        <div className="ml-auto"><Pill testId={tid.tleave.leaverVerdict(x.employeeCode)} tone={x.tone} glyph={x.diff === 0 ? '✓' : <TriangleAlert aria-hidden="true" />}>{x.verdict}</Pill></div>
       </div>
       <div className="mt-md">
         <Table>
           <TableBody>
             {lines.map(([k, label, value]) => (
-              <Row key={k} testId={tid.tleave.leaverRow(x.personCode, k)}>
+              <Row key={k} testId={tid.tleave.leaverRow(x.employeeCode, k)}>
                 <TableCell>{label}</TableCell><TableCell className="text-right font-mono tabular-nums">{value}</TableCell>
               </Row>))}
-            <Row testId={tid.tleave.leaverRow(x.personCode, 'diff')}>
+            <Row testId={tid.tleave.leaverRow(x.employeeCode, 'diff')}>
               <TableCell><strong>{x.diff < 0 ? 'Over-taken' : 'Remaining balance'}</strong></TableCell>
               <TableCell className="text-right font-mono tabular-nums"><strong>{Math.abs(x.diff)} days · {x.hours} hours</strong></TableCell>
             </Row>
@@ -202,7 +202,7 @@ function LeaverCard({ x, settled }: { x: LeaverRow; settled: string }) {
         </Table>
       </div>
       <div className="mt-md [&>div]:mb-0">
-        <Banner testId={tid.tleave.leaverAction(x.personCode)} tone={x.diff < 0 ? 'warn' : 'info'} title={x.action}>{settled}</Banner>
+        <Banner testId={tid.tleave.leaverAction(x.employeeCode)} tone={x.diff < 0 ? 'warn' : 'info'} title={x.action}>{settled}</Banner>
       </div>
     </Card>);
 }

@@ -144,7 +144,7 @@ function Request({ c, stages }: { c: CoverView; stages: readonly FulfilStage[] }
     </Card>);
 }
 
-/* sugBlock (v15:7437-7450): the eligible people best first with their
+/* sugBlock (v15:7437-7450): the eligible employees best first with their
    reasons, and who is ruled out by which rule. The ruled-out list is the
    week's own cell suggestions for that day and shift. */
 function Suggestions({ c, wait }: { c: CoverView; wait: number }) {
@@ -152,24 +152,24 @@ function Suggestions({ c, wait }: { c: CoverView; wait: number }) {
   const cell = useCellSuggestions(c.location, periodStart(c.date), dayIndex(c.date), c.shift);
   const no = cell.data?.no ?? [];
   const ruled = (label: string) => no.length > 0 && <RuledOutList label={label}>
-    {no.slice(0, 6).map(x => <RuledOutRow key={x.personCode} testId={tid.tcover.ruled(c.id, x.personCode)} name={x.name} why={`${x.rule}: ${x.reason}`} />)}
+    {no.slice(0, 6).map(x => <RuledOutRow key={x.employeeCode} testId={tid.tcover.ruled(c.id, x.employeeCode)} name={x.name} why={`${x.rule}: ${x.reason}`} />)}
   </RuledOutList>;
   if (!c.suggestions.length) return (
     <div data-testid={tid.tcover.nobody(c.id)} className="mt-md border-t border-dashed pt-md">
       <GroupLabel>Nobody available · {no.length} ruled out</GroupLabel>
-      {no.slice(0, 6).map(x => <RuledOutRow key={x.personCode} testId={tid.tcover.ruled(c.id, x.personCode)} name={x.name} why={`${x.rule}: ${x.reason}`} />)}
+      {no.slice(0, 6).map(x => <RuledOutRow key={x.employeeCode} testId={tid.tcover.ruled(c.id, x.employeeCode)} name={x.name} why={`${x.rule}: ${x.reason}`} />)}
     </div>);
   return (
     <div className="mt-lg">
       <div className="mb-sm flex items-center text-xs font-semibold text-text-secondary">Suggested
-        <Tip testId={tid.tcover.sugTip(c.id)} text="Eligibility is a hard rule and is checked first. The ranking only orders the people who already passed it." /></div>
+        <Tip testId={tid.tcover.sugTip(c.id)} text="Eligibility is a hard rule and is checked first. The ranking only orders the employees who already passed it." /></div>
       {c.suggestions.slice(0, 3).map((x, i) => (
-        <SugCard key={x.personCode} testId={tid.tcover.sug(c.id, x.personCode)} best={i === 0} name={x.name} sub={x.category}
+        <SugCard key={x.employeeCode} testId={tid.tcover.sug(c.id, x.employeeCode)} best={i === 0} name={x.name} sub={x.category}
           why={x.why.length ? x.why : [NO_REASONS_WHY]}
           actions={<>
-            <Button testId={tid.tcover.assign(c.id, x.personCode)} kind={i === 0 ? 'primary' : 'ghost'} small pending={assign.anyPending}
-              onClick={() => assign.mutate({ cover: c, personCode: x.personCode }, { onSuccess: r => toastInfo(r.summary) })}>Assign</Button>
-            <Button testId={tid.tcover.askFirst(c.id, x.personCode)} kind="ghost" small
+            <Button testId={tid.tcover.assign(c.id, x.employeeCode)} kind={i === 0 ? 'primary' : 'ghost'} small pending={assign.anyPending}
+              onClick={() => assign.mutate({ cover: c, employeeCode: x.employeeCode }, { onSuccess: r => toastInfo(r.summary) })}>Assign</Button>
+            <Button testId={tid.tcover.askFirst(c.id, x.employeeCode)} kind="ghost" small
               onClick={() => toastInfo(askFirstText(x.name.split(' ')[0] ?? x.name, wait))}>Ask first</Button>
           </>} />))}
       {ruled('Not eligible, and why')}
@@ -183,7 +183,7 @@ function Filled({ f, board }: { f: FilledView; board: CoverBoard }) {
       <div className="flex flex-wrap items-start gap-md">
         <div>
           <div className="text-sm font-semibold">{longDate(f.date)} · {f.shiftName} · filled</div>
-          <Small>Taken by {f.name} · <span className="font-mono">{f.personCode}</span> · {f.time} · {f.locationName}</Small>
+          <Small>Taken by {f.name} · <span className="font-mono">{f.employeeCode}</span> · {f.time} · {f.locationName}</Small>
           {f.itRequest && <div className="mt-xs"><Pill testId={tid.tcover.it(f.id)} tone="ok" glyph="✓">IT access request {f.itRequest}</Pill></div>}
         </div>
         <div className="ml-auto flex items-center">

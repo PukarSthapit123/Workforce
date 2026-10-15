@@ -6,7 +6,7 @@ import { DEE, RACHEL, auditRows, inboxOf, openModule } from './support/config';
 /* 1c, the bell's inbox and its deep links (D9) on social. Rachel Hussain has
    five unread items; "Leave approval overdue" opens Team leave. Opening it
    goes there and marks it read, on the server and on the bell. A link to a
-   page that does not exist, or to one this person cannot open, lands on the
+   page that does not exist, or to one this employee cannot open, lands on the
    page-unavailable page with a way home, never somewhere else quietly. While
    a module is off its items are hidden, not deleted, and not counted. */
 test.beforeEach(async ({ api }) => { await api.seed('social'); await api.setClock(FROZEN); });

@@ -310,15 +310,15 @@ test('the notice board’s three capabilities sit in the matrix: reading, postin
 
 /* Suite REVIEW RUN: "The permission matrix stays a scrolling matrix, not
    cards" and "... while the exceptions list beside it becomes cards": the
-   matrix is a matrix table, the people list a record list whose cells are
+   matrix is a matrix table, the employees list a record list whose cells are
    labelled for their phone card, its name the card's title. */
-test('the matrix stays a matrix, while the people list beside it is a record list with labelled cells', async () => {
+test('the matrix stays a matrix, while the employees list beside it is a record list with labelled cells', async () => {
   mount();
   const matrix = await screen.findByTestId(tid.access.table);
   expect(matrix).toHaveAttribute('data-variant', 'matrix');
-  const people = screen.getByTestId(tid.access.usersTable);
-  expect(people).toHaveAttribute('data-variant', 'records');
-  const row = within(people).getAllByRole('row')[1];
-  if (!row) throw new Error('no people row');
+  const employees = screen.getByTestId(tid.access.usersTable);
+  expect(employees).toHaveAttribute('data-variant', 'records');
+  const row = within(employees).getAllByRole('row')[1];
+  if (!row) throw new Error('no employees row');
   expect([...row.querySelectorAll('td')].map(td => td.getAttribute('data-l'))).toEqual([null, 'Employee ID', 'Persona', 'Exceptions', null]);
 });

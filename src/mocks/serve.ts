@@ -3,7 +3,7 @@
    endpoint, so a handler body holds only its own rules:
      1. the session (requireSession), unless the endpoint is public; this
         includes the view-as read-only guard, relaxed only for an endpoint
-        marked allowedWhileViewing, and the new-starter guard: a person still
+        marked allowedWhileViewing, and the new-starter guard: an employee still
         onboarding may write only to an endpoint marked allowedWhileOnboarding;
      2. ep.capability (requireCapability);
      3. path params and the query, against the endpoint's schemas (422);

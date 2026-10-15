@@ -11,7 +11,7 @@
      and cannot be removed or edited;
    - the Profile chain drives self-service routing, so it holds only a line
      manager and payroll, each once, and only its two conditions;
-   - a delegation names people by employee code over ISO dates, both days
+   - a delegation names employees by employee code over ISO dates, both days
      included, and is refused when it covers itself, makes a loop or overlaps
      another for the same approver and module (the prototype pushed a fixed
      row and checked nothing).
@@ -66,7 +66,7 @@ export const whenOptions = (m: ChainModule): readonly string[] => MODULE_WHEN[m]
 
 /* Module 8 group 4: the one table of who may sign off each role of each
    module's chain. A role is the capability that decides it; a scoped role
-   is decided only for people in the approver's own access scope (their
+   is decided only for employees in the approver's own access scope (their
    location, or everyone with Workforce master data), as a manager's team
    is. A role a module has no row for cannot be put in its chain, since
    nothing would decide it. Line manager and payroll are what the seeded
@@ -192,9 +192,9 @@ export interface Delegation { id: string; who: string; to: string; from: string;
 export type DelegationDraft = Omit<Delegation, 'id'>;
 export interface DelegationContext {
   today: string;
-  /* the person's name, when they are someone who can approve; undefined when they cannot */
+  /* the employee's name, when they are someone who can approve; undefined when they cannot */
   approver: (code: string) => string | undefined;
-  /* any person's name, for a sentence */
+  /* any employee's name, for a sentence */
   nameOf: (code: string) => string;
   /* the access a module's stages need that `who` holds and `to` lacks, by its label (a Profile delegate must be able to decide the stage) */
   lacks?: (who: string, to: string, m: ChainModule) => readonly string[];
@@ -209,7 +209,7 @@ export const delegationText = (d: DelegationDraft, nameOf: (code: string) => str
 export const delegationActive = (d: Pick<Delegation, 'from' | 'until'>, date: string) => d.from <= date && date <= d.until;
 
 /* Where `start`'s approvals for a module go over a window, following the
-   delegations already in force: the path of people, start excluded. */
+   delegations already in force: the path of employees, start excluded. */
 function pathFrom(start: string, m: ChainModule, window: { from: string; until: string }, existing: readonly Delegation[]): string[] {
   const path: string[] = [];
   let at = start;
@@ -256,34 +256,34 @@ export function delegationProblem(d: DelegationDraft, existing: readonly Delegat
 }
 
 /* ---------------------------------------------------------- who decides */
-export interface ApproverPerson { code: string; name: string; manager: string; location: string; department: string; active: boolean }
+export interface ApproverEmployee { code: string; name: string; manager: string; location: string; department: string; active: boolean }
 export interface ApproverWorld {
-  people: readonly ApproverPerson[];
+  employees: readonly ApproverEmployee[];
   /* who holds each role other than line manager, by employee code */
   holders: Readonly<Record<Exclude<ApproverRole, 'Line manager'>, readonly string[]>>;
 }
 export interface Decider { approver: string; acting: string }
 export interface LayerDeciders { role: string; scope: string; when: string; sla: string; deciders: Decider[] }
 
-/* The people a role puts in front of one person's request, before any
-   delegation: the line manager is the person's own manager; any other role
+/* The employees a role puts in front of one employee's request, before any
+   delegation: the line manager is the employee's own manager; any other role
    is everyone active who holds it within the layer's scope, never the
-   person themself. Named employees has no list to name in this build, so it
+   employee themself. Named employees has no list to name in this build, so it
    reads as all. */
-export function approversFor(role: string, scope: string, personCode: string, world: ApproverWorld): string[] {
-  const person = world.people.find(p => p.code === personCode);
-  if (!person) return [];
-  const active = (code: string) => world.people.find(p => p.code === code && p.active);
+export function approversFor(role: string, scope: string, employeeCode: string, world: ApproverWorld): string[] {
+  const employee = world.employees.find(p => p.code === employeeCode);
+  if (!employee) return [];
+  const active = (code: string) => world.employees.find(p => p.code === code && p.active);
   if (role === 'Line manager') {
-    const mgr = world.people.find(p => p.active && p.name === person.manager && p.code !== personCode);
+    const mgr = world.employees.find(p => p.active && p.name === employee.manager && p.code !== employeeCode);
     return mgr ? [mgr.code] : [];
   }
   if (!isApproverRole(role) || role === 'Line manager') return [];
   return world.holders[role].filter(code => {
     const h = active(code);
-    if (!h || h.code === personCode) return false;
-    if (scope === 'Own department') return h.department === person.department;
-    if (scope === 'Own location' || scope === 'Own site') return h.location === person.location;
+    if (!h || h.code === employeeCode) return false;
+    if (scope === 'Own department') return h.department === employee.department;
+    if (scope === 'Own location' || scope === 'Own site') return h.location === employee.location;
     return true;
   });
 }
@@ -293,12 +293,12 @@ export function approversFor(role: string, scope: string, personCode: string, wo
 export function actingFor(approver: string, m: ChainModule, date: string, delegations: readonly Delegation[]): string {
   return delegations.find(d => d.who === approver && d.modules.includes(m) && delegationActive(d, date))?.to ?? approver;
 }
-/* Who decides each layer of a module's chain for one person on one day:
-   the chain's role, then the person who holds it, then any delegation. */
-export function whoDecides(steps: readonly ChainStep[], m: ChainModule, personCode: string, date: string, world: ApproverWorld,
+/* Who decides each layer of a module's chain for one employee on one day:
+   the chain's role, then the employee who holds it, then any delegation. */
+export function whoDecides(steps: readonly ChainStep[], m: ChainModule, employeeCode: string, date: string, world: ApproverWorld,
   delegations: readonly Delegation[]): LayerDeciders[] {
   return steps.filter(s => !s.fixed).map(s => ({ role: s.role, scope: s.scope, when: s.when, sla: s.sla,
-    deciders: approversFor(s.role, s.scope, personCode, world).map(a => ({ approver: a, acting: actingFor(a, m, date, delegations) })) }));
+    deciders: approversFor(s.role, s.scope, employeeCode, world).map(a => ({ approver: a, acting: actingFor(a, m, date, delegations) })) }));
 }
 
 /* ------------------------------------------- walking a chain (module 8) */
@@ -309,7 +309,7 @@ export interface ItemFacts {
   premium?: boolean;
   /* Timesheet: a non-working day, or time on a day of leave or sickness */
   absence?: boolean;
-  /* Timesheet: entered by a manager on the person's behalf */
+  /* Timesheet: entered by a manager on the employee's behalf */
   proxy?: boolean;
   /* Profile: the change is to bank details */
   bankDetails?: boolean;
@@ -334,27 +334,27 @@ export const CONDITIONS: Conditions = {
 };
 
 /* Someone who might decide a layer: what the server knows of their record and access. */
-export interface DeciderPerson {
+export interface DeciderEmployee {
   code: string; location: string; department: string; active: boolean; caps: readonly string[];
   /* their access covers every location (Workforce master data), not only their own */
   allLocations: boolean;
 }
-/* An item of a chain. personCode is '' for a rota week, which belongs to no
+/* An item of a chain. employeeCode is '' for a rota week, which belongs to no
    one; department is left out for one, so Own department reads as its
-   location. manager is the employee code of the person's line manager, who
+   location. manager is the employee code of the employee's line manager, who
    holds a Line manager layer for them whatever their department (Leave). */
-export interface ChainItem { personCode: string; location: string; department?: string; manager?: string; facts: ItemFacts }
+export interface ChainItem { employeeCode: string; location: string; department?: string; manager?: string; facts: ItemFacts }
 export interface WalkInput {
   module: ChainModule; steps: readonly ChainStep[]; item: ChainItem;
   /* the roles that have signed the item off since it was last submitted */
   signed: readonly string[];
   /* the day delegations are read on */
   date: string;
-  people: readonly DeciderPerson[]; delegations: readonly Delegation[];
+  employees: readonly DeciderEmployee[]; delegations: readonly Delegation[];
   conditions?: Conditions;
-  /* Leave and Rota (module 8 group 4B): the people who signed an earlier
+  /* Leave and Rota (module 8 group 4B): the employees who signed an earlier
      layer. Every role of those chains needs the same capability, so without
-     this one person could sign every layer; they decide no later one. */
+     this one employee could sign every layer; they decide no later one. */
   signers?: readonly string[];
 }
 export interface WalkLayer { step: ChainStep; holders: string[]; deciders: string[] }
@@ -380,17 +380,17 @@ export interface WalkProgress { signed: WalkLayer[]; passed: WalkLayer[] }
 
 const layerApplies = (s: ChainStep, facts: ItemFacts, conditions: Conditions) => !s.fixed && (conditions[s.when]?.(facts) ?? false);
 /* The layer's own scope, against the approver's record. Named employees has no list in this build, so it reads as all. */
-function inLayerScope(scope: string, p: DeciderPerson, item: ChainItem): boolean {
+function inLayerScope(scope: string, p: DeciderEmployee, item: ChainItem): boolean {
   if (scope === 'Own department') return item.department === undefined ? p.location === item.location : p.department === item.department;
   if (scope === 'Own location' || scope === 'Own site') return p.location === item.location;
   return true;
 }
 /* Holds the layer's role for this item: the role's capability, the item in
    their access scope when the role is scoped, and in the layer's own scope.
-   Never the item's own person. */
-export function holdsLayer(m: ChainModule, s: ChainStep, p: DeciderPerson, item: ChainItem): boolean {
+   Never the item's own employee. */
+export function holdsLayer(m: ChainModule, s: ChainStep, p: DeciderEmployee, item: ChainItem): boolean {
   const rule = roleRule(m, s.role);
-  if (!rule || !p.active || p.code === item.personCode || !p.caps.includes(rule.capability)) return false;
+  if (!rule || !p.active || p.code === item.employeeCode || !p.caps.includes(rule.capability)) return false;
   if (rule.scoped && !p.allLocations && p.location !== item.location) return false;
   if (s.role === 'Line manager' && item.manager !== undefined && item.manager === p.code) return true;
   return inLayerScope(s.scope, p, item);
@@ -398,14 +398,14 @@ export function holdsLayer(m: ChainModule, s: ChainStep, p: DeciderPerson, item:
 /* The holders of a layer, then, while a delegation for the module is in
    force on the day, whoever covers each of them, as decidersToday does for
    Profile. A delegate never decides their own item. */
-/* Ruling (module 8 review M4): a delegate stands in for the person who delegated, with that person's authority, so needs no capability of the layer's own. */
+/* Ruling (module 8 review M4): a delegate stands in for the employee who delegated, with that employee's authority, so needs no capability of the layer's own. */
 function layerDeciders(m: ChainModule, s: ChainStep, input: WalkInput): WalkLayer {
   const signers = input.signers ?? [];
-  const holders = input.people.filter(p => holdsLayer(m, s, p, input.item) && !signers.includes(p.code)).map(p => p.code);
-  const active = (code: string) => input.people.some(p => p.code === code && p.active);
+  const holders = input.employees.filter(p => holdsLayer(m, s, p, input.item) && !signers.includes(p.code)).map(p => p.code);
+  const active = (code: string) => input.employees.some(p => p.code === code && p.active);
   const deciders = [...new Set(holders.flatMap(h => {
     const to = actingFor(h, m, input.date, input.delegations);
-    return to !== h && to !== input.item.personCode && !signers.includes(to) && active(to) ? [h, to] : [h];
+    return to !== h && to !== input.item.employeeCode && !signers.includes(to) && active(to) ? [h, to] : [h];
   }))];
   return { step: s, holders, deciders };
 }
@@ -448,12 +448,12 @@ export function walkProgress(input: WalkInput): WalkProgress {
    scope; they sign off another layer of this chain; or nothing in the chain
    is theirs. */
 export type DecisionBlock = 'self' | 'signed' | 'scope' | 'layer' | 'capability';
-export function decisionBlock(walk: ChainWalk, input: Pick<WalkInput, 'module' | 'item' | 'people' | 'signers'>, code: string): DecisionBlock | null {
-  if (code === input.item.personCode) return 'self';
+export function decisionBlock(walk: ChainWalk, input: Pick<WalkInput, 'module' | 'item' | 'employees' | 'signers'>, code: string): DecisionBlock | null {
+  if (code === input.item.employeeCode) return 'self';
   /* a complete walk is settled by whoever holds its last layer, an earlier signer too (review I5) */
   if (!walk.complete && input.signers?.includes(code)) return 'signed';
   if (walk.current?.deciders.includes(code)) return null;
-  const caps = input.people.find(p => p.code === code)?.caps ?? [];
+  const caps = input.employees.find(p => p.code === code)?.caps ?? [];
   const rule = walk.current ? roleRule(input.module, walk.current.step.role) : undefined;
   if (rule && caps.includes(rule.capability)) return 'scope';
   if (walk.layers.some(l => l.deciders.includes(code)) || chainCapabilities(input.module).some(c => caps.includes(c))) return 'layer';

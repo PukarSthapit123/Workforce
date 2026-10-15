@@ -16,7 +16,7 @@ import { useTenant } from '@/shell/shellData';
 const firstName = (name: string) => name.split(/\s/)[0] ?? name;
 /* What the entitlement and simulation dialogs need: My leave for your own,
    or a colleague's entitlement read (useEntitlement) on Team leave. */
-export type EntitlementOf = Pick<MyLeave, 'today' | 'entitlement' | 'balance' | 'facts'> & { person: { name: string } };
+export type EntitlementOf = Pick<MyLeave, 'today' | 'entitlement' | 'balance' | 'facts'> & { employee: { name: string } };
 const READ_ONLY = 'read-only:cursor-default read-only:bg-surface-tint read-only:text-text-secondary';
 const daysHours = (days: number, hours: number) => `${days} days · ${hours.toFixed(2)} hours`;
 
@@ -106,7 +106,7 @@ export function RequestDialog({ m, day, onClose }: { m: MyLeave; day?: string; o
       </Field>}
       <Banner testId={tid.leave.sla} tone="info"
         title={tenant?.modules.R ? 'Your manager sees the effect on cover' : 'Cover is not checked, as this organisation does not use Rota'}>
-        {m.person.manager} has {m.rules.slaDays} days to decide{sla ? `, then it escalates to the ${m.rules.escalateTo}.` : '.'}
+        {m.employee.manager} has {m.rules.slaDays} days to decide{sla ? `, then it escalates to the ${m.rules.escalateTo}.` : '.'}
         {rota && ' Once approved you are marked unavailable on the rota and coverage is recalculated.'}
       </Banner>
       {general && <FormWarn testId={tid.leave.formWarn}>{general.message} {general.next}</FormWarn>}
@@ -117,7 +117,7 @@ export function RequestDialog({ m, day, onClose }: { m: MyLeave; day?: string; o
 export function EntitlementDialog({ m, onClose, onSimulate }: { m: EntitlementOf; onClose: () => void; onSimulate?: () => void }) {
   const e = m.entitlement, b = m.balance, pol = e.policy;
   return (
-    <Modal open onOpenChange={o => { if (!o) onClose(); }} title={`How ${firstName(m.person.name)}’s entitlement was worked out`}
+    <Modal open onOpenChange={o => { if (!o) onClose(); }} title={`How ${firstName(m.employee.name)}’s entitlement was worked out`}
       footer={<>
         <Button testId={tid.leave.entClose} kind="ghost" onClick={onClose}>Close</Button>
         {onSimulate && <Button testId={tid.leave.simulate} kind="primary" onClick={onSimulate}>Simulate an hours change</Button>}
@@ -136,13 +136,13 @@ export function EntitlementDialog({ m, onClose, onSimulate }: { m: EntitlementOf
       <Fact label="Carry-over cap" testId={tid.leave.entCarry}>{pol.carry} days</Fact>
       <Fact label="Bank-holiday handling" testId={tid.leave.entBh}>{BANK_HOLIDAY_HANDLING_LABEL[pol.bankHolidayHandling]}</Fact>
       <Small className="mt-[14px]">The employee type chooses the display unit. The policy decides whether contracted hours are pro-rated.
-        Change contracted hours on the person record in People and leave entitlement recalculates from that record.</Small>
+        Change contracted hours on the employee record in Employees and leave entitlement recalculates from that record.</Small>
     </Modal>);
 }
 
 /* proRataModal (v15:7822-7836) as a simulation (D3): Leave never edits the
-   person record, so this works the new entitlement out on the screen and
-   writes nothing. People owns contracted hours. */
+   employee record, so this works the new entitlement out on the screen and
+   writes nothing. Employees owns contracted hours. */
 export function SimulateDialog({ m, onClose }: { m: EntitlementOf; onClose: () => void }) {
   const tenant = useTenant().data;
   const [hours, setHours] = useState(String(m.facts.contractedHours >= 30 ? 22.5 : 37.5));
@@ -151,7 +151,7 @@ export function SimulateDialog({ m, onClose }: { m: EntitlementOf; onClose: () =
     ...(m.facts.accruedHours !== undefined ? { accruedHours: m.facts.accruedHours } : {}) };
   const sim = valid ? proRataSimulation(facts, n, m.entitlement.policy, m.today, { fullTimeWeeklyHours: tenant?.fullTimeWeeklyHours ?? DEFAULT_FULL_TIME_WEEKLY_HOURS }) : null;
   return (
-    <Modal open onOpenChange={o => { if (!o) onClose(); }} title={`Simulate an hours change for ${firstName(m.person.name)}`}
+    <Modal open onOpenChange={o => { if (!o) onClose(); }} title={`Simulate an hours change for ${firstName(m.employee.name)}`}
       description="Changing contracted hours on the shared workforce record recalculates leave entitlement on a pro-rata basis and updates the balance. Rota and Timesheet pick the new contracted hours up at the same moment."
       footer={<Button testId={tid.leave.simClose} kind="ghost" onClick={onClose}>Close</Button>}>
       <FieldGrid>

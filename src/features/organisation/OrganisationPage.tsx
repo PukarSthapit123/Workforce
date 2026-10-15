@@ -59,7 +59,7 @@ export function OrganisationPage() {
 }
 
 /* ------------------------------------------------------------ the spine */
-const SPINE = ['Organisation & template', 'Modules', 'Features', 'Fields', 'Employee types', 'People'];
+const SPINE = ['Organisation & template', 'Modules', 'Features', 'Fields', 'Employee types', 'Employees'];
 function SpineCard() {
   return (
     <AdminCard testId={tid.aorg.card('spine')} icon={<Workflow />} title="Configuration spine" tipTestId={tid.aorg.tip('spine')}
@@ -71,8 +71,8 @@ function SpineCard() {
           <b className="rounded-pill border bg-surface-card px-[11px] py-[5px] font-[family-name:var(--qp-font-display)] text-sm font-semibold">{s}</b>
         </span>)}
       </div>
-      <Small className="mt-md">Changes apply immediately. There is no draft stage. People survive a template change: nobody is moved, and
-        employee types a template does not have stay with the people who hold them.</Small>
+      <Small className="mt-md">Changes apply immediately. There is no draft stage. Employees survive a template change: nobody is moved, and
+        employee types a template does not have stay with the employees who hold them.</Small>
     </AdminCard>);
 }
 
@@ -121,7 +121,7 @@ function ApplyDialog({ row, tenant, onClose }: { row: TemplateRow; tenant: Tenan
   });
   return (
     <Modal open onOpenChange={o => { if (!o) onClose(); }} title={`Apply ${row.name}?`} width="wide"
-      description="It applies to everyone immediately. There is no draft stage. People and the records already here are never deleted or overwritten."
+      description="It applies to everyone immediately. There is no draft stage. Employees and the records already here are never deleted or overwritten."
       footer={<>
         <Button testId={tid.aorg.applyCancel} kind="ghost" onClick={onClose}>Keep it as it is</Button>
         <Button testId={tid.aorg.apply} kind="primary" disabled={!plan.data} pending={apply.anyPending} onClick={go}>Apply template</Button>

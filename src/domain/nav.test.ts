@@ -33,10 +33,10 @@ test('an employee gets My Work only, in prototype order', () => {
   expect(g.flatMap(x => x.tabs).filter(t => t.subProject?.includes('plan 1c'))).toEqual([]);
 });
 test('a manager also gets My Team, with Team Home and Approvals in the strip and the rest under headings', () => {
-  const g = buildNav({ caps: caps('own_home', 'team_ts', 'team_rota', 'team_cover', 'team_leave', 'team_sick', 'team_hours', 'team_people', 'onb_track', 'notice_post'), modules: ALL_MODULES, flags, onboarding: false });
+  const g = buildNav({ caps: caps('own_home', 'team_ts', 'team_rota', 'team_cover', 'team_leave', 'team_sick', 'team_hours', 'team_employees', 'onb_track', 'notice_post'), modules: ALL_MODULES, flags, onboarding: false });
   const team = must(g.find((x): x is NavGroup => x.key === 'team'));
   expect(team.tabs.filter(t => !t.group).map(t => t.label)).toEqual(['Team Home', 'Approvals']);
-  expect([...new Set(team.tabs.filter(t => t.group).map(t => t.group))]).toEqual(['Scheduling', 'Requests', 'People']);
+  expect([...new Set(team.tabs.filter(t => t.group).map(t => t.group))]).toEqual(['Scheduling', 'Requests', 'Employees']);
   /* module 2 builds Team timesheets */
   expect(must(team.tabs.find(t => t.view === 'tteam'))).toMatchObject({ built: true, path: '/team/tteam' });
   expect(must(team.tabs.find(t => t.view === 'tteam')).subProject).toBeUndefined();
@@ -50,8 +50,8 @@ test('a manager also gets My Team, with Team Home and Approvals in the strip and
   expect(must(team.tabs.find(t => t.view === 'tleave')).subProject).toBeUndefined();
   expect(must(team.tabs.find(t => t.view === 'tsick'))).toMatchObject({ built: true, path: '/team/tsick', group: 'Requests', label: 'Sickness' });
   expect(must(team.tabs.find(t => t.view === 'tsick')).subProject).toBeUndefined();
-  /* 1c group 6 builds My team → Notices, under People */
-  expect(must(team.tabs.find(t => t.view === 'tnotices'))).toMatchObject({ built: true, path: '/team/tnotices', group: 'People', label: 'Notices' });
+  /* 1c group 6 builds My team → Notices, under Employees */
+  expect(must(team.tabs.find(t => t.view === 'tnotices'))).toMatchObject({ built: true, path: '/team/tnotices', group: 'Employees', label: 'Notices' });
   expect(must(team.tabs.find(t => t.view === 'tnotices')).subProject).toBeUndefined();
   /* 1c group 7 builds Team Home */
   expect(must(team.tabs.find(t => t.view === 'thome'))).toMatchObject({ built: true, path: '/team/thome' });
@@ -120,7 +120,7 @@ test('setup pages are grouped into the prototype\'s five sections (SETUP_SECTION
   });
   const setup = must(g.find((x): x is NavGroup => x.key === 'setup'));
   const sectionKeys = [...new Set(setup.tabs.filter(t => t.sectionKey).map(t => t.sectionKey))];
-  expect(sectionKeys).toEqual(['org', 'mods', 'people', 'gov', 'int']);
+  expect(sectionKeys).toEqual(['org', 'mods', 'employees', 'gov', 'int']);
 });
 
 test('the module setup and integration pages the prototype\'s SETUP_NEED lists are reachable, gated and named for their sub-project', () => {
@@ -181,7 +181,7 @@ test('iit additionally needs the ITACCESS flag', () => {
    trimmed down to nothing just because team caps were added. */
 test('a manager keeps their own employee surface: the work group still has more than a handful of tabs', () => {
   const g = buildNav({
-    caps: caps('own_home', 'own_ts', 'own_shifts', 'own_leave', 'own_hours', 'own_notices', 'team_ts', 'team_rota', 'team_people'),
+    caps: caps('own_home', 'own_ts', 'own_shifts', 'own_leave', 'own_hours', 'own_notices', 'team_ts', 'team_rota', 'team_employees'),
     modules: ALL_MODULES, flags, onboarding: false,
   });
   const work = must(g.find((x): x is NavGroup => x.key === 'work'));
@@ -227,10 +227,10 @@ test('an admin capability set produces exactly one top-level group: setup, not t
   });
   expect(g.map(x => x.key)).toEqual(['setup']);
 });
-test('plan 1b builds the people, profile, dimensions, contracts and employee types pages', () => {
-  const g = buildNav({ caps: caps('own_home', 'master_data', 'team_people', 'type_cfg'), modules: ALL_MODULES, flags, onboarding: false });
+test('plan 1b builds the employees, profile, dimensions, contracts and employee types pages', () => {
+  const g = buildNav({ caps: caps('own_home', 'master_data', 'team_employees', 'type_cfg'), modules: ALL_MODULES, flags, onboarding: false });
   const tabs = g.flatMap(x => x.tabs);
-  for (const view of ['apeople', 'tpeople', 'profile', 'aloc', 'acon', 'atypes']) expect(tabs.find(t => t.view === view), view).toMatchObject({ built: true });
+  for (const view of ['aemployees', 'temployees', 'profile', 'aloc', 'acon', 'atypes']) expect(tabs.find(t => t.view === view), view).toMatchObject({ built: true });
   expect(tabs.filter(t => t.subProject?.includes('plan 1b'))).toEqual([]);
 });
 

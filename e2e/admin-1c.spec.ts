@@ -74,10 +74,10 @@ test('turning Rota off asks first, sets the scheduled shifts aside with their co
   await expect(painted(page, ['E', 'L', 'N'])).toHaveCount(8);
 });
 
-test('a template is saved from this tenant, another is previewed and applied, and the saved one applied back: one audit row each, people untouched, the name kept', async ({ page, api }) => {
+test('a template is saved from this tenant, another is previewed and applied, and the saved one applied back: one audit row each, employees untouched, the name kept', async ({ page, api }) => {
   test.setTimeout(90_000);
   await signInEmail(page, DEE);
-  const people = await everyone(api);
+  const employees = await everyone(api);
   await page.goto('/setup/aorg');
   await page.getByTestId(tid.aorg.template('mne')).waitFor();
   await expect(page.getByTestId(tid.aorg.template('social'))).toHaveAttribute('aria-pressed', 'true');
@@ -103,15 +103,15 @@ test('a template is saved from this tenant, another is previewed and applied, an
   await expect(info(page, /^M&E \/ Building Services applied\./)).toBeVisible();
   await expect(page.getByTestId(tid.aorg.template('mne'))).toHaveAttribute('aria-pressed', 'true');
   expect(await tenantOf(api)).toMatchObject({ template: 'mne', name: 'Brightpath Support Services', modules: { R: false } });
-  expect(await everyone(api)).toEqual(people);
+  expect(await everyone(api)).toEqual(employees);
 
-  /* and the saved one back: Rota on again, people still untouched */
+  /* and the saved one back: Rota on again, employees still untouched */
   await page.getByTestId(tid.aorg.template('tpl_brightpath_as_it_runs')).click();
   await box.getByTestId(tid.aorg.plan('changes')).waitFor();
   await box.getByTestId(tid.aorg.apply).click();
   await expect(info(page, /^Brightpath as it runs applied\./)).toBeVisible();
   expect(await tenantOf(api)).toMatchObject({ template: 'tpl_brightpath_as_it_runs', name: 'Brightpath Support Services', modules: { R: true } });
-  expect(await everyone(api)).toEqual(people);
+  expect(await everyone(api)).toEqual(employees);
   expect((await auditRows(page, 'template')).map(a => [a.act, a.entityId])).toEqual([
     ['Template saved', 'tpl_brightpath_as_it_runs'], ['Template applied', 'mne'], ['Template applied', 'tpl_brightpath_as_it_runs']]);
   /* an apply is one row, not one per thing it set */

@@ -10,7 +10,7 @@ import { DOW_SHORT, addDays, dowMon, formatDay, formatDmy, parseIso } from '@/do
 /* My shifts: the prototype's essShifts and openShiftsFor
    (qnipay-workforce-v15.html:5487-5530), for an employee and for a manager's
    own record. The next shift, this week's shifts and hours, the rest days,
-   and the open shifts this person may claim, which the server has already
+   and the open shifts this employee may claim, which the server has already
    filtered through the safe-worker rules. A week shows only once it has been
    published (D14): the prototype showed the working week whatever its state,
    which put a manager's unpublished plan in front of employees. */
@@ -23,7 +23,7 @@ export function MyShiftsPage() {
   const m = q.data;
   return (
     <Page testId={tid.page('shifts')}>
-      <PageHead title="My shifts" crumb={`My work · Shifts${m ? ` · ${m.person.locationName} · ${formatDmy(m.weekStart)} – ${formatDmy(addDays(m.weekStart, 6))}` : ''}`}
+      <PageHead title="My shifts" crumb={`My work · Shifts${m ? ` · ${m.employee.locationName} · ${formatDmy(m.weekStart)} – ${formatDmy(addDays(m.weekStart, 6))}` : ''}`}
         actions={<GuideButton view="shifts" />} />
       {q.isError && <p data-testid={tid.shifts.error} role="alert" className="text-err">
         {refused && refused.code !== 'network' ? `${refused.message} ${refused.next}` : 'Your shifts could not be loaded. Reload the page to try again.'}</p>}
@@ -64,7 +64,7 @@ function Shifts({ m }: { m: MyShifts }) {
         {m.visible && next
           ? <EssCard testId={tid.shifts.next} dark label={`Next shift · ${next.date === m.today ? 'today' : DOW_SHORT[dowMon(next.date)] ?? ''}`}>
               <EssBig testId={tid.shifts.nextWhen}>{formatDay(next.date)} · {next.time}</EssBig>
-              <div className="mt-[2px] text-xs opacity-85">{next.name} · {next.hours} hours · {m.person.locationName}</div>
+              <div className="mt-[2px] text-xs opacity-85">{next.name} · {next.hours} hours · {m.employee.locationName}</div>
             </EssCard>
           : <EssCard testId={tid.shifts.next} label="Next shift">
               <div className="text-xs text-text-muted">{m.visible ? 'Nothing further scheduled this week.' : 'Not published yet.'}</div>

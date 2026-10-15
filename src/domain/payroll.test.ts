@@ -80,7 +80,7 @@ describe('readiness', () => {
     expect(blockers.map(b => [b.key, b.label, b.count, b.go])).toEqual([
       ['settings', 'Pay periods', 1, 'aorg'], ['missing', 'Missing timesheets', 2, 'tteam'], ['awaiting', 'Pending approvals', 3, 'tteam'],
       ['back', 'Sent back', 1, 'tteam'], ['mgrok', 'Waiting on payroll', 4, 'tteam'], ['failed', 'Posting failures', 1, 'ibc'],
-      ['critical', 'Critical exceptions', 2, 'texc'], ['compliance', 'Compliance', 1, 'tpeople'], ['resource', 'No resource number', 5, 'apeople']]);
+      ['critical', 'Critical exceptions', 2, 'texc'], ['compliance', 'Compliance', 1, 'temployees'], ['resource', 'No resource number', 5, 'aemployees']]);
     expect(warnings).toEqual([]);
     expect(blockers.find(b => b.key === 'mgrok')?.text).toBe('4 timesheet days approved by the manager and waiting on the payroll layer');
     expect(blockers.find(b => b.key === 'resource')?.text).toBe('5 colleagues with hours in this period have no Business Central resource number');
@@ -126,7 +126,7 @@ describe('the run\'s moves', () => {
 });
 
 test('the file: hours and pay codes, a header row first, no amount', () => {
-  const rows = payrollCsv([{ personCode: 'CP-1042', name: 'Amara Okafor', resource: 'R-1042', date: '2026-08-12', shift: 'E', payCode: 'STD',
+  const rows = payrollCsv([{ employeeCode: 'CP-1042', name: 'Amara Okafor', resource: 'R-1042', date: '2026-08-12', shift: 'E', payCode: 'STD',
     element: 'PE-STD', allowances: ['SLEEP_IN'], hours: 7.5, state: 'Approved', posting: 'Posted' }]);
   expect(rows).toEqual([
     ['Employee ID', 'Name', 'Resource no.', 'Date', 'Shift', 'Pay code', 'Pay elements', 'Allowances', 'Hours', 'State', 'Integration'],

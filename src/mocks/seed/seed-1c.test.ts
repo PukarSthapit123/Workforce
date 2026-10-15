@@ -63,22 +63,22 @@ test('social carries the prototype\'s delegation by employee code (D8); qnipay h
 test('both tenants carry the prototype\'s four notices with textVersion, ISO stamps and acknowledgements by employee code (D10)', () => {
   for (const raw of [social, qnipay]) {
     const seed = raw as unknown as SeedFile;
-    const notices = Object.values(seed.data.notices ?? {}) as { id: string; textVersion: number; at: string; acks: { personCode: string; textVersion: number; at: string }[]; history: { textVersion: number }[] }[];
-    const codes = new Set(Object.values(seed.data.people ?? {}).map(p => (p as { code: string }).code));
+    const notices = Object.values(seed.data.notices ?? {}) as { id: string; textVersion: number; at: string; acks: { employeeCode: string; textVersion: number; at: string }[]; history: { textVersion: number }[] }[];
+    const codes = new Set(Object.values(seed.data.employees ?? {}).map(p => (p as { code: string }).code));
     expect(notices.map(n => n.id)).toEqual(['NTC-0001', 'NTC-0002', 'NTC-0003', 'NTC-0004']);
     expect(notices.map(n => n.textVersion)).toEqual([2, 1, 1, 1]);
     expect(notices.flatMap(n => [n.at, ...n.acks.map(a => a.at)]).every(at => /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:00\.000Z$/.test(at))).toBe(true);
-    expect(notices.flatMap(n => n.acks).every(a => codes.has(a.personCode))).toBe(true);
+    expect(notices.flatMap(n => n.acks).every(a => codes.has(a.employeeCode))).toBe(true);
     expect(notices[0]?.history.map(h => h.textVersion)).toEqual([1]);
   }
 });
 test('each tenant carries the prototype\'s seven documents for its first employee account, with ISO dates, and the three payroll documents (D12)', () => {
   for (const [raw, owner] of [[social, 'CP-1042'], [qnipay, 'EMP002']] as const) {
     const seed = raw as unknown as SeedFile;
-    const docs = Object.values(seed.data.documents ?? {}) as { personCode: string; name: string; date: string; source: string }[];
+    const docs = Object.values(seed.data.documents ?? {}) as { employeeCode: string; name: string; date: string; source: string }[];
     expect(docs.map(d => d.name)).toEqual(['Contract of employment', 'Job description · Support Worker', 'DBS certificate', 'Safeguarding L2 certificate',
       'Medication competency', 'Working time opt-out', 'Annual leave statement 2026/27']);
-    expect(docs.every(d => d.personCode === owner && /^\d{4}-\d{2}-\d{2}$/.test(d.date))).toBe(true);
+    expect(docs.every(d => d.employeeCode === owner && /^\d{4}-\d{2}-\d{2}$/.test(d.date))).toBe(true);
     expect(Object.values(seed.data.payrollDocuments ?? {}).map(d => (d as { name: string }).name)).toEqual(['Payslips', 'P60 · 2025/26', 'P45']);
     expect(JSON.stringify(seed.data.payrollDocuments)).not.toMatch(/£|amount|brateb/i);
   }

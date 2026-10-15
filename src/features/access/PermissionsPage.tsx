@@ -159,11 +159,11 @@ export function PermissionsPage() {
         </div>
       </AdminCard>}
 
-      <SectionHead title="People with a persona" tip="Their template, plus any exceptions for that person only." tipTestId={tid.access.usersTip} />
+      <SectionHead title="Employees with a persona" tip="Their template, plus any exceptions for that employee only." tipTestId={tid.access.usersTip} />
       <Table data-testid={tid.access.usersTable} variant="records">
         <TableHeader>
           <TableRow>
-            <TableHead>Person</TableHead><TableHead>Employee ID</TableHead><TableHead>Persona</TableHead>
+            <TableHead>Employee</TableHead><TableHead>Employee ID</TableHead><TableHead>Persona</TableHead>
             <TableHead>Exceptions</TableHead><TableHead><span className="sr-only">Actions</span></TableHead>
           </TableRow>
         </TableHeader>
@@ -171,7 +171,7 @@ export function PermissionsPage() {
           {users.data.map(u => (
             <Row key={u.email} testId={tid.access.userRow(u.email)}>
               <TableCell kind="title"><strong>{u.name}</strong><span className="block text-xs font-normal text-text-muted">{u.email}</span></TableCell>
-              <TableCell label="Employee ID" className="tabular-nums">{u.personCode}</TableCell>
+              <TableCell label="Employee ID" className="tabular-nums">{u.employeeCode}</TableCell>
               <TableCell label="Persona"><Pill tone="info">{typeName(u.userType)}</Pill></TableCell>
               <TableCell label="Exceptions" data-testid={tid.access.exceptions(u.email)}>{exceptionsSummary(typeName(u.userType), u.grants, u.revocations)}</TableCell>
               <TableCell kind="foot" className="text-right">

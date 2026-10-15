@@ -4,7 +4,7 @@ import { Refusal } from '@/contract/common';
 import { RotaSetup, RotaWeekView, SupportLevelList } from '@/contract/rota';
 import { audits, caller, tokenFor, resetTo, type Persona } from '@/test/api-helpers';
 
-/* Module 8 group 5: Rota setup's support levels, with their people per
+/* Module 8 group 5: Rota setup's support levels, with their employees per
    shift, and the flexible-worker milestones and who is told. One audit row
    per save; a level's new number is set on every location at that level. */
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' })); afterAll(() => server.close());
@@ -26,7 +26,7 @@ test('the seeded levels are the prototype\'s, and anyone signed in reads them fo
   expect(SupportLevelList.parse(r.body).items).toEqual(LEVELS);
 });
 
-test('a level\'s new people per shift is set on every location at that level, with one audit row naming them, and the rota needs it', async () => {
+test('a level\'s new employees per shift is set on every location at that level, with one audit row naming them, and the rota needs it', async () => {
   const call = await as('admin');
   const wh = loc('WH');
   expect(wh).toMatchObject({ level: 'High', minPerShift: 4 });
@@ -43,13 +43,13 @@ test('a level\'s new people per shift is set on every location at that level, wi
   expect(w.min).toBe(5);
 });
 
-test('levels keep their names and order, and each number is a whole number of people', async () => {
+test('levels keep their names and order, and each number is a whole number of employees', async () => {
   const call = await as('admin');
   const renamed = await call('PATCH', '/api/v1/rota/config', { supportLevels: LEVELS.map(l => (l.code === 'Low' ? { ...l, label: 'Light support' } : l)) }, 1);
   expect(renamed.status).toBe(422);
-  expect(refusal(renamed)).toMatchObject({ field: 'supportLevels', message: 'Support levels keep their names and order. Only the people per shift can be changed.' });
+  expect(refusal(renamed)).toMatchObject({ field: 'supportLevels', message: 'Support levels keep their names and order. Only the employees per shift can be changed.' });
   const zero = await call('PATCH', '/api/v1/rota/config', { supportLevels: withMin('Medium', 0) }, 1);
-  expect(refusal(zero)).toMatchObject({ field: 'supportLevels.Medium', message: 'Medium support needs a whole number of people per shift from 1 to 50.' });
+  expect(refusal(zero)).toMatchObject({ field: 'supportLevels.Medium', message: 'Medium support needs a whole number of employees per shift from 1 to 50.' });
   expect(loc('WH')?.minPerShift).toBe(4);
   expect(setupAuditActs()).toEqual([]);
 });

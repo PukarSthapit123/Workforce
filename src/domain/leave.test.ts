@@ -32,7 +32,7 @@ const STAGES: LeaveStage[] = [
   { n: 4, who: 'HR administrator', action: 'Final escalation and manual resolution', wait: 2, channel: 'Email' }];
 const rec = (o: Partial<LeaveRecord> & { id?: string } = {}): LeaveRecord & { id: string } =>
   ({ id: 'lr_1', type: 'AL', from: '2026-08-17', to: '2026-08-18', part: 'full', qty: 2, unit: 'days', state: 'approved', ...o });
-const ME = { personCode: 'CP-1001', name: 'Rachel Hussain' };
+const ME = { employeeCode: 'CP-1001', name: 'Rachel Hussain' };
 const AT = '2026-08-13T08:12:00.000Z';
 const SICK_REASONS = ['Cold or flu', 'Stomach upset', 'Musculoskeletal', 'Mental health', 'Other'];
 const sickPlan = (episodes: Parameters<typeof recordSicknessPlan>[0], input: Parameters<typeof recordSicknessPlan>[1], today = TODAY) =>
@@ -199,7 +199,7 @@ describe('requests: shape and validation (D2)', () => {
     const one = shape({ to: '2026-09-03' });
     expect(one.ok && one.shape.label).toBe('1 day · 7.50 hours');
   });
-  test('a half day is 0.5 at the person\'s day length; hours part is recorded in hours', () => {
+  test('a half day is 0.5 at the employee\'s day length; hours part is recorded in hours', () => {
     const am = shape({ to: '2026-09-03', part: 'am' }, 'days', 22.5);
     expect(am.ok && [am.shape.days, am.shape.hours, am.shape.label]).toEqual([0.5, 2.25, '0.5 days · 2.25 hours']);
     const h = shape({ part: 'hours' });
@@ -248,7 +248,7 @@ describe('requests: shape and validation (D2)', () => {
     expect(al('2028-04-03', '2028-04-04')).toMatchObject({ ok: true, hint: '' });
   });
   /* review M1 */
-  test('a request may not overlap the person\'s own waiting or approved leave; a morning and an afternoon do not clash', () => {
+  test('a request may not overlap the employee\'s own waiting or approved leave; a morning and an afternoon do not clash', () => {
     const booked = [rec({ from: '2026-09-14', to: '2026-09-15', state: 'pending' }), rec({ from: '2026-09-21', to: '2026-09-21', state: 'declined' }),
       rec({ from: '2026-09-28', to: '2026-09-28', part: 'am' })];
     const ctx = { types: TYPES, contractedHours: 37.5, checkBalance: false, today: TODAY, finYearStart: '01/04', leftIn: () => null, booked };
@@ -436,7 +436,7 @@ describe('notifications, audit and toasts (D12)', () => {
 });
 
 describe('sickness episodes and Bradford (D9)', () => {
-  const ep = (id: string, from: string, to: string) => ({ id, personCode: 'CP-1088', from, to, reason: 'Other', note: '', rtw: null });
+  const ep = (id: string, from: string, to: string) => ({ id, employeeCode: 'CP-1088', from, to, reason: 'Other', note: '', rtw: null });
   test('an open episode runs to the clock', () => {
     expect([episodeEnd({ from: '2026-08-11', to: '' }, TODAY), episodeDays({ from: '2026-08-11', to: '' }, TODAY), episodeDays({ from: '2026-06-02', to: '2026-06-13' }, TODAY)])
       .toEqual([TODAY, 3, 12]);
@@ -549,7 +549,7 @@ describe('leave to rota (D7)', () => {
     expect([absenceMark('AL'), absenceMark('TOIL'), absenceMark('SICK')]).toEqual(['V', 'V', 'S']);
     expect([leaveRotaWhy('V'), leaveRotaWhy('S'), leaveCoverReason('V'), leaveCoverReason('S')]).toEqual(['Leave approved', 'Sickness recorded', 'Annual leave cover', 'Sickness']);
   });
-  test('the cell plan covers every day, across weeks, at the person\'s location', () => {
+  test('the cell plan covers every day, across weeks, at the employee\'s location', () => {
     expect(absenceCellPlan('WH', '2026-08-24', '2026-08-28')).toEqual([{ location: 'WH', weekStart: '2026-08-24', weekId: 'rw_WH_2026-08-24', days: [0, 1, 2, 3, 4] }]);
     expect(absenceCellPlan('WH', '2026-08-15', '2026-08-18')).toEqual([
       { location: 'WH', weekStart: '2026-08-10', weekId: 'rw_WH_2026-08-10', days: [5, 6] },

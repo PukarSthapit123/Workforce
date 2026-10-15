@@ -37,7 +37,7 @@ const dialog = () => screen.getByTestId(tid.modal.root);
 const rows = () => screen.getByTestId(tid.monb.policies).querySelectorAll('tbody tr').length;
 
 describe('Onboarding setup: steps and documents apply on Save', () => {
-  test('the three fixed steps are always asked; switching one off is unsaved until Save, Cancel puts it back, and Save says people keep what they gave', async () => {
+  test('the three fixed steps are always asked; switching one off is unsaved until Save, Cancel puts it back, and Save says employees keep what they gave', async () => {
     await open();
     expect(screen.getByText('Modules · Onboarding · Onboarding setup')).toBeInTheDocument();
     const policies = await screen.findByTestId(tid.monb.card('policies'));
@@ -56,7 +56,7 @@ describe('Onboarding setup: steps and documents apply on Save', () => {
     await userEvent.click(screen.getByTestId(tid.monb.stepSwitch('emergency')));
     await userEvent.click(screen.getByTestId(tid.monb.save));
     await expectToast(stepSwitchText('Emergency contacts', false));
-    expect(toasts()).toContain('People part-way through keep what they have already given.');
+    expect(toasts()).toContain('Employees part-way through keep what they have already given.');
     expect(config()).toMatchObject({ version: 2 });
     expect(config().steps.find(s => s.id === 'emergency')?.on).toBe(false);
     expect(acts()).toEqual(['Onboarding setup saved']);
@@ -88,7 +88,7 @@ describe('Onboarding setup: steps and documents apply on Save', () => {
     expect(acts()).toEqual(['Onboarding setup saved']);
   });
 
-  test('the page cautions that changing what is required affects people part-way through; who verifies waits for Save, Cancel puts it back, and Save audits the before and after', async () => {
+  test('the page cautions that changing what is required affects employees part-way through; who verifies waits for Save, Cancel puts it back, and Save audits the before and after', async () => {
     await open();
     const caution = screen.getByTestId(tid.head.caution('monb'));
     expect(caution).toHaveAttribute('role', 'note');
@@ -151,7 +151,7 @@ describe('Onboarding setup: policies, one row at a time', () => {
     expect(acts()).toEqual(['Policy edited']);
   });
 
-  test('uploading a new document raises the version and says how many people will be asked again', async () => {
+  test('uploading a new document raises the version and says how many employees will be asked again', async () => {
     const cases = store.coll<OnboardingCaseRecord>('onboardingCases');
     for (const id of ['onb_CP-1501', 'onb_CP-1502']) {
       const c = cases[id];
@@ -163,7 +163,7 @@ describe('Onboarding setup: policies, one row at a time', () => {
     await userEvent.click(screen.getByTestId(tid.monb.polUpload('pol_conduct')));
     const file = new File([new Uint8Array([1, 2, 3])], 'code-of-conduct-v5.pdf', { type: 'application/pdf' });
     fireEvent.change(screen.getByTestId(tid.monb.filePick), { target: { files: [file] } });
-    await expectToast('Code of conduct is now v4.2. 2 people will be asked again.');
+    await expectToast('Code of conduct is now v4.2. 2 employees will be asked again.');
     await waitFor(() => expect(screen.getByTestId(tid.monb.polVer('pol_conduct'))).toHaveTextContent('v4.2'));
     expect(screen.getByTestId(tid.monb.polAcks('pol_conduct'))).toHaveTextContent('0');
     expect(screen.getByTestId(tid.monb.polFile('pol_conduct'))).toHaveTextContent('code-of-conduct-v5.pdf');

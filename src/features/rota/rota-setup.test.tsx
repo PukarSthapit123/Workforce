@@ -64,7 +64,7 @@ describe('Rota setup', () => {
     const before = snapshot('rotaConfig', 'audit');
     type(tid.mrota.num('minDefault'), '0');
     await userEvent.click(screen.getByTestId(tid.mrota.save));
-    const msg = 'Default people per shift must be a whole number from 1 to 50.';
+    const msg = 'Default employees per shift must be a whole number from 1 to 50.';
     expect(await screen.findByTestId(tid.mrota.warn)).toHaveTextContent(msg);
     expect(screen.getByTestId(tid.mrota.num('minDefault'))).toHaveAttribute('aria-invalid', 'true');
     expect(snapshot('rotaConfig', 'audit')).toEqual(before);
@@ -118,7 +118,7 @@ describe('Rota setup', () => {
     await userEvent.click(openBtn);
     await screen.findByTestId(tid.tpat.editor);
     /* an administrator is held to no location, so anyone on the pattern can be taken off */
-    expect(screen.getByTestId(tid.tpat.removePerson('CP-1288'))).toBeInTheDocument();
+    expect(screen.getByTestId(tid.tpat.removeEmployee('CP-1288'))).toBeInTheDocument();
     type(tid.tpat.name, 'Beacon nights');
     await userEvent.click(screen.getByTestId(tid.tpat.save));
     await expectToast(/^Beacon nights saved/);
@@ -175,7 +175,7 @@ describe('Rota setup', () => {
     expect(snapshot('patterns', 'rotaWeeks', 'audit')).toEqual(before);
   });
 
-  test("module 8: a support level's people per shift and the flexible-worker milestones save together, and the level's locations follow", async () => {
+  test("module 8: a support level's employees per shift and the flexible-worker milestones save together, and the level's locations follow", async () => {
     await open();
     expect(screen.getByTestId(tid.mrota.card('flex'))).toHaveTextContent('Milestones at 9 and 12 weeks · notified to HR administrators');
     expect(screen.getByTestId(tid.mrota.flexNote)).toHaveTextContent('Counting bank weeks is a future enhancement');

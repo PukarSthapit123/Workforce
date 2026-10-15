@@ -1,4 +1,4 @@
-/* A real file for the person to save, built in the browser: the prototype's
+/* A real file for the employee to save, built in the browser: the prototype's
    csv() and download() (qnipay-workforce-v15.html). Nothing is sent anywhere. */
 
 /* One CSV line per row. A cell with a comma, a quote or a line break is quoted, and its quotes doubled. */

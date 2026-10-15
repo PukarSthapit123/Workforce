@@ -155,8 +155,8 @@ test('Book time off opens My leave’s request with the day filled in, and sendi
   fireEvent.change(screen.getByTestId(tid.leave.note), { target: { value: 'From the month' } });
   await userEvent.click(screen.getByTestId(tid.leave.send));
   await waitFor(() => expect(screen.queryByTestId(tid.modal.root)).toBeNull());
-  const made = Object.values(store.coll<{ personCode: string; from: string; to: string; state: string }>('leaveRequests'))
-    .filter(r => r.personCode === 'CP-1042' && r.from === '2026-08-24');
+  const made = Object.values(store.coll<{ employeeCode: string; from: string; to: string; state: string }>('leaveRequests'))
+    .filter(r => r.employeeCode === 'CP-1042' && r.from === '2026-08-24');
   expect(made).toEqual([expect.objectContaining({ to: '2026-08-24', state: 'pending' })]);
 });
 

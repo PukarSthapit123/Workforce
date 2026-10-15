@@ -3,7 +3,7 @@ import { bump, refuse } from './http';
 import { serve } from './serve';
 import { actor } from './auth';
 import { writeAudit } from './audit';
-import { invalid } from './people';
+import { invalid } from './employees';
 import { codesOf, recordAt, usageWorld } from './world';
 import { DIMENSIONS, type DimensionKind, type DimensionRow } from '@/contract/dimensions';
 import { codeChangeProblem, dimensionCodeProblem, normaliseCode, type Problem } from '@/domain/codes';

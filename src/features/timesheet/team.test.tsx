@@ -6,12 +6,12 @@ import { store } from '@/mocks/store';
 import { setToken } from '@/api/session-token';
 import { tid } from '@/testids';
 import type { TimesheetDay } from '@/contract/timesheets';
-import type { Person } from '@/contract/people';
+import type { Employee } from '@/contract/employees';
 import { POSTING_DOT } from '@/domain/timesheet';
 import { expectTestIdCoverage } from '@/test/testid-coverage';
 import { renderPage, withFakeServer } from '@/test/render-page';
 import { audits, resetTo } from '@/test/api-helpers';
-import { TeamPeoplePage } from '@/features/people/TeamPeoplePage';
+import { TeamEmployeesPage } from '@/features/employees/TeamEmployeesPage';
 import { TeamTimesheetsPage } from './TeamTimesheetsPage';
 
 /* The qnipay seed at the frozen clock (Thursday 13/08/2026). Pukar Sthapit
@@ -35,9 +35,9 @@ const dayOf = (id: string) => {
   if (!d) throw new Error(`no day ${id}`);
   return d;
 };
-const move = (personId: string, location: string) => {
-  const p = store.coll<Person>('people')[personId];
-  if (!p) throw new Error(`no person ${personId}`);
+const move = (employeeId: string, location: string) => {
+  const p = store.coll<Employee>('employees')[employeeId];
+  if (!p) throw new Error(`no employee ${employeeId}`);
   p.location = location;
 };
 const openQueue = async () => {
@@ -124,7 +124,7 @@ describe('Team timesheets, the day queue', () => {
   test('a refusal is shown with its message and what to do next, and nothing changes', async () => {
     await openQueue();
     /* the day now belongs to the approver: a manager cannot decide their own (D5) */
-    dayOf(JAMIR).personCode = 'EMP001';
+    dayOf(JAMIR).employeeCode = 'EMP001';
     const before = audits().length;
     await userEvent.click(screen.getByTestId(tid.tteam.approve(JAMIR)));
     const warn = await screen.findByTestId(tid.tteam.refusal);
@@ -149,7 +149,7 @@ describe('Team timesheets, bulk approval', () => {
     expect(box).toHaveTextContent('This cannot be undone from here');
     expect(screen.getByTestId(tid.tteam.bulkStat('records'))).toHaveTextContent('3');
     expect(box).toHaveTextContent('Manchester only');
-    expect(screen.getByTestId(tid.tteam.bulkStat('people'))).toHaveTextContent('3');
+    expect(screen.getByTestId(tid.tteam.bulkStat('employees'))).toHaveTextContent('3');
     expect(screen.getByTestId(tid.tteam.bulkStat('hours'))).toHaveTextContent('26h 00m');
     expect(screen.getByTestId(tid.tteam.bulkStat('flagged'))).toHaveTextContent('1');
     expect(screen.getByTestId(tid.tteam.bulkFlagRow(BIJAY))).toHaveTextContent('Bijay Shrestha11/08/2026entered by a manager as proxy');
@@ -161,7 +161,7 @@ describe('Team timesheets, bulk approval', () => {
 
     await userEvent.click(screen.getByTestId(tid.tteam.bulkAck));
     /* Jamir moves to another location after the queue was read: his day is no longer the approver's to decide */
-    move('per_EMP007', 'REM');
+    move('emp_EMP007', 'REM');
     const before = audits().length;
     await userEvent.click(screen.getByTestId(tid.tteam.bulkConfirm));
     expect(await screen.findByTestId(tid.toast.info)).toHaveTextContent('2 approved · 16h 30m · 2 colleague(s) · queued for Business Central · 1 had exceptions');
@@ -169,7 +169,7 @@ describe('Team timesheets, bulk approval', () => {
     expect(audits()).toHaveLength(before + 1);
     const held = await screen.findByTestId(tid.tteam.held);
     expect(held).toHaveTextContent('1 timesheet held back');
-    expect(held).toHaveTextContent('Jamir Maharjan · 10/08/2026: This timesheet belongs to someone outside the people you look after.');
+    expect(held).toHaveTextContent('Jamir Maharjan · 10/08/2026: This timesheet belongs to someone outside the employees you look after.');
   });
 
   test('QUEUE_CHANGED approves nothing, the queue is read again, and the next attempt goes through', async () => {
@@ -197,7 +197,7 @@ describe('Team timesheets, bulk approval', () => {
 });
 
 describe('Team timesheets, the week matrix', () => {
-  test('select people, approve their pending days on the week, and only theirs', async () => {
+  test('select employees, approve their pending days on the week, and only theirs', async () => {
     await openQueue();
     await userEvent.click(screen.getByTestId(tid.tteam.view('week')));
     const matrix = await screen.findByTestId(tid.tteam.matrix);
@@ -211,7 +211,7 @@ describe('Team timesheets, the week matrix', () => {
     expectTestIdCoverage(document.body);
 
     await userEvent.click(screen.getByTestId(tid.tteam.approveSelected));
-    expect(await screen.findByTestId(tid.toast.error)).toHaveTextContent('Select at least one person to approve.');
+    expect(await screen.findByTestId(tid.toast.error)).toHaveTextContent('Select at least one employee to approve.');
 
     await userEvent.click(screen.getByTestId(tid.tteam.mxCheck('EMP004')));
     await userEvent.click(screen.getByTestId(tid.tteam.mxCheck('EMP005')));
@@ -227,12 +227,12 @@ describe('Team timesheets, the week matrix', () => {
   });
 
   /* review Important 2: more than one queue page of days in the week; the earliest days must still show and be approved */
-  test('a full week at the location shows every day, and Approve selected approves the whole of a person’s week', async () => {
+  test('a full week at the location shows every day, and Approve selected approves the whole of an employee’s week', async () => {
     const seed = dayOf(BIGYAN);
-    const team = Object.values(store.coll<Person>('people')).filter(p => p.location === 'MCR' && p.code !== 'EMP001' && p.state === 'active');
+    const team = Object.values(store.coll<Employee>('employees')).filter(p => p.location === 'MCR' && p.code !== 'EMP001' && p.state === 'active');
     const week = ['2026-08-10', '2026-08-11', '2026-08-12', '2026-08-13', '2026-08-14'];
     for (const p of team) for (const date of week)
-      days()[`tsd_${p.code}_${date}`] = { ...seed, id: `tsd_${p.code}_${date}`, personCode: p.code, date, state: 'pend', history: [], integrationAttemptId: '' };
+      days()[`tsd_${p.code}_${date}`] = { ...seed, id: `tsd_${p.code}_${date}`, employeeCode: p.code, date, state: 'pend', history: [], integrationAttemptId: '' };
     expect(team.length * week.length).toBeGreaterThan(50);
     const last = [...team].sort((a, b) => a.name.localeCompare(b.name)).at(-1);
     if (!last) throw new Error('no team');
@@ -249,8 +249,8 @@ describe('Team timesheets, the week matrix', () => {
 
 describe('Proxy entry from a team member’s record', () => {
   const openProxy = async (code: string) => {
-    renderPage(<TeamPeoplePage />);
-    await userEvent.click(await screen.findByTestId(tid.people.open(code)));
+    renderPage(<TeamEmployeesPage />);
+    await userEvent.click(await screen.findByTestId(tid.employees.open(code)));
     await userEvent.click(await screen.findByTestId(tid.proxy.open));
     return screen.findByTestId(tid.proxy.banner);
   };
@@ -265,7 +265,7 @@ describe('Proxy entry from a team member’s record', () => {
     await userEvent.click(screen.getByTestId(tid.proxy.submitDay));
     expect(await screen.findByTestId(tid.toast.info))
       .toHaveTextContent('Submitted for Bijay Shrestha on their behalf · 13/08/2026 · 08:00 · attributed to you · Bijay notified');
-    expect(dayOf('tsd_EMP005_2026-08-13')).toMatchObject({ state: 'pend', captureSource: 'proxy', enteredBy: 'EMP001', personCode: 'EMP005' });
+    expect(dayOf('tsd_EMP005_2026-08-13')).toMatchObject({ state: 'pend', captureSource: 'proxy', enteredBy: 'EMP001', employeeCode: 'EMP005' });
     await waitFor(() => expect(screen.queryByTestId(tid.proxy.banner)).toBeNull());
   });
 

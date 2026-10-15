@@ -122,7 +122,7 @@ describe('My timesheet, day view', () => {
     const warn = await screen.findByTestId(tid.dayForm.refusal);
     expect(warn).toHaveTextContent('You already have an entry for 12/08/2026. It is awaiting approval.');
     expect(warn).toHaveTextContent('Wait for a decision, or ask your approver to send it back.');
-    expect(Object.values(store.coll<TimesheetDay>('timesheetDays')).filter(d => d.personCode === 'EMP004' && d.date === '2026-08-12')).toHaveLength(1);
+    expect(Object.values(store.coll<TimesheetDay>('timesheetDays')).filter(d => d.employeeCode === 'EMP004' && d.date === '2026-08-12')).toHaveLength(1);
   });
   test('a day in a closed pay period says so and offers no way to save it', async () => {
     await openDay();
@@ -189,7 +189,7 @@ describe('My timesheet, day view', () => {
     leaveToday();
     const id = 'tsd_EMP004_2026-08-13';
     store.coll<Omit<TimesheetDay, 'minutes' | 'posting' | 'enteredByName'>>('timesheetDays')[id] = { id, version: 1, updatedAt: '2026-08-13T09:00:00.000Z',
-      personCode: 'EMP004', date: '2026-08-13', state: 'draft', entries: [{ start: '09:00', finish: '17:00', breaks: [], fields: {} }], workType: 'STD',
+      employeeCode: 'EMP004', date: '2026-08-13', state: 'draft', entries: [{ start: '09:00', finish: '17:00', breaks: [], fields: {} }], workType: 'STD',
       allowances: [], shift: '', nonWorkingReason: '', captureSource: 'self', enteredBy: 'EMP004', submittedAt: '', returnReason: '', warnings: [], history: [],
       integrationAttemptId: '', workedAnyway: true };
     store.save();

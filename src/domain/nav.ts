@@ -51,8 +51,8 @@ function setupSections(can: (c: string) => boolean, on: (m: string) => boolean, 
       /* Onboarding setup is gated on Configure onboarding, as the prototype's cap row says (v15:2232) */
       [can('onb_cfg') && on('ON'), tab('setup', 'monb', 'Onboarding', { module: 'ON' })],
     ]),
-    sec('people', 'People', 'The canonical employee record, what each person is, and the structure work is costed to', [
-      [can('master_data'), tab('setup', 'apeople', 'People')],
+    sec('employees', 'Employees', 'The canonical employee record, what each employee is, and the structure work is costed to', [
+      [can('master_data'), tab('setup', 'aemployees', 'Employees')],
       [can('type_cfg'), tab('setup', 'atypes', 'Employee types')],
       [can('master_data'), tab('setup', 'acon', 'Contracts')],
       [can('master_data'), tab('setup', 'aloc', 'Dimensions')],
@@ -86,7 +86,7 @@ export function buildNav({ caps, modules, flags, onboarding }: NavInput): NavGro
     [can('own_home') && flag('DOCS') && !onboarding, tab('work', 'docs', 'Documents')],
     [can('own_notices') && flag('NOTICES') && !onboarding, tab('work', 'notices', 'Notices')],
   ];
-  const teamHome = ['team_ts', 'team_rota', 'team_leave', 'team_people', 'team_hours'].some(can);
+  const teamHome = ['team_ts', 'team_rota', 'team_leave', 'team_employees', 'team_hours'].some(can);
   const team: [boolean, NavTab][] = [
     [teamHome, tab('team', 'thome', 'Team Home')],
     [can('team_ts') && ts, tab('team', 'tteam', 'Approvals')],
@@ -98,9 +98,9 @@ export function buildNav({ caps, modules, flags, onboarding }: NavInput): NavGro
     [can('team_leave') && on('L'), tab('team', 'tleave', 'Requests', { group: 'Requests', groupKey: 'requests' })],
     [can('team_sick') && on('L'), tab('team', 'tsick', 'Sickness', { group: 'Requests', groupKey: 'requests' })],
     [can('team_hours'), tab('team', 'texc', 'Exceptions', { group: 'Requests', groupKey: 'requests' })],
-    [can('team_people'), tab('team', 'tpeople', 'People', { group: 'People', groupKey: 'people' })],
-    [(can('onb_track') || can('onb_verify')) && on('ON'), tab('team', 'tonb', 'Onboarding', { group: 'People', groupKey: 'people' })],
-    [can('notice_post') && flag('NOTICES'), tab('team', 'tnotices', 'Notices', { group: 'People', groupKey: 'people' })],
+    [can('team_employees'), tab('team', 'temployees', 'Employees', { group: 'Employees', groupKey: 'employees' })],
+    [(can('onb_track') || can('onb_verify')) && on('ON'), tab('team', 'tonb', 'Onboarding', { group: 'Employees', groupKey: 'employees' })],
+    [can('notice_post') && flag('NOTICES'), tab('team', 'tnotices', 'Notices', { group: 'Employees', groupKey: 'employees' })],
     /* module 8: payroll signs off the Timesheet chain's payroll layer from the same queue. Someone who
        holds only that comes to it last, so an administrator still lands where they did */
     [!can('team_ts') && can('pay_appr') && ts, tab('team', 'tteam', 'Approvals')],

@@ -8,7 +8,7 @@ import { useProposeChanges } from '@/api/profile';
    5652-5672). Nothing is written to the record here: a request is raised and
    routed for approval, and a field already awaiting a decision is locked. */
 export function ProposeChange({ profile, onClose }: { profile: Profile; onClose(): void }) {
-  const p = profile.person;
+  const p = profile.employee;
   const [values, setValues] = useState<Record<string, string>>(() => Object.fromEntries(profile.fields.map(f => [f.key, p[f.key]])));
   const [note, setNote] = useState('');
   const send = useProposeChanges();

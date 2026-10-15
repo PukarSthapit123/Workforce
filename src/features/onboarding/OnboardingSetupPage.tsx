@@ -58,7 +58,7 @@ function SetupDraftView({ setup }: { setup: OnboardingSetup }) {
   const setStep = (id: string, on: boolean) => setDraft(d => ({ ...d, steps: d.steps.map(s => (s.id === id ? { ...s, on } : s)) }));
   const setDoc = (id: string, patch: Partial<UpdateOnboardingConfig['documents'][number]>) =>
     setDraft(d => ({ ...d, documents: d.documents.map(x => (x.id === id ? { ...x, ...patch } : x)) }));
-  /* the server's summary is the toast: a switched step says people part-way through keep what they gave */
+  /* the server's summary is the toast: a switched step says employees part-way through keep what they gave */
   const submit = () => save.mutate({ config, body: draft }, { onSuccess: d => toastInfo(d.summary) });
   const cancel = () => { setDraft(draftOf(config)); save.clearFieldErrors(); };
 

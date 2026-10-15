@@ -47,8 +47,8 @@ export interface StepProps {
   error(field: string): string | undefined;
 }
 
-export function PersonalStep({ v, set, error, today, disabled, person }: StepProps & { person: { name: string; email: string } }) {
-  const locked: Record<string, string> = { nm: person.name, email: person.email };
+export function PersonalStep({ v, set, error, today, disabled, employee }: StepProps & { employee: { name: string; email: string } }) {
+  const locked: Record<string, string> = { nm: employee.name, email: employee.email };
   return (
     <FieldGrid>
       {PERSONAL_FIELDS.map(f => (

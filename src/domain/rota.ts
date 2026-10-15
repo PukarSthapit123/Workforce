@@ -6,7 +6,7 @@
    the server refuses with exactly what the screen warns about.
 
    A rota week is one record per location and week (brief D1). Its lines map a
-   person code to seven cells, Monday first. A cell holds a shift code, '' (rest),
+   employee code to seven cells, Monday first. A cell holds a shift code, '' (rest),
    'V' (leave) or 'S' (sickness). Messages are the prototype's, with each em-dash
    aside rewritten as its own sentence (listed in the module report). */
 import type { Problem } from './codes';
@@ -134,7 +134,7 @@ export interface RotaConfig {
   itAccess: boolean; agencyManual: boolean; bhEnhanced: boolean; outlook: boolean; publishBlockOnGap: boolean;
   rotaBuiltBy: string; safeRules: SafeRules; supportLevels: SupportLevel[];
 }
-/* A support level and the people every shift at a location on it needs. */
+/* A support level and the employees every shift at a location on it needs. */
 export interface SupportLevel { code: string; label: string; min: number }
 /* The prototype's SUPPORT_LEVELS (v15:1836). */
 export const DEFAULT_SUPPORT_LEVELS: readonly SupportLevel[] = [
@@ -156,7 +156,7 @@ export const supportLevelsOf = (c: { supportLevels?: readonly SupportLevel[] }):
   (c.supportLevels?.length ? c.supportLevels : DEFAULT_SUPPORT_LEVELS).map(l => ({ ...l }));
 /* "High support · 4 per shift", as the location form offers it. */
 export const supportLevelText = (l: SupportLevel) => `${l.label} · ${l.min} per shift`;
-/* The levels whose people per shift changed, by code, with the new number (v15:13270:
+/* The levels whose employees per shift changed, by code, with the new number (v15:13270:
    a level's number is set on every location at that level). */
 export function changedLevelMins(before: readonly SupportLevel[], after: readonly SupportLevel[]): Record<string, number> {
   return Object.fromEntries(after.filter(l => before.find(b => b.code === l.code)?.min !== l.min).map(l => [l.code, l.min]));
@@ -191,7 +191,7 @@ const num = (n: unknown, lo: number, hi: number) => typeof n === 'number' && Num
 export function rotaConfigProblem(c: RotaConfig, stages: readonly FulfilStage[], types: Readonly<Record<string, TypeRota>>,
   ctx: { employeeTypes: readonly string[]; shiftCodes: readonly string[]; supportLevels?: readonly SupportLevel[] }): Problem | null {
   const bad = (field: string, message: string): Problem => ({ field, message });
-  if (!whole(c.minDefault, 1, 50)) return bad('minDefault', 'Default people per shift must be a whole number from 1 to 50.');
+  if (!whole(c.minDefault, 1, 50)) return bad('minDefault', 'Default employees per shift must be a whole number from 1 to 50.');
   if (!num(c.restHours, 0, 24)) return bad('restHours', 'Minimum rest must be from 0 to 24 hours.');
   if (!num(c.maxHours, 1, 168)) return bad('maxHours', 'Maximum hours must be more than 0 and at most 168.');
   if (!whole(c.maxConsec, 1, 14)) return bad('maxConsec', 'Maximum consecutive days must be a whole number from 1 to 14.');
@@ -205,9 +205,9 @@ export function rotaConfigProblem(c: RotaConfig, stages: readonly FulfilStage[],
   if (!(FLEX_NOTIFY_TO as readonly string[]).includes(c.flexNotifyTo)) return bad('flexNotifyTo', 'Choose who is notified from the list.');
   const levels = c.supportLevels, held = ctx.supportLevels ?? levels;
   if (levels.length !== held.length || levels.some((l, i) => l.code !== held[i]?.code || l.label !== held[i]?.label))
-    return bad('supportLevels', 'Support levels keep their names and order. Only the people per shift can be changed.');
+    return bad('supportLevels', 'Support levels keep their names and order. Only the employees per shift can be changed.');
   const lvl = levels.find(l => !whole(l.min, 1, 50));
-  if (lvl) return bad(`supportLevels.${lvl.code}`, `${lvl.label} needs a whole number of people per shift from 1 to 50.`);
+  if (lvl) return bad(`supportLevels.${lvl.code}`, `${lvl.label} needs a whole number of employees per shift from 1 to 50.`);
   if (!stages.length) return bad('stages', 'Keep at least one stage.');
   for (const [i, s] of stages.entries()) {
     if (!(FULFIL_AUDIENCES as readonly string[]).includes(s.audience)) return bad(`stages.${i}.audience`, 'Choose an audience from the list.');
@@ -259,10 +259,10 @@ export function rotaTransitionProblem(from: string, to: string): RotaRefusal | n
 }
 
 /* -------------------------------------------------------- the week (D1) */
-export interface RotaActor { personCode: string; name: string }
+export interface RotaActor { employeeCode: string; name: string }
 /* A row of the week's change log. `afterPublish` marks an amendment to a live week; `version` is the publication it amends. */
 export interface RotaChange {
-  at: string; by: RotaActor; personCode: string; name: string; date: string;
+  at: string; by: RotaActor; employeeCode: string; name: string; date: string;
   from: string; to: string; why: string; afterPublish: boolean; version: number;
 }
 export interface RotaWeekCore {
@@ -273,22 +273,22 @@ export const rotaWeekId = (location: string, weekStart: string) => `rw_${locatio
 /* An untouched week is genuinely empty: it does not inherit another week's lines. */
 export const emptyWeek = (location: string, weekStart: string): RotaWeekCore =>
   ({ location, weekStart, lines: {}, state: 'draft', publishVersion: 0, publishedAt: '', publishedBy: null, changes: [] });
-export const lineOf = (week: Pick<RotaWeekCore, 'lines'> | undefined, personCode: string) =>
-  normLine(week && Object.hasOwn(week.lines, personCode) ? week.lines[personCode] : undefined);
+export const lineOf = (week: Pick<RotaWeekCore, 'lines'> | undefined, employeeCode: string) =>
+  normLine(week && Object.hasOwn(week.lines, employeeCode) ? week.lines[employeeCode] : undefined);
 export const dayOf = (weekStart: string, date: string) => daysBetween(weekStart, date);
 export const weekStartOf = periodStart;
 
 /* rotaChange: every path that writes a cell records it. A change to a week
    colleagues can see is an amendment: it is marked afterPublish and moves the
    week to amendment (an amended week stays amended). */
-export interface CellWrite { personCode: string; name: string; day: number; to: string; by: RotaActor; at: string; why: string }
+export interface CellWrite { employeeCode: string; name: string; day: number; to: string; by: RotaActor; at: string; why: string }
 export function setCell(week: RotaWeekCore, w: CellWrite): { week: RotaWeekCore; change: RotaChange; amended: boolean } {
-  const line = lineOf(week, w.personCode), from = line[w.day] ?? '';
+  const line = lineOf(week, w.employeeCode), from = line[w.day] ?? '';
   line[w.day] = w.to;
   const live = rotaVisible(week.state);
-  const change: RotaChange = { at: w.at, by: w.by, personCode: w.personCode, name: w.name, date: addDays(week.weekStart, w.day),
+  const change: RotaChange = { at: w.at, by: w.by, employeeCode: w.employeeCode, name: w.name, date: addDays(week.weekStart, w.day),
     from, to: w.to, why: w.why, afterPublish: live, version: week.publishVersion };
-  return { week: { ...week, lines: { ...week.lines, [w.personCode]: line }, state: live ? 'amendment' : week.state,
+  return { week: { ...week, lines: { ...week.lines, [w.employeeCode]: line }, state: live ? 'amendment' : week.state,
     changes: [change, ...week.changes] }, change, amended: live };
 }
 /* Several cell writes against one week, as one request (accept plan, clear). */
@@ -306,7 +306,7 @@ export const amendedNotice = (weekStart: string, day: number) => ({ title: 'Rota
   body: `Week ${isoWeek(weekStart)} · your shift on ${weekHeads()[day] ?? ''} has changed. Check your shifts.` });
 
 /* ----------------------------------------------------------- coverage */
-/* onShift: people at the location on shift that day. */
+/* onShift: employees at the location on shift that day. */
 export const onShift = (lines: readonly Line[], day: number) => lines.filter(l => isWorking(l[day])).length;
 /* minFor: the location's minimum while minimum staffing is on, else no minimum. */
 export const minFor = (locationMin: number | undefined, minStaffOn: boolean, cfg: Pick<RotaConfig, 'minDefault'>) =>
@@ -368,7 +368,7 @@ export interface RotaWorker {
 export interface RuleContext { shifts: readonly ShiftType[]; typeRota: TypeRota; config: RotaConfig; safeWorker: boolean }
 export const rotadHours = (line: Line, shifts: readonly ShiftType[]) => line.reduce((a, c) => a + shiftHours(shifts, c), 0);
 export const nightsIn = (line: Line, shifts: readonly ShiftType[]) => line.filter(c => shiftBy(shifts, c)?.night).length;
-/* The lowest of the person's own maximum, their type's and the tenant's (Rota setup says the lower applies). */
+/* The lowest of the employee's own maximum, their type's and the tenant's (Rota setup says the lower applies). */
 export const hoursCap = (w: Pick<RotaWorker, 'maxHours'>, tr: TypeRota, cfg: Pick<RotaConfig, 'maxHours'>) =>
   Math.min(w.maxHours || 99, tr.maxHours || 99, cfg.maxHours || 99);
 export const restNeed = (tr: TypeRota, cfg: Pick<RotaConfig, 'restHours'>) => tr.restHours || cfg.restHours;
@@ -405,7 +405,7 @@ export function lineRestIssues(line: Line, need: number, shifts: readonly ShiftT
 export interface Exclusion { rule: string; reason: string }
 /* PEOP167: every exclusion names its rule. The master switch (SAFEWORKER) gates
    every rule beneath it; shift-type eligibility is what the employee type is for,
-   so it survives the switch. `line` is the person's week as it stands. */
+   so it survives the switch. `line` is the employee's week as it stands. */
 export function eligibility(w: RotaWorker, line: Line, day: number, code: string, ctx: RuleContext): Exclusion[] {
   const { typeRota: tr, config: cfg, shifts } = ctx, out: Exclusion[] = [];
   const typeRule = (): Exclusion => ({ rule: 'Shift eligibility', reason: `${w.typeName} is not eligible for ${shiftName(shifts, code).toLowerCase()} shifts` });
@@ -455,7 +455,7 @@ export function hoursPosition(w: RotaWorker, line: Line, worked: number, ctx: Om
 }
 /* The over-maximum banner. "Advisory only": hours warnings never block publishing. */
 export const overMaximumText = (name: string, rot: number, cap: number) => `${name} is scheduled ${rot}h against a ${cap}h maximum`;
-export const OVER_MAXIMUM_NOTE = 'Advisory only. Hours warnings do not block publishing, but the person is excluded from further offers.';
+export const OVER_MAXIMUM_NOTE = 'Advisory only. Hours warnings do not block publishing, but the employee is excluded from further offers.';
 
 /* --------------------------------------------- the single assignment path */
 export type AssignMode = 'assign' | 'change';
@@ -486,9 +486,9 @@ export interface Suggestion { worker: RotaWorker; score: number; why: string[] }
 export interface RuledOut { worker: RotaWorker; rule: string; reason: string; all: Exclusion[] }
 /* suggest: hard rules first, then a score that only orders those who passed,
    with its reasoning. Nothing is assigned. */
-export function suggest(day: number, code: string, people: readonly Candidate[]): { ok: Suggestion[]; no: RuledOut[] } {
+export function suggest(day: number, code: string, employees: readonly Candidate[]): { ok: Suggestion[]; no: RuledOut[] } {
   const ok: Suggestion[] = [], no: RuledOut[] = [];
-  for (const { worker: p, line, ctx } of people) {
+  for (const { worker: p, line, ctx } of employees) {
     const ex = eligibility(p, line, day, code, ctx);
     const first = ex[0];
     if (first) { no.push({ worker: p, rule: first.rule, reason: first.reason, all: ex }); continue; }
@@ -518,7 +518,7 @@ export function suggest(day: number, code: string, people: readonly Candidate[])
   return { ok, no };
 }
 export const NO_REASONS_WHY = 'Available, cleared and qualified';
-/* thinnest: the shift with the fewest people on it that day, catalogue order breaking a tie. */
+/* thinnest: the shift with the fewest employees on it that day, catalogue order breaking a tie. */
 export function thinnest(day: number, lines: readonly Line[], shifts: readonly ShiftType[]): string | undefined {
   const c = new Map(shifts.map(s => [s.code, 0]));
   for (const l of lines) { const v = l[day] ?? ''; const n = c.get(v); if (n !== undefined) c.set(v, n + 1); }
@@ -526,11 +526,11 @@ export function thinnest(day: number, lines: readonly Line[], shifts: readonly S
 }
 /* planWeek: up to three suggestions a day while the day is below the minimum.
    Each pick is pencilled into a copy of its line so the next one sees it. */
-export type PlanItem = { day: number; code: string; none: true } | { day: number; code: string; none: false; personCode: string; name: string; why: string[] };
-export function planWeek(people: readonly Candidate[], min: number, shifts: readonly ShiftType[]): PlanItem[] {
+export type PlanItem = { day: number; code: string; none: true } | { day: number; code: string; none: false; employeeCode: string; name: string; why: string[] };
+export function planWeek(employees: readonly Candidate[], min: number, shifts: readonly ShiftType[]): PlanItem[] {
   const plan: PlanItem[] = [];
-  const lines = new Map(people.map(c => [c.worker.code, normLine(c.line)]));
-  const current = () => people.map(c => ({ ...c, line: lines.get(c.worker.code) ?? normLine(c.line) }));
+  const lines = new Map(employees.map(c => [c.worker.code, normLine(c.line)]));
+  const current = () => employees.map(c => ({ ...c, line: lines.get(c.worker.code) ?? normLine(c.line) }));
   for (const day of DAYS) {
     let guard = 0;
     while (onShift([...lines.values()], day) < min && guard < 3) {
@@ -538,7 +538,7 @@ export function planWeek(people: readonly Candidate[], min: number, shifts: read
       if (code === undefined) break;
       const best = suggest(day, code, current()).ok[0];
       if (!best) { plan.push({ day, code, none: true }); break; }
-      plan.push({ day, code, none: false, personCode: best.worker.code, name: best.worker.name, why: best.why });
+      plan.push({ day, code, none: false, employeeCode: best.worker.code, name: best.worker.name, why: best.why });
       const l = lines.get(best.worker.code);
       if (l) l[day] = code;
       guard++;
@@ -550,18 +550,18 @@ export const planSummary = (n: number) => (n ? `Suggested ${n} assignments for y
 export const NOBODY_CAN_TAKE = 'Nobody can take that shift without breaking a hard rule.';
 
 /* ----------------------------------------------------- the roster */
-export interface RosterPerson { code: string; location: string; state: string; contractedHours: number }
-/* activePeople: everyone but leavers and archived records. */
-export const isActive = (p: Pick<RosterPerson, 'state'>) => p.state !== 'leaver' && p.state !== 'archived';
-/* rosterAt: active people at the location with contracted hours or a shift on the week. */
-export const onRoster = (p: RosterPerson, location: string, line: Line) =>
+export interface RosterEmployee { code: string; location: string; state: string; contractedHours: number }
+/* activeEmployees: everyone but leavers and archived records. */
+export const isActive = (p: Pick<RosterEmployee, 'state'>) => p.state !== 'leaver' && p.state !== 'archived';
+/* rosterAt: active employees at the location with contracted hours or a shift on the week. */
+export const onRoster = (p: RosterEmployee, location: string, line: Line) =>
   p.location === location && isActive(p) && (p.contractedHours > 0 || line.some(c => !!c));
 
 /* ------------------------------------------------- working patterns */
-export interface PatternPerson { personCode: string; offset: number }
+export interface PatternEmployee { employeeCode: string; offset: number }
 export interface PatternCore {
   code: string; name: string; cycle: number; locations: string[]; jobProfiles: string[]; costCentre: string;
-  starts: string; horizon: number; gen: string; genFrom: string; genTo: string; active: boolean; days: string[]; people: PatternPerson[];
+  starts: string; horizon: number; gen: string; genFrom: string; genTo: string; active: boolean; days: string[]; employees: PatternEmployee[];
 }
 export interface GenPeriod { k: string; label: string; days?: number; months?: number; custom?: boolean }
 export const GEN_PERIODS: readonly GenPeriod[] = [
@@ -576,7 +576,7 @@ export const GEN_PERIODS: readonly GenPeriod[] = [
 ];
 const TWELVE_MONTHS: GenPeriod = { k: '12m', label: 'Twelve months', months: 12 };
 export const genBy = (k: string): GenPeriod => GEN_PERIODS.find(x => x.k === k) ?? TWELVE_MONTHS;
-/* The day of the cycle a date falls on for one person, 0-based. */
+/* The day of the cycle a date falls on for one employee, 0-based. */
 export const cycleIndex = (p: Pick<PatternCore, 'starts' | 'cycle'>, offset: number, date: string) =>
   (((daysBetween(p.starts, date) + (offset - 1)) % p.cycle) + p.cycle) % p.cycle;
 export type GenRange = { ok: false; message: string } | { ok: true; from: string; to: string; span: number; shifts: number; label: string; range: string };
@@ -598,7 +598,7 @@ export function genRange(p: PatternCore, today: string): GenRange {
   let shifts = 0;
   if (p.cycle > 0 && p.days.length) {
     const base = isIsoDate(p.starts) ? p.starts : from;
-    for (const x of p.people) for (let i = 0; i < span; i++)
+    for (const x of p.employees) for (let i = 0; i < span; i++)
       if (p.days[cycleIndex({ starts: base, cycle: p.cycle }, x.offset, addDays(from, i))]) shifts++;
   }
   return { ok: true, from, to, span, shifts, label: per.custom ? 'between two dates' : per.label.toLowerCase(),
@@ -610,7 +610,7 @@ export const genLabel = (p: PatternCore) => genBy(p.gen || '12m').label.replace(
 export function patternGenerateProblem(p: PatternCore, scope: string | null, locName: (c: string) => string): Problem | null {
   if (!p.days.some(c => !!c)) return { field: 'days', message: 'Nothing to generate. Every day of the cycle is a rest day.' };
   if (!p.locations.length) return { field: 'locations', message: 'Pick at least one location before generating.' };
-  if (!p.people.length) return { field: 'people', message: `Nobody is on ${p.name} yet. Add a person first.` };
+  if (!p.employees.length) return { field: 'employees', message: `Nobody is on ${p.name} yet. Add an employee first.` };
   if (scope && !p.locations.includes(scope))
     return { field: 'locations', message: `${p.name} does not cover ${locName(scope)}. A manager can only generate for their own location.` };
   return null;
@@ -645,24 +645,24 @@ export const overlappingWeek = (weekStart: string, stored: readonly string[]) =>
 export interface WeekSlot { state: string; lines: Readonly<Record<string, Line>> }
 export type WeekLookup = (location: string, weekStart: string) => WeekSlot | undefined;
 export interface WeekWrite { location: string; weekStart: string; lines: Record<string, string[]>; created: boolean }
-export interface PatternPersonInfo { code: string; name: string; location: string; state: string; restNeed: number }
+export interface PatternEmployeeInfo { code: string; name: string; location: string; state: string; restNeed: number }
 export type ApplyResult =
   | { ok: false; message: string }
-  | { ok: true; written: number; occupied: number; absence: number; weeks: number; live: number; rest: string[]; range: string; people: number; writes: WeekWrite[] };
+  | { ok: true; written: number; occupied: number; absence: number; weeks: number; live: number; rest: string[]; range: string; employees: number; writes: WeekWrite[] };
 /* applyPattern (IMP-031): writes the run into the week store. It never
    overwrites: a filled cell is left alone and counted, leave and sickness are
    skipped, and a live week is skipped whole (D6). */
 export interface ApplyContext {
-  today: string; scope: string | null; people: ReadonlyMap<string, PatternPersonInfo>; weekAt: WeekLookup;
+  today: string; scope: string | null; employees: ReadonlyMap<string, PatternEmployeeInfo>; weekAt: WeekLookup;
   locName: (c: string) => string; shifts: readonly ShiftType[];
 }
 export function applyPattern(p: PatternCore, ctx: ApplyContext): ApplyResult {
-  const { today, scope, people, weekAt, locName, shifts } = ctx;
+  const { today, scope, employees, weekAt, locName, shifts } = ctx;
   const r = genRange(p, today);
   if (!r.ok) return { ok: false, message: r.message };
   const base = isIsoDate(p.starts) ? p.starts : r.from;
-  const on = p.people.flatMap(x => { const info = people.get(x.personCode); return info && isActive(info) && (!scope || info.location === scope) ? [{ x, info }] : []; });
-  if (!on.length) return { ok: false, message: scope ? `Nobody on this pattern works at ${locName(scope)}.` : 'None of the people on this pattern are on the workforce record.' };
+  const on = p.employees.flatMap(x => { const info = employees.get(x.employeeCode); return info && isActive(info) && (!scope || info.location === scope) ? [{ x, info }] : []; });
+  if (!on.length) return { ok: false, message: scope ? `Nobody on this pattern works at ${locName(scope)}.` : 'None of the employees on this pattern are on the workforce record.' };
   const writes = new Map<string, WeekWrite>(), skipped = new Set<string>(), touched = new Set<string>();
   let written = 0, occupied = 0, absence = 0;
   /* review I3: each date goes in the week that covers it, counting the weeks this run has opened, so no two weeks share a date */
@@ -683,26 +683,26 @@ export function applyPattern(p: PatternCore, ctx: ApplyContext): ApplyResult {
           lines: Object.fromEntries(Object.entries(slot?.lines ?? {}).map(([k, l]) => [k, normLine(l)])) };
         writes.set(key, w);
       }
-      const line = w.lines[x.personCode] ?? emptyLine();
-      w.lines[x.personCode] = line;
+      const line = w.lines[x.employeeCode] ?? emptyLine();
+      w.lines[x.employeeCode] = line;
       const cur = line[dow] ?? '';
       if (isAbsence(cur)) { absence++; continue; }
       if (cur) { occupied++; continue; }
       line[dow] = code; written++; touched.add(key);
     }
   }
-  /* rest is checked on what was actually written, per week and person */
+  /* rest is checked on what was actually written, per week and employee */
   const rest: string[] = [];
   for (const key of touched) {
     const w = writes.get(key);
     if (!w) continue;
     for (const { x, info } of on) {
       if (info.location !== w.location) continue;
-      for (const v of lineRestIssues(w.lines[x.personCode] ?? emptyLine(), info.restNeed, shifts))
+      for (const v of lineRestIssues(w.lines[x.employeeCode] ?? emptyLine(), info.restNeed, shifts))
         rest.push(`${info.name} · week of ${w.weekStart} · ${v.rest}h rest (needs ${info.restNeed}h)`);
     }
   }
-  return { ok: true, written, occupied, absence, weeks: touched.size, live: skipped.size, rest, range: r.range, people: on.length,
+  return { ok: true, written, occupied, absence, weeks: touched.size, live: skipped.size, rest, range: r.range, employees: on.length,
     writes: [...writes.values()].filter(w => touched.has(rotaWeekId(w.location, w.weekStart))) };
 }
 /* The generate toast, from what was actually written. */
@@ -711,7 +711,7 @@ export const generateActivates = (p: Pick<PatternCore, 'active'>, r: Pick<Extrac
 /* activated: the pattern's name when this run made a draft active. */
 export function generateSummary(r: Extract<ApplyResult, { ok: true }>, activated?: string) {
   if (!r.written) return `Nothing written · every target cell was already filled${r.live ? ' or in a published week' : ''}`;
-  return `${r.written} shift(s) written · ${r.range} · ${r.weeks} week(s) · ${r.people} ${r.people === 1 ? 'person' : 'people'}`
+  return `${r.written} shift(s) written · ${r.range} · ${r.weeks} week(s) · ${r.employees} ${r.employees === 1 ? 'employee' : 'employees'}`
     + (r.occupied ? ` · ${r.occupied} cell(s) already filled, left alone` : '')
     + (r.absence ? ` · ${r.absence} skipped for leave or sickness` : '')
     + (r.live ? ` · ${r.live} published week(s) skipped. Amend those individually` : '')
@@ -719,29 +719,29 @@ export function generateSummary(r: Extract<ApplyResult, { ok: true }>, activated
     + (activated ? ` · ${activated} was a draft and is now active` : '');
 }
 export const generateAuditText = (p: PatternCore, r: Extract<ApplyResult, { ok: true }>, scopeName: string | null) =>
-  `${p.name} · ${r.range} · ${r.written} shift(s) written across ${r.weeks} week(s) · ${r.people} person(s)`
+  `${p.name} · ${r.range} · ${r.written} shift(s) written across ${r.weeks} week(s) · ${r.employees} employee(s)`
   + (scopeName ? ` · scoped to ${scopeName}` : '')
   + (r.occupied ? ` · ${r.occupied} cell(s) already filled and left alone` : '')
   + (r.live ? ` · ${r.live} published week(s) skipped` : '');
 
 /* np-create: a new pattern starts as a draft, its cycle clamped to 1–28 days and copied from a base when one is chosen. */
 export const clampCycle = (n: number, fallback = 7) => Math.max(1, Math.min(28, Math.trunc(n) || fallback));
-export function patternProblem(p: Pick<PatternCore, 'name' | 'cycle' | 'days' | 'people' | 'starts' | 'gen'>, shiftCodes: readonly string[]): Problem | null {
+export function patternProblem(p: Pick<PatternCore, 'name' | 'cycle' | 'days' | 'employees' | 'starts' | 'gen'>, shiftCodes: readonly string[]): Problem | null {
   if (!p.name.trim()) return { field: 'name', message: 'Give the pattern a name.' };
   if (!whole(p.cycle, 1, 28) || p.days.length !== p.cycle) return { field: 'cycle', message: 'A cycle runs for 1 to 28 days.' };
   const bad = p.days.findIndex(c => c !== '' && !shiftCodes.includes(c));
   if (bad >= 0) return { field: `days.${bad}`, message: `Day ${bad + 1} of the cycle uses ${p.days[bad] ?? ''}, which is not a shift type.` };
   if (!isIsoDate(p.starts)) return { field: 'starts', message: 'Give the date the cycle starts.' };
   if (!GEN_PERIODS.some(g => g.k === p.gen)) return { field: 'gen', message: 'Choose how far a run reaches from the list.' };
-  const off = p.people.findIndex(x => !whole(x.offset, 1, p.cycle));
-  if (off >= 0) return { field: `people.${off}.offset`, message: `A starting day must be from 1 to ${p.cycle}.` };
+  const off = p.employees.findIndex(x => !whole(x.offset, 1, p.cycle));
+  if (off >= 0) return { field: `employees.${off}.offset`, message: `A starting day must be from 1 to ${p.cycle}.` };
   return null;
 }
 /* data-patcycle: shrinking drops the days beyond the new length, growing adds rest days, offsets wrap. */
-export function resizeCycle<T extends Pick<PatternCore, 'cycle' | 'days' | 'people'>>(p: T, n: number): T {
+export function resizeCycle<T extends Pick<PatternCore, 'cycle' | 'days' | 'employees'>>(p: T, n: number): T {
   const days = p.days.slice(0, n);
   while (days.length < n) days.push('');
-  return { ...p, cycle: n, days, people: p.people.map(x => (x.offset > n ? { ...x, offset: ((x.offset - 1) % n) + 1 } : x)) };
+  return { ...p, cycle: n, days, employees: p.employees.map(x => (x.offset > n ? { ...x, offset: ((x.offset - 1) % n) + 1 } : x)) };
 }
 export const ACTIVATE_EMPTY = 'Set at least one shift in the cycle first.';
 /* pp-add: stagger walks the days that carry a shift, from the chosen one; "same" puts everyone on that day. */
@@ -751,7 +751,7 @@ export function staggerOffsets(days: readonly string[], start: number, mode: 'st
   const k = Math.max(0, ring.indexOf(start));
   return Array.from({ length: count }, (_, n) => Math.max(1, Math.min(days.length, mode === 'same' ? start : ring[(k + n) % ring.length] ?? 1)));
 }
-export const TICK_SOMEONE = 'Tick at least one person.';
+export const TICK_SOMEONE = 'Tick at least one employee.';
 export const alreadyOnPattern = (names: readonly string[]) => `${names.join(', ')} already on this pattern.`;
 
 /* --------------------------------------- repeat, copy and clear (D6) */
@@ -849,7 +849,7 @@ export function clearProblem(week: Pick<RotaWeekCore, 'state' | 'weekStart' | 'l
 }
 /* The removals a clear makes, each recorded as a change with the reason "Cleared". */
 export const clearWrites = (lines: Readonly<Record<string, Line>>, roster: readonly string[], names: ReadonlyMap<string, string>, by: RotaActor, at: string): CellWrite[] =>
-  roster.flatMap(id => normLine(lines[id]).flatMap((c, day) => (isWorking(c) ? [{ personCode: id, name: names.get(id) ?? id, day, to: '', by, at, why: 'Cleared' }] : [])));
+  roster.flatMap(id => normLine(lines[id]).flatMap((c, day) => (isWorking(c) ? [{ employeeCode: id, name: names.get(id) ?? id, day, to: '', by, at, why: 'Cleared' }] : [])));
 export const clearSummary = (n: number, weekStart: string) =>
   `${n} shift(s) cleared · week ${isoWeek(weekStart)} · drag from the palette or generate from a pattern to rebuild it`;
 export const clearAuditText = (locName: string, weekStart: string, n: number) => `${locName} · week ${isoWeek(weekStart)} · ${n} shift(s) removed`;
@@ -923,26 +923,26 @@ export const askFirstText = (firstName: string, wait: number) =>
   `${firstName} would be asked first, with ${wait} minutes to reply. Sending messages is a future enhancement, so nobody has been messaged.`;
 
 /* A filled shift waits for the manager to confirm it was worked. */
-export interface FilledCore { coverId: string; location: string; date: string; shift: string; personCode: string; name: string; confirmed: boolean; itRequest: string }
+export interface FilledCore { coverId: string; location: string; date: string; shift: string; employeeCode: string; name: string; confirmed: boolean; itRequest: string }
 /* Nobody confirms their own shift as worked (as module 2 refuses self-approval of a timesheet). */
 export const CONFIRM_SELF = 'You cannot confirm your own shift as worked.';
-export const confirmSelfProblem = (f: Pick<FilledCore, 'personCode'>, self: string): RotaRefusal | null =>
-  (f.personCode === self ? { code: 'SELF_APPROVAL', message: CONFIRM_SELF, next: 'Ask another manager at this location.' } : null);
+export const confirmSelfProblem = (f: Pick<FilledCore, 'employeeCode'>, self: string): RotaRefusal | null =>
+  (f.employeeCode === self ? { code: 'SELF_APPROVAL', message: CONFIRM_SELF, next: 'Ask another manager at this location.' } : null);
 /* A shift is confirmed as worked on or after its day, never before. */
 export const confirmEarlyProblem = (f: Pick<FilledCore, 'date'>, today: string): RotaRefusal | null =>
   (f.date > today ? { code: 'NOT_WORKED_YET', message: `This shift is on ${formatDay(f.date)}, so it cannot be confirmed as worked yet.`,
     next: 'Confirm it on or after the day of the shift.' } : null);
 export const confirmProblem = (f: Pick<FilledCore, 'confirmed'>): RotaRefusal | null =>
   (f.confirmed ? { code: 'ALREADY_CONFIRMED', message: 'This shift is already confirmed as worked.', next: 'Nothing more is needed.' } : null);
-export interface ItRequestCore { ref: string; personCode: string; name: string; location: string; shift: string; date: string; worker: string; status: string; raisedAt: string; system: string }
+export interface ItRequestCore { ref: string; employeeCode: string; name: string; location: string; shift: string; date: string; worker: string; status: string; raisedAt: string; system: string }
 /* raiseITRequest (PEOP156): only with ITACCESS on. Refs run ITR-1007, ITR-1008, ... */
 export const itRequestFor = (f: FilledCore, raisedSoFar: number, category: string, at: string, locName: string, shifts: readonly ShiftType[]): ItRequestCore => ({
-  ref: `ITR-${1000 + raisedSoFar + 7}`, personCode: f.personCode, name: f.name, location: locName,
+  ref: `ITR-${1000 + raisedSoFar + 7}`, employeeCode: f.employeeCode, name: f.name, location: locName,
   shift: `${shiftName(shifts, f.shift)} · ${shiftTime(shifts, f.shift)}`, date: f.date, worker: category || 'Bank', status: 'Raised',
   raisedAt: at, system: 'IT service desk' });
 export const confirmSummary = (ref: string) => (ref ? `Confirmed. IT access request ${ref} raised.` : 'Confirmed as worked.');
 
-/* openShiftsFor: open requests with a reason at the person's location. With safe-worker filtering on, anyone ineligible is never offered it. */
+/* openShiftsFor: open requests with a reason at the employee's location. With safe-worker filtering on, anyone ineligible is never offered it. */
 export function openShiftsFor<C extends CoverCore>(w: RotaWorker & { location: string }, covers: readonly C[], lineFor: (date: string) => Line, ctx: RuleContext) {
   const out: { cover: C; why: string }[] = [];
   for (const c of covers) {
@@ -972,7 +972,7 @@ export const escalationNotice = (shifts: readonly ShiftType[], code: string, dat
 export const itRequestNotice = (r: ItRequestCore) => ({ title: 'IT access request raised', body: `${r.name} · ${r.location} · ${formatDay(r.date)} · ${r.ref}` });
 
 /* ---------------------------------------- the timesheet's rota line (D16) */
-/* What the timesheet checks a day against: the person's cell for that date in
+/* What the timesheet checks a day against: the employee's cell for that date in
    their location's week. Rest, leave and sickness are not a line. */
 export function rotaInputFor(line: Line | undefined, day: number, ctx: Omit<RuleContext, 'safeWorker'> & { typeName: string }): RotaInput | undefined {
   const code = line?.[day] ?? '', s = shiftBy(ctx.shifts, code);

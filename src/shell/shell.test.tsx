@@ -10,10 +10,10 @@ import { expectTestIdCoverage } from '@/test/testid-coverage';
 import { tid } from '@/testids';
 import type { MenuAccount } from './AccountMenu';
 
-const menuAccount = (name: string): MenuAccount => ({ name, email: 'someone@example.org', personCode: 'CP-0001', roleName: 'Admin', roleDescription: 'Configure how this workforce operates', locationName: 'Head office' });
+const menuAccount = (name: string): MenuAccount => ({ name, email: 'someone@example.org', employeeCode: 'CP-0001', roleName: 'Admin', roleDescription: 'Configure how this workforce operates', locationName: 'Head office' });
 
 test('the shell has full test id coverage for a manager', () => {
-  const nav = buildNav({ caps: new Set(['own_home', 'team_ts', 'team_people', 'notice_post']), modules: { TS: true, A: true, CORE: true }, flags: { NOTICES: true }, onboarding: false });
+  const nav = buildNav({ caps: new Set(['own_home', 'team_ts', 'team_employees', 'notice_post']), modules: { TS: true, A: true, CORE: true }, flags: { NOTICES: true }, onboarding: false });
   render(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={['/work/home']}>
     <ShellView nav={nav} roleLabel="Manager" viewingAs={null} account={menuAccount('Rachel Hussain')} inbox={emptyInbox(2)} onSignOut={() => {}} onEndViewAs={() => {}} /></MemoryRouter></QueryClientProvider>);
   expectTestIdCoverage();
@@ -23,7 +23,7 @@ test('the shell has full test id coverage for a manager', () => {
    as someone else." Ported from the prototype (qnipay-workforce-v15.html:
    10605-10608: the `.viewing` toggle and the composed title) and CSS
    (html:1164, `.rolepill.viewing{opacity:.85;border-style:dashed}`). */
-test('viewing as someone else shows a dashed role pill naming both people, a way back, and full test id coverage', () => {
+test('viewing as someone else shows a dashed role pill naming both employees, a way back, and full test id coverage', () => {
   const nav = buildNav({ caps: new Set(['own_home']), modules: { CORE: true }, flags: {}, onboarding: false });
   render(<QueryClientProvider client={queryClient}><MemoryRouter initialEntries={['/work/home']}>
     <ShellView nav={nav} roleLabel="Employee" viewingAs="Amara Okafor" account={menuAccount('Priya Shah')} inbox={emptyInbox(0)} onSignOut={() => {}} onEndViewAs={() => {}} /></MemoryRouter></QueryClientProvider>);
@@ -88,11 +88,11 @@ test('at the setup index the strip holds the index tab alone, as in the prototyp
    (prototype: `#tabs>button,#tabs>.tabgrp).length<=7`, "the strip carries
    five items, not twelve: two pages and three headings"). Consecutive tabs
    sharing a `group` collapse into one dropdown trigger (TabStrip's `runs`),
-   so a manager holding every scheduling/requests/people capability still
+   so a manager holding every scheduling/requests/employees capability still
    sees a handful of top-level items, not one per page. */
 test('the manager strip stays scannable: a handful of top-level items, not one per page', () => {
   const nav = buildNav({
-    caps: new Set(['own_home', 'team_ts', 'team_hours', 'team_rota', 'rota_pattern', 'rota_shift', 'team_leave', 'team_sick', 'team_people', 'onb_track', 'notice_post']),
+    caps: new Set(['own_home', 'team_ts', 'team_hours', 'team_rota', 'rota_pattern', 'rota_shift', 'team_leave', 'team_sick', 'team_employees', 'onb_track', 'notice_post']),
     modules: { CORE: true, TS: true, A: true, R: true, L: true, ON: true }, flags: { NOTICES: true }, onboarding: false,
   });
   /* on Exceptions: the strip is the subject, and Team Home now reads the session */
@@ -114,7 +114,7 @@ test('a page inside a menu still marks its heading as current', () => {
 
 /* The module drill-in (v15:4059-4076, suite S:3051-3060): opening a module
    gives a way back to the module list, the module's features, and its setup
-   page when this person can reach it; the way back is never the current page. */
+   page when this employee can reach it; the way back is never the current page. */
 test('inside a module the strip reads All modules, then its features, then its setup page', () => {
   const nav = buildNav({ caps: new Set(['mod_cfg']), modules: { CORE: true, TS: true, A: true, R: true, L: true }, flags: {}, onboarding: false });
   const setup = nav.find(g => g.key === 'setup');
@@ -157,11 +157,11 @@ test('the strip on a module setup page renders the drill-in tabs, the setup page
 });
 
 /* 1c follow-up from group 2 (D11): the role pill shows the renamed role,
-   the viewed person's own while viewing as someone, never the raw user type. */
-test('the role pill shows the renamed role, the viewed person\'s while viewing as someone', () => {
-  const account = { email: 'a@example.org', userType: 'admin' as const, personCode: 'CP-0001', name: 'Dee', roleName: 'Administrator', roleDescription: '', locationName: '' };
+   the viewed employee's own while viewing as someone, never the raw user type. */
+test('the role pill shows the renamed role, the viewed employee\'s while viewing as someone', () => {
+  const account = { email: 'a@example.org', userType: 'admin' as const, employeeCode: 'CP-0001', name: 'Dee', roleName: 'Administrator', roleDescription: '', locationName: '' };
   expect(roleLabelOf({ account })).toBe('Administrator');
-  expect(roleLabelOf({ account, viewingAs: { personCode: 'CP-0002', name: 'Amara Okafor', userType: 'employee', roleName: 'Colleague' } })).toBe('Colleague');
+  expect(roleLabelOf({ account, viewingAs: { employeeCode: 'CP-0002', name: 'Amara Okafor', userType: 'employee', roleName: 'Colleague' } })).toBe('Colleague');
   expect(roleLabelOf({ account: { ...account, roleName: '' } })).toBe('Admin');
 });
 
@@ -216,13 +216,13 @@ test('More opens Go to, listing every page of the strip with Current against the
 });
 
 test('manager: Team Home first with the home glyph, the 1c Notices page in Go to with the rest', async () => {
-  const nav = buildNav({ caps: new Set(['own_home', 'team_ts', 'team_hours', 'team_rota', 'team_leave', 'team_sick', 'team_people', 'notice_post']),
+  const nav = buildNav({ caps: new Set(['own_home', 'team_ts', 'team_hours', 'team_rota', 'team_leave', 'team_sick', 'team_employees', 'notice_post']),
     modules: { CORE: true, TS: true, A: true, R: true, L: true }, flags: { NOTICES: true }, onboarding: false });
   renderAt(nav, '/team/texc');
   expect(within(bar()).getAllByRole('link').map(a => a.textContent)).toEqual(['⌂Team', '◷Approvals', '◴Hours', '▦Rota']);
   await userEvent.click(screen.getByTestId(tid.nav.more));
   const rows = within(await screen.findByTestId(tid.nav.goToList)).getAllByRole('listitem');
-  expect(rows.map(r => r.firstChild?.textContent)).toEqual(['Team Home', 'Approvals', 'Hours position', 'Rota', 'Requests', 'Sickness', 'Exceptions', 'People', 'Notices']);
+  expect(rows.map(r => r.firstChild?.textContent)).toEqual(['Team Home', 'Approvals', 'Hours position', 'Rota', 'Requests', 'Sickness', 'Exceptions', 'Employees', 'Notices']);
   expect(screen.getByTestId(tid.nav.goTo('texc'))).toHaveTextContent('Current');
 });
 

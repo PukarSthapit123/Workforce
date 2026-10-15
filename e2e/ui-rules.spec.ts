@@ -18,7 +18,7 @@ import { tid } from '../src/testids';
    the employee, Hours position and Exceptions for the manager, and
    Pay codes, Payroll readiness and Business Central for the admin. */
 type Persona = 'employee' | 'manager' | 'admin';
-const BUILT = ['/setup/asetup', '/setup/aperm', '/setup/iaudit', '/setup/apeople', '/setup/aloc', '/setup/aloc?d=locations', '/setup/acon', '/setup/atypes',
+const BUILT = ['/setup/asetup', '/setup/aperm', '/setup/iaudit', '/setup/aemployees', '/setup/aloc', '/setup/aloc?d=locations', '/setup/acon', '/setup/atypes',
   '/setup/mts', '/setup/mrota', '/setup/mleave',
   '/setup/aorg', '/setup/acal', '/setup/amods', '/setup/amods?m=TS', '/setup/anotif', '/setup/aappr', '/setup/mpay', '/setup/ipay', '/setup/ibc'];
 const BUILT_AS: [Persona, string][] = [['employee', '/work/ts'], ['employee', '/work/shifts'], ['employee', '/work/leave'], ['employee', '/work/home'],
@@ -26,7 +26,7 @@ const BUILT_AS: [Persona, string][] = [['employee', '/work/ts'], ['employee', '/
   ['manager', '/team/tshifts'], ['manager', '/team/tpat'], ['manager', '/team/tcover'], ['manager', '/team/tleave'], ['manager', '/team/tsick'],
   ['manager', '/team/thome'], ['manager', '/team/tnotices'], ['manager', '/team/thours'], ['manager', '/team/texc']];
 const READY: Record<string, string> = { '/setup/asetup': tid.page('asetup'), '/setup/aperm': tid.access.table, '/setup/iaudit': tid.page('iaudit'),
-  '/setup/apeople': tid.people.table, '/setup/aloc': tid.dims.card('locations'), '/setup/aloc?d=locations': tid.dims.table,
+  '/setup/aemployees': tid.employees.table, '/setup/aloc': tid.dims.card('locations'), '/setup/aloc?d=locations': tid.dims.table,
   '/setup/acon': tid.contracts.table, '/setup/atypes': tid.types.detail, '/setup/mts': tid.mts.card('rules'),
   '/work/ts': tid.ts.view('day'), '/team/tteam': tid.tteam.table, '/setup/mrota': tid.mrota.card('staffing'), '/work/shifts': tid.shifts.cards,
   '/team/trota': tid.trota.grid, '/team/tshifts': tid.tshifts.catalogue, '/team/tpat': tid.tpat.list, '/team/tcover': tid.tcover.stages,
@@ -38,10 +38,10 @@ const READY: Record<string, string> = { '/setup/asetup': tid.page('asetup'), '/s
 /* The pages that register a guide (src/ui/guides.ts), by path, with the view it is registered under */
 const GUIDED: Record<string, string> = { '/work/ts': 'ts', '/team/tteam': 'tteam', '/setup/mts': 'mts', '/team/trota': 'trota', '/team/tshifts': 'tshifts',
   '/team/tpat': 'tpat', '/setup/mrota': 'mrota', '/setup/mleave': 'mleave', '/work/notices': 'notices', '/team/tnotices': 'tnotices',
-  '/setup/apeople': 'apeople', '/setup/aloc': 'aloc', '/setup/aloc?d=locations': 'aloc', '/setup/acon': 'acon', '/setup/aperm': 'aperm', '/work/docs': 'docs', '/work/profile': 'profile',
+  '/setup/aemployees': 'aemployees', '/setup/aloc': 'aloc', '/setup/aloc?d=locations': 'aloc', '/setup/acon': 'acon', '/setup/aperm': 'aperm', '/work/docs': 'docs', '/work/profile': 'profile',
   '/team/thours': 'thours', '/setup/ipay': 'ipay' };
 
-/* Each page is reached as a person moves between pages, through the router,
+/* Each page is reached as an employee moves between pages, through the router,
    not by reloading the app. A reload boots the app, the fake server and its
    store again: two to four seconds a page, and over three minutes for the
    walk. The page rendered, and so what each check reads, is the same. */
@@ -69,7 +69,7 @@ async function eachBuiltPage(page: Page, signInAs: (p: Persona) => Promise<void>
 /* GUIDE AFFORDANCE #5 "No ? appears where no guide is registered" and #6
    "Admin pages without a guide show no ?". My timesheet, Team timesheets,
    Timesheet setup, Team rota, Shift catalogue, Working patterns, Rota setup,
-   Leave setup, Notices (both), People, Dimensions, Contracts, Permissions,
+   Leave setup, Notices (both), Employees, Dimensions, Contracts, Permissions,
    Documents and My profile register a guide, so each shows exactly one ?, the one that
    opens it; every other built page shows none, never a hollow one. */
 test('G A ? guide button appears only where a guide is registered, once, and opens that guide', async ({ page, signInAs }) => {

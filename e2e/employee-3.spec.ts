@@ -56,7 +56,7 @@ test('a bank worker claims an urgent open shift from My shifts, and it is writte
   const w = await rotaWeek(api, W33);
   expect(lineOf(w, 'CP-1455')[4]).toBe('L');
   expect(w.state).toBe('amendment');
-  expect(w.changes[0]).toMatchObject({ personCode: 'CP-1455', to: 'L', afterPublish: true });
+  expect(w.changes[0]).toMatchObject({ employeeCode: 'CP-1455', to: 'L', afterPublish: true });
 });
 
 test('My timesheet starts the day from the rota’s Night line with its variance, then fills the week from the rota and submits it', async ({ page, api }) => {

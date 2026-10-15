@@ -73,7 +73,7 @@ describe('delegations (Review Focus 6)', () => {
       ['Rachel Hussain', 'Dee Fitzgerald', '2026-08-24', '2026-08-31', 'Timesheet, Leave', false]]);
     expect(r.approvers.map(a => a.name)).toEqual(['Dee Fitzgerald', 'Rachel Hussain']);
   });
-  test('the qnipay tenant has none: the prototype\'s people are not on its roster', async () => {
+  test('the qnipay tenant has none: the prototype\'s employees are not on its roster', async () => {
     resetTo('qnipay');
     expect(Delegations.parse((await (await as('admin'))('GET', '/api/v1/approvals/delegations')).body).items).toEqual([]);
   });
@@ -115,14 +115,14 @@ describe('delegations (Review Focus 6)', () => {
     expect(snapshot(...WRITES)).toEqual(before);
   });
   test('while a Profile delegation is in force, the delegate and the approver they cover are both told of a request (M1)', async () => {
-    const dee = store.coll<{ personCode: string; grants: string[] }>('accounts')['acc_dee.fitzgerald@brightpath.org'];
+    const dee = store.coll<{ employeeCode: string; grants: string[] }>('accounts')['acc_dee.fitzgerald@brightpath.org'];
     if (!dee) throw new Error('no Dee');
     dee.grants = [...dee.grants, 'profile_appr'];
     const call = await as('admin');
     expect((await call('POST', '/api/v1/approvals/delegations', { who: 'CP-1001', to: 'CP-1002', from: '2026-08-13', until: '2026-08-20', modules: ['Profile'] })).status).toBe(200);
     expect((await (await as('employee'))('POST', '/api/v1/profile-changes', { changes: [{ field: 'phone', to: '07700 900111' }], note: '' })).status).toBe(200);
-    const told = Object.values(store.coll<{ personId: string; event?: string; channel?: string }>('notifications')).filter(n => n.event === 'pf_req');
-    expect(told.map(n => [n.personId, n.channel]).sort()).toEqual([['CP-1001', 'In-app + email'], ['CP-1002', 'In-app + email']]);
+    const told = Object.values(store.coll<{ employeeId: string; event?: string; channel?: string }>('notifications')).filter(n => n.event === 'pf_req');
+    expect(told.map(n => [n.employeeId, n.channel]).sort()).toEqual([['CP-1001', 'In-app + email'], ['CP-1002', 'In-app + email']]);
   });
   test('removing one needs If-Match and writes one audit row; a fault leaves it', async () => {
     const call = await as('admin');
@@ -145,8 +145,8 @@ describe('profile routing follows the Profile chain (D8)', () => {
   test('at the defaults a contact change goes to the line manager, who is told (pf_req)', async () => {
     const [rec] = await propose('phone', '07700 900111');
     expect(rec).toMatchObject({ route: ['manager'], stage: 'manager' });
-    const told = Object.values(store.coll<{ personId: string; event?: string; body: string }>('notifications')).filter(n => n.event === 'pf_req');
-    expect(told.map(n => [n.personId, n.body])).toEqual([['CP-1001', 'Amara Okafor (CP-1042). Mobile number. Awaiting approval.']]);
+    const told = Object.values(store.coll<{ employeeId: string; event?: string; body: string }>('notifications')).filter(n => n.event === 'pf_req');
+    expect(told.map(n => [n.employeeId, n.body])).toEqual([['CP-1001', 'Amara Okafor (CP-1042). Mobile number. Awaiting approval.']]);
   });
   test('after payroll is put first for every contact change, a phone change goes to payroll alone', async () => {
     const steps = [
@@ -159,12 +159,12 @@ describe('profile routing follows the Profile chain (D8)', () => {
     expect(bank).toMatchObject({ route: ['payroll', 'manager'], stage: 'payroll' });
     /* both wait in payroll's queue (Dee Fitzgerald holds bank verification); the line manager has nothing yet */
     const queue = ProfileChange.array().parse((await (await as('admin'))('GET', '/api/v1/profile-changes')).body);
-    expect(queue.filter(c => c.personCode === 'CP-1042').map(c => [c.field, c.stage])).toEqual([['phone', 'payroll'], ['bankAccount', 'payroll']]);
+    expect(queue.filter(c => c.employeeCode === 'CP-1042').map(c => [c.field, c.stage])).toEqual([['phone', 'payroll'], ['bankAccount', 'payroll']]);
     const mgr = ProfileChange.array().parse((await (await as('manager'))('GET', '/api/v1/profile-changes')).body);
-    expect(mgr.filter(c => c.personCode === 'CP-1042' && ['phone', 'bankAccount'].includes(c.field) && c.raisedAt === store.now())).toEqual([]);
+    expect(mgr.filter(c => c.employeeCode === 'CP-1042' && ['phone', 'bankAccount'].includes(c.field) && c.raisedAt === store.now())).toEqual([]);
     /* the payroll decider is acting on the request, so takes the Manager column whatever her account type (I3): Dee is told of both */
-    const told = Object.values(store.coll<{ personId: string; event?: string; channel?: string }>('notifications')).filter(n => n.event === 'pf_req');
-    expect(told.map(n => [n.personId, n.channel])).toEqual([['CP-1002', 'In-app + email'], ['CP-1002', 'In-app + email']]);
+    const told = Object.values(store.coll<{ employeeId: string; event?: string; channel?: string }>('notifications')).filter(n => n.event === 'pf_req');
+    expect(told.map(n => [n.employeeId, n.channel])).toEqual([['CP-1002', 'In-app + email'], ['CP-1002', 'In-app + email']]);
   });
   test('at the defaults, a bank-detail change that passes the manager stage reaches the payroll decider (I3)', async () => {
     const [bank] = await propose('bankAccount', '11112222');
@@ -172,7 +172,7 @@ describe('profile routing follows the Profile chain (D8)', () => {
     if (!bank) throw new Error('no change');
     const ok = await (await as('manager'))('POST', `/api/v1/profile-changes/${bank.id}/decision`, { decision: 'approve', reason: '' }, bank.version);
     expect([ok.status, (ok.body as { record: { stage: string } }).record.stage]).toEqual([200, 'payroll']);
-    const told = Object.values(store.coll<{ personId: string; event?: string }>('notifications')).filter(n => n.event === 'pf_req').map(n => n.personId);
+    const told = Object.values(store.coll<{ employeeId: string; event?: string }>('notifications')).filter(n => n.event === 'pf_req').map(n => n.employeeId);
     expect(told).toEqual(['CP-1001', 'CP-1002']);
   });
 });

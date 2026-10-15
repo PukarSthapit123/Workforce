@@ -123,9 +123,9 @@ export function DelegationDialog({ approvers, onClose }: { approvers: Delegation
   const toggle = (m: ChainModule, on: boolean) => { setModules(ms => (on ? [...ms, m] : ms.filter(x => x !== m))); edited(); };
   const general = create.refusal && !['who', 'to', 'from', 'until', 'modules'].includes(create.refusal.field ?? '') ? create.refusal : null;
   const send = () => create.mutate({ who, to, from, until, modules }, { onSuccess: r => { toastInfo(r.message); onClose(); } });
-  const people = (
+  const employees = (
     <>
-      <option value="">Choose a person</option>
+      <option value="">Choose an employee</option>
       {approvers.map(a => <option key={a.code} value={a.code}>{a.name} ({a.code})</option>)}
     </>);
   return (
@@ -137,10 +137,10 @@ export function DelegationDialog({ approvers, onClose }: { approvers: Delegation
       </>}>
       <FieldGrid>
         <Field label="Approver" required error={create.fieldError('who')}>
-          <NativeSelect testId={tid.aappr.who} value={who} onChange={e => { setWho(e.target.value); edited(); }}>{people}</NativeSelect>
+          <NativeSelect testId={tid.aappr.who} value={who} onChange={e => { setWho(e.target.value); edited(); }}>{employees}</NativeSelect>
         </Field>
         <Field label="Delegated to" required error={create.fieldError('to')}>
-          <NativeSelect testId={tid.aappr.to} value={to} onChange={e => { setTo(e.target.value); edited(); }}>{people}</NativeSelect>
+          <NativeSelect testId={tid.aappr.to} value={to} onChange={e => { setTo(e.target.value); edited(); }}>{employees}</NativeSelect>
         </Field>
         <Field label="From" required error={create.fieldError('from')}>
           <TextInput testId={tid.aappr.from} type="date" value={from} onChange={e => { setFrom(e.target.value); edited(); }} />

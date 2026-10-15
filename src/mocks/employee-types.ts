@@ -3,7 +3,7 @@ import { bump, refuse } from './http';
 import { serve } from './serve';
 import { actor } from './auth';
 import { writeAudit } from './audit';
-import { invalid } from './people';
+import { invalid } from './employees';
 import { recordAt, usageWorld } from './world';
 import meta from './seed/meta.json';
 import {
@@ -58,7 +58,7 @@ export const employeeTypeHandlers = [
   serve(removeEmployeeType, ({ session, params, checkVersion }) => {
     const t = byId(params.id);
     checkVersion(t);
-    /* D12: people are never moved to another type behind anyone's back */
+    /* D12: employees are never moved to another type behind anyone's back */
     const usedBy = usageOf('employee-types', t.code, usageWorld());
     if (usedBy.length) return refuse(409, { code: 'in-use', ...inUseRefusal(t.code, usedBy), usedBy });
     if (Object.keys(types()).length < 2)

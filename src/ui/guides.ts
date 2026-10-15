@@ -11,7 +11,7 @@ export const GUIDES: Readonly<Record<string, Guide>> = {
     ['Clocking',
       'Clock in when you start and out when you finish. Your times fill in and lock while the shift runs, and breaks are recorded as you take them.'],
     ['Manual entry',
-      'The day form and the weekly grid capture the same fields. The grid pivots them across the week for people who record a whole week at once. Fields marked required are required for your employee type.'],
+      'The day form and the weekly grid capture the same fields. The grid pivots them across the week for employees who record a whole week at once. Fields marked required are required for your employee type.'],
     ['Breaks and allowances',
       'Add breaks only if you took them. They come off your net hours. Tick any allowances that applied to the shift. Rates are held in Business Central; nothing here sets a monetary value.'],
     ['What is checked',
@@ -33,7 +33,7 @@ export const GUIDES: Readonly<Record<string, Guide>> = {
   ] },
   thours: { label: 'Where these figures come from', title: 'Where these figures come from', sections: [
     ['Three different sources',
-      'Contracted comes from the workforce record, rota’d from Rota, worked from Timesheet. One row per person, so the three can be compared directly.'],
+      'Contracted comes from the workforce record, rota’d from Rota, worked from Timesheet. One row per employee, so the three can be compared directly.'],
     ['Variance',
       'Rota variance compares scheduled against contracted; worked variance compares actual against contracted. Someone with no contracted baseline is measured against a maximum instead.'],
     ['Flags',
@@ -42,10 +42,10 @@ export const GUIDES: Readonly<Record<string, Guide>> = {
   trota: { label: 'Where shifts come from', title: 'Where shifts come from', sections: [
     ['1 · Working patterns build the backbone',
       'Admin sets a pattern once, for example 4-on / 4-off nights, and the rota is generated from it up to the horizon. Most shifts arrive this way, carrying the pattern’s cost centre, location and job profile.'],
-    ['2 · Each location sets how many people a shift needs',
-      'A location’s support level sets the people it needs on every shift. Anything below that shows as a red gap and, while Rota setup says so, blocks publishing.'],
+    ['2 · Each location sets how many employees a shift needs',
+      'A location’s support level sets the employees it needs on every shift. Anything below that shows as a red gap and, while Rota setup says so, blocks publishing.'],
     ['3 · You add, change and remove shifts',
-      'Tap an empty cell on any row to add a shift for that person. Tap a shift to change or remove it. Drag a shift from the palette onto a cell, or pick one up with Enter and put it down on a cell with Enter. Use “Add an extra shift” when you need more people than the minimum.'],
+      'Tap an empty cell on any row to add a shift for that employee. Tap a shift to change or remove it. Drag a shift from the palette onto a cell, or pick one up with Enter and put it down on a cell with Enter. Use “Add an extra shift” when you need more employees than the minimum.'],
     ['4 · Filling a gap: assign, suggest, or advertise',
       'Assign someone directly, ask Qnipay to suggest who fits, or open a cover request so eligible colleagues and bank workers are notified in configured stages.'],
     ['5 · Leave and sickness feed straight in',
@@ -67,13 +67,13 @@ export const GUIDES: Readonly<Record<string, Guide>> = {
     ['It is tenant-wide',
       'Adding or changing a shift affects every location. Existing rota days keep the shift and have their hours recalculated, which is why a change is audited.'],
     ['Night shifts',
-      'A shift flagged as a night shift is only offered to people whose employee type permits night work and who hold the training for it.'],
+      'A shift flagged as a night shift is only offered to employees whose employee type permits night work and who hold the training for it.'],
     ['Removing one',
       'A shift still used on a rota day or in a working pattern cannot be removed until those uses are cleared.'],
   ] },
   tpat: { label: 'How patterns fill a rota', title: 'How patterns fill a rota', sections: [
     ['A repeating cycle',
-      'Set which day of the cycle carries which shift, attach the locations and job profiles it runs at, then add people with an offset each so they stagger across the cycle.'],
+      'Set which day of the cycle carries which shift, attach the locations and job profiles it runs at, then add employees with an offset each so they stagger across the cycle.'],
     ['Generating',
       'Generating writes rota lines forward to the horizon. It never overwrites a cell that already holds a shift, leave or sickness, and it skips weeks that are already published. Both are reported rather than applied silently.'],
     ['What is checked',
@@ -93,7 +93,7 @@ export const GUIDES: Readonly<Record<string, Guide>> = {
   ] },
   mleave: { label: 'How leave reaches the rota', title: 'How leave reaches the rota', sections: [
     ['Leave → Rota → Cover, in one chain',
-      'Approving a request marks the person unavailable, recalculates coverage for those days, and raises a cover request where the shortfall breaches minimum staffing.'],
+      'Approving a request marks the employee unavailable, recalculates coverage for those days, and raises a cover request where the shortfall breaches minimum staffing.'],
     ['Entitlement',
       'Calculated from the shared workforce record: policy, contracted hours and working pattern. Change any of the three and entitlement recalculates.'],
   ] },
@@ -116,8 +116,8 @@ export const GUIDES: Readonly<Record<string, Guide>> = {
       'Posting, every edit, pinning, withdrawing and each acknowledgement go to the audit log with who, what and before and after.'],
   ] },
   /* 1c group 8: the 1b and 1c pages the prototype gives a guide (v15:9931-10058) */
-  apeople: { label: 'How the workforce record works', title: 'How the workforce record works', sections: [
-    ['One record per person, used by every module',
+  aemployees: { label: 'How the workforce record works', title: 'How the workforce record works', sections: [
+    ['One record per employee, used by every module',
       'Employee ID, employee type, job profile, department, location, contracted hours and clearance are held once here. Timesheet entries, rota shifts and leave requests reference this record; they never copy it.'],
     ['What that means in practice',
       'Move somebody to another location and the rota, coverage and eligibility follow on the next screen. There is no second list to keep in step.'],

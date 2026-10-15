@@ -24,7 +24,7 @@ describe('My hours (own_hours)', () => {
     const r = await (await as('employee'))('GET', '/api/v1/hours/me');
     expect(r.status).toBe(200);
     const h = MyHours.parse(r.body);
-    expect([h.person.code, h.weekStart, h.rota]).toEqual(['CP-1042', '2026-08-10', true]);
+    expect([h.employee.code, h.weekStart, h.rota]).toEqual(['CP-1042', '2026-08-10', true]);
     expect([h.position.con, h.position.rot, h.position.wk, h.position.rotaVar, h.position.schedVar]).toEqual([37.5, 33, 7.5, -4.5, -25.5]);
     expect(h.position.flags.map(f => f.k)).toEqual(['Under contracted', '2 nights']);
     expect(h.days.map(d => [d.code, d.scheduled, d.worked, d.variance, d.status.kind])).toEqual([
@@ -35,7 +35,7 @@ describe('My hours (own_hours)', () => {
   });
   test('it is only ever the reader\'s own: the manager reads theirs, and a session without own_hours is refused', async () => {
     const mine = MyHours.parse((await (await as('manager'))('GET', '/api/v1/hours/me')).body);
-    expect(mine.person.code).toBe('CP-1001');
+    expect(mine.employee.code).toBe('CP-1001');
     const r = await (await as('admin'))('GET', '/api/v1/hours/me');
     expect(r.status).toBe(403);
     expect(refusal(r)).toMatchObject({ code: 'capability', next: expect.any(String) });
@@ -54,10 +54,10 @@ describe('Team hours (team_hours, in location scope)', () => {
     expect(r.status).toBe(200);
     const t = TeamHours.parse(r.body);
     expect([t.location, t.locations, t.weekStart]).toEqual([{ code: 'WH', name: 'Willow House' }, [{ code: 'WH', name: 'Willow House' }], '2026-08-10']);
-    expect(t.rows.map(x => x.personCode)).toEqual(['CP-1042', 'CP-1088', 'CP-1153', 'CP-1201', 'CP-1266', 'CP-1402', 'CP-1310', 'CP-1001', 'CP-1501', 'CP-1502']);
-    const ellie = t.rows.find(x => x.personCode === 'CP-1310');
+    expect(t.rows.map(x => x.employeeCode)).toEqual(['CP-1042', 'CP-1088', 'CP-1153', 'CP-1201', 'CP-1266', 'CP-1402', 'CP-1310', 'CP-1001', 'CP-1501', 'CP-1502']);
+    const ellie = t.rows.find(x => x.employeeCode === 'CP-1310');
     expect(ellie).toMatchObject({ category: 'Bank', contractedHours: 0, position: { con: 0, rot: 7.5, wk: 0, flags: [] } });
-    expect(t.rows.find(x => x.personCode === 'CP-1042')?.position.flags.map(f => f.k)).toEqual(['Under contracted', '2 nights']);
+    expect(t.rows.find(x => x.employeeCode === 'CP-1042')?.position.flags.map(f => f.k)).toEqual(['Under contracted', '2 nights']);
   });
   test('a location outside the manager\'s scope is refused with scope, and an unknown one is not found', async () => {
     const call = await as('manager');
@@ -83,7 +83,7 @@ describe('the Team hours export', () => {
     expect(x.rows[1]).toEqual(['CP-1042', 'Amara Okafor', 'Willow House', 'Support Worker', 37.5, 33, 7.5, -4.5, -30, 'Under contracted; 2 nights']);
     expect(x.rows.find(row => row[0] === 'CP-1310')?.slice(4, 9)).toEqual(['Bank', 7.5, 0, '', '']);
     expect(exports()).toEqual([expect.objectContaining({ id: x.auditId, entity: 'hours', entityId: x.fileName,
-      who: expect.objectContaining({ personCode: 'CP-1001' }), after: { location: 'WH', weekStart: '2026-08-10', rows: 10 } })]);
+      who: expect.objectContaining({ employeeCode: 'CP-1001' }), after: { location: 'WH', weekStart: '2026-08-10', rows: 10 } })]);
   });
   test('refused without team_hours or outside scope, and a refusal writes no audit row', async () => {
     const emp = await (await as('employee'))('POST', '/api/v1/hours/team/export', { location: 'WH' });

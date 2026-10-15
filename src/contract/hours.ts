@@ -1,14 +1,14 @@
 /* Module 6 group 1: the hours position. My hours (own_hours) is the reader's
-   own week, and only theirs: there is no person in its path. Team hours
+   own week, and only theirs: there is no employee in its path. Team hours
    (team_hours) is one location's week, in the reader's location scope (their
    own location, or any with master data). The figures are derived on every
-   read from the timesheet days, the published rota and the person record;
+   read from the timesheet days, the published rota and the employee record;
    nothing is stored. The export is a write only because it is audited: one
    audit row, and the rows of the file, whose count the screen reports.
    Hours only: no rate, amount, cost or currency anywhere (brief P1). */
 import { z } from 'zod';
 import { defineEndpoint } from './endpoints';
-import { IsoDate } from './people';
+import { IsoDate } from './employees';
 import { HoursPosition, LocationOption } from './rota';
 import { TsState } from './timesheets';
 
@@ -27,13 +27,13 @@ export const HoursDay = z.object({
 export type HoursDay = z.infer<typeof HoursDay>;
 /* rota: the Rota module is on, so a rota'd figure exists; while it is off the screens show none. */
 export const MyHours = z.object({
-  person: z.object({ code: z.string(), name: z.string(), contractedHours: z.number().nonnegative() }),
+  employee: z.object({ code: z.string(), name: z.string(), contractedHours: z.number().nonnegative() }),
   weekStart: IsoDate, label: z.string(), rota: z.boolean(), position: HoursPosition, days: z.array(HoursDay).length(7),
 });
 export type MyHours = z.infer<typeof MyHours>;
 
 export const TeamHoursRow = z.object({
-  personCode: z.string(), name: z.string(), category: z.string(), jobProfileName: z.string(),
+  employeeCode: z.string(), name: z.string(), category: z.string(), jobProfileName: z.string(),
   contractedHours: z.number().nonnegative(), position: HoursPosition,
 });
 export type TeamHoursRow = z.infer<typeof TeamHoursRow>;

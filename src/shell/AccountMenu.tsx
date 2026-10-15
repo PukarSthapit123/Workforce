@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/ui/shadcn/dropdown-menu';
-import { useViewAsPeople } from '@/api/session';
+import { useViewAsEmployees } from '@/api/session';
 import { tid } from '@/testids';
 
-export interface MenuAccount { name: string; email: string; personCode: string; roleName: string; roleDescription: string; locationName: string }
+export interface MenuAccount { name: string; email: string; employeeCode: string; roleName: string; roleDescription: string; locationName: string }
 
 /* The prototype's initials(): the first letter of each word, two at most. */
 const initials = (name: string) => name.split(' ').map(w => w.charAt(0)).join('').slice(0, 2).toUpperCase();
 
 /* Ported from the prototype's drawMenu (qnipay-workforce-v15.html:10765-10790):
    who you are signed in as (name, email, role, location and ID), a "Your
-   account" line, then, for a holder of perm_cfg, one person per role to look
+   account" line, then, for a holder of perm_cfg, one employee per role to look
    at the app as. While viewing as someone the menu names them and offers the
    way back instead, since starting another view is refused until then.
 
@@ -22,11 +22,11 @@ const initials = (name: string) => name.split(' ').map(w => w.charAt(0)).join(''
    target. */
 export function AccountMenu({ account, viewingAs, canViewAs, onSignOut, onViewAs, onEndViewAs }: {
   account: MenuAccount; viewingAs: string | null; canViewAs: boolean;
-  onSignOut(): void; onViewAs(personCode: string): void; onEndViewAs(): void;
+  onSignOut(): void; onViewAs(employeeCode: string): void; onEndViewAs(): void;
 }) {
   const [open, setOpen] = useState(false);
   const offerViewAs = canViewAs && !viewingAs;
-  const people = useViewAsPeople(open && offerViewAs);
+  const employees = useViewAsEmployees(open && offerViewAs);
   const sub = 'block text-xs font-normal text-text-muted';
   const label = 'px-[11px] pt-[9px] pb-xs';
   return (
@@ -42,7 +42,7 @@ export function AccountMenu({ account, viewingAs, canViewAs, onSignOut, onViewAs
         <div data-testid={tid.shell.menuAccount} className="mb-[6px] border-b p-md">
           <div className="text-sm font-semibold">{account.name}</div>
           <div className="text-xs text-text-muted">{account.email}</div>
-          <div className="mt-[2px] text-xs text-text-muted">{[account.roleName, account.locationName, account.personCode].filter(Boolean).join(' · ')}</div>
+          <div className="mt-[2px] text-xs text-text-muted">{[account.roleName, account.locationName, account.employeeCode].filter(Boolean).join(' · ')}</div>
         </div>
         <DropdownMenuLabel className={label}>Your account</DropdownMenuLabel>
         <div data-testid={tid.shell.menuRole} className="flex items-center gap-[10px] rounded-sm bg-brand-subtle px-[11px] py-[9px] text-sm font-semibold">
@@ -59,10 +59,10 @@ export function AccountMenu({ account, viewingAs, canViewAs, onSignOut, onViewAs
         {offerViewAs && <>
           <DropdownMenuSeparator />
           <DropdownMenuLabel className={label}>Look at the app as somebody else</DropdownMenuLabel>
-          {people.isPending && <p data-testid={tid.shell.menuViewAsLoading} className="px-[11px] py-[9px] text-xs text-text-muted">Loading people&hellip;</p>}
-          {people.isError && <p data-testid={tid.shell.menuViewAsError} className="px-[11px] py-[9px] text-xs text-err">The list could not be loaded. Close the menu and open it again to retry.</p>}
-          {people.data?.map(p => (
-            <DropdownMenuItem key={p.personCode} data-testid={tid.shell.viewAs(p.personCode)} onSelect={() => onViewAs(p.personCode)} className="min-h-touch">
+          {employees.isPending && <p data-testid={tid.shell.menuViewAsLoading} className="px-[11px] py-[9px] text-xs text-text-muted">Loading employees&hellip;</p>}
+          {employees.isError && <p data-testid={tid.shell.menuViewAsError} className="px-[11px] py-[9px] text-xs text-err">The list could not be loaded. Close the menu and open it again to retry.</p>}
+          {employees.data?.map(p => (
+            <DropdownMenuItem key={p.employeeCode} data-testid={tid.shell.viewAs(p.employeeCode)} onSelect={() => onViewAs(p.employeeCode)} className="min-h-touch">
               <span>{p.name}<span className={sub}>{[p.roleName, p.locationName, p.onboarding ? 'onboarding' : ''].filter(Boolean).join(' · ')}</span></span>
             </DropdownMenuItem>))}
         </>}

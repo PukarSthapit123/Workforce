@@ -28,7 +28,7 @@ export function useClockSeconds(current: ClockRecord | null, readAt: number): nu
 
 /* The day's start as the clock has it while a shift runs (lockShiftTimes): the
    first clock in, or once the clock has written the day, the start stored on
-   it, which the person may have corrected (review I4). */
+   it, which the employee may have corrected (review I4). */
 export function clockedStart(current: ClockRecord | null | undefined, stored?: string): string | null {
   if (!current || !isOpenState(current.state)) return null;
   if (current.written && stored?.trim()) return stored.trim();
@@ -55,7 +55,7 @@ export function ClockCard({ clock, readAt }: { clock: MyClock; readAt: number })
     moves[move].mutate({ version: clock.version }, { onSuccess: (r: ClockMoved) => toastInfo(r.toast, flagged(r)) });
   };
   const refusal = last ? moves[last].refusal : null;
-  /* review M3: a day rule refused the clock out, so the clock still runs; offer a finish the person chooses */
+  /* review M3: a day rule refused the clock out, so the clock still runs; offer a finish the employee chooses */
   const choosing = last === 'out' && refusal?.next === CHOOSE_FINISH_NEXT;
   const open = state === 'running' || state === 'onBreak';
   /* review I3: a clock still running since an earlier day says since when */
@@ -97,7 +97,7 @@ export function ClockCard({ clock, readAt }: { clock: MyClock; readAt: number })
 }
 
 /* Review M3: when a day rule refused the clock out, the close flow with a
-   finish the person chooses stops the clock and saves the day with it. */
+   finish the employee chooses stops the clock and saves the day with it. */
 function ChooseFinish({ rec, onDone }: { rec: ClockRecord; onDone: () => void }) {
   const close = useCloseClock();
   const [finish, setFinish] = useState('');

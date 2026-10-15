@@ -10,7 +10,7 @@ import {
   ALWAYS_ASKED, INVITE_REASON, POLICY_NAME_NEEDED, POLICY_NAME_TAKEN, REASON_NEEDED, START_REASON, STEP_MESSAGES, CONSENT_NEEDED,
   noEmailText, notReadyText, outstandingText, stepSwitchText, tooLargeText, type Blocker,
 } from '@/domain/onboarding';
-import { audits, caller, fault, personOf, resetTo, snapshot, tokenFor, type Persona } from '@/test/api-helpers';
+import { audits, caller, fault, employeeOf, resetTo, snapshot, tokenFor, type Persona } from '@/test/api-helpers';
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' })); afterAll(() => server.close());
 beforeEach(() => resetTo('social'));
@@ -23,11 +23,11 @@ async function asEmail(email: string): Promise<Call> {
   return caller(token);
 }
 const refusal = (r: { body: unknown }) => Refusal.parse(r.body);
-const WRITES = ['onboardingCases', 'onboardingConfig', 'onboardingPolicies', 'people', 'personHistory', 'accounts', 'notifications', 'audit'];
+const WRITES = ['onboardingCases', 'onboardingConfig', 'onboardingPolicies', 'employees', 'employeeHistory', 'accounts', 'notifications', 'audit'];
 /* the module's own rows: signing in writes one too */
 const onbAudits = () => audits().filter(a => a.act !== 'Signed in');
-interface Note { id: string; personId: string; title: string; body: string; event?: string; delivery?: { inApp: boolean; email: string | null } }
-const notes = (personId?: string) => Object.values(store.coll<Note>('notifications')).filter(n => !n.id.startsWith('ntf_seed_') && (!personId || n.personId === personId));
+interface Note { id: string; employeeId: string; title: string; body: string; event?: string; delivery?: { inApp: boolean; email: string | null } }
+const notes = (employeeId?: string) => Object.values(store.coll<Note>('notifications')).filter(n => !n.id.startsWith('ntf_seed_') && (!employeeId || n.employeeId === employeeId));
 interface Case { id: string; version: number; steps: Record<string, string>; docs: Record<string, string>; acks: Record<string, string>; read: Record<string, boolean>;
   rejections: Record<string, string>; submittedAt: string; startedAt: string; invitedAt: string; data: { personal: { ni: string } } }
 const caseOf = (code: string) => store.coll<Case>('onboardingCases')[`onb_${code}`];
@@ -35,7 +35,7 @@ const version = (code: string) => caseOf(code)?.version ?? 0;
 const tenant = () => store.coll<{ version: number; modules: Record<string, boolean>; flags: Record<string, boolean> }>('tenant').tenant;
 const setModule = (k: string, on: boolean) => { const t = tenant(); if (t) t.modules[k] = on; };
 const setFlag = (k: string, on: boolean) => { const t = tenant(); if (t) t.flags[k] = on; };
-const setPerson = (code: string, patch: Record<string, unknown>) => { const p = personOf(code); store.coll('people')[p.id] = { ...p, ...patch }; };
+const setEmployee = (code: string, patch: Record<string, unknown>) => { const p = employeeOf(code); store.coll('employees')[p.id] = { ...p, ...patch }; };
 /* Every step but review done and every required document verified: nothing blocks the start. */
 function complete(code: string) {
   const c = caseOf(code);
@@ -55,7 +55,7 @@ const team = (call: Call, code: string, what: string, body: unknown, v?: number)
 describe('my onboarding: the starter acts on their own case only (D5)', () => {
   test('a preboarding starter reads their steps, documents, policies and what is still to do', async () => {
     const d = OnboardingDetail.parse((await (await asEmail(TOM))('GET', '/api/v1/onboarding/me')).body);
-    expect(d.person).toMatchObject({ code: 'CP-1502', first: 'Tom', stateLabel: 'Preboarding' });
+    expect(d.employee).toMatchObject({ code: 'CP-1502', first: 'Tom', stateLabel: 'Preboarding' });
     expect(d.steps.map(s => s.id)).toEqual(['personal', 'contact', 'emergency', 'additional', 'documents', 'policies', 'review']);
     expect(d.documents.map(x => x.id)).toEqual(['rtw', 'addr', 'photo', 'licence', 'cert']);
     expect(d.policies).toHaveLength(4);
@@ -156,7 +156,7 @@ describe('my onboarding: the starter acts on their own case only (D5)', () => {
     expect(r).toMatchObject({ ref: 'ONB-1001', summary: 'Submitted with reference ONB-1001. HR has been told.' });
     expect(r.record).toMatchObject({ submittedAt: '2026-08-13T14:30:00.000Z', signature: 'Tom Achterberg', consent: true, steps: { review: 'done' } });
     /* Rachel Hussain is his line manager and checks documents at Willow House; Dee Fitzgerald checks everywhere */
-    expect(notes().filter(n => n.event === 'ob_submitted').map(n => n.personId).sort()).toEqual(['CP-1001', 'CP-1002']);
+    expect(notes().filter(n => n.event === 'ob_submitted').map(n => n.employeeId).sort()).toEqual(['CP-1001', 'CP-1002']);
     expect(onbAudits().map(a => a.act)).toEqual(['Onboarding submitted']);
   });
 });
@@ -164,17 +164,17 @@ describe('my onboarding: the starter acts on their own case only (D5)', () => {
 /* -------------------------------------------------------------- tracker */
 describe('the tracker and its scope: own location, or every location with Configure onboarding (D5)', () => {
   test('the manager sees the starters at their own location; the administrator sees every location', async () => {
-    setPerson('CP-1502', { location: 'BC' });
+    setEmployee('CP-1502', { location: 'BC' });
     const mine = TeamOnboarding.parse((await (await as('manager'))('GET', '/api/v1/onboarding/team')).body);
-    expect(mine.rows.map(r => r.person.code)).toEqual(['CP-1501']);
+    expect(mine.rows.map(r => r.employee.code)).toEqual(['CP-1501']);
     expect(mine).toMatchObject({ all: false, locationName: 'Willow House' });
     expect(mine.rows[0]).toMatchObject({ canInvite: true, progress: { text: '0 of 7 done' } });
     const all = TeamOnboarding.parse((await (await as('admin'))('GET', '/api/v1/onboarding/team')).body);
-    expect(all.rows.map(r => r.person.code)).toEqual(['CP-1501', 'CP-1502']);
+    expect(all.rows.map(r => r.employee.code)).toEqual(['CP-1501', 'CP-1502']);
     expect(all.all).toBe(true);
   });
   test('a manager is refused every action on a starter at another location, and nothing is written', async () => {
-    setPerson('CP-1502', { location: 'BC' });
+    setEmployee('CP-1502', { location: 'BC' });
     await upload(await asEmail(TOM), 'photo', PHOTO, 1);
     const call = await as('manager'), before = snapshot(...WRITES);
     const tries: [string, string, unknown, number | undefined][] = [
@@ -188,13 +188,13 @@ describe('the tracker and its scope: own location, or every location with Config
     for (const [method, path, body, v] of tries) {
       const r = await call(method, path, body, v);
       expect(r.status, path).toBe(403);
-      expect(refusal(r)).toMatchObject({ code: 'scope', message: 'You can look after onboarding for people at Willow House only.' });
+      expect(refusal(r)).toMatchObject({ code: 'scope', message: 'You can look after onboarding for employees at Willow House only.' });
     }
     expect(snapshot(...WRITES)).toEqual(before);
   });
   test('each tracker action needs its own capability on the server: Track onboarding, Verify onboarding documents, Configure onboarding', async () => {
     await upload(await asEmail(TOM), 'photo', PHOTO, 1);
-    const mgr = Object.values(store.coll<{ personCode: string; revocations: string[] }>('accounts')).find(a => a.personCode === 'CP-1001');
+    const mgr = Object.values(store.coll<{ employeeCode: string; revocations: string[] }>('accounts')).find(a => a.employeeCode === 'CP-1001');
     if (!mgr) throw new Error('no manager account');
     mgr.revocations = ['onb_verify', 'onb_track'];
     const call = await as('manager'), before = snapshot(...WRITES);
@@ -220,12 +220,12 @@ describe('the tracker and its scope: own location, or every location with Config
   });
   test('a holder of Verify onboarding documents alone reads the tracker and one case, and verifies, but cannot invite, start or chase', async () => {
     await upload(await asEmail(TOM), 'photo', PHOTO, 1);
-    const mgr = Object.values(store.coll<{ personCode: string; revocations: string[] }>('accounts')).find(a => a.personCode === 'CP-1001');
+    const mgr = Object.values(store.coll<{ employeeCode: string; revocations: string[] }>('accounts')).find(a => a.employeeCode === 'CP-1001');
     if (!mgr) throw new Error('no manager account');
     mgr.revocations = ['onb_track'];
     const call = await as('manager');
     const list = TeamOnboarding.parse((await call('GET', '/api/v1/onboarding/team')).body);
-    expect(list.queue.map(q => `${q.person.code}/${q.document.id}`)).toEqual(['CP-1502/photo']);
+    expect(list.queue.map(q => `${q.employee.code}/${q.document.id}`)).toEqual(['CP-1502/photo']);
     expect(list.location).not.toBe('');
     const one = await call('GET', '/api/v1/onboarding/team/CP-1502');
     expect(one.status).toBe(200);
@@ -246,16 +246,16 @@ describe('the tracker and its scope: own location, or every location with Config
     const r = await (await as('manager'))('GET', '/api/v1/onboarding/team/CP-1502');
     const view = StarterOnboarding.parse(r.body), text = JSON.stringify(r.body);
     expect(view.documents.find(d => d.id === 'photo')?.file).toMatchObject({ name: 'face.jpg', preview: PHOTO.preview });
-    expect(Object.keys(r.body as object).sort()).toEqual(['caseRef', 'documents', 'person', 'progress', 'ref', 'steps', 'submittedAt', 'toStart']);
+    expect(Object.keys(r.body as object).sort()).toEqual(['caseRef', 'documents', 'employee', 'progress', 'ref', 'steps', 'submittedAt', 'toStart']);
     for (const secret of ['QQ 12 34 56 C', '1990-04-02', '14 Larkspur Road', 'LS6 2AB', '07700 900123', 'Anke Achterberg', 'Speeding fine', 'T Achterberg', '"signature"', '"consent"', '"data"'])
       expect(text, secret).not.toContain(secret);
   });
-  test('a person who is not onboarding is not on the tracker\'s actions; nobody checks their own documents', async () => {
+  test('an employee who is not onboarding is not on the tracker\'s actions; nobody checks their own documents', async () => {
     const call = await as('manager');
     const r = await team(call, 'CP-1042', 'chase', undefined);
     expect(r.status).toBe(409);
     expect(refusal(r).code).toBe('NOT_ONBOARDING');
-    setPerson('CP-1001', { state: 'preboard' });
+    setEmployee('CP-1001', { state: 'preboard' });
     const self = await team(call, 'CP-1001', 'documents/photo/verify', undefined, 0);
     /* a starter cannot reach their own case from the tracker: the server keeps them to the portal (SELF_CHECK stays behind it) */
     expect(self.status).toBe(403);
@@ -267,7 +267,7 @@ describe('the tracker and its scope: own location, or every location with Config
     store.coll<Case>('onboardingCases')['onb_CP-1502'] = { ...(caseOf('CP-1502') as Case), steps: { documents: 'done' } };
     const call = await as('manager');
     const q = TeamOnboarding.parse((await call('GET', '/api/v1/onboarding/team')).body);
-    expect(q.queue.map(x => [x.person.code, x.document.id])).toEqual([['CP-1502', 'photo']]);
+    expect(q.queue.map(x => [x.employee.code, x.document.id])).toEqual([['CP-1502', 'photo']]);
     expect(q.toVerify).toBe(1);
     const before = snapshot(...WRITES);
     const blank = await team(call, 'CP-1502', 'documents/photo/reject', { reason: '  ' }, 2);
@@ -308,28 +308,28 @@ describe('activation is refused on the server while start blockers remain, throu
     expect(snapshot(...WRITES)).toEqual(before);
   });
   test('the lifecycle dialog (the transition endpoint) is refused alike, and nothing is written', async () => {
-    const call = await as('admin'), p = personOf('CP-1502'), before = snapshot(...WRITES);
-    const r = await call('POST', `/api/v1/people/${p.id}/transitions`, { to: 'active', reason: 'First day' }, p.version);
+    const call = await as('admin'), p = employeeOf('CP-1502'), before = snapshot(...WRITES);
+    const r = await call('POST', `/api/v1/employees/${p.id}/transitions`, { to: 'active', reason: 'First day' }, p.version);
     expect(r.status).toBe(409);
     expect(refusal(r)).toMatchObject({ code: 'NOT_READY', message: expect.stringMatching(/^Tom Achterberg cannot start yet\. \d+ outstanding\. Personal details not completed\.$/) });
     expect(snapshot(...WRITES)).toEqual(before);
   });
   test('a starter parked in Archived is still refused activation while anything is outstanding, and nothing is written', async () => {
-    const call = await as('admin'), p = personOf('CP-1502');
-    expect((await call('POST', `/api/v1/people/${p.id}/transitions`, { to: 'archived', reason: 'Parked' }, p.version)).status).toBe(200);
-    const parked = personOf('CP-1502'), before = snapshot(...WRITES);
-    const r = await call('POST', `/api/v1/people/${parked.id}/transitions`, { to: 'active', reason: 'Starting Monday' }, parked.version);
+    const call = await as('admin'), p = employeeOf('CP-1502');
+    expect((await call('POST', `/api/v1/employees/${p.id}/transitions`, { to: 'archived', reason: 'Parked' }, p.version)).status).toBe(200);
+    const parked = employeeOf('CP-1502'), before = snapshot(...WRITES);
+    const r = await call('POST', `/api/v1/employees/${parked.id}/transitions`, { to: 'active', reason: 'Starting Monday' }, parked.version);
     expect(r.status).toBe(409);
     expect(refusal(r)).toMatchObject({ code: 'NOT_READY', message: expect.stringMatching(/^Tom Achterberg cannot start yet\. \d+ outstanding\. Personal details not completed\.$/) });
     expect(snapshot(...WRITES)).toEqual(before);
-    expect(personOf('CP-1502').state).toBe('archived');
+    expect(employeeOf('CP-1502').state).toBe('archived');
   });
   test('a parked starter with nothing outstanding can be made active from Archived, and the case records the start', async () => {
     complete('CP-1502');
-    const call = await as('admin'), p = personOf('CP-1502');
-    await call('POST', `/api/v1/people/${p.id}/transitions`, { to: 'archived', reason: 'Parked' }, p.version);
-    const parked = personOf('CP-1502');
-    expect((await call('POST', `/api/v1/people/${parked.id}/transitions`, { to: 'active', reason: 'Starting Monday' }, parked.version)).status).toBe(200);
+    const call = await as('admin'), p = employeeOf('CP-1502');
+    await call('POST', `/api/v1/employees/${p.id}/transitions`, { to: 'archived', reason: 'Parked' }, p.version);
+    const parked = employeeOf('CP-1502');
+    expect((await call('POST', `/api/v1/employees/${parked.id}/transitions`, { to: 'active', reason: 'Starting Monday' }, parked.version)).status).toBe(200);
     expect(caseOf('CP-1502')?.startedAt).toBe('2026-08-13T14:30:00.000Z');
   });
   test('a required document not yet verified still blocks the start while verification is on', async () => {
@@ -341,18 +341,18 @@ describe('activation is refused on the server while start blockers remain, throu
   test('with nothing outstanding Start them makes them active with the reason "Onboarding complete", one audit row', async () => {
     complete('CP-1502');
     const r = StarterMoved.parse((await team(await as('manager'), 'CP-1502', 'start', undefined, 1)).body);
-    expect(r.person.state).toBe('active');
+    expect(r.employee.state).toBe('active');
     expect(r.record.startedAt).toBe('2026-08-13T14:30:00.000Z');
     expect(r.summary).toBe('Tom Achterberg is active. They can now be scheduled and paid.');
-    const hist = Object.values(store.coll<{ personCode: string; to: string; reason?: string }>('personHistory')).filter(h => h.personCode === 'CP-1502');
+    const hist = Object.values(store.coll<{ employeeCode: string; to: string; reason?: string }>('employeeHistory')).filter(h => h.employeeCode === 'CP-1502');
     expect(hist.map(h => [h.to, h.reason])).toEqual([['active', START_REASON]]);
     expect(onbAudits()).toHaveLength(1);
     expect(onbAudits()[0]).toMatchObject({ act: 'Employee active', entityId: 'CP-1502', reason: START_REASON });
   });
   test('with nothing outstanding the transition endpoint moves them too, and the case records the start', async () => {
     complete('CP-1502');
-    const call = await as('admin'), p = personOf('CP-1502');
-    expect((await call('POST', `/api/v1/people/${p.id}/transitions`, { to: 'active', reason: 'First day' }, p.version)).status).toBe(200);
+    const call = await as('admin'), p = employeeOf('CP-1502');
+    expect((await call('POST', `/api/v1/employees/${p.id}/transitions`, { to: 'active', reason: 'First day' }, p.version)).status).toBe(200);
     expect(caseOf('CP-1502')?.startedAt).toBe('2026-08-13T14:30:00.000Z');
   });
   test('a document made required after a starter submitted does not hold them back; it does hold back somebody not yet submitted (review I2)', async () => {
@@ -362,10 +362,10 @@ describe('activation is refused on the server while start blockers remain, throu
     const documents = s.config.documents.map(d => (d.id === 'licence' ? { ...d, req: true, blocks: true } : d));
     expect((await admin('PUT', '/api/v1/onboarding/config', { steps: s.config.steps, documents }, s.config.version)).status).toBe(200);
     const rows = TeamOnboarding.parse((await admin('GET', '/api/v1/onboarding/team')).body).rows;
-    expect(rows.find(r => r.person.code === 'CP-1502')?.blockers).toEqual([]);
-    expect(rows.find(r => r.person.code === 'CP-1501')?.blockers.map(b => b.why)).toContain('Driving licence not uploaded');
+    expect(rows.find(r => r.employee.code === 'CP-1502')?.blockers).toEqual([]);
+    expect(rows.find(r => r.employee.code === 'CP-1501')?.blockers.map(b => b.why)).toContain('Driving licence not uploaded');
     const r = StarterMoved.parse((await team(await as('manager'), 'CP-1502', 'start', undefined, version('CP-1502'))).body);
-    expect(r.person.state).toBe('active');
+    expect(r.employee.state).toBe('active');
   });
   test('a candidate cannot be started: they are invited first', async () => {
     complete('CP-1501');
@@ -375,26 +375,26 @@ describe('activation is refused on the server while start blockers remain, throu
   });
   test('with the Onboarding module off the lifecycle alone decides, as in the prototype', async () => {
     setModule('ON', false);
-    const call = await as('admin'), p = personOf('CP-1502');
-    expect((await call('POST', `/api/v1/people/${p.id}/transitions`, { to: 'active', reason: 'First day' }, p.version)).status).toBe(200);
+    const call = await as('admin'), p = employeeOf('CP-1502');
+    expect((await call('POST', `/api/v1/employees/${p.id}/transitions`, { to: 'active', reason: 'First day' }, p.version)).status).toBe(200);
   });
 });
 
 describe('invite (D6)', () => {
   test('a candidate is invited: preboarding with the reason, the invitation time on the case, told in the app only, and the toast says no email is sent', async () => {
     const r = StarterMoved.parse((await team(await as('manager'), 'CP-1501', 'invite', undefined, 1)).body);
-    expect(r.person.state).toBe('preboard');
+    expect(r.employee.state).toBe('preboard');
     expect(r.record.invitedAt).toBe('2026-08-13T14:30:00.000Z');
     expect(r.summary).toBe('Priya Raman is invited. They sign in with priya.raman@brightpath.org. Invitation emails are a future enhancement, so tell them yourself.');
     const n = notes('CP-1501');
     expect(n.map(x => x.event)).toEqual(['ob_invited']);
     expect(n[0]?.delivery).toMatchObject({ inApp: true, email: null });
-    const hist = Object.values(store.coll<{ personCode: string; to: string; reason?: string }>('personHistory')).filter(h => h.personCode === 'CP-1501');
+    const hist = Object.values(store.coll<{ employeeCode: string; to: string; reason?: string }>('employeeHistory')).filter(h => h.employeeCode === 'CP-1501');
     expect(hist.map(h => [h.to, h.reason])).toEqual([['preboard', INVITE_REASON]]);
     expect(onbAudits().map(a => [a.act, a.reason])).toEqual([['Onboarding invited', INVITE_REASON]]);
   });
   test('without a work email there is nowhere to send it; someone already preboarding cannot be invited again; nothing is written', async () => {
-    setPerson('CP-1501', { email: '' });
+    setEmployee('CP-1501', { email: '' });
     const call = await as('manager'), before = snapshot(...WRITES);
     const r = await team(call, 'CP-1501', 'invite', undefined, 1);
     expect(r.status).toBe(409);
@@ -411,29 +411,29 @@ const newStarter = (over: Record<string, unknown> = {}) => ({
   department: '', manager: 'Rachel Hussain', contractedHours: 30, maxHours: 0, night: false, resource: '', cis: false, start: '2026-09-01', state: 'candidate', userType: 'employee', ...over,
 });
 describe('a case for every starter (D1)', () => {
-  test('a person created as a candidate gets an empty case; one created active does not', async () => {
+  test('an employee created as a candidate gets an empty case; one created active does not', async () => {
     const call = await as('admin');
-    expect((await call('POST', '/api/v1/people', newStarter())).status).toBe(200);
+    expect((await call('POST', '/api/v1/employees', newStarter())).status).toBe(200);
     expect(caseOf('CP-9001')).toMatchObject({ id: 'onb_CP-9001', version: 1, steps: {}, submittedAt: '' });
     expect(onbAudits().find(a => a.act === 'Employee created')?.after).toMatchObject({ onboardingCase: 'onb_CP-9001' });
-    expect((await call('POST', '/api/v1/people', newStarter({ code: 'CP-9002', email: 'x.y@brightpath.org', state: 'active' }))).status).toBe(200);
+    expect((await call('POST', '/api/v1/employees', newStarter({ code: 'CP-9002', email: 'x.y@brightpath.org', state: 'active' }))).status).toBe(200);
     expect(caseOf('CP-9002')).toBeUndefined();
   });
   test('moving into preboarding creates a case when there is none, and keeps one that exists', async () => {
     const call = await as('admin');
     Reflect.deleteProperty(store.coll('onboardingCases'), 'onb_CP-1501');
-    const p = personOf('CP-1501');
-    expect((await call('POST', `/api/v1/people/${p.id}/transitions`, { to: 'preboard', reason: 'Offer accepted' }, p.version)).status).toBe(200);
+    const p = employeeOf('CP-1501');
+    expect((await call('POST', `/api/v1/employees/${p.id}/transitions`, { to: 'preboard', reason: 'Offer accepted' }, p.version)).status).toBe(200);
     expect(caseOf('CP-1501')).toMatchObject({ version: 1, steps: {} });
     resetTo('social');
     const kept = caseOf('CP-1501');
     if (kept) kept.data.personal.ni = 'QQ123456C';
-    const q = personOf('CP-1501');
-    expect((await (await as('admin'))('POST', `/api/v1/people/${q.id}/transitions`, { to: 'preboard', reason: 'Offer accepted' }, q.version)).status).toBe(200);
+    const q = employeeOf('CP-1501');
+    expect((await (await as('admin'))('POST', `/api/v1/employees/${q.id}/transitions`, { to: 'preboard', reason: 'Offer accepted' }, q.version)).status).toBe(200);
     expect(caseOf('CP-1501')?.data.personal.ni).toBe('QQ123456C');
   });
 });
-describe('people create refuses a missing, malformed or duplicate work email for a starter (D7)', () => {
+describe('employees create refuses a missing, malformed or duplicate work email for a starter (D7)', () => {
   test('each is refused with its sentence, and nothing is written', async () => {
     const call = await as('admin'), before = snapshot(...WRITES);
     const cases: [Record<string, unknown>, string][] = [
@@ -442,7 +442,7 @@ describe('people create refuses a missing, malformed or duplicate work email for
       [{ email: AMARA, state: 'preboard' }, `${AMARA} is already used by Amara Okafor. One address, one account.`],
     ];
     for (const [over, message] of cases) {
-      const r = await call('POST', '/api/v1/people', newStarter(over));
+      const r = await call('POST', '/api/v1/employees', newStarter(over));
       expect(r.status).toBe(422);
       expect(refusal(r)).toMatchObject({ field: 'email', message });
     }
@@ -454,7 +454,7 @@ describe('a new starter sees the portal only (D8)', () => {
     const r = await fetch('/api/v1/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password: 'Qnipay@123' }) });
     return Session.parse(await r.json());
   };
-  test('session.onboarding is true for a candidate or preboarding person while Onboarding is on, false otherwise', async () => {
+  test('session.onboarding is true for a candidate or preboarding employee while Onboarding is on, false otherwise', async () => {
     expect((await sessionOf(PRIYA)).onboarding).toBe(true);
     expect((await sessionOf(TOM)).onboarding).toBe(true);
     expect((await sessionOf(AMARA)).onboarding).toBe(false);
@@ -472,14 +472,14 @@ describe('a new starter sees the portal only (D8)', () => {
     expect((await tom('POST', '/api/v1/notifications/read-all')).status).toBe(200);
     expect((await tom('DELETE', '/api/v1/session')).status).toBe(200);
   });
-  test('once started, the same person is no longer held to the portal', async () => {
+  test('once started, the same employee is no longer held to the portal', async () => {
     complete('CP-1502');
     expect((await team(await as('manager'), 'CP-1502', 'start', undefined, 1)).status).toBe(200);
     const r = await (await asEmail(TOM))('POST', '/api/v1/leave/requests', { type: 'AL', from: '2026-09-07', to: '2026-09-08', part: 'full' });
     expect(r.status === 403 && refusal(r).code === 'not-started').toBe(false);
   });
   test('the inbox builds its links from the portal-only nav: a leave item opens nothing for a starter', async () => {
-    store.coll('notifications').ntf_000000000901 = { id: 'ntf_000000000901', version: 1, updatedAt: '2026-08-13T14:00:00.000Z', personId: 'CP-1501', area: 'Leave',
+    store.coll('notifications').ntf_000000000901 = { id: 'ntf_000000000901', version: 1, updatedAt: '2026-08-13T14:00:00.000Z', employeeId: 'CP-1501', area: 'Leave',
       title: 'Leave approved', body: 'x', at: '2026-08-13T14:00:00.000Z', read: false };
     const mine = MyNotifications.parse((await (await asEmail(PRIYA))('GET', '/api/v1/notifications/me')).body);
     expect(mine.items.find(i => i.id === 'ntf_000000000901')?.link).toBeNull();
@@ -517,7 +517,7 @@ describe('onboarding setup (D2, D10, D11)', () => {
     const call = await as('admin');
     expect((await setup(call)).policies.find(p => p.id === 'pol_conduct')?.ackCount).toBe(2);
     const first = PolicyUploaded.parse((await call('POST', '/api/v1/onboarding/policies/pol_conduct/file', { name: 'conduct-v4-2.pdf', size: 200_000, type: 'application/pdf' }, 1)).body);
-    expect(first).toMatchObject({ asked: 2, summary: 'Code of conduct is now v4.2. 2 people will be asked again.', record: { ver: 'v4.2', ackCount: 0, file: { name: 'conduct-v4-2.pdf' } } });
+    expect(first).toMatchObject({ asked: 2, summary: 'Code of conduct is now v4.2. 2 employees will be asked again.', record: { ver: 'v4.2', ackCount: 0, file: { name: 'conduct-v4-2.pdf' } } });
     expect([caseOf('CP-1501')?.acks, caseOf('CP-1502')?.acks]).toEqual([{}, {}]);
     const second = PolicyUploaded.parse((await call('POST', '/api/v1/onboarding/policies/pol_conduct/file', { name: 'conduct-v4-3.pdf', size: 200_000, type: 'application/pdf' }, 2)).body);
     expect(second).toMatchObject({ asked: 0, summary: 'Code of conduct is now v4.3. It is ready to read.' });
@@ -528,13 +528,13 @@ describe('onboarding setup (D2, D10, D11)', () => {
     complete('CP-1502');
     expect((await team(await as('manager'), 'CP-1502', 'start', undefined, version('CP-1502'))).status).toBe(200);
     const r = PolicyUploaded.parse((await (await as('admin'))('POST', '/api/v1/onboarding/policies/pol_conduct/file', { name: 'conduct-v4-2.pdf', size: 200_000, type: 'application/pdf' }, 1)).body);
-    expect(r).toMatchObject({ asked: 1, summary: 'Code of conduct is now v4.2. 1 person will be asked again.' });
+    expect(r).toMatchObject({ asked: 1, summary: 'Code of conduct is now v4.2. 1 employee will be asked again.' });
     expect([caseOf('CP-1501')?.acks, caseOf('CP-1502')?.acks]).toEqual([{}, { pol_conduct: 'v4.1' }]);
   });
   test('removing a policy keeps past acknowledgements in the audit trail and on the cases', async () => {
     await (await asEmail(TOM))('POST', '/api/v1/onboarding/me/policies/pol_itsec/ack', { on: true }, 1);
     const call = await as('admin');
-    expect((await setup(call)).policies.find(p => p.id === 'pol_itsec')?.removeText).toContain('1 person has acknowledged this policy.');
+    expect((await setup(call)).policies.find(p => p.id === 'pol_itsec')?.removeText).toContain('1 employee has acknowledged this policy.');
     expect((await call('DELETE', '/api/v1/onboarding/policies/pol_itsec', undefined, 1)).status).toBe(200);
     expect(store.coll('onboardingPolicies').pol_itsec).toBeUndefined();
     expect(caseOf('CP-1502')?.acks.pol_itsec).toBe('v3.2');
@@ -583,7 +583,7 @@ describe('every versioned onboarding write needs If-Match on its own record: mis
     test(what, async () => {
       const call = await asEmail(email), rec = target();
       if (!rec) throw new Error(`no record for ${what}`);
-      /* the version this person read; somebody else has saved the record since, so only this record's version is stale */
+      /* the version this employee read; somebody else has saved the record since, so only this record's version is stale */
       const read = rec.version;
       rec.version = read + 8;
       const before = snapshot(...WRITES);

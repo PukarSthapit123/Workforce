@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { store, STORE_BACKUP_KEY, STORE_KEY } from '@/mocks/store';
+import { store, STORE_BACKUP_KEY, STORE_FORMAT, STORE_KEY } from '@/mocks/store';
 import { tid } from '@/testids';
 import { expectTestIdCoverage } from '@/test/testid-coverage';
 import { renderPage, withFakeServer } from '@/test/render-page';
@@ -163,11 +163,11 @@ test('reset asks first, saying what it clears and that what is here is set aside
   expect(await screen.findByTestId(tid.acalSetAside.why)).toHaveTextContent('A reset set the previous session aside. It can be brought back.');
 });
 
-/* Suite A NEWER BUILD SUPERSEDES A SAVED SESSION: "... and the person is told
+/* Suite A NEWER BUILD SUPERSEDES A SAVED SESSION: "... and the employee is told
    why the app reset". A store written by an older build is set aside at boot,
    and Saved data says that is why, and offers it back. */
 test('after a newer build sets the saved session aside, Saved data says why and offers it back', async () => {
-  localStorage.setItem(STORE_KEY, JSON.stringify({ version: '2026-09-25.1a', tenant: 'social', data: { tenant: {} }, clock: null }));
+  localStorage.setItem(STORE_KEY, JSON.stringify({ version: `${STORE_FORMAT}.0123456789abcdef`, tenant: 'social', data: { tenant: {} }, clock: null }));
   store.boot();
   resetTo('social'); await signInAs('admin');
   await open();

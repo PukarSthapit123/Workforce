@@ -8,15 +8,15 @@ import { periodStart } from '@/domain/time';
 
 type Rec = Record<string, unknown> & { id: string };
 interface SeedFile { data: Record<string, Record<string, Rec>> }
-interface Week extends Rec { location: string; weekStart: string; state: string; publishVersion: number; lines: Record<string, string[]>; publishedBy: { personCode: string } }
-interface Pattern extends Rec { locations: string[]; jobProfiles: string[]; days: string[]; cycle: number; starts: string; people: { personCode: string; offset: number }[] }
-interface Person extends Rec { code: string; location: string; state: string; contractedHours: number }
+interface Week extends Rec { location: string; weekStart: string; state: string; publishVersion: number; lines: Record<string, string[]>; publishedBy: { employeeCode: string } }
+interface Pattern extends Rec { locations: string[]; jobProfiles: string[]; days: string[]; cycle: number; starts: string; employees: { employeeCode: string; offset: number }[] }
+interface Employee extends Rec { code: string; location: string; state: string; contractedHours: number }
 interface Cover extends Rec { location: string; date: string; shift: string; reason: string; stage: number }
-interface Filled extends Rec { location: string; date: string; shift: string; personCode: string }
+interface Filled extends Rec { location: string; date: string; shift: string; employeeCode: string }
 type Config = Rec & RotaConfig & { fulfilStages: FulfilStage[]; types: Record<string, TypeRota> };
 const vals = <T = Rec>(s: SeedFile, c: string) => Object.values(s.data[c] ?? {}) as T[];
 const seed = social as unknown as SeedFile;
-const people = new Map(vals<Person>(seed, 'people').map(p => [p.code, p]));
+const employees = new Map(vals<Employee>(seed, 'employees').map(p => [p.code, p]));
 const shifts = vals<Rec & ShiftType>(seed, 'shiftTypes');
 const codes = shifts.map(s => s.code);
 const locations = new Set(vals<Rec & { code: string }>(seed, 'locations').map(l => l.code));
@@ -35,13 +35,13 @@ describe('seed social for module 3', () => {
       expect(w.id).toBe(rotaWeekId(w.location, w.weekStart));
       expect(locations.has(w.location), w.id).toBe(true);
       expect(ROTA_STATES as readonly string[]).toContain(w.state);
-      expect([w.state, w.publishVersion, people.has(w.publishedBy.personCode)], w.id).toEqual(['published', 1, true]);
+      expect([w.state, w.publishVersion, employees.has(w.publishedBy.employeeCode)], w.id).toEqual(['published', 1, true]);
     }
     expect(weeks.filter(w => w.weekStart === '2026-08-10').map(w => w.location).sort()).toEqual(['FS', 'LGW', 'MAN', 'SLO', 'WH']);
   });
-  test('every line belongs to a real person on that location\'s roster, and every cell is a shift code, rest, leave or sickness', () => {
+  test('every line belongs to a real employee on that location\'s roster, and every cell is a shift code, rest, leave or sickness', () => {
     for (const w of vals<Week>(seed, 'rotaWeeks')) for (const [code, line] of Object.entries(w.lines)) {
-      const p = people.get(code);
+      const p = employees.get(code);
       expect(p, `${w.id}/${code}`).toBeDefined();
       expect(line).toHaveLength(7);
       if (p) expect(onRoster(p, w.location, line), `${w.id}/${code}`).toBe(true);
@@ -55,26 +55,26 @@ describe('seed social for module 3', () => {
     expect(before?.lines['CP-1088']).toEqual(['', 'L', 'L', '', 'E', '', '']);
     expect(Object.keys(now?.lines ?? {})).not.toContain('CP-1288');
   });
-  test('patterns name real shift codes, people, locations and job profiles', () => {
+  test('patterns name real shift codes, employees, locations and job profiles', () => {
     const jobs = new Set(vals<Rec & { code: string }>(seed, 'jobProfiles').map(j => j.code));
     const pats = vals<Pattern>(seed, 'patterns');
     expect(pats.map(p => p.id)).toEqual(['pat_WP-01', 'pat_WP-02', 'pat_WP-03', 'pat_WP-04']);
     for (const p of pats) {
       expect(p.days).toHaveLength(p.cycle);
       expect(p.days.filter(c => c && !codes.includes(c)), p.id).toEqual([]);
-      expect(p.people.filter(x => !people.has(x.personCode) || x.offset < 1 || x.offset > p.cycle), p.id).toEqual([]);
+      expect(p.employees.filter(x => !employees.has(x.employeeCode) || x.offset < 1 || x.offset > p.cycle), p.id).toEqual([]);
       expect(p.locations.filter(l => !locations.has(l)), p.id).toEqual([]);
       expect(p.jobProfiles.filter(j => !jobs.has(j)), p.id).toEqual([]);
       expect(p.starts).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     }
   });
-  test('cover requests and filled shifts name real locations, shifts and people, in the current week', () => {
+  test('cover requests and filled shifts name real locations, shifts and employees, in the current week', () => {
     for (const c of vals<Cover>(seed, 'coverRequests')) {
       expect([locations.has(c.location), codes.includes(c.shift), periodStart(c.date)], c.id).toEqual([true, true, '2026-08-10']);
       expect(COVER_REASONS as readonly string[]).toContain(c.reason);
     }
     for (const f of vals<Filled>(seed, 'filledShifts'))
-      expect([locations.has(f.location), codes.includes(f.shift), people.has(f.personCode)], f.id).toEqual([true, true, true]);
+      expect([locations.has(f.location), codes.includes(f.shift), employees.has(f.employeeCode)], f.id).toEqual([true, true, true]);
   });
   test('rota config, fulfilment stages and per-type limits pass the setup check', () => {
     const cfg = seed.data.rotaConfig?.rotaConfig as Config;
@@ -87,10 +87,10 @@ describe('seed social for module 3', () => {
     }
     expect(cfg.types.casual).toEqual({ shifts: ['E', 'L', 'N'], night: true, maxHours: 37.5, restHours: 11, maxConsec: 5, flexible: true });
   });
-  test('every person has a safe-worker profile, and Kwame Boateng\'s lapsed DBS is kept', () => {
-    const profiles = vals<Rec & { personCode: string; cleared: boolean; dbsExpiry: string }>(seed, 'rotaProfiles');
-    expect(profiles.map(p => p.personCode).sort()).toEqual([...people.keys()].sort());
-    expect(profiles.find(p => p.personCode === 'CP-1490')).toMatchObject({ cleared: false, dbsExpiry: '2026-06-30' });
+  test('every employee has a safe-worker profile, and Kwame Boateng\'s lapsed DBS is kept', () => {
+    const profiles = vals<Rec & { employeeCode: string; cleared: boolean; dbsExpiry: string }>(seed, 'rotaProfiles');
+    expect(profiles.map(p => p.employeeCode).sort()).toEqual([...employees.keys()].sort());
+    expect(profiles.find(p => p.employeeCode === 'CP-1490')).toMatchObject({ cleared: false, dbsExpiry: '2026-06-30' });
   });
   test('no money in any rota collection', () => {
     expect(JSON.stringify(ROTA.map(c => seed.data[c]))).not.toMatch(/£|"rate"|"amount"|"cost"|"pay"/i);

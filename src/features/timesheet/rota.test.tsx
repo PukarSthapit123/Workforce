@@ -7,7 +7,7 @@ import type { TimesheetConfig, TimesheetDay } from '@/contract/timesheets';
 import { expectTestIdCoverage } from '@/test/testid-coverage';
 import { renderPage, withFakeServer } from '@/test/render-page';
 import { resetTo } from '@/test/api-helpers';
-import { TeamPeoplePage } from '@/features/people/TeamPeoplePage';
+import { TeamEmployeesPage } from '@/features/employees/TeamEmployeesPage';
 import { TimesheetPage } from './TimesheetPage';
 import { TeamTimesheetsPage } from './TeamTimesheetsPage';
 
@@ -180,8 +180,8 @@ describe('My timesheet, Fill from rota', () => {
 describe('Proxy entry seeds from the team member’s rota', () => {
   beforeEach(() => signIn('rachel.hussain'));
   const openProxy = async (code: string) => {
-    renderPage(<TeamPeoplePage />);
-    await userEvent.click(await screen.findByTestId(tid.people.open(code)));
+    renderPage(<TeamEmployeesPage />);
+    await userEvent.click(await screen.findByTestId(tid.employees.open(code)));
     await userEvent.click(await screen.findByTestId(tid.proxy.open));
     return screen.findByTestId(tid.dayForm.field('start'));
   };
@@ -209,7 +209,7 @@ describe('Proxy entry seeds from the team member’s rota', () => {
     await userEvent.click(screen.getByTestId(tid.modal.close));
     await waitFor(() => expect(screen.queryByTestId(tid.proxy.banner)).toBeNull());
 
-    await userEvent.click(await screen.findByTestId(tid.people.open('CP-1402')));
+    await userEvent.click(await screen.findByTestId(tid.employees.open('CP-1402')));
     await userEvent.click(await screen.findByTestId(tid.proxy.open));
     await proxyWeek();
     expect(screen.getByTestId(tid.week.cell(0, 1, 'start'))).toHaveValue('14:30');

@@ -1,6 +1,6 @@
 import {
   APPROVER_ROLES, CHAIN_MODULES, CHAIN_ROLE_RULES, CONDITIONS, DEFAULT_CHAIN, POSTING_STEP, STEP_SCOPES, actingFor, chainCapabilities, chainProblem, chainText,
-  decisionBlock, defaultChainFor, delegationProblem, roleOptions, roleRule, walkChain, type ChainItem, type DeciderPerson, type ItemFacts, type WalkInput,
+  decisionBlock, defaultChainFor, delegationProblem, roleOptions, roleRule, walkChain, type ChainItem, type DeciderEmployee, type ItemFacts, type WalkInput,
   parseSla, slaProblem, slaText, whenOptions, whoDecides, withLayer, type ApproverWorld, type ChainStep, type Delegation, type DelegationContext,
 } from './approvals';
 
@@ -88,7 +88,7 @@ describe('delegations (D8)', () => {
     expect(delegationProblem(draft({ who: 'D', to: 'R', from: '2026-09-01', until: '2026-09-02' }), [seeded], ctx)).toBeNull();
     expect(delegationProblem(draft({ who: 'D', to: 'R', from: '2026-08-25', until: '2026-08-26', modules: ['Rota'] }), [seeded], ctx)).toBeNull();
   });
-  test('a loop through a third person is found', () => {
+  test('a loop through a third employee is found', () => {
     const dToO: Delegation = { id: 'dlg_2', who: 'D', to: 'O', from: '2026-08-20', until: '2026-08-31', modules: ['Leave'] };
     expect(delegationProblem(draft({ who: 'O', to: 'R', from: '2026-08-25', until: '2026-08-25', modules: ['Leave'] }), [seeded, dToO], ctx)?.message)
       .toBe('Rachel Hussain already passes Leave approvals on to Dee Fitzgerald, and from there to Owen Clarke, over those dates. They would go round in a circle.');
@@ -101,7 +101,7 @@ describe('delegations (D8)', () => {
     expect(delegationProblem(draft({ who: 'R', to: 'O', from: '2026-09-01', until: '2026-09-04' }), [seeded], ctx)).toBeNull();
     expect(delegationProblem(draft({ who: 'R', to: 'O', from: '2026-08-24', until: '2026-08-31', modules: ['Profile'] }), [seeded], ctx)).toBeNull();
   });
-  test('people, dates and modules', () => {
+  test('employees, dates and modules', () => {
     expect(delegationProblem(draft({ who: 'E' }), [], ctx)).toMatchObject({ field: 'who', message: 'Ellie Warren does not approve anything, so there is no queue to cover.' });
     expect(delegationProblem(draft({ to: 'E' }), [], ctx)).toMatchObject({ field: 'to', message: 'Ellie Warren cannot approve, so cannot cover a queue.' });
     expect(delegationProblem(draft({ until: '2026-08-31' }), [], ctx)).toMatchObject({ field: 'until', message: 'The last day cannot be before the first day.' });
@@ -119,7 +119,7 @@ describe('delegations (D8)', () => {
 
 describe('who decides', () => {
   const world: ApproverWorld = {
-    people: [
+    employees: [
       { code: 'E', name: 'Ellie Warren', manager: 'Rachel Hussain', location: 'WH', department: 'CARE', active: true },
       { code: 'R', name: 'Rachel Hussain', manager: 'Dee Fitzgerald', location: 'WH', department: 'CARE', active: true },
       { code: 'D', name: 'Dee Fitzgerald', manager: '', location: 'FS', department: 'ADM', active: true },
@@ -128,7 +128,7 @@ describe('who decides', () => {
     holders: { 'Service Manager': ['R', 'S'], Payroll: ['D'], 'HR administrator': ['D'] },
   };
   const delegations: Delegation[] = [{ id: 'dlg_1', who: 'R', to: 'D', from: '2026-08-24', until: '2026-08-31', modules: ['Timesheet', 'Leave'] }];
-  test('chain role, then the person who holds it, then an active delegation', () => {
+  test('chain role, then the employee who holds it, then an active delegation', () => {
     const leave = defaultChainFor('Leave');
     expect(whoDecides(leave, 'Leave', 'E', '2026-08-13', world, delegations).map(l => [l.role, l.deciders])).toEqual([
       ['Line manager', [{ approver: 'R', acting: 'R' }]], ['Service Manager', [{ approver: 'R', acting: 'R' }]]]);
@@ -153,13 +153,13 @@ describe('module 8 group 4: the role table and the layer walker', () => {
   const ts = (o: Partial<ChainStep> = {}): ChainStep =>
     ({ module: 'Timesheet', role: 'Line manager', scope: 'Own department', when: 'Every timesheet', sla: '24 hours', fixed: false, ...o });
   const payroll = ts({ role: 'Payroll', scope: 'All departments', when: 'Only above a premium threshold', sla: '48 hours' });
-  const person = (code: string, caps: string[], o: Partial<DeciderPerson> = {}): DeciderPerson =>
+  const employee = (code: string, caps: string[], o: Partial<DeciderEmployee> = {}): DeciderEmployee =>
     ({ code, location: 'WH', department: 'CARE', active: true, caps, allLocations: false, ...o });
-  const people = [person('E', []), person('M', ['team_ts']), person('P', ['pay_appr'], { location: 'FS', department: 'ADM', allLocations: true }),
-    person('O', ['team_ts'], { location: 'BC' }), person('D', ['team_leave'])];
-  const item = (facts: ItemFacts = {}): ChainItem => ({ personCode: 'E', location: 'WH', department: 'CARE', facts });
+  const employees = [employee('E', []), employee('M', ['team_ts']), employee('P', ['pay_appr'], { location: 'FS', department: 'ADM', allLocations: true }),
+    employee('O', ['team_ts'], { location: 'BC' }), employee('D', ['team_leave'])];
+  const item = (facts: ItemFacts = {}): ChainItem => ({ employeeCode: 'E', location: 'WH', department: 'CARE', facts });
   const walk = (o: Partial<WalkInput> = {}) => walkChain({ module: 'Timesheet', steps: [ts(), payroll, POSTING_STEP], item: item(), signed: [],
-    date: '2026-08-13', people, delegations: [], ...o });
+    date: '2026-08-13', employees, delegations: [], ...o });
 
   test('each role maps to one capability: the line manager is team_ts in scope, payroll is pay_appr', () => {
     expect(CHAIN_ROLE_RULES.Timesheet).toEqual({ 'Line manager': { capability: 'team_ts', scoped: true }, Payroll: { capability: 'pay_appr', scoped: false } });
@@ -205,22 +205,22 @@ describe('module 8 group 4: the role table and the layer walker', () => {
     /* the payroll layer was taken out after the line manager signed: M settles the day */
     const done = walk({ steps: [ts(), POSTING_STEP], item: item({ premium: true }), signed: ['Line manager'], signers: ['M'] });
     expect([done.complete, done.final, done.current?.step.role, done.current?.deciders]).toEqual([true, true, 'Line manager', ['M']]);
-    expect(decisionBlock(done, { module: 'Timesheet', item: item({ premium: true }), people, signers: ['M'] }, 'M')).toBeNull();
+    expect(decisionBlock(done, { module: 'Timesheet', item: item({ premium: true }), employees, signers: ['M'] }, 'M')).toBeNull();
     /* while a layer is still to sign, a signer decides no later one */
     const waiting = walk({ item: item({ premium: true }), signed: ['Line manager'], signers: ['M'] });
-    expect([waiting.complete, decisionBlock(waiting, { module: 'Timesheet', item: item({ premium: true }), people, signers: ['M'] }, 'M')]).toEqual([false, 'signed']);
+    expect([waiting.complete, decisionBlock(waiting, { module: 'Timesheet', item: item({ premium: true }), employees, signers: ['M'] }, 'M')]).toEqual([false, 'signed']);
     /* no layer applies any more: the chain's layer that was signed settles it */
     const none = walk({ steps: [ts({ when: 'Only for proxy entries' }), POSTING_STEP], signed: ['Line manager'], signers: ['M'] });
     expect([none.layers, none.complete, none.current?.step.when, none.current?.deciders]).toEqual([[], true, 'Only for proxy entries', ['M']]);
   });
-  test('scope narrows a layer: the line manager in their access scope and the layer\'s own, never the person themself', () => {
+  test('scope narrows a layer: the line manager in their access scope and the layer\'s own, never the employee themself', () => {
     expect(walk({ item: { ...item(), location: 'BC' } }).current?.holders).toEqual(['O']);
     expect(walk({ item: { ...item(), department: 'OPS' } }).current?.holders).toEqual([]);
     expect(walk({ steps: [ts({ scope: 'All departments' })], item: { ...item(), department: 'OPS' } }).current?.holders).toEqual(['M']);
-    expect(walk({ item: { ...item(), personCode: 'M' } }).current?.holders).toEqual([]);
-    expect(walk({ people: people.map(p => (p.code === 'M' ? { ...p, active: false } : p)) }).current?.holders).toEqual([]);
+    expect(walk({ item: { ...item(), employeeCode: 'M' } }).current?.holders).toEqual([]);
+    expect(walk({ employees: employees.map(p => (p.code === 'M' ? { ...p, active: false } : p)) }).current?.holders).toEqual([]);
   });
-  test('delegation applies at every layer while it is in force, and never to the person themself', () => {
+  test('delegation applies at every layer while it is in force, and never to the employee themself', () => {
     const m: Delegation = { id: 'dlg_1', who: 'M', to: 'D', from: '2026-08-10', until: '2026-08-20', modules: ['Timesheet'] };
     const p: Delegation = { ...m, id: 'dlg_2', who: 'P' };
     expect(walk({ item: item({ premium: true }), delegations: [m, p] }).layers.map(l => l.deciders)).toEqual([['M', 'D'], ['P', 'D']]);
@@ -233,10 +233,10 @@ describe('module 8 group 4: the role table and the layer walker', () => {
     const d: Delegation = { id: 'dlg_3', who: 'P', to: 'D', from: '2026-08-10', until: '2026-08-20', modules: ['Timesheet'] };
     const signed = walk({ item: item({ premium: true }), signed: ['Line manager'], delegations: [d] });
     expect(signed.current?.deciders).toEqual(['P', 'D']);
-    expect(decisionBlock(signed, { module: 'Timesheet', item: item({ premium: true }), people }, 'D')).toBeNull();
+    expect(decisionBlock(signed, { module: 'Timesheet', item: item({ premium: true }), employees }, 'D')).toBeNull();
   });
   test('why someone may not decide: their own, out of scope, another layer, or nothing in the chain', () => {
-    const input = { module: 'Timesheet' as const, item: item({ premium: true }), people };
+    const input = { module: 'Timesheet' as const, item: item({ premium: true }), employees };
     const first = walk({ item: input.item }), second = walk({ item: input.item, signed: ['Line manager'] });
     expect(decisionBlock(first, input, 'M')).toBeNull();
     expect(decisionBlock(first, input, 'E')).toBe('self');

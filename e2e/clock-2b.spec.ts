@@ -72,7 +72,7 @@ test('an employee clocks in, takes a break and clocks out: the times land on the
   await expect(page.getByTestId(tid.clock.queueLate(`tsd_CP-1042_${THU}`))).toHaveCount(0);
 });
 
-test('a late clock in flags the day Late, tells the person and their line manager, and the manager sees Late in Team timesheets', async ({ page, api }) => {
+test('a late clock in flags the day Late, tells the employee and their line manager, and the manager sees Late in Team timesheets', async ({ page, api }) => {
   await signInEmail(page, MARCUS);
   await openMyDay(page);
   await page.getByTestId(tid.clock.clockIn).click();
@@ -126,7 +126,7 @@ test('a clock left running on an earlier day shows the banner, blocks a new cloc
 });
 
 test('with Clock in / out off the card goes and the clock type records on the day form; back on, the card returns', async ({ page, api }) => {
-  test.setTimeout(90_000); // five sign-ins across three people
+  test.setTimeout(90_000); // five sign-ins across three employees
   await signInEmail(page, AMARA);
   await openMyDay(page);
   await expect(page.getByTestId(tid.clock.card)).toBeVisible();
@@ -165,7 +165,7 @@ test('with Clock in / out off the card goes and the clock type records on the da
   await expect(page.getByTestId(tid.clock.clockIn)).toBeVisible();
 });
 
-test('nobody reaches someone else’s clock: another person’s day is not found, and a type that does not clock is refused, straight to the server', async ({ page, api }) => {
+test('nobody reaches someone else’s clock: another employee’s day is not found, and a type that does not clock is refused, straight to the server', async ({ page, api }) => {
   test.setTimeout(60_000);
   await signInEmail(page, AMARA);
   await forgetClock(page, api, '2026-08-11', '06:55', FROZEN);

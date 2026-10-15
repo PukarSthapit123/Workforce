@@ -11,7 +11,7 @@ import { expectTestIdCoverage } from '@/test/testid-coverage';
 import { App } from '@/App';
 
 /* I5: the account menu names the account and, for a holder of perm_cfg,
-   offers one person per role to look at the app as (prototype drawMenu,
+   offers one employee per role to look at the app as (prototype drawMenu,
    qnipay-workforce-v15.html:10765-10790). I3: a failed start or end of
    view-as is toasted and changes nothing. */
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
@@ -19,7 +19,7 @@ afterAll(() => server.close());
 beforeEach(() => { faults.length = 0; store.reset('social'); queryClient.clear(); });
 afterEach(() => { setToken(null); server.resetHandlers(); toast.dismiss(); });
 
-interface SeedAccount { email: string; userType: string; personCode: string }
+interface SeedAccount { email: string; userType: string; employeeCode: string }
 const anyAccount = (type: string): SeedAccount => {
   const found = Object.values(store.db.accounts as unknown as Record<string, SeedAccount>).find(a => a.userType === type);
   if (!found) throw new Error(`no seeded account with userType "${type}"`);
@@ -45,7 +45,7 @@ test('the menu names the account you are on: name, email, role, location and ID,
   const header = await openMenu();
   expect(header).toHaveTextContent('Dee Fitzgerald');
   expect(header).toHaveTextContent(account.email);
-  expect(header).toHaveTextContent(new RegExp(`Admin · .+ · ${account.personCode}`));
+  expect(header).toHaveTextContent(new RegExp(`Admin · .+ · ${account.employeeCode}`));
   expect(screen.getByText('Your account')).toBeInTheDocument();
   expect(screen.getByTestId(tid.shell.menuRole)).toHaveTextContent('Admin');
   expect(screen.getByTestId(tid.shell.menuRole)).toHaveTextContent('Configure how this workforce operates');
@@ -56,7 +56,7 @@ test('the menu names the account you are on: name, email, role, location and ID,
   expect(screen.queryAllByRole('menuitemcheckbox')).toEqual([]);
 });
 
-test('a holder of perm_cfg is offered at most five people, one per role, never themselves, with full test id coverage', async () => {
+test('a holder of perm_cfg is offered at most five employees, one per role, never themselves, with full test id coverage', async () => {
   const { account } = await signedInAs('admin');
   render(<App />);
   await openMenu();
@@ -64,8 +64,8 @@ test('a holder of perm_cfg is offered at most five people, one per role, never t
   await waitFor(() => expect(screen.getAllByTestId(/^shell-view-as-/).length).toBeGreaterThan(0));
   const offered = screen.getAllByTestId(/^shell-view-as-/).filter(el => el.getAttribute('data-testid') !== tid.shell.viewAsEnd);
   expect(offered.length).toBeLessThanOrEqual(5);
-  expect(offered.map(el => el.getAttribute('data-testid'))).not.toContain(tid.shell.viewAs(account.personCode));
-  expect(screen.getByTestId(tid.shell.viewAs(anyAccount('manager').personCode))).toHaveTextContent('Manager');
+  expect(offered.map(el => el.getAttribute('data-testid'))).not.toContain(tid.shell.viewAs(account.employeeCode));
+  expect(screen.getByTestId(tid.shell.viewAs(anyAccount('manager').employeeCode))).toHaveTextContent('Manager');
   expectTestIdCoverage();
 });
 
@@ -73,7 +73,7 @@ test('a holder of perm_cfg is offered at most five people, one per role, never t
    (the prototype asks this as an employee, whose menu offers nobody). */
 test('an employee\'s menu offers nobody to view as, and never asks for the list', async () => {
   const asked: string[] = [];
-  server.events.on('request:start', ({ request }) => { if (request.url.includes('/view-as/people')) asked.push(request.url); });
+  server.events.on('request:start', ({ request }) => { if (request.url.includes('/view-as/employees')) asked.push(request.url); });
   await signedInAs('employee');
   render(<App />);
   await openMenu();
@@ -83,12 +83,12 @@ test('an employee\'s menu offers nobody to view as, and never asks for the list'
   server.events.removeAllListeners();
 });
 
-test('choosing a person starts view-as; the menu then names them and offers only the way back', async () => {
+test('choosing an employee starts view-as; the menu then names them and offers only the way back', async () => {
   await signedInAs('admin');
   const manager = anyAccount('manager');
   render(<App />);
   await openMenu();
-  await userEvent.click(await screen.findByTestId(tid.shell.viewAs(manager.personCode)));
+  await userEvent.click(await screen.findByTestId(tid.shell.viewAs(manager.employeeCode)));
   expect(await screen.findByTestId(tid.shell.viewAsEnd)).toBeInTheDocument();
   expect(screen.getByRole('status')).toHaveTextContent('Rachel Hussain');
   await openMenu();
@@ -105,9 +105,9 @@ test('a failed start of view-as is toasted and leaves the session as it was', as
   const manager = anyAccount('manager');
   render(<App />);
   await openMenu();
-  const person = await screen.findByTestId(tid.shell.viewAs(manager.personCode));
+  const employee = await screen.findByTestId(tid.shell.viewAs(manager.employeeCode));
   await fault('POST', '/api/v1/session/view-as');
-  await userEvent.click(person);
+  await userEvent.click(employee);
   expect(await screen.findByTestId(tid.toast.error)).toHaveTextContent('Nothing has been changed');
   expect(screen.queryByTestId(tid.shell.viewAsEnd)).not.toBeInTheDocument();
   expect(screen.getByTestId(tid.shell.rolePill)).toHaveTextContent('Admin');
@@ -116,7 +116,7 @@ test('a failed start of view-as is toasted and leaves the session as it was', as
 test('a failed "Return to my account" is toasted, not silent, and the view stays as it was', async () => {
   const { token } = await signedInAs('admin');
   const employee = anyAccount('employee');
-  await fetch('/api/v1/session/view-as', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ personCode: employee.personCode }) });
+  await fetch('/api/v1/session/view-as', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ employeeCode: employee.employeeCode }) });
   render(<App />);
   const back = await screen.findByTestId(tid.shell.viewAsEnd);
   await fault('DELETE', '/api/v1/session/view-as');

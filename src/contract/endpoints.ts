@@ -17,7 +17,7 @@ export type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
    - allowedWhileViewing: one of the few writes a session viewing as someone
      else may still make (ending the view, signing out).
    - allowedWhileOnboarding: one of the few writes a new starter (a candidate
-     or preboarding person, while Onboarding is on) may make: their own
+     or preboarding employee, while Onboarding is on) may make: their own
      onboarding, signing out, reading their notifications. Every other write
      is refused for them, as the nav shows them the portal only.
    - errors: refusal statuses this endpoint can answer beyond the ones the

@@ -4,7 +4,7 @@ export * from './audit';
 export * from './session';
 export * from './tenant';
 export * from './access';
-export * from './people';
+export * from './employees';
 export * from './dimensions';
 export * from './employee-types';
 export * from './profile';

@@ -19,7 +19,7 @@ import type { Reply } from './read';
 
 export const BIJAY = 'bijay.shrestha@qniverse.co.uk';
 
-export interface LeaveReq { id: string; personCode: string; type: string; from: string; to: string; state: string; version: number; reason: string; qty: number }
+export interface LeaveReq { id: string; employeeCode: string; type: string; from: string; to: string; state: string; version: number; reason: string; qty: number }
 export interface MyLeaveRead { balance: { takenD: number; pending: number; leftD: number }; requests: LeaveReq[] }
 export interface AuditStored { act: string; entity: string; entityId: string; before?: unknown; after?: unknown; reason?: string }
 

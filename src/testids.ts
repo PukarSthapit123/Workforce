@@ -24,7 +24,7 @@ export const tid = {
   shell: {
     rolePill: 'shell-role-pill', bell: 'shell-bell', bellCount: 'shell-bell-count', theme: 'shell-theme',
     account: 'shell-account', signOut: 'shell-sign-out', viewAsEnd: 'shell-view-as-end',
-    viewAs: (personCode: string) => k('shell-view-as', personCode),
+    viewAs: (employeeCode: string) => k('shell-view-as', employeeCode),
     menuAccount: 'shell-menu-account', menuRole: 'shell-menu-role', menuViewAsEnd: 'shell-menu-view-as-end',
     menuViewAsLoading: 'shell-menu-view-as-loading', menuViewAsError: 'shell-menu-view-as-error',
     loading: 'shell-loading', error: 'shell-error', retry: 'shell-retry',
@@ -51,21 +51,21 @@ export const tid = {
     filterEntity: 'audit-filter-entity', filterWho: 'audit-filter-who', filterText: 'audit-filter-text',
     error: 'audit-error',
   },
-  /* plan 1b: the people lists, the person record, the person form and the lifecycle dialog */
-  people: {
-    table: 'people-table', row: (code: string) => k('people-row', code), search: 'people-search', stateFilter: 'people-state-filter',
-    locationFilter: 'people-location-filter', typeFilter: 'people-type-filter', categoryFilter: 'people-category-filter',
-    count: 'people-count', empty: 'people-empty', error: 'people-error', add: 'people-add',
-    open: (code: string) => k('people-open', code), edit: (code: string) => k('people-edit', code), state: (code: string) => k('people-state', code),
+  /* plan 1b: the employees lists, the employee record, the employee form and the lifecycle dialog */
+  employees: {
+    table: 'employees-table', row: (code: string) => k('employees-row', code), search: 'employees-search', stateFilter: 'employees-state-filter',
+    locationFilter: 'employees-location-filter', typeFilter: 'employees-type-filter', categoryFilter: 'employees-category-filter',
+    count: 'employees-count', empty: 'employees-empty', error: 'employees-error', add: 'employees-add',
+    open: (code: string) => k('employees-open', code), edit: (code: string) => k('employees-edit', code), state: (code: string) => k('employees-state', code),
   },
-  person: {
-    record: 'person-record', state: 'person-state', history: 'person-history', historyRow: (id: string) => k('person-history-row', id),
-    close: 'person-close', fact: (key: string) => k('person-fact', key), stat: (key: string) => k('person-stat', key),
-    edit: 'person-edit', changeState: 'person-change-state', error: 'person-error',
+  employee: {
+    record: 'employee-record', state: 'employee-state', history: 'employee-history', historyRow: (id: string) => k('employee-history-row', id),
+    close: 'employee-close', fact: (key: string) => k('employee-fact', key), stat: (key: string) => k('employee-stat', key),
+    edit: 'employee-edit', changeState: 'employee-change-state', error: 'employee-error',
   },
-  personForm: {
-    root: 'person-form', field: (name: string) => k('person-form', name), save: 'person-form-save',
-    cancel: 'person-form-cancel', warn: 'person-form-warn', changeState: 'person-form-change-state',
+  employeeForm: {
+    root: 'employee-form', field: (name: string) => k('employee-form', name), save: 'employee-form-save',
+    cancel: 'employee-form-cancel', warn: 'employee-form-warn', changeState: 'employee-form-change-state',
   },
   lifecycle: {
     from: 'lifecycle-from', option: (state: string) => k('lifecycle-option', state), reason: 'lifecycle-reason',
@@ -194,19 +194,19 @@ export const tid = {
     gaps: 'trota-gaps', covered: 'trota-covered', over: 'trota-over', suggest: 'trota-suggest', showFlags: 'trota-show-flags',
     search: 'trota-search', role: 'trota-role', type: 'trota-type', flags: 'trota-flags', count: 'trota-count',
     palette: 'trota-palette', pchip: (code: string) => k('trota-pchip', code), newShift: 'trota-new-shift',
-    grid: 'trota-grid', cell: (person: string, day: number) => k('trota-cell', person, day), add: (person: string, day: number) => k('trota-add', person, day),
-    chip: (person: string, day: number) => k('trota-chip', person, day), hours: (person: string) => k('trota-hours', person),
+    grid: 'trota-grid', cell: (employee: string, day: number) => k('trota-cell', employee, day), add: (employee: string, day: number) => k('trota-add', employee, day),
+    chip: (employee: string, day: number) => k('trota-chip', employee, day), hours: (employee: string) => k('trota-hours', employee),
     cov: (day: number) => k('trota-cov', day), fill: (day: number) => k('trota-fill', day), key: 'trota-key',
     dayview: 'trota-dayview', dayPill: 'trota-day-pill', dayFill: 'trota-day-fill', day: (day: number) => k('trota-day', day),
-    dayRow: (person: string) => k('trota-day-row', person), dayEmpty: 'trota-day-empty',
+    dayRow: (employee: string) => k('trota-day-row', employee), dayEmpty: 'trota-day-empty',
     plan: 'trota-plan', planItem: (i: number) => k('trota-plan-item', i), planAccept: (i: number) => k('trota-plan-accept', i),
     planAsk: (i: number) => k('trota-plan-ask', i), planSkip: (i: number) => k('trota-plan-skip', i), planAcceptAll: 'trota-plan-accept-all',
     planDismiss: 'trota-plan-dismiss', planNone: 'trota-plan-none',
     history: 'trota-history', historyNote: 'trota-history-note', change: (i: number) => k('trota-change', i), changesMore: 'trota-changes-more',
     changesEmpty: 'trota-changes-empty', pub: (i: number) => k('trota-pub', i),
-    pick: 'trota-pick', pickHint: 'trota-pick-hint', assignThis: 'trota-assign-this', sug: (person: string) => k('trota-sug', person),
-    sugAssign: (person: string) => k('trota-sug-assign', person), sugAsk: (person: string) => k('trota-sug-ask', person),
-    sugMore: 'trota-sug-more', sugNone: 'trota-sug-none', ruled: (person: string) => k('trota-ruled', person), sugTip: 'trota-sug-tip',
+    pick: 'trota-pick', pickHint: 'trota-pick-hint', assignThis: 'trota-assign-this', sug: (employee: string) => k('trota-sug', employee),
+    sugAssign: (employee: string) => k('trota-sug-assign', employee), sugAsk: (employee: string) => k('trota-sug-ask', employee),
+    sugMore: 'trota-sug-more', sugNone: 'trota-sug-none', ruled: (employee: string) => k('trota-ruled', employee), sugTip: 'trota-sug-tip',
     ruledTip: 'trota-ruled-tip', advertise: 'trota-advertise', cancel: 'trota-cancel',
     fact: (key: string) => k('trota-fact', key), changeShift: 'trota-change-shift', remove: 'trota-remove',
     clearConfirm: 'trota-clear-confirm', repeatWeeks: 'trota-repeat-weeks', repeatConfirm: 'trota-repeat-confirm',
@@ -231,18 +231,18 @@ export const tid = {
     newTone: 'tshifts-new-tone', newNight: 'tshifts-new-night', newEligible: 'tshifts-new-eligible', newNightTip: 'tshifts-new-night-tip',
     newEligibleTip: 'tshifts-new-eligible-tip', newCancel: 'tshifts-new-cancel', newCreate: 'tshifts-new-create',
   },
-  /* module 3: Working patterns (tpat): the list, the editor window, a new pattern, adding people, generating */
+  /* module 3: Working patterns (tpat): the list, the editor window, a new pattern, adding employees, generating */
   tpat: {
     error: 'tpat-error', loading: 'tpat-loading', list: 'tpat-list', cardTip: 'tpat-card-tip', empty: 'tpat-empty', newPattern: 'tpat-new',
     row: (code: string) => k('tpat-row', code), state: (code: string) => k('tpat-state', code), open: (code: string) => k('tpat-open', code),
-    addPerson: (code: string) => k('tpat-add-person', code), generate: (code: string) => k('tpat-generate', code),
+    addEmployee: (code: string) => k('tpat-add-employee', code), generate: (code: string) => k('tpat-generate', code),
     editor: 'tpat-editor', summary: 'tpat-summary', name: 'tpat-name', cycle: 'tpat-cycle', starts: 'tpat-starts', active: 'tpat-active',
     day: (i: number) => k('tpat-day', i), legend: 'tpat-legend', unknown: 'tpat-unknown',
     addLocation: 'tpat-add-location', dropLocation: (code: string) => k('tpat-drop-location', code),
     addJob: 'tpat-add-job', dropJob: (code: string) => k('tpat-drop-job', code), costCentre: 'tpat-cost-centre', gen: 'tpat-gen',
-    genFrom: 'tpat-gen-from', genTo: 'tpat-gen-to', range: 'tpat-range', peopleTip: 'tpat-people-tip', people: 'tpat-people',
-    person: (code: string) => k('tpat-person', code), offset: (code: string) => k('tpat-offset', code), first: (code: string) => k('tpat-first', code),
-    removePerson: (code: string) => k('tpat-remove-person', code), noPeople: 'tpat-no-people',
+    genFrom: 'tpat-gen-from', genTo: 'tpat-gen-to', range: 'tpat-range', employeesTip: 'tpat-employees-tip', employees: 'tpat-employees',
+    employee: (code: string) => k('tpat-employee', code), offset: (code: string) => k('tpat-offset', code), first: (code: string) => k('tpat-first', code),
+    removeEmployee: (code: string) => k('tpat-remove-employee', code), noEmployees: 'tpat-no-employees',
     run: 'tpat-run', editorAdd: 'tpat-editor-add', remove: 'tpat-remove', close: 'tpat-close', cancel: 'tpat-cancel', save: 'tpat-save', dirty: 'tpat-dirty',
     newName: 'tpat-new-name', newCycle: 'tpat-new-cycle', newStart: 'tpat-new-start', newBase: 'tpat-new-base', newLocs: 'tpat-new-locs',
     newLocsTip: 'tpat-new-locs-tip', newJobs: 'tpat-new-jobs', newCc: 'tpat-new-cc', newGen: 'tpat-new-gen', newCancel: 'tpat-new-cancel',
@@ -257,9 +257,9 @@ export const tid = {
     search: 'tcover-search', filter: (f: string) => k('tcover-filter', f), count: 'tcover-count', empty: 'tcover-empty',
     request: (id: string) => k('tcover-request', id), urgent: (id: string) => k('tcover-urgent', id), reason: (id: string) => k('tcover-reason', id),
     askedTip: (id: string) => k('tcover-asked-tip', id), log: (id: string) => k('tcover-log', id), noReason: (id: string) => k('tcover-no-reason', id),
-    sugTip: (id: string) => k('tcover-sug-tip', id), sug: (id: string, person: string) => k('tcover-sug', id, person),
-    assign: (id: string, person: string) => k('tcover-assign', id, person), askFirst: (id: string, person: string) => k('tcover-ask-first', id, person),
-    ruledTip: (id: string) => k('tcover-ruled-tip', id), ruled: (id: string, person: string) => k('tcover-ruled', id, person),
+    sugTip: (id: string) => k('tcover-sug-tip', id), sug: (id: string, employee: string) => k('tcover-sug', id, employee),
+    assign: (id: string, employee: string) => k('tcover-assign', id, employee), askFirst: (id: string, employee: string) => k('tcover-ask-first', id, employee),
+    ruledTip: (id: string) => k('tcover-ruled-tip', id), ruled: (id: string, employee: string) => k('tcover-ruled', id, employee),
     nobody: (id: string) => k('tcover-nobody', id),
     fill: (id: string) => k('tcover-fill', id), askAll: (id: string) => k('tcover-ask-all', id), escalate: (id: string) => k('tcover-escalate', id),
     filled: (id: string) => k('tcover-filled', id), it: (id: string) => k('tcover-it', id), confirmed: (id: string) => k('tcover-confirmed', id),
@@ -288,7 +288,7 @@ export const tid = {
     type: (code: string) => k('mrota-type', code), typeShift: (code: string) => k('mrota-type-shift', code), typeNight: 'mrota-type-night',
     typeNum: (key: string) => k('mrota-type-num', key), typeFlexible: 'mrota-type-flexible',
     patternsBlocked: 'mrota-patterns-blocked',
-    /* module 8: each support level's people per shift, and the flexible-worker milestones and who is told */
+    /* module 8: each support level's employees per shift, and the flexible-worker milestones and who is told */
     levelMin: (code: string) => k('mrota-level-min', code), milestones: 'mrota-milestones', notifyTo: 'mrota-notify-to', flexNote: 'mrota-flex-note',
   },
   /* module 3: Upload working patterns (simulated): the validation preview, its error report and the import that writes nothing */
@@ -348,7 +348,7 @@ export const tid = {
     record: 'tsick-record', who: 'tsick-who', from: 'tsick-from', to: 'tsick-to', reason: 'tsick-reason', save: 'tsick-save', warn: 'tsick-warn',
     /* Sick during booked leave (D10) */
     onLeave: 'tsick-on-leave', onLeaveTip: 'tsick-on-leave-tip', onLeaveDay: (code: string, date: string) => k('tsick-on-leave-day', code, date),
-    giveBack: 'tsick-give-back', gbPerson: 'tsick-gb-person', gbDay: (date: string) => k('tsick-gb-day', date), gbConfirm: 'tsick-gb-confirm',
+    giveBack: 'tsick-give-back', gbEmployee: 'tsick-gb-employee', gbDay: (date: string) => k('tsick-gb-day', date), gbConfirm: 'tsick-gb-confirm',
     gbCancel: 'tsick-gb-cancel', gbWarn: 'tsick-gb-warn',
   },
   /* module 4: Leave setup (mleave): leave types, policies, entitlement rules, the booking workflow, Leave and Rota, leavers, per-type policy */
@@ -443,7 +443,7 @@ export const tid = {
     panel: 'inbox-panel', markAll: 'inbox-mark-all', empty: 'inbox-empty', loading: 'inbox-loading', error: 'inbox-error',
     item: (id: string) => k('inbox-item', id), dot: (id: string) => k('inbox-dot', id), dest: (id: string) => k('inbox-dest', id),
   },
-  /* 1c: a link to a page that does not exist, or that this person cannot open (D9) */
+  /* 1c: a link to a page that does not exist, or that this employee cannot open (D9) */
   unavailable: { root: 'unavailable', home: 'unavailable-home' },
   /* 1c group 4: Notifications (anotif): the event x user type channel matrix */
   anotif: {

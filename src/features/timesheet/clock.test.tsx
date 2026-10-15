@@ -27,7 +27,7 @@ const at = (hms: string, date?: string) => store.setClock(london(hms, date));
 type Ev = { kind: 'in' | 'breakStart' | 'breakEnd' | 'out'; at: string };
 function plant(date: string, events: Ev[], extra: Record<string, unknown> = {}) {
   const id = `clk_CP-1042_${date}`;
-  store.coll('clockRecords')[id] = { id, version: 1, updatedAt: events[0]?.at ?? london('07:00', date), personCode: 'CP-1042', date, events,
+  store.coll('clockRecords')[id] = { id, version: 1, updatedAt: events[0]?.at ?? london('07:00', date), employeeCode: 'CP-1042', date, events,
     late: false, closedLate: null, ...extra };
   store.save();
 }
@@ -174,7 +174,7 @@ describe('the clock card', () => {
     expect(screen.queryByTestId(tid.clock.choose)).toBeNull();
   });
 
-  test('after Clock in again, the running form shows the start the person corrected, not the first clock in (review I4)', async () => {
+  test('after Clock in again, the running form shows the start the employee corrected, not the first clock in (review I4)', async () => {
     plant('2026-08-13', [{ kind: 'in', at: london('07:10') }, { kind: 'out', at: london('12:00') }, { kind: 'in', at: london('13:00') }], { written: { breaks: [] } });
     plantDay('2026-08-13', { entries: [{ start: '07:00', finish: '12:00', breaks: [], fields: {} }] });
     await open();

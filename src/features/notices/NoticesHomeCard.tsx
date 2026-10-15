@@ -10,7 +10,7 @@ import { NoticeMarks, ReaderPill } from './NoticeParts';
 
 /* The Notices card on My home: the prototype's noticeHomeCard
    (qnipay-workforce-v15.html:5811-5825). Shown only while the notice board
-   is on, the person may read notices and something is live for them: up to
+   is on, the employee may read notices and something is live for them: up to
    three, urgent first, then pinned, then newest, each with Acknowledge while
    it is owed; how many are still to acknowledge; how many more there are;
    and View all. Group 7 places it on My home. */

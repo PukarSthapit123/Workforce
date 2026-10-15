@@ -21,7 +21,7 @@ async function asEmail(email: string): Promise<Call> {
   return caller(token);
 }
 const WRITES = ['timesheetDays', 'integrationAttempts', 'timesheetConfig', 'audit'];
-interface Day { id: string; version: number; state: string; captureSource: string; enteredBy: string; personCode: string; integrationAttemptId: string; history: unknown[]; returnReason: string }
+interface Day { id: string; version: number; state: string; captureSource: string; enteredBy: string; employeeCode: string; integrationAttemptId: string; history: unknown[]; returnReason: string }
 interface Attempt { id: string; version: number; state: string; attempt: number; cause?: string; reason?: string }
 const day = (code: string, date: string) => store.coll<Day>('timesheetDays')[`tsd_${code}_${date}`];
 const attempt = (id: string) => store.coll<Attempt>('integrationAttempts')[id];
@@ -34,7 +34,7 @@ const refusal = (r: { body: unknown }) => Refusal.parse(r.body);
 /* A pending day planted straight into the store, for scope and self checks. */
 function plant(code: string, date: string, state = 'pend') {
   const id = `tsd_${code}_${date}`;
-  store.coll('timesheetDays')[id] = { id, version: 1, updatedAt: FROZEN, personCode: code, date, state, entries: [entry('07:00', '15:00', [['11:00', '11:30']])],
+  store.coll('timesheetDays')[id] = { id, version: 1, updatedAt: FROZEN, employeeCode: code, date, state, entries: [entry('07:00', '15:00', [['11:00', '11:30']])],
     workType: 'STD', allowances: [], shift: 'E', nonWorkingReason: '', captureSource: 'self', enteredBy: code, submittedAt: FROZEN, returnReason: '',
     warnings: [], history: [], integrationAttemptId: '' };
   return id;
@@ -46,7 +46,7 @@ const asRead = (code: string, weekStart: string) => Array.from({ length: 7 }, (_
 });
 const LOCK_0805 = 'Pay period 03/08/2026 – 09/08/2026 closed at Monday 12:00 (10/08/2026 12:00).';
 
-describe('GET /api/v1/timesheets/:personId/weeks/:weekStart', () => {
+describe('GET /api/v1/timesheets/:employeeId/weeks/:weekStart', () => {
   test('an employee reads their own week in one call: days, states, versions, capture setup and earlier weeks', async () => {
     const w = TimesheetWeek.parse((await (await as('employee'))('GET', '/api/v1/timesheets/CP-1042/weeks/2026-08-10')).body);
     expect(w.days.map(d => d.date)).toEqual(['2026-08-10', '2026-08-11', '2026-08-12', '2026-08-13', '2026-08-14', '2026-08-15', '2026-08-16']);
@@ -68,10 +68,10 @@ describe('GET /api/v1/timesheets/:personId/weeks/:weekStart', () => {
     expect(r.status).toBe(422);
     expect(refusal(r)).toMatchObject({ field: 'weekStart', message: 'A week starts on a Monday.' });
   });
-  test('the proxy grid seeds from the target person, never from the manager (D6)', async () => {
+  test('the proxy grid seeds from the target employee, never from the manager (D6)', async () => {
     const w = TimesheetWeek.parse((await (await as('manager'))('GET', '/api/v1/timesheets/CP-1153/weeks/2026-08-10')).body);
-    expect(w.person).toMatchObject({ code: 'CP-1153', employeeType: 'shift' });
-    expect(w.days[1]?.record?.personCode).toBe('CP-1153');
+    expect(w.employee).toMatchObject({ code: 'CP-1153', employeeType: 'shift' });
+    expect(w.days[1]?.record?.employeeCode).toBe('CP-1153');
     expect(w.capture.type?.fields.shift_code).toBeDefined();
     expect(w.capture.capabilities).toContain('shift');
   });
@@ -113,7 +113,7 @@ describe('the published rota on the timesheet reads (module 3 D13, D14, D16)', (
   test('qnipay (Rota off): no rota line, no catalogue and no matrix rota', async () => {
     resetTo('qnipay');
     const call = await as('employee');
-    const me = accountOf('employee').personCode;
+    const me = accountOf('employee').employeeCode;
     const w = TimesheetWeek.parse((await call('GET', `/api/v1/timesheets/${me}/weeks/2026-08-10`)).body);
     expect(w.days.every(d => d.rota === undefined && !d.absence)).toBe(true);
     expect(w.capture.rotaLines).toBeUndefined();
@@ -122,7 +122,7 @@ describe('the published rota on the timesheet reads (module 3 D13, D14, D16)', (
   });
 });
 
-describe('PUT /api/v1/timesheets/:personId/days/:date (Review Focus 2)', () => {
+describe('PUT /api/v1/timesheets/:employeeId/days/:date (Review Focus 2)', () => {
   test('a day saves as a draft with one audit row', async () => {
     const call = await as('employee');
     const r = await put(call, 'CP-1042', '2026-08-13', shiftDay());
@@ -212,12 +212,12 @@ describe('project and job task', () => {
   });
 });
 
-describe('POST /api/v1/timesheets/:personId/days/:date/submit', () => {
+describe('POST /api/v1/timesheets/:employeeId/days/:date/submit', () => {
   test('a new day is saved and submitted in one request, with history and one audit row', async () => {
     const r = await submit(await as('employee'), 'CP-1042', '2026-08-13', shiftDay());
     const { record, auditId } = DaySaved.parse(r.body);
     expect(record).toMatchObject({ state: 'pend', version: 1, submittedAt: FROZEN });
-    expect(record.history).toEqual([expect.objectContaining({ from: 'draft', to: 'pend', by: { personCode: 'CP-1042', name: 'Amara Okafor' } })]);
+    expect(record.history).toEqual([expect.objectContaining({ from: 'draft', to: 'pend', by: { employeeCode: 'CP-1042', name: 'Amara Okafor' } })]);
     expect(audits().filter(a => a.id === auditId).map(a => a.act)).toEqual(['Timesheet awaiting approval']);
   });
   test('a retried submit is refused with ALREADY_SUBMITTED and never makes a second record (D8)', async () => {
@@ -248,9 +248,9 @@ describe('proxy entry (Review Focus 5)', () => {
   test('a manager\'s day entry is attributed to the manager, flagged as proxy and audited as theirs', async () => {
     const call = await as('manager');
     const { record, auditId } = DaySaved.parse((await submit(call, 'CP-1153', '2026-08-13', shiftDay())).body);
-    expect(record).toMatchObject({ personCode: 'CP-1153', captureSource: 'proxy', enteredBy: 'CP-1001', enteredByName: 'Rachel Hussain', state: 'pend' });
+    expect(record).toMatchObject({ employeeCode: 'CP-1153', captureSource: 'proxy', enteredBy: 'CP-1001', enteredByName: 'Rachel Hussain', state: 'pend' });
     const a = audits().find(x => x.id === auditId);
-    expect(a).toMatchObject({ act: 'Proxy timesheet submitted', who: { personCode: 'CP-1001' } });
+    expect(a).toMatchObject({ act: 'Proxy timesheet submitted', who: { employeeCode: 'CP-1001' } });
     expect(JSON.stringify(a?.after)).toContain('entered on their behalf');
     const q = ApprovalQueue.parse((await call('GET', '/api/v1/approvals/timesheets')).body);
     expect(q.rows.find(r => r.id === record.id)?.flags.map(f => f.code)).toContain('proxy');
@@ -276,7 +276,7 @@ describe('proxy entry (Review Focus 5)', () => {
   });
 });
 
-describe('POST /api/v1/timesheets/:personId/weeks/:weekStart/submit (Review Focus 3)', () => {
+describe('POST /api/v1/timesheets/:employeeId/weeks/:weekStart/submit (Review Focus 3)', () => {
   const url = '/api/v1/timesheets/CP-1042/weeks/2026-08-10/submit';
   test('one request submits the week: the ready days become real records, the rest come back held with reasons', async () => {
     const call = await as('employee');
@@ -351,7 +351,7 @@ describe('POST /api/v1/timesheets/:personId/weeks/:weekStart/submit (Review Focu
   });
 });
 
-describe('POST /api/v1/timesheets/:personId/multiweek/submit', () => {
+describe('POST /api/v1/timesheets/:employeeId/multiweek/submit', () => {
   test('weeks in a closed period are held back with the lock note, and nothing changes', async () => {
     const call = await as('employee'), before = snapshot(...WRITES);
     const out = MultiweekSubmitted.parse((await call('POST', '/api/v1/timesheets/CP-1042/multiweek/submit', { weeks: ['2026-08-03', '2026-07-27'] })).body);
@@ -394,7 +394,7 @@ describe('POST /api/v1/timesheet-days/:id/transition (Review Focus 1 and 4)', ()
   test('a return records the reason on the day and in its history', async () => {
     const { record } = DayDecided.parse((await decide(await as('manager'), id, 'back', 'Break missing')).body);
     expect(record).toMatchObject({ state: 'back', returnReason: 'Break missing' });
-    expect(record.history.at(-1)).toMatchObject({ from: 'pend', to: 'back', reason: 'Break missing', by: { personCode: 'CP-1001' } });
+    expect(record.history.at(-1)).toMatchObject({ from: 'pend', to: 'back', reason: 'Break missing', by: { employeeCode: 'CP-1001' } });
   });
   test('a return without a reason is refused naming the field', async () => {
     const r = await decide(await as('manager'), id, 'back', '  ');
@@ -443,9 +443,9 @@ describe('GET /api/v1/approvals/timesheets and the dispatcher (Review Focus 4)',
   const queue = async (call: Call, qs = '') => ApprovalQueue.parse((await call('GET', `/api/v1/approvals/timesheets${qs}`)).body);
   test('the queue holds the pending days at the approver\'s location, with counts and the bulk set', async () => {
     const q = await queue(await as('manager'));
-    expect(q.rows.map(r => r.personCode)).toEqual(['CP-1042', 'CP-1153', 'CP-1266']);
+    expect(q.rows.map(r => r.employeeCode)).toEqual(['CP-1042', 'CP-1153', 'CP-1266']);
     expect(q.counts).toEqual({ pend: 3, resub: 0, ok: 2, back: 1, mgrok: 0, all: 6 });
-    expect(q.bulk).toMatchObject({ ids: ['tsd_CP-1042_2026-08-12', 'tsd_CP-1153_2026-08-11', 'tsd_CP-1266_2026-08-10'], people: 3, outside: 0 });
+    expect(q.bulk).toMatchObject({ ids: ['tsd_CP-1042_2026-08-12', 'tsd_CP-1153_2026-08-11', 'tsd_CP-1266_2026-08-10'], employees: 3, outside: 0 });
     expect(q.oldestPending).toBe('2026-08-11');
     const all = await queue(await as('manager'), '?status=all');
     expect(all.rows.filter(r => r.state === 'ok').map(r => r.posting)).toEqual(['posted', 'posted']);
@@ -453,20 +453,20 @@ describe('GET /api/v1/approvals/timesheets and the dispatcher (Review Focus 4)',
   test('days at other locations stay out of the queue and are counted as outside', async () => {
     plant('CP-1288', '2026-08-12');
     const q = await queue(await as('manager'));
-    expect(q.rows.map(r => r.personCode)).not.toContain('CP-1288');
+    expect(q.rows.map(r => r.employeeCode)).not.toContain('CP-1288');
     expect(q.bulk.outside).toBe(1);
   });
   test('q searches by name or date, and a bad cursor is refused', async () => {
     const call = await as('manager');
-    expect((await queue(call, '?status=all&q=baptiste')).rows.map(r => r.personCode)).toEqual(['CP-1153']);
-    expect((await queue(call, '?status=all&q=12/08/2026')).rows.map(r => r.personCode)).toEqual(['CP-1042', 'CP-1088']);
+    expect((await queue(call, '?status=all&q=baptiste')).rows.map(r => r.employeeCode)).toEqual(['CP-1153']);
+    expect((await queue(call, '?status=all&q=12/08/2026')).rows.map(r => r.employeeCode)).toEqual(['CP-1042', 'CP-1088']);
     const r = await call('GET', '/api/v1/approvals/timesheets?cursor=abc');
     expect(r.status).toBe(422);
     expect(refusal(r).field).toBe('cursor');
   });
   /* review Important 2: the matrix reads a week whole, so Approve selected covers every day of it */
   test('a week read returns every row of the week, past the page size, and the bulk call approves them all', async () => {
-    const team = Object.values(store.coll<{ code: string; location: string }>('people')).filter(p => p.location === 'WH' && p.code !== 'CP-1001');
+    const team = Object.values(store.coll<{ code: string; location: string }>('employees')).filter(p => p.location === 'WH' && p.code !== 'CP-1001');
     const ids = team.flatMap(p => ['2026-08-03', '2026-08-04', '2026-08-05', '2026-08-06', '2026-08-07'].map(date => plant(p.code, date)));
     expect(ids.length).toBeGreaterThan(50);
     const call = await as('manager'), q = await queue(call, '?status=all&weekStart=2026-08-03');
@@ -533,7 +533,7 @@ describe('POST /api/v1/approvals/timesheets/bulk (Review Focus 1)', () => {
     const call = await as('manager'), set = await shown(call), was = attemptCount(), rows = audits().length;
     const out = BulkApproved.parse((await bulk(call, set.ids, set.checksum)).body);
     expect(out.approved.map(d => [d.id, d.state, d.posting])).toEqual(set.ids.map(id => [id, 'ok', 'queued']));
-    expect(out).toMatchObject({ held: [], people: 3 });
+    expect(out).toMatchObject({ held: [], employees: 3 });
     expect(attemptCount()).toBe(was + 3);
     expect(audits()).toHaveLength(rows + 1);
     const row = audits().find(a => a.id === out.auditId);

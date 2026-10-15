@@ -111,7 +111,7 @@ describe('Exceptions', () => {
 
   test('an exception about the reader offers no moves, only who must handle it, while the others keep theirs', async () => {
     /* Rachel Hussain, WH's manager, is not cleared to work */
-    store.coll<Record<string, unknown>>('rotaProfiles')['rp_CP-1001'] = { id: 'rp_CP-1001', version: 1, updatedAt: store.now(), personCode: 'CP-1001',
+    store.coll<Record<string, unknown>>('rotaProfiles')['rp_CP-1001'] = { id: 'rp_CP-1001', version: 1, updatedAt: store.now(), employeeCode: 'CP-1001',
       cleared: false, dbsExpiry: '2026-07-31', qualifications: 'Care Certificate', favourite: false, preferredDays: [] };
     await open();
     const own = rowWith('Rachel Hussain');

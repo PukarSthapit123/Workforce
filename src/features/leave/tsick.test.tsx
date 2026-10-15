@@ -15,8 +15,8 @@ import { SicknessPage } from './SicknessPage';
 withFakeServer();
 beforeEach(async () => { resetTo('social'); await signInAs('manager'); });
 
-interface Episode { id: string; personCode: string; from: string; to: string; rtw: unknown }
-interface Ledger { personCode: string; type: string; dates?: string[] }
+interface Episode { id: string; employeeCode: string; from: string; to: string; rtw: unknown }
+interface Ledger { employeeCode: string; type: string; dates?: string[] }
 const episodes = () => Object.values(store.coll<Episode>('sickEpisodes'));
 const acts = () => audits().filter(a => a.act !== 'Signed in').map(a => a.act);
 const toasts = (id: string = tid.toast.info) => screen.queryAllByTestId(id).map(t => t.textContent ?? '').join(' | ');
@@ -64,7 +64,7 @@ describe('Sickness', () => {
 
   /* review I3: a day that bridges two absences joins them, so Bradford counts one spell */
   test('back-filling the day between two absences joins them into one spell, and the score shows it', async () => {
-    store.coll('sickEpisodes').sk_099 = { id: 'sk_099', version: 1, updatedAt: '2026-08-13T09:00:00.000Z', personCode: 'CP-1088', from: '2026-08-13', to: '2026-08-13',
+    store.coll('sickEpisodes').sk_099 = { id: 'sk_099', version: 1, updatedAt: '2026-08-13T09:00:00.000Z', employeeCode: 'CP-1088', from: '2026-08-13', to: '2026-08-13',
       reason: 'Other', note: '', rtw: null };
     store.save();
     await open();
@@ -77,7 +77,7 @@ describe('Sickness', () => {
     await expectToast(/^Sickness recorded\./);
     await waitFor(() => expect(screen.getByTestId(tid.tsick.score('CP-1088'))).toHaveTextContent('144'));
     expect(screen.getByTestId(tid.tsick.row('CP-1088'))).toHaveTextContent('11/08/2026 · 3 days');
-    expect(episodes().filter(e => e.personCode === 'CP-1088' && e.from >= '2026-08-01').map(e => [e.id, e.from, e.to])).toEqual([['sk_004', '2026-08-11', '2026-08-13']]);
+    expect(episodes().filter(e => e.employeeCode === 'CP-1088' && e.from >= '2026-08-01').map(e => [e.id, e.from, e.to])).toEqual([['sk_004', '2026-08-11', '2026-08-13']]);
     expect(acts()).toEqual(['Sickness recorded']);
   });
 
@@ -87,7 +87,7 @@ describe('Sickness', () => {
     await expectToast(RTW_TOAST);
     expect(await screen.findByTestId(tid.tsick.arranged)).toHaveTextContent('Return-to-work meeting requested');
     expect(screen.queryByTestId(tid.tsick.arrange)).toBeNull();
-    expect(episodes().find(e => e.id === 'sk_004')?.rtw).toMatchObject({ by: { personCode: 'CP-1001' } });
+    expect(episodes().find(e => e.id === 'sk_004')?.rtw).toMatchObject({ by: { employeeCode: 'CP-1001' } });
     expect(acts()).toEqual(['Return-to-work meeting requested']);
   });
 
@@ -103,7 +103,7 @@ describe('Sickness', () => {
     await expectToast(daysReturnedToast(1, 'Marcus Reilly'));
     const ledger = Object.values(store.coll<Ledger>('leaveLedger'));
     expect(ledger).toHaveLength(before + 1);
-    expect(ledger.filter(l => l.type === 'Days returned' && l.personCode === 'CP-1088')).toEqual([expect.objectContaining({ dates: ['2026-08-11'] })]);
+    expect(ledger.filter(l => l.type === 'Days returned' && l.employeeCode === 'CP-1088')).toEqual([expect.objectContaining({ dates: ['2026-08-11'] })]);
     await waitFor(() => expect(screen.queryByTestId(tid.tsick.onLeaveDay('CP-1088', '2026-08-11'))).toBeNull());
     expect(within(screen.getByTestId(tid.tsick.onLeave)).getByTestId(tid.tsick.giveBack)).toBeDisabled();
     expect(acts()).toEqual(['Days returned']);

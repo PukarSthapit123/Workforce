@@ -27,7 +27,7 @@ export const useEndBreak = () => useRecordMutation({
 export const useClockOut = () => useRecordMutation({
   mutationFn: (v: Move) => api(clockOut, { ifMatch: v.version }), recordKey: () => 'clock', invalidates: AFTER,
 });
-/* A forgotten clock (MyClock.open): its date and version, and the time the person finished. */
+/* A forgotten clock (MyClock.open): its date and version, and the time the employee finished. */
 export const useCloseClock = () => useRecordMutation({
   mutationFn: (v: { date: string; version: number; finish: string }) =>
     api(closeClock, { params: { date: v.date }, body: { finish: v.finish }, ifMatch: v.version }),

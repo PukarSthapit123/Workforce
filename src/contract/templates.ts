@@ -7,7 +7,7 @@
 import { z } from 'zod';
 import { defineEndpoint } from './endpoints';
 import { IsoDateTime } from './common';
-import { DateOrBlank, IsoDate } from './people';
+import { DateOrBlank, IsoDate } from './employees';
 import { Tenant } from './tenant';
 import { CLOCK_STYLES, DATE_FORMATS, WEEK_STARTS } from './tenant';
 import { WeekGrid, WeekLayout } from './timesheets';
@@ -58,7 +58,7 @@ export const Template = z.object({
   employeeTypes: z.array(TemplateType).max(50),
   roleNames: RoleNames.optional(), approvalChain: z.array(ChainStep).max(40).optional(), structure: Structure.optional(), onboarding: Onboarding.optional(),
   tenantSettings: TenantSettings.optional(), leaveConfig: LeaveConfigData.optional(),
-  /* module 8: each support level's people per shift, and the flexible-worker milestones and who is told */
+  /* module 8: each support level's employees per shift, and the flexible-worker milestones and who is told */
   rotaConfig: z.object({ supportLevels: z.array(SupportLevel).max(10), flexMilestones: z.array(z.number()).max(12), flexNotifyTo: Text(80) }).optional(),
 });
 export type Template = z.infer<typeof Template>;
@@ -82,7 +82,7 @@ export const TemplateList = z.object({ templates: z.array(TemplateRow), inUse: z
 export type TemplateList = z.infer<typeof TemplateList>;
 
 export const PlanLine = z.object({
-  area: z.enum(['modules', 'features', 'labels', 'types', 'roles', 'chain', 'structure', 'people', 'organisation', 'onboarding', 'leave', 'rota']), text: z.string(),
+  area: z.enum(['modules', 'features', 'labels', 'types', 'roles', 'chain', 'structure', 'employees', 'organisation', 'onboarding', 'leave', 'rota']), text: z.string(),
 });
 export type PlanLine = z.infer<typeof PlanLine>;
 /* D1: what an apply changes, what it adds and what it leaves alone. */
@@ -106,11 +106,11 @@ const KeyParams = z.object({ key: z.string().min(1).max(120) });
 export const listTemplates = defineEndpoint({ method: 'GET', path: '/api/v1/templates', response: TemplateList, capability: cap,
   summary: 'Every template: the shipped ones, then those saved or imported here, with the one this tenant runs on marked' });
 export const saveTemplate = defineEndpoint({ method: 'POST', path: '/api/v1/templates', request: SaveTemplate, response: TemplateSaved, capability: cap,
-  errors: [409], summary: 'Save this tenant as a template: configuration only, or with its structure too (that needs Workforce master data). Never its people. A name a template already has is NAME_TAKEN.' });
+  errors: [409], summary: 'Save this tenant as a template: configuration only, or with its structure too (that needs Workforce master data). Never its employees. A name a template already has is NAME_TAKEN.' });
 export const getTemplatePlan = defineEndpoint({ method: 'GET', path: '/api/v1/templates/:key/plan', params: KeyParams, response: TemplatePlan, capability: cap,
   errors: [404], summary: 'What applying a template would change, add and leave alone, read before it is applied' });
 export const applyTemplate = defineEndpoint({ method: 'POST', path: '/api/v1/templates/:key/apply', params: KeyParams, response: TemplateApplied, capability: cap,
-  versioned: true, errors: [404, 409], summary: 'Apply a template (If-Match: the tenant\'s version). Sets configuration and adds structure whose codes are new; never deletes or overwrites people or structure, never renames the organisation. One audit row.' });
+  versioned: true, errors: [404, 409], summary: 'Apply a template (If-Match: the tenant\'s version). Sets configuration and adds structure whose codes are new; never deletes or overwrites employees or structure, never renames the organisation. One audit row.' });
 export const exportTemplate = defineEndpoint({ method: 'GET', path: '/api/v1/templates/:key/export', params: KeyParams, response: TemplateFile, capability: cap,
   errors: [404], summary: 'A template as a file to keep or hand over' });
 export const importTemplate = defineEndpoint({ method: 'POST', path: '/api/v1/templates/import', request: ImportTemplate, response: TemplateImported, capability: cap,

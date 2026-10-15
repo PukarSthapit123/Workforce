@@ -128,8 +128,8 @@ test('a location must point at a department and cost centre that exist', async (
   expect(r.status).toBe(422);
   expect(Refusal.parse(r.body)).toMatchObject({ field: 'department', message: 'There is no department with the code NOPE.' });
 });
-test('a location\'s refusal names both the people and the projects at it', async () => {
+test('a location\'s refusal names both the employees and the projects at it', async () => {
   const row = rowByCode('locations', 'WH');
   const r = await (await as('admin'))('DELETE', `/api/v1/locations/${row.id}`, undefined, row.version);
-  expect(Refusal.parse(r.body).usedBy?.map(u => u.kind)).toEqual(['people', 'projects']);
+  expect(Refusal.parse(r.body).usedBy?.map(u => u.kind)).toEqual(['employees', 'projects']);
 });

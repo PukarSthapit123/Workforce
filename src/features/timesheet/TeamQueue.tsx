@@ -30,7 +30,7 @@ export function TeamQueue({ returnReasonRequired }: { returnReasonRequired: bool
   const filters = (counts?.mgrok ?? 0) > 0 || status === 'mgrok' ? WITH_PAYROLL : FILTERS;
   /* module 8: an approval with payroll still to come says so, rather than claiming a posting */
   const approve = (r: QueueRow) => decide.mutate({ day: r, to: 'ok', reason: '' },
-    { onSuccess: res => toastInfo(res.record.state === 'mgrok' ? `Approved · ${r.personName} · now waiting on ${roleWaiting(res.record.waitingOn ?? 'Payroll')}` : `Approved · ${r.personName} · queued for Business Central`) });
+    { onSuccess: res => toastInfo(res.record.state === 'mgrok' ? `Approved · ${r.employeeName} · now waiting on ${roleWaiting(res.record.waitingOn ?? 'Payroll')}` : `Approved · ${r.employeeName} · queued for Business Central`) });
   const rows = list.data?.rows ?? [];
   /* the dialog works on the row as last read, so a retry after a 412 sends the fresh version */
   const ret = returning && latest(returning, rows);
@@ -55,7 +55,7 @@ export function TeamQueue({ returnReasonRequired }: { returnReasonRequired: bool
             return (
               <Row key={r.id} testId={tid.tteam.row(r.id)}>
                 <TableCell kind="title">
-                  <span className="flex items-center gap-[9px]"><Avatar name={r.personName} /><strong className="font-semibold">{r.personName}</strong>
+                  <span className="flex items-center gap-[9px]"><Avatar name={r.employeeName} /><strong className="font-semibold">{r.employeeName}</strong>
                     {r.captureSource === 'proxy' && <Pill testId={tid.tteam.proxyPill(r.id)} tone="neu">Proxy</Pill>}
                     {/* a clocked day: a late first clock in (2b D5), a forgotten clock closed later (D6) */}
                     {r.clock?.late && <Pill testId={tid.clock.queueLate(r.id)} tone="warn" glyph={<AlarmClock />}>Late</Pill>}

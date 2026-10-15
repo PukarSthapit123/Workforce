@@ -32,7 +32,7 @@ export function TeamTimesheetsPage() {
 
   const listBack = (res: BulkApproved, rows: readonly QueueRow[]) => setHeld(res.held.map(h => {
     const r = rows.find(x => x.id === h.id);
-    return { id: h.id, who: r ? `${r.personName} · ${formatDmy(r.date)}` : h.id, reason: h.reason };
+    return { id: h.id, who: r ? `${r.employeeName} · ${formatDmy(r.date)}` : h.id, reason: h.reason };
   }));
   const openBulk = () => {
     if (!q) return;
@@ -64,7 +64,7 @@ export function TeamTimesheetsPage() {
         {held.map(h => <span key={h.id} className="block">{h.who}: {h.reason}</span>)}</Banner>}
       {view === 'day'
         ? <TeamQueue returnReasonRequired={q?.returnReasonRequired ?? true} />
-        : today && <TeamMatrix today={today} self={session?.account.personCode ?? ''} rota={Boolean(tenant.data?.modules.R)} onDone={listBack} />}
+        : today && <TeamMatrix today={today} self={session?.account.employeeCode ?? ''} rota={Boolean(tenant.data?.modules.R)} onDone={listBack} />}
       {bulkOpen && q && <BulkApproveDialog queue={q} where={where} onClose={() => setBulkOpen(false)}
         onDone={res => { listBack(res, pend.data?.rows ?? []); setBulkOpen(false); }} />}
     </Page>);

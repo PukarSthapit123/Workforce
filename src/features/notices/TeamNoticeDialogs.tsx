@@ -52,7 +52,7 @@ export function EditDialog({ notice: n, scopes, org, today, onClose }: { notice?
             </>}
       </>}>
       {n && owed > 0 && (
-        <Banner testId={tid.tnotices.resetWarn} tone="warn" icon={<RotateCw />} title={`${owed} ${owed === 1 ? 'person has' : 'people have'} acknowledged v${n.textVersion}`}>
+        <Banner testId={tid.tnotices.resetWarn} tone="warn" icon={<RotateCw />} title={`${owed} ${owed === 1 ? 'employee has' : 'employees have'} acknowledged v${n.textVersion}`}>
           Changing the title or text makes this v{n.textVersion + 1}. They will be asked to acknowledge again. Their v{n.textVersion} acknowledgement stays on record.</Banner>)}
       <Field label="Title" error={err('title')}>
         <TextInput testId={tid.tnotices.title} maxLength={90} value={title} onChange={e => { setTitle(e.target.value); touched(); }} />
@@ -61,7 +61,7 @@ export function EditDialog({ notice: n, scopes, org, today, onClose }: { notice?
         <TextArea testId={tid.tnotices.body} rows={5} value={body} onChange={e => { setBody(e.target.value); touched(); }} />
       </Field>
       <Field label="Who it is for" error={err('scope')}
-        hint={live ? 'The audience is fixed once a notice is live. Withdraw it and post a new one to reach different people.'
+        hint={live ? 'The audience is fixed once a notice is live. Withdraw it and post a new one to reach different employees.'
           : org ? 'Any location or department, or everyone.' : 'Your location, or a department within it.'}>
         <NativeSelect testId={tid.tnotices.scope} value={scope} disabled={live} onChange={e => { setScope(e.target.value); touched(); }}>
           {options.map(o => <option key={o.key} value={o.key}>{o.label}</option>)}
@@ -85,7 +85,7 @@ export function EditDialog({ notice: n, scopes, org, today, onClose }: { notice?
 }
 
 /* noticeTrackBox (5931-5965): the notice, a withdrawn banner with its reason,
-   who has acknowledged the current version among the people the poster can
+   who has acknowledged the current version among the employees the poster can
    see, the earlier versions and the notice's own audit trail; then what the
    poster may do: a draft is deleted, edited or posted; a live one deleted
    (refused, with how to withdraw instead), withdrawn, pinned or edited. */
@@ -123,7 +123,7 @@ export function TrackDialog({ id, onClose, onEdit, onWithdraw }: {
 }
 
 function TrackBody({ t }: { t: NoticeTrack }) {
-  const n = t.notice, done = t.people.filter(p => p.acknowledged).length;
+  const n = t.notice, done = t.employees.filter(p => p.acknowledged).length;
   return (
     <>
       <div data-testid={tid.tnotices.trackMeta} className="flex flex-wrap items-center gap-xs text-xs text-text-muted">
@@ -133,11 +133,11 @@ function TrackBody({ t }: { t: NoticeTrack }) {
       {n.state === 'withdrawn' && <div className="mt-md"><Banner testId={tid.tnotices.trackWithdrawn} tone="err" icon={<X />} title="Withdrawn">{n.withdrawReason}</Banner></div>}
       <div data-testid={tid.tnotices.trackBody} className="my-md text-sm whitespace-pre-wrap">{n.body}</div>
       {n.mustAck && n.state !== 'draft' && <>
-        <h4 data-testid={tid.tnotices.trackAcks} className="mt-lg mb-sm text-sm font-semibold">Acknowledgements · {done} of {t.people.length}</h4>
+        <h4 data-testid={tid.tnotices.trackAcks} className="mt-lg mb-sm text-sm font-semibold">Acknowledgements · {done} of {t.employees.length}</h4>
         <Table data-testid={tid.tnotices.trackTable} variant="records" dense>
-          <TableHeader><TableRow><TableHead>Person</TableHead><TableHead>Location</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
+          <TableHeader><TableRow><TableHead>Employee</TableHead><TableHead>Location</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
           <TableBody>
-            {t.people.length ? t.people.map(p => (
+            {t.employees.length ? t.employees.map(p => (
               <Row key={p.code} testId={tid.tnotices.trackRow(p.code)}>
                 <TableCell kind="title"><b>{p.name}</b></TableCell>
                 <TableCell label="Location">{p.location}</TableCell>

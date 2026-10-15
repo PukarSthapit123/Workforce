@@ -57,7 +57,7 @@ export function tsTransitionProblem(from: string, to: string): { message: string
   };
 }
 
-export interface TsActor { personCode: string; name: string }
+export interface TsActor { employeeCode: string; name: string }
 /* layer: the chain role a sign-off was made as (module 8), on an approval only */
 export interface TsHistoryEntry { from: TsState; to: TsState; by: TsActor; at: string; reason: string; layer?: string }
 /* The history row a transition appends; the audit text that goes with it. */
@@ -73,11 +73,11 @@ function signsSince(history: readonly Pick<TsHistoryEntry, 'to' | 'layer' | 'by'
   return out;
 }
 export const signedLayers = (history: readonly Pick<TsHistoryEntry, 'to' | 'layer' | 'by'>[]): string[] => signsSince(history).map(h => h.layer ?? '');
-/* Who signed those layers (module 8 review I1): they decide no later layer of the day, so one person never signs both. */
-export const daySigners = (history: readonly Pick<TsHistoryEntry, 'to' | 'layer' | 'by'>[]): string[] => signsSince(history).map(h => h.by.personCode);
+/* Who signed those layers (module 8 review I1): they decide no later layer of the day, so one employee never signs both. */
+export const daySigners = (history: readonly Pick<TsHistoryEntry, 'to' | 'layer' | 'by'>[]): string[] => signsSince(history).map(h => h.by.employeeCode);
 export const SIGNED_EARLIER = 'You approved this timesheet at an earlier layer. Another approver decides the next one.';
-export const transitionAuditText =(personName: string, date: string, from: TsState, to: TsState, reason = '') =>
-  `${personName} · ${formatDmy(date)} · ${TS_STATE[from].label} → ${TS_STATE[to].label}${reason ? ` · "${reason}"` : ''}`;
+export const transitionAuditText =(employeeName: string, date: string, from: TsState, to: TsState, reason = '') =>
+  `${employeeName} · ${formatDmy(date)} · ${TS_STATE[from].label} → ${TS_STATE[to].label}${reason ? ` · "${reason}"` : ''}`;
 
 /* ------------------------------------------------------------- time and dates */
 /* The date and clock helpers live in ./time, shared with Rota; re-exported so callers keep importing them from here. */
@@ -345,7 +345,7 @@ export const payCodeList = (codes: readonly PayCode[], lib: Record<string, Allow
 
 export interface RateContext { date: string; start: number | null; net: number | null; travel: boolean }
 type RateSettings = Pick<CaptureRules, 'nightFrom' | 'nightTo' | 'otDaily'>;
-/* `when` is the trigger the engine matches; a rule's `trigger` is the sentence a person reads. */
+/* `when` is the trigger the engine matches; a rule's `trigger` is the sentence an employee reads. */
 export const RATE_TRIGGERS: Record<string, { label: string; test: (c: RateContext, s: RateSettings) => boolean }> = {
   sat: { label: 'Saturday', test: c => dowMon(c.date) === 5 },
   sun: { label: 'Sunday', test: c => dowMon(c.date) === 6 },

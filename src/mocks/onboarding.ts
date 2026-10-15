@@ -16,7 +16,7 @@ import { serve } from './serve';
 import { actor, capsFor, requireCapability } from './auth';
 import { writeAudit } from './audit';
 import { notifyEvent } from './notify';
-import { accountOfPerson, accounts, effectiveCode, nameOf, people, personByCode, personView, recordAt, today, writeHistory, type Signed, type StoredPerson } from './world';
+import { accountOfEmployee, accounts, effectiveCode, nameOf, employees, employeeByCode, employeeView, recordAt, today, writeHistory, type Signed, type StoredEmployee } from './world';
 import {
   blockerContext, caseOf, casesColl, featuresNow, onbConfig, onbModuleOn, policiesColl, policiesNow, putCase, stillOnboarding, type StoredCase, type StoredConfig, type StoredPolicy,
 } from './onboarding-cases';
@@ -24,7 +24,7 @@ import {
   ackOnboardingPolicy, addOnboardingDocument, addOnboardingPolicy, removeOnboardingDocument, renameOnboardingDocument, chaseStarter, editOnboardingPolicy, getMyOnboarding, getOnboardingSetup, getStarterOnboarding,
   getTeamOnboarding, inviteStarter, readOnboardingPolicy, rejectOnboardingDocument, removeOnboardingPolicy, saveOnboardingStep, startStarter,
   submitOnboarding, updateOnboardingConfig, uploadOnboardingDocument, uploadOnboardingPolicy, verifyOnboardingDocument,
-  type OnbDocumentView, type OnboardingDetail, type OnbPerson, type OnbPolicySetupView, type OnbStepView, type StarterOnboarding, type TrackerRow, type OnbQueueRow,
+  type OnbDocumentView, type OnboardingDetail, type OnbEmployee, type OnbPolicySetupView, type OnbStepView, type StarterOnboarding, type TrackerRow, type OnbQueueRow,
 } from '@/contract/onboarding';
 import {
   ALREADY_SUBMITTED, DEFAULT_POLICY_VER, FILES_NOTE, INVITE_REASON, START_REASON, STEP_NEEDS, VERIFIERS,
@@ -35,7 +35,7 @@ import {
   BUILT_IN_DOC, documentAddedText, documentProblem, documentRemovedText, documentRenamedText, documentUsers, newCustomDocument,
   isStarterState, type OnbDocument, type OnboardingCase, type OnboardingConfig, type OnbFeatures, type OnbRefusal, type StepContext, type Decision,
 } from '@/domain/onboarding';
-import { LIFECYCLE, isPersonState, transitionProblem } from '@/domain/lifecycle';
+import { LIFECYCLE, isEmployeeState, transitionProblem } from '@/domain/lifecycle';
 
 /* ------------------------------------------------------------- the world */
 /* Policies are asked only while Policy acknowledgement is on. */
@@ -61,33 +61,33 @@ const refuseOnb = (p: OnbRefusal): never => refuse(STATUS[p.code] ?? 422, { ...p
 
 /* ----------------------------------------------------------- scope (D5) */
 const seesAll = (s: Signed) => s.caps.includes('onb_cfg');
-const myLocation = (s: Signed) => personByCode(effectiveCode(s))?.location ?? '';
-const inOnbScope = (s: Signed) => (p: StoredPerson) => seesAll(s) || p.location === myLocation(s);
+const myLocation = (s: Signed) => employeeByCode(effectiveCode(s))?.location ?? '';
+const inOnbScope = (s: Signed) => (p: StoredEmployee) => seesAll(s) || p.location === myLocation(s);
 /* The tracker and one starter's case are read with Track onboarding or Verify onboarding documents. */
 function requireTracker(s: Signed) {
   if (!s.caps.includes('onb_verify')) requireCapability(s, 'onb_track');
 }
-const starters = () => Object.values(people()).filter(p => isStarterState(p.state));
+const starters = () => Object.values(employees()).filter(p => isStarterState(p.state));
 /* The starter a tracker action names: found, in scope, and still onboarding. */
-function starterAt(s: Signed, code: string): StoredPerson {
-  const p = personByCode(code) ?? NOT_FOUND('That person record no longer exists.');
+function starterAt(s: Signed, code: string): StoredEmployee {
+  const p = employeeByCode(code) ?? NOT_FOUND('That employee record no longer exists.');
   if (!inOnbScope(s)(p))
-    refuse(403, { code: 'scope', message: `You can look after onboarding for people at ${locName(myLocation(s))} only.`, next: 'Ask a manager at their location, or HR.' });
+    refuse(403, { code: 'scope', message: `You can look after onboarding for employees at ${locName(myLocation(s))} only.`, next: 'Ask a manager at their location, or HR.' });
   if (!isStarterState(p.state))
-    refuse(409, { code: 'NOT_ONBOARDING', message: `${p.name} is not onboarding. Onboarding is for candidates and people preboarding.`, next: 'Reload the page to see who is onboarding.' });
+    refuse(409, { code: 'NOT_ONBOARDING', message: `${p.name} is not onboarding. Onboarding is for candidates and employees preboarding.`, next: 'Reload the page to see who is onboarding.' });
   return p;
 }
 /* The signed-in starter: only their own case, and only while they are a candidate or preboarding. */
-function me(s: Signed): StoredPerson {
-  const p = personByCode(effectiveCode(s));
+function me(s: Signed): StoredEmployee {
+  const p = employeeByCode(effectiveCode(s));
   if (!p || !isStarterState(p.state))
     return refuse(409, { code: 'NOT_ONBOARDING', message: 'There is no onboarding for you to complete. It is open only while you are a new starter.', next: 'Ask your manager if you expected to see it.' });
   return p;
 }
 
 /* ---------------------------------------------------------------- views */
-function personOf(p: StoredPerson): OnbPerson {
-  const st = isPersonState(p.state) ? LIFECYCLE[p.state] : LIFECYCLE.candidate;
+function employeeOf(p: StoredEmployee): OnbEmployee {
+  const st = isEmployeeState(p.state) ? LIFECYCLE[p.state] : LIFECYCLE.candidate;
   return { code: p.code, id: p.id, name: p.name, first: firstName(p.name), email: p.email, start: p.start, state: p.state, stateLabel: st.label, stateTone: st.tone,
     stateGlyph: st.glyph, location: p.location, locationName: locName(p.location), employeeType: p.employeeType, employeeTypeName: nameOf('employeeTypes', p.employeeType),
     manager: p.manager.trim() };
@@ -111,10 +111,10 @@ function progressOf(c: OnboardingCase) {
   return { done: pr.done, total: pr.total, pc: pr.total ? Math.round((pr.done / pr.total) * 100) : 0, text: progressText(pr) };
 }
 const caseView = (c: StoredCase) => ({ ...c });
-function detailOf(p: StoredPerson): OnboardingDetail {
+function detailOf(p: StoredEmployee): OnboardingDetail {
   const c = caseOf(p.code), cfg = onbConfig(), f = featuresNow(), ctx = blockerContext();
   return {
-    person: personOf(p), case: caseView(c), features: f, steps: stepViews(c, cfg, f), documents: docViews(c, cfg, f),
+    employee: employeeOf(p), case: caseView(c), features: f, steps: stepViews(c, cfg, f), documents: docViews(c, cfg, f),
     policies: policiesAsked(f).map(pol => ({ ...pol, acknowledged: policyAcknowledged(c, pol), read: Boolean(c.read[pol.id]) })),
     progress: progressOf(c), toSubmit: blockers(c, ctx, 'submit'), toStart: blockers(c, ctx, 'start'),
     open: !c.submittedAt || Object.values(c.steps).includes('prog'), submitted: c.submittedAt ? submittedText(c.ref) : '', filesNote: FILES_NOTE, today: today(),
@@ -122,9 +122,9 @@ function detailOf(p: StoredPerson): OnboardingDetail {
 }
 /* A step sent back after submission is judged against the documents they were asked then (askedOf). */
 /* The tracker's view of one starter (review I3): states, files and blockers, never their answers. */
-function starterViewOf(p: StoredPerson): StarterOnboarding {
+function starterViewOf(p: StoredEmployee): StarterOnboarding {
   const c = caseOf(p.code), cfg = onbConfig(), f = featuresNow();
-  return { person: personOf(p), caseRef: { id: c.id, version: c.version }, steps: stepViews(c, cfg, f), documents: docViews(c, cfg, f),
+  return { employee: employeeOf(p), caseRef: { id: c.id, version: c.version }, steps: stepViews(c, cfg, f), documents: docViews(c, cfg, f),
     progress: progressOf(c), toStart: blockers(c, blockerContext(), 'start'), submittedAt: c.submittedAt, ref: c.ref };
 }
 const stepContext =(c: OnboardingCase, cfg: OnboardingConfig, f: OnbFeatures): StepContext =>
@@ -143,13 +143,13 @@ const anyAck = (id: string) => Object.values(casesColl()).filter(c => id in c.ac
 const policySetupView = (p: StoredPolicy): OnbPolicySetupView => ({ ...p, ackCount: ackCount(p, Object.values(casesColl())), removeText: removePolicyText(anyAck(p.id)) });
 
 /* ------------------------------------------------------- who is told (D9) */
-const lineManager = (p: StoredPerson) => Object.values(people()).find(x => x.name === p.manager.trim() && x.code !== p.code);
+const lineManager = (p: StoredEmployee) => Object.values(employees()).find(x => x.name === p.manager.trim() && x.code !== p.code);
 /* The document checkers who can see this starter: onb_verify at their location, or onb_verify with onb_cfg anywhere. */
-const checkersOf = (p: StoredPerson) => Object.values(accounts()).filter(a => {
-  if (a.personCode === p.code) return false;
-  const caps = capsFor(a), loc = personByCode(a.personCode)?.location;
+const checkersOf = (p: StoredEmployee) => Object.values(accounts()).filter(a => {
+  if (a.employeeCode === p.code) return false;
+  const caps = capsFor(a), loc = employeeByCode(a.employeeCode)?.location;
   return caps.includes('onb_verify') && (caps.includes('onb_cfg') || loc === p.location);
-}).map(a => a.personCode);
+}).map(a => a.employeeCode);
 
 /* What a step save changed, as field names: values (an NI number, an address) are not copied into the audit trail. */
 function changedFields(a: OnboardingCase, b: OnboardingCase): string[] {
@@ -160,9 +160,9 @@ function changedFields(a: OnboardingCase, b: OnboardingCase): string[] {
 }
 
 /* Verify or reject (D4): the onb_verify holder, never on their own documents. */
-function decide(session: Signed, params: { personCode: string; doc: string }, checkVersion: (r: StoredCase) => void, decision: Decision) {
+function decide(session: Signed, params: { employeeCode: string; doc: string }, checkVersion: (r: StoredCase) => void, decision: Decision) {
   requireOnboarding();
-  const p = starterAt(session, params.personCode);
+  const p = starterAt(session, params.employeeCode);
   if (p.code === effectiveCode(session))
     refuse(403, { code: 'SELF_CHECK', message: 'You cannot check your own documents.', next: 'Ask another manager or HR to check them.' });
   const doc = docAsked(params.doc), c = caseOf(p.code);
@@ -269,11 +269,11 @@ export const onboardingHandlers = [
     const list = starters().filter(inOnbScope(session)).sort((a, b) => a.name.localeCompare(b.name) || a.code.localeCompare(b.code));
     const rows: TrackerRow[] = [], queue: OnbQueueRow[] = [];
     for (const p of list) {
-      const c = caseOf(p.code), person = personOf(p), caseRef = { id: c.id, version: c.version };
-      rows.push({ person, caseRef, progress: progressOf(c), blockers: blockers(c, ctx, 'start'), canInvite: p.state === 'candidate', submittedAt: c.submittedAt, ref: c.ref });
+      const c = caseOf(p.code), employee = employeeOf(p), caseRef = { id: c.id, version: c.version };
+      rows.push({ employee, caseRef, progress: progressOf(c), blockers: blockers(c, ctx, 'start'), canInvite: p.state === 'candidate', submittedAt: c.submittedAt, ref: c.ref });
       for (const d of docsAsked(cfg, f)) {
         const file = c.files[d.id];
-        if (c.docs[d.id] === 'done' && file) queue.push({ person, caseRef, document: d, file, sizeText: fileSize(file.size) });
+        if (c.docs[d.id] === 'done' && file) queue.push({ employee, caseRef, document: d, file, sizeText: fileSize(file.size) });
       }
     }
     return { rows, queue, toVerify: queue.length, verify: f.verify, all: seesAll(session),
@@ -283,7 +283,7 @@ export const onboardingHandlers = [
   serve(getStarterOnboarding, ({ session, params }) => {
     requireTracker(session);
     requireOnboarding();
-    return starterViewOf(starterAt(session, params.personCode));
+    return starterViewOf(starterAt(session, params.employeeCode));
   }),
 
   serve(verifyOnboardingDocument, ({ session, params, checkVersion }) => decide(session, params, checkVersion, { ok: true })),
@@ -291,46 +291,46 @@ export const onboardingHandlers = [
 
   serve(inviteStarter, ({ session, params, checkVersion }) => {
     requireOnboarding();
-    const p = starterAt(session, params.personCode), c = caseOf(p.code);
+    const p = starterAt(session, params.employeeCode), c = caseOf(p.code);
     checkVersion(c);
     if (!p.email.trim()) refuse(409, { code: 'NO_EMAIL', field: 'email', message: noEmailText(p.name), next: 'Open their record and add a work email.' });
-    const t = isPersonState(p.state) ? transitionProblem(p.state, 'preboard') : null;
+    const t = isEmployeeState(p.state) ? transitionProblem(p.state, 'preboard') : null;
     if (t) refuse(409, { code: 'transition', ...t });
-    const person = bump(p, { state: 'preboard' });
-    people()[p.id] = person;
+    const employee = bump(p, { state: 'preboard' });
+    employees()[p.id] = employee;
     /* the account is how they sign in (P's syncUsers); 1b gives one with the work email, so this only fills a gap */
     const email = p.email.trim().toLowerCase();
-    const madeAccount = !accountOfPerson(p.code) && !recordAt(accounts(), `acc_${email}`);
-    if (madeAccount) accounts()[`acc_${email}`] = { id: `acc_${email}`, version: 1, updatedAt: store.now(), email, personCode: p.code, userType: 'employee', grants: [], revocations: [] };
+    const madeAccount = !accountOfEmployee(p.code) && !recordAt(accounts(), `acc_${email}`);
+    if (madeAccount) accounts()[`acc_${email}`] = { id: `acc_${email}`, version: 1, updatedAt: store.now(), email, employeeCode: p.code, userType: 'employee', grants: [], revocations: [] };
     const saved = putCase(c, { ...c, invitedAt: store.now() }), who = actor(session);
     writeHistory(p.code, who, 'transition', [{ field: 'state', from: p.state, to: 'preboard' }], INVITE_REASON);
     notifyEvent('ob_invited', 'subject', [p.code], { title: 'Onboarding invitation', body: `You are invited to complete your onboarding. Sign in with ${p.email} to start.` });
-    const auditId = writeAudit({ who, act: 'Onboarding invited', entity: 'person', entityId: p.code, before: { state: p.state },
+    const auditId = writeAudit({ who, act: 'Onboarding invited', entity: 'employee', entityId: p.code, before: { state: p.state },
       after: { state: 'preboard', email: p.email, invitedAt: saved.invitedAt, emailSent: false, ...(madeAccount ? { account: email } : {}) }, reason: INVITE_REASON });
-    return { record: caseView(saved), person: personView(person), summary: `${p.name} is invited. They sign in with ${p.email}. Invitation emails are a future enhancement, so tell them yourself.`, auditId };
+    return { record: caseView(saved), employee: employeeView(employee), summary: `${p.name} is invited. They sign in with ${p.email}. Invitation emails are a future enhancement, so tell them yourself.`, auditId };
   }),
 
   serve(startStarter, ({ session, params, checkVersion }) => {
     requireOnboarding();
-    const p = starterAt(session, params.personCode), c = caseOf(p.code);
+    const p = starterAt(session, params.employeeCode), c = caseOf(p.code);
     checkVersion(c);
     /* the lifecycle first, as the transition handler checks it: a candidate is invited before they can start */
-    const t = isPersonState(p.state) ? transitionProblem(p.state, 'active') : null;
+    const t = isEmployeeState(p.state) ? transitionProblem(p.state, 'active') : null;
     if (t) refuse(409, { code: 'transition', ...t });
     const bl = startProblem(p.name, c, blockerContext());
     if (bl) return refuseOnb(bl);
-    const person = bump(p, { state: 'active' });
-    people()[p.id] = person;
+    const employee = bump(p, { state: 'active' });
+    employees()[p.id] = employee;
     const saved = putCase(c, { ...c, startedAt: store.now() }), who = actor(session);
     writeHistory(p.code, who, 'transition', [{ field: 'state', from: p.state, to: 'active' }], START_REASON);
-    const auditId = writeAudit({ who, act: `Employee ${LIFECYCLE.active.label.toLowerCase()}`, entity: 'person', entityId: p.code,
+    const auditId = writeAudit({ who, act: `Employee ${LIFECYCLE.active.label.toLowerCase()}`, entity: 'employee', entityId: p.code,
       before: { state: p.state }, after: { state: 'active', startedAt: saved.startedAt }, reason: START_REASON });
-    return { record: caseView(saved), person: personView(person), summary: `${p.name} is active. They can now be scheduled and paid.`, auditId };
+    return { record: caseView(saved), employee: employeeView(employee), summary: `${p.name} is active. They can now be scheduled and paid.`, auditId };
   }),
 
   serve(chaseStarter, ({ session, params }) => {
     requireOnboarding();
-    const p = starterAt(session, params.personCode), c = caseOf(p.code);
+    const p = starterAt(session, params.employeeCode), c = caseOf(p.code);
     const bl = blockers(c, blockerContext(), 'start');
     if (!bl.length) refuse(409, { code: 'NOTHING_OUTSTANDING', message: `${p.name} has nothing outstanding.`, next: 'Start them instead.' });
     notifyEvent('ob_chased', 'subject', [p.code], { title: 'Onboarding outstanding', body: outstandingText(bl) });
@@ -418,7 +418,7 @@ export const onboardingHandlers = [
     /* D2: nothing in use is deleted; the refusal names who holds it */
     const users = documentUsers(d.id, Object.values(casesColl()));
     if (users.length) {
-      const names = users.map(code => personByCode(code)?.name ?? code);
+      const names = users.map(code => employeeByCode(code)?.name ?? code);
       return refuse(409, { code: 'in-use', field: `documents.${d.id}`,
         message: `${d.label} is on the onboarding of ${names.length > 3 ? `${names.slice(0, 3).join(', ')} and ${names.length - 3} more` : names.join(', ')}, so it cannot be removed.`,
         next: 'Switch it off instead, so new starters are no longer asked for it.',
@@ -468,13 +468,13 @@ export const onboardingHandlers = [
     const bad = uploadProblem(body);
     if (bad) return refuseOnb(bad);
     const file = fileRecord(body, store.now());
-    /* only people still onboarding are asked again; somebody who has started keeps what they agreed to as the record */
+    /* only employees still onboarding are asked again; somebody who has started keeps what they agreed to as the record */
     const r = applyPolicyUpload(p, file, Object.values(casesColl()).filter(stillOnboarding));
     const saved = bump(p, r.policy);
     policiesColl()[p.id] = saved;
     /* D10: everyone who acknowledged it is asked again, once */
     for (const changed of r.changed) {
-      const was = recordAt(casesColl(), `onb_${changed.personCode}`);
+      const was = recordAt(casesColl(), `onb_${changed.employeeCode}`);
       if (was) putCase(was, changed);
     }
     const auditId = writeAudit({ who: actor(session), act: 'Policy document uploaded', entity: 'onboardingPolicy', entityId: p.id,

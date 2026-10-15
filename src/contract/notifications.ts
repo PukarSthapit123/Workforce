@@ -1,5 +1,5 @@
 /* 1c group 4 (brief D9): the bell's inbox and the notification matrix.
-   Rows are addressed to a person; a person reads only their own. Only In-app
+   Rows are addressed to an employee; an employee reads only their own. Only In-app
    is delivered: an item an Email-only channel recorded never reaches the
    inbox, and nothing here says an email or SMS was sent. An item whose source
    module is off is hidden, not deleted, and is not counted. A deep link is

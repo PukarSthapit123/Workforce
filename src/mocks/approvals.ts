@@ -7,9 +7,9 @@
 import { store } from './store';
 import { bump, refuse } from './http';
 import { serve } from './serve';
-import { actor, capsFor, accountForPerson } from './auth';
+import { actor, capsFor, accountForEmployee } from './auth';
 import { writeAudit } from './audit';
-import { effectiveCode, people, personByCode, recordAt, today } from './world';
+import { effectiveCode, employees, employeeByCode, recordAt, today } from './world';
 import { tenantRec, tsConfig } from './tenant';
 import {
   createDelegation, getApprovalSetup, listDelegations, listMyDelegations, removeDelegation, saveApprovalChain,
@@ -18,7 +18,7 @@ import {
 import {
   CHAIN_MODULES, CHAIN_ROLE_RULES, actingFor, approversFor, chainCapabilities, chainId, chainModuleOf, chainProblem, chainText, decisionBlock,
   defaultChainFor, roleRule, delegationActive, delegationProblem, delegationText, walkChain, walkProgress,
-  type ApproverWorld, type ChainItem, type ChainModule, type ChainStep, type ChainWalk, type DecisionBlock, type DeciderPerson, type Delegation,
+  type ApproverWorld, type ChainItem, type ChainModule, type ChainStep, type ChainWalk, type DecisionBlock, type DeciderEmployee, type Delegation,
 } from '@/domain/approvals';
 import type { Refusal as DomainRefusal } from '@/domain/modules';
 import { STAGE_CAPABILITY, STAGE_CAPABILITY_LABEL, type Stage } from '@/domain/selfService';
@@ -61,21 +61,21 @@ function signOff(): SignOff {
 /* ------------------------------------------------------------ approvers */
 /* Someone can approve, and so give or cover a queue, while they are active and hold any approving capability. */
 const APPROVING = ['team_ts', 'team_leave', 'team_rota', 'profile_appr', 'bank_verify', 'pay_appr'];
-const capsOf = (code: string) => { const a = accountForPerson(code); return a ? capsFor(a) : []; };
-const isActive = (code: string) => personByCode(code)?.state === 'active';
+const capsOf = (code: string) => { const a = accountForEmployee(code); return a ? capsFor(a) : []; };
+const isActive = (code: string) => employeeByCode(code)?.state === 'active';
 export const canApprove = (code: string) => isActive(code) && capsOf(code).some(c => APPROVING.includes(c));
-const nameOf = (code: string) => personByCode(code)?.name ?? code;
+const nameOf = (code: string) => employeeByCode(code)?.name ?? code;
 const delegationList = (): StoredDelegation[] => Object.values(delegations()).sort((a, b) => a.from.localeCompare(b.from) || a.id.localeCompare(b.id));
 /* The holders of each role other than line manager come from the one role
    table (module 8): for Profile, payroll is whoever verifies bank details. */
 export function approverWorld(m: ChainModule = 'Profile'): ApproverWorld {
-  const all = Object.values(people());
+  const all = Object.values(employees());
   const holders = (role: 'Service Manager' | 'Payroll' | 'HR administrator') => {
     const cap = CHAIN_ROLE_RULES[m][role]?.capability;
     return cap ? all.filter(p => p.state === 'active' && capsOf(p.code).includes(cap)).map(p => p.code) : [];
   };
   return {
-    people: all.map(p => ({ code: p.code, name: p.name, manager: p.manager, location: p.location, department: p.department, active: p.state === 'active' })),
+    employees: all.map(p => ({ code: p.code, name: p.name, manager: p.manager, location: p.location, department: p.department, active: p.state === 'active' })),
     holders: { 'Service Manager': holders('Service Manager'), Payroll: holders('Payroll'), 'HR administrator': holders('HR administrator') },
   };
 }
@@ -83,21 +83,21 @@ export function approverWorld(m: ChainModule = 'Profile'): ApproverWorld {
 /* ------------------------------------------------ walking a chain (module 8) */
 /* Everyone who might decide a layer, with their capabilities and access
    scope, read once per request. */
-export function chainPeople(): DeciderPerson[] {
-  return Object.values(people()).map(p => {
+export function chainEmployees(): DeciderEmployee[] {
+  return Object.values(employees()).map(p => {
     const caps = capsOf(p.code);
     return { code: p.code, location: p.location, department: p.department, active: p.state === 'active', caps, allLocations: caps.includes('master_data') };
   });
 }
-/* The employee code of a person's line manager, read off the manager's name on their record. */
+/* The employee code of an employee's line manager, read off the manager's name on their record. */
 export const lineManagerCode = (p: { code: string; manager: string }): string | undefined =>
-  Object.values(people()).find(x => x.name === p.manager.trim() && x.code !== p.code)?.code;
+  Object.values(employees()).find(x => x.name === p.manager.trim() && x.code !== p.code)?.code;
 /* One item's walk along its module's chain as it stands today, with today's
-   delegations. Leave and Rota walk theirs through here too, naming the people
+   delegations. Leave and Rota walk theirs through here too, naming the employees
    who signed an earlier layer, who decide no later one. */
-export function walkNow(m: ChainModule, item: ChainItem, signed: readonly string[], everyone: readonly DeciderPerson[] = chainPeople(),
+export function walkNow(m: ChainModule, item: ChainItem, signed: readonly string[], everyone: readonly DeciderEmployee[] = chainEmployees(),
   signers?: readonly string[]) {
-  const input = { module: m, steps: chainRecord(m).steps, item, signed, date: today(), people: everyone, delegations: delegationList(),
+  const input = { module: m, steps: chainRecord(m).steps, item, signed, date: today(), employees: everyone, delegations: delegationList(),
     ...(signers ? { signers } : {}) };
   const walk: ChainWalk = walkChain(input);
   return { walk, block: (code: string): DecisionBlock | null => decisionBlock(walk, input, code), progress: () => walkProgress(input) };
@@ -117,9 +117,9 @@ export function registerWaiting(m: ChainModule, kind: string, items: () => Waiti
 export function chainStrands(m: ChainModule, steps: readonly ChainStep[]): DomainRefusal & { usedBy: { kind: string; count: number; examples: string[] }[] } | null {
   const src = waiting[m];
   if (!src) return null;
-  const everyone = chainPeople(), list = delegationList(), date = today(), now = chainRecord(m).steps;
+  const everyone = chainEmployees(), list = delegationList(), date = today(), now = chainRecord(m).steps;
   const doneUnder = (s: readonly ChainStep[], w: WaitingItem) =>
-    walkChain({ module: m, steps: s, item: w.item, signed: w.signed, date, people: everyone, delegations: list, signers: w.signers }).complete;
+    walkChain({ module: m, steps: s, item: w.item, signed: w.signed, date, employees: everyone, delegations: list, signers: w.signers }).complete;
   const stuck = src.items().filter(w => w.signed.length > 0 && !doneUnder(now, w) && doneUnder(steps, w));
   if (!stuck.length) return null;
   const n = stuck.length, one = n === 1;
@@ -129,7 +129,7 @@ export function chainStrands(m: ChainModule, steps: readonly ChainStep[]): Domai
     usedBy: [{ kind: src.kind, count: n, examples: stuck.slice(0, 3).map(w => w.label) }] };
 }
 
-/* The SLA of the first layer of the module's chain the person holds the role of, or '' when they hold none. */
+/* The SLA of the first layer of the module's chain the employee holds the role of, or '' when they hold none. */
 export function slaFor(m: ChainModule, caps: readonly string[]): string {
   return chainRecord(m).steps.find(s => { const cap = roleRule(m, s.role)?.capability; return !s.fixed && cap !== undefined && caps.includes(cap); })?.sla ?? '';
 }
@@ -140,13 +140,13 @@ export function approvesIn(m: ChainModule, code: string, caps: readonly string[]
   const day = today();
   return delegationList().some(d => d.to === code && d.modules.includes(m) && delegationActive(d, day));
 }
-/* Who is told today for one role of a module's chain, for one person: the
-   people the role names and, while a delegation is in force, their delegate
+/* Who is told today for one role of a module's chain, for one employee: the
+   employees the role names and, while a delegation is in force, their delegate
    as well, so the approver they cover still hears of it. Used to address
    notifications. */
-export function decidersToday(m: ChainModule, role: string, scope: string, personCode: string): string[] {
+export function decidersToday(m: ChainModule, role: string, scope: string, employeeCode: string): string[] {
   const list = delegationList(), day = today();
-  return [...new Set(approversFor(role, scope, personCode, approverWorld(m)).flatMap(a => { const act = actingFor(a, m, day, list); return act === a ? [a] : [act, a]; }))];
+  return [...new Set(approversFor(role, scope, employeeCode, approverWorld(m)).flatMap(a => { const act = actingFor(a, m, day, list); return act === a ? [a] : [act, a]; }))];
 }
 /* A Profile delegate must hold the access each stage the approver decides needs. */
 const PROFILE_STAGES: readonly Stage[] = ['manager', 'payroll'];
@@ -194,7 +194,7 @@ export const approvalHandlers = [
 
   serve(listDelegations, () => ({
     items: delegationList().map(delegationView),
-    approvers: Object.values(people()).filter(p => canApprove(p.code)).sort((a, b) => a.name.localeCompare(b.name)).map(p => ({ code: p.code, name: p.name })),
+    approvers: Object.values(employees()).filter(p => canApprove(p.code)).sort((a, b) => a.name.localeCompare(b.name)).map(p => ({ code: p.code, name: p.name })),
   })),
 
   serve(listMyDelegations, ({ session }) => {

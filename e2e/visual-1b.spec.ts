@@ -30,11 +30,11 @@ for (const { w, h } of WIDTHS) {
 
       await signInAs('admin');
       await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
-      await at('/setup/apeople', tid.people.table);
-      await shot('people');
-      await page.getByTestId(tid.people.add).click();
-      await expect(page.getByTestId(tid.personForm.field('code'))).not.toHaveValue('');
-      await shot('person-form', false);
+      await at('/setup/aemployees', tid.employees.table);
+      await shot('employees');
+      await page.getByTestId(tid.employees.add).click();
+      await expect(page.getByTestId(tid.employeeForm.field('code'))).not.toHaveValue('');
+      await shot('employee-form', false);
       await page.keyboard.press('Escape');
       await at('/setup/aloc', tid.dims.card('projects'));
       await shot('dimensions');
@@ -47,9 +47,9 @@ for (const { w, h } of WIDTHS) {
       await shot('employee-types');
 
       await signInAs('manager');
-      await at('/team/tpeople', tid.people.table);
+      await at('/team/temployees', tid.employees.table);
       await page.getByTestId(tid.queue.root('manager')).waitFor();
-      await shot('team-people');
+      await shot('team-employees');
 
       await signInAs('employee');
       await at('/work/profile', tid.profile.state);

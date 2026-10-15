@@ -5,7 +5,7 @@
    what is stored: the timesheet days in the period and the published rota
    behind them (./rota, ./leave), the postings for those days and the batch
    postings, the exceptions as the exception centre derives them now
-   (./exceptions), the rota profiles' clearance and the people's Business
+   (./exceptions), the rota profiles' clearance and the employees' Business
    Central resource numbers. Nothing is written on a read; approval and
    posting are unchanged (P5). The run for a period is stored in payrollRuns
    the first time someone exports it; each move checks If-Match against it
@@ -16,7 +16,7 @@ import { bump, refuse } from './http';
 import { serve } from './serve';
 import { actor } from './auth';
 import { writeAudit } from './audit';
-import { people, personByCode, recordAt, today, type Signed, type StoredPerson } from './world';
+import { employees, employeeByCode, recordAt, today, type Signed, type StoredEmployee } from './world';
 import { hoursRulesFor, rotaDayOn } from './rota';
 import { leaveAbsenceOn } from './leave';
 import { exceptionsEverywhere } from './exceptions';
@@ -76,8 +76,8 @@ const activeLocations = () => new Set(Object.values(store.coll<StoredLocation>('
 function missingIn(p: PayPeriod, days: readonly StoredDay[]): number {
   if (!tenant().modules.R) return 0;
   const now = today(), at = activeLocations(), dates = periodDates(p).filter(d => d < now);
-  return Object.values(people()).filter(x => isActive(x) && at.has(x.location)).reduce((n, x) => n + dates.filter(date => {
-    const r = rotaDayOn(x.code, date), d = days.find(y => y.personCode === x.code && y.date === date);
+  return Object.values(employees()).filter(x => isActive(x) && at.has(x.location)).reduce((n, x) => n + dates.filter(date => {
+    const r = rotaDayOn(x.code, date), d = days.find(y => y.employeeCode === x.code && y.date === date);
     return dayStatus({ cell: r?.code ?? '', absence: leaveAbsenceOn(x.code, date), state: d?.state ?? null, scheduled: r?.hours ?? 0, future: false }).kind === 'missing';
   }).length, 0);
 }
@@ -85,9 +85,9 @@ function factsFor(p: PayPeriod): ReadinessFacts {
   const days = daysIn(p), attempts = attemptsIn(p), now = today();
   const count = (...states: string[]) => days.filter(d => states.includes(d.state)).length;
   const exc = exceptionsEverywhere().filter(x => needsAction(x.state));
-  const codesWith = (f: (d: StoredDay) => boolean) => new Set(days.filter(f).map(d => d.personCode));
+  const codesWith = (f: (d: StoredDay) => boolean) => new Set(days.filter(f).map(d => d.employeeCode));
   const recorded = codesWith(d => dayMinutes(d.entries) > 0), crossing = codesWith(d => d.state !== 'draft');
-  const person = (code: string): StoredPerson[] => { const x = personByCode(code); return x ? [x] : []; };
+  const employee = (code: string): StoredEmployee[] => { const x = employeeByCode(code); return x ? [x] : []; };
   return {
     unanchored: !payPeriodOn(p.start, settings()).anchored,
     missing: missingIn(p, days),
@@ -96,8 +96,8 @@ function factsFor(p: PayPeriod): ReadinessFacts {
     failed: attempts.filter(a => a.state === 'failed').length, queued: attempts.filter(a => a.state === 'queued').length,
     posted: attempts.filter(a => a.state === 'posted').length,
     critical: exc.filter(x => x.severity >= 4).length, lowerExceptions: exc.filter(x => x.severity < 4).length,
-    uncleared: [...recorded].flatMap(person).filter(x => !hoursRulesFor(x).worker.cleared).length,
-    noResource: [...crossing].flatMap(person).filter(x => !x.resource.trim()).length,
+    uncleared: [...recorded].flatMap(employee).filter(x => !hoursRulesFor(x).worker.cleared).length,
+    noResource: [...crossing].flatMap(employee).filter(x => !x.resource.trim()).length,
   };
 }
 
@@ -125,9 +125,9 @@ function readinessView(p: PayPeriod): PayrollReadiness {
 const POSTING: Readonly<Record<string, string>> = { queued: 'Queued', posted: 'Posted', failed: 'Failed' };
 function approvedDays(p: PayPeriod): ApprovedDay[] {
   const attempts = store.coll<IntegrationAttempt>('integrationAttempts'), codes = Object.values(store.coll<StoredPayCode>('payCodes'));
-  return daysIn(p).filter(d => d.state === 'ok').sort((a, b) => a.date.localeCompare(b.date) || a.personCode.localeCompare(b.personCode)).map(d => {
-    const x = personByCode(d.personCode), a = d.integrationAttemptId ? recordAt(attempts, d.integrationAttemptId) : undefined;
-    return { personCode: d.personCode, name: x?.name ?? d.personCode, resource: x?.resource ?? '', date: d.date, shift: d.shift, payCode: d.workType,
+  return daysIn(p).filter(d => d.state === 'ok').sort((a, b) => a.date.localeCompare(b.date) || a.employeeCode.localeCompare(b.employeeCode)).map(d => {
+    const x = employeeByCode(d.employeeCode), a = d.integrationAttemptId ? recordAt(attempts, d.integrationAttemptId) : undefined;
+    return { employeeCode: d.employeeCode, name: x?.name ?? d.employeeCode, resource: x?.resource ?? '', date: d.date, shift: d.shift, payCode: d.workType,
       element: codes.find(c => c.code === d.workType)?.element ?? '', allowances: d.allowances, hours: minutesToHours(dayMinutes(d.entries)),
       state: tsLabel(d.state), posting: (a && POSTING[a.state]) ?? 'Not sent' };
   });
@@ -146,7 +146,7 @@ function move(m: RunMove, s: Signed, id: string, reason: string, checkVersion: (
   const days = m === 'export' ? approvedDays(p) : [];
   const problem = runMoveProblem(r.run.state, m, { reason, state: r.state, rows: days.length });
   if (problem) return refuseWith(problem);
-  const w = actor(s), by = { personCode: w.personCode, name: w.name }, at = store.now(), to = RUN_TO[m];
+  const w = actor(s), by = { employeeCode: w.employeeCode, name: w.name }, at = store.now(), to = RUN_TO[m];
   const fileName = payrollFileName(p), rows = m === 'export' ? days.length : null;
   const step = { from: r.run.state, to, by, at, rows, reason: m === 'reopen' ? reason.trim() : '' };
   const changes: Partial<PayrollRun> = {

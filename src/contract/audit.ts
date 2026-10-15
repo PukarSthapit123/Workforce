@@ -3,7 +3,7 @@ import { defineEndpoint } from './endpoints';
 import { IsoDateTime } from './common';
 
 export const AuditEntry = z.object({
-  id: z.string(), at: IsoDateTime, who: z.object({ personCode: z.string(), name: z.string(), viewingAs: z.string().optional() }),
+  id: z.string(), at: IsoDateTime, who: z.object({ employeeCode: z.string(), name: z.string(), viewingAs: z.string().optional() }),
   act: z.string(), entity: z.string(), entityId: z.string(),
   before: z.unknown().optional(), after: z.unknown().optional(), reason: z.string().optional(),
 });

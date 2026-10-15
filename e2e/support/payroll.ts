@@ -41,7 +41,7 @@ export async function clearPayrollBlockers(page: Page, api: Api) {
     const each = (c: string) => Object.values(s.data[c] ?? {});
     for (const d of each('timesheetDays')) if (d.state !== 'draft') d.state = 'ok';
     for (const a of each('integrationAttempts')) if (a.state === 'failed') a.state = 'posted';
-    for (const p of each('people')) p.resource = `R-${String(p.code)}`;
+    for (const p of each('employees')) p.resource = `R-${String(p.code)}`;
     const t = s.data.tenant?.tenant as { modules: Record<string, boolean> } | undefined;
     if (t) t.modules.R = false;
     localStorage.setItem('qnipay.app.store', JSON.stringify(s));

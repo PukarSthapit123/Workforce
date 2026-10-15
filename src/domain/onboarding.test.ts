@@ -183,7 +183,7 @@ describe('blockers and progress', () => {
       'Right to work not uploaded', 'Proof of address not uploaded', 'Photograph not uploaded']);
     expect(bl.some(b => b.id === 'review')).toBe(false);
   });
-  test('submit counts the person\'s own duties; start adds a blocking document not yet verified', () => {
+  test('submit counts the employee\'s own duties; start adds a blocking document not yet verified', () => {
     const c = complete();
     expect(blockers(c, ctx(), 'submit')).toEqual([]);
     expect(blockers(c, ctx(), 'start').map(b => b.why)).toEqual(['Right to work not verified']);
@@ -215,13 +215,13 @@ describe('what was asked at submission (review I2)', () => {
     expect(c.asked?.documents.find(d => d.id === 'licence')).toEqual({ id: 'licence', req: false, blocks: false });
     expect(c.asked?.documents.find(d => d.id === 'rtw')).toEqual({ id: 'rtw', req: true, blocks: true });
   });
-  test('a document made required after a submission does not block that person\'s start, but blocks someone not yet submitted', () => {
+  test('a document made required after a submission does not block that employee\'s start, but blocks someone not yet submitted', () => {
     const sent = verified(submit(complete(), ctx()));
     const later: BlockerContext = { config: licenceRequired, features: F };
     expect(blockers(sent, later, 'start')).toEqual([]);
     expect(blockers(verified(complete()), later, 'start').map(b => b.why)).toEqual(['Driving licence not uploaded']);
   });
-  test('a step switched on after a submission made with it off does not block that person\'s start', () => {
+  test('a step switched on after a submission made with it off does not block that employee\'s start', () => {
     const before = complete();
     const steps = Object.fromEntries(Object.entries(before.steps).filter(([k]) => k !== 'emergency'));
     const sent = verified(submit({ ...before, steps }, { config: noEmergency, features: F }));
@@ -320,11 +320,11 @@ describe('policies (D10)', () => {
   test('a new upload bumps the version, clears that policy\'s acknowledgements and says how many are asked again', () => {
     const a = setPolicyAck(emptyCase('A'), conduct, true), b = setPolicyAck(emptyCase('B'), POLICIES[1] as OnbPolicy, true);
     const r = applyPolicyUpload(conduct, PDF, [a, b, emptyCase('C')]);
-    expect([r.policy.ver, r.policy.file?.name, r.asked, r.changed.map(c => c.personCode)]).toEqual(['v4.2', 'scan.pdf', 1, ['A']]);
+    expect([r.policy.ver, r.policy.file?.name, r.asked, r.changed.map(c => c.employeeCode)]).toEqual(['v4.2', 'scan.pdf', 1, ['A']]);
     expect(r.changed[0]?.acks).toEqual({});
     expect(ackCount(r.policy, [a, b])).toBe(0);
     expect(ackCount(conduct, [a, b])).toBe(1);
-    expect(policyUploadedText('Code of conduct', 'v4.2', 2)).toBe('Code of conduct is now v4.2. 2 people will be asked again.');
+    expect(policyUploadedText('Code of conduct', 'v4.2', 2)).toBe('Code of conduct is now v4.2. 2 employees will be asked again.');
     expect(policyUploadedText('Code of conduct', 'v4.2', 0)).toBe('Code of conduct is now v4.2. It is ready to read.');
   });
   test('adding needs a name that is not already taken; editing keeps its id', () => {
@@ -337,8 +337,8 @@ describe('policies (D10)', () => {
     expect(policySavedText('Safeguarding policy')).toBe('Safeguarding policy saved. Upload the document to make it readable.');
   });
   test('removing asks first, and says past acknowledgements stay in the audit trail', () => {
-    expect(removePolicyText(2)).toMatch(/^2 people have acknowledged this policy\. .*audit trail/);
-    expect(removePolicyText(1)).toMatch(/^1 person has acknowledged/);
+    expect(removePolicyText(2)).toMatch(/^2 employees have acknowledged this policy\. .*audit trail/);
+    expect(removePolicyText(1)).toMatch(/^1 employee has acknowledged/);
     expect(removePolicyText(0)).toBe('New starters will no longer be asked to read it.');
     expect(policyRemovedText('Privacy notice')).toBe('Privacy notice removed.');
   });
@@ -354,7 +354,7 @@ describe('step switches and config (D11, D2)', () => {
     expect(p?.message).toBe(`Policies and sign-off cannot be switched on. ${STEP_UNAVAILABLE}`);
     expect(p?.next).toBe('Switch on Policy acknowledgement under Modules and features first.');
     expect(stepSwitchProblem(step('emergency'), false, F)).toBeNull();
-    expect(stepSwitchText('Emergency contacts', false)).toBe('Emergency contacts will not be asked for. People part-way through keep what they have already given.');
+    expect(stepSwitchText('Emergency contacts', false)).toBe('Emergency contacts will not be asked for. Employees part-way through keep what they have already given.');
   });
   test('Save takes switches and document settings only', () => {
     const swap = { ...CONFIG, steps: [...CONFIG.steps].reverse() };
@@ -370,7 +370,7 @@ describe('step switches and config (D11, D2)', () => {
 });
 
 describe('activation (D6)', () => {
-  test('a person with anything outstanding cannot start, and is told the count and the first reason', () => {
+  test('an employee with anything outstanding cannot start, and is told the count and the first reason', () => {
     const p = startProblem('Priya Raman', complete(), ctx());
     expect(p?.message).toBe('Priya Raman cannot start yet. 1 outstanding. Right to work not verified.');
     expect(notReadyText('Tom Achterberg', blockers(emptyCase('X'), ctx()))).toBe('Tom Achterberg cannot start yet. 9 outstanding. Personal details not completed.');

@@ -8,7 +8,7 @@
 import { z } from 'zod';
 import { defineEndpoint } from './endpoints';
 import { IsoDateTime, RecordMeta } from './common';
-import { IsoDate } from './people';
+import { IsoDate } from './employees';
 
 /* the same as src/domain/notices.ts (the contract test holds them together) */
 export const ScopeKind = z.enum(['all', 'loc', 'dept']);
@@ -64,7 +64,7 @@ export const TrackRow = z.object({
 export const NoticeTrack = z.object({
   notice: PosterNotice,
   /* the audience the poster can see: everyone with notice_org, otherwise their own location */
-  people: z.array(TrackRow),
+  employees: z.array(TrackRow),
   trail: z.array(z.object({ id: z.string(), at: IsoDateTime, who: z.string(), act: z.string(), detail: z.string() })),
 });
 export type NoticeTrack = z.infer<typeof NoticeTrack>;
@@ -100,7 +100,7 @@ export const acknowledgeNotice = defineEndpoint({ method: 'POST', path: '/api/v1
 export const listPostedNotices = defineEndpoint({ method: 'GET', path: '/api/v1/notices', query: z.object({ status: StatusFilter.optional() }), response: PostedNotices,
   capability: POST, summary: 'The notices a poster manages, draft first, with counts per status, and the scopes they may post to' });
 export const trackNotice = defineEndpoint({ method: 'GET', path: '/api/v1/notices/:id/track', params: IdParams, response: NoticeTrack, capability: POST, errors: [404],
-  summary: 'Who has acknowledged which version, among the people the poster can see, the earlier versions and the notice\'s audit trail' });
+  summary: 'Who has acknowledged which version, among the employees the poster can see, the earlier versions and the notice\'s audit trail' });
 export const createNotice = defineEndpoint({ method: 'POST', path: '/api/v1/notices', request: CreateNotice, response: NoticeSaved, capability: POST, errors: [409],
   summary: 'Save a draft, or post it now. A scope outside the poster\'s is refused (403). Posting tells the audience (notice_posted). One audit row.' });
 export const editNotice = defineEndpoint({ method: 'PATCH', path: '/api/v1/notices/:id', params: IdParams, request: EditNotice, response: NoticeSaved,

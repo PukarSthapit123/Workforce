@@ -23,12 +23,12 @@ async function asEmail(email: string): Promise<Call> {
 const refusal = (r: { body: unknown }) => Refusal.parse(r.body);
 const WRITES = ['rotaWeeks', 'coverRequests', 'filledShifts', 'itRequests', 'notifications', 'shiftTypes', 'patterns', 'rotaConfig', 'audit'];
 const WH = '/api/v1/rota/weeks/WH/2026-08-10', NEXT = '/api/v1/rota/weeks/WH/2026-08-17';
-interface Week { id: string; version: number; state: string; publishVersion: number; lines: Record<string, string[]>; changes: { afterPublish: boolean; version: number; to: string; personCode: string }[] }
+interface Week { id: string; version: number; state: string; publishVersion: number; lines: Record<string, string[]>; changes: { afterPublish: boolean; version: number; to: string; employeeCode: string }[] }
 const week = (loc: string, ws: string) => store.coll<Week>('rotaWeeks')[`rw_${loc}_${ws}`];
 const line = (loc: string, ws: string, code: string) => week(loc, ws)?.lines[code];
-interface Note { id: string; personId: string; title: string; body: string; area: string; read: boolean }
+interface Note { id: string; employeeId: string; title: string; body: string; area: string; read: boolean }
 /* the rows this test raised: the seeded feeds (1c) are left out */
-const notes = (personId?: string) => Object.values(store.coll<Note>('notifications')).filter(n => !n.id.startsWith('ntf_seed_') && (!personId || n.personId === personId));
+const notes = (employeeId?: string) => Object.values(store.coll<Note>('notifications')).filter(n => !n.id.startsWith('ntf_seed_') && (!employeeId || n.employeeId === employeeId));
 /* the rota's own rows: signing in writes one too */
 const rotaAudits = () => audits().filter(a => a.act !== 'Signed in');
 const auditActs = () => rotaAudits().map(a => a.act);
@@ -45,7 +45,7 @@ const setFlag = (k: string, on: boolean) => {
   if (t) t.flags[k] = on;
 };
 const cell = (call: Call, url: string, body: unknown, v = 1) => call('PUT', `${url}/cells`, body, v);
-const ASSIGN_LIVE = { personCode: 'CP-1402', day: 4, code: 'E' };
+const ASSIGN_LIVE = { employeeCode: 'CP-1402', day: 4, code: 'E' };
 
 describe('reading the week', () => {
   test('a manager reads their location\'s week: lines, coverage, gaps, hours and state in one call', async () => {
@@ -53,10 +53,10 @@ describe('reading the week', () => {
     expect(w).toMatchObject({ id: 'rw_WH_2026-08-10', version: 1, state: 'published', publishVersion: 1, min: 4, gapDays: [4], isoWeek: 33 });
     expect(w.onShift).toEqual([6, 4, 5, 4, 3, 5, 4]);
     expect(w.locations).toEqual([{ code: 'WH', name: 'Willow House' }]);
-    const amara = w.rows.find(r => r.personCode === 'CP-1042');
+    const amara = w.rows.find(r => r.employeeCode === 'CP-1042');
     expect(amara?.line).toEqual(['E', 'E', '', 'N', 'N', '', '']);
     expect(amara?.hours).toMatchObject({ con: 37.5, rot: 33, cap: 45 });
-    expect(w.rows.map(r => r.personCode)).not.toContain('CP-1455');
+    expect(w.rows.map(r => r.employeeCode)).not.toContain('CP-1455');
     expect(w.coverage[0]).toMatchObject({ E: 4, L: 1, N: 1 });
   });
   test('a week not stored yet reads as an empty draft at version 0', async () => {
@@ -71,7 +71,7 @@ describe('scope (Review Focus 1)', () => {
     const r = await call('GET', '/api/v1/rota/weeks/BC/2026-08-10');
     expect(r.status).toBe(403);
     expect(refusal(r)).toMatchObject({ code: 'scope', message: 'You can manage the rota at Willow House only.' });
-    const w = await cell(call, '/api/v1/rota/weeks/BC/2026-08-10', { personCode: 'CP-1288', day: 0, code: 'E' }, 0);
+    const w = await cell(call, '/api/v1/rota/weeks/BC/2026-08-10', { employeeCode: 'CP-1288', day: 0, code: 'E' }, 0);
     expect(w.status).toBe(403);
     expect(snapshot(...WRITES)).toEqual(before);
   });
@@ -90,7 +90,7 @@ describe('scope (Review Focus 1)', () => {
     expect(refusal(e).code).toBe('capability');
   });
   test('an admin with team_rota may pick every active location', async () => {
-    const a = Object.values(store.coll<{ personCode: string; grants: string[] }>('accounts')).find(x => x.personCode === accountOf('admin').personCode);
+    const a = Object.values(store.coll<{ employeeCode: string; grants: string[] }>('accounts')).find(x => x.employeeCode === accountOf('admin').employeeCode);
     if (a) a.grants = ['team_rota'];
     const w = RotaWeekView.parse((await (await as('admin'))('GET', '/api/v1/rota/weeks/BC/2026-08-10')).body);
     expect(w.locations.map(l => l.code)).toEqual(['WH', 'BC', 'RL', 'FS', 'LGW', 'SLO', 'MAN']);
@@ -123,13 +123,13 @@ describe('scope (Review Focus 1)', () => {
     Reflect.deleteProperty(store.coll('coverRequests'), 'cov_9');
     expect(snapshot(...WRITES)).toEqual(before);
   });
-  test('a manager cannot put another location\'s people or locations on a pattern, by create, update or copy (I1)', async () => {
+  test('a manager cannot put another location\'s employees or locations on a pattern, by create, update or copy (I1)', async () => {
     const call = await as('manager'), before = snapshot(...WRITES);
-    const pats = store.coll<{ people: { personCode: string; offset: number }[]; locations: string[] }>('patterns');
-    const wp2 = pats['pat_WP-02']?.people ?? [];
-    const outsider = await call('PATCH', '/api/v1/rota/patterns/WP-02', { people: [...wp2, { personCode: 'EMP-2044', offset: 1 }] }, 1);
+    const pats = store.coll<{ employees: { employeeCode: string; offset: number }[]; locations: string[] }>('patterns');
+    const wp2 = pats['pat_WP-02']?.employees ?? [];
+    const outsider = await call('PATCH', '/api/v1/rota/patterns/WP-02', { employees: [...wp2, { employeeCode: 'EMP-2044', offset: 1 }] }, 1);
     expect(outsider.status).toBe(403);
-    expect(refusal(outsider)).toMatchObject({ code: 'scope', field: 'people.5.personCode',
+    expect(refusal(outsider)).toMatchObject({ code: 'scope', field: 'employees.5.employeeCode',
       message: 'Adaeze Okafor does not work at Willow House. You can put your own team on a pattern only.' });
     const body = { name: 'Spread', cycle: 7, locations: ['WH', 'LGW'], jobProfiles: [], costCentre: 'WH-CAM-01', starts: '2026-08-17', horizon: 1, gen: '4w' };
     const create = await call('POST', '/api/v1/rota/patterns', body);
@@ -143,9 +143,9 @@ describe('scope (Review Focus 1)', () => {
     expect(refusal(copy)).toMatchObject({ code: 'scope', field: 'base' });
     expect(snapshot(...WRITES)).toEqual(before);
     /* someone from another location already on a shared pattern stays there */
-    const wp1 = store.coll<{ people: { personCode: string; offset: number }[] }>('patterns')['pat_WP-01'];
-    if (wp1) wp1.people = [...wp1.people, { personCode: 'CP-1288', offset: 2 }];
-    const drop = await call('PATCH', '/api/v1/rota/patterns/WP-01', { people: wp1?.people.filter(x => x.personCode !== 'CP-1288') }, 1);
+    const wp1 = store.coll<{ employees: { employeeCode: string; offset: number }[] }>('patterns')['pat_WP-01'];
+    if (wp1) wp1.employees = [...wp1.employees, { employeeCode: 'CP-1288', offset: 2 }];
+    const drop = await call('PATCH', '/api/v1/rota/patterns/WP-01', { employees: wp1?.employees.filter(x => x.employeeCode !== 'CP-1288') }, 1);
     expect(drop.status).toBe(403);
     expect(refusal(drop)).toMatchObject({ code: 'scope', message: expect.stringContaining('does not work at Willow House') });
     /* the list names them, so the editor offers no Remove the server would refuse */
@@ -153,7 +153,7 @@ describe('scope (Review Focus 1)', () => {
     expect(PatternList.parse((await (await as('admin'))('GET', '/api/v1/rota/patterns')).body).elsewhere).toEqual([]);
     /* an administrator is not limited to one location */
     const admin = await as('admin');
-    expect((await admin('PATCH', '/api/v1/rota/patterns/WP-02', { people: [...wp2, { personCode: 'EMP-2044', offset: 1 }] }, 1)).status).toBe(200);
+    expect((await admin('PATCH', '/api/v1/rota/patterns/WP-02', { employees: [...wp2, { employeeCode: 'EMP-2044', offset: 1 }] }, 1)).status).toBe(200);
     expect((await admin('POST', '/api/v1/rota/patterns', { ...body, base: 'WP-03' })).status).toBe(200);
   });
   test('"Admins only" withholds patterns and shift types from managers on the server, not from admins', async () => {
@@ -176,7 +176,7 @@ describe('scope (Review Focus 1)', () => {
     expect(snapshot(...WRITES)).toEqual(before);
   });
   test('without claim, a claim is refused with the prototype\'s text', async () => {
-    const a = Object.values(store.coll<{ personCode: string; revocations: string[] }>('accounts')).find(x => x.personCode === 'CP-1042');
+    const a = Object.values(store.coll<{ employeeCode: string; revocations: string[] }>('accounts')).find(x => x.employeeCode === 'CP-1042');
     if (a) a.revocations = ['claim'];
     const r = await (await as('employee'))('POST', '/api/v1/rota/cover/cov_2/claim', undefined, 1);
     expect(r.status).toBe(403);
@@ -218,7 +218,7 @@ describe('week integrity (Review Focus 2)', () => {
     expect(r.status).toBe(200);
     const saved = CellSaved.parse(r.body);
     expect(saved.week).toMatchObject({ state: 'amendment', version: 2 });
-    expect(saved.week.changes[0]).toMatchObject({ personCode: 'CP-1402', to: 'E', afterPublish: true, version: 1, why: 'Assigned' });
+    expect(saved.week.changes[0]).toMatchObject({ employeeCode: 'CP-1402', to: 'E', afterPublish: true, version: 1, why: 'Assigned' });
     expect(audits().filter(a => a.id === saved.auditId).map(a => a.act)).toEqual(['Published rota amended']);
     expect(rotaAudits()).toHaveLength(1);
     expect(notes('CP-1402').map(n => [n.title, n.body])).toEqual([['Rota amended', 'Week 33 · your shift on Fri has changed. Check your shifts.']]);
@@ -227,17 +227,17 @@ describe('week integrity (Review Focus 2)', () => {
     expect(p.summary).toBe('Rota republished · v2 · 10 colleagues notified · 1 amendment(s) included');
     expect(notes('CP-1042').map(n => n.title)).toEqual(['Rota republished']);
   });
-  test('a shift on a draft week tells the person with a stored notification row (D8); a removal tells nobody', async () => {
+  test('a shift on a draft week tells the employee with a stored notification row (D8); a removal tells nobody', async () => {
     plant('WH', '2026-08-17', {});
     const call = await as('manager');
-    const r = CellSaved.parse((await cell(call, NEXT, { personCode: 'CP-1042', day: 0, code: 'E' })).body);
+    const r = CellSaved.parse((await cell(call, NEXT, { employeeCode: 'CP-1042', day: 0, code: 'E' })).body);
     expect(r.week).toMatchObject({ state: 'draft', version: 2 });
     expect(r.week.changes[0]).toMatchObject({ afterPublish: false, to: 'E' });
-    expect(notes('CP-1042')).toEqual([expect.objectContaining({ personId: 'CP-1042', area: 'Rota', title: 'Shift assigned', read: false })]);
+    expect(notes('CP-1042')).toEqual([expect.objectContaining({ employeeId: 'CP-1042', area: 'Rota', title: 'Shift assigned', read: false })]);
     expect(notes('CP-1042')[0]?.body).toMatch(/^Early on .+ at Willow House$/);
     expect(auditActs()).toEqual(['Shift assigned']);
-    const gone = CellSaved.parse((await cell(call, NEXT, { personCode: 'CP-1042', day: 0, code: '' }, 2)).body);
-    expect(gone.week.rows.find(x => x.personCode === 'CP-1042')?.line[0]).toBe('');
+    const gone = CellSaved.parse((await cell(call, NEXT, { employeeCode: 'CP-1042', day: 0, code: '' }, 2)).body);
+    expect(gone.week.rows.find(x => x.employeeCode === 'CP-1042')?.line[0]).toBe('');
     expect(notes('CP-1042')).toHaveLength(1);
     expect(auditActs()).toEqual(['Shift assigned', 'Shift removed']);
   });
@@ -273,14 +273,14 @@ describe('week integrity (Review Focus 2)', () => {
 
 describe('eligibility on the server (Review Focus 3)', () => {
   const refusals: [string, unknown, number, Partial<Refusal>][] = [
-    ['a person who is not cleared', { personCode: 'CP-1490', day: 0, code: 'E' }, 422,
+    ['an employee who is not cleared', { employeeCode: 'CP-1490', day: 0, code: 'E' }, 422,
       { code: 'ROTA_INELIGIBLE', field: 'lines.CP-1490.0', message: 'Kwame Boateng. Not cleared to work. DBS expired 30/06/2026.' }],
-    ['a night shift for someone not night-trained', { personCode: 'CP-1377', day: 2, code: 'N' }, 422,
+    ['a night shift for someone not night-trained', { employeeCode: 'CP-1377', day: 2, code: 'N' }, 422,
       { code: 'ROTA_INELIGIBLE', field: 'lines.CP-1377.2', message: 'Tomas Novak. Not night-trained.' }],
-    ['a shift on a leave day', { personCode: 'CP-1088', day: 0, code: 'E' }, 409, { code: 'ON_LEAVE', message: 'Marcus Reilly is already down as on leave that day.' }],
-    ['the shift already there', { personCode: 'CP-1042', day: 0, code: 'E' }, 409, { code: 'UNCHANGED', message: 'Amara Okafor is already on Early that day.' }],
-    ['a code not in the catalogue', { personCode: 'CP-1042', day: 2, code: 'Q' }, 422, { code: 'UNKNOWN_SHIFT', message: 'There is no shift type with the code Q.' }],
-    ['a person at another location', { personCode: 'EMP-2044', day: 2, code: 'E' }, 422, { code: 'invalid', field: 'personCode', message: 'Adaeze Okafor does not work at Willow House.' }],
+    ['a shift on a leave day', { employeeCode: 'CP-1088', day: 0, code: 'E' }, 409, { code: 'ON_LEAVE', message: 'Marcus Reilly is already down as on leave that day.' }],
+    ['the shift already there', { employeeCode: 'CP-1042', day: 0, code: 'E' }, 409, { code: 'UNCHANGED', message: 'Amara Okafor is already on Early that day.' }],
+    ['a code not in the catalogue', { employeeCode: 'CP-1042', day: 2, code: 'Q' }, 422, { code: 'UNKNOWN_SHIFT', message: 'There is no shift type with the code Q.' }],
+    ['an employee at another location', { employeeCode: 'EMP-2044', day: 2, code: 'E' }, 422, { code: 'invalid', field: 'employeeCode', message: 'Adaeze Okafor does not work at Willow House.' }],
   ];
   for (const [what, body, status, expected] of refusals) {
     test(`${what} is refused and nothing is written`, async () => {
@@ -294,18 +294,18 @@ describe('eligibility on the server (Review Focus 3)', () => {
   test('consecutive days and rest are hard rules with their text', async () => {
     plant('WH', '2026-08-17', { 'CP-1042': ['E', 'E', 'E', 'E', 'E', '', ''], 'CP-1201': ['N', '', '', '', '', '', ''] });
     const call = await as('manager');
-    expect(refusal(await cell(call, NEXT, { personCode: 'CP-1042', day: 5, code: 'E' }))).toMatchObject({ message: 'Amara Okafor. Would make 6 days in a row.' });
-    expect(refusal(await cell(call, NEXT, { personCode: 'CP-1201', day: 1, code: 'E' }))).toMatchObject({ message: 'Priya Shah. Only 0 hours rest before or after.' });
+    expect(refusal(await cell(call, NEXT, { employeeCode: 'CP-1042', day: 5, code: 'E' }))).toMatchObject({ message: 'Amara Okafor. Would make 6 days in a row.' });
+    expect(refusal(await cell(call, NEXT, { employeeCode: 'CP-1201', day: 1, code: 'E' }))).toMatchObject({ message: 'Priya Shah. Only 0 hours rest before or after.' });
   });
   test('advisories never block: an assignment over contracted hours saves and says so', async () => {
-    const r = await cell(await as('manager'), WH, { personCode: 'CP-1042', day: 2, code: 'L' });
+    const r = await cell(await as('manager'), WH, { employeeCode: 'CP-1042', day: 2, code: 'L' });
     expect(r.status).toBe(200);
     expect(CellSaved.parse(r.body).advisories).toEqual([{ k: 'Over contracted', c: 'warn' }]);
     expect(line('WH', '2026-08-10', 'CP-1042')).toEqual(['E', 'E', 'L', 'N', 'N', '', '']);
   });
   test('accept plan runs eligibility on every item: one refused item writes none', async () => {
     const call = await as('manager'), before = snapshot(...WRITES);
-    const r = await call('POST', `${WH}/plan/accept`, { items: [ASSIGN_LIVE, { personCode: 'CP-1490', day: 4, code: 'E' }] }, 1);
+    const r = await call('POST', `${WH}/plan/accept`, { items: [ASSIGN_LIVE, { employeeCode: 'CP-1490', day: 4, code: 'E' }] }, 1);
     expect(r.status).toBe(422);
     expect(refusal(r)).toMatchObject({ code: 'ROTA_INELIGIBLE', field: 'items.1', message: 'Kwame Boateng. Not cleared to work. DBS expired 30/06/2026.' });
     expect(snapshot(...WRITES)).toEqual(before);
@@ -316,20 +316,20 @@ describe('eligibility on the server (Review Focus 3)', () => {
     const pick = plan.items.filter(x => !x.none);
     expect(pick.map(x => x.day)).toEqual([4]);
     expect(plan.summary).toBe('Suggested 1 assignments for you to review');
-    const saved = PlanAccepted.parse((await call('POST', `${WH}/plan/accept`, { items: pick.map(x => ({ personCode: x.personCode, day: x.day, code: x.code })) }, 1)).body);
+    const saved = PlanAccepted.parse((await call('POST', `${WH}/plan/accept`, { items: pick.map(x => ({ employeeCode: x.employeeCode, day: x.day, code: x.code })) }, 1)).body);
     expect(saved.week.gapDays).toEqual([]);
     expect(saved.week.changes[0]).toMatchObject({ afterPublish: true, why: 'Accepted from the plan' });
     expect(auditActs()).toEqual(['Published rota amended']);
   });
-  test('cover assign refuses an ineligible person with the rule\'s text', async () => {
+  test('cover assign refuses an ineligible employee with the rule\'s text', async () => {
     const call = await as('manager'), before = snapshot(...WRITES);
-    const r = await call('POST', '/api/v1/rota/cover/cov_1/assign', { personCode: 'CP-1377' }, 1);
+    const r = await call('POST', '/api/v1/rota/cover/cov_1/assign', { employeeCode: 'CP-1377' }, 1);
     expect(r.status).toBe(422);
     expect(refusal(r)).toMatchObject({ code: 'ROTA_INELIGIBLE', message: 'Tomas Novak. Not night-trained.' });
     expect(snapshot(...WRITES)).toEqual(before);
   });
   test('cover assign never replaces somebody\'s shift that day', async () => {
-    const r = await (await as('manager'))('POST', '/api/v1/rota/cover/cov_1/assign', { personCode: 'CP-1042' }, 1);
+    const r = await (await as('manager'))('POST', '/api/v1/rota/cover/cov_1/assign', { employeeCode: 'CP-1042' }, 1);
     expect(refusal(r)).toMatchObject({ code: 'ROTA_INELIGIBLE', message: 'Amara Okafor. Already working that day.' });
   });
   test('a claim by someone ineligible is refused with the claim text', async () => {
@@ -342,8 +342,8 @@ describe('eligibility on the server (Review Focus 3)', () => {
   test('suggestions for one cell rank who passed and name the rule for who did not', async () => {
     const s = CellSuggestions.parse((await (await as('manager'))('GET', `${WH}/suggestions?day=4&code=E`)).body);
     expect(s.ok.length).toBeGreaterThan(0);
-    expect(s.no.find(x => x.personCode === 'CP-1490')).toMatchObject({ rule: 'Clearance' });
-    expect(s.no.find(x => x.personCode === 'CP-1042')).toMatchObject({ rule: 'Shift conflict' });
+    expect(s.no.find(x => x.employeeCode === 'CP-1490')).toMatchObject({ rule: 'Clearance' });
+    expect(s.no.find(x => x.employeeCode === 'CP-1042')).toMatchObject({ rule: 'Shift conflict' });
   });
 });
 
@@ -416,9 +416,9 @@ describe('generate, repeat, copy and clear never overwrite (Review Focus 4)', ()
     const gen = PatternGenerated.parse((await call('POST', '/api/v1/rota/patterns/WP-02/generate', { gen: '1w' }, 1)).body);
     expect(gen.live).toBe(1);
     expect(week('WH', '2026-08-10')).toEqual(amended);
-    const second = CellSaved.parse((await cell(call, WH, { personCode: 'CP-1402', day: 4, code: '' }, 2)).body);
+    const second = CellSaved.parse((await cell(call, WH, { employeeCode: 'CP-1402', day: 4, code: '' }, 2)).body);
     expect(second.week.state).toBe('amendment');
-    expect(second.week.changes[0]).toMatchObject({ personCode: 'CP-1402', to: '', afterPublish: true, version: 1 });
+    expect(second.week.changes[0]).toMatchObject({ employeeCode: 'CP-1402', to: '', afterPublish: true, version: 1 });
     expect(notes('CP-1402').map(n => n.title)).toEqual(['Rota amended', 'Rota amended']);
   });
   test('generating from a draft pattern that writes shifts makes it active, and the summary says so (M1)', async () => {
@@ -433,7 +433,7 @@ describe('generate, repeat, copy and clear never overwrite (Review Focus 4)', ()
   test('a run that lands nothing is refused with NO_LANDING', async () => {
     const r = await (await as('admin'))('POST', '/api/v1/rota/patterns/WP-03/generate', { gen: '1w' }, 1);
     expect(r.status).toBe(422);
-    expect(refusal(r)).toMatchObject({ message: 'None of the people on this pattern are on the workforce record.' });
+    expect(refusal(r)).toMatchObject({ message: 'None of the employees on this pattern are on the workforce record.' });
   });
 });
 
@@ -464,28 +464,28 @@ describe('cover flow (Review Focus 5)', () => {
     expect(auditActs()).toEqual(['Cover request opened', 'Cover reason set', 'Cover asked of every cleared worker', 'Fulfilment escalated']);
   });
   test('assign writes the shift through the week path, closes the request and leaves a filled row', async () => {
-    const r = CoverFilled.parse((await (await as('manager'))('POST', '/api/v1/rota/cover/cov_1/assign', { personCode: 'CP-1310' }, 1)).body);
+    const r = CoverFilled.parse((await (await as('manager'))('POST', '/api/v1/rota/cover/cov_1/assign', { employeeCode: 'CP-1310' }, 1)).body);
     expect(r.record.open).toBe(false);
-    expect(r.filled).toMatchObject({ personCode: 'CP-1310', date: '2026-08-11', shift: 'N', confirmed: false });
+    expect(r.filled).toMatchObject({ employeeCode: 'CP-1310', date: '2026-08-11', shift: 'N', confirmed: false });
     expect(line('WH', '2026-08-10', 'CP-1310')).toEqual(['', 'N', '', '', '', 'E', '']);
     expect(week('WH', '2026-08-10')).toMatchObject({ state: 'amendment' });
-    expect(week('WH', '2026-08-10')?.changes[0]).toMatchObject({ personCode: 'CP-1310', afterPublish: true });
+    expect(week('WH', '2026-08-10')?.changes[0]).toMatchObject({ employeeCode: 'CP-1310', afterPublish: true });
     expect(notes('CP-1310').map(n => n.title)).toEqual(['Rota amended']);
     expect(auditActs()).toEqual(['Cover request filled']);
   });
-  test('fill needs a reason, then picks the best eligible person', async () => {
+  test('fill needs a reason, then picks the best eligible employee', async () => {
     const call = await as('manager');
     const opened = CoverSaved.parse((await call('POST', '/api/v1/rota/cover', { location: 'WH', date: '2026-08-16', shift: 'E', reason: '', urgent: false })).body);
     const r = await call('POST', `/api/v1/rota/cover/${opened.record.id}/fill`, undefined, 1);
     expect(refusal(r)).toMatchObject({ code: 'REASON_REQUIRED', message: 'Add a reason before closing the request.' });
     const best = CoverBoard.parse((await call('GET', '/api/v1/rota/cover')).body).requests.find(x => x.id === 'cov_2')?.suggestions[0];
     const f = CoverFilled.parse((await call('POST', '/api/v1/rota/cover/cov_2/fill', undefined, 1)).body);
-    expect(f.filled.personCode).toBe(best?.personCode);
-    expect(line('WH', '2026-08-10', f.filled.personCode)?.[4]).toBe('L');
+    expect(f.filled.employeeCode).toBe(best?.employeeCode);
+    expect(line('WH', '2026-08-10', f.filled.employeeCode)?.[4]).toBe('L');
   });
   test('an employee claims an open shift: written to the rota, the manager told', async () => {
     const r = CoverFilled.parse((await (await asEmail('sana.iqbal@brightpath.org'))('POST', '/api/v1/rota/cover/cov_2/claim', undefined, 1)).body);
-    expect(r.filled).toMatchObject({ personCode: 'CP-1455', shift: 'L' });
+    expect(r.filled).toMatchObject({ employeeCode: 'CP-1455', shift: 'L' });
     expect(line('WH', '2026-08-10', 'CP-1455')?.[4]).toBe('L');
     expect(notes('CP-1001').map(n => [n.title, n.body])).toEqual([['Cover request filled', 'Sana Iqbal has claimed Late on Fri 14 Aug']]);
     expect(auditActs()).toEqual(['Open shift claimed']);
@@ -496,8 +496,8 @@ describe('cover flow (Review Focus 5)', () => {
     expect(early.status).toBe(409);
     expect(refusal(early)).toMatchObject({ code: 'NOT_WORKED_YET', message: 'This shift is on Sat 15 Aug, so it cannot be confirmed as worked yet.' });
     expect(snapshot('filledShifts', 'itRequests', 'notifications', 'audit')).toEqual(before);
-    const f = store.coll<{ personCode: string; date: string }>('filledShifts').fil_1;
-    if (f) { f.personCode = accountOf('manager').personCode; f.date = '2026-08-13'; }
+    const f = store.coll<{ employeeCode: string; date: string }>('filledShifts').fil_1;
+    if (f) { f.employeeCode = accountOf('manager').employeeCode; f.date = '2026-08-13'; }
     const own = await call('POST', '/api/v1/rota/filled/fil_1/confirm', undefined, 1);
     expect(own.status).toBe(403);
     expect(refusal(own)).toEqual({ code: 'SELF_APPROVAL', message: 'You cannot confirm your own shift as worked.', next: 'Ask another manager at this location.' });
@@ -508,10 +508,10 @@ describe('cover flow (Review Focus 5)', () => {
     store.setClock('2026-08-15T09:00:00.000Z');
     const call = await as('manager');
     const r = FilledConfirmed.parse((await call('POST', '/api/v1/rota/filled/fil_1/confirm', undefined, 1)).body);
-    expect(r.itRequest).toMatchObject({ ref: 'ITR-1007', personCode: 'CP-1310', worker: 'Bank', status: 'Raised' });
+    expect(r.itRequest).toMatchObject({ ref: 'ITR-1007', employeeCode: 'CP-1310', worker: 'Bank', status: 'Raised' });
     expect(r.summary).toBe('Confirmed. IT access request ITR-1007 raised.');
     expect(Object.values(store.coll('itRequests'))).toHaveLength(1);
-    expect(notes(accountOf('admin').personCode).map(n => n.title)).toEqual(['IT access request raised']);
+    expect(notes(accountOf('admin').employeeCode).map(n => n.title)).toEqual(['IT access request raised']);
     expect(refusal(await call('POST', '/api/v1/rota/filled/fil_1/confirm', undefined, 2))).toMatchObject({ code: 'ALREADY_CONFIRMED' });
     resetTo('social');
     store.setClock('2026-08-15T09:00:00.000Z');
@@ -521,7 +521,7 @@ describe('cover flow (Review Focus 5)', () => {
     expect(Object.values(store.coll('itRequests'))).toHaveLength(0);
   });
   test('removing a shift that leaves the day short opens a cover request when FULFIL is on', async () => {
-    const r = CellSaved.parse((await cell(await as('manager'), WH, { personCode: 'CP-1153', day: 6, code: '' })).body);
+    const r = CellSaved.parse((await cell(await as('manager'), WH, { employeeCode: 'CP-1153', day: 6, code: '' })).body);
     expect(r.cover).toMatchObject({ date: '2026-08-16', open: true, reason: '' });
     expect(notes('CP-1001').map(n => n.title)).toEqual(['Coverage issue · Willow House']);
     expect(rotaAudits()).toHaveLength(1);
@@ -542,13 +542,13 @@ describe('a fault on each write leaves nothing behind (Review Focus 6)', () => {
     ['pattern create', 'manager', 'POST', '/api/v1/rota/patterns', { name: 'New', cycle: 7, locations: ['WH'], jobProfiles: [], costCentre: '', starts: '2026-08-17', horizon: 12, gen: '1w' }, 0],
     ['pattern update', 'manager', 'PATCH', '/api/v1/rota/patterns/WP-02', { name: 'Renamed' }, 1],
     ['pattern delete', 'manager', 'DELETE', '/api/v1/rota/patterns/WP-02', undefined, 1],
-    ['pattern people', 'manager', 'POST', '/api/v1/rota/patterns/WP-02/people', { personCodes: ['CP-1310'], start: 1, mode: 'stagger' }, 1],
+    ['pattern employees', 'manager', 'POST', '/api/v1/rota/patterns/WP-02/employees', { employeeCodes: ['CP-1310'], start: 1, mode: 'stagger' }, 1],
     ['generate', 'manager', 'POST', '/api/v1/rota/patterns/WP-02/generate', { gen: '1w' }, 1],
     ['open cover', 'manager', 'POST', '/api/v1/rota/cover', { location: 'WH', date: '2026-08-16', shift: 'E', reason: 'Sickness', urgent: true }, 0],
     ['cover reason', 'manager', 'POST', '/api/v1/rota/cover/cov_1/reason', { reason: 'Vacancy' }, 1],
     ['ask all', 'manager', 'POST', '/api/v1/rota/cover/cov_1/ask-all', undefined, 1],
     ['escalate', 'manager', 'POST', '/api/v1/rota/cover/cov_1/escalate', undefined, 1],
-    ['cover assign', 'manager', 'POST', '/api/v1/rota/cover/cov_1/assign', { personCode: 'CP-1310' }, 1],
+    ['cover assign', 'manager', 'POST', '/api/v1/rota/cover/cov_1/assign', { employeeCode: 'CP-1310' }, 1],
     ['cover fill', 'manager', 'POST', '/api/v1/rota/cover/cov_2/fill', undefined, 1],
     ['claim', 'employee', 'POST', '/api/v1/rota/cover/cov_2/claim', undefined, 1],
     ['confirm', 'manager', 'POST', '/api/v1/rota/filled/fil_1/confirm', undefined, 1],
@@ -567,7 +567,7 @@ describe('a fault on each write leaves nothing behind (Review Focus 6)', () => {
   test('a throw after the week, the cover and the notices are written rolls every one back', async () => {
     const call = await as('manager'), before = snapshot(...WRITES);
     store.db.audit = Object.freeze({ ...store.db.audit });
-    const r = await cell(call, WH, { personCode: 'CP-1153', day: 6, code: '' });
+    const r = await cell(call, WH, { employeeCode: 'CP-1153', day: 6, code: '' });
     expect(r.status).toBe(500);
     expect(snapshot(...WRITES)).toEqual(before);
     expect(notes()).toEqual([]);
@@ -577,7 +577,7 @@ describe('a fault on each write leaves nothing behind (Review Focus 6)', () => {
 describe('the timesheet reads the real rota line (Review Focus 7, D13)', () => {
   const save = (call: Call, code: string, date: string, start: string, finish: string) =>
     call('PUT', `/api/v1/timesheets/${code}/days/${date}`, { entries: [{ start, finish, breaks: [] }], shift: 'E' }, 0);
-  test('on social a long day warns against the person\'s rota line', async () => {
+  test('on social a long day warns against the employee\'s rota line', async () => {
     const r = DaySaved.parse((await save(await as('employee'), 'CP-1042', '2026-08-13', '07:00', '19:00')).body);
     expect(r.warnings).toContain('That is +3.00 h against the rota line (Night 9 h).');
   });
@@ -596,11 +596,11 @@ describe('the timesheet reads the real rota line (Review Focus 7, D13)', () => {
   test('on qnipay (Rota off) no rota warning fires, even with a line in the store', async () => {
     resetTo('qnipay');
     /* an employee who has started: qnipay's first employee accounts are new starters, kept to the onboarding portal */
-    const people = Object.values(store.coll<{ code: string; location: string; state: string }>('people'));
-    const acc = Object.values(store.coll<{ email: string; personCode: string; userType: string }>('accounts'))
-      .find(a => a.userType === 'employee' && people.find(x => x.code === a.personCode)?.state === 'active');
+    const employees = Object.values(store.coll<{ code: string; location: string; state: string }>('employees'));
+    const acc = Object.values(store.coll<{ email: string; employeeCode: string; userType: string }>('accounts'))
+      .find(a => a.userType === 'employee' && employees.find(x => x.code === a.employeeCode)?.state === 'active');
     if (!acc) throw new Error('the qnipay seed has no active employee account');
-    const me = acc.personCode, p = people.find(x => x.code === me);
+    const me = acc.employeeCode, p = employees.find(x => x.code === me);
     store.coll('shiftTypes').sht_N = { id: 'sht_N', version: 1, updatedAt: FROZEN, code: 'N', name: 'Night', from: '22:00', to: '07:00', breakMinutes: 0, hours: 9, cross: true, night: true, start: 22, end: 31, tone: 'N' };
     plant(p?.location ?? '', '2026-08-10', { [me]: ['N', 'N', 'N', 'N', 'N', '', ''] }, 'published');
     const r = await save(await asEmail(acc.email), me, '2026-08-13', '07:00', '19:00');
@@ -626,12 +626,12 @@ describe('shift types, patterns, my shifts and setup', () => {
     expect(refusal(r)).toMatchObject({ code: 'IN_USE', message: 'Night is still in use on 24 rota day(s) and 4 pattern day(s). Clear those first.' });
     expect(refusal(r).usedBy?.map(u => [u.kind, u.count])).toEqual([['rota days', 24], ['pattern days', 4]]);
   });
-  test('people go on a pattern staggered across its shift days; ticking nobody is refused', async () => {
+  test('employees go on a pattern staggered across its shift days; ticking nobody is refused', async () => {
     const call = await as('manager');
-    const r = await call('POST', '/api/v1/rota/patterns/WP-02/people', { personCodes: ['CP-1310', 'CP-1455'], start: 1, mode: 'stagger' }, 1);
+    const r = await call('POST', '/api/v1/rota/patterns/WP-02/employees', { employeeCodes: ['CP-1310', 'CP-1455'], start: 1, mode: 'stagger' }, 1);
     expect(r.status).toBe(200);
-    expect(store.coll<{ people: { personCode: string; offset: number }[] }>('patterns')['pat_WP-02']?.people.slice(-2)).toEqual([{ personCode: 'CP-1310', offset: 1 }, { personCode: 'CP-1455', offset: 2 }]);
-    expect(refusal(await call('POST', '/api/v1/rota/patterns/WP-02/people', { personCodes: [], start: 1, mode: 'stagger' }, 2))).toMatchObject({ message: 'Tick at least one person.' });
+    expect(store.coll<{ employees: { employeeCode: string; offset: number }[] }>('patterns')['pat_WP-02']?.employees.slice(-2)).toEqual([{ employeeCode: 'CP-1310', offset: 1 }, { employeeCode: 'CP-1455', offset: 2 }]);
+    expect(refusal(await call('POST', '/api/v1/rota/patterns/WP-02/employees', { employeeCodes: [], start: 1, mode: 'stagger' }, 2))).toMatchObject({ message: 'Tick at least one employee.' });
   });
   test('the pattern list carries today and the locations a pattern may cover, so an admin without team_rota can build (I2)', async () => {
     expect((await (await as('admin'))('GET', '/api/v1/rota/home')).status).toBe(403);
@@ -673,7 +673,7 @@ describe('shift types, patterns, my shifts and setup', () => {
     expect(cfg()).toMatchObject({ publishBlockOnGap: false, version: 2 });
     expect(Object.keys(cfg().types as object)).toEqual(['shift', 'casual', 'salaried']);
     expect(auditActs()).toEqual(['Rota setup saved']);
-    expect(refusal(await call('PATCH', '/api/v1/rota/config', { minDefault: 0 }, 2))).toMatchObject({ field: 'minDefault', message: 'Default people per shift must be a whole number from 1 to 50.' });
+    expect(refusal(await call('PATCH', '/api/v1/rota/config', { minDefault: 0 }, 2))).toMatchObject({ field: 'minDefault', message: 'Default employees per shift must be a whole number from 1 to 50.' });
   });
 });
 
@@ -702,7 +702,7 @@ describe('GET /api/v1/rota/it-requests (the IT service desk, admIT)', () => {
     store.coll('itRequests').itr_old = { ...raised, id: 'itr_old', ref: 'ITR-1000', raisedAt: '2026-08-01T09:00:00.000Z' };
     const list = ItRequestList.parse((await admin('GET', IT)).body);
     expect(list.items.map(i => i.ref)).toEqual(['ITR-1007', 'ITR-1000']);
-    expect(list.items[0]).toMatchObject({ personCode: 'CP-1310', worker: 'Bank', status: 'Raised', system: 'IT service desk' });
+    expect(list.items[0]).toMatchObject({ employeeCode: 'CP-1310', worker: 'Bank', status: 'Raised', system: 'IT service desk' });
   });
 });
 
@@ -716,7 +716,7 @@ describe('a change of week start keeps stored weeks readable (module 8 D4, revie
     expect(r.status).toBe(200);
   }
   test('Home, My shifts and the timesheet rota line still show the published Monday-keyed weeks', async () => {
-    const me = await as('employee'), code = accountOf('employee').personCode;
+    const me = await as('employee'), code = accountOf('employee').employeeCode;
     const shiftsOn = (b: unknown) => HomeMonth.parse(b).days.filter(d => d.shift).map(d => `${d.date} ${d.shift?.code ?? ''}`);
     const homeBefore = shiftsOn((await me('GET', '/api/v1/home?month=2026-08')).body);
     const mineBefore = MyShifts.parse((await me('GET', '/api/v1/rota/my-shifts')).body);
@@ -758,9 +758,9 @@ describe('a change of week start keeps stored weeks readable (module 8 D4, revie
     const mgr = await as('manager'), me = await asEmail('rosa.mendes@brightpath.org'), code = 'CP-1402';
     expect(RotaWeekView.parse((await mgr('GET', WH)).body).nextWeek).toBe('2026-08-17');
     /* the Sunday week would hold 16 August twice, so nothing can be written to it */
-    const sunday = await cell(mgr, '/api/v1/rota/weeks/WH/2026-08-16', { personCode: code, day: 1, code: 'E' }, 0);
+    const sunday = await cell(mgr, '/api/v1/rota/weeks/WH/2026-08-16', { employeeCode: code, day: 1, code: 'E' }, 0);
     expect([sunday.status, refusal(sunday).code, refusal(sunday).next]).toEqual([409, 'WEEK_OVERLAPS', 'Open the week of 10/08/2026, which holds 16/08/2026.']);
-    const placed = await cell(mgr, NEXT, { personCode: code, day: 0, code: 'E' }, 0);
+    const placed = await cell(mgr, NEXT, { employeeCode: code, day: 0, code: 'E' }, 0);
     expect(placed.status).toBe(200);
     expect(WeekMoved.parse((await mgr('POST', `${NEXT}/transition`, { to: 'published' }, 1)).body).week.state).toBe('published');
     const day = HomeMonth.parse((await me('GET', '/api/v1/home?month=2026-08')).body).days.find(d => d.date === '2026-08-17');

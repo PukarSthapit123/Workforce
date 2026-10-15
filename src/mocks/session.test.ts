@@ -8,7 +8,7 @@ const post = (url: string, body?: unknown, token?: string) => fetch(url, { metho
 /* Explicit guard rather than `!`: a missing seeded account is a broken test
    fixture, and this fails with a clear message instead of a TypeError. */
 const anyAccount = (type: string) => {
-  const found = Object.values(store.db.accounts as Record<string, { email: string; userType: string; personCode: string }>).find(a => a.userType === type);
+  const found = Object.values(store.db.accounts as Record<string, { email: string; userType: string; employeeCode: string }>).find(a => a.userType === type);
   if (!found) throw new Error(`no seeded account with userType "${type}"`);
   return found;
 };
@@ -18,7 +18,7 @@ test('signing in with the demo password returns a session with capabilities', as
   expect(r.status).toBe(200);
   const s = await r.json();
   expect(s.account.userType).toBe('manager');
-  expect(s.capabilities).toContain('team_people');
+  expect(s.capabilities).toContain('team_employees');
 });
 test('a wrong password is refused with a next step, and nothing is issued', async () => {
   const r = await post('/api/v1/session', { email: anyAccount('manager').email, password: 'nope' });
@@ -48,38 +48,38 @@ test('a session whose account has gone is refused, so the client signs out', asy
 test('view-as is audited, and the session says who is really signed in', async () => {
   const admin = anyAccount('admin'), emp = anyAccount('employee');
   const { token } = await (await post('/api/v1/session', { email: admin.email, password: 'Qnipay@123' })).json();
-  const r = await post('/api/v1/session/view-as', { personCode: emp.personCode }, token);
+  const r = await post('/api/v1/session/view-as', { employeeCode: emp.employeeCode }, token);
   const s = await r.json();
-  expect(s.viewingAs.personCode).toBe(emp.personCode);
+  expect(s.viewingAs.employeeCode).toBe(emp.employeeCode);
   expect(s.account.email).toBe(admin.email);
   expect(Object.values(store.coll<{ act: string }>('audit')).some(a => a.act === 'View-as started')).toBe(true);
 });
-test('a signed-in person without the perm_cfg capability is refused view-as with a plain 403', async () => {
+test('a signed-in employee without the perm_cfg capability is refused view-as with a plain 403', async () => {
   const emp = anyAccount('employee'), target = anyAccount('manager');
   const { token } = await (await post('/api/v1/session', { email: emp.email, password: 'Qnipay@123' })).json();
-  const r = await post('/api/v1/session/view-as', { personCode: target.personCode }, token);
+  const r = await post('/api/v1/session/view-as', { employeeCode: target.employeeCode }, token);
   expect(r.status).toBe(403);
   expect(await r.json()).toMatchObject({ code: 'capability', next: expect.any(String) });
 });
 test('view-as refuses an unknown employee ID with a 422 naming the field', async () => {
   const admin = anyAccount('admin');
   const { token } = await (await post('/api/v1/session', { email: admin.email, password: 'Qnipay@123' })).json();
-  const r = await post('/api/v1/session/view-as', { personCode: 'NOPE-0000' }, token);
+  const r = await post('/api/v1/session/view-as', { employeeCode: 'NOPE-0000' }, token);
   expect(r.status).toBe(422);
-  expect(await r.json()).toMatchObject({ code: 'invalid', field: 'personCode', next: expect.any(String) });
+  expect(await r.json()).toMatchObject({ code: 'invalid', field: 'employeeCode', next: expect.any(String) });
 });
-test('view-as refuses a person with no account, rather than quietly using the viewer\'s own capabilities under their label', async () => {
+test('view-as refuses an employee with no account, rather than quietly using the viewer\'s own capabilities under their label', async () => {
   const admin = anyAccount('admin'), emp = anyAccount('employee');
   const { token } = await (await post('/api/v1/session', { email: admin.email, password: 'Qnipay@123' })).json();
   Reflect.deleteProperty(store.db.accounts as Record<string, unknown>, `acc_${emp.email}`);
-  const r = await post('/api/v1/session/view-as', { personCode: emp.personCode }, token);
+  const r = await post('/api/v1/session/view-as', { employeeCode: emp.employeeCode }, token);
   expect(r.status).toBe(422);
-  expect(await r.json()).toMatchObject({ code: 'invalid', field: 'personCode', next: expect.any(String) });
+  expect(await r.json()).toMatchObject({ code: 'invalid', field: 'employeeCode', next: expect.any(String) });
 });
 test('a view-as target whose account vanishes mid-view falls back to the real account, not a leaked, mislabelled one', async () => {
   const admin = anyAccount('admin'), emp = anyAccount('employee');
   const { token } = await (await post('/api/v1/session', { email: admin.email, password: 'Qnipay@123' })).json();
-  await post('/api/v1/session/view-as', { personCode: emp.personCode }, token);
+  await post('/api/v1/session/view-as', { employeeCode: emp.employeeCode }, token);
   Reflect.deleteProperty(store.db.accounts as Record<string, unknown>, `acc_${emp.email}`);
   const r = await fetch('/api/v1/session', { headers: { Authorization: `Bearer ${token}` } });
   expect(r.status).toBe(200);
@@ -91,20 +91,20 @@ test('a view-as target whose account vanishes mid-view falls back to the real ac
 test('the view-as-started audit row names the real account and records what it started viewing as, with correct before/after', async () => {
   const admin = anyAccount('admin'), emp = anyAccount('employee');
   const { token } = await (await post('/api/v1/session', { email: admin.email, password: 'Qnipay@123' })).json();
-  await post('/api/v1/session/view-as', { personCode: emp.personCode }, token);
-  const rows = Object.values(store.coll<{ act: string; who: { personCode: string; viewingAs?: string }; before: unknown; after: unknown }>('audit'));
+  await post('/api/v1/session/view-as', { employeeCode: emp.employeeCode }, token);
+  const rows = Object.values(store.coll<{ act: string; who: { employeeCode: string; viewingAs?: string }; before: unknown; after: unknown }>('audit'));
   const row = rows.find(r => r.act === 'View-as started');
-  expect(row).toMatchObject({ who: { personCode: admin.personCode, viewingAs: emp.personCode }, before: null, after: { viewingAs: emp.personCode } });
+  expect(row).toMatchObject({ who: { employeeCode: admin.employeeCode, viewingAs: emp.employeeCode }, before: null, after: { viewingAs: emp.employeeCode } });
 });
 test('ending view-as writes its own audit row', async () => {
   const admin = anyAccount('admin'), emp = anyAccount('employee');
   const { token } = await (await post('/api/v1/session', { email: admin.email, password: 'Qnipay@123' })).json();
-  await post('/api/v1/session/view-as', { personCode: emp.personCode }, token);
+  await post('/api/v1/session/view-as', { employeeCode: emp.employeeCode }, token);
   const r = await fetch('/api/v1/session/view-as', { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
   expect(r.status).toBe(200);
   const rows = Object.values(store.coll<{ act: string; before: unknown; after: unknown }>('audit'));
   const row = rows.find(x => x.act === 'View-as ended');
-  expect(row).toMatchObject({ before: { viewingAs: emp.personCode }, after: null });
+  expect(row).toMatchObject({ before: { viewingAs: emp.employeeCode }, after: null });
 });
 
 /* I4: view-as is gated on perm_cfg, as in the prototype (v15:10773). Holding
@@ -117,7 +117,7 @@ test('an account holding integration but not perm_cfg is refused view-as', async
   record.grants = [...record.grants, 'integration'];
   const { token, capabilities } = await (await post('/api/v1/session', { email: emp.email, password: 'Qnipay@123' })).json();
   expect(capabilities).toContain('integration');
-  const r = await post('/api/v1/session/view-as', { personCode: target.personCode }, token);
+  const r = await post('/api/v1/session/view-as', { employeeCode: target.employeeCode }, token);
   expect(r.status).toBe(403);
   expect(await r.json()).toMatchObject({ code: 'capability', message: expect.stringContaining('Permissions and role configuration'), next: expect.any(String) });
 });
@@ -125,7 +125,7 @@ test('an account holding integration but not perm_cfg is refused view-as', async
 async function viewingAsEmployee() {
   const admin = anyAccount('admin'), emp = anyAccount('employee');
   const { token } = await (await post('/api/v1/session', { email: admin.email, password: 'Qnipay@123' })).json();
-  const started = await post('/api/v1/session/view-as', { personCode: emp.personCode }, token);
+  const started = await post('/api/v1/session/view-as', { employeeCode: emp.employeeCode }, token);
   expect(started.status).toBe(200);
   return { token: token as string, admin, emp };
 }
@@ -142,7 +142,7 @@ test('while viewing as someone, a write is refused with 403 and the store is unc
 
 test('while viewing as someone, starting another view-as is refused too', async () => {
   const { token } = await viewingAsEmployee();
-  const r = await post('/api/v1/session/view-as', { personCode: anyAccount('manager').personCode }, token);
+  const r = await post('/api/v1/session/view-as', { employeeCode: anyAccount('manager').employeeCode }, token);
   expect(r.status).toBe(403);
   expect(await r.json()).toMatchObject({ code: 'viewing-as' });
 });
@@ -165,7 +165,7 @@ test('while viewing as someone, signing out still works', async () => {
 });
 
 /* I6: sign-in and sign-out are audited; a failed sign-in is not a change. */
-type AuditRow = { act: string; entity: string; entityId: string; who: { personCode: string; name: string }; before: unknown; after: unknown };
+type AuditRow = { act: string; entity: string; entityId: string; who: { employeeCode: string; name: string }; before: unknown; after: unknown };
 const auditRows = () => Object.values(store.coll<AuditRow>('audit'));
 
 test('signing in writes one audit row naming who, with no token in it', async () => {
@@ -173,7 +173,7 @@ test('signing in writes one audit row naming who, with no token in it', async ()
   const { token } = await (await post('/api/v1/session', { email: acc.email, password: 'Qnipay@123' })).json();
   const rows = auditRows().filter(r => r.act === 'Signed in');
   expect(rows).toHaveLength(1);
-  expect(rows[0]).toMatchObject({ entity: 'session', entityId: acc.email, who: { personCode: acc.personCode }, before: null, after: { signedIn: true } });
+  expect(rows[0]).toMatchObject({ entity: 'session', entityId: acc.email, who: { employeeCode: acc.employeeCode }, before: null, after: { signedIn: true } });
   expect(JSON.stringify(rows[0])).not.toContain(token);
 });
 
@@ -189,23 +189,23 @@ test('signing out writes one audit row naming who', async () => {
   await fetch('/api/v1/session', { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
   const rows = auditRows().filter(r => r.act === 'Signed out');
   expect(rows).toHaveLength(1);
-  expect(rows[0]).toMatchObject({ entity: 'session', entityId: acc.email, who: { personCode: acc.personCode }, before: { signedIn: true }, after: null });
+  expect(rows[0]).toMatchObject({ entity: 'session', entityId: acc.email, who: { employeeCode: acc.employeeCode }, before: { signedIn: true }, after: null });
 });
 
 /* I5: who the account menu offers to view as. */
-test('the view-as list offers one person per role, never yourself, nobody who has left, at most five', async () => {
+test('the view-as list offers one employee per role, never yourself, nobody who has left, at most five', async () => {
   const admin = anyAccount('admin');
   const { token } = await (await post('/api/v1/session', { email: admin.email, password: 'Qnipay@123' })).json();
-  const r = await fetch('/api/v1/session/view-as/people', { headers: { Authorization: `Bearer ${token}` } });
+  const r = await fetch('/api/v1/session/view-as/employees', { headers: { Authorization: `Bearer ${token}` } });
   expect(r.status).toBe(200);
-  const people = (await r.json()) as { personCode: string; userType: string; roleName: string; locationName: string; onboarding: boolean }[];
-  expect(people.length).toBeGreaterThan(0);
-  expect(people.length).toBeLessThanOrEqual(5);
-  expect(people.map(p => p.personCode)).not.toContain(admin.personCode);
-  expect(people.filter(p => p.userType === 'manager')).toHaveLength(1);
-  const gone = Object.values(store.coll<{ code: string; state: string }>('people')).filter(p => p.state === 'leaver').map(p => p.code);
-  expect(people.some(p => gone.includes(p.personCode))).toBe(false);
-  expect(people.every(p => p.roleName && p.locationName)).toBe(true);
+  const employees = (await r.json()) as { employeeCode: string; userType: string; roleName: string; locationName: string; onboarding: boolean }[];
+  expect(employees.length).toBeGreaterThan(0);
+  expect(employees.length).toBeLessThanOrEqual(5);
+  expect(employees.map(p => p.employeeCode)).not.toContain(admin.employeeCode);
+  expect(employees.filter(p => p.userType === 'manager')).toHaveLength(1);
+  const gone = Object.values(store.coll<{ code: string; state: string }>('employees')).filter(p => p.state === 'leaver').map(p => p.code);
+  expect(employees.some(p => gone.includes(p.employeeCode))).toBe(false);
+  expect(employees.every(p => p.roleName && p.locationName)).toBe(true);
 });
 test('the session names the account\'s role, what it is for and where they work', async () => {
   const s = await (await post('/api/v1/session', { email: anyAccount('manager').email, password: 'Qnipay@123' })).json();
@@ -217,15 +217,15 @@ test('the session names the account\'s role, what it is for and where they work'
 test('view-as of yourself is refused with 422 in plain words, and nothing is recorded', async () => {
   const admin = anyAccount('admin');
   const { token } = await (await post('/api/v1/session', { email: admin.email, password: 'Qnipay@123' })).json();
-  const r = await post('/api/v1/session/view-as', { personCode: admin.personCode }, token);
+  const r = await post('/api/v1/session/view-as', { employeeCode: admin.employeeCode }, token);
   expect(r.status).toBe(422);
-  expect(await r.json()).toMatchObject({ code: 'invalid', field: 'personCode', message: expect.stringContaining('yourself'), next: expect.any(String) });
+  expect(await r.json()).toMatchObject({ code: 'invalid', field: 'employeeCode', message: expect.stringContaining('yourself'), next: expect.any(String) });
   expect(auditRows().some(x => x.act === 'View-as started')).toBe(false);
   expect((await (await fetch('/api/v1/session', { headers: { Authorization: `Bearer ${token as string}` } })).json()).viewingAs).toBeUndefined();
 });
 
 /* 1c D11: a renamed role shows its new name everywhere, the role pill while
-   viewing as someone included, so the session carries the viewed person's
+   viewing as someone included, so the session carries the viewed employee's
    role name as well as their user type. */
 test('viewing as someone whose role was renamed carries the new role name', async () => {
   const { token } = await viewingAsEmployee();

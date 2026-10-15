@@ -45,8 +45,8 @@ export function dayChip(day: WeekDay) {
    day the clock acts on while the server's gates allow it (D4), and a clock
    left open on an earlier day shows its close banner (D6). */
 export interface DayClock { card: MyClock | null; readAt: number; open: ClockRecord | null; openBlocked: MyClock['openBlocked'] }
-export function DayView({ week, date, today, onDate, personId }: {
-  week: TimesheetWeek; date: string; today: string; onDate: (d: string) => void; personId: string;
+export function DayView({ week, date, today, onDate, employeeId }: {
+  week: TimesheetWeek; date: string; today: string; onDate: (d: string) => void; employeeId: string;
 }) {
   const q = useMyClock(week.capture.mode === 'clock'), c = q.data;
   const day = week.days.find(d => d.date === date);
@@ -56,7 +56,7 @@ export function DayView({ week, date, today, onDate, personId }: {
   const onCard = c ? date === c.date || date === c.now.date : false;
   const clock: DayClock = { card: c?.gates.show && onCard ? c : null, readAt: q.dataUpdatedAt,
     open: c?.gates.live && c.gates.mode === 'clock' ? c.open : null, openBlocked: c?.openBlocked ?? null };
-  return <DayPanel key={`${date}:${day.version}`} week={week} day={day} today={today} onDate={onDate} personId={personId} clock={clock} />;
+  return <DayPanel key={`${date}:${day.version}`} week={week} day={day} today={today} onDate={onDate} employeeId={employeeId} clock={clock} />;
 }
 
 function entryTip(week: TimesheetWeek, clocking: boolean) {
@@ -65,15 +65,15 @@ function entryTip(week: TimesheetWeek, clocking: boolean) {
     : c.mode === 'grid' ? 'Enter this day here, or switch to Week to fill the whole week at once.'
       : 'Enter your start and finish times for this day.';
   const mand = formGroups(c).some(g => g.fields.some(f => f.setting.mand));
-  return mand ? `${first} Fields marked required are required for ${week.person.typeName}.` : first;
+  return mand ? `${first} Fields marked required are required for ${week.employee.typeName}.` : first;
 }
 
-function DayPanel({ week, day, today, onDate, personId, clock }: {
-  week: TimesheetWeek; day: WeekDay; today: string; onDate: (d: string) => void; personId: string; clock: DayClock;
+function DayPanel({ week, day, today, onDate, employeeId, clock }: {
+  week: TimesheetWeek; day: WeekDay; today: string; onDate: (d: string) => void; employeeId: string; clock: DayClock;
 }) {
-  const c = week.capture, rec = day.record, mgr = week.person.manager.trim() || 'your manager';
+  const c = week.capture, rec = day.record, mgr = week.employee.manager.trim() || 'your manager';
   const flagged = (r: DaySaved) => (r.warnings.length ? `Flagged: ${r.warnings.join(' ')}` : undefined);
-  const entry = useDayEntry({ week, day, personId,
+  const entry = useDayEntry({ week, day, employeeId,
     onSaved: res => toastInfo(`Draft saved · ${hm(c, res.record.minutes)} · not submitted yet`, flagged(res)),
     onSubmitted: res => toastInfo(res.record.state === 'resub'
       ? `Resubmitted · ${formatDmy(day.date)} · back with ${mgr}`
@@ -105,7 +105,7 @@ function DayPanel({ week, day, today, onDate, personId, clock }: {
 
   /* submit-nonwork: a reason and no times, routed to the approver like any day */
   const submitReason = () => entry.submit.mutate(
-    { personId, date: day.date, version: day.version, body: { entries: [], nonWorkingReason: notes.trim() ? `${reason} · ${notes.trim()}` : reason } },
+    { employeeId, date: day.date, version: day.version, body: { entries: [], nonWorkingReason: notes.trim() ? `${reason} · ${notes.trim()}` : reason } },
     { onSuccess: () => toastInfo(`Reason submitted · ${reason} · routed to ${mgr}`) });
   /* copy-day: yesterday's rota line when there is one (the prototype's), otherwise yesterday's recorded entry */
   const copyYesterday = () => {

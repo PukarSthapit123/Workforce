@@ -13,7 +13,7 @@ import { FAILED_POSTING, RUN, clearPayrollBlockers, exceptionsAt, readinessOf } 
    Integration. The pay period is 03/08 to 16/08 (support/payroll.ts). */
 test.beforeEach(async ({ api }) => { await api.seed('social'); await api.setClock(FROZEN); });
 
-/* The saved file's lines, read from disk: what the person actually got. */
+/* The saved file's lines, read from disk: what the employee actually got. */
 async function savedLines(d: Download): Promise<string[]> {
   const path = await d.path();
   return (await readFile(path, 'utf8')).split('\r\n').filter(Boolean);

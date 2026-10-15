@@ -55,7 +55,7 @@ export interface RotaFilters { q: string; role: string; type: string; flags: boo
 export const NO_FILTERS: RotaFilters = { q: '', role: 'all', type: 'all', flags: false };
 export function filterRows(rows: readonly RotaRow[], f: RotaFilters) {
   const q = f.q.trim().toLowerCase();
-  return rows.filter(r => (!q || r.name.toLowerCase().includes(q) || r.personCode.toLowerCase().includes(q))
+  return rows.filter(r => (!q || r.name.toLowerCase().includes(q) || r.employeeCode.toLowerCase().includes(q))
     && (f.role === 'all' || r.jobProfile === f.role)
     && (f.type === 'all' || r.category === f.type)
     && (!f.flags || r.restIssues.length > 0 || overCap(r)));

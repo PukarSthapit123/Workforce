@@ -4,7 +4,7 @@
 import { z } from 'zod';
 import { defineEndpoint } from './endpoints';
 import { RecordMeta, mutation } from './common';
-import { DateOrBlank } from './people';
+import { DateOrBlank } from './employees';
 
 const META = { id: true, version: true, updatedAt: true } as const;
 export const Location = RecordMeta.extend({ code: z.string(), name: z.string(), area: z.string(), department: z.string(),
@@ -27,7 +27,7 @@ const DimensionParams = z.object({ id: z.string().min(1) });
 function crud<R extends z.ZodObject, B extends z.ZodObject>(path: `/api/v1/${string}`, singular: string, record: R, body: B) {
   const capability = 'master_data';
   return {
-    /* needs a session only: the person form reads every dimension */
+    /* needs a session only: the employee form reads every dimension */
     list: defineEndpoint({ method: 'GET', path, response: z.array(record.extend(InUse)), summary: `Every ${singular}, with how many records use it` }),
     create: defineEndpoint({ method: 'POST', path, request: body, response: mutation(record), capability, summary: `Create a ${singular}. The code is unique.` }),
     update: defineEndpoint({ method: 'PATCH', path: `${path}/:id`, params: DimensionParams, request: body.partial(), capability, versioned: true, errors: [404],

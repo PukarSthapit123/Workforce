@@ -1,6 +1,6 @@
 import socialSeed from './seed/social.json';
 import qnipaySeed from './seed/qnipay.json';
-import { createStore, contentHash, STORE_KEY, STORE_REV_KEY, SEED_VERSION, DEFAULT_TENANT } from './store';
+import { createStore, contentHash, STORE_KEY, STORE_REV_KEY, SEED_VERSION, STORE_FORMAT, DEFAULT_TENANT } from './store';
 
 const seed = { version: SEED_VERSION, tenant: 'social', data: { things: { a: { id: 'a', version: 1, updatedAt: '2026-08-13T14:30:00.000Z' } } } };
 const saved = (o: unknown) => localStorage.setItem(STORE_KEY, JSON.stringify(o));
@@ -24,9 +24,9 @@ test('the seed version is derived from the seed content', () => {
   const content = JSON.stringify([['social', socialSeed], ['qnipay', qnipaySeed]]);
   expect(SEED_VERSION.split('.')[1]).toBe(contentHash(content));
   /* one changed character anywhere in a seed changes the version */
-  const edited = structuredClone(socialSeed) as { data: { people: Record<string, { name: string }> } };
-  const first = Object.values(edited.data.people)[0];
-  if (!first) throw new Error('the social seed has no people');
+  const edited = structuredClone(socialSeed) as { data: { employees: Record<string, { name: string }> } };
+  const first = Object.values(edited.data.employees)[0];
+  if (!first) throw new Error('the social seed has no employees');
   first.name += 'x';
   expect(contentHash(JSON.stringify([['social', edited], ['qnipay', qnipaySeed]]))).not.toBe(contentHash(content));
 });
@@ -43,6 +43,28 @@ test('a store written by an older seed is set aside, not half-loaded', () => {
   const s = createStore(() => seed); s.boot();
   expect(Object.keys(s.db.things ?? {})).toEqual(['a']);
   expect(superseded()).not.toBeNull();
+});
+
+test('a store saved before people became employees (format 3) is set aside, never loaded, and not offered back', () => {
+  const before = { version: '3.0123456789abcdef', tenant: 'social', clock: null,
+    data: { people: { per_EMP001: { id: 'per_EMP001', code: 'EMP001', version: 1 } }, notifications: { n1: { id: 'n1', personId: 'EMP001' } } } };
+  saved(before);
+  const s = createStore(() => seed); s.boot();
+  expect(Object.keys(s.db)).toEqual(['things']);
+  expect(superseded()).toBe(JSON.stringify(before));
+  expect(s.hasBackup()).toBe(false);
+  expect(s.backupReason()).toBeNull();
+  expect(s.restoreBackup()).toBe(false);
+  expect(s.db.people).toBeUndefined();
+});
+
+test('a store from an older seed in this store format can still be brought back', () => {
+  saved({ version: `${STORE_FORMAT}.0123456789abcdef`, tenant: 'social', clock: null, data: { things: { b: { id: 'b', version: 2 } } } });
+  const s = createStore(() => seed); s.boot();
+  expect(Object.keys(s.db.things ?? {})).toEqual(['a']);
+  expect([s.hasBackup(), s.backupReason()]).toEqual([true, 'newer-build']);
+  expect(s.restoreBackup()).toBe(true);
+  expect(Object.keys(s.db.things ?? {})).toEqual(['b']);
 });
 
 test('corrupt JSON boots cleanly on the seed', () => {

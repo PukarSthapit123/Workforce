@@ -4,12 +4,12 @@
    or in review), its absence is the one the timesheet already reads (a V or
    S cell on the published rota, else approved leave or recorded sickness
    while Leave is on), its timesheet state is the stored day's, and its bank
-   holiday is the tenant's. Both reads are the person signed in, or the one
+   holiday is the tenant's. Both reads are the employee signed in, or the one
    being viewed as. Nothing here writes. */
 import { store } from './store';
 import { refuse } from './http';
 import { serve } from './serve';
-import { effectiveCode, nameOf, personByCode, recordAt, type StoredPerson } from './world';
+import { effectiveCode, nameOf, employeeByCode, recordAt, type StoredEmployee } from './world';
 import { tenantRec, view } from './tenant';
 import { rotaDayOn, rotaToneOf } from './rota';
 import { absenceOf, daysOf, hm, isLocked, waitingOnOf } from './timesheets';
@@ -27,14 +27,14 @@ import { dayMinutes } from '@/domain/timesheet';
 type StoredDay = Omit<TimesheetDay, 'minutes' | 'posting' | 'enteredByName' | 'waitingOn'>;
 interface StoredPayrollDoc { id: string; name: string; category: string; note: string }
 
-const NO_PERSON = () => refuse(404, { code: 'not-found', message: 'There is no employee record behind this account.', next: 'Ask an administrator to link your account to your record.' });
-const personOf = (code: string): StoredPerson => personByCode(code) ?? NO_PERSON();
+const NO_EMPLOYEE = () => refuse(404, { code: 'not-found', message: 'There is no employee record behind this account.', next: 'Ask an administrator to link your account to your record.' });
+const employeeOf = (code: string): StoredEmployee => employeeByCode(code) ?? NO_EMPLOYEE();
 
 /* review M3: the role an mgrok day waits on, so its pill names it */
 const waiting = (d: StoredDay) => { const w = waitingOnOf(d); return w ? { waitingOn: w } : {}; };
-/* One person's days, read once per request: the published rota by week and
+/* One employee's days, read once per request: the published rota by week and
    the stored timesheet days by date. */
-function reader(p: StoredPerson, today: string) {
+function reader(p: StoredEmployee, today: string) {
   const rotaOn = (date: string): RotaDay | undefined => rotaDayOn(p.code, date);
   const stored = new Map(daysOf(p.code).map(d => [d.date, d as StoredDay]));
   const holidays = new Map(view(tenantRec()).bankHolidays.map(b => [b.date, b.name]));
@@ -73,7 +73,7 @@ const NO_DOCUMENT = () => refuse(404, { code: 'not-found', message: 'That docume
 
 export const homeHandlers = [
   serve(getHome, ({ session, query }) => {
-    const p = personOf(effectiveCode(session)), t = view(tenantRec());
+    const p = employeeOf(effectiveCode(session)), t = view(tenantRec());
     const clock = clockFromIso(store.now()), today = clock.date, bounds = monthBounds(today, t.rotaHorizon);
     const month = query.month ?? monthOf(today);
     if (!inBounds(month, bounds)) {
@@ -89,7 +89,7 @@ export const homeHandlers = [
     const ts = t.modules.A || t.modules.B;
     return {
       month, label: monthLabel(month), thisMonth: monthOf(today), bounds, today,
-      person: { code: p.code, name: p.name, location: nameOf('locations', p.location) },
+      employee: { code: p.code, name: p.name, location: nameOf('locations', p.location) },
       greeting: `${greeting(clock.time)}, ${firstName(p.name)}`,
       who: whoLine({ job: p.jobProfile ? nameOf('jobProfiles', p.jobProfile) : '', type: p.employeeType ? nameOf('employeeTypes', p.employeeType) : '', location: nameOf('locations', p.location) }),
       leadingBlanks: leadingBlanks(month), days, totals, summary: monthSummary(totals), key: monthKey(keyDays),
@@ -104,10 +104,10 @@ export const homeHandlers = [
 
   serve(listMyDocuments, ({ session }) => {
     requireDocuments();
-    const p = personOf(effectiveCode(session));
+    const p = employeeOf(effectiveCode(session));
     return {
-      person: { code: p.code, name: p.name },
-      items: Object.values(docColl()).filter(d => d.personCode === p.code),
+      employee: { code: p.code, name: p.name },
+      items: Object.values(docColl()).filter(d => d.employeeCode === p.code),
       payroll: Object.values(store.coll<StoredPayrollDoc>('payrollDocuments')).map(d => ({ id: d.id, name: d.name, category: d.category, note: d.note })),
     };
   }),
@@ -115,6 +115,6 @@ export const homeHandlers = [
   serve(getDocument, ({ session, params }) => {
     requireDocuments();
     const d = recordAt(docColl(), params.id);
-    return d && d.personCode === effectiveCode(session) ? d : NO_DOCUMENT();
+    return d && d.employeeCode === effectiveCode(session) ? d : NO_DOCUMENT();
   }),
 ];

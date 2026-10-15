@@ -12,7 +12,7 @@ import { LocationOption } from './rota';
 
 export const ExceptionState = z.enum(['open', 'prog', 'resolved', 'ignored', 'reopened']);
 export const ExceptionKind = z.enum(['Clearance', 'Coverage', 'Leave', 'Business Central', 'Compliance', 'Timesheet', 'Hours', 'Qualification']);
-const Who = z.object({ personCode: z.string(), name: z.string() });
+const Who = z.object({ employeeCode: z.string(), name: z.string() });
 export const HandlingStep = z.object({ from: ExceptionState, to: ExceptionState, by: Who, at: IsoDateTime, note: z.string() });
 export const ExceptionItem = z.object({
   id: z.string(), version: z.number().int().nonnegative(),

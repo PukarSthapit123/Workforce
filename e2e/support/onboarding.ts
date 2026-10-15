@@ -36,7 +36,7 @@ export interface CaseRead {
   rejections: Record<string, string>; acks: Record<string, string>; signature: string; consent: boolean; submittedAt: string; ref: string;
 }
 export interface DetailRead {
-  person: { code: string; state: string }; case: CaseRead; progress: { text: string };
+  employee: { code: string; state: string }; case: CaseRead; progress: { text: string };
   policies: { id: string; ver: string; acknowledged: boolean }[]; toSubmit: { why: string }[]; toStart: { why: string }[];
 }
 export async function myCase(api: Get): Promise<DetailRead> {
@@ -45,8 +45,8 @@ export async function myCase(api: Get): Promise<DetailRead> {
   return r.body as DetailRead;
 }
 export interface TeamRead {
-  rows: { person: { code: string; state: string }; caseRef: { id: string; version: number }; blockers: { why: string }[] }[];
-  queue: { person: { code: string }; document: { id: string } }[]; toVerify: number;
+  rows: { employee: { code: string; state: string }; caseRef: { id: string; version: number }; blockers: { why: string }[] }[];
+  queue: { employee: { code: string }; document: { id: string } }[]; toVerify: number;
 }
 export async function teamOf(api: Get): Promise<TeamRead> {
   const r = await api.get('/api/v1/onboarding/team');
@@ -79,10 +79,10 @@ export async function completeMine(page: Page, api: Get, opts: { submit?: boolea
    (or was not) written without signing in as somebody who may read it. */
 export interface AuditStored { act: string; entity: string; entityId: string; before?: unknown; after?: unknown; reason?: string }
 export const onbAudit = async (page: Page) =>
-  (await stored<AuditStored>(page, 'audit')).filter(a => ['onboardingCase', 'onboardingConfig', 'onboardingPolicy', 'person'].includes(a.entity));
-export interface NoteStored { id: string; personId: string; event?: string; area: string; title: string; body: string }
+  (await stored<AuditStored>(page, 'audit')).filter(a => ['onboardingCase', 'onboardingConfig', 'onboardingPolicy', 'employee'].includes(a.entity));
+export interface NoteStored { id: string; employeeId: string; event?: string; area: string; title: string; body: string }
 export const onbNotes = async (page: Page) => (await stored<NoteStored>(page, 'notifications')).filter(n => n.area === 'Onboarding');
-export const ONB_STORE = ['onboardingCases', 'onboardingConfig', 'onboardingPolicies', 'notifications', 'people', 'personHistory', 'audit'] as const;
+export const ONB_STORE = ['onboardingCases', 'onboardingConfig', 'onboardingPolicies', 'notifications', 'employees', 'employeeHistory', 'audit'] as const;
 export const onbStore = async (page: Page) =>
   Object.fromEntries(await Promise.all(ONB_STORE.map(async c => [c, await stored<unknown>(page, c)] as const)));
 

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Clock } from 'lucide-react';
 import { tid } from '@/testids';
 import type { ProfileChange } from '@/contract/profile';
-import { Button, Card, CardHead, CardNote, Field, FormWarn, Modal, PersonBlock, Pill, Small, TextInput, toastInfo } from '@/ui';
+import { Button, Card, CardHead, CardNote, Field, FormWarn, Modal, EmployeeBlock, Pill, Small, TextInput, toastInfo } from '@/ui';
 import { useDecide, useProfileQueue } from '@/api/profile';
 import { selfField } from '@/domain/selfService';
 import { formatAtDate } from '@/domain/time';
@@ -14,7 +14,7 @@ const TITLE = { manager: 'Profile changes awaiting you', payroll: 'Bank detail c
    7612): each change with who raised it, the old value struck through and
    the new one, Decline and Approve. A bank change goes on to payroll after
    its manager approves (plan 1b decision D3), which shows here as the
-   payroll stage on Qnipay setup · People. Declining needs a reason (D4). */
+   payroll stage on Qnipay setup · Employees. Declining needs a reason (D4). */
 export function ProfileQueue({ stage }: { stage: 'manager' | 'payroll' }) {
   const queue = useProfileQueue(true);
   const [held, setDeclining] = useState<ProfileChange | null>(null);
@@ -35,10 +35,10 @@ export function ProfileQueue({ stage }: { stage: 'manager' | 'payroll' }) {
       <CardHead title={TITLE[stage]} actions={<Pill testId={tid.queue.count(stage)} tone="warn" glyph={<Clock />}>{rows.length}</Pill>} />
       <ul>{rows.map(c => (
         <li key={c.id} data-testid={tid.queue.row(c.id)} className="flex flex-wrap items-center gap-md border-b py-sm last:border-b-0">
-          <PersonBlock name={c.personName}>
+          <EmployeeBlock name={c.employeeName}>
             <Small>{selfField(c.field).label} · raised {formatAtDate(c.raisedAt)}{c.note ? ` · ${c.note}` : ''}</Small>
             <Small><span className="line-through">{c.from || '—'}</span> → <strong className="text-text-primary">{c.to}</strong></Small>
-          </PersonBlock>
+          </EmployeeBlock>
           <span className="ml-auto inline-flex flex-wrap items-center gap-xs">
             {stage === 'manager' && c.route.includes('payroll') && <Pill testId={tid.queue.payroll(c.id)} tone="warn">Payroll verifies</Pill>}
             <Button testId={tid.queue.decline(c.id)} kind="ghost" small onClick={() => { setDeclining(c); setReason(''); decide.clearFieldErrors(); }}>Decline</Button>
@@ -47,7 +47,7 @@ export function ProfileQueue({ stage }: { stage: 'manager' | 'payroll' }) {
         </li>))}</ul>
       <CardNote>Approving writes the new value to the one workforce record every module reads, and keeps the old value in its history.</CardNote>
       {declining && <Modal open onOpenChange={o => { if (!o) setDeclining(null); }} title={`Decline the ${selfField(declining.field).label.toLowerCase()} change`}
-        description={`${declining.personName} is told why.`}
+        description={`${declining.employeeName} is told why.`}
         footer={<>
           <Button testId={tid.queue.cancelDecline} kind="ghost" onClick={() => setDeclining(null)}>Keep it as it is</Button>
           <Button testId={tid.queue.confirmDecline} kind="danger" pending={decide.isPending(declining.id)}

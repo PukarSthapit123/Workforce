@@ -1,7 +1,7 @@
 /* Module 4 Leave handlers. Every rule is the group 1 domain's
    (src/domain/leave.ts): the handlers build its inputs from the store and
    write its outputs. Entitlement and balance are derived on every read from the
-   policy, the person record, the seeded base, the requests and the counted
+   policy, the employee record, the seeded base, the requests and the counted
    ledger rows (D3), so approve, cancel and give-days-back move a balance
    exactly once and nothing can drift. A request is one versioned record moved
    only along LEAVE_STATE (D1). Approved leave and recorded sickness reach the
@@ -15,11 +15,11 @@ import { serve } from './serve';
 import { actor, capsFor, requireCapability } from './auth';
 import { writeAudit } from './audit';
 import { leaveConfigChangeProblem } from './leave-config-usage';
-import { invalid } from './people';
+import { invalid } from './employees';
 import { notifyEvent } from './notify';
 import { rotaCoverDays, writeAbsence, type AbsenceWritten } from './rota';
-import { approvesIn, chainPeople, lineManagerCode, registerWaiting, walkNow } from './approvals';
-import { accounts, codesOf, effectiveCode, inScope, nameOf, people, personByCode, recordAt, scopeOf, today, type Signed, type StoredPerson } from './world';
+import { approvesIn, chainEmployees, lineManagerCode, registerWaiting, walkNow } from './approvals';
+import { accounts, codesOf, effectiveCode, inScope, nameOf, employees, employeeByCode, recordAt, scopeOf, today, type Signed, type StoredEmployee } from './world';
 import {
   approveLeave, arrangeRtw, cancelLeave, declineLeave, getEntitlement, getLeaveConfig, getMyLeave, getSicknessBoard, getTeamBalances, giveDaysBack,
   listLeavers, listTeamLeave, recordSickness, requestLeave, updateLeaveConfig,
@@ -39,19 +39,19 @@ import {
   type Balance, type LeaveYearSpan, type BalanceUnit, type LeavePart, type Entitlement, type LeaveRefusal, type LedgerRow,
 } from '@/domain/leave';
 import { SICK, isActive, type RotaActor } from '@/domain/rota';
-import { ESCALATION_WHEN, type ChainItem, type ChainWalk, type DecisionBlock, type DeciderPerson } from '@/domain/approvals';
+import { ESCALATION_WHEN, type ChainItem, type ChainWalk, type DecisionBlock, type DeciderEmployee } from '@/domain/approvals';
 import { addDays, clockFromIso, daysBetween } from '@/domain/time';
 
 /* ------------------------------------------------------------- the world */
 interface Meta { id: string; version: number; updatedAt: string }
 type StoredRequest = LeaveRequestRecord;
 type StoredEpisode = SickEpisodeRecord;
-type StoredLedger = Meta & LedgerRow & { personCode: string; by: RotaActor | null; leaveType?: string };
+type StoredLedger = Meta & LedgerRow & { employeeCode: string; by: RotaActor | null; leaveType?: string };
 interface StoredBase extends Meta {
-  personCode: string; unit: BalanceUnit; taken: number; toil: number; toilBy: string; accruedHours?: number; year?: string;
+  employeeCode: string; unit: BalanceUnit; taken: number; toil: number; toilBy: string; accruedHours?: number; year?: string;
   carryBaselineYear?: string; carryBaselineTakenD?: number;
 }
-interface StoredLeaver extends Meta { personCode: string; leaveDate: string; note: string }
+interface StoredLeaver extends Meta { employeeCode: string; leaveDate: string; note: string }
 interface Tenant {
   modules: Record<string, boolean>; flags: Record<string, unknown>; fullTimeWeeklyHours: number;
   bankHolidays: { date: string; name: string }[];
@@ -87,15 +87,15 @@ const escalationTarget = (c: LeaveConfigRecord, stage: number) => c.stages[stage
 const requests = () => store.coll<StoredRequest>('leaveRequests');
 const ledgerColl = () => store.coll<StoredLedger>('leaveLedger');
 const episodesColl = () => store.coll<StoredEpisode>('sickEpisodes');
-const requestsOf = (code: string) => Object.values(requests()).filter(r => r.personCode === code);
-const ledgerOf = (code: string) => Object.values(ledgerColl()).filter(l => l.personCode === code);
-const episodesOf = (code: string) => Object.values(episodesColl()).filter(e => e.personCode === code).sort((a, b) => a.from.localeCompare(b.from));
+const requestsOf = (code: string) => Object.values(requests()).filter(r => r.employeeCode === code);
+const ledgerOf = (code: string) => Object.values(ledgerColl()).filter(l => l.employeeCode === code);
+const episodesOf = (code: string) => Object.values(episodesColl()).filter(e => e.employeeCode === code).sort((a, b) => a.from.localeCompare(b.from));
 /* The leave days a give-back already returned (D10). */
 const returnedDates = (code: string) => ledgerOf(code).filter(l => l.counts).flatMap(l => l.dates ?? []);
 const locName = (code: string) => nameOf('locations', code);
-const by = (s: Signed): RotaActor => { const w = actor(s); return { personCode: w.personCode, name: w.name }; };
+const by = (s: Signed): RotaActor => { const w = actor(s); return { employeeCode: w.employeeCode, name: w.name }; };
 const firstName = (name: string) => name.split(/\s/)[0] ?? name;
-const managerOf = (p: StoredPerson) => p.manager.trim() || 'your manager';
+const managerOf = (p: StoredEmployee) => p.manager.trim() || 'your manager';
 const NOT_FOUND = (what: string, next = 'Reload the page.') => refuse(404, { code: 'not-found', message: `That ${what} no longer exists.`, next });
 const datesBetween = (from: string, to: string) => Array.from({ length: Math.max(0, daysBetween(from, to) + 1) }, (_, i) => addDays(from, i));
 function nextNumId(coll: Record<string, unknown>, prefix: string, pad = 0) {
@@ -104,7 +104,7 @@ function nextNumId(coll: Record<string, unknown>, prefix: string, pad = 0) {
   for (const id of Object.keys(coll)) max = Math.max(max, Number(re.exec(id)?.[1] ?? 0));
   return `${prefix}_${String(max + 1).padStart(pad, '0')}`;
 }
-const administrators = () => Object.values(accounts()).filter(a => capsFor(a).includes('mod_cfg')).map(a => a.personCode);
+const administrators = () => Object.values(accounts()).filter(a => capsFor(a).includes('mod_cfg')).map(a => a.employeeCode);
 
 /* A refusal from the domain, with the status its code carries. */
 const STATUS: Record<string, number> = { SELF_APPROVAL: 403, TRANSITION_NOT_ALLOWED: 409, OVERLAPS: 409, ALREADY_RECORDED: 409, ALREADY_REQUESTED: 409, NO_ABSENCE: 409 };
@@ -115,22 +115,22 @@ const refuseLeave = (p: LeaveRefusal): never =>
 /* A request walks the Leave approval chain, through the shared walker. The
    escalation layer ("Only when the SLA is breached") applies once the first
    layer has not decided within the policy's SLA, or the tenant's (D3). The
-   person's own line manager holds the Line manager layer whatever their
+   employee's own line manager holds the Line manager layer whatever their
    department. */
-function itemOf(r: StoredRequest, p: StoredPerson): ChainItem {
+function itemOf(r: StoredRequest, p: StoredEmployee): ChainItem {
   const first = r.history.find(h => h.from === 'pending' && !!h.layer);
   const slaBreached = firstLayerBreached({ raised: clockFromIso(r.raisedAt).date, escalated: r.escalated, firstSigned: first ? clockFromIso(first.at).date : null },
     policySla(config(), r.type), today());
   const manager = lineManagerCode(p);
-  return { personCode: p.code, location: p.location, department: p.department, ...(manager ? { manager } : {}), facts: { slaBreached } };
+  return { employeeCode: p.code, location: p.location, department: p.department, ...(manager ? { manager } : {}), facts: { slaBreached } };
 }
 /* The request's walk along the Leave chain as it stands, with the layers signed and who signed them. */
-const walkOf = (r: StoredRequest, p: StoredPerson, everyone?: readonly DeciderPerson[]) =>
+const walkOf = (r: StoredRequest, p: StoredEmployee, everyone?: readonly DeciderEmployee[]) =>
   walkNow('Leave', itemOf(r, p), leaveSignedLayers(r.history), everyone, leaveSigners(r.history));
 const waitingRole = (w: ChainWalk) => w.current?.step.role ?? 'Line manager';
 /* Review I5: the requests part-way along the chain, which a chain save may not strand. */
 registerWaiting('Leave', 'leave requests', () => Object.values(requests()).flatMap(r => {
-  const p = r.state === 'pending' ? personByCode(r.personCode) : undefined;
+  const p = r.state === 'pending' ? employeeByCode(r.employeeCode) : undefined;
   const signed = leaveSignedLayers(r.history);
   return p && signed.length ? [{ label: `${p.name} (${p.code}) · ${leaveRange(r.from, r.to)}`, item: itemOf(r, p), signed, signers: leaveSigners(r.history) }] : [];
 }));
@@ -139,12 +139,12 @@ function requireApprover(s: Signed) {
   if (!approvesIn('Leave', effectiveCode(s), s.caps)) requireCapability(s, 'team_leave');
 }
 /* Why the reader may not decide the request at its current layer, as a refusal. */
-function refuseBlocked(why: DecisionBlock, w: ChainWalk, s: Signed, p: StoredPerson): never {
+function refuseBlocked(why: DecisionBlock, w: ChainWalk, s: Signed, p: StoredEmployee): never {
   if (why === 'self') return refuseLeave({ code: 'SELF_APPROVAL', message: SELF_APPROVAL, next: 'Ask another approver at your location.' });
   if (why === 'signed') return refuse(403, { code: 'ALREADY_SIGNED', message: SIGNED_EARLIER, next: 'Another approver decides the next layer.' });
   if (why === 'scope') {
     requireTeamScope(s, p, 'decide leave');
-    return refuse(403, { code: 'scope', message: 'This request is for someone outside the people you decide leave for.', next: 'Their own manager decides it.' });
+    return refuse(403, { code: 'scope', message: 'This request is for someone outside the employees you decide leave for.', next: 'Their own manager decides it.' });
   }
   if (why === 'layer') return refuse(403, wrongLayerProblem(waitingRole(w)));
   const label = store.coll<{ label?: string }>('capabilities').team_leave?.label ?? 'team_leave';
@@ -156,13 +156,13 @@ const refusesNow = (why: DecisionBlock, r: StoredRequest) => r.state === 'pendin
 const decidersOf = (w: ChainWalk, except: string) => (w.current?.deciders ?? []).filter(c => c !== except);
 
 /* ------------------------------------------------------------- scope (D5) */
-function requireTeamScope(s: Signed, p: StoredPerson, what: string) {
+function requireTeamScope(s: Signed, p: StoredEmployee, what: string) {
   if (inScope(s, p.location)) return;
   const sc = scopeOf(s);
-  refuse(403, { code: 'scope', message: `You can ${what} for people at ${sc.all ? 'any location' : locName(sc.location)} only.`,
+  refuse(403, { code: 'scope', message: `You can ${what} for employees at ${sc.all ? 'any location' : locName(sc.location)} only.`,
     next: 'Ask an approver at their location.' });
 }
-const inMyScope = (s: Signed) => (p: StoredPerson) => inScope(s, p.location);
+const inMyScope = (s: Signed) => (p: StoredEmployee) => inScope(s, p.location);
 const managedLocations = (s: Signed) => {
   const sc = scopeOf(s);
   return Object.values(store.coll<{ code: string; name: string; active?: boolean }>('locations'))
@@ -170,7 +170,7 @@ const managedLocations = (s: Signed) => {
 };
 
 /* ------------------------------------------- entitlement and balance (D3) */
-function leaveOf(p: StoredPerson) {
+function leaveOf(p: StoredEmployee) {
   const c = config(), tl = typeLeaveFor(c.typeLeave, p.employeeType), policy = policyBy(c.policies, tl.policy);
   if (!policy) throw new Error('the leave config has no policies');
   const stored = recordAt(store.coll<StoredBase>('leaveBases'), `lb_${p.code}`);
@@ -199,7 +199,7 @@ function requestView(r: StoredRequest): LeaveRequestView {
 }
 /* "Approved by the line manager, waiting on the Service Manager", while a later layer has still to approve (module 8). */
 function waitingLabel(r: StoredRequest): string | null {
-  const last = leaveSignedLayers(r.history).at(-1), p = personByCode(r.personCode);
+  const last = leaveSignedLayers(r.history).at(-1), p = employeeByCode(r.employeeCode);
   if (r.state !== 'pending' || !last || !p) return null;
   return layerWaitingLabel(last, waitingRole(walkOf(r, p).walk));
 }
@@ -207,16 +207,16 @@ const ledgerView = (l: StoredLedger): LedgerView => ({ id: l.id, date: l.date, t
   ...(l.dates ? { dates: l.dates } : {}), qtyText: ledgerQty(l) });
 const newestFirst = <T extends { id: string }>(key: (x: T) => string) => (a: T, b: T) => key(b).localeCompare(key(a)) || b.id.localeCompare(a.id);
 const yearNow = () => leaveYear(today(), config().finYearStart);
-/* Leaver reconciliation in days and hours at the leaving date (D13), for the people `mine` lets through:
+/* Leaver reconciliation in days and hours at the leaving date (D13), for the employees `mine` lets through:
    a manager's locations on Team leave, the whole tenant on Leave setup. */
-function leaversIn(mine: (p: StoredPerson) => boolean) {
+function leaversIn(mine: (p: StoredEmployee) => boolean) {
   const yr = yearNow();
   const rows = Object.values(store.coll<StoredLeaver>('leavers')).flatMap(x => {
-    const p = personByCode(x.personCode);
+    const p = employeeByCode(x.employeeCode);
     if (!p || !mine(p)) return [];
     const L = leaveOf(p), months = monthsWorked(yr.start, p.start, x.leaveDate);
     const r = reconcileLeaver({ fullDays: L.ent.days, takenDays: L.bal.takenD, months, contractedHours: L.facts.contractedHours });
-    return [{ personCode: p.code, name: p.name, leaveDate: x.leaveDate, note: x.note, months, full: r.full, prorata: r.prorata, taken: r.taken,
+    return [{ employeeCode: p.code, name: p.name, leaveDate: x.leaveDate, note: x.note, months, full: r.full, prorata: r.prorata, taken: r.taken,
       diff: r.diff, hours: r.hours, verdict: r.verdict, tone: r.diff < 0 ? 'err' as const : r.diff > 0 ? 'warn' as const : 'ok' as const, action: r.action }];
   });
   return { rows, settled: SETTLED_IN_PAYROLL };
@@ -226,8 +226,8 @@ function leaversIn(mine: (p: StoredPerson) => boolean) {
 function requestFor(id: string): StoredRequest {
   return recordAt(requests(), id) ?? NOT_FOUND('leave request');
 }
-function personOf(code: string): StoredPerson {
-  return personByCode(code) ?? NOT_FOUND('person record');
+function employeeOf(code: string): StoredEmployee {
+  return employeeByCode(code) ?? NOT_FOUND('employee record');
 }
 function moved(r: StoredRequest, to: StoredRequest['state'], who: RotaActor, reason = '', layer = ''): Partial<StoredRequest> {
   return { state: to, history: [...r.history, { from: r.state, to, by: who, at: store.now(), reason, ...(layer ? { layer } : {}) }] };
@@ -240,15 +240,15 @@ const rotaAfter = (r: AbsenceWritten) => (r.written ? { rotaWeeks: r.weeks, cell
 /* ---------------------------------------------- the timesheet's link (D8) */
 /* The absence a day carries from leave records: booked leave (V), else
    sickness (S). Read for every tenant, with or without the rota. */
-export function leaveAbsenceOn(personCode: string, date: string): '' | 'V' | 'S' {
+export function leaveAbsenceOn(employeeCode: string, date: string): '' | 'V' | 'S' {
   if (!tenant().modules.L) return '';
-  return absenceOn(date, requestsOf(personCode), episodesOf(personCode), today(), returnedDates(personCode));
+  return absenceOn(date, requestsOf(employeeCode), episodesOf(employeeCode), today(), returnedDates(employeeCode));
 }
 /* My home's day dialog (1c group 7): the leave record or sickness episode
    behind leaveAbsenceOn's answer, and how the leave settings name a type. */
-export function leaveRecordOn(personCode: string, date: string) {
+export function leaveRecordOn(employeeCode: string, date: string) {
   if (!tenant().modules.L) return null;
-  return absenceRecordOn(date, requestsOf(personCode), episodesOf(personCode), today(), returnedDates(personCode));
+  return absenceRecordOn(date, requestsOf(employeeCode), episodesOf(employeeCode), today(), returnedDates(employeeCode));
 }
 const TYPE_FALLBACK: Record<string, { name: string; short: string; icon: string }> = {
   AL: { name: 'Annual leave', short: 'Leave', icon: '☀' }, SICK: { name: 'Sickness', short: 'Sick', icon: '✚' } };
@@ -269,14 +269,14 @@ function slaFor(r: StoredRequest, walk: ChainWalk, c: LeaveConfigRecord, now: st
 /* Module 6 Exceptions: every pending request whose approval SLA has been
    breached, as Team leave reads it, with whom it was escalated to. Nothing
    while the Leave module is off. */
-export function escalatedLeave(): { id: string; personCode: string; escalateTo: string }[] {
+export function escalatedLeave(): { id: string; employeeCode: string; escalateTo: string }[] {
   if (!tenant().modules.L) return [];
-  const c = config(), now = today(), everyone = chainPeople();
+  const c = config(), now = today(), everyone = chainEmployees();
   return Object.values(requests()).flatMap(r => {
-    const p = r.state === 'pending' ? personByCode(r.personCode) : undefined;
+    const p = r.state === 'pending' ? employeeByCode(r.employeeCode) : undefined;
     if (!p) return [];
     const { sla } = slaFor(r, walkOf(r, p, everyone).walk, c, now);
-    return sla.escalated ? [{ id: r.id, personCode: p.code, escalateTo: escalationTarget(c, sla.stage) }] : [];
+    return sla.escalated ? [{ id: r.id, employeeCode: p.code, escalateTo: escalationTarget(c, sla.stage) }] : [];
   });
 }
 /* LEAVE_CFG.blocksTimesheet, while the Leave module is on. */
@@ -291,11 +291,11 @@ export const leaveHandlers = [
   /* -------------------------------------------------------------- my leave */
   serve(getMyLeave, ({ session }) => {
     requireLeave();
-    const p = personOf(effectiveCode(session)), c = config(), L = leaveOf(p), yr = yearNow(), toilOn = flagOn('LV_TOIL');
+    const p = employeeOf(effectiveCode(session)), c = config(), L = leaveOf(p), yr = yearNow(), toilOn = flagOn('LV_TOIL');
     const next = leaveYear(addDays(yr.end, 1), c.finYearStart);
     const al = L.unit === 'hours' ? `${L.bal.leftH} hours left` : `${L.bal.leftD} of ${L.ent.days} days left`;
     return {
-      person: { code: p.code, name: p.name, manager: managerOf(p), employeeType: p.employeeType },
+      employee: { code: p.code, name: p.name, manager: managerOf(p), employeeType: p.employeeType },
       today: today(), year: yr, entitlement: entitlementView(L.ent), balance: balanceView(L.bal), facts: L.facts,
       nextYear: { ...next, leftD: L.balIn(next).leftD },
       daysToTake: L.bal.leftD > 0 ? daysToTakeText(L.bal, yr.end, toilOn) : '',
@@ -311,7 +311,7 @@ export const leaveHandlers = [
 
   serve(requestLeave, ({ session, body }) => {
     requireLeave();
-    const p = personOf(effectiveCode(session)), c = config(), L = leaveOf(p);
+    const p = employeeOf(effectiveCode(session)), c = config(), L = leaveOf(p);
     /* the part is checked by requestProblem (isLeavePart), which refuses with the domain's sentence */
     const checked = requestProblem({ type: body.type, from: body.from, to: body.to, part: body.part as LeavePart },
       { types: c.types, contractedHours: L.facts.contractedHours, checkBalance: flagOn('LV_ENT'), today: today(), finYearStart: c.finYearStart,
@@ -322,10 +322,10 @@ export const leaveHandlers = [
     const policy = c.policies.find(p => p.code === leaveType?.policy);
     /* approval off approves at once, but never a type that needs evidence: a manager has to see it first (review I3) */
     const automatic = policy?.approval === false && leaveType?.evidence !== true;
-    const systemActor: RotaActor = { personCode: 'leave-policy', name: 'Leave policy' };
+    const systemActor: RotaActor = { employeeCode: 'leave-policy', name: 'Leave policy' };
     const impact = tenant().modules.R ? coverImpact(rotaCoverDays(p.code, datesBetween(s.from, s.to))) : { text: ROTA_OFF_IMPACT, short: false };
     const id = nextNumId(requests(), 'lr');
-    const rec: StoredRequest = { id, version: 1, updatedAt: at, personCode: p.code, type: body.type, from: s.from, to: s.to, part: s.part, qty: s.qty,
+    const rec: StoredRequest = { id, version: 1, updatedAt: at, employeeCode: p.code, type: body.type, from: s.from, to: s.to, part: s.part, qty: s.qty,
       unit: s.unit, state: automatic ? 'approved' : 'pending', raisedAt: at, note: body.note?.trim() ?? '', impact: impact.text, short: impact.short, escalated: false,
       decidedAt: automatic ? at : '', decidedBy: automatic ? systemActor : null, reason: '',
       history: [{ from: '', to: automatic ? 'approved' : 'pending', by: automatic ? systemActor : who, at,
@@ -335,7 +335,7 @@ export const leaveHandlers = [
     let rota = NO_ROTA;
     if (automatic) {
       const mark = absenceMark(rec.type);
-      if (rotaLinked()) rota = writeAbsence({ personCode: p.code, dates: datesBetween(s.from, s.to), mark, by: systemActor, coverReason: leaveCoverReason(mark) });
+      if (rotaLinked()) rota = writeAbsence({ employeeCode: p.code, dates: datesBetween(s.from, s.to), mark, by: systemActor, coverReason: leaveCoverReason(mark) });
       notifyEvent('lv_req', 'subject', [p.code], approvedNotice(range, typeName));
     } else {
       notifyEvent('lv_req', 'actor', decidersOf(walkOf(rec, p).walk, p.code), requestedNotice(p.name, typeName, range, s.label, policySla(c, body.type)));
@@ -351,12 +351,12 @@ export const leaveHandlers = [
   serve(cancelLeave, ({ session, params, checkVersion }) => {
     requireLeave();
     const r = requestFor(params.id);
-    if (r.personCode !== effectiveCode(session))
+    if (r.employeeCode !== effectiveCode(session))
       refuse(403, { code: 'NOT_YOUR_REQUEST', message: NOT_YOUR_REQUEST, next: 'Only the colleague who asked for it can cancel it.' });
     const t = leaveTransitionProblem(r.state, 'cancelled');
     if (t) refuseLeave(t);
     checkVersion(r);
-    const p = personOf(r.personCode);
+    const p = employeeOf(r.employeeCode);
     const saved = bump(r, moved(r, 'cancelled', by(session)));
     requests()[r.id] = saved;
     notifyEvent('lv_req', 'actor', decidersOf(walkOf(r, p).walk, p.code), cancelledNotice(p.name, r.from));
@@ -368,11 +368,11 @@ export const leaveHandlers = [
   /* ------------------------------------------------------------ team leave */
   serve(listTeamLeave, ({ session, query }) => {
     requireLeave(); requireApprover(session);
-    const c = config(), now = today(), self = effectiveCode(session), everyone = chainPeople();
+    const c = config(), now = today(), self = effectiveCode(session), everyone = chainEmployees();
     /* the approver's own request is not theirs to decide (D5), as module 2's queue leaves out their own timesheet.
        Module 8: a request is in the queue while its current layer of the chain is the reader's to decide. */
     const pend = Object.values(requests()).flatMap(r => {
-      const p = r.state === 'pending' && r.personCode !== self ? personByCode(r.personCode) : undefined;
+      const p = r.state === 'pending' && r.employeeCode !== self ? employeeByCode(r.employeeCode) : undefined;
       if (!p) return [];
       const { walk, block, progress } = walkOf(r, p, everyone);
       return block(self) === null ? [{ r, p, walk, progress: progress() }] : [];
@@ -391,7 +391,7 @@ export const leaveHandlers = [
         advisories: [noticeAdvisory(r.from, raised, c.minNotice), cancelWindowAdvisory(r.from, now, c.cancelWindow)].filter((x): x is string => !!x) };
     });
     const q = (query.q ?? '').trim().toLowerCase();
-    const shown = views.filter(v => (!q || v.name.toLowerCase().includes(q) || v.personCode.toLowerCase().includes(q))
+    const shown = views.filter(v => (!q || v.name.toLowerCase().includes(q) || v.employeeCode.toLowerCase().includes(q))
       && (!query.type || v.type === query.type) && (query.short !== 'true' || v.short));
     const escalated = views.filter(v => v.sla.escalated).length;
     /* each policy may set its own SLA: P's sentence names the days while the breached requests share one */
@@ -405,7 +405,7 @@ export const leaveHandlers = [
 
   serve(approveLeave, ({ session, params, checkVersion }) => {
     requireLeave(); requireApprover(session);
-    const r = requestFor(params.id), p = personOf(r.personCode);
+    const r = requestFor(params.id), p = employeeOf(r.employeeCode);
     /* D5 and module 8: the reader must decide the request's current layer of the chain */
     const { walk, block } = walkOf(r, p), why = block(effectiveCode(session));
     if (why && refusesNow(why, r)) refuseBlocked(why, walk, session, p);
@@ -418,7 +418,7 @@ export const leaveHandlers = [
       const saved = bump(r, { history: [...r.history, { from: 'pending', to: 'pending', by: who, at: store.now(), reason: '', layer }] });
       requests()[r.id] = saved;
       const next = walkOf(saved, p).walk, waiting = waitingRole(next), range = leaveRange(r.from, r.to);
-      notifyEvent('lv_esc', 'actor', decidersOf(next, who.personCode), passedNotice(p.name, leaveTypeName(c.types, r.type), range, who.name, waiting));
+      notifyEvent('lv_esc', 'actor', decidersOf(next, who.employeeCode), passedNotice(p.name, leaveTypeName(c.types, r.type), range, who.name, waiting));
       notifyEvent('lv_esc', 'subject', [p.code], movedOnNotice(range, who.name, waiting));
       const auditId = writeAudit({ who: actor(session), act: passedAct(waiting), entity: 'leaveRequest', entityId: r.id,
         before: { state: r.state, layer }, after: { state: 'pending', layer: waiting, detail: `${decidedAudit(p.name, r.from)} · approved as ${layer} · now waiting on ${waiting}` } });
@@ -428,7 +428,7 @@ export const leaveHandlers = [
     requests()[r.id] = saved;
     notifyEvent('lv_ok', 'subject', [p.code], approvedNotice(leaveRange(r.from, r.to), leaveTypeName(c.types, r.type)));
     const mark = absenceMark(r.type);
-    const rota = rotaLinked() ? writeAbsence({ personCode: p.code, dates: datesBetween(r.from, r.to), mark, by: who, coverReason: leaveCoverReason(mark) }) : NO_ROTA;
+    const rota = rotaLinked() ? writeAbsence({ employeeCode: p.code, dates: datesBetween(r.from, r.to), mark, by: who, coverReason: leaveCoverReason(mark) }) : NO_ROTA;
     const auditId = writeAudit({ who: actor(session), act: 'Leave approved', entity: 'leaveRequest', entityId: r.id,
       before: { state: r.state }, after: { state: 'approved', detail: decidedAudit(p.name, r.from), ...rotaAfter(rota) } });
     return { record: requestView(saved), summary: approvedToast(firstName(p.name), rota.written > 0, rota.covers.length > 0), rota, auditId };
@@ -436,7 +436,7 @@ export const leaveHandlers = [
 
   serve(declineLeave, ({ session, params, body, checkVersion }) => {
     requireLeave(); requireApprover(session);
-    const r = requestFor(params.id), p = personOf(r.personCode);
+    const r = requestFor(params.id), p = employeeOf(r.employeeCode);
     const { walk, block } = walkOf(r, p), why = block(effectiveCode(session));
     if (why && refusesNow(why, r)) refuseBlocked(why, walk, session, p);
     const t = leaveTransitionProblem(r.state, 'declined');
@@ -456,10 +456,10 @@ export const leaveHandlers = [
   serve(getTeamBalances, ({ session }) => {
     requireLeave();
     const now = today(), mine = inMyScope(session);
-    const rows = Object.values(people()).filter(p => isActive(p) && mine(p)).sort((a, b) => a.name.localeCompare(b.name)).map(p => {
+    const rows = Object.values(employees()).filter(p => isActive(p) && mine(p)).sort((a, b) => a.name.localeCompare(b.name)).map(p => {
       const L = leaveOf(p);
       const next = L.mine.filter(r => (r.state === 'pending' || r.state === 'approved') && r.to >= now).sort((a, b) => a.from.localeCompare(b.from))[0];
-      return { personCode: p.code, name: p.name, policyName: L.policy.name, unit: L.unit, entDays: L.ent.days, entHours: L.ent.hours,
+      return { employeeCode: p.code, name: p.name, policyName: L.policy.name, unit: L.unit, entDays: L.ent.days, entHours: L.ent.hours,
         takenD: L.bal.takenD, leftD: L.bal.leftD, leftH: L.bal.leftH, toil: L.bal.toil, toilBy: L.bal.toilBy,
         next: next ? { from: next.from, state: next.state } : null };
     });
@@ -468,11 +468,11 @@ export const leaveHandlers = [
 
   serve(getEntitlement, ({ session, params }) => {
     requireLeave();
-    const p = personOf(params.personCode);
+    const p = employeeOf(params.employeeCode);
     if (p.code === effectiveCode(session)) requireCapability(session, 'own_leave');
     else { requireCapability(session, 'team_leave'); requireTeamScope(session, p, 'see leave'); }
     const L = leaveOf(p);
-    return { person: { code: p.code, name: p.name, employeeType: p.employeeType }, today: today(), year: yearNow(),
+    return { employee: { code: p.code, name: p.name, employeeType: p.employeeType }, today: today(), year: yearNow(),
       entitlement: entitlementView(L.ent), balance: balanceView(L.bal), facts: L.facts };
   }),
 
@@ -485,19 +485,19 @@ export const leaveHandlers = [
   serve(getSicknessBoard, ({ session }) => {
     requireLeave();
     const c = config(), now = today(), mine = inMyScope(session);
-    const team = Object.values(people()).filter(mine).sort((a, b) => a.name.localeCompare(b.name));
+    const team = Object.values(employees()).filter(mine).sort((a, b) => a.name.localeCompare(b.name));
     const rows = team.flatMap(p => {
       const eps = episodesOf(p.code), latest = eps.at(-1);
       if (!latest) return [];
       const b = bradford(eps, now, c.absenceTrigger);
-      return [{ personCode: p.code, name: p.name, latest: latestAbsenceText(latest, now), spells: b.spells, days: b.days, score: b.score,
+      return [{ employeeCode: p.code, name: p.name, latest: latestAbsenceText(latest, now), spells: b.spells, days: b.days, score: b.score,
         triggered: b.triggered, next: nextStepText(b.triggered, latest), episode: latest }];
     });
     const first = rows.find(r => r.triggered);
     const sickOnLeave = team.flatMap(p => sickDuringLeave(requestsOf(p.code), episodesOf(p.code), returnedDates(p.code), now)
-      .map(x => ({ personCode: p.code, name: p.name, ...x })));
+      .map(x => ({ employeeCode: p.code, name: p.name, ...x })));
     return {
-      rows, banner: first ? { personCode: first.personCode, text: triggerBannerText(first.name, first.score, c.absenceTrigger), note: TRIGGER_NOTE, episode: first.episode } : null,
+      rows, banner: first ? { employeeCode: first.employeeCode, text: triggerBannerText(first.name, first.score, c.absenceTrigger), note: TRIGGER_NOTE, episode: first.episode } : null,
       counts: { triggered: rows.filter(r => r.triggered).length, colleagues: rows.length }, trigger: c.absenceTrigger, tip: bradfordTip(c.absenceTrigger), today: now,
       colleagues: team.filter(isActive).map(p => ({ code: p.code, name: p.name })), reasons: [...config().sicknessReasons], sickOnLeave,
     };
@@ -505,7 +505,7 @@ export const leaveHandlers = [
 
   serve(recordSickness, ({ session, body }) => {
     requireLeave();
-    const p = personOf(body.personCode);
+    const p = employeeOf(body.employeeCode);
     requireTeamScope(session, p, 'record sickness');
     const now = today(), eps = episodesOf(p.code);
     const planned = recordSicknessPlan(eps, { from: body.from, to: body.to, reason: body.reason }, now, config().sicknessReasons);
@@ -519,11 +519,11 @@ export const leaveHandlers = [
       for (const e of merged) Reflect.deleteProperty(episodesColl(), e.id);
     } else {
       const id = nextNumId(episodesColl(), 'sk', 3);
-      rec = { id, version: 1, updatedAt: store.now(), personCode: p.code, from: plan.from, to: plan.to, reason: body.reason, note: body.note?.trim() ?? '', rtw: null };
+      rec = { id, version: 1, updatedAt: store.now(), employeeCode: p.code, from: plan.from, to: plan.to, reason: body.reason, note: body.note?.trim() ?? '', rtw: null };
     }
     episodesColl()[rec.id] = rec;
     const rota = rotaLinked()
-      ? writeAbsence({ personCode: p.code, dates: sicknessDates(rec, now, bookedLeaveDates(requestsOf(p.code), returnedDates(p.code))), mark: SICK, by: by(session),
+      ? writeAbsence({ employeeCode: p.code, dates: sicknessDates(rec, now, bookedLeaveDates(requestsOf(p.code), returnedDates(p.code))), mark: SICK, by: by(session),
         coverReason: leaveCoverReason(SICK) })
       : NO_ROTA;
     const range = leaveRange(body.from, body.to || body.from);
@@ -538,7 +538,7 @@ export const leaveHandlers = [
   serve(arrangeRtw, ({ session, params, checkVersion }) => {
     requireLeave();
     const e = recordAt(episodesColl(), params.id) ?? NOT_FOUND('absence');
-    const p = personOf(e.personCode);
+    const p = employeeOf(e.employeeCode);
     requireTeamScope(session, p, 'arrange a return to work');
     const problem = rtwProblem(e);
     if (problem) refuseLeave(problem);
@@ -555,7 +555,7 @@ export const leaveHandlers = [
 
   serve(giveDaysBack, ({ session, body }) => {
     requireLeave();
-    const p = personOf(body.personCode);
+    const p = employeeOf(body.employeeCode);
     requireTeamScope(session, p, 'give days back');
     const now = today(), L = leaveOf(p);
     const candidates = sickDuringLeave(requestsOf(p.code), episodesOf(p.code), returnedDates(p.code), now);
@@ -564,10 +564,10 @@ export const leaveHandlers = [
     const row = giveBackRow(body.dates, candidates, L.unit, L.facts.contractedHours, now);
     const days = Number(candidates.filter(x => body.dates.includes(x.date)).reduce((n, x) => n + x.days, 0).toFixed(2));
     const id = nextNumId(ledgerColl(), 'led', 3), who = by(session);
-    const rec: StoredLedger = { id, version: 1, updatedAt: store.now(), personCode: p.code, ...row, leaveType: 'AL', by: who };
+    const rec: StoredLedger = { id, version: 1, updatedAt: store.now(), employeeCode: p.code, ...row, leaveType: 'AL', by: who };
     ledgerColl()[id] = rec;
     /* the returned days are sickness now, not leave: S over exactly those days (D10) */
-    const rota = rotaLinked() ? writeAbsence({ personCode: p.code, dates: row.dates ?? [], mark: SICK, by: who, coverReason: leaveCoverReason(SICK) }) : NO_ROTA;
+    const rota = rotaLinked() ? writeAbsence({ employeeCode: p.code, dates: row.dates ?? [], mark: SICK, by: who, coverReason: leaveCoverReason(SICK) }) : NO_ROTA;
     notifyEvent('lv_ent', 'subject', [p.code], daysReturnedNotice(days));
     const auditId = writeAudit({ who: actor(session), act: 'Days returned', entity: 'leaveLedger', entityId: id, before: null,
       after: { qty: rec.qty, unit: rec.unit, dates: rec.dates, detail: daysReturnedToast(days, p.name), ...rotaAfter(rota) } });

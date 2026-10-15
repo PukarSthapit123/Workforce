@@ -3,7 +3,7 @@
    yearsService, serviceBonus, entitlement, takenDays, takenHours, balance,
    reconcileLeaver, leaveShape, leaveRecalc, lv-send, lv-cancel, decideLeave,
    applyLeaveToRota, record-sick, arrange-rtw and give-days-back). Every
-   function is pure: the policies, the config, the clock, the person's facts and
+   function is pure: the policies, the config, the clock, the employee's facts and
    their records come in as arguments, so the server refuses with exactly what
    the screen warns about.
 
@@ -185,7 +185,7 @@ export function yearShares(r: { from: string; to: string }, total: { days: numbe
 }
 
 /* -------------------------------------------------- entitlement (D3) */
-export interface PersonLeaveFacts { contractedHours: number; start: string; accruedHours?: number }
+export interface EmployeeLeaveFacts { contractedHours: number; start: string; accruedHours?: number }
 export interface CalcLine { label: string; value: string }
 export interface Entitlement { days: number; hours: number; policy: LeavePolicy; years: number; lines: CalcLine[] }
 export const DEFAULT_FULL_TIME_WEEKLY_HOURS = 37.5;
@@ -210,7 +210,7 @@ export interface EntitlementOptions {
 const carryLine = (policy: LeavePolicy, carry: EntitlementOptions['carry']): CalcLine[] => (policy.carry > 0 && carry
   ? [{ label: 'Carry-over', value: carry.note ?? `${carry.days} of ${policy.carry} days carried from ${carry.from}` }] : []);
 /* entitlement: a full, traceable calculation, not just a number. */
-export function entitlement(p: PersonLeaveFacts, policy: LeavePolicy, today: string, options: EntitlementOptions = {}): Entitlement {
+export function entitlement(p: EmployeeLeaveFacts, policy: LeavePolicy, today: string, options: EntitlementOptions = {}): Entitlement {
   const years = yearsService(p.start, today), lines: CalcLine[] = [], day = dailyHours(p.contractedHours);
   const fullTime = options.fullTimeWeeklyHours ?? DEFAULT_FULL_TIME_WEEKLY_HOURS;
   const ratio = p.contractedHours > 0 && policy.prorata ? Math.min(1, p.contractedHours / fullTime) : (p.contractedHours > 0 ? 1 : 0);
@@ -250,12 +250,12 @@ export function entitlement(p: PersonLeaveFacts, policy: LeavePolicy, today: str
   return { days, hours, policy, years, lines };
 }
 /* The "Simulate an hours change" dialog (D3): computed on the client, nothing written. */
-export function proRataSimulation(p: PersonLeaveFacts, newHours: number, policy: LeavePolicy, today: string, options: EntitlementOptions = {}) {
+export function proRataSimulation(p: EmployeeLeaveFacts, newHours: number, policy: LeavePolicy, today: string, options: EntitlementOptions = {}) {
   const before = entitlement(p, policy, today, options), after = entitlement({ ...p, contractedHours: newHours }, policy, today, options);
   const delta = round1(after.days - before.days);
   return { before, after, delta, text: `${delta >= 0 ? '+' : ''}${delta} days` };
 }
-export const SIMULATION_NOTE = 'This is a simulation. Contracted hours change on the person record in People, and entitlement follows from there.';
+export const SIMULATION_NOTE = 'This is a simulation. Contracted hours change on the employee record in Employees, and entitlement follows from there.';
 
 /* ------------------------------------------------- requests (D1, D2) */
 export const LEAVE_STATES = ['pending', 'approved', 'declined', 'cancelled'] as const;
@@ -292,7 +292,7 @@ export const PICK_BOTH_DATES = 'Pick both dates.';
 export const LAST_BEFORE_FIRST = 'The last day is before the first day.';
 export const halfDaySingle = (part: LeavePart) => `${PART_LABEL[part]} applies to a single day. Set both dates the same.`;
 /* leaveShape: what the request comes to. Calendar days, half a day for a morning
-   or afternoon, and hours at the person's day length. Bank holidays are not
+   or afternoon, and hours at the employee's day length. Bank holidays are not
    deducted (D2). A type held in weeks is stored in days. */
 export function leaveShape(input: RequestInput, typeUnit: LeaveUnit, contractedHours: number): { ok: true; shape: LeaveShape } | { ok: false; field: string; message: string } {
   const { from, to, part } = input;
@@ -344,7 +344,7 @@ export function overlapProblem(input: Pick<LeaveRecord, 'from' | 'to' | 'part'>,
   return clash ? { code: 'OVERLAPS', message: OVERLAPS, next: `Your request for ${leaveRange(clash.from, clash.to)} already covers them. Pick other dates.`, field: 'from' } : null;
 }
 /* lv-send, server side (D2): a known active type, the shape, no clash with
-   the person's own waiting or approved leave, and the annual leave balance
+   the employee's own waiting or approved leave, and the annual leave balance
    while automatic entitlement is on. What `leftIn` returns already holds back
    every other waiting request in that year. */
 export function requestProblem(input: RequestInput, ctx: BalanceCheckCtx & { types: readonly LeaveType[]; contractedHours: number; checkBalance: boolean; booked?: readonly Booked[] }):
@@ -381,7 +381,7 @@ export const declineReasonProblem = (reason: string): LeaveRefusal | null =>
 export const NOT_YOUR_REQUEST = 'You can cancel only your own requests.';
 
 /* ---------------------------------------------- balance (D2, D3) */
-/* The per-person base: what was taken this leave year before the seeded
+/* The per-employee base: what was taken this leave year before the seeded
    records, in the type's display unit, plus the TOIL bank and its use-by date.
    accruedHours is the bank worker's accrual to date (ACC policy). */
 export interface LeaveBase {
@@ -426,7 +426,7 @@ export function balanceOf(o: { ent: Entitlement; base: LeaveBase; contractedHour
 }
 /* The balance of one leave year. Legacy seed bases carry an explicit opening-
    used baseline so enabling carry-over does not invent a previous-year balance. */
-export interface YearBalanceInput { facts: PersonLeaveFacts; policy: LeavePolicy; base: LeaveBase; requests: readonly LeaveRecord[]; ledger: readonly LedgerRow[];
+export interface YearBalanceInput { facts: EmployeeLeaveFacts; policy: LeavePolicy; base: LeaveBase; requests: readonly LeaveRecord[]; ledger: readonly LedgerRow[];
   today: string; finYearStart: string; fullTimeWeeklyHours?: number; bhPaid?: boolean; workingBankHolidays?: (year: LeaveYearSpan) => number }
 export function yearBalance(o: YearBalanceInput, year: LeaveYearSpan): Balance {
   const current = inYear(o.today, year);
@@ -441,7 +441,7 @@ export function yearBalance(o: YearBalanceInput, year: LeaveYearSpan): Balance {
     : o.base.year === priorYear.label ? o.base.taken : 0;
   const priorBalance = balanceOf({ ent: priorEnt, base: { ...o.base, taken: baselineTaken }, contractedHours: o.facts.contractedHours,
     requests: o.requests, ledger: o.ledger, today: o.today, finYearStart: o.finYearStart, year: priorYear });
-  /* review I6: nothing carries from a leave year the person did not work all of. The entitlement has no
+  /* review I6: nothing carries from a leave year the employee did not work all of. The entitlement has no
      part-year rule to pro-rate the prior year with, so a starter after it began carries nothing. */
   const workedPrior = !isIsoDate(o.facts.start) || o.facts.start <= priorYear.start;
   const carry = workedPrior ? Math.max(0, Math.min(o.policy.carry, priorBalance.leftD)) : 0;
@@ -537,11 +537,11 @@ export const tellManagerToast = (manager: string) => `Sending messages is a futu
    layer that applies approves it, so its days count as waiting in the balance
    and reach the rota only then. Each layer's approval is a history row from
    pending, naming the layer's role. */
-export interface LeaveSign { from: string; to: string; by: { personCode: string; name: string }; at: string; layer?: string }
+export interface LeaveSign { from: string; to: string; by: { employeeCode: string; name: string }; at: string; layer?: string }
 const signsOf = (history: readonly LeaveSign[]) => history.filter(h => h.from === 'pending' && (h.to === 'pending' || h.to === 'approved') && !!h.layer);
 /* the roles that have approved the request, in order, and who approved as each */
 export const leaveSignedLayers = (history: readonly LeaveSign[]) => signsOf(history).map(h => h.layer ?? '');
-export const leaveSigners = (history: readonly LeaveSign[]) => signsOf(history).map(h => h.by.personCode);
+export const leaveSigners = (history: readonly LeaveSign[]) => signsOf(history).map(h => h.by.employeeCode);
 /* when the request reached the layer it waits on: its last layer's approval, else when it was raised */
 export const layerStartedAt = (history: readonly LeaveSign[], raisedAt: string) => signsOf(history).at(-1)?.at ?? raisedAt;
 /* The escalation condition ("Only when the SLA is breached"): the first layer
@@ -573,7 +573,7 @@ export const wrongLayerProblem = (waitingOn: string): LeaveRefusal => ({ code: '
 /* ---------------------------------------------- sickness (D9) */
 export interface RtwRequest { requestedAt: string; by: RotaActor }
 /* to is '' while the colleague is still off. */
-export interface SickEpisode { id: string; personCode: string; from: string; to: string; reason: string; note: string; rtw: RtwRequest | null }
+export interface SickEpisode { id: string; employeeCode: string; from: string; to: string; reason: string; note: string; rtw: RtwRequest | null }
 export const episodeEnd = (e: Pick<SickEpisode, 'from' | 'to'>, today: string) => e.to || (e.from > today ? e.from : today);
 export const episodeDays = (e: Pick<SickEpisode, 'from' | 'to'>, today: string) => daysBetween(e.from, episodeEnd(e, today)) + 1;
 export interface SickInput { from: string; to: string; reason: string }
@@ -642,7 +642,7 @@ export function giveBackProblem(picked: readonly string[], candidates: readonly 
   if (new Set(picked).size !== picked.length) return { code: 'VALIDATION', message: 'Each day can be given back once.', next: 'Pick each day once.', field: 'dates' };
   return null;
 }
-/* The one ledger row a give-back writes, in the person's display unit. */
+/* The one ledger row a give-back writes, in the employee's display unit. */
 export function giveBackRow(picked: readonly string[], candidates: readonly { date: string; days: number }[], unit: BalanceUnit, contractedHours: number, today: string): LedgerRow {
   const days = round2(sum(candidates.filter(c => picked.includes(c.date)).map(c => c.days)));
   return { date: today, type: 'Days returned', qty: unit === 'hours' ? round2(days * dailyHours(contractedHours)) : days, unit,
@@ -696,8 +696,8 @@ export const bookedLeaveDates = (requests: readonly Pick<LeaveRecord, 'type' | '
 export const sicknessDates = (e: Pick<SickEpisode, 'from' | 'to'>, today: string, booked: ReadonlySet<string>) =>
   datesOf(e.from, episodeEnd(e, today)).filter(d => !booked.has(d));
 /* The cell writes for one planned week, for the module 3 week path (setCells). */
-export const absenceCellWrites = (w: CellPlanWeek, person: { code: string; name: string }, mark: string, by: RotaActor, at: string): CellWrite[] =>
-  w.days.map(day => ({ personCode: person.code, name: person.name, day, to: mark, by, at, why: leaveRotaWhy(mark) }));
+export const absenceCellWrites = (w: CellPlanWeek, employee: { code: string; name: string }, mark: string, by: RotaActor, at: string): CellWrite[] =>
+  w.days.map(day => ({ employeeCode: employee.code, name: employee.name, day, to: mark, by, at, why: leaveRotaWhy(mark) }));
 /* The planned days that fall below the minimum once the cells are written. */
 export const shortDays = (lines: readonly Line[], days: readonly number[], min: number) => days.filter(d => onShift(lines, d) < min);
 

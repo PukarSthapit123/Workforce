@@ -1,15 +1,15 @@
 /* 1c group 7: My home, the month calendar, and My documents (brief D7, D12,
-   D13). One read gives a person's month as the server paints it: each day's
+   D13). One read gives an employee's month as the server paints it: each day's
    shift from the published rota, leave and sickness from the leave records,
    what the timesheet holds, and the tenant's bank holidays, with the month's
-   totals and live key and the figures around the calendar. The person is the
-   one signed in, or the one being viewed as. Documents are per person and are
+   totals and live key and the figures around the calendar. The employee is the
+   one signed in, or the one being viewed as. Documents are per employee and are
    listed only: opening one is not built. Payroll documents are payroll's and
    read "Not yet connected". */
 import { z } from 'zod';
 import { defineEndpoint } from './endpoints';
 import { RecordMeta } from './common';
-import { IsoDate } from './people';
+import { IsoDate } from './employees';
 import { TsState } from './timesheets';
 
 /* the same as src/domain/home.ts (the contract test holds them together) */
@@ -48,7 +48,7 @@ export const MonthKey = z.object({
 });
 export const HomeMonth = z.object({
   month: Month, label: z.string(), thisMonth: Month, bounds: z.object({ min: Month, max: Month }), today: IsoDate,
-  person: z.object({ code: z.string(), name: z.string(), location: z.string() }),
+  employee: z.object({ code: z.string(), name: z.string(), location: z.string() }),
   /* "Good afternoon, Amara" and "Support Worker · Shift worker · Willow House" */
   greeting: z.string(), who: z.string(),
   leadingBlanks: z.number().int().min(0).max(6),
@@ -73,12 +73,12 @@ export const HomeMonth = z.object({
 export type HomeMonth = z.infer<typeof HomeMonth>;
 
 export const DocumentRow = RecordMeta.extend({
-  personCode: z.string(), name: z.string(), category: z.string(), date: IsoDate, owner: z.string(), source: z.string(),
+  employeeCode: z.string(), name: z.string(), category: z.string(), date: IsoDate, owner: z.string(), source: z.string(),
 });
 export type DocumentRow = z.infer<typeof DocumentRow>;
 export const PayrollDocument = z.object({ id: z.string(), name: z.string(), category: z.string(), note: z.string() });
 export const MyDocuments = z.object({
-  person: z.object({ code: z.string(), name: z.string() }),
+  employee: z.object({ code: z.string(), name: z.string() }),
   items: z.array(DocumentRow), payroll: z.array(PayrollDocument),
 });
 export type MyDocuments = z.infer<typeof MyDocuments>;

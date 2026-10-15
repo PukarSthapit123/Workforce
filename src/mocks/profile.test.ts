@@ -2,16 +2,16 @@ import { server } from './node';
 import { store } from './store';
 import { Refusal } from '@/contract/common';
 import { decideProfileChange, getProfile, listProfileChanges, proposeChanges } from '@/contract/profile';
-import { accountOf, audits, caller, fault, personOf, resetTo, snapshot, tokenFor, type Persona } from '@/test/api-helpers';
+import { accountOf, audits, caller, fault, employeeOf, resetTo, snapshot, tokenFor, type Persona } from '@/test/api-helpers';
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' })); afterAll(() => server.close());
 beforeEach(() => resetTo('social'));
 const as = async (p: Persona) => caller(await tokenFor(p));
-const WRITES = ['people', 'profileChanges', 'personHistory', 'audit'];
-interface StoredChange { id: string; version: number; personCode: string; field: string; status: string; stage: string; from: string; to: string }
+const WRITES = ['employees', 'profileChanges', 'employeeHistory', 'audit'];
+interface StoredChange { id: string; version: number; employeeCode: string; field: string; status: string; stage: string; from: string; to: string }
 const changes = () => Object.values(store.coll<StoredChange>('profileChanges'));
 const changeFor = (code: string, field: string) => {
-  const c = changes().find(x => x.personCode === code && x.field === field && x.status === 'pending');
+  const c = changes().find(x => x.employeeCode === code && x.field === field && x.status === 'pending');
   if (!c) throw new Error(`no pending ${field} change for ${code}`);
   return c;
 };
@@ -21,11 +21,11 @@ const decideWith = (call: Call, c: { id: string; version: number }, decision: 'a
   call('POST', `/api/v1/profile-changes/${c.id}/decision`, { decision, reason }, c.version);
 const decide = async (who: Persona, c: { id: string; version: number }, decision: 'approve' | 'decline', reason = '') =>
   decideWith(await as(who), c, decision, reason);
-const me = () => personOf(accountOf('employee').personCode);
+const me = () => employeeOf(accountOf('employee').employeeCode);
 /* A bank change the manager has already passed on, waiting for payroll. */
-const atPayroll = (code: string, from = String(personOf(code).bankAccount ?? '')) => {
+const atPayroll = (code: string, from = String(employeeOf(code).bankAccount ?? '')) => {
   const id = `pfc_test_payroll_${code}`;
-  store.coll('profileChanges')[id] = { id, version: 2, updatedAt: store.now(), personCode: code, field: 'bankAccount', from, to: '87654321',
+  store.coll('profileChanges')[id] = { id, version: 2, updatedAt: store.now(), employeeCode: code, field: 'bankAccount', from, to: '87654321',
     note: '', raisedAt: store.now(), status: 'pending', stage: 'payroll', route: ['manager', 'payroll'], decisions: [] };
   return { id, version: 2 };
 };
@@ -33,11 +33,11 @@ const atPayroll = (code: string, from = String(personOf(code).bankAccount ?? '')
 describe('GET /api/v1/profile', () => {
   test('an employee reads their own record, the six fields, and nothing pending', async () => {
     const p = getProfile.response.parse((await (await as('employee'))('GET', '/api/v1/profile')).body);
-    expect(p.person.code).toBe(accountOf('employee').personCode);
+    expect(p.employee.code).toBe(accountOf('employee').employeeCode);
     expect(p.fields.map(f => f.key)).toEqual(['phone', 'address', 'emergencyName', 'emergencyPhone', 'bankAccount', 'bankSortCode']);
     expect(p.pending).toEqual([]);
     expect(p.selfEdit).toBe(true);
-    expect(p.person.bankAccount).toMatch(/^(\*{4}.{0,4})?$/);
+    expect(p.employee.bankAccount).toMatch(/^(\*{4}.{0,4})?$/);
   });
   test('an admin, who has no own profile capability, is refused', async () => {
     expect((await (await as('admin'))('GET', '/api/v1/profile')).status).toBe(403);
@@ -92,10 +92,10 @@ describe('POST /api/v1/profile-changes', () => {
 });
 
 describe('GET /api/v1/profile-changes', () => {
-  test('a manager sees the pending changes for people at their location', async () => {
+  test('a manager sees the pending changes for employees at their location', async () => {
     const q = listProfileChanges.response.parse((await (await as('manager'))('GET', '/api/v1/profile-changes')).body);
-    expect(q.map(c => [c.personCode, c.field]).sort()).toEqual([['CP-1088', 'phone'], ['CP-1201', 'address']]);
-    expect(q[0]?.personName).toBeTruthy();
+    expect(q.map(c => [c.employeeCode, c.field]).sort()).toEqual([['CP-1088', 'phone'], ['CP-1201', 'address']]);
+    expect(q[0]?.employeeName).toBeTruthy();
   });
   test('an employee is refused, naming the capability', async () => {
     const r = await (await as('employee'))('GET', '/api/v1/profile-changes');
@@ -109,9 +109,9 @@ describe('GET /api/v1/profile-changes', () => {
   });
   test('payroll is not offered its own bank change, which it could not decide', async () => {
     atPayroll(me().code);
-    const own = atPayroll(accountOf('admin').personCode);
+    const own = atPayroll(accountOf('admin').employeeCode);
     const q = listProfileChanges.response.parse((await (await as('admin'))('GET', '/api/v1/profile-changes')).body);
-    expect(q.map(c => c.personCode)).toEqual([me().code]);
+    expect(q.map(c => c.employeeCode)).toEqual([me().code]);
     expect(q.map(c => c.id)).not.toContain(own.id);
   });
 });
@@ -123,24 +123,24 @@ describe('POST /api/v1/profile-changes/:id/decision', () => {
     expect(r.status).toBe(200);
     const out = decideProfileChange.response.parse(r.body);
     expect(out.record).toMatchObject({ status: 'approved', stage: 'done' });
-    expect(out.person?.phone).toBe(c.to);
-    expect(personOf('CP-1088').phone).toBe(c.to);
-    expect(Object.values(store.coll<{ personCode: string; source: string }>('personHistory')).some(h => h.personCode === 'CP-1088' && h.source === 'profile-change')).toBe(true);
+    expect(out.employee?.phone).toBe(c.to);
+    expect(employeeOf('CP-1088').phone).toBe(c.to);
+    expect(Object.values(store.coll<{ employeeCode: string; source: string }>('employeeHistory')).some(h => h.employeeCode === 'CP-1088' && h.source === 'profile-change')).toBe(true);
     expect(audits().find(a => a.id === out.auditId)?.act).toBe('Profile change approved');
   });
   test('a decline needs a reason, then leaves the record as it was', async () => {
-    const c = changeFor('CP-1201', 'address'), was = personOf('CP-1201').address;
+    const c = changeFor('CP-1201', 'address'), was = employeeOf('CP-1201').address;
     expect(Refusal.parse((await decide('manager', c, 'decline')).body).field).toBe('reason');
     const out = decideProfileChange.response.parse((await decide('manager', c, 'decline', 'Address not recognised')).body);
-    expect(out).toMatchObject({ record: { status: 'declined' }, person: null });
-    expect(personOf('CP-1201').address).toBe(was);
+    expect(out).toMatchObject({ record: { status: 'declined' }, employee: null });
+    expect(employeeOf('CP-1201').address).toBe(was);
     expect(audits().find(a => a.id === out.auditId)).toMatchObject({ act: 'Profile change declined', reason: 'Address not recognised' });
   });
   test('a bank change approved by the manager waits for payroll, and the record does not change until payroll approves', async () => {
     await (await as('employee'))('POST', '/api/v1/profile-changes', { changes: [{ field: 'bankAccount', to: '12345678' }], note: '' });
     const was = me().bankAccount;
     const first = decideProfileChange.response.parse((await decide('manager', changeFor(me().code, 'bankAccount'), 'approve')).body);
-    expect(first).toMatchObject({ record: { status: 'pending', stage: 'payroll' }, person: null });
+    expect(first).toMatchObject({ record: { status: 'pending', stage: 'payroll' }, employee: null });
     expect(me().bankAccount).toBe(was);
     expect(audits().find(a => a.id === first.auditId)?.act).toBe('Profile change passed to payroll');
     const again = await decide('manager', changeFor(me().code, 'bankAccount'), 'approve');
@@ -151,13 +151,13 @@ describe('POST /api/v1/profile-changes/:id/decision', () => {
     const last = decideProfileChange.response.parse((await decide('admin', changeFor(me().code, 'bankAccount'), 'approve')).body);
     expect(last.record.status).toBe('approved');
     expect(me().bankAccount).toBe('12345678');
-    expect(last.person?.bankAccount).toBe('****5678');
+    expect(last.employee?.bankAccount).toBe('****5678');
   });
   test('nobody decides a change to their own details', async () => {
-    const mgr = accountOf('manager').personCode;
+    const mgr = accountOf('manager').employeeCode;
     await (await as('manager'))('POST', '/api/v1/profile-changes', { changes: [{ field: 'phone', to: '07700 900999' }], note: '' });
     const queue = listProfileChanges.response.parse((await (await as('manager'))('GET', '/api/v1/profile-changes')).body);
-    expect(queue.map(c => c.personCode)).not.toContain(mgr);
+    expect(queue.map(c => c.employeeCode)).not.toContain(mgr);
     const call = await as('manager'), before = snapshot(...WRITES);
     const r = await decideWith(call, changeFor(mgr, 'phone'), 'approve');
     expect(r.status).toBe(409);
@@ -165,7 +165,7 @@ describe('POST /api/v1/profile-changes/:id/decision', () => {
     expect(snapshot(...WRITES)).toEqual(before);
   });
   test('nobody decides their own bank change at the payroll stage either', async () => {
-    const admin = accountOf('admin').personCode, c = atPayroll(admin);
+    const admin = accountOf('admin').employeeCode, c = atPayroll(admin);
     const call = await as('admin'), before = snapshot(...WRITES);
     const r = await decideWith(call, c, 'approve');
     expect(r.status).toBe(409);
@@ -181,20 +181,20 @@ describe('POST /api/v1/profile-changes/:id/decision', () => {
     expect(snapshot(...WRITES)).toEqual(before);
   });
   test('a change the record has overtaken is refused, and the newer value stands', async () => {
-    const c = changeFor('CP-1088', 'phone'), p = personOf('CP-1088');
-    await (await as('admin'))('PATCH', `/api/v1/people/${p.id}`, { phone: '07700 900555' }, p.version);
+    const c = changeFor('CP-1088', 'phone'), p = employeeOf('CP-1088');
+    await (await as('admin'))('PATCH', `/api/v1/employees/${p.id}`, { phone: '07700 900555' }, p.version);
     const r = await decide('manager', c, 'approve');
     expect(r.status).toBe(409);
     expect(Refusal.parse(r.body)).toMatchObject({ code: 'changed-since', next: 'Decline this change and ask for a new proposal.' });
-    expect(personOf('CP-1088').phone).toBe('07700 900555');
+    expect(employeeOf('CP-1088').phone).toBe('07700 900555');
     expect(changeFor('CP-1088', 'phone').status).toBe('pending');
   });
   test('a manager cannot decide for someone at another location', async () => {
-    const mine = String(personOf(accountOf('manager').personCode).location);
-    const other = Object.values(store.coll<{ code: string; location: string }>('people')).find(p => p.location !== mine);
+    const mine = String(employeeOf(accountOf('manager').employeeCode).location);
+    const other = Object.values(store.coll<{ code: string; location: string }>('employees')).find(p => p.location !== mine);
     if (!other) throw new Error('nobody outside the manager\'s location');
     const id = 'pfc_test_other';
-    store.coll('profileChanges')[id] = { id, version: 1, updatedAt: store.now(), personCode: other.code, field: 'phone', from: '', to: '1',
+    store.coll('profileChanges')[id] = { id, version: 1, updatedAt: store.now(), employeeCode: other.code, field: 'phone', from: '', to: '1',
       note: '', raisedAt: store.now(), status: 'pending', stage: 'manager', route: ['manager'], decisions: [] };
     const r = await decide('manager', { id, version: 1 }, 'approve');
     expect(r.status).toBe(403);
@@ -202,7 +202,7 @@ describe('POST /api/v1/profile-changes/:id/decision', () => {
   });
   test('a decided change cannot be decided again', async () => {
     await decide('manager', changeFor('CP-1088', 'phone'), 'approve');
-    const done = changes().find(c => c.personCode === 'CP-1088' && c.field === 'phone');
+    const done = changes().find(c => c.employeeCode === 'CP-1088' && c.field === 'phone');
     if (!done) throw new Error('change vanished');
     const r = await decide('manager', done, 'decline', 'Too late');
     expect(r.status).toBe(409);

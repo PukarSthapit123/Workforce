@@ -40,10 +40,10 @@ function useAdvertise(view: RotaWeekView, onDone: () => void) {
 /* sugHTML (v15:9819-9833): who could take the shift, best first with the
    reasons, and who is ruled out by which rule. */
 function Suggestions({ view, day, code, busy, onAssign }: {
-  view: RotaWeekView; day: number; code: string; busy: boolean; onAssign: (personCode: string) => void;
+  view: RotaWeekView; day: number; code: string; busy: boolean; onAssign: (employeeCode: string) => void;
 }) {
   const q = useCellSuggestions(view.location.code, view.weekStart, day, code);
-  const rowOf = (c: string) => view.rows.find(r => r.personCode === c);
+  const rowOf = (c: string) => view.rows.find(r => r.employeeCode === c);
   if (!q.data) return <Small>{q.isError ? 'Suggestions could not be loaded.' : 'Finding who could take it…'}</Small>;
   const { ok, no } = q.data;
   return (
@@ -51,20 +51,20 @@ function Suggestions({ view, day, code, busy, onAssign }: {
       <div className="mb-sm flex items-center text-xs font-bold tracking-[.08em] text-text-muted">Suggested
         <Tip testId={tid.trota.sugTip} text="Eligibility is checked first as a hard rule. The ranking only orders whoever already passed it." /></div>
       {ok.length ? ok.slice(0, 3).map((x, i) => {
-        const r = rowOf(x.personCode);
+        const r = rowOf(x.employeeCode);
         return (
-          <SugCard key={x.personCode} testId={tid.trota.sug(x.personCode)} best={i === 0} name={x.name}
+          <SugCard key={x.employeeCode} testId={tid.trota.sug(x.employeeCode)} best={i === 0} name={x.name}
             sub={`${x.category}${r && r.contractedHours > 0 ? ` · ${r.hours.rot}h of ${r.contractedHours}h` : ''}`}
             why={x.why.length ? x.why : [NO_REASONS_WHY]}
             actions={<>
-              <Button testId={tid.trota.sugAssign(x.personCode)} kind={i === 0 ? 'primary' : 'ghost'} small pending={busy} onClick={() => onAssign(x.personCode)}>Assign</Button>
-              <Button testId={tid.trota.sugAsk(x.personCode)} kind="ghost" small onClick={() => askFirst(x.name)}>Ask first</Button>
+              <Button testId={tid.trota.sugAssign(x.employeeCode)} kind={i === 0 ? 'primary' : 'ghost'} small pending={busy} onClick={() => onAssign(x.employeeCode)}>Assign</Button>
+              <Button testId={tid.trota.sugAsk(x.employeeCode)} kind="ghost" small onClick={() => askFirst(x.name)}>Ask first</Button>
             </>} />);
       }) : <Empty testId={tid.trota.sugNone}>Nobody can take this shift without breaking a hard rule.</Empty>}
       {ok.length > 3 && <Small testId={tid.trota.sugMore}>{ok.length - 3} more could take it, ranked lower.</Small>}
       {no.length > 0 && <RuledOutList label={<span className="flex items-center">Not eligible, and why
-        <Tip testId={tid.trota.ruledTip} text="These people are never offered the shift while the exclusion stands." /></span>}>
-        {no.slice(0, 7).map(x => <RuledOutRow key={x.personCode} testId={tid.trota.ruled(x.personCode)} name={x.name} why={`${x.rule}: ${x.reason}`} />)}
+        <Tip testId={tid.trota.ruledTip} text="These employees are never offered the shift while the exclusion stands." /></span>}>
+        {no.slice(0, 7).map(x => <RuledOutRow key={x.employeeCode} testId={tid.trota.ruled(x.employeeCode)} name={x.name} why={`${x.rule}: ${x.reason}`} />)}
       </RuledOutList>}
     </>);
 }
@@ -76,9 +76,9 @@ function ShiftPicker({ view, value, onChange, label = 'Which shift', hint }: {
 }
 
 /* addShiftBox (v15:9834-9852): an empty cell. Pick the shift, then assign this
-   person, or one of the suggestions, or advertise it to the bank. */
+   employee, or one of the suggestions, or advertise it to the bank. */
 export function AddShiftDialog({ view, row, day, busy, onAssign, onClose }: {
-  view: RotaWeekView; row: RotaRow; day: number; busy: boolean; onAssign: (personCode: string, code: string) => void; onClose: () => void;
+  view: RotaWeekView; row: RotaRow; day: number; busy: boolean; onAssign: (employeeCode: string, code: string) => void; onClose: () => void;
 }) {
   const [code, setCode] = useState(view.shifts[0]?.code ?? '');
   const ad = useAdvertise(view, onClose);
@@ -96,7 +96,7 @@ export function AddShiftDialog({ view, row, day, busy, onAssign, onClose }: {
           <div><div className="text-sm font-semibold">{row.name}</div>
             <Small>{row.jobProfileName} · {row.typeName} · {row.contractedHours > 0 ? `${row.hours.rot}h of ${row.contractedHours}h this week` : 'bank'}</Small></div>
           <div className="ml-auto"><Button testId={tid.trota.assignThis} kind="primary" small pending={busy}
-            onClick={() => onAssign(row.personCode, code)}>Assign {row.name.split(' ')[0]}</Button></div>
+            onClick={() => onAssign(row.employeeCode, code)}>Assign {row.name.split(' ')[0]}</Button></div>
         </div>
       </div>
       <div className="mt-[18px]"><Suggestions view={view} day={day} code={code} busy={busy} onAssign={p => onAssign(p, code)} /></div>
@@ -104,9 +104,9 @@ export function AddShiftDialog({ view, row, day, busy, onAssign, onClose }: {
 }
 
 /* gapBox (v15:9853-9866): a day below the minimum. The shift with the fewest
-   people that day is picked to start with. */
+   employees that day is picked to start with. */
 export function GapDialog({ view, day, busy, onAssign, onClose }: {
-  view: RotaWeekView; day: number; busy: boolean; onAssign: (personCode: string, code: string) => void; onClose: () => void;
+  view: RotaWeekView; day: number; busy: boolean; onAssign: (employeeCode: string, code: string) => void; onClose: () => void;
 }) {
   const [code, setCode] = useState(() => thinnest(day, view.rows.map(r => r.line), view.shifts) ?? view.shifts[0]?.code ?? '');
   const ad = useAdvertise(view, onClose);
@@ -117,10 +117,10 @@ export function GapDialog({ view, day, busy, onAssign, onClose }: {
         {view.rules.fulfil && <Button testId={tid.trota.advertise} kind="secondary" pending={ad.pending}
           onClick={() => ad.send(day, code, '', false, `Cover request opened for ${longDay(view.weekStart, day)}`)}>Advertise it instead</Button>}
       </>}>
-      <Banner tone="err" title={`${longDay(view.weekStart, day)} has ${view.onShift[day] ?? 0} of ${view.min} people on shift`}>
+      <Banner tone="err" title={`${longDay(view.weekStart, day)} has ${view.onShift[day] ?? 0} of ${view.min} employees on shift`}>
         {view.location.name} is {view.location.level} support, so it needs {view.min} per shift.</Banner>
       <ShiftPicker view={view} value={code} onChange={setCode} label="Which shift needs filling"
-        hint={`Fewest people are on the ${shiftName(view.shifts, code).toLowerCase()} shift that day.`} />
+        hint={`Fewest employees are on the ${shiftName(view.shifts, code).toLowerCase()} shift that day.`} />
       <Suggestions view={view} day={day} code={code} busy={busy} onAssign={p => onAssign(p, code)} />
     </Modal>);
 }
@@ -136,7 +136,7 @@ export function ShiftDialog({ view, row, day, busy, onChange, onRemove, onClose 
         <Button testId={tid.trota.cancel} kind="ghost" onClick={onClose}>Close</Button>
         <Button testId={tid.trota.remove} kind="danger" pending={busy} onClick={onRemove}>Remove this shift</Button>
       </>}>
-      <Fact label="Colleague" testId={tid.trota.fact('colleague')}>{row.name} · <span className="font-mono">{row.personCode}</span></Fact>
+      <Fact label="Colleague" testId={tid.trota.fact('colleague')}>{row.name} · <span className="font-mono">{row.employeeCode}</span></Fact>
       <Fact label="Date" testId={tid.trota.fact('date')}>{longDay(view.weekStart, day)} {addDays(view.weekStart, day).slice(0, 4)}</Fact>
       <Fact label="Time" testId={tid.trota.fact('time')}>{shiftTime(sh, code)} · {shiftHours(sh, code)} hours</Fact>
       <Fact label="Job profile">{row.jobProfileName}</Fact>
@@ -159,7 +159,7 @@ export function ShiftDialog({ view, row, day, busy, onChange, onRemove, onClose 
    written. Leave and sickness are kept; each removal is recorded. */
 export function ClearDialog({ view, onClose }: { view: RotaWeekView; onClose: () => void }) {
   const clear = useClearWeek();
-  const p = clearPreview(Object.fromEntries(view.rows.map(r => [r.personCode, r.line])), view.rows.map(r => r.personCode));
+  const p = clearPreview(Object.fromEntries(view.rows.map(r => [r.employeeCode, r.line])), view.rows.map(r => r.employeeCode));
   const go = () => clear.mutate(ref(view), { onSuccess: r => { onClose(); toastInfo(r.summary); } });
   return (
     <Modal open onOpenChange={o => { if (!o) onClose(); }} title={`Clear week ${view.isoWeek}?`}
@@ -170,7 +170,7 @@ export function ClearDialog({ view, onClose }: { view: RotaWeekView; onClose: ()
       <Fact label="Week">{weekRange(view.weekStart)}</Fact>
       <Fact label="Location">{view.location.name}</Fact>
       <Fact label="Shifts to remove" testId={tid.trota.fact('clear-shifts')}>{p.shifts}</Fact>
-      <Fact label="Colleagues affected" testId={tid.trota.fact('clear-people')}>{p.colleagues}</Fact>
+      <Fact label="Colleagues affected" testId={tid.trota.fact('clear-employees')}>{p.colleagues}</Fact>
       <div className="mt-md">
         {p.absence > 0 && <Banner tone="info" title={`${p.absence} leave or sickness day(s) will be kept`}>Approved absence is not a shift and is not removed by clearing.</Banner>}
         <Banner tone="warn" title="This cannot be undone from here">
@@ -213,7 +213,7 @@ export function RepeatDialog({ view, onClose }: { view: RotaWeekView; onClose: (
         <Button testId={tid.trota.repeatConfirm} kind="primary" pending={repeat.anyPending} onClick={go}>Repeat the week</Button>
       </>}>
       <Fact label="Source week">{weekRange(view.weekStart)}</Fact>
-      <Fact label="Colleagues with shifts" testId={tid.trota.fact('repeat-people')}>{filled}</Fact>
+      <Fact label="Colleagues with shifts" testId={tid.trota.fact('repeat-employees')}>{filled}</Fact>
       <div className="mt-md">
         <Field label="Repeat for" hint="Counted from the week after this one.">
           <SelectBox testId={tid.trota.repeatWeeks} value={weeks} onValueChange={setWeeks}
@@ -262,7 +262,7 @@ export function HorizonDialog({ view, onJump, onClose }: { view: RotaWeekView; o
 }
 
 /* adhocBox (v15:9895-9914): a shift on top of the minimum. Suggest someone puts
-   the best eligible person in the suggested cover; Advertise opens an urgent
+   the best eligible employee in the suggested cover; Advertise opens an urgent
    cover request. */
 export function AdhocDialog({ view, onPlan, onClose }: { view: RotaWeekView; onPlan: (items: PlanItem[]) => void; onClose: () => void }) {
   const [day, setDay] = useState('6');
@@ -276,9 +276,9 @@ export function AdhocDialog({ view, onPlan, onClose }: { view: RotaWeekView; onP
     const best = sug.data?.ok[0];
     if (!sug.data) return;
     onClose();
-    if (best) onPlan([{ day: d, code, none: false, personCode: best.personCode, name: best.name, why: best.why }]);
+    if (best) onPlan([{ day: d, code, none: false, employeeCode: best.employeeCode, name: best.name, why: best.why }]);
     else {
-      onPlan([{ day: d, code, none: true, personCode: '', name: '', why: [] }]);
+      onPlan([{ day: d, code, none: true, employeeCode: '', name: '', why: [] }]);
       toastRefusal({ message: NOBODY_CAN_TAKE, next: 'Advertise it instead.' });
     }
   };

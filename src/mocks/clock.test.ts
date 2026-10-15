@@ -32,13 +32,13 @@ const moved = (r: { status: number; body: unknown }) => { expect(r.status).toBe(
 const clockAudits = () => audits().filter(a => a.entity === 'clockRecord').map(a => a.act);
 interface Day { state: string; captureSource: string; entries: { start: string; finish: string; breaks: { start: string; end: string }[] }[]; shift: string }
 const day = (code: string, date: string) => store.coll<Day>('timesheetDays')[`tsd_${code}_${date}`];
-interface Note { id: string; personId: string; title: string; body: string; event?: string }
+interface Note { id: string; employeeId: string; title: string; body: string; event?: string }
 const notes = () => Object.values(store.coll<Note>('notifications')).filter(n => !n.id.startsWith('ntf_seed_'));
 const tenantRec = () => { const t = store.coll<{ modules: Record<string, boolean>; flags: Record<string, boolean>; extras: { breaksMax: number } }>('tenant').tenant; if (!t) throw new Error('no tenant'); return t; };
 /* A clock left running on an earlier day, planted straight into the store. */
 function plantOpen(code: string, date: string, inAt = '07:02') {
   const id = `clk_${code}_${date}`;
-  store.coll('clockRecords')[id] = { id, version: 1, updatedAt: london(inAt, date), personCode: code, date, events: [{ kind: 'in', at: london(inAt, date) }], late: false, closedLate: null };
+  store.coll('clockRecords')[id] = { id, version: 1, updatedAt: london(inAt, date), employeeCode: code, date, events: [{ kind: 'in', at: london(inAt, date) }], late: false, closedLate: null };
 }
 
 describe('a day on the clock (D1, D2, D3)', () => {
@@ -104,7 +104,7 @@ describe('a day on the clock (D1, D2, D3)', () => {
 });
 
 describe('own only and the gates (Review Focus 1, D4)', () => {
-  test('nobody reaches another person\'s clock: every path is the caller\'s own, and a close for a day only someone else has is 404', async () => {
+  test('nobody reaches another employee\'s clock: every path is the caller\'s own, and a close for a day only someone else has is 404', async () => {
     plantOpen('CP-1088', '2026-08-11');
     const amara = await as('employee'), before = snapshot(...WRITES);
     expect((await mine(amara)).open).toBeNull();
@@ -150,7 +150,7 @@ describe('own only and the gates (Review Focus 1, D4)', () => {
     expect(r.status).toBe(409);
     expect(refusal(r)).toMatchObject({ code: 'ABSENCE_BLOCKED', message: expect.stringContaining('Annual leave is recorded for this day.') });
     const id = 'tsd_CP-1088_2026-08-11';
-    store.coll('timesheetDays')[id] = { ...store.coll<Record<string, unknown>>('timesheetDays')['tsd_CP-1042_2026-08-03'], id, personCode: 'CP-1088', date: '2026-08-11', entries: [], nonWorkingReason: 'Called in', workedAnyway: true };
+    store.coll('timesheetDays')[id] = { ...store.coll<Record<string, unknown>>('timesheetDays')['tsd_CP-1042_2026-08-03'], id, employeeCode: 'CP-1088', date: '2026-08-11', entries: [], nonWorkingReason: 'Called in', workedAnyway: true };
     expect((await mine(marcus)).gates.blocked).toBeNull();
     moved(await move(marcus, 'in', 0));
   });
@@ -210,7 +210,7 @@ describe('moves, versions and the break cap (Review Focus 2, D2)', () => {
 });
 
 describe('clock out goes through the day save (Review Focus 3, D3)', () => {
-  test('a finish past the daily maximum is refused with module 2\'s sentence, nothing is written, and the person clocks out at a time they choose (review M3)', async () => {
+  test('a finish past the daily maximum is refused with module 2\'s sentence, nothing is written, and the employee clocks out at a time they choose (review M3)', async () => {
     const call = await as('employee');
     at('06:00:00'); await move(call, 'in');
     at('22:30:00');
@@ -221,7 +221,7 @@ describe('clock out goes through the day save (Review Focus 3, D3)', () => {
       next: 'Use “Clock out at a time you choose” and enter the time you finished.' });
     expect(snapshot(...WRITES)).toEqual(before);
     expect((await mine(call)).current?.state).toBe('running');
-    /* review M3: the close flow with a finish the person chooses; not one still to come */
+    /* review M3: the close flow with a finish the employee chooses; not one still to come */
     const v = (await mine(call)).version;
     const ahead = await call('POST', '/api/v1/clock/2026-08-13/close', { finish: '23:00' }, v);
     expect([ahead.status, refusal(ahead)]).toEqual([422, { code: 'TS_INVALID', field: 'finish', message: 'That finish time has not come yet.', next: 'Enter the time you finished.' }]);
@@ -231,14 +231,14 @@ describe('clock out goes through the day save (Review Focus 3, D3)', () => {
     expect(c.day?.entries[0]).toMatchObject({ start: '06:00', finish: '21:00' });
     expect(clockAudits()).toEqual(['Clocked in', 'Clocked out at a chosen time']);
   });
-  test('the day keeps what the person changed on the form, the clock fills the first empty break pair (the gap before Clock in again first), and a submitted day refuses the clock', async () => {
+  test('the day keeps what the employee changed on the form, the clock fills the first empty break pair (the gap before Clock in again first), and a submitted day refuses the clock', async () => {
     const call = await as('employee');
     at('07:00:00'); await move(call, 'in');
     at('10:00:00'); await move(call, 'break/start');
     at('10:20:00'); await move(call, 'break/end');
     at('15:00:00');
     const first = moved(await move(call, 'out'));
-    /* the person corrects the day on the form: a typed break, an empty pair, a note and the shift */
+    /* the employee corrects the day on the form: a typed break, an empty pair, a note and the shift */
     const edited = await call('PUT', '/api/v1/timesheets/CP-1042/days/2026-08-13', { shift: 'E', entries: [{ start: '07:00', finish: '15:00',
       breaks: [{ start: '09:00', end: '09:10' }, { start: '', end: '' }, { start: '10:00', end: '10:20' }], fields: { notes: 'Ward 3' } }] }, first.day?.version);
     expect(edited.status).toBe(200);
@@ -259,7 +259,7 @@ describe('clock out goes through the day save (Review Focus 3, D3)', () => {
 describe('while the clock runs, its day cannot be saved or submitted (review I1)', () => {
   const PATH = '/api/v1/timesheets/CP-1042/days/2026-08-13';
   const body = { shift: 'N', entries: [{ start: '15:30', finish: '07:00', breaks: [] }] };
-  test('the day save and the day submit are refused CLOCK_RUNNING, for the person and for a proxy, and nothing is written', async () => {
+  test('the day save and the day submit are refused CLOCK_RUNNING, for the employee and for a proxy, and nothing is written', async () => {
     const call = await as('employee'), manager = await as('manager');
     at('15:30:00'); await move(call, 'in');
     const before = snapshot(...WRITES);
@@ -293,7 +293,7 @@ describe('while the clock runs, its day cannot be saved or submitted (review I1)
 });
 
 describe('clock out writes only what the clock owns since its last write (review I4)', () => {
-  /* clock in 07:10, a clocked break 10:00-10:15, out 12:00; the person edits the day; clock in again 13:00, out 17:00 */
+  /* clock in 07:10, a clocked break 10:00-10:15, out 12:00; the employee edits the day; clock in again 13:00, out 17:00 */
   async function editedThenAgain(edit: { start: string; breaks: { start: string; end: string }[] }) {
     const call = await as('employee');
     at('07:10:00'); await move(call, 'in');
@@ -323,12 +323,12 @@ describe('clock out writes only what the clock owns since its last write (review
 });
 
 describe('late and forgotten (Review Focus 4, D5, D6)', () => {
-  test('a first clock in after the rota line start is late: the record is flagged and ts_late reaches the person and their line manager', async () => {
+  test('a first clock in after the rota line start is late: the record is flagged and ts_late reaches the employee and their line manager', async () => {
     const marcus = await asEmail(MARCUS);
     at('14:31:00');
     const a = moved(await move(marcus, 'in', 0));
     expect(a.record.late).toBe(true);
-    expect(notes().map(n => [n.personId, n.event, n.title, n.body])).toEqual([
+    expect(notes().map(n => [n.employeeId, n.event, n.title, n.body])).toEqual([
       ['CP-1088', 'ts_late', 'Late clock-in', 'You clocked in at 14:31 on Thu 13 Aug. Your shift started at 14:30.'],
       ['CP-1001', 'ts_late', 'Late clock-in', 'Marcus Reilly clocked in at 14:31 on Thu 13 Aug. The shift started at 14:30.'],
     ]);
@@ -351,7 +351,7 @@ describe('late and forgotten (Review Focus 4, D5, D6)', () => {
     expect((await mine(amara)).date).toBe('2026-08-13');
     const a = moved(await move(amara, 'in', 0));
     expect(a.record).toMatchObject({ date: '2026-08-13', late: true });
-    expect(notes().map(n => [n.personId, n.event, n.body])).toEqual([
+    expect(notes().map(n => [n.employeeId, n.event, n.body])).toEqual([
       ['CP-1042', 'ts_late', 'You clocked in at 00:10 on Fri 14 Aug. Your shift started at 22:00 on Thu 13 Aug.'],
       ['CP-1001', 'ts_late', 'Amara Okafor clocked in at 00:10 on Fri 14 Aug. The shift started at 22:00 on Thu 13 Aug.'],
     ]);
@@ -406,7 +406,7 @@ describe('late and forgotten (Review Focus 4, D5, D6)', () => {
     expect(c.record).toMatchObject({ state: 'clockedOut', closedLate: null, closedNoDay: { finish: '15:00' } });
     expect(JSON.stringify(store.coll('timesheetDays'))).toBe(days);
     expect(clockAudits()).toEqual(['Forgotten clock closed']);
-    expect(notes().map(n => [n.personId, n.event, n.title, n.body])).toEqual([['CP-1001', 'ts_missing', 'Clock closed without the day',
+    expect(notes().map(n => [n.employeeId, n.event, n.title, n.body])).toEqual([['CP-1001', 'ts_missing', 'Clock closed without the day',
       'Amara Okafor did not clock out on Fri 7 Aug and finished at 15:00. The day can no longer be changed from the clock, so it needs an amendment.']]);
     expect((await mine(call)).open).toBeNull();
     moved(await move(call, 'in', 0));

@@ -16,7 +16,7 @@ beforeEach(async () => { resetTo('social'); admin = await as('admin'); });
 const T = '/api/v1/templates';
 const PLAN = (k: string) => `${T}/${k}/plan`, APPLY = (k: string) => `${T}/${k}/apply`, EXPORT = (k: string) => `${T}/${k}/export`, ONE = (k: string) => `${T}/${k}`;
 const WRITES = ['tenant', 'templates', 'leaveConfig', 'timesheetConfig', 'employeeTypes', 'userTypes', 'departments', 'costCentres', 'locations', 'jobProfiles',
-  'projects', 'projectTasks', 'rotaWeeks', 'rotaSetAside', 'people', 'approvalChains', 'onboardingConfig', 'onboardingPolicies', 'onboardingCases', 'audit'];
+  'projects', 'projectTasks', 'rotaWeeks', 'rotaSetAside', 'employees', 'approvalChains', 'onboardingConfig', 'onboardingPolicies', 'onboardingCases', 'audit'];
 const chainOf = async (m: string) => ApprovalSetup.parse((await admin('GET', '/api/v1/approvals/chains')).body).chains.find(c => c.module === m);
 const tenantVer = () => store.coll<{ version: number }>('tenant').tenant?.version ?? -1;
 const savedVer = (k: string) => store.coll<{ version: number }>('templates')[k]?.version ?? -1;
@@ -98,7 +98,7 @@ describe('saving (D2)', () => {
     expect([shipped.status, refusal(shipped.body)]).toEqual([409, expect.objectContaining({ code: 'NAME_TAKEN', message: TEMPLATE_NAME_SHIPPED })]);
     expect(snapshot('templates', 'audit')).toEqual(before);
   });
-  test('configuration only keeps what the tenant decided, not its structure or people, with one audit row', async () => {
+  test('configuration only keeps what the tenant decided, not its structure or employees, with one audit row', async () => {
     const r = await save('Care, two-stage approval');
     expect(r.status).toBe(200);
     const kept = store.coll<{ template: Record<string, unknown>; savedBy: string; from: string }>('templates').tpl_care_two_stage_approval;
@@ -117,7 +117,7 @@ describe('saving (D2)', () => {
     expect(kept?.template.tenantSettings).not.toHaveProperty('bankHolidays');
     expect(kept?.template).not.toHaveProperty('structure');
     /* a policy's wording is prose a new starter reads (the code of conduct names a gifts limit), not a money field: its keys are checked instead */
-    expect(JSON.stringify({ ...kept?.template, onboarding: undefined })).not.toMatch(/currency|[£€$]|payCode|"allowance"\s*:|"rules"|budget|people/i);
+    expect(JSON.stringify({ ...kept?.template, onboarding: undefined })).not.toMatch(/currency|[£€$]|payCode|"allowance"\s*:|"rules"|budget|employees/i);
     const onb = kept?.template.onboarding as { policies: Record<string, unknown>[] } | undefined;
     expect(onb?.policies.map(p => Object.keys(p).join())).toEqual(Array(4).fill('id,label,ver,sum,body'));
     expect(kept?.from).toBe('Brightpath Support Services');
@@ -126,12 +126,12 @@ describe('saving (D2)', () => {
     expect(row).toMatchObject({ source: 'saved', scope: 'config', inUse: false, version: 1, savedBy: expect.any(String) });
   });
   test('configuration and structure adds the five dimensions with their tasks; a second save under that name is NAME_TAKEN and replaces nothing', async () => {
-    expect((await save('Everything but people', 'structure')).status).toBe(200);
-    const t = store.coll<{ template: { structure: Record<string, { code: string; tasks?: unknown[] }[]> } }>('templates').tpl_everything_but_people?.template;
+    expect((await save('Everything but employees', 'structure')).status).toBe(200);
+    const t = store.coll<{ template: { structure: Record<string, { code: string; tasks?: unknown[] }[]> } }>('templates').tpl_everything_but_employees?.template;
     expect(t?.structure.locations).toHaveLength(7);
     expect(t?.structure.contracts?.[0]?.tasks?.length).toBeGreaterThan(0);
     const before = snapshot('templates', 'audit');
-    const again = await save('everything but people');
+    const again = await save('everything but employees');
     expect([again.status, refusal(again.body).code]).toEqual([409, 'NAME_TAKEN']);
     expect(snapshot('templates', 'audit')).toEqual(before);
   });
@@ -142,7 +142,7 @@ describe('applying (D1, Review Focus 3)', () => {
     const before = snapshot(...WRITES);
     const p = TemplatePlan.parse((await admin('GET', PLAN('mne'))).body);
     expect(p.changes.map(l => l.text)).toContain('Activity reads as Cost code.');
-    expect(p.leftAlone.map(l => l.area)).toEqual(expect.arrayContaining(['people', 'organisation']));
+    expect(p.leftAlone.map(l => l.area)).toEqual(expect.arrayContaining(['employees', 'organisation']));
     expect(snapshot(...WRITES)).toEqual(before);
     expect((await admin('GET', PLAN('nope'))).status).toBe(404);
   });
@@ -206,7 +206,7 @@ describe('applying (D1, Review Focus 3)', () => {
     expect(snapshot('tenant', 'leaveConfig', 'templates', 'audit')).toEqual(before);
   });
   test('Fusion III makes the tenant read through the template: start and finish on a grid, Contract and Cost code, Rota off', async () => {
-    const people = snapshot('people'), heldCc = store.coll('costCentres')['cc_CC-104'], heldLoc = snapshot('locations');
+    const employees = snapshot('employees'), heldCc = store.coll('costCentres')['cc_CC-104'], heldLoc = snapshot('locations');
     const call = admin;
     const out = TemplateApplied.parse((await call('POST', APPLY('mne'), undefined, tenantVer())).body);
     const t = getTenant.response.parse((await call('GET', '/api/v1/tenant')).body);
@@ -214,8 +214,8 @@ describe('applying (D1, Review Focus 3)', () => {
     expect([t.modules.R, t.template, t.name]).toEqual([false, 'mne', 'Brightpath Support Services']);
     expect(labels()).toMatchObject({ project: 'Contract', job_task: 'Cost code', site: 'Site' });
     expect(t.rotaSetAside).toBeGreaterThan(0);
-    /* never deletes or overwrites: people, held structure and the types the template lacks stay exactly as they were */
-    expect(snapshot('people')).toEqual(people);
+    /* never deletes or overwrites: employees, held structure and the types the template lacks stay exactly as they were */
+    expect(snapshot('employees')).toEqual(employees);
     expect(store.coll('costCentres')['cc_CC-104']).toEqual(heldCc);
     expect(snapshot('locations')).toEqual(heldLoc);
     expect(Object.values(store.coll<{ code: string }>('employeeTypes')).map(x => x.code).sort()).toEqual(['casual', 'driver', 'hourly', 'salaried', 'shift']);
@@ -284,7 +284,7 @@ describe('applying (D1, Review Focus 3)', () => {
     expect((await mgr('POST', `/api/v1/leave/requests/${(asked.body as { record: { id: string } }).record.id}/approve`, undefined, 1)).status).toBe(200);
     const back = TemplateApplied.parse((await admin('POST', APPLY('social'), undefined, tenantVer())).body);
     expect(line()).toEqual(['E', 'E', '', 'N', 'V', '', '']);
-    expect(back.message).toMatch(/ 1 shift was not put back because the person is on leave or off sick that day\.$/);
+    expect(back.message).toMatch(/ 1 shift was not put back because the employee is on leave or off sick that day\.$/);
   });
   test('the tenant\'s version is needed: missing is 428, stale is 412, and nothing changes', async () => {
     const call = admin, before = snapshot(...WRITES);
@@ -386,7 +386,7 @@ describe('the onboarding setup in a template (module 5, D12)', () => {
 
     const plan = TemplatePlan.parse((await admin('GET', PLAN(KEY))).body);
     expect(onbLines(plan.changes)).toEqual(['Onboarding step Emergency contacts on.', 'Onboarding document Proof of address: does not block the start.',
-      'Policy Privacy notice, with the template\'s wording. It becomes v2.1. 1 person will be asked to read it again.']);
+      'Policy Privacy notice, with the template\'s wording. It becomes v2.1. 1 employee will be asked to read it again.']);
     expect(onbLines(plan.leftAlone)).toEqual(['Policies the template does not have stay, with their acknowledgements: Fire safety.',
       'Uploaded policy documents stay as they are. Everybody’s onboarding progress stays too, apart from the policies they are asked to read again.']);
     const n = audits().length;

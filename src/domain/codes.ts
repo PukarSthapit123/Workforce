@@ -44,7 +44,7 @@ export function dimensionCodeProblem(code: string, existing: readonly string[]):
 export function typeCodeProblem(code: string, existing: readonly string[]): Problem | null {
   const c = code.trim();
   if (!TYPE_CODE.test(c)) return { field: 'code', message: 'A type code is lower-case letters, digits and underscores, like waking_night.' };
-  if (existing.includes(c)) return { field: 'code', message: `${c} already exists. People reference a type by its code.` };
+  if (existing.includes(c)) return { field: 'code', message: `${c} already exists. Employees reference a type by its code.` };
   return null;
 }
 

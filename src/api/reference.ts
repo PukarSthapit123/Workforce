@@ -1,4 +1,4 @@
-/* Reference data every people screen shows by name: the dimensions and the employee types. */
+/* Reference data every employees screen shows by name: the dimensions and the employee types. */
 import { useQuery } from '@tanstack/react-query';
 import { api } from './client';
 import { DIMENSIONS, type DimensionKind, type DimensionRow } from '@/contract/dimensions';
@@ -20,5 +20,5 @@ export function useNames() {
     (code: string) => (code ? rows?.find(r => r.code === code)?.name ?? code : '—');
   return { location: by(loc.data), department: by(dep.data), job: by(job.data), type: by(types.data) };
 }
-/* The support levels a location can carry, with the people per shift Rota setup gives each (under the rota keys, so a Rota setup save reads them again). */
+/* The support levels a location can carry, with the employees per shift Rota setup gives each (under the rota keys, so a Rota setup save reads them again). */
 export const useSupportLevels = () => useQuery({ queryKey: ['rota', 'support-levels'] as const, queryFn: async () => (await api(listSupportLevels)).items });

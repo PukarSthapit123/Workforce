@@ -21,7 +21,7 @@ export interface TypeDraft { shifts: string[]; night: boolean; flexible: boolean
 export interface RotaDraft {
   nums: Record<NumKey, string>; toggles: Record<ToggleKey, boolean>; horizon: number; rotaBuiltBy: string;
   safeRules: SafeRules; stages: StageDraft[]; types: Record<string, TypeDraft>;
-  /* people per shift by support level code, and the milestones as typed */
+  /* employees per shift by support level code, and the milestones as typed */
   levels: Record<string, string>; milestones: string; flexNotifyTo: string;
 }
 

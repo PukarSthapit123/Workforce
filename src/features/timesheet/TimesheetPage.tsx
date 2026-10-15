@@ -23,14 +23,14 @@ type View = 'day' | 'week';
 const defaultView = (c: CaptureSetup): View => (c.mode === 'grid' && flagOn(c, 'WEEKLY') ? 'week' : 'day');
 
 export function TimesheetPage() {
-  const personId = useCurrentSession()?.account.personCode ?? '';
+  const employeeId = useCurrentSession()?.account.employeeCode ?? '';
   const [serverToday, setServerToday] = useState<string | null>(null);
   const asked = useSearchParams()[0].get('date') ?? '';
   const [anchor, setAnchor] = useState<string | null>(isIsoDate(asked) ? asked : null);
   const [view, setView] = useState<View | null>(isIsoDate(asked) ? 'day' : null);
   const today = serverToday ?? todayIso();
   const date = anchor ?? today;
-  const q = useTimesheetWeek(personId, periodStart(date), Boolean(personId));
+  const q = useTimesheetWeek(employeeId, periodStart(date), Boolean(employeeId));
   const week = q.data?.weekStart === periodStart(date) ? q.data : undefined;
   /* the server's clock, adopted once: a stored fact about the session, not a derived value */
   if (q.data && serverToday === null) setServerToday(q.data.now.date);
@@ -50,7 +50,7 @@ export function TimesheetPage() {
       {q.isError && <p data-testid={tid.ts.error} role="alert" className="text-err">Your timesheet could not be loaded. Reload the page to try again.</p>}
       {!q.isError && (!week || serverToday === null) && <p className="text-text-secondary">Loading your timesheet&hellip;</p>}
       {week && serverToday !== null && (shown === 'day'
-        ? <DayView week={week} date={date} today={today} onDate={setAnchor} personId={personId} />
-        : <WeekView week={week} today={today} onAnchor={setAnchor} personId={personId} />)}
+        ? <DayView week={week} date={date} today={today} onDate={setAnchor} employeeId={employeeId} />
+        : <WeekView week={week} today={today} onAnchor={setAnchor} employeeId={employeeId} />)}
     </Page>);
 }

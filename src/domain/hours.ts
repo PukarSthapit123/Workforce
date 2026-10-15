@@ -19,7 +19,7 @@ const r2 = (v: number) => Number(v.toFixed(2));
    "Bank" in its place and leave out the variances against it. */
 export const isBank = (contractedHours: number) => !(contractedHours > 0);
 
-/* The person's position for the week. `line` is their published rota line,
+/* The employee's position for the week. `line` is their published rota line,
    Monday first; null while the Rota module is off, when there is no rota'd
    baseline, so nothing is measured against one and no rota flag is raised.
    `worked` is the hours on their timesheet days. */

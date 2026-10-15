@@ -26,7 +26,7 @@ const saveAs = async (name: string) => {
 
 test('the page shows the spine, every template with the live one marked, the company, compliance and pay periods, with full test id coverage', async () => {
   await open();
-  expect(screen.getByTestId(tid.aorg.spine)).toHaveTextContent('Organisation & template→Modules→Features→Fields→Employee types→People');
+  expect(screen.getByTestId(tid.aorg.spine)).toHaveTextContent('Organisation & template→Modules→Features→Fields→Employee types→Employees');
   expect(screen.getByTestId(tid.aorg.template('social'))).toHaveAttribute('aria-pressed', 'true');
   expect(screen.getByTestId(tid.aorg.template('mne'))).toHaveTextContent('M&E / Building Services');
   expect(screen.getByTestId(tid.aorg.template('mne'))).toHaveTextContent('Site Engineer · Contracts Manager · Office / Admin');
@@ -94,7 +94,7 @@ test('save a template: a name is needed, then it is listed as saved here with wh
   await userEvent.click(screen.getByTestId(tid.aorg.saveOpen));
   const box = await screen.findByTestId(tid.modal.root);
   expect(within(box).getByTestId(tid.aorg.scope('config'))).toBeChecked();
-  expect(within(box).queryByText(/Everything, including people/)).toBeNull();
+  expect(within(box).queryByText(/Everything, including employees/)).toBeNull();
   await userEvent.click(within(box).getByTestId(tid.aorg.save));
   expect(within(box).getByTestId(tid.aorg.saveWarn)).toHaveTextContent('A template needs a name.');
   expect(Object.keys(saved())).toEqual([]);
@@ -186,8 +186,8 @@ test('a saved template says who saved it and when, in London time', async () => 
   await open();
   await saveAs('Care, two-stage approval');
   const row = await screen.findByTestId(tid.aorg.savedRow('tpl_care_two_stage_approval'));
-  const admin = Object.values(store.coll<{ userType: string; personCode: string }>('accounts')).find(a => a.userType === 'admin');
-  const name = Object.values(store.coll<{ code: string; name: string }>('people')).find(p => p.code === admin?.personCode)?.name;
+  const admin = Object.values(store.coll<{ userType: string; employeeCode: string }>('accounts')).find(a => a.userType === 'admin');
+  const name = Object.values(store.coll<{ code: string; name: string }>('employees')).find(p => p.code === admin?.employeeCode)?.name;
   expect(name).toBeTruthy();
   expect(within(row).getAllByRole('cell')[2]).toHaveTextContent(`13/08/2026 15:30${name ?? ''}`);
 });

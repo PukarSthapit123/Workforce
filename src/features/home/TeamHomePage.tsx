@@ -10,7 +10,7 @@ import { useCoverBoard } from '@/api/rota';
 import { usePostedNotices } from '@/api/notices';
 
 /* Team Home: the prototype's mgrTeamHome (qnipay-workforce-v15.html:
-   10551-10568). It owns no data: one card per My Team page this person can
+   10551-10568). It owns no data: one card per My Team page this employee can
    reach, each with the count that page's own read returns, and a card with
    nothing waiting says so rather than showing a bare zero. A page with no
    count reads "Open"; a page not built yet says so. The location picker is

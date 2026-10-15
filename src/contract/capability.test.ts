@@ -11,7 +11,7 @@ beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterAll(() => server.close());
 beforeEach(() => store.reset('social'));
 
-interface Account { email: string; userType: string; personCode: string; grants: string[]; revocations: string[] }
+interface Account { email: string; userType: string; employeeCode: string; grants: string[]; revocations: string[] }
 const everyCapability = () => Object.keys(store.coll('capabilities'));
 function employeeHolding(caps: string[]): Account {
   const emp = Object.values(store.coll<Account>('accounts')).find(a => a.userType === 'employee');

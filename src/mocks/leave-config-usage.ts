@@ -1,17 +1,17 @@
 import type { LeaveConfigRecord, LeaveTypeRecord } from '@/contract/leave';
 import type { Refusal } from '@/contract/common';
 import { typeLeaveFor, type TypeLeave } from '@/domain/leave';
-import { personByCode } from './world';
+import { employeeByCode } from './world';
 import { store } from './store';
 
-interface RequestUse { id: string; personCode: string; type: string }
-interface LedgerUse { id: string; personCode: string; type: string; leaveType?: string }
+interface RequestUse { id: string; employeeCode: string; type: string }
+interface LedgerUse { id: string; employeeCode: string; type: string; leaveType?: string }
 interface EmployeeTypeUse { code: string; name: string }
-interface EpisodeUse { personCode: string; reason: string }
+interface EpisodeUse { employeeCode: string; reason: string }
 
-const personLabel = (code: string) => {
-  const person = personByCode(code);
-  return person ? `${person.name} (${person.code})` : code;
+const employeeLabel = (code: string) => {
+  const employee = employeeByCode(code);
+  return employee ? `${employee.name} (${employee.code})` : code;
 };
 const examples = (labels: readonly string[]) => [...new Set(labels)].slice(0, 3);
 
@@ -33,8 +33,8 @@ export function leaveConfigChangeProblem(current: LeaveConfigRecord, types: read
     const requests = requestRows.filter(row => row.type === old.code);
     const ledger = ledgerRows.filter(row => row.leaveType === old.code || row.type === old.code);
     const usedBy = [
-      ...(requests.length ? [{ kind: 'leave requests', count: requests.length, examples: examples(requests.map(row => personLabel(row.personCode))) }] : []),
-      ...(ledger.length ? [{ kind: 'leave ledger', count: ledger.length, examples: examples(ledger.map(row => personLabel(row.personCode))) }] : []),
+      ...(requests.length ? [{ kind: 'leave requests', count: requests.length, examples: examples(requests.map(row => employeeLabel(row.employeeCode))) }] : []),
+      ...(ledger.length ? [{ kind: 'leave ledger', count: ledger.length, examples: examples(ledger.map(row => employeeLabel(row.employeeCode))) }] : []),
     ];
     if (usedBy.length) return { code: 'in-use', field: `types.${i}`,
       message: `${old.name} is still in use by leave requests or ledger entries.`,
@@ -60,7 +60,7 @@ export function leaveConfigChangeProblem(current: LeaveConfigRecord, types: read
     const using = episodes.filter(e => e.reason === old);
     if (using.length) return { code: 'in-use', field: `sicknessReasons.${i}`, message: `${old} is still the reason on recorded sickness.`,
       next: 'Keep this reason. Sickness already recorded with it needs it.',
-      usedBy: [{ kind: 'sickness records', count: using.length, examples: examples(using.map(e => personLabel(e.personCode))) }] };
+      usedBy: [{ kind: 'sickness records', count: using.length, examples: examples(using.map(e => employeeLabel(e.employeeCode))) }] };
   }
   return null;
 }

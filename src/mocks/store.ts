@@ -1,5 +1,5 @@
 /* The fake server's database. In memory, persisted to localStorage so a reload
-   keeps what the person did, and set aside wholesale when the seed changes. */
+   keeps what the employee did, and set aside wholesale when the seed changes. */
 import socialSeed from './seed/social.json';
 import qnipaySeed from './seed/qnipay.json';
 
@@ -19,7 +19,7 @@ export type Collections = Record<string, Record<string, Record<string, unknown>>
 export interface Seed { version: string; tenant: string; data: Collections }
 /* What actually gets written to localStorage: a Seed plus the frozen clock, so
    a page reload (which throws away the in-memory `clock` closure below, along
-   with everything else in the JS context) restores the same clock the person
+   with everything else in the JS context) restores the same clock the employee
    had set, not the wall clock. */
 interface PersistedState extends Seed { clock: string | null }
 
@@ -33,7 +33,9 @@ export const isTenant = (t: unknown): t is string => typeof t === 'string' && Ob
 
 /* Bump only when the persisted shape changes in a way the seed files do not
    show (for example a new top-level field in PersistedState). */
-const STORE_FORMAT = 3; // 3: audit ids became a zero-padded counter (aud_000000000001)
+// 3: audit ids became a zero-padded counter (aud_000000000001)
+// 4: people became employees (the employees collection, employeeCode, emp_ ids)
+export const STORE_FORMAT = 4;
 /* FNV-1a, run twice with different offsets for 64 bits. Not cryptographic:
    it only has to change whenever a seed file's content changes. */
 export function contentHash(text: string): string {
@@ -47,6 +49,19 @@ export function contentHash(text: string): string {
 /* Derived from the seed files themselves, so every seed change sets aside a
    store saved under the old seed. Nobody has to remember to bump it. */
 export const SEED_VERSION = `${STORE_FORMAT}.${contentHash(JSON.stringify(TENANTS.map(t => [t, SEEDS[t]])))}`;
+
+/* Whether a session set aside can be brought back: only one written under
+   this store format, whatever seed it had. One from an older format (before
+   format 4 its records were people, personCode and per_ ids) stays set aside
+   in storage, but is never offered or loaded, because this build would load
+   it as a broken shape. */
+export function restorableBackup(raw: string | null): boolean {
+  if (!raw) return false;
+  let o: unknown;
+  try { o = JSON.parse(raw); } catch { return false; }
+  const version = o && typeof o === 'object' ? (o as Partial<PersistedState>).version : undefined;
+  return typeof version === 'string' && /^(\d+)\.[0-9a-f]{16}$/.exec(version)?.[1] === String(STORE_FORMAT);
+}
 
 const defaultSeed = (tenant = DEFAULT_TENANT): Seed => {
   const seed = SEEDS[tenant];
@@ -101,10 +116,11 @@ export function createStore(seedFor: (tenant?: string) => Seed = defaultSeed, kn
     },
     /* The prototype's storeCard, resetState and restoreBackup (v15:4649-4671,
        4935-4951). A reset keeps what was here as the set-aside session; a
-       restore loads the set-aside session whatever build wrote it, keeping the
-       clock, and then forgets it, so it comes back once. */
+       restore loads the set-aside session whatever seed it had (if its store
+       format is this build's, see restorableBackup), keeping the clock, and
+       then forgets it, so it comes back once. */
     hasBackup(): boolean {
-      try { return localStorage.getItem(STORE_BACKUP_KEY) !== null; } catch { return false; }
+      try { return restorableBackup(localStorage.getItem(STORE_BACKUP_KEY)); } catch { return false; }
     },
     /* Why the session set aside was set aside, or null when nothing is. */
     backupReason(): SetAsideBecause | null {
@@ -120,7 +136,7 @@ export function createStore(seedFor: (tenant?: string) => Seed = defaultSeed, kn
     restoreBackup(): boolean {
       let raw: string | null;
       try { raw = localStorage.getItem(STORE_BACKUP_KEY); } catch { return false; }
-      if (!raw) return false;
+      if (!raw || !restorableBackup(raw)) return false;
       let o: unknown;
       try { o = JSON.parse(raw); } catch { return false; }
       const p = (o && typeof o === 'object' ? o : {}) as Partial<PersistedState>;

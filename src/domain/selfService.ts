@@ -1,5 +1,5 @@
 /* Self-service profile changes. Ported from the prototype's SELF_FIELDS and
-   PROFILE_CHANGES. A proposal writes nothing to the person's record; it takes
+   PROFILE_CHANGES. A proposal writes nothing to the employee's record; it takes
    effect only when the last approver on its route says yes. The route is the
    Profile approval chain (1c D8): a layer that applies to every contact
    detail change takes every field, one that applies only to bank details

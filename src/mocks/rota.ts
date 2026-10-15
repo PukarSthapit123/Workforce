@@ -11,15 +11,15 @@ import { bump, refuse } from './http';
 import { serve } from './serve';
 import { actor, capsFor, requireCapability } from './auth';
 import { writeAudit } from './audit';
-import { invalid } from './people';
+import { invalid } from './employees';
 import { notifyEvent } from './notify';
-import { approvesIn, chainPeople, registerWaiting, walkNow } from './approvals';
-import { roleWaiting, type ChainItem, type ChainWalk, type DecisionBlock, type DeciderPerson } from '@/domain/approvals';
+import { approvesIn, chainEmployees, registerWaiting, walkNow } from './approvals';
+import { roleWaiting, type ChainItem, type ChainWalk, type DecisionBlock, type DeciderEmployee } from '@/domain/approvals';
 import {
-  accountOfPerson, accounts, codesOf, effectiveCode, nameOf, people, personByCode, recordAt, scopeOf, today, type Signed, type StoredPerson,
+  accountOfEmployee, accounts, codesOf, effectiveCode, nameOf, employees, employeeByCode, recordAt, scopeOf, today, type Signed, type StoredEmployee,
 } from './world';
 import {
-  acceptRotaPlan, addPatternPeople, askAllCover, assignCover, claimCover, clearRotaWeek, confirmFilled, copyRotaWeek, createPattern,
+  acceptRotaPlan, addPatternEmployees, askAllCover, assignCover, claimCover, clearRotaWeek, confirmFilled, copyRotaWeek, createPattern,
   createShiftType, deletePattern, deleteShiftType, escalateCover, fillCover, generatePattern, getMyShifts, getRotaConfig, getRotaHome, getRotaWeek,
   listCover, listItRequests, listPatterns, listShiftTypes, openCover, planRotaWeek, repeatRotaWeek, setCoverReason, signOffRotaWeek, suggestRotaCell, transitionRotaWeek,
   updatePattern, updateRotaConfig, updateShiftType, writeRotaCell, listSupportLevels,
@@ -41,7 +41,7 @@ import {
   resizeCycle, restNeed, rotaConfigProblem, changedLevelMins, supportLevelsOf, rotaDayOf, rotaDaysOf, rotaInputFor, rotaPolicyWithholds, rotaState, rotaTransitionProblem, rotaVisible, rotaWeekId,
   rotadHours, setCell, setCells, shiftAssignedNotice, shiftBy, shiftRemovalProblem, shiftTime, shiftTypeProblem, shiftUsage,
   staggerOffsets, suggest, thinnest, typeRotaFor, typesAfterNightChange, typesAfterShiftCreate, typesWithoutShift, rotaKeyCounts,
-  type AssignMode, type AssignOutcome, type Candidate, type CellWrite, type PatternPersonInfo, type RotaActor, type RotaChange,
+  type AssignMode, type AssignOutcome, type Candidate, type CellWrite, type PatternEmployeeInfo, type RotaActor, type RotaChange,
   weekCovering, overlappingWeek, type RotaDay, type RotaWeekCore, type RotaWorker, type RuleContext, type Suggestion, type SupportLevel, type WeekLookup,
 } from '@/domain/rota';
 import { absenceCellWrites, shortDays, type CellPlanWeek, type CoverDay } from '@/domain/leave';
@@ -57,7 +57,7 @@ interface WeekChain { signoff?: WeekSignOff | null; sentBack?: WeekSentBack | nu
 type StoredWeek = Meta & RotaWeekCore & WeekChain;
 interface Tenant { modules: Record<string, boolean>; flags: Record<string, unknown>; weekStart: string }
 interface StoredLocation { code: string; name: string; area?: string; level?: string; minPerShift?: number; active?: boolean }
-interface RotaProfile { personCode: string; cleared: boolean; dbsExpiry: string; qualifications: string; favourite: boolean; preferredDays: number[] }
+interface RotaProfile { employeeCode: string; cleared: boolean; dbsExpiry: string; qualifications: string; favourite: boolean; preferredDays: number[] }
 interface StoredDay { entries: TimeEntry[] }
 
 function tenant(): Tenant {
@@ -88,7 +88,7 @@ const shiftList = () => Object.values(shiftColl()).sort((a, b) => a.start - b.st
 const locations = () => Object.values(store.coll<StoredLocation>('locations'));
 const locationBy = (code: string) => locations().find(l => l.code === code);
 const locName = (code: string) => nameOf('locations', code);
-const by = (s: Signed): RotaActor => { const w = actor(s); return { personCode: w.personCode, name: w.name }; };
+const by = (s: Signed): RotaActor => { const w = actor(s); return { employeeCode: w.employeeCode, name: w.name }; };
 const NOT_FOUND = (what: string, next = 'Reload the page.') => refuse(404, { code: 'not-found', message: `That ${what} no longer exists.`, next });
 
 /* Module 8 (v15:13270): a level's new number is set on every location at
@@ -126,7 +126,7 @@ const manageable = (s: Signed) => {
 };
 /* "Admins only" withholds pattern and shift-type building from managers, whatever the matrix says (D5). */
 function requireBuilder(s: Signed, cap: 'rota_pattern' | 'rota_shift') {
-  const userType = accountOfPerson(effectiveCode(s))?.userType ?? s.account.userType;
+  const userType = accountOfEmployee(effectiveCode(s))?.userType ?? s.account.userType;
   if (rotaPolicyWithholds(cap, userType, config().rotaBuiltBy))
     refuse(403, { code: 'rota-policy', message: `Rota setup says only administrators build ${cap === 'rota_pattern' ? 'working patterns' : 'shift types'}.`,
       next: 'Ask an administrator, or change who builds the rota in Rota setup.' });
@@ -139,8 +139,8 @@ function requireMonday(loc: string, weekStart: string, field = 'weekStart') {
   invalid({ field, message: `A week starts on a ${tenant().weekStart}.` });
 }
 
-/* ----------------------------------------------------------- the people */
-function worker(p: StoredPerson): RotaWorker {
+/* ----------------------------------------------------------- the employees */
+function worker(p: StoredEmployee): RotaWorker {
   const prof = recordAt(store.coll<RotaProfile>('rotaProfiles'), `rp_${p.code}`);
   return {
     code: p.code, name: p.name, employeeType: p.employeeType, typeName: nameOf('employeeTypes', p.employeeType), jobProfile: p.jobProfile,
@@ -149,18 +149,18 @@ function worker(p: StoredPerson): RotaWorker {
     favourite: prof?.favourite ?? false, preferredDays: prof?.preferredDays ?? [],
   };
 }
-function ctxFor(p: StoredPerson): RuleContext {
+function ctxFor(p: StoredEmployee): RuleContext {
   const c = config();
   return { shifts: shiftList(), typeRota: typeRotaFor(c.types, p.employeeType), config: c, safeWorker: Boolean(tenant().modules.R) && flagOn('SAFEWORKER') };
 }
-/* Module 6: the hours position reads a person's rota rules as Team rota does. */
-export const hoursRulesFor = (p: StoredPerson) => ({ worker: worker(p), ctx: ctxFor(p) });
-const activeAt = (loc: string) => Object.values(people()).filter(p => p.location === loc && isActive(p));
-const rosterOf = (loc: string, week: RotaWeekCore) => Object.values(people()).filter(p => onRoster(p, loc, lineOf(week, p.code)));
+/* Module 6: the hours position reads an employee's rota rules as Team rota does. */
+export const hoursRulesFor = (p: StoredEmployee) => ({ worker: worker(p), ctx: ctxFor(p) });
+const activeAt = (loc: string) => Object.values(employees()).filter(p => p.location === loc && isActive(p));
+const rosterOf = (loc: string, week: RotaWeekCore) => Object.values(employees()).filter(p => onRoster(p, loc, lineOf(week, p.code)));
 const candidatesAt = (loc: string, week: RotaWeekCore): Candidate[] => activeAt(loc).map(p => ({ worker: worker(p), line: lineOf(week, p.code), ctx: ctxFor(p) }));
 const minAt = (l: StoredLocation) => minFor(l.minPerShift, flagOn('MINSTAFF'), config());
-function personAt(code: string, loc: string, field = 'personCode'): StoredPerson {
-  const p = personByCode(code) ?? NOT_FOUND('person record', 'Reload the rota.');
+function employeeAt(code: string, loc: string, field = 'employeeCode'): StoredEmployee {
+  const p = employeeByCode(code) ?? NOT_FOUND('employee record', 'Reload the rota.');
   if (p.location !== loc || !isActive(p))
     refuse(422, { code: 'invalid', field, message: `${p.name} does not work at ${locName(loc)}.`, next: 'Choose someone at this location.' });
   return p;
@@ -170,7 +170,7 @@ const workedHours = (code: string, ws: string) => weekDates(ws).reduce((n, d) =>
   return n + (t ? dayMinutes(t.entries) : 0);
 }, 0) / 60;
 const suggestionView = (x: Suggestion): SuggestionView =>
-  ({ personCode: x.worker.code, name: x.worker.name, category: x.worker.category, score: x.score, why: x.why });
+  ({ employeeCode: x.worker.code, name: x.worker.name, category: x.worker.category, score: x.score, why: x.why });
 
 /* ------------------------------------------------------------- the weeks */
 const weeks = () => store.coll<StoredWeek>('rotaWeeks');
@@ -248,15 +248,15 @@ function agencyIn(loc: string, ws: string): boolean {
   return Object.values(covers()).some(c => c.location === loc && c.open && dates.includes(c.date)
     && stages.find(st => st.n === c.stage)?.audience === 'Agency partners');
 }
-const weekItem = (loc: string, ws: string): ChainItem => ({ personCode: '', location: loc, facts: { agency: agencyIn(loc, ws) } });
+const weekItem = (loc: string, ws: string): ChainItem => ({ employeeCode: '', location: loc, facts: { agency: agencyIn(loc, ws) } });
 const signedOf = (rec: StoredWeek | undefined) => rec?.signoff?.signed ?? [];
-const weekWalk = (rec: StoredWeek | undefined, loc: string, ws: string, everyone?: readonly DeciderPerson[]) =>
-  walkNow('Rota', weekItem(loc, ws), signedOf(rec).map(x => x.layer), everyone, signedOf(rec).map(x => x.by.personCode));
+const weekWalk = (rec: StoredWeek | undefined, loc: string, ws: string, everyone?: readonly DeciderEmployee[]) =>
+  walkNow('Rota', weekItem(loc, ws), signedOf(rec).map(x => x.layer), everyone, signedOf(rec).map(x => x.by.employeeCode));
 const waitingOn = (w: ChainWalk) => roleWaiting(w.current?.step.role ?? 'Service Manager');
 /* Review I5: the weeks waiting on sign-off, which a chain save may not strand. */
 registerWaiting('Rota', 'rota weeks', () => Object.values(weeks()).flatMap(w => (w.signoff && w.state === 'review'
   ? [{ label: `${locName(w.location)} · week ${isoWeek(w.weekStart)}`, item: weekItem(w.location, w.weekStart), signed: signedOf(w).map(x => x.layer),
-    signers: signedOf(w).map(x => x.by.personCode) }] : [])));
+    signers: signedOf(w).map(x => x.by.employeeCode) }] : [])));
 const upperFirst = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 /* Signing off needs a capability that decides some layer of the Rota chain, or a delegation in force from someone who has one. */
 function requireRotaApprover(s: Signed) {
@@ -265,7 +265,7 @@ function requireRotaApprover(s: Signed) {
 /* Why the reader may not sign the week off at its current layer. */
 function signOffBlocked(why: DecisionBlock, w: ChainWalk, rec: StoredWeek, l: StoredLocation, me: string): { status: number; code: string; message: string; next: string } {
   if (why === 'signed' || why === 'self') return { status: 403, code: 'ALREADY_SIGNED',
-    message: rec.signoff?.requestedBy.personCode === me ? 'You sent this week to be published, so someone else signs it off.'
+    message: rec.signoff?.requestedBy.employeeCode === me ? 'You sent this week to be published, so someone else signs it off.'
       : 'You signed off an earlier layer of this week, so someone else signs off the next.',
     next: `${upperFirst(waitingOn(w))} signs it off.` };
   if (why === 'scope') return { status: 403, code: 'scope', message: `This week is at ${l.name}, outside the locations you sign off rotas for.`, next: `${upperFirst(waitingOn(w))} there signs it off.` };
@@ -282,7 +282,7 @@ function signoffView(s: Signed, rec: StoredWeek | undefined, l: StoredLocation, 
 }
 /* The weeks waiting on the reader's sign-off, at any location. */
 function awaitingFor(s: Signed) {
-  const me = effectiveCode(s), everyone = chainPeople();
+  const me = effectiveCode(s), everyone = chainEmployees();
   return Object.values(weeks()).filter(w => w.signoff && w.state === 'review')
     .filter(w => weekWalk(w, w.location, w.weekStart, everyone).block(me) === null)
     .sort((a, b) => a.weekStart.localeCompare(b.weekStart) || a.location.localeCompare(b.location))
@@ -294,7 +294,7 @@ function weekView(s: Signed, l: StoredLocation, ws: string): RotaWeekView {
   const roster = rosterOf(l.code, w), lines = roster.map(p => lineOf(w, p.code)), min = minAt(l);
   const rows = roster.map(p => {
     const line = lineOf(w, p.code), ctx = ctxFor(p);
-    return { personCode: p.code, name: p.name, jobProfile: p.jobProfile, jobProfileName: nameOf('jobProfiles', p.jobProfile), category: p.category,
+    return { employeeCode: p.code, name: p.name, jobProfile: p.jobProfile, jobProfileName: nameOf('jobProfiles', p.jobProfile), category: p.category,
       employeeType: p.employeeType, typeName: nameOf('employeeTypes', p.employeeType), contractedHours: p.contractedHours, line,
       hours: hoursPosition(worker(p), line, Number(workedHours(p.code, ws).toFixed(2)), ctx),
       restIssues: cfg.restWarn ? lineRestIssues(line, restNeed(ctx.typeRota, cfg), sh) : [] };
@@ -317,8 +317,8 @@ function weekView(s: Signed, l: StoredLocation, ws: string): RotaWeekView {
 
 /* ------------------------------------------------------- notifications (D8) */
 const managersAt = (loc: string) => Object.values(accounts())
-  .filter(a => personByCode(a.personCode)?.location === loc && capsFor(a).includes('team_rota')).map(a => a.personCode);
-const administrators = () => Object.values(accounts()).filter(a => capsFor(a).includes('mod_cfg')).map(a => a.personCode);
+  .filter(a => employeeByCode(a.employeeCode)?.location === loc && capsFor(a).includes('team_rota')).map(a => a.employeeCode);
+const administrators = () => Object.values(accounts()).filter(a => capsFor(a).includes('mod_cfg')).map(a => a.employeeCode);
 function nextNumId(coll: Record<string, unknown>, prefix: string) {
   const re = new RegExp(`^${prefix}_(\\d+)$`);
   let max = 0;
@@ -341,21 +341,21 @@ function refuseAssign(out: AssignOutcomeFail, field: string): never {
 interface Placed { week: RotaWeekCore; change: RotaChange; amended: boolean; advisories: HoursFlag[] }
 /* Every path that puts somebody on a shift lands here. `assign` never replaces
    a shift already on the day; `change` judges the new shift against the line without the old one. */
-function placeShift(week: RotaWeekCore, p: StoredPerson, day: number, code: string, s: Signed, why: string, field: string, mode: AssignMode): Placed {
+function placeShift(week: RotaWeekCore, p: StoredEmployee, day: number, code: string, s: Signed, why: string, field: string, mode: AssignMode): Placed {
   const line = lineOf(week, p.code), cur = line[day] ?? '';
   if (mode === 'assign' && isWorking(cur) && cur !== code && shiftBy(shiftList(), code))
     refuse(422, { code: 'ROTA_INELIGIBLE', field, message: ineligibleMessage(p.name, { rule: 'Shift conflict', reason: 'Already working that day' }), next: ASSIGN_NEXT.ROTA_INELIGIBLE[1] });
   const out = assignCheck(worker(p), line, day, code, mode, ctxFor(p));
   if (!out.ok) refuseAssign(out, field);
-  const r = setCell(week, { personCode: p.code, name: p.name, day, to: code, by: by(s), at: store.now(), why });
+  const r = setCell(week, { employeeCode: p.code, name: p.name, day, to: code, by: by(s), at: store.now(), why });
   return { ...r, advisories: out.advisories };
 }
 /* The colleague's notice for one written cell: an amendment to a live week, or a new shift. */
-function noticeFor(p: StoredPerson, week: RotaWeekCore, day: number, code: string, amended: boolean) {
+function noticeFor(p: StoredEmployee, week: RotaWeekCore, day: number, code: string, amended: boolean) {
   if (amended) notifyEvent('rt_pub', 'subject', [p.code], amendedNotice(week.weekStart, day));
   else if (code) notifyEvent('rt_assign', 'subject', [p.code], shiftAssignedNotice(shiftList(), code, addDays(week.weekStart, day), locName(week.location)));
 }
-const cellField = (personCode: string, day: number) => `lines.${personCode}.${day}`;
+const cellField = (employeeCode: string, day: number) => `lines.${employeeCode}.${day}`;
 
 /* --------------------------------------------------------------- cover */
 const covers = () => store.coll<CoverRecord>('coverRequests');
@@ -391,16 +391,16 @@ function coverFor(s: Signed, id: string): CoverRecord {
 const refuseCover = (p: { code: string; message: string; next: string; field?: string }): never =>
   refuse(p.code === 'VALIDATION' ? 422 : 409, { ...p, code: p.code === 'VALIDATION' ? 'invalid' : p.code });
 /* D15: the shift goes on through the week path, then the request closes and a filled row waits for confirmation. */
-function fillWith(s: Signed, c: CoverRecord, p: StoredPerson, why: string, notifyPerson: boolean) {
+function fillWith(s: Signed, c: CoverRecord, p: StoredEmployee, why: string, notifyEmployee: boolean) {
   const at = weekOn(c.location, c.date), day = at.day, week = weekCore(c.location, at.weekStart);
-  const placed = placeShift(week, p, day, c.shift, s, why, 'personCode', 'assign');
+  const placed = placeShift(week, p, day, c.shift, s, why, 'employeeCode', 'assign');
   saveWeek(placed.week);
-  if (notifyPerson || placed.amended) noticeFor(p, placed.week, day, c.shift, placed.amended);
+  if (notifyEmployee || placed.amended) noticeFor(p, placed.week, day, c.shift, placed.amended);
   const cover = bump(c, { open: false });
   covers()[c.id] = cover;
   const fid = nextNumId(filledColl(), 'fil');
   const filled: FilledShift = { id: fid, version: 1, updatedAt: store.now(), coverId: c.id, location: c.location, date: c.date, shift: c.shift,
-    personCode: p.code, name: p.name, confirmed: false, itRequest: '' };
+    employeeCode: p.code, name: p.name, confirmed: false, itRequest: '' };
   filledColl()[fid] = filled;
   return { cover, filled, placed };
 }
@@ -411,7 +411,7 @@ const coverDetail = (c: Pick<CoverRecord, 'location' | 'date' | 'shift'>, name?:
 const patternColl = () => store.coll<PatternRecord>('patterns');
 const patternBy = (code: string) => recordAt(patternColl(), `pat_${code}`);
 /* Patterns: an administrator (mod_cfg or master_data) builds for any location;
-   a manager for their own only, as P's patternBox and patternPersonBox did (D5). */
+   a manager for their own only, as P's patternBox and patternEmployeeBox did (D5). */
 function patternScope(s: Signed): { all: true } | { all: false; location: string } {
   return s.caps.includes('mod_cfg') ? { all: true } : scopeOf(s);
 }
@@ -431,21 +431,21 @@ function requireOwnLocations(s: Signed, before: readonly string[], after: readon
       next: `Keep the pattern to ${locName(sc.location)}, or ask an administrator to span several locations.` });
 }
 const notOurs = (name: string, loc: string) => `${name} does not work at ${locName(loc)}. You can put your own team on a pattern only.`;
-/* A manager adds and removes only their own people; anyone else already on a shared pattern stays as they are. */
-function requireOwnPeople(s: Signed, before: PatternRecord['people'], after: PatternRecord['people']) {
+/* A manager adds and removes only their own employees; anyone else already on a shared pattern stays as they are. */
+function requireOwnEmployees(s: Signed, before: PatternRecord['employees'], after: PatternRecord['employees']) {
   const sc = patternScope(s);
   if (sc.all) return;
-  const had = new Set(before.map(x => x.personCode)), has = new Set(after.map(x => x.personCode));
+  const had = new Set(before.map(x => x.employeeCode)), has = new Set(after.map(x => x.employeeCode));
   after.forEach((x, i) => {
-    const q = personByCode(x.personCode);
-    if (!had.has(x.personCode) && q && q.location !== sc.location)
-      refuse(403, { code: 'scope', field: `people.${i}.personCode`, message: notOurs(q.name, sc.location), next: 'Ask an administrator to add people from other locations.' });
+    const q = employeeByCode(x.employeeCode);
+    if (!had.has(x.employeeCode) && q && q.location !== sc.location)
+      refuse(403, { code: 'scope', field: `employees.${i}.employeeCode`, message: notOurs(q.name, sc.location), next: 'Ask an administrator to add employees from other locations.' });
   });
   for (const x of before) {
-    const q = personByCode(x.personCode);
-    if (!has.has(x.personCode) && q && q.location !== sc.location)
-      refuse(403, { code: 'scope', field: 'people', message: `${q.name} does not work at ${locName(sc.location)}. You can take your own team off a pattern only.`,
-        next: 'Ask an administrator to change people from other locations.' });
+    const q = employeeByCode(x.employeeCode);
+    if (!has.has(x.employeeCode) && q && q.location !== sc.location)
+      refuse(403, { code: 'scope', field: 'employees', message: `${q.name} does not work at ${locName(sc.location)}. You can take your own team off a pattern only.`,
+        next: 'Ask an administrator to change employees from other locations.' });
   }
 }
 function patternsGate(s: Signed) { requireRota(); requireFlag('PATTERNS', 'Working patterns'); requireBuilder(s, 'rota_pattern'); }
@@ -455,17 +455,17 @@ function patternFor(s: Signed, code: string): PatternRecord {
   requirePatternScope(s, p.locations);
   return p;
 }
-function checkPatternRefs(p: Pick<PatternRecord, 'locations' | 'jobProfiles' | 'people'>) {
+function checkPatternRefs(p: Pick<PatternRecord, 'locations' | 'jobProfiles' | 'employees'>) {
   const locs = codesOf('locations'), jobs = codesOf('jobProfiles');
   const badLoc = p.locations.findIndex(c => !locs.includes(c));
   if (badLoc >= 0) invalid({ field: `locations.${badLoc}`, message: `There is no location with the code ${p.locations[badLoc] ?? ''}.` });
   const badJob = p.jobProfiles.findIndex(c => !jobs.includes(c));
   if (badJob >= 0) invalid({ field: `jobProfiles.${badJob}`, message: `There is no job profile with the code ${p.jobProfiles[badJob] ?? ''}.` });
   const seen = new Set<string>();
-  p.people.forEach((x, i) => {
-    if (!personByCode(x.personCode)) invalid({ field: `people.${i}.personCode`, message: `There is no person with the employee ID ${x.personCode}.` });
-    if (seen.has(x.personCode)) invalid({ field: `people.${i}.personCode`, message: `${x.personCode} is on this pattern twice.` });
-    seen.add(x.personCode);
+  p.employees.forEach((x, i) => {
+    if (!employeeByCode(x.employeeCode)) invalid({ field: `employees.${i}.employeeCode`, message: `There is no employee with the employee ID ${x.employeeCode}.` });
+    if (seen.has(x.employeeCode)) invalid({ field: `employees.${i}.employeeCode`, message: `${x.employeeCode} is on this pattern twice.` });
+    seen.add(x.employeeCode);
   });
 }
 function nextPatternCode() {
@@ -480,11 +480,11 @@ const diff = <T extends object>(was: T, is: T, keys: readonly (keyof T)[]) => {
 };
 
 /* ---------------------------------------------- the timesheet's rota line (D13, D16) */
-/* The person's cell for that date in their location's week, once that week has
+/* The employee's cell for that date in their location's week, once that week has
    been published (D14: an unpublished plan is not shown to the employee, so it
    does not reach their timesheet either). Rest, leave and sickness are not a line. */
-export function rotaInputOn(personCode: string, date: string): RotaInput | undefined {
-  const p = personByCode(personCode), at = p ? weekOn(p.location, date) : undefined;
+export function rotaInputOn(employeeCode: string, date: string): RotaInput | undefined {
+  const p = employeeByCode(employeeCode), at = p ? weekOn(p.location, date) : undefined;
   const w = p && at ? weekRec(p.location, at.weekStart) : undefined;
   if (!p || !at || !w || !rotaVisible(w.state)) return undefined;
   const c = config();
@@ -492,7 +492,7 @@ export function rotaInputOn(personCode: string, date: string): RotaInput | undef
     typeName: nameOf('employeeTypes', p.employeeType) });
 }
 
-/* What the timesheet shows of the rota (D13, D14, D16): the person's published
+/* What the timesheet shows of the rota (D13, D14, D16): the employee's published
    week, Monday first. Nothing while the Rota module is off or the week is a
    draft or in review, so an unpublished plan never reaches a timesheet. */
 const visibleWeek = (loc: string, ws: string) => {
@@ -500,17 +500,17 @@ const visibleWeek = (loc: string, ws: string) => {
   const w = weekRec(loc, ws);
   return w && rotaVisible(w.state) ? w : undefined;
 };
-/* One date's published rota day for the person, from the stored week that
+/* One date's published rota day for the employee, from the stored week that
    covers it (review C1); nothing while that week is not published. */
-export function rotaDayOn(personCode: string, date: string): RotaDay | undefined {
-  const p = personByCode(personCode), at = p ? weekOn(p.location, date) : undefined;
+export function rotaDayOn(employeeCode: string, date: string): RotaDay | undefined {
+  const p = employeeByCode(employeeCode), at = p ? weekOn(p.location, date) : undefined;
   const w = p && at ? visibleWeek(p.location, at.weekStart) : undefined;
   return p && at && w ? rotaDayOf(lineOf(w, p.code)[at.day] ?? '', shiftList()) : undefined;
 }
 /* The seven days from weekStart, each from the stored week that covers it: a
    week that straddles a change of week start reads from both. */
-export function rotaDaysFor(personCode: string, weekStart: string): (RotaDay | undefined)[] | undefined {
-  const days = weekDates(weekStart).map(d => rotaDayOn(personCode, d));
+export function rotaDaysFor(employeeCode: string, weekStart: string): (RotaDay | undefined)[] | undefined {
+  const days = weekDates(weekStart).map(d => rotaDayOn(employeeCode, d));
   return days.some(Boolean) ? days : undefined;
 }
 /* The tone a shift is painted in on My home's month (toneOf); a code no
@@ -519,7 +519,7 @@ export function rotaToneOf(code: string): 'E' | 'L' | 'N' {
   const t = shiftBy(shiftList(), code)?.tone;
   return t === 'L' || t === 'N' ? t : 'E';
 }
-/* Everyone on a location's published week, by person code, for the approver's matrix. */
+/* Everyone on a location's published week, by employee code, for the approver's matrix. */
 export function rotaWeekDays(location: string, weekStart: string): Record<string, RotaDay[]> {
   const sh = shiftList(), w = visibleWeek(location, weekStart);
   if (w) return Object.fromEntries(Object.keys(w.lines).map(code => [code, rotaDaysOf(lineOf(w, code), sh)]));
@@ -545,8 +545,8 @@ export const rotaLineOptions = () => (tenant().modules.R ? shiftList().map(s => 
 /* The effect on cover of someone being away on these dates: each day in a
    stored week at their location, with how many are on shift, whether they are
    one of them, and the minimum. A week not stored yet has nothing to say. */
-export function rotaCoverDays(personCode: string, dates: readonly string[]): CoverDay[] {
-  const p = personByCode(personCode), l = p ? locationBy(p.location) : undefined;
+export function rotaCoverDays(employeeCode: string, dates: readonly string[]): CoverDay[] {
+  const p = employeeByCode(employeeCode), l = p ? locationBy(p.location) : undefined;
   if (!p || !l) return [];
   return dates.flatMap(date => {
     const at = weekOn(l.code, date), w = weekRec(l.code, at.weekStart);
@@ -559,12 +559,12 @@ export interface AbsenceWritten { written: number; weeks: string[]; amended: boo
 /* Leave or sickness reaching the rota (module 4 D7) through the same week path
    as every other cell write: setCells keeps the change log and moves a live
    week to amendment, a week not stored yet is created as a draft, and the
-   colleague hears about an amended week. A day the person was working that now
+   colleague hears about an amended week. A day the employee was working that now
    falls below the minimum opens one cover request (FULFIL), deduplicated as
    module 3 D7. The caller gates on Rota and LV_ROTA and writes the audit row. */
-export function writeAbsence(o: { personCode: string; dates: readonly string[]; mark: string; by: RotaActor; coverReason: string }): AbsenceWritten {
+export function writeAbsence(o: { employeeCode: string; dates: readonly string[]; mark: string; by: RotaActor; coverReason: string }): AbsenceWritten {
   const out: AbsenceWritten = { written: 0, weeks: [], amended: false, covers: [] };
-  const p = personByCode(o.personCode), l = p ? locationBy(p.location) : undefined;
+  const p = employeeByCode(o.employeeCode), l = p ? locationBy(p.location) : undefined;
   if (!p || !l) return out;
   const sh = shiftList();
   for (const plan of cellPlanAt(l.code, o.dates)) {
@@ -595,7 +595,7 @@ export const rotaHandlers = [
   serve(getRotaHome, ({ session }) => {
     requireRota();
     const ls = manageable(session), sc = scopeOf(session), now = today();
-    const own = sc.all ? personByCode(effectiveCode(session))?.location : sc.location;
+    const own = sc.all ? employeeByCode(effectiveCode(session))?.location : sc.location;
     const location = ls.find(l => l.code === own)?.code ?? ls[0]?.code ?? '';
     const awaiting = awaitingFor(session);
     return { locations: ls, location, today: now, weekStart: location ? weekOn(location, now).weekStart : periodStart(now), ...(awaiting.length ? { awaiting } : {}) };
@@ -614,13 +614,13 @@ export const rotaHandlers = [
     requireMonday(l.code, ws);
     requireOwnWeek(l.code, ws);
     checkVersion(weekMeta(l.code, ws));
-    const p = personAt(body.personCode, l.code), week = weekCore(l.code, ws), field = cellField(p.code, body.day);
+    const p = employeeAt(body.employeeCode, l.code), week = weekCore(l.code, ws), field = cellField(p.code, body.day);
     const cur = lineOf(week, p.code)[body.day] ?? '', sh = shiftList();
     let placed: Placed;
     if (body.code === '') {
       if (isAbsence(cur)) refuseAssign({ ok: false, code: 'ON_LEAVE', message: `${p.name} is down as ${cur === 'V' ? 'on leave' : 'off sick'} that day.` }, field);
       if (!cur) refuse(409, { code: 'UNCHANGED', field, message: `${p.name} has no shift that day.`, next: ASSIGN_NEXT.UNCHANGED[1] });
-      placed = { ...setCell(week, { personCode: p.code, name: p.name, day: body.day, to: '', by: by(session), at: store.now(), why: body.why?.trim() || 'Removed' }), advisories: [] };
+      placed = { ...setCell(week, { employeeCode: p.code, name: p.name, day: body.day, to: '', by: by(session), at: store.now(), why: body.why?.trim() || 'Removed' }), advisories: [] };
     } else {
       placed = placeShift(week, p, body.day, body.code, session, body.why?.trim() || (isWorking(cur) ? 'Changed' : 'Assigned'), field, isWorking(cur) ? 'change' : 'assign');
     }
@@ -638,8 +638,8 @@ export const rotaHandlers = [
     const detail = placed.amended ? amendedAuditText(l.name, placed.week, c, sh)
       : `${p.name} · ${c.date} · ${c.from || 'nothing'} → ${c.to || 'nothing'}`;
     const auditId = writeAudit({ who: actor(session), act: placed.amended ? 'Published rota amended' : body.code ? 'Shift assigned' : 'Shift removed',
-      entity: 'rotaWeek', entityId: rotaWeekId(l.code, ws), before: { [c.personCode]: { [c.date]: c.from } },
-      after: { [c.personCode]: { [c.date]: c.to }, state: placed.week.state, detail, ...(cover ? { coverOpened: cover.id } : {}) } });
+      entity: 'rotaWeek', entityId: rotaWeekId(l.code, ws), before: { [c.employeeCode]: { [c.date]: c.from } },
+      after: { [c.employeeCode]: { [c.date]: c.to }, state: placed.week.state, detail, ...(cover ? { coverOpened: cover.id } : {}) } });
     return { week: weekView(session, l, ws), advisories: placed.advisories, cover: cover ? coverView(cover) : null, auditId };
   }),
 
@@ -668,7 +668,7 @@ export const rotaHandlers = [
         const who = by(session), at = store.now();
         const saved = saveWeek({ ...w, state: 'review' }, { signoff: { requestedBy: who, at, signed: [{ layer: walk.current.step.role, by: who, at }] }, sentBack: null });
         const next = weekWalk(saved, l.code, ws).walk, waiting = waitingOn(next);
-        notifyEvent('rt_pub', 'actor', (next.current?.deciders ?? []).filter(c => c !== who.personCode),
+        notifyEvent('rt_pub', 'actor', (next.current?.deciders ?? []).filter(c => c !== who.employeeCode),
           { title: 'Rota waiting on your sign-off', body: `${l.name} · ${formatDmy(ws)} – ${formatDmy(addDays(ws, 6))}. Sent to publish by ${who.name}.` });
         const auditId = writeAudit({ who: actor(session), act: 'Rota sent for sign-off', entity: 'rotaWeek', entityId: rotaWeekId(l.code, ws),
           before: { state: w.state }, after: { state: 'review', layer: walk.current.step.role, detail: `${l.name} · week ${isoWeek(ws)} · waiting on ${waiting}` } });
@@ -709,8 +709,8 @@ export const rotaHandlers = [
       const reason = (body.reason ?? '').trim();
       if (!reason) invalid({ field: 'reason', message: 'Give a reason for sending it back. The rota manager sees it.' });
       saveWeek({ ...w, state: 'draft' }, { signoff: null, sentBack: { by: who, at, reason } });
-      if (requester && requester.personCode !== me)
-        notifyEvent('rt_pub', 'actor', [requester.personCode], { title: 'Rota sent back', body: `${l.name} · week ${isoWeek(ws)}. Sent back by ${who.name}: "${reason}".` });
+      if (requester && requester.employeeCode !== me)
+        notifyEvent('rt_pub', 'actor', [requester.employeeCode], { title: 'Rota sent back', body: `${l.name} · week ${isoWeek(ws)}. Sent back by ${who.name}: "${reason}".` });
       const auditId = writeAudit({ who: actor(session), act: 'Rota sent back', entity: 'rotaWeek', entityId: rec.id, before: { state: 'review', layer },
         after: { state: 'draft', detail: `${l.name} · week ${isoWeek(ws)} · sent back as ${layer}` }, reason });
       return { week: weekView(session, l, ws), summary: `Week ${isoWeek(ws)} sent back to ${requester?.name ?? 'the rota manager'}.`, auditId };
@@ -732,8 +732,8 @@ export const rotaHandlers = [
     const r = publishWeek(w, who, at);
     saveWeek(r.week, { signoff: null, sentBack: null });
     notifyEvent('rt_pub', 'subject', roster.map(p => p.code), publishNotice(l.name, ws, r.version, r.republished));
-    if (requester && requester.personCode !== me)
-      notifyEvent('rt_pub', 'actor', [requester.personCode], { title: 'Rota signed off', body: `${l.name} · week ${isoWeek(ws)}. Signed off by ${who.name} and published.` });
+    if (requester && requester.employeeCode !== me)
+      notifyEvent('rt_pub', 'actor', [requester.employeeCode], { title: 'Rota signed off', body: `${l.name} · week ${isoWeek(ws)}. Signed off by ${who.name} and published.` });
     const auditId = writeAudit({ who: actor(session), act: 'Rota published', entity: 'rotaWeek', entityId: rec.id, before: { state: 'review', version: w.publishVersion },
       after: { location: l.code, weekStart: ws, state: r.week.state, version: r.version, notified: roster.length,
         detail: `${publishAuditText(l.name, ws, r.version, r.amended)} · signed off as ${layer}` } });
@@ -788,7 +788,7 @@ export const rotaHandlers = [
     const w = weekCore(l.code, ws), roster = activeAt(l.code).map(p => p.code);
     const problem = clearProblem(w, roster, l.name);
     if (problem) refuse(409, problem);
-    const names = new Map(Object.values(people()).map(p => [p.code, p.name]));
+    const names = new Map(Object.values(employees()).map(p => [p.code, p.name]));
     const writes: CellWrite[] = clearWrites(w.lines, roster, names, by(session), store.now());
     const r = setCells(w, writes);
     saveWeek(r.week);
@@ -802,7 +802,7 @@ export const rotaHandlers = [
     const l = locationFor(session, params.location), ws = params.weekStart;
     requireMonday(l.code, ws);
     const items = planWeek(candidatesAt(l.code, weekCore(l.code, ws)), minAt(l), shiftList())
-      .map(x => (x.none ? { day: x.day, code: x.code, none: true, personCode: '', name: '', why: [] } : { ...x }));
+      .map(x => (x.none ? { day: x.day, code: x.code, none: true, employeeCode: '', name: '', why: [] } : { ...x }));
     return { items, summary: planSummary(items.filter(x => !x.none).length) };
   }),
 
@@ -813,9 +813,9 @@ export const rotaHandlers = [
     requireOwnWeek(l.code, ws);
     checkVersion(weekMeta(l.code, ws));
     let week = weekCore(l.code, ws), amended = false;
-    const advisories: HoursFlag[] = [], placedAll: { p: StoredPerson; day: number; code: string }[] = [];
+    const advisories: HoursFlag[] = [], placedAll: { p: StoredEmployee; day: number; code: string }[] = [];
     body.items.forEach((it, i) => {
-      const p = personAt(it.personCode, l.code, `items.${i}.personCode`);
+      const p = employeeAt(it.employeeCode, l.code, `items.${i}.employeeCode`);
       const placed = placeShift(week, p, it.day, it.code, session, 'Accepted from the plan', `items.${i}`, 'assign');
       week = placed.week; amended ||= placed.amended;
       advisories.push(...placed.advisories);
@@ -837,7 +837,7 @@ export const rotaHandlers = [
     if (!shiftBy(shiftList(), query.code)) invalid({ field: 'code', message: `There is no shift type with the code ${query.code}.` });
     const r = suggest(query.day, query.code, candidatesAt(l.code, weekCore(l.code, ws)));
     return { day: query.day, code: query.code, ok: r.ok.map(suggestionView),
-      no: r.no.map(x => ({ personCode: x.worker.code, name: x.worker.name, rule: x.rule, reason: x.reason })) };
+      no: r.no.map(x => ({ employeeCode: x.worker.code, name: x.worker.name, rule: x.rule, reason: x.reason })) };
   }),
 
   /* --------------------------------------------------------- shift types */
@@ -906,13 +906,13 @@ export const rotaHandlers = [
     patternsGate(session);
     const sc = patternScope(session);
     const items = Object.values(patternColl()).filter(p => sc.all || p.locations.includes(sc.location));
-    const ppl = Object.values(people()).filter(p => isActive(p) && (sc.all || p.location === sc.location))
+    const ppl = Object.values(employees()).filter(p => isActive(p) && (sc.all || p.location === sc.location))
       .map(p => ({ code: p.code, name: p.name, location: p.location, jobProfile: p.jobProfile, category: p.category }));
     const canCover = locations().filter(l => (sc.all ? l.active !== false : l.code === sc.location)).map(l => ({ code: l.code, name: l.name }));
-    /* the people requireOwnPeople keeps a manager from taking off */
-    const elsewhere = sc.all ? [] : [...new Set(items.flatMap(p => p.people.map(x => x.personCode)))]
-      .filter(code => { const q = personByCode(code); return !!q && q.location !== sc.location; });
-    return { items, people: ppl, canCover, today: today(), elsewhere };
+    /* the employees requireOwnEmployees keeps a manager from taking off */
+    const elsewhere = sc.all ? [] : [...new Set(items.flatMap(p => p.employees.map(x => x.employeeCode)))]
+      .filter(code => { const q = employeeByCode(code); return !!q && q.location !== sc.location; });
+    return { items, employees: ppl, canCover, today: today(), elsewhere };
   }),
 
   serve(createPattern, ({ session, body }) => {
@@ -924,7 +924,7 @@ export const rotaHandlers = [
     const days = body.days ?? (base ? resizeCycle(base, cycle).days : Array.from({ length: Math.max(0, Math.min(28, cycle)) }, () => ''));
     const draft = { code: nextPatternCode(), name: body.name.trim(), cycle, locations: body.locations, jobProfiles: body.jobProfiles,
       costCentre: body.costCentre, starts: body.starts, horizon: body.horizon, gen: body.gen, genFrom: body.genFrom ?? '', genTo: body.genTo ?? '',
-      active: false, days, people: [] };
+      active: false, days, employees: [] };
     requirePatternScope(session, draft.locations);
     checkPatternRefs(draft);
     const problem = patternProblem(draft, shiftList().map(s => s.code));
@@ -940,15 +940,15 @@ export const rotaHandlers = [
     const p = patternFor(session, params.code);
     checkVersion(p);
     let next: PatternRecord = { ...p, ...body, ...(body.name !== undefined ? { name: body.name.trim() } : {}) };
-    if (body.cycle !== undefined && body.days === undefined && body.cycle >= 1 && body.cycle <= 28) next = resizeCycle({ ...next, days: p.days, people: body.people ?? p.people }, body.cycle);
+    if (body.cycle !== undefined && body.days === undefined && body.cycle >= 1 && body.cycle <= 28) next = resizeCycle({ ...next, days: p.days, employees: body.employees ?? p.employees }, body.cycle);
     if (body.active === true && !next.days.some(c => !!c)) refuse(422, { code: 'ACTIVATE_EMPTY', field: 'days', message: ACTIVATE_EMPTY, next: 'Put a shift on at least one day of the cycle.' });
     requireOwnLocations(session, p.locations, next.locations);
     requirePatternScope(session, next.locations);
     checkPatternRefs(next);
-    requireOwnPeople(session, p.people, next.people);
+    requireOwnEmployees(session, p.employees, next.employees);
     const problem = patternProblem(next, shiftList().map(s => s.code));
     if (problem) invalid(problem);
-    const keys =['name', 'cycle', 'days', 'locations', 'jobProfiles', 'costCentre', 'starts', 'horizon', 'gen', 'genFrom', 'genTo', 'active', 'people'] as const;
+    const keys =['name', 'cycle', 'days', 'locations', 'jobProfiles', 'costCentre', 'starts', 'horizon', 'gen', 'genFrom', 'genTo', 'active', 'employees'] as const;
     const { before, after } = diff(p, next, keys);
     if (!Object.keys(after).length) return { record: p, auditId: null };
     const saved = bump(p, next);
@@ -962,31 +962,31 @@ export const rotaHandlers = [
     checkVersion(p);
     Reflect.deleteProperty(patternColl(), p.id);
     const auditId = writeAudit({ who: actor(session), act: 'Working pattern removed', entity: 'pattern', entityId: p.id,
-      before: { code: p.code, name: p.name, people: p.people.length }, after: null });
+      before: { code: p.code, name: p.name, employees: p.employees.length }, after: null });
     return { code: p.code, auditId };
   }),
 
-  serve(addPatternPeople, ({ session, params, body, checkVersion }) => {
+  serve(addPatternEmployees, ({ session, params, body, checkVersion }) => {
     const p = patternFor(session, params.code);
     checkVersion(p);
-    const codes = [...new Set(body.personCodes)];
-    if (!codes.length) invalid({ field: 'personCodes', message: TICK_SOMEONE });
+    const codes = [...new Set(body.employeeCodes)];
+    if (!codes.length) invalid({ field: 'employeeCodes', message: TICK_SOMEONE });
     if (body.start > p.cycle) invalid({ field: 'start', message: `A starting day must be from 1 to ${p.cycle}.` });
     const sc = patternScope(session);
     const ppl = codes.map((code, i) => {
-      const x = personByCode(code) ?? invalid({ field: `personCodes.${i}`, message: `There is no person with the employee ID ${code}.` });
+      const x = employeeByCode(code) ?? invalid({ field: `employeeCodes.${i}`, message: `There is no employee with the employee ID ${code}.` });
       if (!sc.all && x.location !== sc.location)
-        refuse(403, { code: 'scope', field: `personCodes.${i}`, message: notOurs(x.name, sc.location), next: 'Ask an administrator to add people from other locations.' });
+        refuse(403, { code: 'scope', field: `employeeCodes.${i}`, message: notOurs(x.name, sc.location), next: 'Ask an administrator to add employees from other locations.' });
       return x;
     });
-    const already = ppl.filter(x => p.people.some(y => y.personCode === x.code)).map(x => x.name);
-    if (already.length) refuse(409, { code: 'ALREADY_ON_PATTERN', field: 'personCodes', message: alreadyOnPattern(already), next: 'Untick them, or change their starting day on the pattern.' });
+    const already = ppl.filter(x => p.employees.some(y => y.employeeCode === x.code)).map(x => x.name);
+    if (already.length) refuse(409, { code: 'ALREADY_ON_PATTERN', field: 'employeeCodes', message: alreadyOnPattern(already), next: 'Untick them, or change their starting day on the pattern.' });
     const offsets = staggerOffsets(p.days, body.start, body.mode, ppl.length);
-    const added = ppl.map((x, i) => ({ personCode: x.code, offset: offsets[i] ?? body.start }));
-    const saved = bump(p, { people: [...p.people, ...added] });
+    const added = ppl.map((x, i) => ({ employeeCode: x.code, offset: offsets[i] ?? body.start }));
+    const saved = bump(p, { employees: [...p.employees, ...added] });
     patternColl()[p.id] = saved;
-    const auditId = writeAudit({ who: actor(session), act: 'People added to a working pattern', entity: 'pattern', entityId: p.id,
-      before: { people: p.people.length }, after: { people: saved.people.length, added: added.map(a => `${a.personCode} from day ${a.offset}`) } });
+    const auditId = writeAudit({ who: actor(session), act: 'Employees added to a working pattern', entity: 'pattern', entityId: p.id,
+      before: { employees: p.employees.length }, after: { employees: saved.employees.length, added: added.map(a => `${a.employeeCode} from day ${a.offset}`) } });
     return { record: saved, auditId };
   }),
 
@@ -998,14 +998,14 @@ export const rotaHandlers = [
     const problem = patternGenerateProblem(run, scope, locName);
     if (problem) invalid(problem);
     const c = config();
-    const info = new Map<string, PatternPersonInfo>(run.people.flatMap(x => {
-      const q = personByCode(x.personCode);
+    const info = new Map<string, PatternEmployeeInfo>(run.employees.flatMap(x => {
+      const q = employeeByCode(x.employeeCode);
       return q ? [[q.code, { code: q.code, name: q.name, location: q.location, state: q.state, restNeed: restNeed(typeRotaFor(c.types, q.employeeType), c) }]] : [];
     }));
-    const r = applyPattern(run, { today: today(), scope, people: info, weekAt, locName, shifts: shiftList() });
+    const r = applyPattern(run, { today: today(), scope, employees: info, weekAt, locName, shifts: shiftList() });
     if (!r.ok) return invalid({ field: 'gen', message: r.message });
     if (!r.written && !r.occupied && !r.live && !r.absence) refuse(422, { code: 'NO_LANDING', field: 'days', message: NO_LANDING, next: 'Change the cycle or the start day, then generate again.' });
-    const counts = { written: r.written, occupied: r.occupied, absence: r.absence, weeks: r.weeks, live: r.live, rest: r.rest, range: r.range, people: r.people,
+    const counts = { written: r.written, occupied: r.occupied, absence: r.absence, weeks: r.weeks, live: r.live, rest: r.rest, range: r.range, employees: r.employees,
       summary: generateSummary(r, generateActivates(p, r) ? p.name : undefined) };
     if (!r.written) return { ...counts, record: p, auditId: null };
     for (const w of r.writes) requireOwnWeek(w.location, w.weekStart);
@@ -1097,7 +1097,7 @@ export const rotaHandlers = [
     checkVersion(c);
     const closed = coverClosed(c);
     if (closed) refuse(409, closed);
-    const p = personAt(body.personCode, c.location);
+    const p = employeeAt(body.employeeCode, c.location);
     const r = fillWith(session, c, p, 'Cover', true);
     const auditId = writeAudit({ who: actor(session), act: 'Cover request filled', entity: 'coverRequest', entityId: c.id,
       before: { open: true }, after: { open: false, filled: r.filled.id, amended: r.placed.amended, detail: coverDetail(c, p.name) } });
@@ -1113,7 +1113,7 @@ export const rotaHandlers = [
     if (!c.reason) refuse(409, { code: 'REASON_REQUIRED', field: 'reason', message: REASON_BEFORE_CLOSE, next: 'Choose why this shift needs filling.' });
     const best = eligibleFor(c.location, c.date, c.shift)[0];
     if (!best) refuse(409, { code: 'NOBODY_ELIGIBLE', message: NOBODY_ELIGIBLE, next: 'Escalate the request.' });
-    const p = (best ? personByCode(best.worker.code) : undefined) ?? NOT_FOUND('person record');
+    const p = (best ? employeeByCode(best.worker.code) : undefined) ?? NOT_FOUND('employee record');
     const r = fillWith(session, c, p, 'Cover', true);
     const auditId = writeAudit({ who: actor(session), act: 'Cover request filled', entity: 'coverRequest', entityId: c.id,
       before: { open: true }, after: { open: false, filled: r.filled.id, amended: r.placed.amended, detail: coverDetail(c, p.name) } });
@@ -1124,7 +1124,7 @@ export const rotaHandlers = [
     requireRota(); requireFlag('FULFIL', 'Cover requests');
     if (!session.caps.includes('claim')) refuse(403, { code: 'capability', message: CLAIM_NOT_PERMITTED, next: 'Ask your manager to assign the shift to you.' });
     const c = recordAt(covers(), params.id) ?? NOT_FOUND('open shift');
-    const me = personByCode(effectiveCode(session)) ?? NOT_FOUND('person record');
+    const me = employeeByCode(effectiveCode(session)) ?? NOT_FOUND('employee record');
     /* claim is own-only: an open shift at somebody else's location is not offered */
     if (c.location !== me.location) refuse(403, { code: 'scope', message: 'This open shift is not at your location.', next: 'Claim open shifts from My shifts.' });
     checkVersion(c);
@@ -1153,7 +1153,7 @@ export const rotaHandlers = [
     let it: ItRequest | null = null;
     if (flagOn('ITACCESS')) {
       const id = nextNumId(itColl(), 'itr');
-      it = { id, ...itRequestFor(f, Object.keys(itColl()).length, personByCode(f.personCode)?.category ?? '', store.now(), locName(f.location), shiftList()) };
+      it = { id, ...itRequestFor(f, Object.keys(itColl()).length, employeeByCode(f.employeeCode)?.category ?? '', store.now(), locName(f.location), shiftList()) };
       itColl()[id] = it;
       notifyEvent('rt_it', 'backOffice', administrators(), { ...itRequestNotice(it), ref: it.ref });
     }
@@ -1177,7 +1177,7 @@ export const rotaHandlers = [
   /* ------------------------------------------------------------ my shifts */
   serve(getMyShifts, ({ session, query }) => {
     requireRota();
-    const p = personByCode(effectiveCode(session)) ?? NOT_FOUND('person record');
+    const p = employeeByCode(effectiveCode(session)) ?? NOT_FOUND('employee record');
     const now = today(), ws = query.weekStart ?? weekOn(p.location, now).weekStart;
     requireMonday(p.location, ws);
     const w = weekCore(p.location, ws), visible = rotaVisible(w.state), sh = shiftList();
@@ -1193,7 +1193,7 @@ export const rotaHandlers = [
       ? openShiftsFor({ ...worker(p), location: p.location }, Object.values(covers()).filter(c => c.date >= now), date => lineOf(weekCore(p.location, weekOn(p.location, date).weekStart), p.code), ctxFor(p))
       : [];
     return {
-      person: { code: p.code, name: p.name, location: p.location, locationName: locName(p.location) },
+      employee: { code: p.code, name: p.name, location: p.location, locationName: locName(p.location) },
       weekStart: ws, label: weekLabel(ws), today: now, state: w.state, visible, days,
       restDays: visible ? dates.filter((_, i) => !line[i]) : [], hours: r2(rotadHours(line, sh)), next, publishedTo: published.at(-1) ?? '',
       openShifts: open.map(({ cover: c, why }) => ({ id: c.id, version: c.version, date: c.date, shift: c.shift, shiftName: shiftBy(sh, c.shift)?.name ?? c.shift,

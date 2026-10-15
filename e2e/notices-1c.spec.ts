@@ -23,7 +23,7 @@ test('a notice is posted and acknowledged, its words changed so it is acknowledg
   await box.getByTestId(tid.tnotices.body).fill('Every sink will be checked on Tuesday.');
   await expect(box.getByTestId(tid.tnotices.mustAck)).toBeChecked();
   await box.getByTestId(tid.tnotices.postNow).click();
-  await expect(info(page, `Posted. ${TITLE}. 11 people in Willow House.`)).toBeVisible();
+  await expect(info(page, `Posted. ${TITLE}. 11 employees in Willow House.`)).toBeVisible();
   await expect(page.getByTestId(tid.tnotices.acks('NTC-0005'))).toHaveText(/0 of 11/);
 
   /* Amara is told in her inbox, and the item opens Notices */
@@ -54,10 +54,10 @@ test('a notice is posted and acknowledged, its words changed so it is acknowledg
   await page.getByTestId(tid.tnotices.open('NTC-0005')).click();
   await expect(box.getByTestId(tid.tnotices.trackStatus('CP-1042'))).toContainText('v1');
   await box.getByTestId(tid.tnotices.trackEdit).click();
-  await expect(box.getByTestId(tid.tnotices.resetWarn)).toContainText('1 person has acknowledged v1');
+  await expect(box.getByTestId(tid.tnotices.resetWarn)).toContainText('1 employee has acknowledged v1');
   await box.getByTestId(tid.tnotices.body).fill('Every sink and every dispenser will be checked on Tuesday.');
   await box.getByTestId(tid.tnotices.save).click();
-  await expect(info(page, 'Saved as v2. 11 people now need to acknowledge it.')).toBeVisible();
+  await expect(info(page, 'Saved as v2. 11 employees now need to acknowledge it.')).toBeVisible();
   await expect(page.getByTestId(tid.tnotices.acks('NTC-0005'))).toHaveText(/0 of 11/);
 
   /* Amara is asked again; the v1 she read is no longer enough */

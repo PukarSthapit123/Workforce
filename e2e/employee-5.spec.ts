@@ -111,5 +111,5 @@ test('a new starter lands on the portal alone, completes every step, uploads, ac
   expect(acts.filter(a => a === 'Onboarding document uploaded')).toHaveLength(3);
   expect(acts.filter(a => a === 'Policy acknowledged')).toHaveLength(4);
   expect(acts.filter(a => a === 'Onboarding submitted')).toHaveLength(1);
-  expect((await onbNotes(page)).filter(n => n.personId === 'EMP001').map(n => n.body).join(' ')).toContain('Tom Achterberg');
+  expect((await onbNotes(page)).filter(n => n.employeeId === 'EMP001').map(n => n.body).join(' ')).toContain('Tom Achterberg');
 });

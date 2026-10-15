@@ -8,7 +8,7 @@
 import { z } from 'zod';
 import { defineEndpoint } from './endpoints';
 import { RecordMeta } from './common';
-import { IsoDate } from './people';
+import { IsoDate } from './employees';
 
 /* the same four as src/domain/approvals.ts CHAIN_MODULES (the contract test holds them together) */
 export const ChainModule = z.enum(['Timesheet', 'Profile', 'Leave', 'Rota']);
@@ -41,7 +41,7 @@ export const Delegation = RecordMeta.extend({
   active: z.boolean(),
 });
 export type Delegation = z.infer<typeof Delegation>;
-/* the people who can approve, for the two pickers */
+/* the employees who can approve, for the two pickers */
 export const Approver = z.object({ code: z.string(), name: z.string() });
 export const Delegations = z.object({ items: z.array(Delegation), approvers: z.array(Approver) });
 export type Delegations = z.infer<typeof Delegations>;
@@ -64,7 +64,7 @@ export const saveApprovalChain = defineEndpoint({ method: 'PUT', path: '/api/v1/
   response: ChainSaved, capability: cap, versioned: true, errors: [404, 409],
   summary: 'Save one module\'s chain whole (If-Match). Roles are Line manager, Service Manager, Payroll or HR administrator; the Business Central posting step stays last in the Timesheet chain (FIXED); the Profile chain has only a line manager and payroll. A change that would leave an item waiting part-way along the chain with every layer that still applies signed, and nobody left to decide it, is refused (409 in-use) naming the items in usedBy. One audit row.' });
 export const listDelegations = defineEndpoint({ method: 'GET', path: '/api/v1/approvals/delegations', response: Delegations, capability: cap,
-  summary: 'Every delegation, soonest first, and the people who can approve' });
+  summary: 'Every delegation, soonest first, and the employees who can approve' });
 export const createDelegation = defineEndpoint({ method: 'POST', path: '/api/v1/approvals/delegations', request: CreateDelegation, response: DelegationSaved,
   capability: cap, errors: [409],
   summary: 'Hand an approver\'s queue to another for a date range, both days included. Covering yourself or a circle of delegations is LOOP; a second one for the same approver, module and days is OVERLAP. One audit row.' });

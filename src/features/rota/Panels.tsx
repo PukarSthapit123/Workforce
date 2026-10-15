@@ -29,7 +29,7 @@ export function PlanPanel({ view, items, busy, onAccept, onAcceptAll, onAsk, onS
         </div>
       </div>
       {good.map(({ x, i }) => (
-        <SugCard key={`${x.day}-${x.code}-${x.personCode}`} testId={tid.trota.planItem(i)} best name={x.name}
+        <SugCard key={`${x.day}-${x.code}-${x.employeeCode}`} testId={tid.trota.planItem(i)} best name={x.name}
           sub={`${shiftName(view.shifts, x.code)} · ${shiftTime(view.shifts, x.code)} · ${longDay(view.weekStart, x.day)}`}
           why={x.why.length ? x.why : [NO_REASONS_WHY]}
           actions={<>
@@ -62,7 +62,7 @@ export function RotaHistory({ view }: { view: RotaWeekView }) {
             <TableHead>From</TableHead><TableHead>To</TableHead><TableHead>Against</TableHead>
           </TableRow></TableHeader>
           <TableBody>{ch.slice(0, 12).map((c, i) => (
-            <Row key={`${c.at}-${c.personCode}-${c.date}-${String(i)}`} testId={tid.trota.change(i)}>
+            <Row key={`${c.at}-${c.employeeCode}-${c.date}-${String(i)}`} testId={tid.trota.change(i)}>
               <TableCell className="text-xs tabular-nums">{formatDateTime(c.at)}</TableCell>
               <TableCell className="text-xs">{c.by.name}</TableCell>
               <TableCell>{c.name}</TableCell>

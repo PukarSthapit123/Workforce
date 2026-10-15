@@ -1,6 +1,6 @@
 import { test, expect, FROZEN } from './support/fixtures';
 import { tid } from '../src/testids';
-import { answered, personByCode } from './support/read';
+import { answered, employeeByCode } from './support/read';
 import { sendVersioned, signInEmail } from './support/timesheet';
 import { DEE, RACHEL } from './support/rota';
 import { BIGYAN, EDDIE, TOM, onbAudit, onbStore, teamOf } from './support/onboarding';
@@ -10,7 +10,7 @@ import { BIGYAN, EDDIE, TOM, onbAudit, onbStore, teamOf } from './support/onboar
    endpoints refuse them; an employee who is not a starter, or a starter
    without Complete my own onboarding, has no portal; a manager sees and acts
    on starters at their own location only; without Configure onboarding the
-   setup page and its endpoints are refused; and the People lifecycle dialog
+   setup page and its endpoints are refused; and the Employees lifecycle dialog
    refuses to make a starter active while anything blocks the start. Each
    refusal writes nothing. */
 type R = { status: number; body: unknown };
@@ -30,7 +30,7 @@ test.describe('on qnipay', () => {
     await expect(page).toHaveURL(/\/work\/onb$/);
     await expect(pageTabs(page)).toHaveCount(1);
     for (const g of ['team', 'setup']) await expect(page.getByTestId(tid.nav.group(g))).toHaveCount(0);
-    for (const path of ['/work/home', '/work/ts', '/work/leave', '/work/profile', '/team/tonb', '/team/tpeople', '/setup/monb', '/setup/apeople']) await unreachable(page, path);
+    for (const path of ['/work/home', '/work/ts', '/work/leave', '/work/profile', '/team/tonb', '/team/temployees', '/setup/monb', '/setup/aemployees']) await unreachable(page, path);
     await page.getByTestId(tid.unavailable.home).click();
     await expect(page).toHaveURL(/\/work\/onb$/);
 
@@ -70,12 +70,12 @@ test.describe('on qnipay', () => {
     expect([save.status, code(save)]).toEqual([403, 'capability']);
   });
 
-  test('the People lifecycle dialog refuses to make a starter active while anything blocks the start, and so does the transition endpoint', async ({ page, api }) => {
+  test('the Employees lifecycle dialog refuses to make a starter active while anything blocks the start, and so does the transition endpoint', async ({ page, api }) => {
     await signInEmail(page, EDDIE);
-    await page.goto('/setup/apeople');
-    await page.getByTestId(tid.people.open('EMP003')).click();
-    await page.getByTestId(tid.person.record).waitFor();
-    await page.getByTestId(tid.person.changeState).click();
+    await page.goto('/setup/aemployees');
+    await page.getByTestId(tid.employees.open('EMP003')).click();
+    await page.getByTestId(tid.employee.record).waitFor();
+    await page.getByTestId(tid.employee.changeState).click();
     await page.getByTestId(tid.lifecycle.option('active')).check();
     await page.getByTestId(tid.lifecycle.reason).fill('Ready to go');
     const before = await onbStore(page);
@@ -84,11 +84,11 @@ test.describe('on qnipay', () => {
     expect((await moved).status()).toBe(409);
     await expect(page.getByTestId(tid.lifecycle.warn)).toContainText(/^Tom Achterberg cannot start yet\. 9 outstanding\. Personal details not completed\./);
     await expect(page.getByTestId(tid.modal.root)).toBeVisible();
-    expect((await personByCode(api, 'EMP003')).state).toBe('preboard');
+    expect((await employeeByCode(api, 'EMP003')).state).toBe('preboard');
 
     /* straight to the server, with the record's version */
-    const tom = await personByCode(api, 'EMP003');
-    const direct = await sendVersioned(page, 'POST', `/api/v1/people/${tom.id}/transitions`, tom.version, { to: 'active', reason: 'Ready to go' });
+    const tom = await employeeByCode(api, 'EMP003');
+    const direct = await sendVersioned(page, 'POST', `/api/v1/employees/${tom.id}/transitions`, tom.version, { to: 'active', reason: 'Ready to go' });
     expect([direct.status, code(direct)]).toEqual([409, 'NOT_READY']);
     expect(await onbStore(page)).toEqual(before);
     expect(await onbAudit(page)).toEqual([]);
@@ -101,22 +101,22 @@ test.describe('on social', () => {
   test('a manager sees and acts on starters at their own location only', async ({ page, api }) => {
     /* Dee adds a starter at Beacon Court */
     await signInEmail(page, DEE);
-    const made = await api.send('POST', '/api/v1/people', {
+    const made = await api.send('POST', '/api/v1/employees', {
       code: 'CP-9001', name: 'Hannah Vogel', email: 'hannah.vogel@brightpath.org', phone: '', jobProfile: 'SW', employeeType: 'shift', category: '', location: 'BC',
       department: '', manager: '', contractedHours: 30, maxHours: 0, night: false, resource: '', cis: false, start: '2026-09-01', state: 'candidate', userType: 'employee',
     });
     expect(made.status).toBe(200);
-    expect((await teamOf(api)).rows.map(r => r.person.code)).toContain('CP-9001');
+    expect((await teamOf(api)).rows.map(r => r.employee.code)).toContain('CP-9001');
 
     await signInEmail(page, RACHEL);
     await page.goto('/team/tonb');
     await page.getByTestId(tid.tonb.table).waitFor();
     await expect(page.getByTestId(tid.tonb.row('CP-1502'))).toBeVisible();
     await expect(page.getByTestId(tid.tonb.row('CP-9001'))).toHaveCount(0);
-    expect((await teamOf(api)).rows.map(r => r.person.code).sort()).toEqual(['CP-1501', 'CP-1502']);
+    expect((await teamOf(api)).rows.map(r => r.employee.code).sort()).toEqual(['CP-1501', 'CP-1502']);
 
     const before = await onbStore(page);
-    const scope = 'You can look after onboarding for people at Willow House only.';
+    const scope = 'You can look after onboarding for employees at Willow House only.';
     expect(said(await api.get('/api/v1/onboarding/team/CP-9001'))).toEqual([403, 'scope', scope]);
     for (const action of ['invite', 'start', 'chase']) {
       const r = await sendVersioned(page, 'POST', `/api/v1/onboarding/team/CP-9001/${action}`, 1);

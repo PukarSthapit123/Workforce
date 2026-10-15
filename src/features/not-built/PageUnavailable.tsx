@@ -2,10 +2,10 @@ import { everyTab, type NavTab } from '@/domain/nav';
 import { tid } from '@/testids';
 import { Card, NavLink, Page, PageHead } from '@/ui';
 
-/* A link to a page that does not exist, or to one this person cannot open
+/* A link to a page that does not exist, or to one this employee cannot open
    (brief D9; the prototype's applyHash refusals, v15 "Unknown link" and "That
    view is not available to this persona"). Said in the page frame, with a
-   way home, never by quietly sending the person somewhere else. */
+   way home, never by quietly sending the employee somewhere else. */
 export function PageUnavailable({ path, home }: { path: string; home: NavTab | undefined }) {
   const known = everyTab().find(t => t.path === path);
   return (

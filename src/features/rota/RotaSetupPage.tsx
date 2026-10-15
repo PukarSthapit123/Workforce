@@ -13,7 +13,7 @@ import { useTenant } from '@/shell/shellData';
 import { versionKey } from '@/lib/latest';
 import { FLEX_NOTIFY_TO, FULFIL_AUDIENCES, FULFIL_CHANNELS, HORIZONS, ROTA_BUILT_BY, genLabel, milestonesText, supportLevelsOf } from '@/domain/rota';
 import { NewShiftTypeDialog, ShiftCatalogueBody } from './ShiftCatalogue';
-import { NewPatternDialog, PatternEditor, PatternPeopleDialog, activePill, type PatternCtx } from './PatternEditor';
+import { NewPatternDialog, PatternEditor, PatternEmployeesDialog, activePill, type PatternCtx } from './PatternEditor';
 import { PatternUploadDialog } from './PatternUpload';
 import { draftOf, newStageDraft, rotaBody, type NumKey, type RotaDraft, type ToggleKey, type TypeDraft, type TypeNumKey } from './setup';
 
@@ -23,10 +23,10 @@ import { draftOf, newStageDraft, rotaBody, type NumKey, type RotaDraft, type Tog
    catalogue and Working patterns use, each saved on its own record. Every
    other setting edits one draft: Save sends it with If-Match and one audit
    row with the before and after, Cancel puts it back (D12). The prototype
-   applied each change as it was made. Module 8: each support level's people
+   applied each change as it was made. Module 8: each support level's employees
    per shift is edited here (v15:9073) and set on every location at that
    level, and the flexible-worker milestones and who is told (v15:8326, which
-   the prototype kept on People) are here beside the type switch that counts
+   the prototype kept on Employees) are here beside the type switch that counts
    bank weeks. The module's feature switches belong
    to Modules & features, so they are shown here as they stand. Nothing here
    carries a rate or an amount (D10). */
@@ -86,9 +86,9 @@ function CatalogueCard() {
 }
 
 /* ------------------------------------------------------ working patterns */
-type Box = { k: 'edit' | 'people' | 'upload' | 'delete'; code: string; back?: boolean } | { k: 'new' } | { k: 'upload' } | null;
+type Box = { k: 'edit' | 'employees' | 'upload' | 'delete'; code: string; back?: boolean } | { k: 'new' } | { k: 'upload' } | null;
 function PatternsCard({ horizon }: { horizon: number }) {
-  /* The list carries today and the locations this person may cover, so an
+  /* The list carries today and the locations this employee may cover, so an
      administrator without team_rota builds patterns here as P's admRota let them. */
   const list = usePatterns(), cat = useShiftCatalogue(), del = useDeletePattern();
   const locs = useDimension('locations'), jobs = useDimension('job-profiles'), ccs = useDimension('cost-centres');
@@ -98,7 +98,7 @@ function PatternsCard({ horizon }: { horizon: number }) {
   const locName = nameIn(locs.data ?? list.data?.canCover), jobName = nameIn(jobs.data);
   const ready = list.data && cat.data;
   const ctx: PatternCtx | null = ready ? {
-    shifts: cat.data.items, people: list.data.people, today: list.data.today, canCover: list.data.canCover, elsewhere: list.data.elsewhere,
+    shifts: cat.data.items, employees: list.data.employees, today: list.data.today, canCover: list.data.canCover, elsewhere: list.data.elsewhere,
     locations: (locs.data ?? list.data.canCover).filter(l => !('active' in l) || l.active !== false).map(l => ({ code: l.code, name: l.name })),
     jobs: (jobs.data ?? []).map(j => ({ code: j.code, name: j.name })), costCentres: (ccs.data ?? []).map(c => ({ code: c.code, name: c.name })),
   } : null;
@@ -118,7 +118,7 @@ function PatternsCard({ horizon }: { horizon: number }) {
         ? <Table data-testid={tid.mrota.patterns}>
             <TableHeader><TableRow>
               <TableHead>Pattern</TableHead><TableHead className="text-right">Repeats every</TableHead><TableHead>Locations</TableHead>
-              <TableHead>Job profiles</TableHead><TableHead>Cost centre</TableHead><TableHead className="text-right">People</TableHead>
+              <TableHead>Job profiles</TableHead><TableHead>Cost centre</TableHead><TableHead className="text-right">Employees</TableHead>
               <TableHead>Horizon</TableHead><TableHead>Status</TableHead><TableHead><span className="sr-only">Actions</span></TableHead>
             </TableRow></TableHeader>
             <TableBody>{list.data.items.map((p: PatternRecord) => (
@@ -128,7 +128,7 @@ function PatternsCard({ horizon }: { horizon: number }) {
                 <TableCell className="text-xs text-text-muted">{names(p.locations, locName)}</TableCell>
                 <TableCell className="text-xs text-text-muted">{names(p.jobProfiles, jobName)}</TableCell>
                 <TableCell className="font-mono text-xs">{p.costCentre}</TableCell>
-                <TableCell className="text-right tabular-nums">{p.people.length}</TableCell>
+                <TableCell className="text-right tabular-nums">{p.employees.length}</TableCell>
                 <TableCell className="text-xs text-text-muted">{genLabel(p)}</TableCell>
                 <TableCell>{activePill(p)}</TableCell>
                 <TableCell className="text-right"><Button testId={tid.mrota.patternOpen(p.code)} kind="ghost" small disabled={!ctx}
@@ -144,14 +144,14 @@ function PatternsCard({ horizon }: { horizon: number }) {
       {ctx && list.data && box?.k === 'new' && <NewPatternDialog patterns={list.data.items} ctx={ctx} onClose={close} onCreated={code => setBox({ k: 'edit', code })} />}
       {/* a saved pattern opens again from the server's copy */}
       {ctx && box?.k === 'edit' && cur && <PatternEditor key={`${cur.code}:${cur.version}`} pattern={cur} ctx={ctx} onClose={close}
-        onAddPeople={() => setBox({ k: 'people', code: cur.code, back: true })} onUpload={() => setBox({ k: 'upload', code: cur.code })}
+        onAddEmployees={() => setBox({ k: 'employees', code: cur.code, back: true })} onUpload={() => setBox({ k: 'upload', code: cur.code })}
         onDelete={() => setBox({ k: 'delete', code: cur.code })} />}
       {box?.k === 'delete' && cur && <ConfirmModal open onOpenChange={o => { if (!o) setBox({ k: 'edit', code: cur.code }); }}
         title={`Delete ${cur.name}?`} confirmLabel="Delete the pattern" danger busy={del.anyPending}
         body={`Shifts already generated and published stay on the rota. Nothing further will be generated from this pattern, and ${
-          cur.people.length ? `${cur.people.length} person(s) will no longer be scheduled by it.` : 'nobody is currently on it.'}`}
+          cur.employees.length ? `${cur.employees.length} employee(s) will no longer be scheduled by it.` : 'nobody is currently on it.'}`}
         onConfirm={() => del.mutate(cur, { onSuccess: () => { close(); toastInfo(`${cur.name} deleted`, 'Published shifts are untouched.'); } })} />}
-      {ctx && box?.k === 'people' && cur && <PatternPeopleDialog pattern={cur} ctx={ctx}
+      {ctx && box?.k === 'employees' && cur && <PatternEmployeesDialog pattern={cur} ctx={ctx}
         onClose={() => setBox(box.back ? { k: 'edit', code: cur.code } : null)} />}
     </AdminCard>);
 }
@@ -211,9 +211,9 @@ function SetupDraftView({ setup, flags }: { setup: RotaSetup; flags: Record<stri
   return (
     <>
       <AdminCard testId={tid.mrota.card('staffing')} icon={<Target />} title="Minimum staffing" tipTestId={tid.mrota.tip('staffing')}
-        tip="Each location has a configurable staffing requirement driven by its support level." desc="Support level determines how many people every shift needs">
+        tip="Each location has a configurable staffing requirement driven by its support level." desc="Support level determines how many employees every shift needs">
         {flagRow('MINSTAFF', 'Check coverage against minimum staffing', 'When off, the rota shows headcount but never flags a gap.')}
-        {numRow('minDefault', 'Default people per shift', 'Used where a location has no support level', 'people')}
+        {numRow('minDefault', 'Default employees per shift', 'Used where a location has no support level', 'employees')}
         {toggleRow('publishBlockOnGap', 'Coverage gaps block publishing', 'Hours warnings never block; coverage shortfalls do')}
         <SettingRow title={<>Who builds the rota<Tip testId={tid.mrota.tip('builtBy')} text="A tenant policy above the permission matrix. Both must agree." /></>}
           desc={draft.rotaBuiltBy === 'Admins only'
@@ -227,7 +227,7 @@ function SetupDraftView({ setup, flags }: { setup: RotaSetup; flags: Record<stri
         <div className="mt-md">
           <Table>
             <TableHeader><TableRow>
-              <TableHead>Support level</TableHead><TableHead className="text-right">People per shift</TableHead>
+              <TableHead>Support level</TableHead><TableHead className="text-right">Employees per shift</TableHead>
               <TableHead className="text-right">Locations</TableHead><TableHead>Locations at this level</TableHead>
             </TableRow></TableHeader>
             <TableBody>{supportLevelsOf(config).map(s => {
@@ -237,7 +237,7 @@ function SetupDraftView({ setup, flags }: { setup: RotaSetup; flags: Record<stri
                 <Row key={s.code} testId={tid.mrota.level(s.code)}>
                   <TableCell><strong>{s.label}</strong></TableCell>
                   <TableCell className="text-right">
-                    <UnitInput testId={tid.mrota.levelMin(s.code)} unit="people" aria-label={`People per shift at ${s.label}`} type="number" inputMode="numeric"
+                    <UnitInput testId={tid.mrota.levelMin(s.code)} unit="employees" aria-label={`Employees per shift at ${s.label}`} type="number" inputMode="numeric"
                       min="1" className="ml-auto" value={draft.levels[s.code] ?? String(s.min)} aria-invalid={err ? true : undefined}
                       onChange={e => set({ levels: { ...draft.levels, [s.code]: e.target.value } })} />
                     <Err text={err} /></TableCell>
@@ -247,7 +247,7 @@ function SetupDraftView({ setup, flags }: { setup: RotaSetup; flags: Record<stri
             })}</TableBody>
           </Table>
           <Err text={fe('supportLevels')} />
-          <p className="mt-sm text-xs text-text-muted">Saving a new number sets it on every location at that level. A location's level, and its own people per shift, are changed on the location, under Locations.</p>
+          <p className="mt-sm text-xs text-text-muted">Saving a new number sets it on every location at that level. A location's level, and its own employees per shift, are changed on the location, under Locations.</p>
         </div>
       </AdminCard>
 
@@ -309,7 +309,7 @@ function SetupDraftView({ setup, flags }: { setup: RotaSetup; flags: Record<stri
             <SwitchField testId={tid.mrota.safe(r.key)} aria-label={r.title} checked={draft.safeRules[r.key]} disabled={!swOn}
               onCheckedChange={v => set({ safeRules: { ...draft.safeRules, [r.key]: v } })} /></SettingRow>))}
         {numRow('restHours', 'Minimum rest between shifts', 'Default where the employee type has no stricter value', 'hrs')}
-        {numRow('maxHours', 'Maximum hours anyone can be rota’d', 'The lower of this, the employee type and the person’s own maximum applies', 'hrs')}
+        {numRow('maxHours', 'Maximum hours anyone can be rota’d', 'The lower of this, the employee type and the employee’s own maximum applies', 'hrs')}
         {numRow('maxConsec', 'Maximum consecutive days', undefined, 'days')}
       </AdminCard>
 
@@ -360,7 +360,7 @@ function SetupDraftView({ setup, flags }: { setup: RotaSetup; flags: Record<stri
 /* The rota eligibility of each employee type (v15:8144-8157): which shifts it
    may work, nights, and its own hours, rest and consecutive-day limits. */
 const TYPE_NUMS: { key: TypeNumKey; title: string; desc?: string; unit: string }[] = [
-  { key: 'maxHours', title: 'Maximum hours', desc: 'Operational maximum for this type. The lower of this and the person’s own maximum applies.', unit: 'hrs' },
+  { key: 'maxHours', title: 'Maximum hours', desc: 'Operational maximum for this type. The lower of this and the employee’s own maximum applies.', unit: 'hrs' },
   { key: 'restHours', title: 'Minimum rest', desc: 'Between the end of one shift and the start of the next', unit: 'hrs' },
   { key: 'maxConsec', title: 'Maximum consecutive days', unit: 'days' },
 ];

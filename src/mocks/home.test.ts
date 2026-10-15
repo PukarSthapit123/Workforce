@@ -28,7 +28,7 @@ const tenantVersion = () => (store.coll<{ version: number }>('tenant').tenant?.v
 test('the contract\'s glyphs are the domain\'s, in the key order', () => expect(GlyphKey.options).toEqual([...GLYPH_ORDER]));
 
 test('social: August shows the published rota\'s shifts, approved leave, sickness, the bank holiday and the recorded days, with the key and the figures around it', async () => {
-  store.coll('sickEpisodes').sk_home = { version: 1, updatedAt: '2026-08-13T14:30:00.000Z', id: 'sk_home', personCode: 'CP-1042', from: '2026-08-01', to: '2026-08-01', reason: 'Cold or flu', note: '', rtw: null };
+  store.coll('sickEpisodes').sk_home = { version: 1, updatedAt: '2026-08-13T14:30:00.000Z', id: 'sk_home', employeeCode: 'CP-1042', from: '2026-08-01', to: '2026-08-01', reason: 'Cold or flu', note: '', rtw: null };
   const r = await (await asEmployee())('GET', '/api/v1/home');
   expect(r.status).toBe(200);
   const m = month(r);
@@ -64,7 +64,7 @@ test('qnipay (Rota off): it boots on the tenant\'s own data, with no shifts, but
   const r = await (await asEmail('bigyan.poudel@dogmagroup.co.uk'))('GET', '/api/v1/home');
   expect(r.status).toBe(200);
   const m = month(r);
-  expect(m.person.code).toBe('EMP004');
+  expect(m.employee.code).toBe('EMP004');
   expect(m.greeting).toMatch(/^Good afternoon, Bigyan$/);
   expect(m.days.every(d => d.shift === null)).toBe(true);
   expect(m.totals.shifts).toBe(0);
@@ -123,7 +123,7 @@ test('documents: my seven and the payroll ones; one of mine opens, someone else\
   const me = await asEmployee();
   const list = MyDocuments.parse((await me('GET', '/api/v1/documents/mine')).body);
   expect(list.items).toHaveLength(7);
-  expect(list.items.every(d => d.personCode === 'CP-1042')).toBe(true);
+  expect(list.items.every(d => d.employeeCode === 'CP-1042')).toBe(true);
   expect(list.payroll.map(d => d.name)).toEqual(['Payslips', 'P60 · 2025/26', 'P45']);
   expect((await me('GET', '/api/v1/documents/doc_CP-1042_3')).body).toMatchObject({ name: 'DBS certificate', date: '2024-03-31' });
   const mgr = caller(await tokenFor('manager'));

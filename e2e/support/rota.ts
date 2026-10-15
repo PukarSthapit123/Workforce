@@ -22,23 +22,23 @@ export const DEE = 'dee.fitzgerald@brightpath.org';
 export const W33 = '2026-08-10', W34 = '2026-08-17', W35 = '2026-08-24';
 export const weekPath = (ws: string, loc = 'WH') => `/api/v1/rota/weeks/${loc}/${ws}`;
 
-export interface RotaRowRead { personCode: string; name: string; line: string[] }
+export interface RotaRowRead { employeeCode: string; name: string; line: string[] }
 export interface RotaWeekRead {
   id: string; version: number; state: string; publishVersion: number; gapDays: number[]; onShift: number[];
-  rows: RotaRowRead[]; changes: { personCode: string; from: string; to: string; afterPublish: boolean; version: number }[];
+  rows: RotaRowRead[]; changes: { employeeCode: string; from: string; to: string; afterPublish: boolean; version: number }[];
 }
 export async function rotaWeek(api: { get(path: string): Promise<Reply> }, ws = W33, loc = 'WH'): Promise<RotaWeekRead> {
   const r = await api.get(weekPath(ws, loc));
   expect(r.status, `rota week ${loc} ${ws}`).toBe(200);
   return r.body as RotaWeekRead;
 }
-export const lineOf = (w: RotaWeekRead, code: string) => w.rows.find(r => r.personCode === code)?.line ?? [];
+export const lineOf = (w: RotaWeekRead, code: string) => w.rows.find(r => r.employeeCode === code)?.line ?? [];
 /* the working cells on a week: a shift code, not rest, leave or sickness */
 export const shiftsOn = (w: RotaWeekRead) => w.rows.flatMap(r => r.line).filter(c => c && c !== 'V' && c !== 'S').length;
 
 /* Notifications have no read endpoint in this module (the inbox is 1c's), so a
    journey reads them where the fake server keeps them: its persisted store. */
-export interface NoteRow { id: string; personId: string; area: string; title: string; body: string }
+export interface NoteRow { id: string; employeeId: string; area: string; title: string; body: string }
 export const stored = <T>(page: Page, coll: string): Promise<T[]> =>
   page.evaluate(c => {
     const raw = localStorage.getItem('qnipay.app.store');

@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { Tip } from './Affordances';
 
 /* The prototype's record-display pieces, used wherever one record or one
-   list of records is shown: the person record, My profile, the approval
+   list of records is shown: the employee record, My profile, the approval
    queues, the dimension and employee-type pages. Each names the prototype
    rule it ports (qnipay-workforce-v15.html). */
 
@@ -16,13 +16,13 @@ export function Avatar({ name, large }: { name: string; large?: boolean }) {
   return <span aria-hidden="true" className={cn('grid shrink-0 place-items-center rounded-pill bg-brand-subtle font-bold text-brand dark:text-brand-accent',
     large ? 'size-10 text-sm' : 'size-[26px] text-xs')}>{initials(name)}</span>;
 }
-/* .emp (v15:700): an avatar beside the person's name in a list. */
-export function PersonName({ name }: { name: string }) {
+/* .emp (v15:700): an avatar beside the employee's name in a list. */
+export function EmployeeName({ name }: { name: string }) {
   return <span className="flex items-center gap-[9px]"><Avatar name={name} /><strong className="font-semibold">{name}</strong></span>;
 }
 /* .emp with lines under the name, as an approval queue row shows it
    (v15:5625-5629): the avatar, then the name and what is asked of it. */
-export function PersonBlock({ name, children }: { name: string; children: ReactNode }) {
+export function EmployeeBlock({ name, children }: { name: string; children: ReactNode }) {
   return (
     <div className="flex min-w-0 flex-1 items-center gap-[9px]">
       <Avatar name={name} />

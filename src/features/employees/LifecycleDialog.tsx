@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { tid } from '@/testids';
-import type { Person } from '@/contract/people';
+import type { Employee } from '@/contract/employees';
 import { Banner, Button, ChoiceList, ChoiceRow, Empty, Field, FormWarn, Modal, Small, TextInput, toastInfo } from '@/ui';
-import { useMovePerson } from '@/api/people';
-import { LIFECYCLE, type PersonState } from '@/domain/lifecycle';
+import { useMoveEmployee } from '@/api/employees';
+import { LIFECYCLE, type EmployeeState } from '@/domain/lifecycle';
 import { StatePill } from './StatePill';
 
 /* Ported from the prototype's emp-lifecycle dialog (qnipay-workforce-v15.html:
@@ -12,23 +12,23 @@ import { StatePill } from './StatePill';
    caution says what is true in this build (plan 1b decision D11): Rota is not
    built, so no shift is released yet. Which moves are legal is the server's
    rule; a refused move is shown here and changes nothing. */
-export function LifecycleDialog({ person, onClose }: { person: Person; onClose(): void }) {
-  const [to, setTo] = useState<PersonState | ''>('');
+export function LifecycleDialog({ employee, onClose }: { employee: Employee; onClose(): void }) {
+  const [to, setTo] = useState<EmployeeState | ''>('');
   const [reason, setReason] = useState('');
-  const move = useMovePerson();
-  const from = LIFECYCLE[person.state];
-  const save = () => move.mutate({ person, to, reason }, {
+  const move = useMoveEmployee();
+  const from = LIFECYCLE[employee.state];
+  const save = () => move.mutate({ employee, to, reason }, {
     onSuccess: d => { toastInfo(`${d.record.name} → ${LIFECYCLE[d.record.state].label}`); onClose(); },
   });
   /* a refused move names where this record can go */
   const warn = move.refusal ? `${move.refusal.message} ${move.refusal.code === 'transition' ? move.refusal.next : ''}`.trim() : null;
   return (
-    <Modal open onOpenChange={o => { if (!o) onClose(); }} title={person.name}
+    <Modal open onOpenChange={o => { if (!o) onClose(); }} title={employee.name}
       footer={<>
         <Button testId={tid.lifecycle.cancel} kind="ghost" onClick={onClose}>Cancel</Button>
         <Button testId={tid.lifecycle.save} kind="primary" pending={move.anyPending} onClick={save}>Change state</Button></>}>
       <div className="mb-md flex flex-wrap items-center gap-sm">
-        <StatePill testId={tid.lifecycle.from} state={person.state} />
+        <StatePill testId={tid.lifecycle.from} state={employee.state} />
         <Small>{from.note}</Small>
       </div>
       <h3 className="mb-sm border-b pb-xs text-xs font-[650] tracking-normal text-text-secondary">Move to</h3>
@@ -40,7 +40,7 @@ export function LifecycleDialog({ person, onClose }: { person: Person; onClose()
       <Field label="Reason" required error={move.fieldError('reason')}>
         <TextInput testId={tid.lifecycle.reason} value={reason} placeholder="Recorded against the change" onChange={e => setReason(e.target.value)} /></Field>
       <Banner testId={tid.lifecycle.caution} tone="warn" title="Some moves affect future shifts">
-        Releasing this person from unpublished rota weeks when they become a leaver, suspended or archived is a future enhancement. Nothing is released now.
+        Releasing this employee from unpublished rota weeks when they become a leaver, suspended or archived is a future enhancement. Nothing is released now.
       </Banner>
       {warn && <FormWarn testId={tid.lifecycle.warn}>{warn}</FormWarn>}
     </Modal>);

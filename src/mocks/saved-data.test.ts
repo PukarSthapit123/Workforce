@@ -4,7 +4,7 @@ import { SavedData, SavedDataExport } from '@/contract/saved-data';
 import { audits, caller, resetTo, tokenFor } from '@/test/api-helpers';
 
 /* Saved data (D14): reset sets what was here aside and returns to the seed,
-   restore brings the set-aside session back once, and the person doing it
+   restore brings the set-aside session back once, and the employee doing it
    stays signed in throughout. */
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' })); afterAll(() => server.close());
 beforeEach(() => { resetTo('social'); localStorage.removeItem(STORE_BACKUP_KEY); });

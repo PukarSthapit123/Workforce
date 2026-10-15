@@ -6,14 +6,14 @@ import { useAudit, type AuditEntry } from '@/api/audit';
 import { formatDateTime, describeChange } from '@/lib/format';
 
 /* The entities the session, view-as, access and plan 1b handlers write (see
-   mocks/session.ts, access.ts, people.ts and the rest). A future handler adding a new kind of
+   mocks/session.ts, access.ts, employees.ts and the rest). A future handler adding a new kind of
    audited change should add its label here too. */
 const ENTITY_OPTIONS = [
   { value: 'all', label: 'All records' },
   { value: 'userType', label: 'Permission templates' },
   { value: 'account', label: 'User accounts' },
   { value: 'session', label: 'Sessions and view-as' },
-  { value: 'person', label: 'People' },
+  { value: 'employee', label: 'Employees' },
   { value: 'profileChange', label: 'Profile changes' },
   { value: 'employeeType', label: 'Employee types' },
   { value: 'location', label: 'Locations' },
@@ -30,7 +30,7 @@ const ENTITY_OPTIONS = [
   { value: 'notice', label: 'Notices' },
 ];
 const ENTITY_LABEL: Record<string, string> = { userType: 'Permission template', account: 'User account', session: 'Session',
-  person: 'Person', profileChange: 'Profile change', employeeType: 'Employee type', location: 'Location', department: 'Department',
+  employee: 'Employee', profileChange: 'Profile change', employeeType: 'Employee type', location: 'Location', department: 'Department',
   costCentre: 'Cost centre', jobProfile: 'Job profile', project: 'Project', timesheetDay: 'Timesheet',
   timesheetConfig: 'Timesheet setup', integrationAttempt: 'Business Central posting', tenant: 'Tenant', savedData: 'Saved data', template: 'Template', notice: 'Notice' };
 

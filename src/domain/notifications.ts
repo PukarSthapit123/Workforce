@@ -7,9 +7,9 @@
    matrix (anotif) says, per event and per user type, which channel is used.
    Only In-app is delivered. Email and SMS are recorded on the row as not
    connected and the screen says so; nothing ever claims they were sent. A
-   row is addressed to a person. An item whose source module is off is hidden,
+   row is addressed to an employee. An item whose source module is off is hidden,
    never deleted, and comes back when the module does. A deep link is offered
-   only when the page it opens is on that person's nav and built. */
+   only when the page it opens is on that employee's nav and built. */
 import { captureOn, flagOn, modOn, type Switches } from './modules';
 import type { NavGroup, NavTab } from './nav';
 
@@ -65,7 +65,7 @@ export const NOTIF_EVENTS: readonly NotifEvent[] = [
   { code: 'ob_invited', module: 'Onboarding', label: 'Onboarding invitation', description: 'A candidate is invited to complete their onboarding', defaults: ch('In-app', null, null) },
   { code: 'pf_req', module: 'Workforce', label: 'Profile change requested', description: 'A colleague has proposed a change to their own details', defaults: ch('In-app', 'In-app + email', 'Off') },
   { code: 'pf_done', module: 'Workforce', label: 'Profile change decided', description: 'A proposed change was approved or declined', defaults: ch('In-app + email', 'Off', 'Off') },
-  { code: 'notice_posted', module: 'Workforce', label: 'Notice posted', description: 'A notice went live, or its text changed, for people in its audience', defaults: ch('In-app', 'In-app', 'Off'), needs: { kind: 'flag', flag: 'NOTICES' } },
+  { code: 'notice_posted', module: 'Workforce', label: 'Notice posted', description: 'A notice went live, or its text changed, for employees in its audience', defaults: ch('In-app', 'In-app', 'Off'), needs: { kind: 'flag', flag: 'NOTICES' } },
   /* configurable, but not raised by any 1c write (D9) */
   { code: 'cfg', module: 'Workforce', label: 'Configuration changed', description: 'Template, feature, employee type or policy edited', defaults: ch(null, null, 'In-app + email') },
 ];
@@ -120,7 +120,7 @@ export const channelLabel = (c: NotifChannel) => (c === 'Email' ? 'Email (not co
 
 /* A recipient's part in the event picks the matrix column, whatever their
    account type (the prototype's employee, manager and admin inboxes): the
-   person the event is about takes the Employee column, an approver or manager
+   employee the event is about takes the Employee column, an approver or manager
    acting on it (a delegate too) the Manager column, and the back office told
    for oversight (HR, IT, administrators) the Admin column. */
 export const NOTIF_PARTS = ['subject', 'actor', 'backOffice'] as const;
@@ -130,15 +130,15 @@ export const PART_COLUMN: Readonly<Record<NotifPart, NotifPersona>> = { subject:
 /* Who an event reaches: each recipient whose column's channel is not Off,
    with what that channel delivers (notifyEvent). Nothing at all while the
    event's module is off. */
-export interface Recipient { personCode: string; persona: NotifPersona }
+export interface Recipient { employeeCode: string; persona: NotifPersona }
 export function plannedDeliveries(e: NotifEvent, recipients: readonly Recipient[], matrix: EventMatrix, modules: Switches, flags: Readonly<Record<string, unknown>>) {
   if (!areaLive(e.module, modules, flags)) return [];
   const seen = new Set<string>();
   return recipients.flatMap(r => {
-    if (seen.has(r.personCode)) return [];
-    seen.add(r.personCode);
+    if (seen.has(r.employeeCode)) return [];
+    seen.add(r.employeeCode);
     const channel = channelFor(matrix, e.code, r.persona), delivery = deliveryOf(channel);
-    return channel && delivery ? [{ personCode: r.personCode, channel, delivery }] : [];
+    return channel && delivery ? [{ employeeCode: r.employeeCode, channel, delivery }] : [];
   });
 }
 
@@ -150,15 +150,15 @@ export const NOTIF_TARGETS: Readonly<Record<string, Readonly<Record<NotifPersona
   Rota: { employee: 'shifts', manager: 'trota', admin: 'mrota' },
   Leave: { employee: 'leave', manager: 'tleave', admin: 'mleave' },
   Onboarding: { employee: 'onb', manager: 'tonb', admin: 'tonb' },
-  DBS: { employee: 'profile', manager: 'tpeople', admin: 'apeople' },
-  Workforce: { employee: 'home', manager: 'tpeople', admin: 'asetup' },
+  DBS: { employee: 'profile', manager: 'temployees', admin: 'aemployees' },
+  Workforce: { employee: 'home', manager: 'temployees', admin: 'asetup' },
   Notices: { employee: 'notices', manager: 'notices', admin: 'tnotices' },
 };
 export function targetView(area: string, persona: NotifPersona): string {
   const m = (Object.hasOwn(NOTIF_TARGETS, area) ? NOTIF_TARGETS[area] : undefined) ?? NOTIF_TARGETS.Workforce;
   return m?.[persona] ?? 'home';
 }
-/* The tab a view opens on this person's nav, when it is there and built
+/* The tab a view opens on this employee's nav, when it is there and built
    (notifReachable). A view that is not on the nav, or not built yet, is no link. */
 export function reachableTab(view: string, nav: readonly NavGroup[]): NavTab | null {
   return nav.flatMap(g => g.tabs).find(t => t.view === view && t.built && !t.back) ?? null;
@@ -170,10 +170,10 @@ export function linkFor(area: string, persona: NotifPersona, nav: readonly NavGr
 }
 
 /* ------------------------------------------------------------ the inbox */
-export interface InboxRow { id: string; personId: string; area: string; at: string; read: boolean; delivery?: Delivery }
+export interface InboxRow { id: string; employeeId: string; area: string; at: string; read: boolean; delivery?: Delivery }
 /* Mine, delivered in-app, from a live source, newest first. */
-export function inboxOf<R extends InboxRow>(rows: readonly R[], personCode: string, modules: Switches, flags: Readonly<Record<string, unknown>>): R[] {
-  return rows.filter(r => r.personId === personCode && (r.delivery?.inApp ?? true) && areaLive(r.area, modules, flags))
+export function inboxOf<R extends InboxRow>(rows: readonly R[], employeeCode: string, modules: Switches, flags: Readonly<Record<string, unknown>>): R[] {
+  return rows.filter(r => r.employeeId === employeeCode && (r.delivery?.inApp ?? true) && areaLive(r.area, modules, flags))
     .sort((a, b) => b.at.localeCompare(a.at) || b.id.localeCompare(a.id));
 }
 export const unreadOf = (rows: readonly InboxRow[]) => rows.filter(r => !r.read).length;

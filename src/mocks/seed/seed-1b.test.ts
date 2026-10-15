@@ -1,7 +1,7 @@
 import social from './social.json';
 import qnipay from './qnipay.json';
 import meta from './meta.json';
-import { PERSON_STATES } from '@/domain/lifecycle';
+import { EMPLOYEE_STATES } from '@/domain/lifecycle';
 import { DIMENSION_CODE, EMPLOYEE_CODE, TYPE_CODE } from '@/domain/codes';
 import { SELF_FIELDS } from '@/domain/selfService';
 
@@ -10,33 +10,33 @@ interface SeedFile { data: Record<string, Record<string, Rec>> }
 const vals = (s: SeedFile, c: string) => Object.values(s.data[c] ?? {});
 const codes = (s: SeedFile, c: string) => new Set<unknown>(vals(s, c).map(r => r.code));
 const ISO_OR_BLANK = /^(\d{4}-\d{2}-\d{2})?$/;
-const PERSON_KEYS = ['code', 'name', 'email', 'phone', 'address', 'emergencyName', 'emergencyPhone', 'bankAccount', 'bankSortCode',
+const EMPLOYEE_KEYS = ['code', 'name', 'email', 'phone', 'address', 'emergencyName', 'emergencyPhone', 'bankAccount', 'bankSortCode',
   'jobProfile', 'employeeType', 'category', 'location', 'department', 'manager', 'contractedHours', 'maxHours', 'night',
   'resource', 'cis', 'state', 'start', 'end'];
 
 for (const [name, raw] of Object.entries({ social, qnipay })) {
   const seed = raw as unknown as SeedFile;
   describe(`seed ${name} for plan 1b`, () => {
-    test('every person is in one of the seven states', () => {
-      expect(vals(seed, 'people').filter(p => !(PERSON_STATES as readonly unknown[]).includes(p.state)).map(p => p.code)).toEqual([]);
+    test('every employee is in one of the seven states', () => {
+      expect(vals(seed, 'employees').filter(p => !(EMPLOYEE_STATES as readonly unknown[]).includes(p.state)).map(p => p.code)).toEqual([]);
     });
-    test('every person carries the self-service, contract and Business Central fields', () => {
-      for (const p of vals(seed, 'people')) expect(Object.keys(p).filter(k => PERSON_KEYS.includes(k)).sort(), String(p.code)).toEqual([...PERSON_KEYS].sort());
+    test('every employee carries the self-service, contract and Business Central fields', () => {
+      for (const p of vals(seed, 'employees')) expect(Object.keys(p).filter(k => EMPLOYEE_KEYS.includes(k)).sort(), String(p.code)).toEqual([...EMPLOYEE_KEYS].sort());
     });
-    test('every person points at a location, type, department and job profile that exist', () => {
+    test('every employee points at a location, type, department and job profile that exist', () => {
       const locs = codes(seed, 'locations'), types = codes(seed, 'employeeTypes'), deps = codes(seed, 'departments'), jobs = codes(seed, 'jobProfiles');
-      const broken = vals(seed, 'people').filter(p => !locs.has(p.location) || !types.has(p.employeeType)
+      const broken = vals(seed, 'employees').filter(p => !locs.has(p.location) || !types.has(p.employeeType)
         || (p.department !== '' && !deps.has(p.department)) || (p.jobProfile !== '' && !jobs.has(p.jobProfile)));
       expect(broken.map(p => `${String(p.code)}: ${String(p.location)}/${String(p.employeeType)}/${String(p.department)}/${String(p.jobProfile)}`)).toEqual([]);
     });
     test('dates are ISO or empty', () => {
-      for (const c of ['people', 'projects']) for (const r of vals(seed, c)) {
+      for (const c of ['employees', 'projects']) for (const r of vals(seed, c)) {
         expect(String(r.start), `${c} ${String(r.code)} start`).toMatch(ISO_OR_BLANK);
         expect(String(r.end), `${c} ${String(r.code)} end`).toMatch(ISO_OR_BLANK);
       }
     });
     test('employee IDs, dimension codes and type codes are well formed', () => {
-      expect(vals(seed, 'people').map(p => String(p.code)).filter(c => !EMPLOYEE_CODE.test(c))).toEqual([]);
+      expect(vals(seed, 'employees').map(p => String(p.code)).filter(c => !EMPLOYEE_CODE.test(c))).toEqual([]);
       for (const c of ['locations', 'departments', 'costCentres', 'jobProfiles', 'projects'])
         expect(vals(seed, c).map(r => String(r.code)).filter(x => !DIMENSION_CODE.test(x)), c).toEqual([]);
       expect(vals(seed, 'employeeTypes').map(r => String(r.code)).filter(c => !TYPE_CODE.test(c))).toEqual([]);
@@ -68,22 +68,22 @@ for (const [name, raw] of Object.entries({ social, qnipay })) {
       const holders = vals(seed, 'userTypes').filter(u => (u.capabilities as string[]).includes('bank_verify')).map(u => u.id);
       expect(holders).toEqual(['admin']);
     });
-    test('person history starts empty', () => {
-      expect(vals(seed, 'personHistory')).toEqual([]);
+    test('employee history starts empty', () => {
+      expect(vals(seed, 'employeeHistory')).toEqual([]);
     });
   });
 }
 
 test('social carries the prototype\'s two pending profile changes', () => {
   const pc = vals(social as unknown as SeedFile, 'profileChanges');
-  expect(pc.map(c => [c.personCode, c.field, c.status, c.stage]).sort()).toEqual([
+  expect(pc.map(c => [c.employeeCode, c.field, c.status, c.stage]).sort()).toEqual([
     ['CP-1088', 'phone', 'pending', 'manager'], ['CP-1201', 'address', 'pending', 'manager']]);
   for (const c of pc) expect(c.route).toEqual(['manager']);
 });
-test("each seeded profile change starts from the person's current value", () => {
+test("each seeded profile change starts from the employee's current value", () => {
   const s = social as unknown as SeedFile;
   for (const c of vals(s, 'profileChanges')) {
-    const p = vals(s, 'people').find(x => x.code === c.personCode);
+    const p = vals(s, 'employees').find(x => x.code === c.employeeCode);
     expect(p?.[String(c.field)], String(c.id)).toBe(c.from);
   }
 });

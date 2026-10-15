@@ -4,7 +4,7 @@ import { sessionHandlers } from './session';
 import { tenantHandlers } from './tenant';
 import { accessHandlers } from './access';
 import { auditHandlers } from './audit-handlers';
-import { peopleHandlers } from './people';
+import { employeesHandlers } from './employees';
 import { transitionHandlers } from './transitions';
 import { dimensionHandlers } from './dimensions';
 import { employeeTypeHandlers } from './employee-types';
@@ -26,4 +26,4 @@ import { payCodeHandlers } from './pay-codes';
 import { payrollHandlers } from './payroll';
 import { integrationHandlers } from './integration';
 /* Order matters: faults first, so they can pre-empt any endpoint. */
-export const handlers = [faultsHandler, ...devHandlers, ...sessionHandlers, ...tenantHandlers, ...accessHandlers, ...auditHandlers, ...peopleHandlers, ...transitionHandlers, ...dimensionHandlers, ...employeeTypeHandlers, ...profileHandlers, ...timesheetHandlers, ...rotaHandlers, ...leaveHandlers, ...savedDataHandlers, ...templateHandlers, ...notificationHandlers, ...approvalHandlers, ...noticeHandlers, ...homeHandlers, ...clockHandlers, ...onboardingHandlers, ...hoursHandlers, ...exceptionHandlers, ...payCodeHandlers, ...payrollHandlers, ...integrationHandlers /* feature handlers appended by later tasks */];
+export const handlers = [faultsHandler, ...devHandlers, ...sessionHandlers, ...tenantHandlers, ...accessHandlers, ...auditHandlers, ...employeesHandlers, ...transitionHandlers, ...dimensionHandlers, ...employeeTypeHandlers, ...profileHandlers, ...timesheetHandlers, ...rotaHandlers, ...leaveHandlers, ...savedDataHandlers, ...templateHandlers, ...notificationHandlers, ...approvalHandlers, ...noticeHandlers, ...homeHandlers, ...clockHandlers, ...onboardingHandlers, ...hoursHandlers, ...exceptionHandlers, ...payCodeHandlers, ...payrollHandlers, ...integrationHandlers /* feature handlers appended by later tasks */];

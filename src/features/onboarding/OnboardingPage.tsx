@@ -141,7 +141,7 @@ function Portal({ d }: { d: OnboardingDetail }) {
   };
   const body = (() => {
     switch (st.id) {
-      case 'personal': return <PersonalStep {...props} person={d.person} />;
+      case 'personal': return <PersonalStep {...props} employee={d.employee} />;
       case 'contact': return <ContactStep {...props} />;
       case 'emergency': return <EmergencyStep {...props} />;
       case 'additional': return <AdditionalStep {...props} />;
@@ -159,8 +159,8 @@ function Portal({ d }: { d: OnboardingDetail }) {
 
   return (
     <>
-      <PageHead title={`Welcome, ${d.person.first}`} crumb="My work · Onboarding" tipTestId={tid.onb.tip}
-        tip={`A few things to complete before ${d.person.start ? formatDmy(d.person.start) : 'you start'}.`}
+      <PageHead title={`Welcome, ${d.employee.first}`} crumb="My work · Onboarding" tipTestId={tid.onb.tip}
+        tip={`A few things to complete before ${d.employee.start ? formatDmy(d.employee.start) : 'you start'}.`}
         actions={<Pill testId={tid.onb.progress} tone={d.progress.pc === 100 ? 'ok' : 'info'}>{d.progress.text}</Pill>} />
       <div ref={top} className="grid scroll-mt-[110px] grid-cols-[250px_1fr] items-start gap-lg max-[860px]:grid-cols-1">
         <nav data-testid={tid.onb.rail} aria-label="Onboarding steps"
@@ -213,7 +213,7 @@ function ReviewStep({ d, v, signature, consent, busy, onSignature, onConsent, er
         ? <Banner testId={tid.onb.todo} tone="warn" title={`${bl.length} ${bl.length === 1 ? 'thing' : 'things'} still to do`}>{outstandingText(bl)}</Banner>
         : <Banner testId={tid.onb.complete} tone="ok" title="Everything is complete. Check it below, then submit." />}
       <SubHead>Personal</SubHead>
-      {row('name', 'Name', d.person.name)}
+      {row('name', 'Name', d.employee.name)}
       {row('dob', 'Date of birth', v.personal.dob ? formatDate(v.personal.dob) : '')}
       {row('nat', 'Nationality', v.personal.nat)}
       {row('ni', 'National insurance', v.personal.ni)}
@@ -227,7 +227,7 @@ function ReviewStep({ d, v, signature, consent, busy, onSignature, onConsent, er
       {d.features.sign && <>
         <SubHead>Signature</SubHead>
         <Field label="Type your full name to sign" {...(error('signature') ? { error: error('signature') } : { hint: 'This records that the information above is true and complete, with the date and time.' })}>
-          <TextInput testId={tid.onb.sign} value={signature} maxLength={120} placeholder={d.person.name} autoComplete="name" disabled={busy}
+          <TextInput testId={tid.onb.sign} value={signature} maxLength={120} placeholder={d.employee.name} autoComplete="name" disabled={busy}
             onChange={e => onSignature(e.target.value)} />
         </Field>
       </>}
@@ -257,7 +257,7 @@ function Submitted({ d }: { d: OnboardingDetail }) {
   const askedAgain = d.policies.filter(p => !p.acknowledged);
   return (
     <>
-      <PageHead title={`Thank you, ${d.person.first}`} crumb="My work · Onboarding" tipTestId={tid.onb.tip} tip="Your information has been sent to HR." />
+      <PageHead title={`Thank you, ${d.employee.first}`} crumb="My work · Onboarding" tipTestId={tid.onb.tip} tip="Your information has been sent to HR." />
       <div data-testid={tid.onb.submitted}>
         <AdminCard icon={<ClipboardList />} title="Submitted" tip="What happens next" tipTestId={tid.onb.submittedTip}>
           <Fact label="Reference" testId={tid.onb.ref}><span className="tabular-nums">{d.case.ref}</span></Fact>

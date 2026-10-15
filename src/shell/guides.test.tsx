@@ -5,8 +5,8 @@ import { tid } from '@/testids';
 import { GUIDES } from '@/ui';
 import { renderPage, withFakeServer } from '@/test/render-page';
 import { resetTo, signInAs, type Persona } from '@/test/api-helpers';
-import { AdminPeoplePage } from '@/features/people/AdminPeoplePage';
-import { TeamPeoplePage } from '@/features/people/TeamPeoplePage';
+import { AdminEmployeesPage } from '@/features/employees/AdminEmployeesPage';
+import { TeamEmployeesPage } from '@/features/employees/TeamEmployeesPage';
 import { DimensionsPage } from '@/features/dimensions/DimensionsPage';
 import { ContractsPage } from '@/features/dimensions/ContractsPage';
 import { PermissionsPage } from '@/features/access/PermissionsPage';
@@ -31,7 +31,7 @@ beforeEach(() => resetTo('social'));
 
 type Case = [view: string, persona: Persona, Page: ComponentType, path: string];
 const GUIDED: Case[] = [
-  ['apeople', 'admin', AdminPeoplePage, '/setup/apeople'],
+  ['aemployees', 'admin', AdminEmployeesPage, '/setup/aemployees'],
   ['aloc', 'admin', DimensionsPage, '/setup/aloc'],
   ['acon', 'admin', ContractsPage, '/setup/acon'],
   ['aperm', 'admin', PermissionsPage, '/setup/aperm'],
@@ -61,13 +61,13 @@ test.each(GUIDED)('the %s page offers a ? that opens its guide, section by secti
 
 test('the permissions guide keeps the security caveat, and the guides read as sentences, not dashed asides', () => {
   expect(GUIDES.aperm?.sections.map(([h]) => h)).toContain('UI visibility is not security');
-  for (const g of ['apeople', 'aloc', 'acon', 'aperm', 'profile', 'docs']) {
+  for (const g of ['aemployees', 'aloc', 'acon', 'aperm', 'profile', 'docs']) {
     for (const [h, b] of GUIDES[g]?.sections ?? []) expect(`${h} ${b}`).not.toMatch(/ — | – /);
   }
 });
 
 const UNGUIDED: Case[] = [
-  ['tpeople', 'manager', TeamPeoplePage, '/team/tpeople'],
+  ['temployees', 'manager', TeamEmployeesPage, '/team/temployees'],
   ['home', 'employee', HomePage, '/work/home'],
   ['thome', 'manager', TeamHomePage, '/team/thome'],
   ['tsick', 'manager', SicknessPage, '/team/tsick'],
@@ -88,7 +88,7 @@ test.each(UNGUIDED)('the %s page has no guide in the prototype, so it shows no ?
   expect(screen.queryAllByTestId(/^guide-open/)).toHaveLength(0);
 });
 
-/* Suite GUIDES: "Its explainer banner is gone from the page" (People,
+/* Suite GUIDES: "Its explainer banner is gone from the page" (Employees,
    Dimensions, Contracts, Permissions) and "Its read-only-pay banner is gone"
    (Profile): what the guide explains is not printed on the page as well, and
    the page carries no explainer banner. */

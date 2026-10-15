@@ -16,7 +16,7 @@ import { useSession } from './SessionProvider';
 export type ShellData =
   | { kind: 'loading' }
   | { kind: 'error'; onRetry(): void; onSignOut(): void }
-  | { kind: 'ready'; session: Session; nav: NavGroup[]; onSignOut(): void; onViewAs(personCode: string): void; onEndViewAs(): void };
+  | { kind: 'ready'; session: Session; nav: NavGroup[]; onSignOut(): void; onViewAs(employeeCode: string): void; onEndViewAs(): void };
 
 /* The tenant's settings, from the one cached query the shell itself reads
    (src/api/tenant.ts, beside the writes that invalidate it). */
@@ -44,7 +44,7 @@ export function useShellData(): ShellData {
   const nav = buildNav({ caps: new Set(session.capabilities), modules: tenant.data.modules, flags: tenant.data.flags, onboarding: session.onboarding });
   /* viewAs and endViewAs toast their own failures and never reject on a
      refusal (SessionProvider's switchView), so nothing here goes unhandled. */
-  return { kind: 'ready', session, nav, onSignOut: () => void signOut(), onViewAs: personCode => void viewAs(personCode), onEndViewAs: () => void endViewAs() };
+  return { kind: 'ready', session, nav, onSignOut: () => void signOut(), onViewAs: employeeCode => void viewAs(employeeCode), onEndViewAs: () => void endViewAs() };
 }
 
 export function ShellLoading() {

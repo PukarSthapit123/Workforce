@@ -3,7 +3,7 @@
    4935-4963; D14). The store keeps everything in this browser; these
    handlers report on it, export it, reset it to the seed and bring back the
    session a reset or a newer build set aside. Sign-in sessions survive a
-   reset or a restore, so the person doing it stays signed in, and each of
+   reset or a restore, so the employee doing it stays signed in, and each of
    the two writes leaves one audit row in the data it leaves behind. */
 import { store, SEED_VERSION } from './store';
 import { refuse } from './http';

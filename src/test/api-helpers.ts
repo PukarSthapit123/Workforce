@@ -11,16 +11,16 @@ export const FROZEN = '2026-08-13T14:30:00.000Z';
 /* Clears faults too, so one a test set but never consumed cannot leak into the next. */
 export function resetTo(tenant: 'social' | 'qnipay' = 'social') { faults.length = 0; store.reset(tenant); store.setClock(FROZEN); }
 
-interface Acc { email: string; userType: Persona; personCode: string }
-/* The first account of that user type whose person has started. The server
+interface Acc { email: string; userType: Persona; employeeCode: string }
+/* The first account of that user type whose employee has started. The server
    keeps a new starter (candidate or preboard) to the onboarding portal, so
    the generic persona never picks one: qnipay's first employee accounts are
    Priya Raman (candidate) and Tom Achterberg (preboard), and the tests about
    starters sign in as them by name. */
 export function accountOf(t: Persona): Acc {
-  const people = Object.values(store.coll<{ code: string; state: string }>('people'));
-  const started = (code: string) => { const p = people.find(x => x.code === code); return !p || !isStarterState(p.state); };
-  const a = Object.values(store.coll<Acc>('accounts')).find(x => x.userType === t && started(x.personCode));
+  const employees = Object.values(store.coll<{ code: string; state: string }>('employees'));
+  const started = (code: string) => { const p = employees.find(x => x.code === code); return !p || !isStarterState(p.state); };
+  const a = Object.values(store.coll<Acc>('accounts')).find(x => x.userType === t && started(x.employeeCode));
   if (!a) throw new Error(`the seed has no ${t} account for somebody who has started`);
   return a;
 }
@@ -51,8 +51,8 @@ export async function fault(method: string, path: string, status = 500) {
 export const snapshot = (...collections: string[]) =>
   structuredClone(Object.fromEntries(collections.map(c => [c, store.coll(c)])));
 export const audits = () => Object.values(store.coll<AuditEntry>('audit'));
-export function personOf(code: string) {
-  const p = Object.values(store.coll<{ id: string; code: string; version: number } & Record<string, unknown>>('people')).find(x => x.code === code);
-  if (!p) throw new Error(`no person ${code} in the store`);
+export function employeeOf(code: string) {
+  const p = Object.values(store.coll<{ id: string; code: string; version: number } & Record<string, unknown>>('employees')).find(x => x.code === code);
+  if (!p) throw new Error(`no employee ${code} in the store`);
   return p;
 }

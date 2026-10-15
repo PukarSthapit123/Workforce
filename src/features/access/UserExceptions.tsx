@@ -3,7 +3,7 @@ import { tid } from '@/testids';
 import { Button, Field, TextInput, SelectBox, Modal } from '@/ui';
 import { useExceptionWrite, type Capability, type Self, type UserAccess } from '@/api/access';
 
-/* One capability granted or revoked for one person, listed together so both
+/* One capability granted or revoked for one employee, listed together so both
    kinds of exception show in the order they were added. */
 interface ExceptionRow { cap: string; mode: 'grant' | 'revoke' }
 
@@ -35,7 +35,7 @@ export function UserExceptions({ user, capabilities, typeName, templateCapabilit
     if (!capId || !stillOffered) setCapId('');
   }
 
-  /* M3: one write at a time for this person. Save and every Remove send the
+  /* M3: one write at a time for this employee. Save and every Remove send the
      same If-Match, so while one is in flight the others wait. They wait with
      aria-disabled, so the button just pressed keeps keyboard focus, and the
      handlers below refuse to send while busy. */
@@ -56,7 +56,7 @@ export function UserExceptions({ user, capabilities, typeName, templateCapabilit
   return (
     <Modal open={user !== null} onOpenChange={o => { if (!o) close(); }}
       title={user ? `Exceptions for ${user.name}` : 'Exceptions'}
-      description={user ? `${typeName}. These changes affect this person only.` : undefined}
+      description={user ? `${typeName}. These changes affect this employee only.` : undefined}
       footer={<Button testId={tid.access.exceptionSave} kind="primary" disabled={!capId} pending={busy} onClick={save}>Save exception</Button>}>
       {user && <div className="flex flex-col gap-md">
         <Field label="Grant or revoke">

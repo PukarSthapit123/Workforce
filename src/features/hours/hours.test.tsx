@@ -18,9 +18,9 @@ const open = async () => {
   renderPage(<MyHoursPage />, '/work/hours');
   return screen.findByTestId(tid.hours.days);
 };
-interface Acc { email: string; personCode: string; userType: string }
-async function signInAsPerson(code: string) {
-  const a = Object.values(store.coll<Acc>('accounts')).find(x => x.personCode === code);
+interface Acc { email: string; employeeCode: string; userType: string }
+async function signInAsEmployee(code: string) {
+  const a = Object.values(store.coll<Acc>('accounts')).find(x => x.employeeCode === code);
   if (!a) throw new Error(`no account for ${code}`);
   const r = await fetch('/api/v1/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: a.email, password: 'Qnipay@123' }) });
   const { token } = (await r.json()) as { token: string };
@@ -61,7 +61,7 @@ describe('My hours', () => {
   });
 
   test('a bank worker sees Bank in place of a contracted figure, and the rota measured against nothing', async () => {
-    await signInAsPerson('CP-1310');
+    await signInAsEmployee('CP-1310');
     await open();
     expect(screen.getByTestId(tid.hours.contracted)).toHaveTextContent('Bank');
     expect(screen.getByTestId(tid.hours.contracted).parentElement).toHaveTextContent('no contracted baseline');

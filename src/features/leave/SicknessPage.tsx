@@ -36,7 +36,7 @@ function SicknessView({ b }: { b: SicknessBoard }) {
   const [giving, setGiving] = useState(false);
   const arrange = useArrangeRtw();
   const s = q.trim().toLowerCase();
-  const rows = b.rows.filter(r => (!s || r.name.toLowerCase().includes(s) || r.personCode.toLowerCase().includes(s)) && (!triggers || r.triggered));
+  const rows = b.rows.filter(r => (!s || r.name.toLowerCase().includes(s) || r.employeeCode.toLowerCase().includes(s)) && (!triggers || r.triggered));
   const ep = b.banner?.episode;
   return (
     <>
@@ -60,7 +60,7 @@ function SicknessView({ b }: { b: SicknessBoard }) {
         </TableRow></TableHeader>
         <TableBody>
           {!rows.length && <Row testId={tid.tsick.empty}><TableCell colSpan={6}><Empty>{s || triggers ? 'Nothing matches that filter' : 'No absence recorded'}</Empty></TableCell></Row>}
-          {rows.map(r => <EpisodeRow key={r.personCode} r={r} />)}
+          {rows.map(r => <EpisodeRow key={r.employeeCode} r={r} />)}
         </TableBody>
       </Table>
       <RecordAbsence b={b} />
@@ -68,7 +68,7 @@ function SicknessView({ b }: { b: SicknessBoard }) {
         <CardHead title={<span className="flex items-center">Sick during booked leave<Tip testId={tid.tsick.onLeaveTip} text={SICK_ON_LEAVE_TIP} /></span>}
           actions={<Button testId={tid.tsick.giveBack} kind="ghost" small disabled={!b.sickOnLeave.length} onClick={() => setGiving(true)}>Give days back</Button>} />
         {b.sickOnLeave.length
-          ? b.sickOnLeave.map(d => <Small key={`${d.personCode}-${d.date}`} testId={tid.tsick.onLeaveDay(d.personCode, d.date)}>
+          ? b.sickOnLeave.map(d => <Small key={`${d.employeeCode}-${d.date}`} testId={tid.tsick.onLeaveDay(d.employeeCode, d.date)}>
               {d.name} · {formatDay(d.date)} · {d.days === 1 ? '1 day' : `${d.days} days`} of annual leave</Small>)
           : <Small>No recorded sickness falls on booked annual leave.</Small>}
       </Card>
@@ -81,19 +81,19 @@ function SicknessView({ b }: { b: SicknessBoard }) {
 function EpisodeRow({ r }: { r: SicknessRow }) {
   const tone = r.triggered ? 'err' : r.score > 50 ? 'warn' : 'ok';
   return (
-    <Row testId={tid.tsick.row(r.personCode)}>
+    <Row testId={tid.tsick.row(r.employeeCode)}>
       <TableCell kind="title">
         <span className="flex items-center gap-[9px]">
           <Avatar name={r.name} />
-          <span><strong className="font-semibold">{r.name}</strong><span className="block font-mono text-xs text-text-muted">{r.personCode}</span></span>
+          <span><strong className="font-semibold">{r.name}</strong><span className="block font-mono text-xs text-text-muted">{r.employeeCode}</span></span>
         </span>
       </TableCell>
       <TableCell label="Latest absence">{r.latest}</TableCell>
       <TableCell label="Spells" className="text-right tabular-nums">{r.spells}</TableCell>
       <TableCell label="Days" className="text-right tabular-nums">{r.days}</TableCell>
-      <TableCell label="Bradford score"><Meter testId={tid.tsick.score(r.personCode)} pct={r.score} tone={tone} strong={r.triggered}>{r.score}</Meter></TableCell>
+      <TableCell label="Bradford score"><Meter testId={tid.tsick.score(r.employeeCode)} pct={r.score} tone={tone} strong={r.triggered}>{r.score}</Meter></TableCell>
       <TableCell label="Next step">
-        <span data-testid={tid.tsick.next(r.personCode)}>{r.triggered ? <Pill tone="err" glyph={<TriangleAlert aria-hidden="true" />}>{r.next}</Pill> : <span className="text-xs text-text-muted">{r.next}</span>}</span>
+        <span data-testid={tid.tsick.next(r.employeeCode)}>{r.triggered ? <Pill tone="err" glyph={<TriangleAlert aria-hidden="true" />}>{r.next}</Pill> : <span className="text-xs text-text-muted">{r.next}</span>}</span>
       </TableCell>
     </Row>);
 }
@@ -111,7 +111,7 @@ function RecordAbsence({ b }: { b: SicknessBoard }) {
   const [reason, setReason] = useState(b.reasons[0] ?? '');
   const edited = () => record.clearFieldErrors();
   const general = record.refusal && !['from', 'to', 'reason'].includes(record.refusal.field ?? '') ? record.refusal : null;
-  const send = () => record.mutate({ personCode: who, from, to, reason }, { onSuccess: x => {
+  const send = () => record.mutate({ employeeCode: who, from, to, reason }, { onSuccess: x => {
     toastInfo(x.summary, x.extended
       ? `Joined to the absence that began ${formatDmy(x.record.from)}, so it counts as one spell.` : undefined);
   } });

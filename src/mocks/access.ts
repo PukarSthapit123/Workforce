@@ -1,7 +1,7 @@
 import { seededCollection, store } from './store';
 import { bump, refuse } from './http';
 import { serve } from './serve';
-import { actor, personName, type Account } from './auth';
+import { actor, employeeName, type Account } from './auth';
 import { writeAudit } from './audit';
 import { resolveCapabilities } from '@/domain/capabilities';
 import { roleNameProblem } from '@/domain/modules';
@@ -24,8 +24,8 @@ const accountAt = (email: string) => {
     ?? refuse(404, { code: 'not-found', message: 'That account no longer exists.', next: 'Reload the page.' });
 };
 const userView = (a: Account): UserAccess => ({
-  id: a.id, version: a.version, updatedAt: a.updatedAt, email: a.email, personCode: a.personCode,
-  name: personName(a.personCode), userType: a.userType, grants: a.grants, revocations: a.revocations,
+  id: a.id, version: a.version, updatedAt: a.updatedAt, email: a.email, employeeCode: a.employeeCode,
+  name: employeeName(a.employeeCode), userType: a.userType, grants: a.grants, revocations: a.revocations,
 });
 /* Whether any account, across the whole tenant, would still effectively hold
    `capId` under the given (possibly simulated) templates and accounts. Used
@@ -96,7 +96,7 @@ export const accessHandlers = [
     const templateHas = !!template?.capabilities.includes(c.id);
     /* An exception only means something as a difference from the template: a
        grant the template already covers, or a revoke of something it never
-       had, changes nothing about what this person can do. */
+       had, changes nothing about what this employee can do. */
     if (mode === 'grant' && templateHas)
       return refuse(422, { code: 'invalid', field: 'capability', message: `${templateName} already includes "${c.label}", so there is nothing to grant.`, next: 'Choose a capability their template does not already include.' });
     if (mode === 'revoke' && !templateHas)

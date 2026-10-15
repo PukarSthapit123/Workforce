@@ -22,7 +22,7 @@ const signInEmail = async (email: string) => {
   setToken(body.token);
 };
 const PUKAR = 'pukar.sthapit@dogmagroup.co.uk';
-interface Req { id: string; state: string; personCode: string; reason: string }
+interface Req { id: string; state: string; employeeCode: string; reason: string }
 const req = (id: string) => store.coll<Req>('leaveRequests')[id];
 const acts = () => audits().filter(a => a.act !== 'Signed in').map(a => a.act);
 const toasts = (id: string = tid.toast.info) => screen.queryAllByTestId(id).map(t => t.textContent ?? '').join(' | ');
@@ -89,7 +89,7 @@ describe('Team leave on qnipay', () => {
     await open();
     /* the request is re-pointed at the manager after the queue was read */
     const r = req('lr_3');
-    if (r) r.personCode = 'EMP001';
+    if (r) r.employeeCode = 'EMP001';
     store.save();
     await userEvent.click(screen.getByTestId(tid.tleave.approve('lr_3')));
     await waitFor(() => expect(screen.getByTestId(tid.tleave.warn('lr_3'))).toHaveTextContent(SELF_APPROVAL));

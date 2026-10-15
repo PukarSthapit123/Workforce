@@ -51,7 +51,7 @@ function evidence(ctx: LiveContext): EvidenceRow[] | null {
   if (!flagOn(ctx.modules, ctx.flags, 'FLEXMON')) return null;
   const kept = Object.values(store.coll<StoredEvidence>('notifEvidence')).map(e => ({ employee: e.employee, employeeId: e.employeeId, event: e.event, at: e.at,
     recipient: e.recipient, channel: isNotifChannel(e.channel) ? deliveryText(deliveryOf(e.channel)) : e.channel, ref: e.ref }));
-  const it = Object.values(store.coll<ItRequest>('itRequests')).map(r => ({ employee: r.name, employeeId: r.personCode, event: 'IT access request',
+  const it = Object.values(store.coll<ItRequest>('itRequests')).map(r => ({ employee: r.name, employeeId: r.employeeCode, event: 'IT access request',
     at: r.raisedAt, recipient: 'IT service desk', channel: 'System', ref: r.ref }));
   return [...kept, ...it];
 }

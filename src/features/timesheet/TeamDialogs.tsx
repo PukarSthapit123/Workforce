@@ -26,7 +26,7 @@ export function BulkApproveDialog({ queue, where, onClose, onDone }: {
     if (!ack) { setWarn(true); return; }
     bulk.mutate({ ids: s.ids, checksum: s.checksum }, { onSuccess: res => {
       const k = res.approved.length, onward = res.approved.filter(d => d.state === 'mgrok').length;
-      if (k) toastInfo(`${k} approved · ${queueHours(res.minutes)} · ${res.people} colleague(s) · `
+      if (k) toastInfo(`${k} approved · ${queueHours(res.minutes)} · ${res.employees} colleague(s) · `
         + (onward ? `${k - onward} queued for Business Central · ${onward} now waiting on payroll` : 'queued for Business Central')
         + (flagged.length ? ` · ${flagged.length} had exceptions` : ''));
       onDone(res);
@@ -42,7 +42,7 @@ export function BulkApproveDialog({ queue, where, onClose, onDone }: {
         Each approval queues a posting to Business Central. Reversing one afterwards needs an amendment, not a second approval.</Banner>
       <Stats>
         <Stat label="Records" testId={tid.tteam.bulkStat('records')} foot={`${where} only`}>{n}</Stat>
-        <Stat label="Colleagues" testId={tid.tteam.bulkStat('people')}>{s.people}</Stat>
+        <Stat label="Colleagues" testId={tid.tteam.bulkStat('employees')}>{s.employees}</Stat>
         <Stat label="Hours" testId={tid.tteam.bulkStat('hours')} foot="to be queued for payroll">{queueHours(s.minutes)}</Stat>
         <Stat label="With exceptions" testId={tid.tteam.bulkStat('flagged')} tone={flagged.length ? 'bad' : undefined}
           foot={flagged.length ? 'review before approving' : 'none flagged'}>{flagged.length}</Stat>
@@ -52,7 +52,7 @@ export function BulkApproveDialog({ queue, where, onClose, onDone }: {
           <TableHeader><TableRow><TableHead>Colleague</TableHead><TableHead>Date</TableHead><TableHead>Why it is flagged</TableHead></TableRow></TableHeader>
           <TableBody>{flagged.slice(0, 8).map(f => (
             <Row key={f.id} testId={tid.tteam.bulkFlagRow(f.id)}>
-              <TableCell>{f.personName}</TableCell>
+              <TableCell>{f.employeeName}</TableCell>
               <TableCell className="text-xs tabular-nums">{formatDmy(f.date)}</TableCell>
               <TableCell className="text-xs">{f.why.join('; ')}</TableCell>
             </Row>))}</TableBody>
@@ -81,7 +81,7 @@ export function ReturnDialog({ row, required, onClose }: { row: QueueRow; requir
     const why = reason.trim();
     if (returnReasonProblem(why, required)) { setMissing(true); return; }
     decide.mutate({ day: row, to: 'back', reason: why }, { onSuccess: () => {
-      toastInfo(`Sent back with a reason · ${row.personName}`);
+      toastInfo(`Sent back with a reason · ${row.employeeName}`);
       onClose();
     } });
   };
@@ -91,7 +91,7 @@ export function ReturnDialog({ row, required, onClose }: { row: QueueRow; requir
         <Button testId={tid.tteam.returnCancel} kind="ghost" onClick={onClose}>Cancel</Button>
         <Button testId={tid.tteam.returnConfirm} kind="danger" pending={decide.isPending(row.id)} onClick={send}>Send back</Button>
       </>}>
-      <Small className="mb-md">{row.personName} · {formatDmy(row.date)} · {queueHours(row.minutes)}</Small>
+      <Small className="mb-md">{row.employeeName} · {formatDmy(row.date)} · {queueHours(row.minutes)}</Small>
       <Field label="Reason" required={required} error={(missing ? returnReasonProblem('', true)?.message : undefined) ?? decide.fieldError('reason')}>
         <TextArea testId={tid.tteam.returnReason} value={reason} placeholder="Sent to the employee with the returned timesheet and stored on the entry"
           onChange={e => { setReason(e.target.value); setMissing(false); }} />

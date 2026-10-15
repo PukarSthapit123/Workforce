@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from './client';
 import { useRecordMutation } from './mutation';
-import { peopleKeys } from './people';
+import { employeesKeys } from './employees';
 import { typesKey } from './reference';
 import {
   createEmployeeType, getTypeLibrary, removeEmployeeType, updateEmployeeType,
@@ -9,8 +9,8 @@ import {
 } from '@/contract/employee-types';
 
 export const useTypeLibrary = () => useQuery({ queryKey: ['employee-types', 'library'], queryFn: () => api(getTypeLibrary), staleTime: Infinity });
-/* the people screens show a type by name */
-const AFTER = [typesKey, peopleKeys.all] as const;
+/* the employees screens show a type by name */
+const AFTER = [typesKey, employeesKeys.all] as const;
 export const useCreateType = () => useRecordMutation({
   mutationFn: (body: CreateEmployeeType) => api(createEmployeeType, { body }),
   recordKey: () => 'new-type',

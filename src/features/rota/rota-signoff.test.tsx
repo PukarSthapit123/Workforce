@@ -12,7 +12,7 @@ import { RotaPage } from './RotaPage';
    at Willow House to publish; it waits on a Service Manager, Dee Fitzgerald
    (the administrator persona), given "Plan and publish rota" here. */
 withFakeServer();
-const RACHEL = { personCode: 'CP-1001', name: 'Rachel Hussain' };
+const RACHEL = { employeeCode: 'CP-1001', name: 'Rachel Hussain' };
 beforeEach(() => {
   resetTo('social');
   const admin = store.coll<{ capabilities: string[] }>('userTypes').admin;

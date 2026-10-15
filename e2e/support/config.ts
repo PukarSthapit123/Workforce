@@ -1,8 +1,8 @@
 /* 1c journeys (configuration and communication). They run on social
    (Brightpath, every module on, the Social Care & Charity template) unless a
-   test says otherwise, with the people of support/rota.ts: Dee Fitzgerald is
+   test says otherwise, with the employees of support/rota.ts: Dee Fitzgerald is
    the admin; Rachel Hussain (CP-1001) manages Willow House, whose fire drill
-   notice NTC-0002 (urgent, must acknowledge, v1) two of its eleven people have
+   notice NTC-0002 (urgent, must acknowledge, v1) two of its eleven employees have
    acknowledged; Amara Okafor (CP-1042) works there and owes it; Grace Whitmore
    (CP-1288) works at Beacon Court. Rachel's inbox holds five unread items,
    among them "Leave approval overdue" (ntf_seed_0006), which opens Team leave.
@@ -54,7 +54,7 @@ export async function openModule(page: Page, code: string) {
   await page.getByTestId(tid.amods.moduleCard).waitFor();
 }
 
-/* My home's month as the server paints it for the signed-in person. */
+/* My home's month as the server paints it for the signed-in employee. */
 export interface HomeRead { totals: { shifts: number; leaveDays: number; minutes: number }; days: { date: string; shift: { code: string } | null; absence: { mark: string; name: string } | null }[] }
 export async function homeOf(api: Get): Promise<HomeRead> {
   const r = await api.get('/api/v1/home');

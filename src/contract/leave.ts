@@ -1,6 +1,6 @@
 /* Module 4 Leave. A request is one record (brief D1), versioned on its own;
    cancel, approve and decline carry If-Match on it. Entitlement and balance
-   are derived on the server from the policy, the person record and the leave
+   are derived on the server from the policy, the employee record and the leave
    records, never stored as counters (D3). Sickness is an episode (D9). Every
    rule is the group 1 domain's (src/domain/leave.ts); the screens run the same
    rules only to warn early. No money anywhere (D13): days and hours only.
@@ -8,10 +8,10 @@
 import { z } from 'zod';
 import { defineEndpoint } from './endpoints';
 import { IsoDateTime, RecordMeta, mutation } from './common';
-import { IsoDate } from './people';
+import { IsoDate } from './employees';
 import { BANK_HOLIDAY_HANDLING, LEAVE_METHODS } from '@/domain/leave';
 
-const Actor = z.object({ personCode: z.string(), name: z.string() });
+const Actor = z.object({ employeeCode: z.string(), name: z.string() });
 const AtOrBlank = z.union([IsoDateTime, z.literal('')]);
 const DateOrBlank = z.union([IsoDate, z.literal('')]);
 const Tone = z.enum(['warn', 'ok', 'err', 'neu']);
@@ -31,7 +31,7 @@ export const ServiceRule = z.object({ afterYears: z.number(), add: z.number(), c
    is not the last is a move from pending to pending: the request still waits on the next. */
 export const LeaveMove = z.object({ from: z.string(), to: z.string(), by: Actor, at: IsoDateTime, reason: z.string(), layer: z.string().optional() });
 export const LeaveRequestRecord = RecordMeta.extend({
-  personCode: z.string(), type: z.string(), from: IsoDate, to: IsoDate, part: LeavePart, qty: z.number(), unit: BalanceUnit, state: LeaveState,
+  employeeCode: z.string(), type: z.string(), from: IsoDate, to: IsoDate, part: LeavePart, qty: z.number(), unit: BalanceUnit, state: LeaveState,
   raisedAt: IsoDateTime, note: z.string(),
   /* the effect on cover worked out when it was sent, and whether it drops a day below the minimum */
   impact: z.string(), short: z.boolean(), escalated: z.boolean(),
@@ -81,7 +81,7 @@ export type LeaveTypeOption = z.infer<typeof LeaveTypeOption>;
 export const LeaveFacts = z.object({ contractedHours: z.number(), start: DateOrBlank, accruedHours: z.number().optional() });
 
 export const MyLeave = z.object({
-  person: z.object({ code: z.string(), name: z.string(), manager: z.string(), employeeType: z.string() }),
+  employee: z.object({ code: z.string(), name: z.string(), manager: z.string(), employeeType: z.string() }),
   today: IsoDate, year: LeaveYear, entitlement: EntitlementView, balance: BalanceView, facts: LeaveFacts,
   /* the next leave year and the annual leave days left in it, so the request form checks leave booked there against that year */
   nextYear: LeaveYear.extend({ leftD: z.number() }),
@@ -131,7 +131,7 @@ export const LeaveStage = z.object({ n: z.number().int(), who: z.string(), actio
 export type LeaveStage = z.infer<typeof LeaveStage>;
 export const TeamRequestsQuery = z.object({ q: z.string().max(80).optional(), type: z.string().max(10).optional(), short: z.enum(['true', 'false']).optional() });
 export const TeamRequests = z.object({
-  /* the waiting requests at the locations this person decides for, filtered */
+  /* the waiting requests at the locations this employee decides for, filtered */
   requests: z.array(TeamRequestView),
   counts: z.object({ pending: z.number().int(), escalated: z.number().int(), shown: z.number().int() }),
   /* "2 requests have breached the 5-day approval SLA", or '' */
@@ -140,7 +140,7 @@ export const TeamRequests = z.object({
 });
 export type TeamRequests = z.infer<typeof TeamRequests>;
 export const TeamBalanceRow = z.object({
-  personCode: z.string(), name: z.string(), policyName: z.string(), unit: BalanceUnit, entDays: z.number(), entHours: z.number(),
+  employeeCode: z.string(), name: z.string(), policyName: z.string(), unit: BalanceUnit, entDays: z.number(), entHours: z.number(),
   takenD: z.number(), leftD: z.number(), leftH: z.number(), toil: z.number(), toilBy: DateOrBlank,
   /* the first request not declined or cancelled */
   next: z.object({ from: IsoDate, state: LeaveState }).nullable(),
@@ -149,12 +149,12 @@ export type TeamBalanceRow = z.infer<typeof TeamBalanceRow>;
 export const TeamBalances = z.object({ rows: z.array(TeamBalanceRow), toil: z.boolean() });
 export type TeamBalances = z.infer<typeof TeamBalances>;
 export const EntitlementDetail = z.object({
-  person: z.object({ code: z.string(), name: z.string(), employeeType: z.string() }),
+  employee: z.object({ code: z.string(), name: z.string(), employeeType: z.string() }),
   today: IsoDate, year: LeaveYear, entitlement: EntitlementView, balance: BalanceView, facts: LeaveFacts,
 });
 export type EntitlementDetail = z.infer<typeof EntitlementDetail>;
 export const LeaverRow = z.object({
-  personCode: z.string(), name: z.string(), leaveDate: IsoDate, note: z.string(), months: z.number().int(),
+  employeeCode: z.string(), name: z.string(), leaveDate: IsoDate, note: z.string(), months: z.number().int(),
   full: z.number(), prorata: z.number(), taken: z.number(), diff: z.number(), hours: z.number(),
   verdict: z.string(), tone: Tone, action: z.string(),
 });
@@ -165,34 +165,34 @@ export type Leavers = z.infer<typeof Leavers>;
 /* ------------------------------------------------------------- sickness */
 export const RtwRequest = z.object({ requestedAt: IsoDateTime, by: Actor });
 export const SickEpisodeRecord = RecordMeta.extend({
-  personCode: z.string(), from: IsoDate,
+  employeeCode: z.string(), from: IsoDate,
   /* '' while the colleague is still off */
   to: DateOrBlank, reason: z.string(), note: z.string(), rtw: RtwRequest.nullable(),
 });
 export type SickEpisodeRecord = z.infer<typeof SickEpisodeRecord>;
 export const SicknessRow = z.object({
-  personCode: z.string(), name: z.string(), latest: z.string(), spells: z.number().int(), days: z.number().int(), score: z.number().int(),
+  employeeCode: z.string(), name: z.string(), latest: z.string(), spells: z.number().int(), days: z.number().int(), score: z.number().int(),
   triggered: z.boolean(), next: z.string(),
   /* the latest episode, which Arrange return to work acts on */
   episode: SickEpisodeRecord,
 });
 export type SicknessRow = z.infer<typeof SicknessRow>;
-export const SickOnLeaveDay = z.object({ personCode: z.string(), name: z.string(), requestId: z.string(), date: IsoDate, days: z.number() });
+export const SickOnLeaveDay = z.object({ employeeCode: z.string(), name: z.string(), requestId: z.string(), date: IsoDate, days: z.number() });
 export type SickOnLeaveDay = z.infer<typeof SickOnLeaveDay>;
 export const SicknessBoard = z.object({
   rows: z.array(SicknessRow),
   /* the first colleague over the trigger: the banner and its Arrange it */
-  banner: z.object({ personCode: z.string(), text: z.string(), note: z.string(), episode: SickEpisodeRecord }).nullable(),
+  banner: z.object({ employeeCode: z.string(), text: z.string(), note: z.string(), episode: SickEpisodeRecord }).nullable(),
   counts: z.object({ triggered: z.number().int(), colleagues: z.number().int() }),
   trigger: z.number().int(), tip: z.string(), today: IsoDate,
-  /* who can be recorded: active people at the locations this person looks after */
+  /* who can be recorded: active employees at the locations this employee looks after */
   colleagues: z.array(Option), reasons: z.array(z.string()),
   /* approved annual leave days a sickness episode covers, not yet given back (D10) */
   sickOnLeave: z.array(SickOnLeaveDay),
 });
 export type SicknessBoard = z.infer<typeof SicknessBoard>;
 export const RecordSickness = z.object({
-  personCode: z.string().min(1), from: z.string().max(10), to: z.string().max(10), reason: z.string().max(40), note: z.string().max(200).optional(),
+  employeeCode: z.string().min(1), from: z.string().max(10), to: z.string().max(10), reason: z.string().max(40), note: z.string().max(200).optional(),
 });
 export type RecordSickness = z.infer<typeof RecordSickness>;
 /* extended: the day joined an open or just-ended episode instead of starting a new spell (D9). */
@@ -200,7 +200,7 @@ export const SicknessRecorded = z.object({ record: SickEpisodeRecord, extended: 
 export type SicknessRecorded = z.infer<typeof SicknessRecorded>;
 export const RtwArranged = z.object({ record: SickEpisodeRecord, summary: z.string(), auditId: z.string() });
 export type RtwArranged = z.infer<typeof RtwArranged>;
-export const GiveDaysBack = z.object({ personCode: z.string().min(1), dates: z.array(z.string().max(10)).max(60) });
+export const GiveDaysBack = z.object({ employeeCode: z.string().min(1), dates: z.array(z.string().max(10)).max(60) });
 export type GiveDaysBack = z.infer<typeof GiveDaysBack>;
 export const DaysGivenBack = z.object({ record: LedgerView, rota: RotaEffect, summary: z.string(), auditId: z.string() });
 export type DaysGivenBack = z.infer<typeof DaysGivenBack>;
@@ -246,7 +246,7 @@ export type UpdateLeaveConfig = z.infer<typeof UpdateLeaveConfig>;
 
 /* ------------------------------------------------------------- endpoints */
 const ById = z.object({ id: z.string().min(1) });
-const ByPerson = z.object({ personCode: z.string().min(1) });
+const ByEmployee = z.object({ employeeCode: z.string().min(1) });
 
 export const getMyLeave = defineEndpoint({ method: 'GET', path: '/api/v1/leave/me', response: MyLeave, capability: 'own_leave',
   summary: 'My leave: balances in days and hours, TOIL, the request form\'s types, my requests and the adjustment ledger' });
@@ -261,21 +261,21 @@ export const cancelLeave = defineEndpoint({ method: 'POST', path: '/api/v1/leave
    delegate covering a holder. Anyone holding neither, and covering nobody, is
    refused with 403 capability. */
 export const listTeamLeave = defineEndpoint({ method: 'GET', path: '/api/v1/leave/team/requests', query: TeamRequestsQuery, response: TeamRequests,
-  errors: [403], summary: 'Waiting requests whose current approval layer this person decides, with balance, effect on cover, layer, stage and the SLA of that layer' });
+  errors: [403], summary: 'Waiting requests whose current approval layer this employee decides, with balance, effect on cover, layer, stage and the SLA of that layer' });
 export const approveLeave = defineEndpoint({ method: 'POST', path: '/api/v1/leave/requests/:id/approve', params: ById, response: LeaveDecided,
   versioned: true, errors: [403, 404, 409],
   summary: 'Approve a waiting request at its current approval layer (If-Match). With a later layer to come it stays waiting, on that layer. Only an approval at the last layer approves it; with Rota and Leave to rota on, the days then go onto the rota as leave and cover opens below the minimum. Refused with SELF_APPROVAL, ALREADY_SIGNED, scope, WRONG_LAYER or capability.' });
 export const declineLeave = defineEndpoint({ method: 'POST', path: '/api/v1/leave/requests/:id/decline', params: ById, request: DeclineLeave, response: LeaveMoved,
   versioned: true, errors: [403, 404, 409], summary: 'Decline a waiting request at its current approval layer, with a reason the colleague sees (If-Match)' });
 export const getTeamBalances = defineEndpoint({ method: 'GET', path: '/api/v1/leave/team/balances', response: TeamBalances, capability: 'team_leave',
-  summary: 'Entitlement, taken and remaining for everyone at the locations this person looks after' });
+  summary: 'Entitlement, taken and remaining for everyone at the locations this employee looks after' });
 /* No single capability: your own needs own_leave; someone else's needs team_leave and their location. */
-export const getEntitlement = defineEndpoint({ method: 'GET', path: '/api/v1/leave/entitlement/:personCode', params: ByPerson, response: EntitlementDetail,
-  errors: [403, 404], summary: 'How a person\'s entitlement and balance were worked out' });
+export const getEntitlement = defineEndpoint({ method: 'GET', path: '/api/v1/leave/entitlement/:employeeCode', params: ByEmployee, response: EntitlementDetail,
+  errors: [403, 404], summary: 'How an employee\'s entitlement and balance were worked out' });
 export const listLeavers = defineEndpoint({ method: 'GET', path: '/api/v1/leave/leavers', response: Leavers, capability: 'team_leave', errors: [403],
   summary: 'Leaver reconciliation in days and hours at the leaving date. Payroll settles the money.' });
 export const getSicknessBoard = defineEndpoint({ method: 'GET', path: '/api/v1/leave/sickness', response: SicknessBoard, capability: 'team_sick',
-  summary: 'Sickness at the locations this person looks after: episodes, Bradford scores and triggers, and sickness during booked leave' });
+  summary: 'Sickness at the locations this employee looks after: episodes, Bradford scores and triggers, and sickness during booked leave' });
 export const recordSickness = defineEndpoint({ method: 'POST', path: '/api/v1/leave/sickness', request: RecordSickness, response: SicknessRecorded,
   capability: 'team_sick', errors: [404, 409],
   summary: 'Record sickness. A day next to an open or just-ended episode extends it. With Leave to rota on, the days go onto the rota as sickness.' });

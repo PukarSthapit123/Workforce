@@ -10,7 +10,7 @@ import { FROZEN, audits, caller, resetTo, snapshot, tokenFor, type Persona } fro
    days count as taken and reach the rota. On social, Rachel Hussain (CP-1001)
    is the line manager at Willow House and Dee Fitzgerald (CP-1002) the
    administrator, who is Rachel's own line manager. Dee is given "Decide team
-   leave" here so there is a second person to decide a later layer. Amara
+   leave" here so there is a second employee to decide a later layer. Amara
    Okafor (CP-1042, the employee persona) works nights on Thursday and Friday
    of week 33. */
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' })); afterAll(() => server.close());
@@ -20,9 +20,9 @@ type Call = ReturnType<typeof caller>;
 const as = async (p: Persona) => caller(await tokenFor(p));
 const refusal = (r: { body: unknown }) => Refusal.parse(r.body);
 const WRITES = ['leaveRequests', 'leaveLedger', 'rotaWeeks', 'coverRequests', 'notifications', 'audit'];
-interface Note { personId: string; event?: string; title: string; body: string }
-const told = (event: string) => Object.values(store.coll<Note>('notifications')).filter(n => n.event === event).map(n => [n.personId, n.title, n.body]);
-interface Req { id: string; version: number; state: string; history: { from: string; to: string; layer?: string; by: { personCode: string } }[] }
+interface Note { employeeId: string; event?: string; title: string; body: string }
+const told = (event: string) => Object.values(store.coll<Note>('notifications')).filter(n => n.event === event).map(n => [n.employeeId, n.title, n.body]);
+interface Req { id: string; version: number; state: string; history: { from: string; to: string; layer?: string; by: { employeeCode: string } }[] }
 const req = (id: string) => store.coll<Req>('leaveRequests')[id];
 const lineOf = (code: string) => store.coll<{ lines: Record<string, string[]> }>('rotaWeeks')['rw_WH_2026-08-10']?.lines[code];
 const approve = (call: Call, id: string, v: number) => call('POST', `/api/v1/leave/requests/${id}/approve`, undefined, v);
@@ -53,7 +53,7 @@ describe('two layers: the line manager, then the Service Manager', () => {
     const before = lineOf('CP-1042'), asked = MyLeave.parse((await emp('GET', '/api/v1/leave/me')).body).balance;
     const first = LeaveDecided.parse((await approve(mgr, mine.id, 1)).body);
     expect(first.record).toMatchObject({ state: 'pending', stateLabel: WAITING, decidedBy: null });
-    expect(first.record.history.at(-1)).toMatchObject({ from: 'pending', to: 'pending', layer: 'Line manager', by: { personCode: 'CP-1001' } });
+    expect(first.record.history.at(-1)).toMatchObject({ from: 'pending', to: 'pending', layer: 'Line manager', by: { employeeCode: 'CP-1001' } });
     expect(first.summary).toBe('Amara’s request approved by you. It now waits on the Service Manager.');
     expect(first.rota.written).toBe(0);
     expect(lineOf('CP-1042')).toEqual(before);
@@ -63,7 +63,7 @@ describe('two layers: the line manager, then the Service Manager', () => {
     expect(waiting.requests.find(r => r.id === mine.id)?.stateLabel).toBe(WAITING);
     expect([waiting.balance.pending, waiting.balance.takenD]).toEqual([asked.pending, asked.takenD]);
     const second = LeaveDecided.parse((await approve(admin, mine.id, 2)).body);
-    expect(second.record).toMatchObject({ state: 'approved', stateLabel: 'Approved', decidedBy: { personCode: 'CP-1002' } });
+    expect(second.record).toMatchObject({ state: 'approved', stateLabel: 'Approved', decidedBy: { employeeCode: 'CP-1002' } });
     expect(second.record.history.at(-1)).toMatchObject({ from: 'pending', to: 'approved', layer: 'Service Manager' });
     expect(lineOf('CP-1042')?.[4]).toBe('V');
     expect(audits().find(a => a.id === second.auditId)?.act).toBe('Leave approved');
@@ -119,7 +119,7 @@ describe('delegation applies at every layer', () => {
     const admin = await as('admin');
     expect((await queue(admin)).requests.map(r => r.id)).toEqual(['lr_1', 'lr_2', 'lr_3']);
     const r = LeaveDecided.parse((await approve(admin, 'lr_3', 1)).body);
-    expect(r.record).toMatchObject({ state: 'approved', decidedBy: { personCode: 'CP-1002' } });
+    expect(r.record).toMatchObject({ state: 'approved', decidedBy: { employeeCode: 'CP-1002' } });
     store.setClock(FROZEN);
     const dee = await as('admin'), before = snapshot(...WRITES);
     const early = await approve(dee, 'lr_2', 1);
@@ -134,7 +134,7 @@ describe('delegation applies at every layer', () => {
     const jo = caller(await tokenForEmail('jo.baptiste@brightpath.org'));
     expect((await queue(jo)).requests.map(r => r.id)).toEqual([mine.id]);
     const r = LeaveDecided.parse((await approve(jo, mine.id, 2)).body);
-    expect(r.record).toMatchObject({ state: 'approved', decidedBy: { personCode: 'CP-1153' } });
+    expect(r.record).toMatchObject({ state: 'approved', decidedBy: { employeeCode: 'CP-1153' } });
   });
 });
 
@@ -158,7 +158,7 @@ describe('permissions on every layer', () => {
     await twoLayers();
     const mine = await askFriday();
     const lr1 = store.coll<Record<string, unknown>>('leaveRequests').lr_1;
-    store.coll('leaveRequests').lr_9 = { ...lr1, id: 'lr_9', personCode: 'EMP-2044', history: [] };
+    store.coll('leaveRequests').lr_9 = { ...lr1, id: 'lr_9', employeeCode: 'EMP-2044', history: [] };
     /* Jo covers Dee, who decides only the Service Manager's layer, so the line manager's is not Jo's */
     store.coll('delegations').dlg_9 = { id: 'dlg_9', version: 1, updatedAt: FROZEN, who: 'CP-1002', to: 'CP-1153', from: '2026-08-13', until: '2026-08-20', modules: ['Leave'] };
     const jo = caller(await tokenForEmail('jo.baptiste@brightpath.org')), emp = await as('employee'), mgr = await as('manager');
@@ -169,7 +169,7 @@ describe('permissions on every layer', () => {
     for (const r of [await approve(emp, 'lr_1', 1), await decline(emp, 'lr_1', 'No', 1), await emp('GET', '/api/v1/leave/team/requests')])
       expect([r.status, refusal(r).code]).toEqual([403, 'capability']);
     const out = await approve(mgr, 'lr_9', 1);
-    expect([out.status, refusal(out).code, refusal(out).message]).toEqual([403, 'scope', 'You can decide leave for people at Willow House only.']);
+    expect([out.status, refusal(out).code, refusal(out).message]).toEqual([403, 'scope', 'You can decide leave for employees at Willow House only.']);
     expect(snapshot(...WRITES)).toEqual(before);
   });
 });
@@ -215,7 +215,7 @@ describe('a chain edited while a request waits part-way along it (review I5)', (
     stored.steps = lineManagerOnly.map(s => ({ ...s, module: 'Leave' }));
     expect((await queue(await as('manager'))).requests.map(r => r.id)).toContain(mine.id);
     const r = LeaveDecided.parse((await approve(await as('manager'), mine.id, 2)).body);
-    expect(r.record).toMatchObject({ state: 'approved', decidedBy: { personCode: 'CP-1001' } });
+    expect(r.record).toMatchObject({ state: 'approved', decidedBy: { employeeCode: 'CP-1001' } });
     expect(lineOf('CP-1042')?.[4]).toBe('V');
   });
 });

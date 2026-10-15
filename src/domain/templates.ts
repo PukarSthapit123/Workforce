@@ -8,11 +8,11 @@
    - D1: applying one sets configuration (modules, features with their
      extras, labels, the capture layout, employee types and role names) and
      adds structure records whose codes are new. It never deletes or
-     overwrites people or structure already here, and never renames the
+     overwrites employees or structure already here, and never renames the
      organisation. The prototype replaced the master data and reset the
      company; here those are left alone and the plan says so.
    - D2: two capture scopes. The prototype's third ("everything, including
-     people") is not offered.
+     employees") is not offered.
    - D3: no money. No currency, pay-code values, allowance amounts, rates or
      pay rules: the prototype's company, tweaks.rules, tweaks.allow, payCodes
      and budget hours are left out of the shipped data, and an imported file
@@ -25,7 +25,7 @@
      kept onbDocs and onbPolicies, never an uploaded file or anybody's
      progress. Applying it needs Configure onboarding, switches only what
      the features allow, and takes a held policy's name and wording. New
-     wording (text or summary) raises its version and asks the people still
+     wording (text or summary) raises its version and asks the employees still
      onboarding who acknowledged it to read it again, as a new upload does
      (D10); a new name alone keeps the version. It adds the policies not
      here, and leaves the tenant's other policies alone.
@@ -95,7 +95,7 @@ export interface TemplateTenantSettings {
   financialYear: { start: string; end: string };
 }
 export type TemplateLeaveConfig = Omit<LeaveConfig, 'finYearStart'>;
-/* Module 8: the Rota setup settings a template keeps: each support level's people per shift, and the flexible-worker milestones and who is told. */
+/* Module 8: the Rota setup settings a template keeps: each support level's employees per shift, and the flexible-worker milestones and who is told. */
 export interface TemplateRotaConfig { supportLevels: SupportLevel[]; flexMilestones: number[]; flexNotifyTo: string }
 export interface Template {
   name: string; description: string; scope: TemplateScope;
@@ -118,9 +118,9 @@ export interface Template {
 
 export const TEMPLATE_SCOPES: readonly { key: TemplateScope; label: string; note: string }[] = [
   { key: 'config', label: 'Configuration only',
-    note: 'Modules, features, employee types, labels, the capture layout, the approval chain, role names, Leave setup and onboarding. Nothing about this organisation’s structure or people.' },
+    note: 'Modules, features, employee types, labels, the capture layout, the approval chain, role names, Leave setup and onboarding. Nothing about this organisation’s structure or employees.' },
   { key: 'structure', label: 'Configuration and structure',
-    note: 'The above, plus locations, departments, cost centres, job profiles and contracts. Never its people.' },
+    note: 'The above, plus locations, departments, cost centres, job profiles and contracts. Never its employees.' },
 ];
 export const scopeLabel = (s: TemplateScope) => TEMPLATE_SCOPES.find(x => x.key === s)?.label ?? s;
 
@@ -296,7 +296,7 @@ export function captureOnboarding(o: { config: OnboardingConfig; policies: reado
 }
 /* captureTemplate: what the tenant has decided, not what it contains. Labels
    are kept where they differ from the field's own name. The structure scope
-   adds the five dimensions; people are never kept (D2). */
+   adds the five dimensions; employees are never kept (D2). */
 export function captureTemplate(name: string, description: string, scope: TemplateScope, src: CaptureSource): Template {
   const t: Template = {
     name: name.trim(), description: description.trim(), scope,
@@ -403,7 +403,7 @@ export function roleNamesProblem(names: Readonly<Record<RoleKey, string>>): stri
 
 /* ------------------------------------------------------------ the plan */
 export interface TenantState {
-  name: string; people: number;
+  name: string; employees: number;
   modules: Readonly<Record<string, boolean>>; restore: Readonly<Record<string, string[]>>; flags: Readonly<Record<string, boolean>>;
   extras: FlagExtras;
   /* field code to the label it reads by now; a field not here is not on this tenant */
@@ -415,13 +415,13 @@ export interface TenantState {
   /* the codes already held, per kind */
   structure: Readonly<Record<StructureKind, readonly string[]>>;
   /* the onboarding setup and its policies now, when this tenant has them; acknowledged counts, by policy id,
-     the people still onboarding who hold an acknowledgement of it (those a new wording asks again) */
+     the employees still onboarding who hold an acknowledgement of it (those a new wording asks again) */
   onboarding?: { config: OnboardingConfig; policies: readonly OnbPolicy[]; acknowledged?: Readonly<Record<string, number>> };
   tenantSettings?: TemplateTenantSettings;
   leaveConfig?: TemplateLeaveConfig;
   rotaConfig?: TemplateRotaConfig;
 }
-export type PlanArea = 'modules' | 'features' | 'labels' | 'types' | 'roles' | 'chain' | 'structure' | 'people' | 'organisation' | 'onboarding' | 'leave' | 'rota';
+export type PlanArea = 'modules' | 'features' | 'labels' | 'types' | 'roles' | 'chain' | 'structure' | 'employees' | 'organisation' | 'onboarding' | 'leave' | 'rota';
 export interface PlanLine { area: PlanArea; text: string }
 export interface ApplySteps {
   /* module switches in the order they run, and where they leave the tenant */
@@ -435,7 +435,7 @@ export interface ApplySteps {
   chains: { module: ChainModule; steps: ChainStep[] }[];
   structure: TemplateStructure;
   /* the onboarding switches and settings to set by id, the held policies whose name or wording changes (reask: new wording,
-     so the version goes up and the people still onboarding who acknowledged it are asked again), and the policies added */
+     so the version goes up and the employees still onboarding who acknowledged it are asked again), and the policies added */
   onboarding: {
     steps: Record<string, boolean>; documents: Record<string, Omit<TemplateOnbDocument, 'id'>>; documentsAdded: TemplateOnbDocument[];
     policiesUpdated: (Pick<TemplateOnbPolicy, 'id' | 'label' | 'ver' | 'sum' | 'body'> & { reask: boolean })[]; policiesAdded: TemplateOnbPolicy[];
@@ -478,9 +478,9 @@ function moduleSteps(t: Template, s: TenantState) {
 }
 
 /* applyTemplate, as D1 has it: what changes, what is added, and what is left
-   alone. Nothing here deletes or overwrites a person or a structure record,
+   alone. Nothing here deletes or overwrites an employee or a structure record,
    or renames the organisation; employee types the template does not have
-   stay with the people who hold them. `mayRenameRoles` is false when the
+   stay with the employees who hold them. `mayRenameRoles` is false when the
    caller lacks Permissions configuration: role names are then left alone.
    `mayChangeChains` is false without the approval framework: the chains are
    then left alone. `mayChangeTypes` is false without Employee types and
@@ -641,7 +641,7 @@ export function planApply(t: Template, s: TenantState,
     if (stay.length) leftAlone.push({ area: 'structure', text: `${STRUCTURE_LABEL[kind].many} already here stay exactly as they are: ${list(stay)}.` });
   }
 
-  leftAlone.push({ area: 'people', text: `Nobody’s record changes. ${plural(s.people, 'person', 'people')} keep their details and their employee type.` });
+  leftAlone.push({ area: 'employees', text: `Nobody’s record changes. ${plural(s.employees, 'employee', 'employees')} keep their details and their employee type.` });
   leftAlone.push({ area: 'organisation', text: `${s.name} keeps its name, company details, compliance and pay periods.` });
   return { changes, added, leftAlone, steps };
 }
@@ -681,7 +681,7 @@ function planChains(t: Template, s: TenantState, may: boolean, changes: PlanLine
    id and only their switches and settings change; a step goes on only while
    its features are on, and a fixed step stays on, as Onboarding setup
    refuses. Policies are matched by id: a held one takes the template's name,
-   summary and text. New wording raises its version and asks again the people
+   summary and text. New wording raises its version and asks again the employees
    still onboarding who acknowledged it, as a new upload does (D10); a new name
    alone keeps the version and the acknowledgements. One not here is added
    without a document; the tenant's others stay. */
@@ -767,7 +767,7 @@ function planOnboarding(t: Template, s: TenantState, may: boolean, f: ReturnType
       const renamed = label !== h.label ? ` becomes ${label}` : '', asked = have.acknowledged?.[h.id] ?? 0;
       changes.push(line(reask
         ? `Policy ${h.label}${renamed}, with the template's wording. It becomes ${ver}. ${asked
-          ? `${plural(asked, 'person', 'people')} will be asked to read it again.` : 'Nobody still onboarding has acknowledged it, so nobody is asked again.'}`
+          ? `${plural(asked, 'employee', 'employees')} will be asked to read it again.` : 'Nobody still onboarding has acknowledged it, so nobody is asked again.'}`
         : `Policy ${h.label}${renamed}. It stays ${h.ver}, so nobody is asked to read it again.`));
       if (reask) reasked += asked;
       continue;
@@ -791,7 +791,7 @@ function planOnboarding(t: Template, s: TenantState, may: boolean, f: ReturnType
 }
 
 /* Module 8: Rota setup's support levels, matched by code, each taking the
-   template's people per shift; and the flexible-worker milestones and who is
+   template's employees per shift; and the flexible-worker milestones and who is
    told. A level this tenant does not have is not used. A value the setup page
    would refuse is left alone and said. The locations at a level follow its
    new number, as a save on Rota setup does. */
@@ -813,7 +813,7 @@ function planRota(want: TemplateRotaConfig | undefined, have: TemplateRotaConfig
     if (problem) out.leftAlone.push(line(`Support levels stay as they are. ${problem.message}`));
     else {
       next.supportLevels = levels;
-      for (const [i, l] of levels.entries()) if (l.min !== have.supportLevels[i]?.min) out.changes.push(line(`${l.label}: ${plural(l.min, 'person', 'people')} per shift, at every location at that level.`));
+      for (const [i, l] of levels.entries()) if (l.min !== have.supportLevels[i]?.min) out.changes.push(line(`${l.label}: ${plural(l.min, 'employee', 'employees')} per shift, at every location at that level.`));
     }
   }
   const flex = { flexMilestones: [...want.flexMilestones], flexNotifyTo: want.flexNotifyTo };

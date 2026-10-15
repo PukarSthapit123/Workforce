@@ -8,7 +8,7 @@ import { sessionEvents } from '@/api/session-events';
 
 interface Ctx { session: Session | null; ready: boolean;
   signIn(email: string, password: string): Promise<void>; signOut(): Promise<void>;
-  viewAs(personCode: string): Promise<void>; endViewAs(): Promise<void>; }
+  viewAs(employeeCode: string): Promise<void>; endViewAs(): Promise<void>; }
 const SessionCtx = createContext<Ctx | null>(null);
 export const useSession = () => { const c = useContext(SessionCtx); if (!c) throw new Error('useSession outside provider'); return c; };
 /* The signed-in session, or null, without requiring a provider: for a page
@@ -27,16 +27,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (!getToken()) return;
     api(getSession).then(adopt, (err: unknown) => {
       /* Only a confirmed 401 (the token, or the account behind it, is gone)
-         should clear a cached token: that is a signed-out person, not an
+         should clear a cached token: that is a signed-out employee, not an
          empty shell. A 5xx or network failure (ApiError status 0) says
          nothing about whether the session is still valid, so the token stays
-         and the person is told what happened instead of being silently
+         and the employee is told what happened instead of being silently
          signed out from under an unrelated outage. */
       if (err instanceof ApiError && err.status === 401) { adopt(null); return; }
       if (err instanceof ApiError) toastRefusal(err.refusal);
     }).finally(() => setReady(true));
   }, [adopt]);
-  /* A write that can change this person's own capabilities (their own
+  /* A write that can change this employee's own capabilities (their own
      template or exception) asks for the session to be read again. Only the
      session and the tenant (which the nav is built from) are re-read; the
      rest of the cache is the writer's business, and is kept. */
@@ -55,7 +55,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
      two direct reads above, which already sign out on their own 401) was
      answered 401 by queryClient's QueryCache/MutationCache (src/api/query.ts).
      The refusal it carries is toasted here, once, and the session is cleared,
-     so a request the person never sees directly still ends in a clear
+     so a request the employee never sees directly still ends in a clear
      "you are signed out", not a page that quietly stops working. */
   useEffect(() => sessionEvents.on('signed-out', refusal => {
     if (refusal) toastRefusal(refusal);
@@ -79,7 +79,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const value: Ctx = { session, ready,
     signIn: async (email, password) => adopt(await api(createSession, { body: { email, password } })),
     signOut: async () => { try { await api(deleteSession); } catch (e) { if (!(e instanceof ApiError)) throw e; } adopt(null); },
-    viewAs: personCode => switchView(() => api(startViewAs, { body: { personCode } })),
+    viewAs: employeeCode => switchView(() => api(startViewAs, { body: { employeeCode } })),
     endViewAs: () => switchView(() => api(endViewAs)) };
   return <SessionCtx.Provider value={value}>{children}</SessionCtx.Provider>;
 }

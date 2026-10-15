@@ -1,5 +1,5 @@
 /* Module 2 journeys run on the qnipay seed, where the timesheet data lives
-   with named people (src/mocks/seed/seed-2.test.ts): Bigyan Poudel (EMP004)
+   with named employees (src/mocks/seed/seed-2.test.ts): Bigyan Poudel (EMP004)
    is a Consultant, a grid type, with a day awaiting approval on 12/08/2026
    and two earlier weeks of drafts in closed periods; Pukar Sthapit (EMP001)
    is the manager at Manchester who approves him; Eddie Harford is the first

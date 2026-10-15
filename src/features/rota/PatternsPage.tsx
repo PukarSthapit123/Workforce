@@ -7,16 +7,16 @@ import { ApiError } from '@/api/client';
 import { useDimension } from '@/api/reference';
 import { useDeletePattern, usePatterns, useRotaHome, useShiftCatalogue, type PatternList, type PatternRecord } from '@/api/rota';
 import { genLabel } from '@/domain/rota';
-import { NewPatternDialog, PatternEditor, PatternPeopleDialog, activePill, useGenerateRun, type PatternCtx } from './PatternEditor';
+import { NewPatternDialog, PatternEditor, PatternEmployeesDialog, activePill, useGenerateRun, type PatternCtx } from './PatternEditor';
 import { PatternUploadDialog } from './PatternUpload';
 
 /* Working patterns: the prototype's mgrPatternsPage and mgrPatternsBody
    (qnipay-workforce-v15.html:7238-7246, 7119-7141). The patterns that cover
-   the manager's location, how many of their people each one carries, and
-   from each: open it, add people, or generate the rota. The server scopes
+   the manager's location, how many of their employees each one carries, and
+   from each: open it, add employees, or generate the rota. The server scopes
    the list and every write to the manager's location, and Rota setup can
    keep patterns for administrators only (D5). */
-type Box = { k: 'edit' | 'people' | 'delete' | 'upload'; code: string; back?: boolean } | { k: 'new' } | null;
+type Box = { k: 'edit' | 'employees' | 'delete' | 'upload'; code: string; back?: boolean } | { k: 'new' } | null;
 const TIP = 'A pattern staffs a repeating cycle. Generating from it writes rota lines forward, skipping cells that are already filled and weeks that are already published.';
 
 export function PatternsPage() {
@@ -39,7 +39,7 @@ export function PatternsPage() {
         {refused && refused.code !== 'network' ? `${refused.message} ${refused.next}` : 'Working patterns could not be loaded. Reload the page to try again.'}</p>}
       {!ready && !(home.isError || list.isError || cat.isError) && <p data-testid={tid.tpat.loading} className="text-text-secondary">Loading working patterns&hellip;</p>}
       {ready && <Patterns list={list.data} location={location} ctx={{
-        shifts: cat.data.items, people: list.data.people, today: list.data.today, canCover: list.data.canCover, elsewhere: list.data.elsewhere,
+        shifts: cat.data.items, employees: list.data.employees, today: list.data.today, canCover: list.data.canCover, elsewhere: list.data.elsewhere,
         locations: (locs.data ?? list.data.canCover).filter(l => !('active' in l) || l.active !== false).map(l => ({ code: l.code, name: l.name })),
         jobs: (jobs.data ?? []).map(j => ({ code: j.code, name: j.name })), costCentres: (ccs.data ?? []).map(c => ({ code: c.code, name: c.name })),
       }} locName={locName} box={box} setBox={setBox} />}
@@ -52,17 +52,17 @@ function Patterns({ list, location, ctx, locName, box, setBox }: {
   const gen = useGenerateRun(), del = useDeletePattern();
   const mine = list.items.filter(p => p.locations.includes(location));
   const at = (code: string) => list.items.find(p => p.code === code);
-  const hereCount = (p: PatternRecord) => p.people.filter(x => list.people.find(c => c.code === x.personCode)?.location === location).length;
+  const hereCount = (p: PatternRecord) => p.employees.filter(x => list.employees.find(c => c.code === x.employeeCode)?.location === location).length;
   const close = () => setBox(null);
   const cur = box && 'code' in box ? at(box.code) : undefined;
   return (
     <>
       <AdminCard icon={<Repeat />} title={`Patterns covering ${locName(location)}`} tip={TIP} tipTestId={tid.tpat.cardTip}
-        desc="Set the cycle, add people, then generate">
+        desc="Set the cycle, add employees, then generate">
         {mine.length
           ? <Table data-testid={tid.tpat.list}>
               <TableHeader><TableRow>
-                <TableHead>Pattern</TableHead><TableHead className="text-right">Cycle</TableHead><TableHead className="text-right">People here</TableHead>
+                <TableHead>Pattern</TableHead><TableHead className="text-right">Cycle</TableHead><TableHead className="text-right">Employees here</TableHead>
                 <TableHead>Generates</TableHead><TableHead>State</TableHead><TableHead><span className="sr-only">Actions</span></TableHead>
               </TableRow></TableHeader>
               <TableBody>{mine.map(p => {
@@ -78,7 +78,7 @@ function Patterns({ list, location, ctx, locName, box, setBox }: {
                     <TableCell className="min-w-[260px] text-right whitespace-nowrap">
                       <span className="inline-flex gap-[6px]">
                         <Button testId={tid.tpat.open(p.code)} kind="ghost" small onClick={() => setBox({ k: 'edit', code: p.code })}>Open</Button>
-                        <Button testId={tid.tpat.addPerson(p.code)} kind="ghost" small onClick={() => setBox({ k: 'people', code: p.code })}>Add a person</Button>
+                        <Button testId={tid.tpat.addEmployee(p.code)} kind="ghost" small onClick={() => setBox({ k: 'employees', code: p.code })}>Add an employee</Button>
                         <Button testId={tid.tpat.generate(p.code)} kind="primary" small disabled={!n} pending={gen.pending(p.code)}
                           title={n ? undefined : `Nobody from ${locName(location)} is on this pattern yet`} onClick={() => gen.run(p)}>Generate</Button>
                       </span></TableCell>
@@ -90,15 +90,15 @@ function Patterns({ list, location, ctx, locName, box, setBox }: {
       {box?.k === 'new' && <NewPatternDialog patterns={list.items} ctx={ctx} onClose={close} onCreated={code => setBox({ k: 'edit', code })} />}
       {/* a saved pattern opens again from the server's copy */}
       {box?.k === 'edit' && cur && <PatternEditor key={`${cur.code}:${cur.version}`} pattern={cur} ctx={ctx} onClose={close}
-        onAddPeople={() => setBox({ k: 'people', code: cur.code, back: true })} onDelete={() => setBox({ k: 'delete', code: cur.code })}
+        onAddEmployees={() => setBox({ k: 'employees', code: cur.code, back: true })} onDelete={() => setBox({ k: 'delete', code: cur.code })}
         onUpload={() => setBox({ k: 'upload', code: cur.code })} />}
       {box?.k === 'upload' && cur && <PatternUploadDialog horizon={cur.horizon} onClose={() => setBox({ k: 'edit', code: cur.code })} />}
-      {box?.k === 'people' && cur && <PatternPeopleDialog pattern={cur} ctx={ctx}
+      {box?.k === 'employees' && cur && <PatternEmployeesDialog pattern={cur} ctx={ctx}
         onClose={() => setBox(box.back ? { k: 'edit', code: cur.code } : null)} />}
       {box?.k === 'delete' && cur && <ConfirmModal open onOpenChange={o => { if (!o) setBox({ k: 'edit', code: cur.code }); }}
         title={`Delete ${cur.name}?`} confirmLabel="Delete the pattern" danger busy={del.anyPending}
         body={`Shifts already generated and published stay on the rota. Nothing further will be generated from this pattern, and ${
-          cur.people.length ? `${cur.people.length} person(s) will no longer be scheduled by it.` : 'nobody is currently on it.'}`}
+          cur.employees.length ? `${cur.employees.length} employee(s) will no longer be scheduled by it.` : 'nobody is currently on it.'}`}
         onConfirm={() => del.mutate(cur, { onSuccess: () => { close(); toastInfo(`${cur.name} deleted`, 'Published shifts are untouched.'); } })} />}
     </>);
 }

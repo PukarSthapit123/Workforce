@@ -27,7 +27,7 @@ export const leaveKeys = {
   teamRequests: (f: TeamLeaveFilters) => ['leave', 'team', 'requests', f.q ?? '', f.type ?? '', f.short ? 'short' : ''] as const,
   balances: ['leave', 'team', 'balances'] as const,
   leavers: ['leave', 'team', 'leavers'] as const,
-  entitlement: (personCode: string) => ['leave', 'entitlement', personCode] as const,
+  entitlement: (employeeCode: string) => ['leave', 'entitlement', employeeCode] as const,
   sickness: ['leave', 'sickness'] as const,
   config: ['leave', 'config'] as const,
 };
@@ -40,8 +40,8 @@ export const useTeamLeave = (f: TeamLeaveFilters = {}, enabled = true) => useQue
 });
 export const useTeamBalances = (enabled = true) => useQuery({ queryKey: leaveKeys.balances, queryFn: () => api(getTeamBalances), enabled });
 /* "How this was worked out": your own, or a colleague's at your location. */
-export const useEntitlement = (personCode: string, enabled = true) => useQuery({
-  queryKey: leaveKeys.entitlement(personCode), queryFn: () => api(getEntitlement, { params: { personCode } }), enabled: enabled && !!personCode,
+export const useEntitlement = (employeeCode: string, enabled = true) => useQuery({
+  queryKey: leaveKeys.entitlement(employeeCode), queryFn: () => api(getEntitlement, { params: { employeeCode } }), enabled: enabled && !!employeeCode,
 });
 /* Only while LV_LEAVER is on: the server refuses it otherwise (feature-off). */
 export const useLeavers = (enabled = true) => useQuery({ queryKey: leaveKeys.leavers, queryFn: () => api(listLeavers), enabled });
@@ -71,14 +71,14 @@ export const useDeclineLeave = () => useRecordMutation({
   recordKey: v => `leave/request/${v.request.id}`, invalidates: TELLS,
 });
 export const useRecordSickness = () => useRecordMutation({
-  mutationFn: (body: RecordSickness) => api(recordSickness, { body }), recordKey: b => `leave/sickness/new/${b.personCode}`, invalidates: REACHES,
+  mutationFn: (body: RecordSickness) => api(recordSickness, { body }), recordKey: b => `leave/sickness/new/${b.employeeCode}`, invalidates: REACHES,
 });
 export const useArrangeRtw = () => useRecordMutation({
   mutationFn: (e: Pick<SickEpisodeRecord, 'id' | 'version'>) => api(arrangeRtw, { params: { id: e.id }, ifMatch: e.version }),
   recordKey: e => `leave/sickness/${e.id}`, invalidates: TELLS,
 });
 export const useGiveDaysBack = () => useRecordMutation({
-  mutationFn: (body: GiveDaysBack) => api(giveDaysBack, { body }), recordKey: b => `leave/give-back/${b.personCode}`, invalidates: REACHES,
+  mutationFn: (body: GiveDaysBack) => api(giveDaysBack, { body }), recordKey: b => `leave/give-back/${b.employeeCode}`, invalidates: REACHES,
 });
 /* Leave setup (mleave): applies on Save, versioned, one audit row. blocksTimesheet changes the timesheet. */
 export const useSaveLeaveConfig = () => useRecordMutation({

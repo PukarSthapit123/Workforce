@@ -64,7 +64,7 @@ export function WeekGrid(p: WeekGridProps) {
   const hm = (min: number) => formatMinutes(min, tf);
   if (!m.hasTime && !m.multi) return <Empty testId={tid.week.empty}>{NO_TIME_FIELDS}</Empty>;
   const totals = gridTotals(p.state, m);
-  const contracted = `contracted ${hm(week.person.contractedHours * 60)}`;
+  const contracted = `contracted ${hm(week.employee.contractedHours * 60)}`;
   const whose = p.who ? `${p.who}’s` : 'your';
   const breakdown = Object.keys(totals.byCtx).length > 0 && (
     <div data-testid={tid.week.alloc} className="mt-sm flex flex-wrap gap-md text-xs text-text-muted">

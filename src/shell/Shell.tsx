@@ -19,8 +19,8 @@ import { NotificationsPage } from '@/features/notifications/NotificationsPage';
 import { SetupIndex } from '@/features/setup/SetupIndex';
 import { PermissionsPage } from '@/features/access/PermissionsPage';
 import { AuditPage } from '@/features/audit/AuditPage';
-import { AdminPeoplePage } from '@/features/people/AdminPeoplePage';
-import { TeamPeoplePage } from '@/features/people/TeamPeoplePage';
+import { AdminEmployeesPage } from '@/features/employees/AdminEmployeesPage';
+import { TeamEmployeesPage } from '@/features/employees/TeamEmployeesPage';
 import { ProfilePage } from '@/features/profile/ProfilePage';
 import { DimensionsPage } from '@/features/dimensions/DimensionsPage';
 import { ContractsPage } from '@/features/dimensions/ContractsPage';
@@ -60,7 +60,7 @@ import { BusinessCentralPage } from '@/features/integration/BusinessCentralPage'
 import { moduleBy } from '@/domain/modules';
 
 const BUILT: Record<string, ComponentType> = { asetup: SetupIndex, aperm: PermissionsPage, iaudit: AuditPage,
-  apeople: AdminPeoplePage, tpeople: TeamPeoplePage, profile: ProfilePage,
+  aemployees: AdminEmployeesPage, temployees: TeamEmployeesPage, profile: ProfilePage,
   aloc: DimensionsPage, acon: ContractsPage, atypes: EmployeeTypesPage, ts: TimesheetPage, tteam: TeamTimesheetsPage,
   mts: TimesheetSetupPage, trota: RotaPage, tshifts: ShiftsPage, tpat: PatternsPage,
   tcover: CoverPage, shifts: MyShiftsPage, mrota: RotaSetupPage, leave: LeavePage, tleave: TeamLeavePage, tsick: SicknessPage, mleave: LeaveSetupPage,
@@ -74,7 +74,7 @@ const THEME_KEY = 'qnipay.theme';
 const capitalise = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /* The role pill's text: the user type's display name (D11), so a renamed
-   role shows its new name; while viewing as someone, the viewed person's. */
+   role shows its new name; while viewing as someone, the viewed employee's. */
 export function roleLabelOf(session: Pick<Session, 'account' | 'viewingAs'>): string {
   const on = session.viewingAs ?? session.account;
   return on.roleName || capitalise(on.userType);
@@ -87,7 +87,7 @@ export function Shell() {
   const { session } = data;
   return <ShellView nav={data.nav} roleLabel={roleLabelOf(session)} viewingAs={session.viewingAs?.name ?? null}
     account={session.account} canViewAs={session.capabilities.includes('perm_cfg')}
-    who={`${session.account.email}|${session.viewingAs?.personCode ?? ''}`}
+    who={`${session.account.email}|${session.viewingAs?.employeeCode ?? ''}`}
     onSignOut={data.onSignOut} onViewAs={data.onViewAs} onEndViewAs={data.onEndViewAs} />;
 }
 
@@ -117,7 +117,7 @@ export function ShellView({ nav, roleLabel, viewingAs, account, canViewAs = fals
   inbox?: InboxState;
   /* who the app is showing: the account, and whoever it is viewing as */
   who?: string;
-  onSignOut(): void; onViewAs?(personCode: string): void; onEndViewAs(): void;
+  onSignOut(): void; onViewAs?(employeeCode: string): void; onEndViewAs(): void;
 }) {
   const { pathname, search } = useLocation();
   useHomeOnSwitch(who, nav, pathname);
@@ -166,7 +166,7 @@ function ServerBell({ readOnly }: { readOnly: boolean }) {
   return <NotificationBell inbox={useInbox(readOnly)} />;
 }
 
-/* Switching account or who you view as starts from that person's first page
+/* Switching account or who you view as starts from that employee's first page
    when the page on screen is not theirs; a link opened on purpose to a page
    you cannot reach says so instead (PageUnavailable). */
 function useHomeOnSwitch(who: string | undefined, nav: NavGroup[], pathname: string) {
@@ -220,7 +220,7 @@ function firstTabPath(g: NavGroup): string {
    strip is just the group's tabs, as it always was. Inside Modules, opening
    a module (/setup/amods?m=<code>) drills in once more, as the prototype's
    NAV() does (v15:4059-4076): a way back to the module list, the module's
-   features, and its setup page when this person can reach it. A module's
+   features, and its setup page when this employee can reach it. A module's
    setup page (mts, mrota, mleave) sits inside that drill-in, never on the
    Modules section's own strip (suite ADMIN LAYOUT: "‹ All modules |
    Timesheet features | Timesheet setup"). */
@@ -314,7 +314,7 @@ function TabStrip({ tabs, here }: { tabs: NavTab[]; here: string }) {
    icon set instead, at the same 14px. Anything unlisted takes the dot. */
 const GLYPH: Record<string, ReactNode> = {
   home: '⌂', ts: '◷', shifts: '▦', leave: <Sun />, hours: '◴', profile: '○', docs: '▤', onb: '◱', notices: '⚑', tnotices: '⚑',
-  thome: '⌂', tteam: '◷', thours: '◴', trota: '▦', tcover: '◈', tleave: <Sun />, tsick: '⊕', tpeople: '○', tonb: '◱', texc: <TriangleAlert />,
+  thome: '⌂', tteam: '◷', thours: '◴', trota: '▦', tcover: '◈', tleave: <Sun />, tsick: '⊕', temployees: '○', tonb: '◱', texc: <TriangleAlert />,
   tshifts: '▥', tpat: '▧',
 };
 const BAR_ITEM = 'flex min-h-[52px] min-w-0 flex-1 flex-col items-center gap-[3px] px-[2px] pt-[9px] pb-[10px] text-xs leading-[1.25] font-semibold';

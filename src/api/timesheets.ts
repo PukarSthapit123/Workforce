@@ -14,16 +14,16 @@ import {
 export type QueueStatus = 'pend' | 'all' | 'resub' | 'ok' | 'back' | 'mgrok';
 export const timesheetKeys = {
   all: ['timesheets'] as const,
-  week: (personId: string, weekStart: string) => ['timesheets', 'week', personId, weekStart] as const,
+  week: (employeeId: string, weekStart: string) => ['timesheets', 'week', employeeId, weekStart] as const,
   queue: ['timesheets', 'queue'] as const,
   queueList: (status: QueueStatus, q: string, weekStart: string, cursor: string) => ['timesheets', 'queue', status, q, weekStart, cursor] as const,
   config: ['timesheet-config'] as const,
 };
 
-/* One person's week: your own, or a team member's for proxy entry (the grid
+/* One employee's week: your own, or a team member's for proxy entry (the grid
    and the form are the target's, D6). */
-export const useTimesheetWeek = (personId: string, weekStart: string, enabled = true) => useQuery({
-  queryKey: timesheetKeys.week(personId, weekStart), queryFn: () => api(getTimesheetWeek, { params: { personId, weekStart } }), enabled,
+export const useTimesheetWeek = (employeeId: string, weekStart: string, enabled = true) => useQuery({
+  queryKey: timesheetKeys.week(employeeId, weekStart), queryFn: () => api(getTimesheetWeek, { params: { employeeId, weekStart } }), enabled,
 });
 /* The approver's queue. The previous page stays on screen while a new filter is read. */
 export const useApprovalQueue = (f: { status: QueueStatus; q?: string; weekStart?: string; cursor?: string }, enabled = true) => useQuery({
@@ -36,26 +36,26 @@ export const useTimesheetConfig = (enabled = true) => useQuery({ queryKey: times
 /* Every timesheet write can change a week, the queue and its counts. */
 const AFTER = [timesheetKeys.all] as const;
 /* `version` is the day's version as last read: WeekDay.version, 0 for a day with no record. */
-export interface DayWrite { personId: string; date: string; version: number; body: DayInput }
+export interface DayWrite { employeeId: string; date: string; version: number; body: DayInput }
 export const useSaveDay = () => useRecordMutation({
-  mutationFn: (v: DayWrite) => api(saveTimesheetDay, { params: { personId: v.personId, date: v.date }, body: v.body, ifMatch: v.version }),
-  recordKey: v => `${v.personId}/${v.date}`,
+  mutationFn: (v: DayWrite) => api(saveTimesheetDay, { params: { employeeId: v.employeeId, date: v.date }, body: v.body, ifMatch: v.version }),
+  recordKey: v => `${v.employeeId}/${v.date}`,
   invalidates: AFTER,
 });
 export const useSubmitDay = () => useRecordMutation({
-  mutationFn: (v: DayWrite) => api(submitTimesheetDay, { params: { personId: v.personId, date: v.date }, body: v.body, ifMatch: v.version }),
-  recordKey: v => `${v.personId}/${v.date}`,
+  mutationFn: (v: DayWrite) => api(submitTimesheetDay, { params: { employeeId: v.employeeId, date: v.date }, body: v.body, ifMatch: v.version }),
+  recordKey: v => `${v.employeeId}/${v.date}`,
   invalidates: AFTER,
 });
 export const useSubmitWeek = () => useRecordMutation({
-  mutationFn: (v: { personId: string; weekStart: string; body: WeekSubmit }) =>
-    api(submitTimesheetWeek, { params: { personId: v.personId, weekStart: v.weekStart }, body: v.body }),
-  recordKey: v => `${v.personId}/week/${v.weekStart}`,
+  mutationFn: (v: { employeeId: string; weekStart: string; body: WeekSubmit }) =>
+    api(submitTimesheetWeek, { params: { employeeId: v.employeeId, weekStart: v.weekStart }, body: v.body }),
+  recordKey: v => `${v.employeeId}/week/${v.weekStart}`,
   invalidates: AFTER,
 });
 export const useSubmitMultiweek = () => useRecordMutation({
-  mutationFn: (v: { personId: string; weeks: string[] }) => api(submitMultiweek, { params: { personId: v.personId }, body: { weeks: v.weeks } }),
-  recordKey: v => `${v.personId}/multiweek`,
+  mutationFn: (v: { employeeId: string; weeks: string[] }) => api(submitMultiweek, { params: { employeeId: v.employeeId }, body: { weeks: v.weeks } }),
+  recordKey: v => `${v.employeeId}/multiweek`,
   invalidates: AFTER,
 });
 /* Approve or return one day. One pending key per day: deciding one row never blocks another. */

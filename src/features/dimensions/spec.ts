@@ -5,7 +5,7 @@
 import type { DimensionKind, DimensionRow } from '@/contract/dimensions';
 import { supportLevelText, type SupportLevel } from '@/domain/rota';
 
-/* The support levels, with their people per shift, are the tenant's: set in Rota setup (module 8). */
+/* The support levels, with their employees per shift, are the tenant's: set in Rota setup (module 8). */
 export interface DimCtx { departments: DimensionRow[]; costCentres: DimensionRow[]; locations: DimensionRow[]; supportLevels: readonly SupportLevel[] }
 export interface DimField {
   key: string; label: string; kind: 'text' | 'number' | 'bool' | 'select' | 'date';
@@ -16,7 +16,7 @@ export interface DimSpec { kind: DimensionKind; label: string; singular: string;
 const rows = (list: DimensionRow[], withCode = false) => list.map(r => ({ value: r.code, label: withCode ? `${r.code} · ${r.name}` : r.name }));
 
 export const DIM_SPECS: Record<DimensionKind, DimSpec> = {
-  locations: { kind: 'locations', label: 'Locations', singular: 'location', icon: 'building', usedAs: 'the people and projects at each location',
+  locations: { kind: 'locations', label: 'Locations', singular: 'location', icon: 'building', usedAs: 'the employees and projects at each location',
     desc: 'Where the work happens. Carries the support level that decides minimum staffing.',
     fields: [
       { key: 'code', label: 'Code', kind: 'text', required: true, code: true, hint: 'Short and stable. Rota lines reference it.' },
@@ -26,11 +26,11 @@ export const DIM_SPECS: Record<DimensionKind, DimSpec> = {
       { key: 'costCentre', label: 'Cost centre', kind: 'select', optional: true, options: c => rows(c.costCentres, true) },
       { key: 'level', label: 'Support level', kind: 'select', hint: 'Sets minimum staffing, which coverage is measured against.',
         options: c => c.supportLevels.map(l => ({ value: l.code, label: supportLevelText(l) })) },
-      { key: 'minPerShift', label: 'People per shift', kind: 'number' },
+      { key: 'minPerShift', label: 'Employees per shift', kind: 'number' },
       { key: 'manager', label: 'Manager', kind: 'text' },
       { key: 'address', label: 'Address', kind: 'text', wide: true },
     ] },
-  departments: { kind: 'departments', label: 'Departments', singular: 'department', icon: 'shield', usedAs: 'the locations and people in each department',
+  departments: { kind: 'departments', label: 'Departments', singular: 'department', icon: 'shield', usedAs: 'the locations and employees in each department',
     desc: 'Who owns the work. Approval scope and manager visibility follow it.',
     fields: [
       { key: 'code', label: 'Code', kind: 'text', required: true, code: true },
@@ -43,7 +43,7 @@ export const DIM_SPECS: Record<DimensionKind, DimSpec> = {
       { key: 'code', label: 'Code', kind: 'text', required: true, code: true, hint: 'Business Central matches on this.' },
       { key: 'name', label: 'Cost centre name', kind: 'text', required: true },
     ] },
-  'job-profiles': { kind: 'job-profiles', label: 'Job profiles', singular: 'job profile', icon: 'users', usedAs: 'the people holding each profile',
+  'job-profiles': { kind: 'job-profiles', label: 'Job profiles', singular: 'job profile', icon: 'users', usedAs: 'the employees holding each profile',
     desc: 'The canonical role list. Rota assigns to it, Timesheet reports on it, approval scope follows it.',
     fields: [
       { key: 'code', label: 'Code', kind: 'text', required: true, code: true },
@@ -69,6 +69,6 @@ export const DIM_SPECS: Record<DimensionKind, DimSpec> = {
 /* The prototype's grouping: three questions, in the order a reader asks them. */
 export const DIM_GROUPS: { key: string; label: string; note: string; kinds: DimensionKind[] }[] = [
   { key: 'where', label: 'Where work happens', note: 'Sites and the teams attached to them. Rota coverage and manager scope follow these.', kinds: ['locations', 'departments'] },
-  { key: 'what', label: 'What people do', note: 'The role list rota assigns to and timesheet reports on.', kinds: ['job-profiles'] },
+  { key: 'what', label: 'What employees do', note: 'The role list rota assigns to and timesheet reports on.', kinds: ['job-profiles'] },
   { key: 'charged', label: 'What work is charged to', note: 'What crosses to Business Central on every posted line.', kinds: ['cost-centres', 'projects'] },
 ];

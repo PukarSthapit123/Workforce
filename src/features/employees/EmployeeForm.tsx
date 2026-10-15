@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { tid } from '@/testids';
-import type { Person } from '@/contract/people';
+import type { Employee } from '@/contract/employees';
 import { Button, Field, FormSection, FormWarn, Modal, SelectBox, Small, SwitchField, TextInput, UnitInput, toastInfo } from '@/ui';
-import { useCreatePerson, useNextCode, useUpdatePerson } from '@/api/people';
+import { useCreateEmployee, useNextCode, useUpdateEmployee } from '@/api/employees';
 import { useDimension, useEmployeeTypes } from '@/api/reference';
 import { useCaps } from '@/shell/useCaps';
 import { LIFECYCLE, STARTING_STATES } from '@/domain/lifecycle';
@@ -20,7 +20,7 @@ const CATEGORIES = ['Contracted', 'Bank', 'Agency', 'Salaried'].map(c => ({ valu
 const USER_TYPES = [{ value: 'employee', label: 'Employee' }, { value: 'manager', label: 'Manager' }, { value: 'admin', label: 'Admin' }];
 const isUserType = (v: string): v is UserType => USER_TYPES.some(u => u.value === v);
 const isStart = (v: string): v is Start => (STARTING_STATES as readonly string[]).includes(v);
-const fromPerson = (p: Person): Draft => ({ code: p.code, name: p.name, email: p.email, phone: p.phone, resource: p.resource, cis: p.cis,
+const fromEmployee = (p: Employee): Draft => ({ code: p.code, name: p.name, email: p.email, phone: p.phone, resource: p.resource, cis: p.cis,
   employeeType: p.employeeType, jobProfile: p.jobProfile, location: p.location, department: p.department, manager: p.manager, start: p.start,
   category: p.category, contractedHours: String(p.contractedHours), maxHours: String(p.maxHours), night: p.night,
   userType: p.userType ?? 'employee', state: 'candidate' });
@@ -29,31 +29,31 @@ const close = (onClose: () => void) => (o: boolean) => { if (!o) onClose(); };
 
 /* Loads what the form needs, then renders it with its first values, so no
    effect has to patch state in later. */
-export function PersonForm({ person, defaultLocation, startState = 'candidate', onClose, onChangeState }: {
-  person?: Person; defaultLocation?: string;
+export function EmployeeForm({ employee, defaultLocation, startState = 'candidate', onClose, onChangeState }: {
+  employee?: Employee; defaultLocation?: string;
   /* the starting state a new record opens with: the onboarding tracker's "Add a new starter" presets candidate, as the prototype's employeeBox(null, state) does */
-  startState?: Start; onClose(): void; onChangeState?(p: Person): void;
+  startState?: Start; onClose(): void; onChangeState?(p: Employee): void;
 }) {
-  const next = useNextCode(!person), types = useEmployeeTypes(), locs = useDimension('locations');
-  const ready = (person || next.data) && types.data && locs.data;
-  if (!ready) return <Modal open onOpenChange={close(onClose)} title={person ? person.name : 'Add someone'} width="wide"><p className="text-text-secondary">Loading&hellip;</p></Modal>;
+  const next = useNextCode(!employee), types = useEmployeeTypes(), locs = useDimension('locations');
+  const ready = (employee || next.data) && types.data && locs.data;
+  if (!ready) return <Modal open onOpenChange={close(onClose)} title={employee ? employee.name : 'Add someone'} width="wide"><p className="text-text-secondary">Loading&hellip;</p></Modal>;
   const firstType = types.data?.[0];
-  const initial: Draft = person ? fromPerson(person) : {
+  const initial: Draft = employee ? fromEmployee(employee) : {
     code: next.data?.code ?? '', name: '', email: '', phone: '', resource: '', cis: false,
     employeeType: firstType?.code ?? '', jobProfile: '', location: defaultLocation ?? locs.data?.[0]?.code ?? '', department: '', manager: '', start: todayIso(),
     category: firstType?.category ?? 'Contracted', contractedHours: '0', maxHours: '48', night: false, userType: 'employee', state: startState };
-  return <PersonFormBody person={person} initial={initial} onClose={onClose} onChangeState={onChangeState} />;
+  return <EmployeeFormBody employee={employee} initial={initial} onClose={onClose} onChangeState={onChangeState} />;
 }
 
 /* Ported from the prototype's employeeBox (qnipay-workforce-v15.html:10133-
    10203): Identity, Employment, Contract and Access, two columns of fields.
    Validation is the server's (plan 1b decision D10): a refusal is shown
    against its field and under the form, and nothing is written. */
-function PersonFormBody({ person, initial, onClose, onChangeState }: { person?: Person; initial: Draft; onClose(): void; onChangeState?(p: Person): void }) {
-  const editing = !!person, canSetType = useCaps().has('perm_cfg');
+function EmployeeFormBody({ employee, initial, onClose, onChangeState }: { employee?: Employee; initial: Draft; onClose(): void; onChangeState?(p: Employee): void }) {
+  const editing = !!employee, canSetType = useCaps().has('perm_cfg');
   const types = useEmployeeTypes(), locs = useDimension('locations'), deps = useDimension('departments'), jobs = useDimension('job-profiles');
   const [v, setV] = useState<Draft>(initial);
-  const create = useCreatePerson(), update = useUpdatePerson();
+  const create = useCreateEmployee(), update = useUpdateEmployee();
   const write = editing ? update : create;
   const set = <K extends keyof Draft>(k: K, value: Draft[K]) => setV(d => ({ ...d, [k]: value }));
   const opts = (rows: readonly { code: string; name: string }[] | undefined, optional: boolean) =>
@@ -63,19 +63,19 @@ function PersonFormBody({ person, initial, onClose, onChangeState }: { person?: 
   const text = (k: 'name' | 'code' | 'email' | 'phone' | 'resource' | 'manager' | 'start', label: string,
     extra: { type?: string; disabled?: boolean; tip?: string; required?: boolean; placeholder?: string } = {}) => (
     <Field label={label} error={err(k)} tip={extra.tip} required={extra.required}>
-      <TextInput testId={tid.personForm.field(k)} type={extra.type ?? 'text'} disabled={extra.disabled} value={v[k]}
+      <TextInput testId={tid.employeeForm.field(k)} type={extra.type ?? 'text'} disabled={extra.disabled} value={v[k]}
         placeholder={extra.placeholder} onChange={e => set(k, e.target.value)} /></Field>);
   const hoursField = (k: 'contractedHours' | 'maxHours', label: string, tip?: string) => (
     <Field label={label} error={err(k)} tip={tip}>
-      <UnitInput testId={tid.personForm.field(k)} unit="h / week" type="number" inputMode="decimal" step="0.5" min="0" max="80"
+      <UnitInput testId={tid.employeeForm.field(k)} unit="h / week" type="number" inputMode="decimal" step="0.5" min="0" max="80"
         value={v[k]} onChange={e => set(k, e.target.value)} /></Field>);
   const select = (k: 'employeeType' | 'jobProfile' | 'location' | 'department' | 'category', label: string,
     options: { value: string; label: string }[], extra: { required?: boolean; tip?: string } = {}) => (
     <Field label={label} error={err(k)} required={extra.required} tip={extra.tip}>
-      <SelectBox testId={tid.personForm.field(k)} options={options} value={v[k] || NONE}
+      <SelectBox testId={tid.employeeForm.field(k)} options={options} value={v[k] || NONE}
         onValueChange={x => {
           const value = x === NONE ? '' : x;
-          /* a new person takes their type's usual basis, as the prototype's form did */
+          /* a new employee takes their type's usual basis, as the prototype's form did */
           if (k === 'employeeType' && !editing) { const t = types.data?.find(y => y.code === value); setV(d => ({ ...d, employeeType: value, category: t?.category ?? d.category })); }
           else set(k, value);
         }} /></Field>);
@@ -84,8 +84,8 @@ function PersonFormBody({ person, initial, onClose, onChangeState }: { person?: 
     const fields = { name: v.name, email: v.email, phone: v.phone, jobProfile: v.jobProfile, employeeType: v.employeeType, category: v.category,
       location: v.location, department: v.department, manager: v.manager, contractedHours: hours(v.contractedHours), maxHours: hours(v.maxHours),
       night: v.night, resource: v.resource, cis: v.cis, start: v.start };
-    if (person) {
-      update.mutate({ person, body: { ...fields, ...(canSetType && person.userType ? { userType: v.userType } : {}) } }, {
+    if (employee) {
+      update.mutate({ employee, body: { ...fields, ...(canSetType && employee.userType ? { userType: v.userType } : {}) } }, {
         onSuccess: d => { toastInfo(d.changed.length ? `${d.record.name} updated · ${d.changed.length} field(s) changed` : `${d.record.name} · nothing changed`); onClose(); },
       });
     } else {
@@ -100,23 +100,23 @@ function PersonFormBody({ person, initial, onClose, onChangeState }: { person?: 
   }
   const busy = write.anyPending;
   return (
-    <Modal open onOpenChange={close(onClose)} title={editing ? person.name : 'Add someone'} width="wide"
+    <Modal open onOpenChange={close(onClose)} title={editing ? employee.name : 'Add someone'} width="wide"
       footer={<>
-        <Button testId={tid.personForm.cancel} kind="ghost" onClick={onClose}>Cancel</Button>
-        {person && onChangeState && <Button testId={tid.personForm.changeState} kind="ghost" onClick={() => onChangeState(person)}>Change state</Button>}
-        <Button testId={tid.personForm.save} kind="primary" pending={busy} onClick={submit}>{editing ? 'Save changes' : 'Create record'}</Button></>}>
-      <div data-testid={tid.personForm.root}>
+        <Button testId={tid.employeeForm.cancel} kind="ghost" onClick={onClose}>Cancel</Button>
+        {employee && onChangeState && <Button testId={tid.employeeForm.changeState} kind="ghost" onClick={() => onChangeState(employee)}>Change state</Button>}
+        <Button testId={tid.employeeForm.save} kind="primary" pending={busy} onClick={submit}>{editing ? 'Save changes' : 'Create record'}</Button></>}>
+      <div data-testid={tid.employeeForm.root}>
         <FormSection title="Identity">
           {text('name', 'Full name', { required: true, placeholder: 'For example, Amara Okafor' })}
-          {text('code', 'Employee ID', { disabled: editing, tip: 'The key payroll and Business Central use for this person. It cannot change once the record exists, because postings reference it.' })}
+          {text('code', 'Employee ID', { disabled: editing, tip: 'The key payroll and Business Central use for this employee. It cannot change once the record exists, because postings reference it.' })}
           {text('email', 'Work email', { type: 'email' })}
           {text('phone', 'Phone', { type: 'tel' })}
           {text('resource', 'Business Central resource no.', { placeholder: 'R-0142', tip: 'What a job journal line posts against. Leave it blank until the resource exists in Business Central.' })}
           <Field label="Paid under CIS" tip="Construction Industry Scheme. Workforce records the marker; payroll makes the deduction.">
-            <SwitchField testId={tid.personForm.field('cis')} checked={v.cis} onCheckedChange={c => set('cis', c)} /></Field>
+            <SwitchField testId={tid.employeeForm.field('cis')} checked={v.cis} onCheckedChange={c => set('cis', c)} /></Field>
         </FormSection>
         <FormSection title="Employment">
-          {select('employeeType', 'Employee type', opts(types.data, false), { required: true, tip: 'Decides which fields this person captures, how they enter time, and what they may claim.' })}
+          {select('employeeType', 'Employee type', opts(types.data, false), { required: true, tip: 'Decides which fields this employee captures, how they enter time, and what they may claim.' })}
           {select('jobProfile', 'Job profile', opts(jobs.data, true))}
           {select('location', 'Location', opts(locs.data, false), { required: true })}
           {select('department', 'Department', opts(deps.data, true))}
@@ -128,23 +128,23 @@ function PersonFormBody({ person, initial, onClose, onChangeState }: { person?: 
           {hoursField('contractedHours', 'Contracted hours', 'Rota, Timesheet and Leave all compare against this. Zero for bank and agency.')}
           {hoursField('maxHours', 'Maximum hours')}
           <Field label="Night work permitted">
-            <SwitchField testId={tid.personForm.field('night')} checked={v.night} onCheckedChange={c => set('night', c)} /></Field>
+            <SwitchField testId={tid.employeeForm.field('night')} checked={v.night} onCheckedChange={c => set('night', c)} /></Field>
         </FormSection>
         <FormSection title="Access">
-          {canSetType && (!editing || person.userType)
-            ? <Field label="User type" error={err('userType')} tip="What this person may do. The capabilities come from the permission matrix; this chooses which set applies.">
-                <SelectBox testId={tid.personForm.field('userType')} options={USER_TYPES} value={v.userType}
+          {canSetType && (!editing || employee.userType)
+            ? <Field label="User type" error={err('userType')} tip="What this employee may do. The capabilities come from the permission matrix; this chooses which set applies.">
+                <SelectBox testId={tid.employeeForm.field('userType')} options={USER_TYPES} value={v.userType}
                   onValueChange={x => { if (isUserType(x)) set('userType', x); }} /></Field>
             : <Small className="mb-md">{!canSetType
-              ? (editing ? 'The user type is changed on Qnipay setup · Permissions.' : 'New people get an Employee account. An administrator can change it.')
-              : person?.email
-                ? `This person has no account of their own: ${person.email} already signs in to another account. Give them an address of their own to create one.`
-                : 'This person has no account yet. Give them a work email to create one.'}</Small>}
+              ? (editing ? 'The user type is changed on Qnipay setup · Permissions.' : 'New employees get an Employee account. An administrator can change it.')
+              : employee?.email
+                ? `This employee has no account of their own: ${employee.email} already signs in to another account. Give them an address of their own to create one.`
+                : 'This employee has no account yet. Give them a work email to create one.'}</Small>}
           {!editing && <Field label="Starting state" error={err('state')} hint={LIFECYCLE[v.state].note}>
-            <SelectBox testId={tid.personForm.field('state')} options={STARTING_STATES.map(s => ({ value: s, label: LIFECYCLE[s].label }))}
+            <SelectBox testId={tid.employeeForm.field('state')} options={STARTING_STATES.map(s => ({ value: s, label: LIFECYCLE[s].label }))}
               value={v.state} onValueChange={x => { if (isStart(x)) set('state', x); }} /></Field>}
         </FormSection>
-        {write.refusal && <FormWarn testId={tid.personForm.warn}>{write.refusal.message}</FormWarn>}
+        {write.refusal && <FormWarn testId={tid.employeeForm.warn}>{write.refusal.message}</FormWarn>}
       </div>
     </Modal>);
 }

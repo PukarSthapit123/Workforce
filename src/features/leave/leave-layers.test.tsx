@@ -27,7 +27,7 @@ beforeEach(() => {
   const r = store.coll<LeaveRequestRecord>('leaveRequests').lr_3;
   if (!r) throw new Error('no lr_3');
   r.version = 2;
-  r.history = [...r.history, { from: 'pending', to: 'pending', by: { personCode: 'CP-1001', name: 'Rachel Hussain' }, at: FROZEN, reason: '', layer: 'Line manager' }];
+  r.history = [...r.history, { from: 'pending', to: 'pending', by: { employeeCode: 'CP-1001', name: 'Rachel Hussain' }, at: FROZEN, reason: '', layer: 'Line manager' }];
   store.save();
 });
 const toasts = () => screen.queryAllByTestId(tid.toast.info).map(t => t.textContent ?? '').join(' | ');

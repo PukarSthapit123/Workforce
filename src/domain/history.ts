@@ -1,5 +1,5 @@
 /* Field-level history: one entry per field that changed, before → after, in the
-   words the audit log and the person record show. */
+   words the audit log and the employee record show. */
 export const FIELD_LABELS: Record<string, string> = {
   code: 'Employee ID', name: 'Full name', email: 'Work email', phone: 'Mobile number', address: 'Home address',
   emergencyName: 'Emergency contact', emergencyPhone: 'Emergency number', bankAccount: 'Bank account number',

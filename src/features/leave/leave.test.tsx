@@ -183,7 +183,7 @@ describe('My leave', () => {
   test('a manager simulates an hours change on their own entitlement, and it writes nothing (D3)', async () => {
     await signInAs('manager');
     await open();
-    const people = structuredClone(store.coll('people'));
+    const employees = structuredClone(store.coll('employees'));
     await userEvent.click(screen.getByTestId(tid.leave.entShow));
     await userEvent.click(await screen.findByTestId(tid.leave.simulate));
     expect(await screen.findByTestId(tid.leave.simNote)).toHaveTextContent('This is a simulation.');
@@ -195,7 +195,7 @@ describe('My leave', () => {
     expectTestIdCoverage(document.body);
     await userEvent.click(screen.getByTestId(tid.leave.simClose));
     expect(acts()).toEqual([]);
-    expect(store.coll('people')).toEqual(people);
+    expect(store.coll('employees')).toEqual(employees);
     expect(screen.getByTestId(tid.leave.annual)).toHaveTextContent('24 of 24 days');
   });
 });

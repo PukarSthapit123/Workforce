@@ -1,5 +1,5 @@
 /* The day form's model, shared by My timesheet and proxy entry: which fields a
-   person's type captures (the prototype's GROUPS, FIELD_HINTS, buildForm,
+   employee's type captures (the prototype's GROUPS, FIELD_HINTS, buildForm,
    readDayTimes, renderDaySummary and validateEntry, qnipay-workforce-v15.html:
    6097-6228, 6778-6823, 3357-3373), how the form's values become the DayInput
    the server takes, and the client-side checks. Every check is a domain
@@ -55,7 +55,7 @@ export const FIELD_HINTS: Readonly<Record<string, string>> = {
   ppe: 'Confirm the briefing and PPE check happened before work started.',
   lone_work: 'Confirm your lone-working check-in was completed for this shift.',
   visits: 'How many visits or sessions you completed on this shift.',
-  handover: 'What the next person on shift needs to know.',
+  handover: 'What the next employee on shift needs to know.',
   client_sign: 'Tick when the client or funder signed off the work.',
   notes: 'Anything your approver should know. Visible to your manager and payroll.',
 };
@@ -75,7 +75,7 @@ export const breakIndex = (code: string) => (isBreak(code) ? Math.max(0, Number(
 export const isAllowance = (f: FieldDef) => f.cat === 'Allowance' && Boolean(f.pay);
 
 export interface FormField { def: FieldDef; setting: FieldDefault; hint?: string }
-/* The fields this person's type shows, in catalogue order, grouped by GROUPS. */
+/* The fields this employee's type shows, in catalogue order, grouped by GROUPS. */
 export function formGroups(c: CaptureSetup): { group: FieldGroup; fields: FormField[] }[] {
   const env = envOf(c), type = typeOf(c);
   return GROUPS.map(group => ({ group, fields: c.fields
@@ -117,7 +117,7 @@ export const varianceText = (netMin: number, hours: number) => {
 };
 
 /* A saved day as the form shows it: the first entry's times, breaks and fields, the rota line, the allowances ticked.
-   A day with nothing saved starts from the person's rota shift, if they have one (seedFromRota). */
+   A day with nothing saved starts from the employee's rota shift, if they have one (seedFromRota). */
 export function valuesFromDay(day: WeekDay | undefined, c: CaptureSetup): FormValues {
   const rec = day?.record, out: FormValues = {};
   if (!rec) { const r = rotaShift(day); return r ? valuesFromRota(r) : out; }

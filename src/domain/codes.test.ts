@@ -62,7 +62,7 @@ describe('typeCodeProblem', () => {
     expect(typeCodeProblem('waking_night', [])).toBeNull();
   });
   test('a duplicate type code is refused', () => {
-    expect(typeCodeProblem('shift', ['shift', 'casual'])?.message).toBe('shift already exists. People reference a type by its code.');
+    expect(typeCodeProblem('shift', ['shift', 'casual'])?.message).toBe('shift already exists. Employees reference a type by its code.');
   });
 });
 

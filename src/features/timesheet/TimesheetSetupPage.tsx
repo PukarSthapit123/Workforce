@@ -304,7 +304,7 @@ function CaptureFields({ fields, env, labels, type, onChange }: {
 }
 
 /* The automatic pay rules table. The code select resolves the element and its basis from the pay codes, which are read-only here
-   and kept on Pay codes: the pointer beside Add rule is a link while this person can reach that page. */
+   and kept on Pay codes: the pointer beside Add rule is a link while this employee can reach that page. */
 function PayRules({ code, rules, payCodes, draft, fe, onChange }: {
   code: string; rules: readonly TypeRule[]; payCodes: PayCode[]; draft: SetupDraft; fe(field: string): string | undefined;
   onChange(rules: TypeRule[]): void;

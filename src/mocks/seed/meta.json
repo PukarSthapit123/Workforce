@@ -64,13 +64,13 @@
    "code": "ONB_CONV",
    "label": "Convictions declaration",
    "mod": "ON",
-   "desc": "Ask whether the person has unspent convictions, with detail where they do."
+   "desc": "Ask whether the employee has unspent convictions, with detail where they do."
   },
   {
    "code": "ONB_WTD",
    "label": "Working time opt-out",
    "mod": "ON",
-   "desc": "Record whether the person opts out of the 48-hour weekly limit."
+   "desc": "Record whether the employee opts out of the 48-hour weekly limit."
   },
   {
    "code": "ONB_QUAL",
@@ -94,13 +94,13 @@
    "code": "ONB_VERIFY",
    "label": "Document verification",
    "mod": "ON",
-   "desc": "A named person checks each uploaded document before it counts."
+   "desc": "A named employee checks each uploaded document before it counts."
   },
   {
    "code": "ONB_PORTAL",
    "label": "Employee portal",
    "mod": "ON",
-   "desc": "Handbook, company information, vacancies and benefits for people already working."
+   "desc": "Handbook, company information, vacancies and benefits for employees already working."
   },
   {
    "code": "DOCS",
@@ -172,7 +172,7 @@
    "code": "SAFEWORKER",
    "label": "Safe-worker filtering",
    "mod": "R",
-   "desc": "Only advertise work to people who are cleared and eligible."
+   "desc": "Only advertise work to employees who are cleared and eligible."
   },
   {
    "code": "FLEXMON",
@@ -226,7 +226,7 @@
    "code": "LV_ROTA",
    "label": "Leave affects rota availability",
    "mod": "L",
-   "desc": "Approved leave removes the person from rota allocation."
+   "desc": "Approved leave removes the employee from rota allocation."
   },
   {
    "code": "LV_TOIL",
@@ -240,7 +240,7 @@
    "code": "CORE",
    "name": "Workforce core",
    "ic": "users",
-   "desc": "People, employee types, approvals, notifications and the Business Central hand-off.",
+   "desc": "Employees, employee types, approvals, notifications and the Business Central hand-off.",
    "locked": true
   },
   {

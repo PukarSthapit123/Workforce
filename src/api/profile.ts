@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from './client';
 import { useRecordMutation } from './mutation';
-import { peopleKeys } from './people';
+import { employeesKeys } from './employees';
 import { notificationKeys } from './notifications';
 import { decideProfileChange, getProfile, listProfileChanges, proposeChanges, type ProfileChange, type ProposeChanges } from '@/contract/profile';
 
@@ -9,9 +9,9 @@ export const profileKeys = { mine: ['profile'] as const, queue: ['profile-change
 export const useProfile = () => useQuery({ queryKey: profileKeys.mine, queryFn: () => api(getProfile) });
 export const useProfileQueue = (enabled: boolean) => useQuery({ queryKey: profileKeys.queue, queryFn: () => api(listProfileChanges), enabled });
 
-/* A decision can write the person's record, so the people lists refresh too;
+/* A decision can write the employee's record, so the employees lists refresh too;
    a proposal and a decision can notify someone (pf_req, pf_done). */
-const AFTER = [profileKeys.mine, profileKeys.queue, peopleKeys.all, notificationKeys.all] as const;
+const AFTER = [profileKeys.mine, profileKeys.queue, employeesKeys.all, notificationKeys.all] as const;
 export const useProposeChanges = () => useRecordMutation({
   mutationFn: (body: ProposeChanges) => api(proposeChanges, { body }),
   recordKey: () => 'own-profile',

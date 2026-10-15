@@ -10,11 +10,11 @@ import { timesheetKeys } from './timesheets';
 import { notificationKeys } from './notifications';
 import { dimensionKey } from './reference';
 import {
-  acceptRotaPlan, addPatternPeople, askAllCover, assignCover, claimCover, clearRotaWeek, confirmFilled, copyRotaWeek, createPattern,
+  acceptRotaPlan, addPatternEmployees, askAllCover, assignCover, claimCover, clearRotaWeek, confirmFilled, copyRotaWeek, createPattern,
   createShiftType, deletePattern, deleteShiftType, escalateCover, fillCover, generatePattern, getMyShifts, getRotaConfig, getRotaHome, getRotaWeek,
   listCover, listItRequests, listPatterns, listShiftTypes, openCover, planRotaWeek, repeatRotaWeek, setCoverReason, signOffRotaWeek, suggestRotaCell, transitionRotaWeek,
   updatePattern, updateRotaConfig, updateShiftType, writeRotaCell,
-  type AcceptPlan, type AddPatternPeople, type CellInput, type CellSaved, type CellSuggestions, type CoverBoard, type CoverFilled,
+  type AcceptPlan, type AddPatternEmployees, type CellInput, type CellSaved, type CellSuggestions, type CoverBoard, type CoverFilled,
   type CoverSaved, type CoverView, type CreatePattern, type CreateShiftType, type FilledConfirmed, type FilledView, type GeneratePattern, type ItRequest, type ItRequestList,
   type MyShifts, type OpenCover, type OpenShift, type PatternGenerated, type PatternList, type PatternRecord, type PlanAccepted,
   type PlanItem, type RotaConfigRecord, type RotaHome, type RotaRow, type RotaSetup, type RotaWeekView, type ShiftCatalogue, type ShiftTypeRecord,
@@ -41,7 +41,7 @@ export const rotaKeys = {
 };
 
 /* ---------------------------------------------------------------- reads */
-/* Where Team rota opens: the locations this person may manage, their own, and the server's week. */
+/* Where Team rota opens: the locations this employee may manage, their own, and the server's week. */
 export const useRotaHome = (enabled = true) => useQuery({ queryKey: rotaKeys.home, queryFn: () => api(getRotaHome), enabled });
 export const useRotaWeek = (location: string, weekStart: string, enabled = true) => useQuery({
   queryKey: rotaKeys.week(location, weekStart), queryFn: () => api(getRotaWeek, { params: { location, weekStart } }), enabled: enabled && !!location,
@@ -61,7 +61,7 @@ export const usePatterns = (enabled = true) => useQuery({ queryKey: rotaKeys.pat
 export const useCoverBoard = (status: CoverStatus = 'all', enabled = true) => useQuery({
   queryKey: rotaKeys.coverList(status), queryFn: () => api(listCover, { query: { status } }), enabled,
 });
-/* The signed-in person's week; weekStart defaults to the server's current week. */
+/* The signed-in employee's week; weekStart defaults to the server's current week. */
 export const useMyShifts = (weekStart?: string, enabled = true) => useQuery({
   queryKey: rotaKeys.myWeek(weekStart ?? ''), queryFn: () => api(getMyShifts, { query: { weekStart } }), enabled,
 });
@@ -72,7 +72,7 @@ export const useItRequests = () => useQuery({ queryKey: rotaKeys.itRequests, que
 /* --------------------------------------------------------------- writes */
 /* A rota write can change any week (repeat and generate reach forward), cover,
    my shifts, and the timesheet's rota line. */
-/* a rota write can tell people (rt_* events), so the bell is read again too */
+/* a rota write can tell employees (rt_* events), so the bell is read again too */
 const AFTER = [rotaKeys.all, timesheetKeys.all, notificationKeys.all] as const;
 const COVER = [rotaKeys.cover, notificationKeys.all] as const;
 export interface WeekRef { location: string; weekStart: string; version: number }
@@ -139,8 +139,8 @@ export const useDeletePattern = () => useRecordMutation({
   mutationFn: (p: PatternRef) => api(deletePattern, { params: { code: p.code }, ifMatch: p.version }),
   recordKey: p => `rota/pattern/${p.code}`, invalidates: [rotaKeys.patterns],
 });
-export const useAddPatternPeople = () => useRecordMutation({
-  mutationFn: (v: { pattern: PatternRef; body: AddPatternPeople }) => api(addPatternPeople, { params: { code: v.pattern.code }, body: v.body, ifMatch: v.pattern.version }),
+export const useAddPatternEmployees = () => useRecordMutation({
+  mutationFn: (v: { pattern: PatternRef; body: AddPatternEmployees }) => api(addPatternEmployees, { params: { code: v.pattern.code }, body: v.body, ifMatch: v.pattern.version }),
   recordKey: v => `rota/pattern/${v.pattern.code}`, invalidates: [rotaKeys.patterns],
 });
 export const useGeneratePattern = () => useRecordMutation({
@@ -164,7 +164,7 @@ export const useEscalateCover = () => useRecordMutation({
   mutationFn: (c: CoverRef) => api(escalateCover, { params: { id: c.id }, ifMatch: c.version }), recordKey: c => `rota/cover/${c.id}`, invalidates: COVER,
 });
 export const useAssignCover = () => useRecordMutation({
-  mutationFn: (v: { cover: CoverRef; personCode: string }) => api(assignCover, { params: { id: v.cover.id }, body: { personCode: v.personCode }, ifMatch: v.cover.version }),
+  mutationFn: (v: { cover: CoverRef; employeeCode: string }) => api(assignCover, { params: { id: v.cover.id }, body: { employeeCode: v.employeeCode }, ifMatch: v.cover.version }),
   recordKey: v => `rota/cover/${v.cover.id}`, invalidates: AFTER,
 });
 export const useFillCover = () => useRecordMutation({

@@ -13,7 +13,7 @@ import { bump, refuse } from './http';
 import { serve } from './serve';
 import { actor, requireCapability } from './auth';
 import { writeAudit } from './audit';
-import { codesOf, people, recordAt, type Signed } from './world';
+import { codesOf, employees, recordAt, type Signed } from './world';
 import { requireWeekStartChangeAllowed, rotaActor, rotaOff, rotaOn, saveTenant, sitesOff, tenantRec, tsConfig, view, type StoredTenant } from './tenant';
 import meta from './seed/meta.json';
 import { chainRecord, chainStrands, chainsNow, writeChain } from './approvals';
@@ -113,7 +113,7 @@ const codes = (kind: StructureKind) => Object.values(store.coll<Row>(HOME[kind].
 function stateOf(t: StoredTenant): TenantState {
   const v = view(t);
   return {
-    name: t.name, people: Object.keys(people()).length, modules: t.modules, restore: t.restore ?? {}, flags: v.flags,
+    name: t.name, employees: Object.keys(employees()).length, modules: t.modules, restore: t.restore ?? {}, flags: v.flags,
     extras: v.extras, labels: labelsNow(), employeeTypes: typesNow(), roleNames: roleNamesNow(),
     tenantSettings: {
       timezone: t.timezone, dateFormat: t.dateFormat, clock: t.clock, weekStart: t.weekStart,
@@ -197,7 +197,7 @@ function carryOut(t: StoredTenant, plan: ApplyPlan, key: string, by: RotaActor):
       } else coll[id] = { ...row, id, version: 1, updatedAt: store.now() };
     }
   }
-  /* the onboarding setup (D12): switches and settings by id; a held policy's new name and wording, and with new wording a new version that asks the people still onboarding again (D10); new policies after the last */
+  /* the onboarding setup (D12): switches and settings by id; a held policy's new name and wording, and with new wording a new version that asks the employees still onboarding again (D10); new policies after the last */
   const o = s.onboarding;
   const cfg = recordAt(store.coll<StoredConfig>('onboardingConfig'), 'onboardingConfig');
   if (cfg && (Object.keys(o.steps).length || Object.keys(o.documents).length || o.documentsAdded.length)) {
@@ -214,7 +214,7 @@ function carryOut(t: StoredTenant, plan: ApplyPlan, key: string, by: RotaActor):
     if (!have) continue;
     pols[u.id] = bump(have, { label: u.label, ver: u.ver, sum: u.sum, body: u.body });
     if (u.reask) for (const c of reaskPolicy(u.id, Object.values(casesColl()).filter(stillOnboarding)).changed) {
-      const was = recordAt(casesColl(), caseId(c.personCode));
+      const was = recordAt(casesColl(), caseId(c.employeeCode));
       if (was) putCase(was, c);
     }
   }

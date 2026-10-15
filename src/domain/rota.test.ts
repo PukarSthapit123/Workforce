@@ -24,7 +24,7 @@ const worker = (o: Partial<RotaWorker> = {}): RotaWorker => ({ code: 'CP-1042', 
   qualifications: 'All valid', favourite: false, preferredDays: [], ...o });
 const ctx = (o: Partial<RuleContext> = {}): RuleContext => ({ shifts: SHIFTS, typeRota: SHIFT_TYPE, config: DEFAULT_ROTA_CONFIG, safeWorker: true, ...o });
 const line = (...cells: string[]) => normLine(cells);
-const ME: RotaActor = { personCode: 'CP-1001', name: 'Rachel Hussain' };
+const ME: RotaActor = { employeeCode: 'CP-1001', name: 'Rachel Hussain' };
 const AT = '2026-08-13T08:12:00.000Z';
 const STAGES: FulfilStage[] = [
   { n: 1, audience: 'Employees at location', wait: 15, channel: 'In-app + email', next: 'Favourite workers' },
@@ -129,34 +129,34 @@ describe('week states (D2)', () => {
 const week = (o: Partial<RotaWeekCore> = {}): RotaWeekCore => ({ ...emptyWeek('WH', '2026-08-10'), ...o });
 describe('cell changes (rotaChange)', () => {
   test('a change to a draft week is logged but leaves it a draft', () => {
-    const r = setCell(week({ lines: { 'CP-1042': line('E') } }), { personCode: 'CP-1042', name: 'Amara Okafor', day: 0, to: 'L', by: ME, at: AT, why: 'Changed' });
+    const r = setCell(week({ lines: { 'CP-1042': line('E') } }), { employeeCode: 'CP-1042', name: 'Amara Okafor', day: 0, to: 'L', by: ME, at: AT, why: 'Changed' });
     expect(r.week.state).toBe('draft');
     expect(r.amended).toBe(false);
-    expect(r.change).toEqual({ at: AT, by: ME, personCode: 'CP-1042', name: 'Amara Okafor', date: '2026-08-10', from: 'E', to: 'L', why: 'Changed', afterPublish: false, version: 0 });
+    expect(r.change).toEqual({ at: AT, by: ME, employeeCode: 'CP-1042', name: 'Amara Okafor', date: '2026-08-10', from: 'E', to: 'L', why: 'Changed', afterPublish: false, version: 0 });
     expect(r.week.lines['CP-1042']).toEqual(line('L'));
   });
   test('a change to a live week is an amendment against the published version', () => {
     const live = week({ state: 'published', publishVersion: 1, lines: { 'CP-1042': line('E', 'E') } });
-    const r = setCell(live, { personCode: 'CP-1042', name: 'Amara Okafor', day: 1, to: '', by: ME, at: AT, why: 'Removed' });
+    const r = setCell(live, { employeeCode: 'CP-1042', name: 'Amara Okafor', day: 1, to: '', by: ME, at: AT, why: 'Removed' });
     expect([r.week.state, r.amended, r.change.afterPublish, r.change.version]).toEqual(['amendment', true, true, 1]);
     expect(amendedAuditText('Willow House', live, r.change, SHIFTS)).toBe('Willow House · week 33 v1 · Amara Okafor · Early → nothing');
     expect(amendedNotice('2026-08-10', 1)).toEqual({ title: 'Rota amended', body: 'Week 33 · your shift on Tue has changed. Check your shifts.' });
-    const again = setCell(r.week, { personCode: 'CP-1042', name: 'Amara Okafor', day: 2, to: 'L', by: ME, at: AT, why: 'Assigned' });
+    const again = setCell(r.week, { employeeCode: 'CP-1042', name: 'Amara Okafor', day: 2, to: 'L', by: ME, at: AT, why: 'Assigned' });
     /* an amended week is still one colleagues can see: the next change is an amendment too (I3) */
     expect([again.week.state, again.amended, again.change.afterPublish, again.week.changes.length]).toEqual(['amendment', true, true, 2]);
   });
   test('several writes as one request keep every change, newest first', () => {
     const r = setCells(week({ state: 'republished', publishVersion: 2 }), [
-      { personCode: 'A', name: 'A', day: 0, to: 'E', by: ME, at: AT, why: 'Accepted' },
-      { personCode: 'B', name: 'B', day: 1, to: 'L', by: ME, at: AT, why: 'Accepted' }]);
-    expect([r.week.state, r.amended, r.week.changes.map(c => c.personCode)]).toEqual(['amendment', true, ['B', 'A']]);
+      { employeeCode: 'A', name: 'A', day: 0, to: 'E', by: ME, at: AT, why: 'Accepted' },
+      { employeeCode: 'B', name: 'B', day: 1, to: 'L', by: ME, at: AT, why: 'Accepted' }]);
+    expect([r.week.state, r.amended, r.week.changes.map(c => c.employeeCode)]).toEqual(['amendment', true, ['B', 'A']]);
     expect(rotaWeekId('WH', '2026-08-10')).toBe('rw_WH_2026-08-10');
   });
 });
 
 describe('coverage', () => {
   const lines = [line('E', 'V', 'N'), line('L', '', 'N'), line('E', 'S', '')];
-  test('onShift counts people working, not leave or sickness, and gaps are days below the minimum', () => {
+  test('onShift counts employees working, not leave or sickness, and gaps are days below the minimum', () => {
     expect([0, 1, 2].map(d => onShift(lines, d))).toEqual([3, 0, 2]);
     expect(gapDays(lines, 2)).toEqual([1, 3, 4, 5, 6]);
     expect(gapsAt(lines, 0)).toBe(0);
@@ -181,7 +181,7 @@ describe('publish (D3)', () => {
   test('publishing moves state and version; republishing counts only the amendments to the version it replaces', () => {
     const p = publishWeek(week({ state: 'review' }), ME, AT);
     expect([p.week.state, p.version, p.amended, p.republished, p.week.publishedBy, p.week.publishedAt]).toEqual(['published', 1, 0, false, ME, AT]);
-    const old = { at: AT, by: ME, personCode: 'A', name: 'A', date: '2026-08-10', from: '', to: 'E', why: '', afterPublish: true, version: 1 };
+    const old = { at: AT, by: ME, employeeCode: 'A', name: 'A', date: '2026-08-10', from: '', to: 'E', why: '', afterPublish: true, version: 1 };
     const amended = week({ state: 'amendment', publishVersion: 2, changes: [{ ...old, version: 2 }, { ...old, version: 2 }, old] });
     const r = publishWeek(amended, ME, AT);
     expect([r.week.state, r.version, r.amended]).toEqual(['republished', 3, 2]);
@@ -214,14 +214,14 @@ describe('eligibility (PEOP167)', () => {
     expect(reasons(worker({ qualifications: 'Medication training expired' }), line(), 0, 'E')).toEqual(['Medication training expired']);
     expect(reasons(worker({ qualifications: 'First aid expires in 24 days' }), line(), 0, 'E')).toEqual([]);
   });
-  test('a night shift needs a night-trained person on a night-eligible type', () => {
+  test('a night shift needs a night-trained employee on a night-eligible type', () => {
     expect(reasons(worker({ night: false }), line(), 0, 'N')).toEqual(['Not night-trained']);
     expect(reasons(worker(), line(), 0, 'N', ctx({ typeRota: { ...SHIFT_TYPE, night: false } }))).toEqual(['Not night-trained']);
   });
   test('the employee type\'s shifts', () => {
     expect(reasons(worker(), line(), 0, 'N', ctx({ typeRota: { ...SHIFT_TYPE, shifts: ['E'] } }))).toEqual(['Support Worker is not eligible for night shifts']);
   });
-  test('maximum hours: the lowest of the person, the type and the tenant', () => {
+  test('maximum hours: the lowest of the employee, the type and the tenant', () => {
     expect(reasons(worker({ maxHours: 30 }), line('N', '', 'N', '', 'N'), 6, 'E')).toEqual(['Would pass their 30-hour maximum']);
     expect(reasons(worker({ maxHours: 60 }), line('N', '', 'N', '', 'N'), 6, 'E', ctx({ config: { ...DEFAULT_ROTA_CONFIG, maxHours: 30 } })))
       .toEqual(['Would pass their 30-hour maximum']);
@@ -310,13 +310,13 @@ describe('suggestions', () => {
     const plan = planWeek([bank('A'), bank('B'), bank('C')], 1, SHIFTS);
     expect(plan.map(p => p.day)).toEqual([0, 1, 2, 3, 4, 5, 6]);
     expect(plan.every(p => !p.none)).toBe(true);
-    expect(new Set(plan.map(p => (p.none ? '' : p.personCode))).size).toBe(3);
+    expect(new Set(plan.map(p => (p.none ? '' : p.employeeCode))).size).toBe(3);
     const none = planWeek([cand(worker({ cleared: false }), line())], 1, SHIFTS);
     expect(none.every(p => p.none)).toBe(true);
     expect([planSummary(3), planSummary(0)]).toEqual(['Suggested 3 assignments for you to review',
       'No suggestions possible. Advertise the gaps through a cover request.']);
   });
-  test('the roster: active people at the location with contracted hours or a shift', () => {
+  test('the roster: active employees at the location with contracted hours or a shift', () => {
     const p = { code: 'A', location: 'WH', state: 'active', contractedHours: 0 };
     expect([onRoster(p, 'WH', line()), onRoster(p, 'WH', line('E')), onRoster({ ...p, contractedHours: 30 }, 'WH', line()),
       onRoster({ ...p, state: 'leaver' }, 'WH', line('E')), onRoster(p, 'BC', line('E'))]).toEqual([false, true, true, false, false]);
@@ -325,7 +325,7 @@ describe('suggestions', () => {
 
 const pattern = (o: Partial<PatternCore> = {}): PatternCore => ({ code: 'WP-02', name: 'Early / Late, 5 over 7', cycle: 7, locations: ['WH'], jobProfiles: ['SW'],
   costCentre: 'WH-CAM-01', starts: '2026-07-06', horizon: 12, gen: '4w', genFrom: '', genTo: '', active: true, days: ['E', 'E', 'L', 'L', 'E', '', ''],
-  people: [1, 1, 3, 5, 2].map((offset, i) => ({ personCode: `P${i}`, offset })), ...o });
+  employees: [1, 1, 3, 5, 2].map((offset, i) => ({ employeeCode: `P${i}`, offset })), ...o });
 describe('pattern generation', () => {
   test('genRange: the span from today or the start, and the shifts it would land', () => {
     expect(genRange(pattern(), '2026-08-13')).toEqual({ ok: true, from: '2026-08-13', to: '2026-09-09', span: 28, shifts: 100,
@@ -344,51 +344,51 @@ describe('pattern generation', () => {
   test('the refusals before a run', () => {
     expect(patternGenerateProblem(pattern({ days: ['', '', ''] }), null, locName)?.message).toBe('Nothing to generate. Every day of the cycle is a rest day.');
     expect(patternGenerateProblem(pattern({ locations: [] }), null, locName)?.message).toBe('Pick at least one location before generating.');
-    expect(patternGenerateProblem(pattern({ people: [] }), null, locName)?.message).toBe('Nobody is on Early / Late, 5 over 7 yet. Add a person first.');
+    expect(patternGenerateProblem(pattern({ employees: [] }), null, locName)?.message).toBe('Nobody is on Early / Late, 5 over 7 yet. Add an employee first.');
     expect(patternGenerateProblem(pattern(), 'BC', locName)?.message)
       .toBe('Early / Late, 5 over 7 does not cover Beacon Court. A manager can only generate for their own location.');
     expect(patternGenerateProblem(pattern(), 'WH', locName)).toBeNull();
   });
   const info = (code: string, location: string, state = 'active') => [code, { code, name: code, location, state, restNeed: 11 }] as const;
   const run = (p: PatternCore, scope: string | null, weeks: Record<string, WeekSlot>) => applyPattern(p, { today: '2026-08-10', scope,
-    people: new Map([info('A', 'WH'), info('B', 'WH'), info('C', 'BC'), info('G', 'BC', 'leaver')]), weekAt: (l, ws) => weeks[`${l}|${ws}`], locName, shifts: SHIFTS });
-  const small = (people: PatternCore['people']) => pattern({ starts: '2026-08-10', gen: '1w', days: ['E', 'E', '', '', '', '', ''], people });
+    employees: new Map([info('A', 'WH'), info('B', 'WH'), info('C', 'BC'), info('G', 'BC', 'leaver')]), weekAt: (l, ws) => weeks[`${l}|${ws}`], locName, shifts: SHIFTS });
+  const small = (employees: PatternCore['employees']) => pattern({ starts: '2026-08-10', gen: '1w', days: ['E', 'E', '', '', '', '', ''], employees });
   test('applyPattern never overwrites: filled cells and leave are counted, live weeks skipped', () => {
     const weeks = { 'WH|2026-08-10': { state: 'draft', lines: { A: line('', 'V'), B: line('L') } }, 'BC|2026-08-10': { state: 'published', lines: {} } };
-    const r = run(small([{ personCode: 'A', offset: 1 }, { personCode: 'B', offset: 2 }, { personCode: 'C', offset: 1 }]), null, weeks);
-    expect(r).toMatchObject({ ok: true, written: 2, occupied: 1, absence: 1, weeks: 1, live: 1, people: 3, range: '10/08/2026 – 16/08/2026' });
+    const r = run(small([{ employeeCode: 'A', offset: 1 }, { employeeCode: 'B', offset: 2 }, { employeeCode: 'C', offset: 1 }]), null, weeks);
+    expect(r).toMatchObject({ ok: true, written: 2, occupied: 1, absence: 1, weeks: 1, live: 1, employees: 3, range: '10/08/2026 – 16/08/2026' });
     expect(r.ok && r.writes.map(w => [w.location, w.weekStart, w.created, w.lines.A, w.lines.B])).toEqual([['WH', '2026-08-10', false, line('E', 'V'), line('L', '', '', '', '', '', 'E')]]);
     if (r.ok) {
-      expect(generateSummary(r)).toBe('2 shift(s) written · 10/08/2026 – 16/08/2026 · 1 week(s) · 3 people · 1 cell(s) already filled, left alone'
+      expect(generateSummary(r)).toBe('2 shift(s) written · 10/08/2026 – 16/08/2026 · 1 week(s) · 3 employees · 1 cell(s) already filled, left alone'
         + ' · 1 skipped for leave or sickness · 1 published week(s) skipped. Amend those individually');
       /* M1: a run from a draft that writes shifts makes it active, as P's save-pattern did, and says so */
       expect(generateActivates({ active: false }, r)).toBe(true);
       expect(generateActivates({ active: true }, r)).toBe(false);
       expect(generateSummary(r, 'Early / Late, 5 over 7').endsWith(' · Early / Late, 5 over 7 was a draft and is now active')).toBe(true);
-      expect(generateAuditText(small([]), r, null)).toBe('Early / Late, 5 over 7 · 10/08/2026 – 16/08/2026 · 2 shift(s) written across 1 week(s) · 3 person(s)'
+      expect(generateAuditText(small([]), r, null)).toBe('Early / Late, 5 over 7 · 10/08/2026 – 16/08/2026 · 2 shift(s) written across 1 week(s) · 3 employee(s)'
         + ' · 1 cell(s) already filled and left alone · 1 published week(s) skipped');
     }
   });
   test('applyPattern scoped to a manager\'s location, rest warnings on what it wrote, and nothing written', () => {
-    const r = run(pattern({ starts: '2026-08-10', gen: '1w', days: ['N', 'E', '', '', '', '', ''], people: [{ personCode: 'A', offset: 1 }, { personCode: 'C', offset: 1 }] }), 'WH', {});
-    expect(r).toMatchObject({ ok: true, written: 2, people: 1, rest: ['A · week of 2026-08-10 · 0h rest (needs 11h)'] });
+    const r = run(pattern({ starts: '2026-08-10', gen: '1w', days: ['N', 'E', '', '', '', '', ''], employees: [{ employeeCode: 'A', offset: 1 }, { employeeCode: 'C', offset: 1 }] }), 'WH', {});
+    expect(r).toMatchObject({ ok: true, written: 2, employees: 1, rest: ['A · week of 2026-08-10 · 0h rest (needs 11h)'] });
     expect(r.ok && r.writes[0]?.created).toBe(true);
-    const again = run(small([{ personCode: 'A', offset: 1 }]), null, { 'WH|2026-08-10': { state: 'draft', lines: { A: line('L', 'L') } } });
+    const again = run(small([{ employeeCode: 'A', offset: 1 }]), null, { 'WH|2026-08-10': { state: 'draft', lines: { A: line('L', 'L') } } });
     expect(again.ok && generateSummary(again)).toBe('Nothing written · every target cell was already filled');
   });
   test('applyPattern refuses when nobody on the pattern is in reach', () => {
-    expect(run(small([{ personCode: 'C', offset: 1 }]), 'RL', {})).toEqual({ ok: false, message: 'Nobody on this pattern works at Rowan Lodge.' });
-    expect(run(small([{ personCode: 'G', offset: 1 }, { personCode: 'Z', offset: 1 }]), null, {}))
-      .toEqual({ ok: false, message: 'None of the people on this pattern are on the workforce record.' });
+    expect(run(small([{ employeeCode: 'C', offset: 1 }]), 'RL', {})).toEqual({ ok: false, message: 'Nobody on this pattern works at Rowan Lodge.' });
+    expect(run(small([{ employeeCode: 'G', offset: 1 }, { employeeCode: 'Z', offset: 1 }]), null, {}))
+      .toEqual({ ok: false, message: 'None of the employees on this pattern are on the workforce record.' });
   });
   test('a pattern\'s own checks, cycle resizing and staggered starting days', () => {
     expect(patternProblem(pattern(), ['E', 'L', 'N'])).toBeNull();
     expect(patternProblem(pattern({ name: '' }), ['E', 'L', 'N'])?.message).toBe('Give the pattern a name.');
     expect(patternProblem(pattern({ cycle: 30 }), ['E', 'L', 'N'])?.field).toBe('cycle');
     expect(patternProblem(pattern({ days: ['E', 'Q', '', '', '', '', ''] }), ['E', 'L', 'N'])?.message).toBe('Day 2 of the cycle uses Q, which is not a shift type.');
-    expect(patternProblem(pattern({ people: [{ personCode: 'A', offset: 9 }] }), ['E', 'L', 'N'])?.message).toBe('A starting day must be from 1 to 7.');
-    const shrunk = resizeCycle(pattern({ people: [{ personCode: 'A', offset: 6 }] }), 4);
-    expect([shrunk.days, shrunk.people[0]?.offset]).toEqual([['E', 'E', 'L', 'L'], 2]);
+    expect(patternProblem(pattern({ employees: [{ employeeCode: 'A', offset: 9 }] }), ['E', 'L', 'N'])?.message).toBe('A starting day must be from 1 to 7.');
+    const shrunk = resizeCycle(pattern({ employees: [{ employeeCode: 'A', offset: 6 }] }), 4);
+    expect([shrunk.days, shrunk.employees[0]?.offset]).toEqual([['E', 'E', 'L', 'L'], 2]);
     expect(resizeCycle(pattern(), 9).days.slice(7)).toEqual(['', '']);
     const nights = ['N', 'N', 'N', 'N', '', '', '', ''];
     expect([staggerOffsets(nights, 1, 'stagger', 3), staggerOffsets(nights, 3, 'stagger', 3), staggerOffsets(nights, 3, 'same', 2)])
@@ -401,8 +401,8 @@ describe('repeat, copy and clear (D6)', () => {
   test('an amended week counts as live: repeat and generate skip it (I3)', () => {
     const amended: WeekSlot = { state: 'amendment', lines: {} };
     expect(repeatWeek('WH', '2026-08-10', src, ['A'], 1, () => amended)).toMatchObject({ written: 0, live: 1, weeks: 0 });
-    const p = pattern({ starts: '2026-08-10', gen: '1w', days: ['E', 'E', '', '', '', '', ''], people: [{ personCode: 'A', offset: 1 }] });
-    const r = applyPattern(p, { today: '2026-08-10', scope: null, people: new Map([['A', { code: 'A', name: 'A', location: 'WH', state: 'active', restNeed: 11 }]]),
+    const p = pattern({ starts: '2026-08-10', gen: '1w', days: ['E', 'E', '', '', '', '', ''], employees: [{ employeeCode: 'A', offset: 1 }] });
+    const r = applyPattern(p, { today: '2026-08-10', scope: null, employees: new Map([['A', { code: 'A', name: 'A', location: 'WH', state: 'active', restNeed: 11 }]]),
       weekAt: (_l, ws) => (ws === '2026-08-10' ? amended : undefined), locName: c => c, shifts: SHIFTS });
     expect(r).toMatchObject({ ok: true, written: 0, live: 1 });
   });
@@ -437,7 +437,7 @@ describe('repeat, copy and clear (D6)', () => {
     const lines = { A: line('E', 'V', 'L'), B: line() };
     expect(clearPreview(lines, ['A', 'B'])).toEqual({ shifts: 2, absence: 1, colleagues: 1 });
     const writes = clearWrites(lines, ['A', 'B'], new Map([['A', 'Amara Okafor']]), ME, AT);
-    expect(writes.map(w => [w.personCode, w.name, w.day, w.to, w.why])).toEqual([['A', 'Amara Okafor', 0, '', 'Cleared'], ['A', 'Amara Okafor', 2, '', 'Cleared']]);
+    expect(writes.map(w => [w.employeeCode, w.name, w.day, w.to, w.why])).toEqual([['A', 'Amara Okafor', 0, '', 'Cleared'], ['A', 'Amara Okafor', 2, '', 'Cleared']]);
     const r = setCells(week({ lines }), writes);
     expect([r.week.lines.A, r.changes.length, r.amended]).toEqual([line('', 'V'), 2, false]);
     expect(clearSummary(2, '2026-08-10')).toBe('2 shift(s) cleared · week 33 · drag from the palette or generate from a pattern to rebuild it');
@@ -488,7 +488,7 @@ describe('cover (D7)', () => {
     expect(coverEscalateMove(open({ open: false }), STAGES, AT)).toMatchObject({ problem: { code: 'COVER_CLOSED' } });
   });
   test('confirming a filled shift raises the IT access request', () => {
-    const f = { coverId: 'cov_1', location: 'WH', date: '2026-08-15', shift: 'E', personCode: 'CP-1310', name: 'Ellie Warren', confirmed: false, itRequest: '' };
+    const f = { coverId: 'cov_1', location: 'WH', date: '2026-08-15', shift: 'E', employeeCode: 'CP-1310', name: 'Ellie Warren', confirmed: false, itRequest: '' };
     expect(confirmProblem(f)).toBeNull();
     expect(confirmProblem({ ...f, confirmed: true })?.message).toBe('This shift is already confirmed as worked.');
     /* M2: never your own shift, never before its day */
@@ -496,11 +496,11 @@ describe('cover (D7)', () => {
     expect(confirmSelfProblem(f, 'CP-1001')).toBeNull();
     expect(confirmEarlyProblem(f, '2026-08-14')).toMatchObject({ code: 'NOT_WORKED_YET', message: 'This shift is on Sat 15 Aug, so it cannot be confirmed as worked yet.' });
     expect(confirmEarlyProblem(f, '2026-08-15')).toBeNull();
-    expect(itRequestFor(f, 0, 'Bank', AT, 'Willow House', SHIFTS)).toEqual({ ref: 'ITR-1007', personCode: 'CP-1310', name: 'Ellie Warren', location: 'Willow House',
+    expect(itRequestFor(f, 0, 'Bank', AT, 'Willow House', SHIFTS)).toEqual({ ref: 'ITR-1007', employeeCode: 'CP-1310', name: 'Ellie Warren', location: 'Willow House',
       shift: 'Early · 07:00–15:00', date: '2026-08-15', worker: 'Bank', status: 'Raised', raisedAt: AT, system: 'IT service desk' });
     expect([confirmSummary('ITR-1007'), confirmSummary('')]).toEqual(['Confirmed. IT access request ITR-1007 raised.', 'Confirmed as worked.']);
   });
-  test('open shifts: offered only where the person is eligible, with why', () => {
+  test('open shifts: offered only where the employee is eligible, with why', () => {
     const covers = [open({ reason: 'Sickness' }), open({ shift: 'L' }), open({ location: 'BC', reason: 'Sickness' }), open({ shift: 'N', reason: 'Sickness', open: false })];
     const me = { ...worker(), location: 'WH' };
     const why = (w: typeof me, c = ctx()) => openShiftsFor(w, covers, () => line(), c).map(x => x.why);
@@ -539,12 +539,12 @@ describe('the timesheet\'s rota line (D16)', () => {
 describe('module 8: support levels and flexible-worker milestones', () => {
   const ok = { employeeTypes: ['shift'], shiftCodes: ['E', 'L', 'N'], supportLevels: DEFAULT_SUPPORT_LEVELS };
   const levels = (code: string, patch: Partial<SupportLevel>) => DEFAULT_SUPPORT_LEVELS.map(l => (l.code === code ? { ...l, ...patch } : l));
-  test('a level keeps its code, name and place; only its people per shift changes, as a whole number from 1 to 50', () => {
+  test('a level keeps its code, name and place; only its employees per shift changes, as a whole number from 1 to 50', () => {
     expect(rotaConfigProblem({ ...DEFAULT_ROTA_CONFIG, supportLevels: levels('High', { min: 6 }) }, STAGES, {}, ok)).toBeNull();
     expect(rotaConfigProblem({ ...DEFAULT_ROTA_CONFIG, supportLevels: levels('High', { label: 'Top' }) }, STAGES, {}, ok)?.field).toBe('supportLevels');
     expect(rotaConfigProblem({ ...DEFAULT_ROTA_CONFIG, supportLevels: DEFAULT_SUPPORT_LEVELS.slice(1) }, STAGES, {}, ok)?.field).toBe('supportLevels');
     expect(rotaConfigProblem({ ...DEFAULT_ROTA_CONFIG, supportLevels: levels('Low', { min: 2.5 }) }, STAGES, {}, ok))
-      .toEqual({ field: 'supportLevels.Low', message: 'Low support needs a whole number of people per shift from 1 to 50.' });
+      .toEqual({ field: 'supportLevels.Low', message: 'Low support needs a whole number of employees per shift from 1 to 50.' });
   });
   test('milestones run earliest first, each once, within a year; the recipient is one of the prototype\'s three', () => {
     const p = (o: Partial<typeof DEFAULT_ROTA_CONFIG>) => rotaConfigProblem({ ...DEFAULT_ROTA_CONFIG, ...o }, STAGES, {}, ok)?.field;
@@ -582,8 +582,8 @@ describe('weeks after a change of week start (module 8 D4, review I3)', () => {
   test('a pattern run after the change opens weeks that follow the stored week and never overlap it', () => {
     sunday();
     const weeks: Record<string, WeekSlot> = { 'WH|2026-08-10': { state: 'published', lines: {} } };
-    const r = applyPattern(pattern({ starts: '2026-08-16', gen: 'range', genFrom: '2026-08-16', genTo: '2026-08-30', days: ['E'], cycle: 1, people: [{ personCode: 'A', offset: 0 }] }),
-      { today: '2026-08-10', scope: null, people: new Map([['A', { code: 'A', name: 'A', location: 'WH', state: 'active', restNeed: 11 }]]),
+    const r = applyPattern(pattern({ starts: '2026-08-16', gen: 'range', genFrom: '2026-08-16', genTo: '2026-08-30', days: ['E'], cycle: 1, employees: [{ employeeCode: 'A', offset: 0 }] }),
+      { today: '2026-08-10', scope: null, employees: new Map([['A', { code: 'A', name: 'A', location: 'WH', state: 'active', restNeed: 11 }]]),
         weekAt: (l, ws) => weeks[`${l}|${ws}`], locName, shifts: SHIFTS });
     if (!r.ok) throw new Error(r.message);
     /* 16 August is in the published week, so it is skipped; the rest land in Monday weeks after it, each date once */

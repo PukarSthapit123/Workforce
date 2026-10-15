@@ -47,8 +47,8 @@ test('a manager approves a day, returns one with a reason, and approves the rest
 
 test('a manager enters a day on a team member’s behalf, it shows as a proxy entry, and they approve it from the week matrix', async ({ page, api }) => {
   await signInEmail(page, PUKAR);
-  await page.goto('/team/tpeople');
-  await page.getByTestId(tid.people.open('EMP005')).click();
+  await page.goto('/team/temployees');
+  await page.getByTestId(tid.employees.open('EMP005')).click();
   await page.getByTestId(tid.proxy.open).click();
   await expect(page.getByTestId(tid.modal.title)).toContainText('Log time · Bijay Shrestha');
   await expect(page.getByTestId(tid.proxy.banner)).toContainText('attributed to you');
@@ -77,8 +77,8 @@ test('a manager enters a day on a team member’s behalf, it shows as a proxy en
 test('the server refuses a manager’s own day, a day outside their location, and an employee with no team rights', async ({ page, api }) => {
   /* everyone in the qnipay roster is at Manchester, so the admin moves Jamir to Remote first */
   await signInEmail(page, EDDIE);
-  const jamir = (await api.get('/api/v1/people/per_EMP007')).body as { version: number };
-  expect((await sendVersioned(page, 'PATCH', '/api/v1/people/per_EMP007', jamir.version, { location: 'REM' })).status).toBe(200);
+  const jamir = (await api.get('/api/v1/employees/emp_EMP007')).body as { version: number };
+  expect((await sendVersioned(page, 'PATCH', '/api/v1/employees/emp_EMP007', jamir.version, { location: 'REM' })).status).toBe(200);
 
   await signInEmail(page, PUKAR);
   await page.goto('/team/tteam');

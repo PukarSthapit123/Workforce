@@ -4,14 +4,14 @@ import { store } from '@/mocks/store';
 import { tid } from '@/testids';
 import { expectTestIdCoverage } from '@/test/testid-coverage';
 import { renderPage, withFakeServer } from '@/test/render-page';
-import { accountOf, caller, fault, personOf, resetTo, signInAs, snapshot, tokenFor } from '@/test/api-helpers';
+import { accountOf, caller, fault, employeeOf, resetTo, signInAs, snapshot, tokenFor } from '@/test/api-helpers';
 import { queryClient } from '@/api/query';
 import { tenantKeys } from '@/api/tenant';
 import { ProfilePage } from './ProfilePage';
 
 withFakeServer();
 beforeEach(async () => { resetTo('social'); await signInAs('employee'); });
-const me = () => personOf(accountOf('employee').personCode);
+const me = () => employeeOf(accountOf('employee').employeeCode);
 const openPropose = async () => {
   renderPage(<ProfilePage />);
   await userEvent.click(await screen.findByTestId(tid.profile.propose));

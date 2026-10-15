@@ -3,8 +3,8 @@ import { bump, refuse } from './http';
 import { serve } from './serve';
 import { actor, requireCapability } from './auth';
 import { writeAudit } from './audit';
-import { invalid } from './people';
-import { effectiveCode, inScope, people, personByCode, personView, recordAt, writeHistory, type Signed, type StoredPerson } from './world';
+import { invalid } from './employees';
+import { effectiveCode, inScope, employees, employeeByCode, employeeView, recordAt, writeHistory, type Signed, type StoredEmployee } from './world';
 import { getProfile, proposeChanges, listProfileChanges, decideProfileChange, type ProfileChange } from '@/contract/profile';
 import { chainRecord, decidersToday } from './approvals';
 import { notifyEvent } from './notify';
@@ -12,29 +12,29 @@ import {
   SELF_FIELDS, STAGE_CAPABILITY, afterDecision, maskBank, routeFor, selfField, type SelfFieldKey, type Stage,
 } from '@/domain/selfService';
 
-type StoredChange = Omit<ProfileChange, 'personName'>;
+type StoredChange = Omit<ProfileChange, 'employeeName'>;
 const changes = () => store.coll<StoredChange>('profileChanges');
 const masked = (field: SelfFieldKey, v: string) => (field === 'bankAccount' ? maskBank(v) : v);
-const view = (c: StoredChange): ProfileChange => ({ ...c, personName: personByCode(c.personCode)?.name ?? c.personCode,
+const view = (c: StoredChange): ProfileChange => ({ ...c, employeeName: employeeByCode(c.employeeCode)?.name ?? c.employeeCode,
   from: masked(c.field, c.from), to: masked(c.field, c.to) });
 const selfEditOn = () => Boolean(store.coll<{ flags: Record<string, unknown> }>('tenant').tenant?.flags.SELF_EDIT);
 function mine(s: Signed) {
-  return personByCode(effectiveCode(s)) ?? refuse(404, { code: 'not-found', message: 'Your account has no person record.', next: 'Ask an administrator to link your account.' });
+  return employeeByCode(effectiveCode(s)) ?? refuse(404, { code: 'not-found', message: 'Your account has no employee record.', next: 'Ask an administrator to link your account.' });
 }
-const valueOf = (p: StoredPerson, field: SelfFieldKey): string => p[field];
+const valueOf = (p: StoredEmployee, field: SelfFieldKey): string => p[field];
 /* 1c D8: a change routes along the Profile approval chain as it stands when
    it is proposed; a later change to the chain leaves it on its route. */
 const STAGE_ROLE: Record<Stage, string> = { manager: 'Line manager', payroll: 'Payroll' };
-/* Who decides a stage for one person today: the chain's role for it, then
+/* Who decides a stage for one employee today: the chain's role for it, then
    whoever holds it, then their delegate while a Profile delegation is in force. */
-function stageDeciders(stage: Stage, personCode: string): string[] {
+function stageDeciders(stage: Stage, employeeCode: string): string[] {
   const layer = chainRecord('Profile').steps.find(s => s.role === STAGE_ROLE[stage]);
-  return decidersToday('Profile', STAGE_ROLE[stage], layer?.scope ?? 'All departments', personCode);
+  return decidersToday('Profile', STAGE_ROLE[stage], layer?.scope ?? 'All departments', employeeCode);
 }
-/* pf_req, as the prototype's pf-send raises it: the person, the fields, awaiting approval. */
-function raiseRequested(stage: Stage, person: StoredPerson, labels: readonly string[]) {
-  notifyEvent('pf_req', 'actor', stageDeciders(stage, person.code), { title: 'Profile change requested',
-    body: `${person.name} (${person.code}). ${labels.join(', ')}. Awaiting approval.` });
+/* pf_req, as the prototype's pf-send raises it: the employee, the fields, awaiting approval. */
+function raiseRequested(stage: Stage, employee: StoredEmployee, labels: readonly string[]) {
+  notifyEvent('pf_req', 'actor', stageDeciders(stage, employee.code), { title: 'Profile change requested',
+    body: `${employee.name} (${employee.code}). ${labels.join(', ')}. Awaiting approval.` });
 }
 /* A counter one past the highest stored (the seed's own ids are pfc_9001 and
    pfc_9002), so ids stay unique across a reload and across tabs. */
@@ -47,8 +47,8 @@ function nextChangeId(): string {
 export const profileHandlers = [
   serve(getProfile, ({ session }) => {
     const me = mine(session);
-    const pending = Object.values(changes()).filter(c => c.personCode === me.code && c.status === 'pending').map(view);
-    return { person: personView(me), fields: [...SELF_FIELDS], pending, selfEdit: selfEditOn() };
+    const pending = Object.values(changes()).filter(c => c.employeeCode === me.code && c.status === 'pending').map(view);
+    return { employee: employeeView(me), fields: [...SELF_FIELDS], pending, selfEdit: selfEditOn() };
   }),
   serve(proposeChanges, ({ session, body: { changes: asked, note } }) => {
     if (!selfEditOn()) return refuse(409, { code: 'feature-off', message: 'Self-service profile changes are switched off for this organisation.',
@@ -62,7 +62,7 @@ export const profileHandlers = [
       wanted.set(c.field, to);
     }
     for (const field of wanted.keys()) {
-      if (Object.values(changes()).some(c => c.personCode === me.code && c.field === field && c.status === 'pending'))
+      if (Object.values(changes()).some(c => c.employeeCode === me.code && c.field === field && c.status === 'pending'))
         return refuse(409, { code: 'pending', message: `A change to ${selfField(field).label} is already awaiting approval.`,
           next: 'Wait for a decision on it, or ask your manager to decline it first.' });
     }
@@ -70,14 +70,14 @@ export const profileHandlers = [
     const chain = chainRecord('Profile').steps;
     const records = [...wanted].map(([field, to]) => {
       const id = nextChangeId(), route = routeFor(field, chain);
-      const rec: StoredChange = { id, version: 1, updatedAt: store.now(), personCode: me.code, field, from: valueOf(me, field), to, note: note.trim(),
+      const rec: StoredChange = { id, version: 1, updatedAt: store.now(), employeeCode: me.code, field, from: valueOf(me, field), to, note: note.trim(),
         raisedAt: store.now(), status: 'pending', stage: route[0] ?? 'manager', route, decisions: [] };
       changes()[id] = rec;
       return rec;
     });
     for (const stage of new Set(records.map(r => r.stage)))
       if (stage !== 'done') raiseRequested(stage, me, records.filter(r => r.stage === stage).map(r => selfField(r.field).label));
-    const auditId = writeAudit({ who: actor(session), act: 'Profile change requested', entity: 'person', entityId: me.code, before: null,
+    const auditId = writeAudit({ who: actor(session), act: 'Profile change requested', entity: 'employee', entityId: me.code, before: null,
       after: { fields: records.map(r => selfField(r.field).label), ...(note.trim() ? { note: note.trim() } : {}) } });
     return { records: records.map(view), auditId };
   }),
@@ -86,8 +86,8 @@ export const profileHandlers = [
     if (!mgr && !pay) requireCapability(session, 'profile_appr');
     const self = effectiveCode(session);
     return Object.values(changes()).filter(c => c.status === 'pending' && (
-      (mgr && c.stage === 'manager' && c.personCode !== self && inScope(session, personByCode(c.personCode)?.location ?? '')) ||
-      (pay && c.stage === 'payroll' && c.personCode !== self)))
+      (mgr && c.stage === 'manager' && c.employeeCode !== self && inScope(session, employeeByCode(c.employeeCode)?.location ?? '')) ||
+      (pay && c.stage === 'payroll' && c.employeeCode !== self)))
       .sort((a, b) => a.raisedAt.localeCompare(b.raisedAt))
       .map(view);
   }),
@@ -97,37 +97,37 @@ export const profileHandlers = [
       return refuse(409, { code: 'decided', message: 'This change has already been decided.', next: 'Reload the page to see its outcome.' });
     const stage: Stage = c.stage;
     requireCapability(session, STAGE_CAPABILITY[stage]);
-    const person = personByCode(c.personCode) ?? refuse(404, { code: 'not-found', message: 'That person record no longer exists.', next: 'Decline the change.' });
-    if (stage === 'manager' && !inScope(session, person.location))
-      return refuse(403, { code: 'scope', message: 'This person is outside the people you look after.', next: 'Their own manager decides it.' });
-    if (c.personCode === effectiveCode(session))
+    const employee = employeeByCode(c.employeeCode) ?? refuse(404, { code: 'not-found', message: 'That employee record no longer exists.', next: 'Decline the change.' });
+    if (stage === 'manager' && !inScope(session, employee.location))
+      return refuse(403, { code: 'scope', message: 'This employee is outside the employees you look after.', next: 'Their own manager decides it.' });
+    if (c.employeeCode === effectiveCode(session))
       return refuse(409, { code: 'own-change', message: 'You cannot decide a change to your own details.', next: 'Another approver decides it.' });
     checkVersion(c);
     const why = reason.trim();
-    if (decision === 'decline' && !why) return invalid({ field: 'reason', message: 'Give a reason. The person is told why their change did not happen.' });
+    if (decision === 'decline' && !why) return invalid({ field: 'reason', message: 'Give a reason. The employee is told why their change did not happen.' });
     const out = afterDecision(c, decision);
     const label = selfField(c.field).label;
-    if (out.status === 'approved' && valueOf(person, c.field) !== c.from)
+    if (out.status === 'approved' && valueOf(employee, c.field) !== c.from)
       return refuse(409, { code: 'changed-since', message: `${label} was changed on the record after this was proposed.`,
         next: 'Decline this change and ask for a new proposal.' });
     const who = actor(session);
-    const saved = bump(c, { ...out, decisions: [...c.decisions, { stage, decision, by: { personCode: who.personCode, name: who.name }, at: store.now(), ...(why ? { reason: why } : {}) }] });
+    const saved = bump(c, { ...out, decisions: [...c.decisions, { stage, decision, by: { employeeCode: who.employeeCode, name: who.name }, at: store.now(), ...(why ? { reason: why } : {}) }] });
     changes()[c.id] = saved;
-    let updated: StoredPerson | null = null;
+    let updated: StoredEmployee | null = null;
     if (out.status === 'approved') {
-      const patch: Partial<StoredPerson> = { [c.field]: c.to };
-      updated = bump(person, patch);
-      people()[person.id] = updated;
-      writeHistory(person.code, who, 'profile-change', [{ field: c.field, from: masked(c.field, c.from), to: masked(c.field, c.to) }]);
+      const patch: Partial<StoredEmployee> = { [c.field]: c.to };
+      updated = bump(employee, patch);
+      employees()[employee.id] = updated;
+      writeHistory(employee.code, who, 'profile-change', [{ field: c.field, from: masked(c.field, c.from), to: masked(c.field, c.to) }]);
     }
-    /* pf_done to the person once it is decided, as the prototype's data-pfok and
+    /* pf_done to the employee once it is decided, as the prototype's data-pfok and
        data-pfno raise it; pf_req to the next stage's approvers when it moves on */
-    if (out.status === 'pending' && out.stage !== 'done') raiseRequested(out.stage, person, [label]);
-    else notifyEvent('pf_done', 'subject', [person.code], { title: `Profile change ${out.status}`,
+    if (out.status === 'pending' && out.stage !== 'done') raiseRequested(out.stage, employee, [label]);
+    else notifyEvent('pf_done', 'subject', [employee.code], { title: `Profile change ${out.status}`,
       body: `${label}. ${out.status === 'approved' ? masked(c.field, c.to) : `Left as ${masked(c.field, c.from) || 'it was'}`}. Decided by ${who.name}.` });
     const act = out.status === 'approved' ? 'Profile change approved' : out.status === 'declined' ? 'Profile change declined' : 'Profile change passed to payroll';
     const auditId = writeAudit({ who, act, entity: 'profileChange', entityId: c.id,
       before: { status: c.status, stage: c.stage, field: label }, after: { status: out.status, stage: out.stage }, ...(why ? { reason: why } : {}) });
-    return { record: view(saved), person: updated ? personView(updated) : null, auditId };
+    return { record: view(saved), employee: updated ? employeeView(updated) : null, auditId };
   }),
 ];

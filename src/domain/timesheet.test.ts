@@ -52,7 +52,7 @@ describe('state machine (D2)', () => {
     expect(TS_STATES.filter(tsPending)).toEqual(['pend', 'resub']);
   });
   test('history and audit text record from, to, who and why', () => {
-    const by = { personCode: 'EMP014', name: 'Manish Nepal' };
+    const by = { employeeCode: 'EMP014', name: 'Manish Nepal' };
     expect(historyEntry('pend', 'back', by, '2026-08-13T08:12:00.000Z', 'Break times missing'))
       .toEqual({ from: 'pend', to: 'back', by, at: '2026-08-13T08:12:00.000Z', reason: 'Break times missing' });
     expect(historyEntry('draft', 'pend', by, 'x').reason).toBe('');

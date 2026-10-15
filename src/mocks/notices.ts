@@ -1,6 +1,6 @@
 /* 1c group 6: the notice board (brief D10). Every rule is
    src/domain/notices.ts's; the handlers read the store into it. The audience
-   is worked out from the people collection on every read, never copied onto
+   is worked out from the employees collection on every read, never copied onto
    the notice. A refusal or a fault writes nothing, because serve() restores
    the store. One audit row per write; going live, or a text change on a live
    notice, raises notice_posted to the audience through the channel matrix. */
@@ -9,7 +9,7 @@ import { bump, refuse } from './http';
 import { serve } from './serve';
 import { actor } from './auth';
 import { writeAudit } from './audit';
-import { effectiveCode, nameOf, people, personByCode, recordAt, today, type Signed, type StoredPerson } from './world';
+import { effectiveCode, nameOf, employees, employeeByCode, recordAt, today, type Signed, type StoredEmployee } from './world';
 import { tenantRec } from './tenant';
 import { notifyEvent } from './notify';
 import {
@@ -21,7 +21,7 @@ import {
   ALREADY_POSTED, AUDIENCE_FIXED, DRAFT_DELETED, DRAFT_SAVED, NOTHING_CHANGED, NOTICES_OFF, NOTICE_STATUSES, NOT_LIVE, NO_LOCATION, NO_NOTICE, REASON_NEEDED,
   WITHDRAWN, ackProblem, ackedNow, ackedToast, audienceOf, cannotPostTo, editedToast, fieldsProblem, inScopes, latestAck, myNotices, noticeFor, noticeOrder,
   noticeScopes, noticeStatus, notDraft, outsideScope, owes, pinnedToast, planEdit, postedNote, postedNotices, postedToast, posterOrder, readerState,
-  sameScope, scopeKey, scopeLabel, withdrawnToast, type Notice, type NoticePerson, type NoticeRefusal, type NoticeScope,
+  sameScope, scopeKey, scopeLabel, withdrawnToast, type Notice, type NoticeEmployee, type NoticeRefusal, type NoticeScope,
 } from '@/domain/notices';
 import { flagOn } from '@/domain/modules';
 
@@ -36,13 +36,13 @@ function requireBoard() {
   const t = tenantRec();
   if (!flagOn(t.modules, t.flags, 'NOTICES')) refuseWith(NOTICES_OFF);
 }
-const asPerson = (p: StoredPerson): NoticePerson => ({ code: p.code, location: p.location, department: p.department, active: p.state === 'active' });
-const everyone = () => Object.values(people()).map(asPerson);
+const asEmployee = (p: StoredEmployee): NoticeEmployee => ({ code: p.code, location: p.location, department: p.department, active: p.state === 'active' });
+const everyone = () => Object.values(employees()).map(asEmployee);
 const names = { location: (c: string) => nameOf('locations', c), department: (c: string) => nameOf('departments', c) };
 const labelOf = (s: NoticeScope) => scopeLabel(s, names);
 interface Place { code: string; name: string; active?: boolean }
 const scopesFor = (s: Signed) => noticeScopes({
-  org: s.caps.includes('notice_org'), location: personByCode(effectiveCode(s))?.location ?? '', people: everyone(),
+  org: s.caps.includes('notice_org'), location: employeeByCode(effectiveCode(s))?.location ?? '', employees: everyone(),
   locations: Object.values(store.coll<Place>('locations')).map(l => ({ code: l.code, name: l.name, active: l.active !== false })),
   departments: Object.values(store.coll<Place>('departments')).map(d => ({ code: d.code, name: d.name })),
 });
@@ -65,7 +65,7 @@ const base = (n: StoredNotice) => ({
   pinned: n.pinned, urgent: n.urgent, mustAck: n.mustAck, from: n.from, until: n.until, status: noticeStatus(n, today()), by: n.by, at: n.at,
 });
 function readerView(n: StoredNotice, code: string): ReaderNotice {
-  const a = n.acks.find(x => x.personCode === code && x.textVersion === n.textVersion);
+  const a = n.acks.find(x => x.employeeCode === code && x.textVersion === n.textVersion);
   return { ...base(n), you: readerState(n, code), acknowledgedAt: a?.at ?? null, owed: owes(n, code, today()) };
 }
 function posterView(n: StoredNotice, scopes: readonly NoticeScope[]): PosterNotice {
@@ -78,11 +78,11 @@ const viewFor = (s: Signed, n: StoredNotice) => posterView(n, scopesFor(s));
 /* --------------------------------------------------------------- writing */
 const audit = (s: Signed, act: string, n: StoredNotice, detail: string, before: Record<string, unknown> | null, after: Record<string, unknown> | null) =>
   writeAudit({ who: actor(s), act, entity: 'notice', entityId: n.id, before, after: after ? { ...after, detail } : { detail } });
-/* Tells the audience: the event's matrix decides each person's channel. The
+/* Tells the audience: the event's matrix decides each employee's channel. The
    poster is not told of their own notice, though they still count in its
    audience (main-session ruling). */
 function tell(s: Signed, n: StoredNotice, updated: boolean) {
-  const note = postedNote(n, labelOf(n.scope), updated), poster = s.account.personCode;
+  const note = postedNote(n, labelOf(n.scope), updated), poster = s.account.employeeCode;
   const told = audienceOf(n, everyone()).map(p => p.code).filter(c => c !== poster);
   notifyEvent('notice_posted', 'subject', told, { ...note, area: 'Notices', ref: n.id });
 }
@@ -99,25 +99,25 @@ const checkFields = (f: { title: string; body: string; from: string; until: stri
 export const noticeHandlers = [
   serve(listMyNotices, ({ session }) => {
     requireBoard();
-    const code = effectiveCode(session), me = personByCode(code);
-    const mine = myNotices(list(), me && asPerson(me), today()).sort(noticeOrder);
+    const code = effectiveCode(session), me = employeeByCode(code);
+    const mine = myNotices(list(), me && asEmployee(me), today()).sort(noticeOrder);
     const items = mine.map(n => readerView(n, code)), current = items.filter(n => n.status === 'current').length;
     return { items, counts: { current, expired: items.length - current }, owed: items.filter(n => n.owed).length };
   }),
 
   serve(getMyNotice, ({ session, params }) => {
     requireBoard();
-    const code = effectiveCode(session), me = personByCode(code);
-    const n = myNotices(list(), me && asPerson(me), today()).find(x => x.id === params.id) ?? refuseWith(NO_NOTICE);
+    const code = effectiveCode(session), me = employeeByCode(code);
+    const n = myNotices(list(), me && asEmployee(me), today()).find(x => x.id === params.id) ?? refuseWith(NO_NOTICE);
     return readerView(n, code);
   }),
 
   serve(acknowledgeNotice, ({ session, params, body }) => {
     requireBoard();
-    const n = noticeAt(params.id), code = effectiveCode(session), me = personByCode(code);
-    const problem = ackProblem(n, me && asPerson(me), today(), body.textVersion);
+    const n = noticeAt(params.id), code = effectiveCode(session), me = employeeByCode(code);
+    const problem = ackProblem(n, me && asEmployee(me), today(), body.textVersion);
     if (problem) return refuseWith(problem);
-    const saved = bump(n, { acks: [...n.acks, { personCode: code, textVersion: n.textVersion, at: store.now() }] });
+    const saved = bump(n, { acks: [...n.acks, { employeeCode: code, textVersion: n.textVersion, at: store.now() }] });
     notices()[n.id] = saved;
     const auditId = audit(session, 'Notice acknowledged', saved, `v${n.textVersion} · outstanding → acknowledged`,
       { acknowledged: false }, { acknowledged: true, textVersion: n.textVersion });
@@ -130,7 +130,7 @@ export const noticeHandlers = [
     const statusOf = (n: StoredNotice) => noticeStatus(n, today());
     const counts = Object.fromEntries([['all', all.length], ...NOTICE_STATUSES.map(st => [st, all.filter(n => statusOf(n) === st).length])]) as Record<StatusFilter, number>;
     const want = query.status ?? 'all';
-    const me = personByCode(effectiveCode(session));
+    const me = employeeByCode(effectiveCode(session));
     return {
       items: all.filter(n => want === 'all' || statusOf(n) === want).map(n => posterView(n, scopes)), counts,
       scopes: scopes.map(s => ({ scope: s, key: scopeKey(s), label: labelOf(s) })), org: session.caps.includes('notice_org'),
@@ -142,15 +142,15 @@ export const noticeHandlers = [
     requireBoard();
     const n = noticeAt(params.id), scopes = scopesFor(session);
     if (!postedNotices([n], scopes).length) refuseWith(outsideScope(n.title, labelOf(n.scope)));
-    const here = personByCode(effectiveCode(session))?.location ?? '';
-    const all = Object.values(people()).filter(p => p.state === 'active' && noticeFor(n, asPerson(p)));
+    const here = employeeByCode(effectiveCode(session))?.location ?? '';
+    const all = Object.values(employees()).filter(p => p.state === 'active' && noticeFor(n, asEmployee(p)));
     const visible = session.caps.includes('notice_org') ? all : all.filter(p => p.location === here);
     const trail = Object.values(store.coll<AuditEntry>('audit')).filter(a => a.entity === 'notice' && a.entityId === n.id)
       .sort((a, b) => b.id.localeCompare(a.id))
       .map(a => ({ id: a.id, at: a.at, who: a.who.name, act: a.act, detail: String((a.after as { detail?: unknown } | undefined)?.detail ?? '') }));
     return {
       notice: posterView(n, scopes),
-      people: visible.map(p => {
+      employees: visible.map(p => {
         const a = latestAck(n, p.code);
         return { code: p.code, name: p.name, location: nameOf('locations', p.location), acknowledged: ackedNow(n, p.code), textVersion: a?.textVersion ?? null, at: a?.at ?? null };
       }),
@@ -176,7 +176,7 @@ export const noticeHandlers = [
     }
     const live = goLive(session, draft);
     const k = audienceOf(live, everyone()).length;
-    const auditId = audit(session, 'Notice posted', live, `new → live · ${labelOf(live.scope)} · ${k} people`, null,
+    const auditId = audit(session, 'Notice posted', live, `new → live · ${labelOf(live.scope)} · ${k} employees`, null,
       { state: 'live', title: live.title, scope: labelOf(live.scope), audience: k });
     return { record: viewFor(session, live), auditId, message: posted(live) };
   }),
@@ -207,7 +207,7 @@ export const noticeHandlers = [
     if (body.post) {
       saved = goLive(session, saved);
       const k = audienceOf(saved, everyone()).length;
-      const auditId = audit(session, 'Notice posted', saved, [`draft → live · ${labelOf(saved.scope)} · ${k} people`, ...changes].join(' · '),
+      const auditId = audit(session, 'Notice posted', saved, [`draft → live · ${labelOf(saved.scope)} · ${k} employees`, ...changes].join(' · '),
         { state: 'draft' }, { state: 'live', audience: k });
       return { record: viewFor(session, saved), auditId, message: posted(saved) };
     }
@@ -243,7 +243,7 @@ export const noticeHandlers = [
     if (n.state !== 'draft') return refuseWith(n.state === 'withdrawn' ? WITHDRAWN : ALREADY_POSTED);
     const live = goLive(session, bump(n, {}));
     const k = audienceOf(live, everyone()).length;
-    const auditId = audit(session, 'Notice posted', live, `draft → live · ${labelOf(live.scope)} · ${k} people`, { state: 'draft' }, { state: 'live', audience: k });
+    const auditId = audit(session, 'Notice posted', live, `draft → live · ${labelOf(live.scope)} · ${k} employees`, { state: 'draft' }, { state: 'live', audience: k });
     return { record: viewFor(session, live), auditId, message: posted(live) };
   }),
 

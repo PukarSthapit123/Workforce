@@ -1,4 +1,4 @@
-/* Module 2b Clocking (timesheet capture method B). One clock record per person
+/* Module 2b Clocking (timesheet capture method B). One clock record per employee
    per day (brief D1): the events the server stamped, never the browser's
    times. Everything the card shows is derived here from those events: the
    state, the time worked with breaks paused, and the day the clock writes
@@ -53,7 +53,7 @@ export const clockTime = (at: string) => clockFromIso(at).time;
    like a break (main-session ruling), so the day's net hours leave it out as
    the timer does. A break still open, or a clock out not yet followed by a
    clock in, has no pair yet. A pair that starts and ends in the same minute
-   is left out: module 2 refuses a zero-length break, and a pair the person
+   is left out: module 2 refuses a zero-length break, and a pair the employee
    never typed must not stop the day from saving. */
 export function clockedBreaks(events: readonly ClockEvent[]): BreakInput[] {
   const out: BreakInput[] = [];
@@ -96,10 +96,10 @@ export const breaksUsed = (existing: readonly BreakInput[], events: readonly Clo
 export interface ClockEntry { start: string; finish: string; breaks: BreakInput[]; fields: Record<string, string | boolean> }
 /* The day's first entry as the clock leaves it (D3), writing only what the
    clock owns since its last write (review I4): the finish is the last clock
-   out (or the finish the person gave when closing the clock); the clocked
+   out (or the finish the employee gave when closing the clock); the clocked
    pairs not yet written are merged into the breaks already there; the start
    is the first clock in on the clock's first write, and after that the start
-   the person left. A break they edited or deleted stays as they left it. The
+   the employee left. A break they edited or deleted stays as they left it. The
    entry's other fields stay as they were. */
 export function clockEntry(events: readonly ClockEvent[],
   existing: { start?: string; breaks: readonly BreakInput[]; fields?: Record<string, string | boolean> } | undefined,
@@ -207,7 +207,7 @@ export const noDayNotice = (name: string, date: string, finish: string) => ({ ti
   body: `${name} did not clock out on ${formatDay(date)} and finished at ${formatTime(finish)}. The day can no longer be changed from the clock, so it needs an amendment.` });
 /* Review M3: a clock out a day rule refuses (the daily maximum, say) leaves
    the clock running, so the card offers the close flow with a finish the
-   person chooses, and the refusal names it. The finish must have come: one
+   employee chooses, and the refusal names it. The finish must have come: one
    at or before the first clock in is the next morning, as on the day form. */
 export const CHOOSE_FINISH = 'Clock out at a time you choose';
 export const CHOOSE_FINISH_NEXT = `Use “${CHOOSE_FINISH}” and enter the time you finished.`;

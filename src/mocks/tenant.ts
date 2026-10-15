@@ -8,7 +8,7 @@
    through to that record and module 2 and 3 keep reading one source. Turning
    Rota off sets every scheduled shift aside in its own collection and turning
    it on puts them back (rotaShiftsOff / rotaShiftsOn), except on a day the
-   person is now on leave or off sick: that cell takes the absence mark through
+   employee is now on leave or off sick: that cell takes the absence mark through
    module 3's week path when leave reaches the rota (module 4 D7), else it
    stays empty. */
 import { store } from './store';
@@ -78,7 +78,7 @@ export function view(t: StoredTenant): Tenant {
     rotaSetAside: setAside()?.count ?? 0,
   };
 }
-export const rotaActor = (s: Parameters<typeof actor>[0]): RotaActor => { const w = actor(s); return { personCode: w.personCode, name: w.name }; };
+export const rotaActor = (s: Parameters<typeof actor>[0]): RotaActor => { const w = actor(s); return { employeeCode: w.employeeCode, name: w.name }; };
 const refuseWith = (r: DomainRefusal): never =>
   refuse(r.status, { code: r.code, message: r.message, next: r.next, ...(r.field ? { field: r.field } : {}) });
 
@@ -101,7 +101,7 @@ export function rotaOn(by: RotaActor): { restored: number; notRestored: number }
   const weeks = store.coll<StoredWeek>('rotaWeeks');
   const dateOf = (id: string, day: number) => { const w = recordAt(weeks, id); return w ? addDays(w.weekStart, day) : ''; };
   const r = restoreShifts(Object.fromEntries(Object.values(weeks).map(w => [w.id, w.lines])), kept.weeks,
-    (id, person, day) => { const date = dateOf(id, day); return date ? leaveAbsenceOn(person, date) : ''; });
+    (id, employee, day) => { const date = dateOf(id, day); return date ? leaveAbsenceOn(employee, date) : ''; });
   for (const [id, lines] of Object.entries(r.restored)) {
     const w = recordAt(weeks, id);
     if (w) weeks[id] = bump(w, { lines });
@@ -109,13 +109,13 @@ export function rotaOn(by: RotaActor): { restored: number; notRestored: number }
   store.db[SET_ASIDE] = {};
   const t = tenantRec();
   if (leaveWritesRota(t.modules, Object.fromEntries(Object.entries(t.flags).map(([k, v]) => [k, Boolean(v)])))) {
-    const byMark = new Map<string, { personCode: string; mark: string; dates: string[] }>();
+    const byMark = new Map<string, { employeeCode: string; mark: string; dates: string[] }>();
     for (const h of r.held) {
-      const key = `${h.person}|${h.mark}`, at = byMark.get(key) ?? { personCode: h.person, mark: h.mark, dates: [] };
+      const key = `${h.employee}|${h.mark}`, at = byMark.get(key) ?? { employeeCode: h.employee, mark: h.mark, dates: [] };
       at.dates.push(dateOf(h.week, h.day));
       byMark.set(key, at);
     }
-    for (const x of byMark.values()) writeAbsence({ personCode: x.personCode, dates: x.dates, mark: x.mark, by, coverReason: leaveCoverReason(x.mark) });
+    for (const x of byMark.values()) writeAbsence({ employeeCode: x.employeeCode, dates: x.dates, mark: x.mark, by, coverReason: leaveCoverReason(x.mark) });
   }
   return { restored: r.count, notRestored: r.held.length };
 }
@@ -138,7 +138,7 @@ function keptFor(code: string): ModuleEffect['kept'] {
     R: [['rota weeks', 'rotaWeeks'], ['working patterns', 'patterns'], ['cover requests', 'coverRequests']],
     L: [['leave requests', 'leaveRequests'], ['sickness episodes', 'sickEpisodes']],
   } as Record<string, [string, string][]>)[code] ?? [];
-  /* Onboarding: the cases of people still onboarding, kept for when the module returns */
+  /* Onboarding: the cases of employees still onboarding, kept for when the module returns */
   if (code === 'ON') return [{ what: 'onboarding cases in progress', count: casesInProgress() }];
   return rows.map(([what, coll]) => ({ what, count: count(coll) }));
 }

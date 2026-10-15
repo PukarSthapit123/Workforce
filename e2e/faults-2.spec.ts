@@ -47,8 +47,8 @@ test('a fault on any timesheet write shows the refusal, and leaves no record and
   expect((await dayState(api, 'EMP004', '2026-08-03', '2026-08-03')).state).toBe('draft');
 
   await signInEmail(page, PUKAR);
-  await page.goto('/team/tpeople');
-  await page.getByTestId(tid.people.open('EMP005')).click();
+  await page.goto('/team/temployees');
+  await page.getByTestId(tid.employees.open('EMP005')).click();
   await page.getByTestId(tid.proxy.open).click();
   await page.getByTestId(tid.dayForm.field('start')).fill('07:00');
   await page.getByTestId(tid.dayForm.field('finish')).fill('15:00');

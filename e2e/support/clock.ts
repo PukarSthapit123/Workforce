@@ -35,13 +35,13 @@ export async function myClock(api: { get(path: string): Promise<Reply> }): Promi
   expect(r.status, 'my clock').toBe(200);
   return r.body as ClockRead;
 }
-/* A clock move straight to the server as the signed-in person, with the version the card would send. */
+/* A clock move straight to the server as the signed-in employee, with the version the card would send. */
 export async function clockMove(page: Page, api: { get(path: string): Promise<Reply> }, path: 'in' | 'break/start' | 'break/end' | 'out'): Promise<Reply> {
   return sendVersioned(page, 'POST', `/api/v1/clock/${path}`, (await myClock(api)).version);
 }
-/* A clock left running on an earlier day, made the way a person would make
+/* A clock left running on an earlier day, made the way an employee would make
    it: a clock in on that day at that time, then the server clock moved on to
-   `back` (the frozen Thursday by default). Signed in as the person. */
+   `back` (the frozen Thursday by default). Signed in as the employee. */
 export async function forgetClock(page: Page, api: { get(path: string): Promise<Reply>; setClock(iso: string | null): Promise<void> },
   date: string, hms: string, back: string) {
   await api.setClock(london(hms, date));
@@ -58,6 +58,6 @@ export async function openMyDay(page: Page) {
 }
 
 export const clockAudit = async (page: Page) => (await auditRows(page, 'clockRecord')).map(a => a.act);
-export interface NoteStored { id: string; personId: string; event?: string; title: string; body: string }
+export interface NoteStored { id: string; employeeId: string; event?: string; title: string; body: string }
 export const lateNotes = async (page: Page) =>
-  (await stored<NoteStored>(page, 'notifications')).filter(n => n.event === 'ts_late').map(n => [n.personId, n.title, n.body]);
+  (await stored<NoteStored>(page, 'notifications')).filter(n => n.event === 'ts_late').map(n => [n.employeeId, n.title, n.body]);

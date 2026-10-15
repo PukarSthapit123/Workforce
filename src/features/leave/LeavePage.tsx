@@ -51,7 +51,7 @@ function MyLeaveView({ m }: { m: MyLeave }) {
             <Tip testId={tid.leave.offSickTip} text="HR can return those days to your balance once your manager records the sickness." /></div>
           <div className="ml-auto">
             <Button testId={tid.leave.tellMgr} kind="ghost" small
-              onClick={() => toastRefusal({ message: tellManagerToast(m.person.manager), next: 'Tell your manager directly for now.' })}>Tell my manager</Button>
+              onClick={() => toastRefusal({ message: tellManagerToast(m.employee.manager), next: 'Tell your manager directly for now.' })}>Tell my manager</Button>
           </div>
         </div>
       </Card>

@@ -1,4 +1,4 @@
-/* Module 2b Clocking handlers. One clock record per person per day (D1),
+/* Module 2b Clocking handlers. One clock record per employee per day (D1),
    stamped with the server's clock; every rule is src/domain/clock.ts's. Own
    only: each path is the caller's own clock (Review Focus 1). Clock out, and
    closing a forgotten clock, write the day through module 2's day save path
@@ -14,7 +14,7 @@ import { writeAudit } from './audit';
 import { notifyEvent } from './notify';
 import { rotaDayOn } from './rota';
 import { asStored, absenceBlocks, captureRules, dayView, daysOf, draftBase, isLocked, refuseLocked, writeDraft } from './timesheets';
-import { effectiveCode, people, personByCode, recordAt, type Signed, type StoredPerson } from './world';
+import { effectiveCode, employees, employeeByCode, recordAt, type Signed, type StoredEmployee } from './world';
 import { clockIn, clockOut, closeClock, endBreak, getMyClock, startBreak, type ClockMoved, type ClockRecord } from '@/contract/clock';
 import type { Refusal } from '@/contract/common';
 import type { DayInput, RotaDay } from '@/contract/timesheets';
@@ -28,7 +28,7 @@ import { DEFAULT_EXTRAS, flagOn, modOn } from '@/domain/modules';
 import { addDays, clockFromIso, formatDay, toMin } from '@/domain/time';
 
 interface StoredClock {
-  id: string; version: number; updatedAt: string; personCode: string; date: string; events: ClockEvent[];
+  id: string; version: number; updatedAt: string; employeeCode: string; date: string; events: ClockEvent[];
   late: boolean; closedLate: { finish: string; at: string } | null;
   /* the clocked pairs the clock has written to the day (review I4); absent on a record from before it was kept */
   written?: ClockWritten | null;
@@ -49,7 +49,7 @@ function tenant(): Tenant {
 const live = (t: Tenant) => modOn(t.modules, 'TS') && modOn(t.modules, 'B');
 const breaksOn = (t: Tenant) => flagOn(t.modules, t.flags, 'BREAKS');
 const breaksMax = (t: Tenant) => t.extras?.breaksMax ?? DEFAULT_EXTRAS.breaksMax;
-const typeOf = (p: StoredPerson) => Object.values(store.coll<StoredType>('employeeTypes')).find(x => x.code === p.employeeType);
+const typeOf = (p: StoredEmployee) => Object.values(store.coll<StoredType>('employeeTypes')).find(x => x.code === p.employeeType);
 const closed = (r: StoredClock) => r.closedLate != null || r.closedNoDay != null;
 const stateOf = (r: StoredClock) => clockState(r.events, closed(r));
 const view = (r: StoredClock): ClockRecord => ({ ...r, written: r.written ?? null, closedNoDay: r.closedNoDay ?? null, state: stateOf(r),
@@ -57,19 +57,19 @@ const view = (r: StoredClock): ClockRecord => ({ ...r, written: r.written ?? nul
 const refuseWith = (p: ClockProblem | Refusal, status = 409): never => refuse(status, { code: p.code, message: p.message, next: p.next, ...('field' in p && p.field ? { field: p.field } : {}) });
 
 /* The published rota line for the day: a shift, never a rest day, leave or sickness (D5). */
-function rotaLine(p: StoredPerson, date: string): RotaDay | null {
+function rotaLine(p: StoredEmployee, date: string): RotaDay | null {
   const r = rotaDayOn(p.code, date);
   return r && r.from && r.code !== 'V' && r.code !== 'S' ? r : null;
 }
-/* The person's line manager, by the name their record carries. */
-const lineManager = (p: StoredPerson) => Object.values(people()).find(x => x.name === p.manager.trim() && x.code !== p.code);
-const me = (s: Signed) => personByCode(effectiveCode(s))
-  ?? refuse(404, { code: 'not-found', message: 'That person record no longer exists.', next: 'Reload the page.' });
+/* The employee's line manager, by the name their record carries. */
+const lineManager = (p: StoredEmployee) => Object.values(employees()).find(x => x.name === p.manager.trim() && x.code !== p.code);
+const me = (s: Signed) => employeeByCode(effectiveCode(s))
+  ?? refuse(404, { code: 'not-found', message: 'That employee record no longer exists.', next: 'Reload the page.' });
 
 /* The day a new clock goes on: the calendar day, except from midnight until
    the finish of the day before's night line, when it is that line's day, as
    long as that day has no clock yet (review M1). */
-function clockDate(p: StoredPerson): string {
+function clockDate(p: StoredEmployee): string {
   const now = clockFromIso(store.now()), before = addDays(now.date, -1), line = rotaLine(p, before);
   const theirs = recordAt(clocks(), clockId(p.code, before));
   return line && inNightTail(line, now.time) && !theirs?.events.length ? before : now.date;
@@ -77,15 +77,15 @@ function clockDate(p: StoredPerson): string {
 /* The record the card acts on, and any forgotten one. A record still running
    or on break from an earlier day is the current one while it is within the
    daily maximum of its first clock in (a night shift), and forgotten after. */
-function locate(p: StoredPerson): { current: StoredClock | undefined; open: StoredClock | undefined } {
+function locate(p: StoredEmployee): { current: StoredClock | undefined; open: StoredClock | undefined } {
   const d = today(), now = store.now(), max = captureRules().maxDaily;
-  const active = Object.values(clocks()).filter(r => r.personCode === p.code && isOpenState(stateOf(r))).sort((a, b) => b.date.localeCompare(a.date))[0];
+  const active = Object.values(clocks()).filter(r => r.employeeCode === p.code && isOpenState(stateOf(r))).sort((a, b) => b.date.localeCompare(a.date))[0];
   const todays = recordAt(clocks(), clockId(p.code, clockDate(p)));
   if (active && isForgotten({ ...active, closed: false }, d, now, max)) return { current: todays, open: active };
   return { current: active ?? todays, open: undefined };
 }
 /* D4: why the day cannot be clocked, in module 2's and module 4's own words, or null. */
-function dayBlocked(p: StoredPerson, date: string): Refusal | null {
+function dayBlocked(p: StoredEmployee, date: string): Refusal | null {
   try {
     if (isLocked(date)) refuseLocked(p, date);
     const { base } = draftBase(p, date);
@@ -98,8 +98,8 @@ function dayBlocked(p: StoredPerson, date: string): Refusal | null {
   }
 }
 const shortBlocked = (b: Refusal | null) => (b ? { code: b.code, message: b.message, next: b.next } : null);
-/* Every write: the clock is live and the person's type enters by clock. */
-function owner(s: Signed): { p: StoredPerson; t: Tenant } {
+/* Every write: the clock is live and the employee's type enters by clock. */
+function owner(s: Signed): { p: StoredEmployee; t: Tenant } {
   const p = me(s), t = tenant();
   if (!live(t)) refuseWith(CLOCK_OFF);
   const type = typeOf(p);
@@ -111,16 +111,16 @@ const put = (base: StoredClock, changes: Partial<StoredClock>): StoredClock => {
   clocks()[rec.id] = rec;
   return rec;
 };
-const blank = (p: StoredPerson, date: string): StoredClock =>
-  ({ id: clockId(p.code, date), version: 0, updatedAt: store.now(), personCode: p.code, date, events: [], late: false, closedLate: null });
-const storedDay = (p: StoredPerson, date: string) => daysOf(p.code).find(d => d.date === date);
+const blank = (p: StoredEmployee, date: string): StoredClock =>
+  ({ id: clockId(p.code, date), version: 0, updatedAt: store.now(), employeeCode: p.code, date, events: [], late: false, closedLate: null });
+const storedDay = (p: StoredEmployee, date: string) => daysOf(p.code).find(d => d.date === date);
 
 /* D3: the clock's day, written through module 2's save path as a draft with
    captureSource clock. The stored day keeps everything the clock does not
    own; its first entry takes the clock's finish and the breaks it has not
    written yet, and its start on the clock's first write (review I4); an
    empty shift takes the rota line's. Refuses as the day save refuses. */
-function writeClockDay(s: Signed, p: StoredPerson, t: Tenant, rec: StoredClock, events: readonly ClockEvent[], finish?: string) {
+function writeClockDay(s: Signed, p: StoredEmployee, t: Tenant, rec: StoredClock, events: readonly ClockEvent[], finish?: string) {
   const date = rec.date, { existing, base } = draftBase(p, date);
   const stored = existing ? asStored(existing) : null, first = stored?.entries[0];
   const entry = clockEntry(events, first, breaksMax(t), rec.written ?? null, finish);
@@ -203,7 +203,7 @@ export const clockHandlers = [
     const now = store.now(), events = [...rec.events, ...eventsFor(st, 'out', now)];
     let wrote: ReturnType<typeof writeClockDay>;
     try { wrote = writeClockDay(session, p, t, rec, events); } catch (e) {
-      /* review M3: a day rule refused it, so the clock keeps running; the card offers a finish the person chooses */
+      /* review M3: a day rule refused it, so the clock keeps running; the card offers a finish the employee chooses */
       if (e instanceof Refused) refuse(e.status, { ...e.body, next: CHOOSE_FINISH_NEXT });
       throw e;
     }

@@ -9,13 +9,13 @@
 import { z } from 'zod';
 import { defineEndpoint } from './endpoints';
 import { IsoDateTime, RecordMeta } from './common';
-import { IsoDate } from './people';
+import { IsoDate } from './employees';
 
 export const PayrollState = z.enum(['notready', 'warnings', 'ready', 'exported', 'reconciled']);
 export const RunState = z.enum(['open', 'exported', 'reconciled']);
 export const ReadinessKey = z.enum(['settings', 'missing', 'awaiting', 'back', 'mgrok', 'failed', 'critical', 'compliance', 'resource',
   'queued', 'unreconciled', 'exceptions', 'drafts']);
-const Who = z.object({ personCode: z.string(), name: z.string() });
+const Who = z.object({ employeeCode: z.string(), name: z.string() });
 const When = z.object({ date: IsoDate, time: z.string() });
 
 export const RunStep = z.object({

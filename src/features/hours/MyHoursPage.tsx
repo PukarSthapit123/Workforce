@@ -28,7 +28,7 @@ export function MyHoursPage() {
 }
 
 function HoursView({ h }: { h: MyHours }) {
-  const p = h.position, bank = isBank(h.person.contractedHours);
+  const p = h.position, bank = isBank(h.employee.contractedHours);
   return (
     <>
       <Stats>

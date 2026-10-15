@@ -11,8 +11,8 @@ import { Shell } from './Shell';
    prototype's per-role feeds, copied to each account of that role. */
 withFakeServer();
 beforeEach(() => resetTo('social'));
-interface Row { id: string; personId: string; read: boolean; title: string }
-const rows = (personId: string) => Object.values(store.coll<Row>('notifications')).filter(n => n.personId === personId);
+interface Row { id: string; employeeId: string; read: boolean; title: string }
+const rows = (employeeId: string) => Object.values(store.coll<Row>('notifications')).filter(n => n.employeeId === employeeId);
 const openBell = async () => {
   await userEvent.click(await screen.findByTestId(tid.shell.bell));
   return screen.findByTestId(tid.inbox.panel);
@@ -20,7 +20,7 @@ const openBell = async () => {
 
 test('the bell shows the real unread count and the panel lists my items, newest first, with full test id coverage', async () => {
   await signInAs('manager');
-  renderPage(<Shell />, '/team/tpeople');
+  renderPage(<Shell />, '/team/temployees');
   expect(await screen.findByTestId(tid.shell.bellCount)).toHaveTextContent('5');
   expect(screen.getByTestId(tid.shell.bell)).toHaveAccessibleName('Notifications, 5 unread');
   const panel = await openBell();
@@ -34,7 +34,7 @@ test('the bell shows the real unread count and the panel lists my items, newest 
 
 test('opening an item marks it read and goes to its page; the count follows the server', async () => {
   await signInAs('manager');
-  renderPage(<Shell />, '/team/tpeople');
+  renderPage(<Shell />, '/team/temployees');
   const panel = await openBell();
   const item = within(panel).getAllByRole('link').find(a => /Coverage issue/.test(a.textContent ?? ''));
   if (!item) throw new Error('no coverage item');
@@ -53,8 +53,8 @@ test('an item whose page I cannot reach is shown without a link; Mark all read c
   const acc = accountOf('admin') as ReturnType<typeof accountOf> & { revocations: string[] };
   acc.revocations = ['integration'];
   await signInAs('admin');
-  const admin = acc.personCode;
-  store.coll('notifications').ntf_test_home = { id: 'ntf_test_home', version: 1, updatedAt: '2026-08-13T14:30:00.000Z', personId: admin, area: 'Timesheet',
+  const admin = acc.employeeCode;
+  store.coll('notifications').ntf_test_home = { id: 'ntf_test_home', version: 1, updatedAt: '2026-08-13T14:30:00.000Z', employeeId: admin, area: 'Timesheet',
     title: 'Approval delegated to you', body: 'Covering Rachel Hussain', at: '2026-08-13T14:00:00.000Z', read: false };
   const unread = rows(admin).filter(n => !n.read).length;
   renderPage(<Shell />, '/setup/asetup');

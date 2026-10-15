@@ -10,7 +10,7 @@ interface Section { key: string; label: string; description: string; pages: NavT
 
 /* The prototype's icon for each section (SETUP_SECTIONS[].ic, v15:3975-3991),
    from the shared icon set. */
-const ICON: Record<string, ReactNode> = { org: <Building />, mods: <Blocks />, people: <Users />, gov: <ShieldCheck />, int: <Plug /> };
+const ICON: Record<string, ReactNode> = { org: <Building />, mods: <Blocks />, employees: <Users />, gov: <ShieldCheck />, int: <Plug /> };
 
 /* Ported from the prototype's admSetupIndex and SETUP_SECTIONS
    (qnipay-workforce-v15.html:9271-9281, 3975-3991): an administrator has one

@@ -160,7 +160,7 @@ function SetupDraftView({ setup, tenant, catalogue, onOpenPolicy }: { setup: Lea
       </AdminCard>
 
       <AdminCard testId={tid.mleave.card('rota')} icon={<Link2 />} title="Leave and Rota" desc="How approved leave affects availability">
-        {flagRow('LV_ROTA', 'Approved leave makes the person unavailable on the rota',
+        {flagRow('LV_ROTA', 'Approved leave makes the employee unavailable on the rota',
           'Coverage is recalculated, and the fulfilment workflow may trigger if the day falls below minimum')}
         {!setup.rotaOn && <p data-testid={tid.mleave.rotaOff} className="border-b py-[11px] text-xs text-text-muted">
           The Rota module is off for this tenant, so approved leave reaches the timesheet but no rota.</p>}
@@ -388,8 +388,8 @@ function LeaversCard({ leavers }: { leavers: NonNullable<LeaveSetup['leavers']> 
               <TableHead className="text-right">Taken</TableHead><TableHead className="text-right">Difference</TableHead><TableHead>Outcome</TableHead>
             </TableRow></TableHeader>
             <TableBody>{leavers.rows.map(x => (
-              <Row key={x.personCode} testId={tid.mleave.leaver(x.personCode)}>
-                <TableCell><strong>{x.name}</strong><div className="font-mono text-xs text-text-muted">{x.personCode}</div></TableCell>
+              <Row key={x.employeeCode} testId={tid.mleave.leaver(x.employeeCode)}>
+                <TableCell><strong>{x.name}</strong><div className="font-mono text-xs text-text-muted">{x.employeeCode}</div></TableCell>
                 <TableCell className="font-mono">{formatDmy(x.leaveDate)}</TableCell>
                 <TableCell className="text-right tabular-nums">{x.months}</TableCell>
                 <TableCell className="text-right font-mono tabular-nums">{x.full} d</TableCell>

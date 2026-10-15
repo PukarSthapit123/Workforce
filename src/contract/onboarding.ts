@@ -11,7 +11,7 @@
 import { z } from 'zod';
 import { defineEndpoint } from './endpoints';
 import { IsoDateTime, RecordMeta } from './common';
-import { DateOrBlank, IsoDate, Person, PersonState } from './people';
+import { DateOrBlank, IsoDate, Employee, EmployeeState } from './employees';
 
 const Tone = z.enum(['neu', 'info', 'warn', 'ok', 'err']);
 /* the domain's STEP_IDS and TASK_STATES (src/domain/onboarding.ts) */
@@ -55,7 +55,7 @@ export const OnbDataRecord = z.object({
 const AtOrBlank = z.union([IsoDateTime, z.literal('')]);
 /* The case (D1). steps and docs hold task states by id; acks the policy version acknowledged. */
 export const OnboardingCaseRecord = RecordMeta.extend({
-  personCode: z.string(), steps: z.record(z.string(), TaskState), docs: z.record(z.string(), TaskState), files: z.record(z.string(), OnbFileRecord),
+  employeeCode: z.string(), steps: z.record(z.string(), TaskState), docs: z.record(z.string(), TaskState), files: z.record(z.string(), OnbFileRecord),
   rejections: z.record(z.string(), z.string()), acks: z.record(z.string(), z.string()), read: z.record(z.string(), z.boolean()),
   data: OnbDataRecord, signature: z.string(), consent: z.boolean(), submittedAt: AtOrBlank, ref: z.string(), invitedAt: AtOrBlank, startedAt: AtOrBlank,
   /* what was asked when they submitted: the start is judged against it, never against a requirement added later */
@@ -83,16 +83,16 @@ export type Blocker = z.infer<typeof Blocker>;
 /* "3 of 7 done" */
 export const OnbProgress = z.object({ done: z.number().int(), total: z.number().int(), pc: z.number().int(), text: z.string() });
 export type OnbProgress = z.infer<typeof OnbProgress>;
-export const OnbPerson = z.object({
-  code: z.string(), id: z.string(), name: z.string(), first: z.string(), email: z.string(), start: DateOrBlank, state: PersonState, stateLabel: z.string(),
+export const OnbEmployee = z.object({
+  code: z.string(), id: z.string(), name: z.string(), first: z.string(), email: z.string(), start: DateOrBlank, state: EmployeeState, stateLabel: z.string(),
   stateTone: Tone, stateGlyph: z.string(), location: z.string(), locationName: z.string(), employeeType: z.string(), employeeTypeName: z.string(), manager: z.string(),
 });
-export type OnbPerson = z.infer<typeof OnbPerson>;
+export type OnbEmployee = z.infer<typeof OnbEmployee>;
 /* One starter's onboarding, as the portal and the tracker read it. toSubmit is
-   what the person still has to do; toStart adds the checks only HR can make.
-   open: the person can still change it (not submitted, or a step sent back). */
+   what the employee still has to do; toStart adds the checks only HR can make.
+   open: the employee can still change it (not submitted, or a step sent back). */
 export const OnboardingDetail = z.object({
-  person: OnbPerson, case: OnboardingCaseRecord, features: OnbFeatures, steps: z.array(OnbStepView), documents: z.array(OnbDocumentView),
+  employee: OnbEmployee, case: OnboardingCaseRecord, features: OnbFeatures, steps: z.array(OnbStepView), documents: z.array(OnbDocumentView),
   policies: z.array(OnbPolicyView), progress: OnbProgress, toSubmit: z.array(Blocker), toStart: z.array(Blocker), open: z.boolean(),
   /* "Submitted with reference ONB-1001. HR has been told.", or '' */
   submitted: z.string(),
@@ -106,7 +106,7 @@ export type OnboardingDetail = z.infer<typeof OnboardingDetail>;
    convictions), no signature, no consent. Strict, so a field added to the
    handler by mistake fails the response check instead of reaching the browser. */
 export const StarterOnboarding = z.strictObject({
-  person: OnbPerson, caseRef: z.object({ id: z.string(), version: z.number().int().nonnegative() }), steps: z.array(OnbStepView),
+  employee: OnbEmployee, caseRef: z.object({ id: z.string(), version: z.number().int().nonnegative() }), steps: z.array(OnbStepView),
   documents: z.array(OnbDocumentView), progress: OnbProgress, toStart: z.array(Blocker), submittedAt: AtOrBlank, ref: z.string(),
 });
 export type StarterOnboarding = z.infer<typeof StarterOnboarding>;
@@ -143,18 +143,18 @@ export type CaseSubmitted = z.infer<typeof CaseSubmitted>;
 
 /* ----------------------------------------------------------------- team */
 export const TrackerRow = z.object({
-  person: OnbPerson, caseRef: z.object({ id: z.string(), version: z.number().int().nonnegative() }), progress: OnbProgress,
+  employee: OnbEmployee, caseRef: z.object({ id: z.string(), version: z.number().int().nonnegative() }), progress: OnbProgress,
   /* start-stage blockers: what stops them becoming active */
   blockers: z.array(Blocker), canInvite: z.boolean(), submittedAt: AtOrBlank, ref: z.string(),
 });
 export type TrackerRow = z.infer<typeof TrackerRow>;
 /* An uploaded document waiting on a check. */
 export const OnbQueueRow = z.object({
-  person: OnbPerson, caseRef: z.object({ id: z.string(), version: z.number().int().nonnegative() }),
+  employee: OnbEmployee, caseRef: z.object({ id: z.string(), version: z.number().int().nonnegative() }),
   document: OnbDocumentRecord, file: OnbFileRecord, sizeText: z.string(),
 });
 export type OnbQueueRow = z.infer<typeof OnbQueueRow>;
-/* The starters at the locations this person tracks (D5): their own, or every location with onb_cfg. */
+/* The starters at the locations this employee tracks (D5): their own, or every location with onb_cfg. */
 export const TeamOnboarding = z.object({
   rows: z.array(TrackerRow), queue: z.array(OnbQueueRow), toVerify: z.number().int(), verify: z.boolean(),
   all: z.boolean(), locationName: z.string(),
@@ -163,8 +163,8 @@ export const TeamOnboarding = z.object({
 });
 export type TeamOnboarding = z.infer<typeof TeamOnboarding>;
 export const RejectDocument = z.object({ reason: z.string().max(300) });
-/* Invite and Start them move the person along the lifecycle as well as the case. */
-export const StarterMoved = CaseChanged.extend({ person: Person, auditId: z.string() });
+/* Invite and Start them move the employee along the lifecycle as well as the case. */
+export const StarterMoved = CaseChanged.extend({ employee: Employee, auditId: z.string() });
 export type StarterMoved = z.infer<typeof StarterMoved>;
 export const StarterChased = z.object({ outstanding: z.number().int(), summary: z.string(), auditId: z.string() });
 export type StarterChased = z.infer<typeof StarterChased>;
@@ -177,7 +177,7 @@ export const OnbStepSetup = z.object({ id: OnbStepId, available: z.boolean(), ne
 export const OnboardingSetup = z.object({
   config: OnboardingConfigRecord, policies: z.array(OnbPolicySetupView), features: OnbFeatures, steps: z.array(OnbStepSetup),
   verifiers: z.array(z.object({ value: Verifier, label: z.string() })),
-  /* people part-way through: candidates and preboarders with a case */
+  /* employees part-way through: candidates and preboarders with a case */
   inProgress: z.number().int(),
 });
 export type OnboardingSetup = z.infer<typeof OnboardingSetup>;
@@ -193,7 +193,7 @@ export const PolicyDraft = z.object({ label: z.string().max(80), ver: z.string()
 export type PolicyDraft = z.infer<typeof PolicyDraft>;
 export const PolicySaved = z.object({ record: OnbPolicySetupView, summary: z.string(), auditId: z.string().nullable() });
 export type PolicySaved = z.infer<typeof PolicySaved>;
-/* asked: people whose acknowledgement the new version cleared (D10). */
+/* asked: employees whose acknowledgement the new version cleared (D10). */
 export const PolicyUploaded = z.object({ record: OnbPolicySetupView, asked: z.number().int(), summary: z.string(), auditId: z.string() });
 export type PolicyUploaded = z.infer<typeof PolicyUploaded>;
 export const PolicyRemoved = z.object({ id: z.string(), summary: z.string(), auditId: z.string() });
@@ -203,8 +203,8 @@ export type PolicyRemoved = z.infer<typeof PolicyRemoved>;
 const ByStep = z.object({ step: z.string().min(1) });
 const ByDoc = z.object({ doc: z.string().min(1) });
 const ByPolicy = z.object({ id: z.string().min(1) });
-const ByPerson = z.object({ personCode: z.string().min(1) });
-const ByPersonDoc = z.object({ personCode: z.string().min(1), doc: z.string().min(1) });
+const ByEmployee = z.object({ employeeCode: z.string().min(1) });
+const ByEmployeeDoc = z.object({ employeeCode: z.string().min(1), doc: z.string().min(1) });
 
 export const getMyOnboarding = defineEndpoint({ method: 'GET', path: '/api/v1/onboarding/me', response: OnboardingDetail, capability: 'own_onb', errors: [409],
   summary: 'My onboarding: the steps I am asked, my documents and policies, my progress and what is still to do. Only while I am a candidate or preboarding.' });
@@ -228,21 +228,21 @@ export const submitOnboarding = defineEndpoint({ method: 'POST', path: '/api/v1/
    each action still needs its own. */
 export const getTeamOnboarding = defineEndpoint({ method: 'GET', path: '/api/v1/onboarding/team', response: TeamOnboarding, errors: [403],
   summary: 'New starters at my location (every location with Configure onboarding): progress, state, what blocks the start, and documents waiting on a check' });
-export const getStarterOnboarding = defineEndpoint({ method: 'GET', path: '/api/v1/onboarding/team/:personCode', params: ByPerson, response: StarterOnboarding,
+export const getStarterOnboarding = defineEndpoint({ method: 'GET', path: '/api/v1/onboarding/team/:employeeCode', params: ByEmployee, response: StarterOnboarding,
   errors: [403, 404, 409], summary: 'One new starter\'s onboarding as the tracker reads it: progress, step and document states, the files to check and what blocks the start. None of their answers.' });
-export const verifyOnboardingDocument = defineEndpoint({ method: 'POST', path: '/api/v1/onboarding/team/:personCode/documents/:doc/verify', params: ByPersonDoc,
+export const verifyOnboardingDocument = defineEndpoint({ method: 'POST', path: '/api/v1/onboarding/team/:employeeCode/documents/:doc/verify', params: ByEmployeeDoc,
   response: CaseChanged, capability: 'onb_verify', versioned: true, errors: [403, 404, 409],
-  summary: 'Verify an uploaded document (If-Match: the case). The person is told.' });
-export const rejectOnboardingDocument = defineEndpoint({ method: 'POST', path: '/api/v1/onboarding/team/:personCode/documents/:doc/reject', params: ByPersonDoc,
+  summary: 'Verify an uploaded document (If-Match: the case). The employee is told.' });
+export const rejectOnboardingDocument = defineEndpoint({ method: 'POST', path: '/api/v1/onboarding/team/:employeeCode/documents/:doc/reject', params: ByEmployeeDoc,
   request: RejectDocument, response: CaseChanged, capability: 'onb_verify', versioned: true, errors: [403, 404, 409],
-  summary: 'Reject an uploaded document with a reason the person sees (If-Match: the case). A rejected required document reopens the documents step.' });
-export const inviteStarter = defineEndpoint({ method: 'POST', path: '/api/v1/onboarding/team/:personCode/invite', params: ByPerson, response: StarterMoved,
+  summary: 'Reject an uploaded document with a reason the employee sees (If-Match: the case). A rejected required document reopens the documents step.' });
+export const inviteStarter = defineEndpoint({ method: 'POST', path: '/api/v1/onboarding/team/:employeeCode/invite', params: ByEmployee, response: StarterMoved,
   capability: 'onb_track', versioned: true, errors: [403, 404, 409],
   summary: 'Invite a candidate to complete onboarding (If-Match: the case): they move to preboarding. Invitation emails are a future enhancement, so no email is sent.' });
-export const startStarter = defineEndpoint({ method: 'POST', path: '/api/v1/onboarding/team/:personCode/start', params: ByPerson, response: StarterMoved,
+export const startStarter = defineEndpoint({ method: 'POST', path: '/api/v1/onboarding/team/:employeeCode/start', params: ByEmployee, response: StarterMoved,
   capability: 'onb_track', versioned: true, errors: [403, 404, 409],
   summary: 'Make a new starter active (If-Match: the case). Refused while anything that blocks the start is outstanding.' });
-export const chaseStarter = defineEndpoint({ method: 'POST', path: '/api/v1/onboarding/team/:personCode/chase', params: ByPerson, response: StarterChased,
+export const chaseStarter = defineEndpoint({ method: 'POST', path: '/api/v1/onboarding/team/:employeeCode/chase', params: ByEmployee, response: StarterChased,
   capability: 'onb_track', errors: [403, 404, 409], summary: 'Remind a new starter of what is outstanding. They are told in the app.' });
 
 export const getOnboardingSetup = defineEndpoint({ method: 'GET', path: '/api/v1/onboarding/config', response: OnboardingSetup, capability: 'onb_cfg',

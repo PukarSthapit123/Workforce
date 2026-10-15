@@ -16,8 +16,8 @@ const typeByCode = (code: string) => {
   return t;
 };
 const heldType = () => {
-  const p = Object.values(store.coll<{ employeeType: string }>('people'))[0];
-  if (!p) throw new Error('no people');
+  const p = Object.values(store.coll<{ employeeType: string }>('employees'))[0];
+  if (!p) throw new Error('no employees');
   return p.employeeType;
 };
 
@@ -78,19 +78,19 @@ test('ET It can be removed once nobody holds it', async () => {
   expect(audits().find(a => a.id === removeEmployeeType.response.parse(r.body).auditId)?.act).toBe('Employee type removed');
   expect(store.coll('employeeTypes')[t.id]).toBeUndefined();
 });
-test('ET Removing a type people hold is refused, and names them', async () => {
-  const call = await as('admin'), t = typeByCode(heldType()), before = snapshot(...WRITES, 'people');
+test('ET Removing a type employees hold is refused, and names them', async () => {
+  const call = await as('admin'), t = typeByCode(heldType()), before = snapshot(...WRITES, 'employees');
   const r = await call('DELETE', `${BASE}/${t.id}`, undefined, t.version);
   expect(r.status).toBe(409);
-  expect(Refusal.parse(r.body)).toMatchObject({ code: 'in-use', usedBy: [expect.objectContaining({ kind: 'people' })] });
-  expect(snapshot(...WRITES, 'people')).toEqual(before);
+  expect(Refusal.parse(r.body)).toMatchObject({ code: 'in-use', usedBy: [expect.objectContaining({ kind: 'employees' })] });
+  expect(snapshot(...WRITES, 'employees')).toEqual(before);
 });
 test('the last type cannot be removed', async () => {
   const types = store.coll<{ id: string; code: string }>('employeeTypes');
   for (const t of Object.values(types).slice(1)) Reflect.deleteProperty(types, t.id);
   const only = Object.values(types)[0];
   if (!only) throw new Error('no types');
-  for (const p of Object.values(store.coll<{ employeeType: string }>('people'))) p.employeeType = 'nobody_holds_this';
+  for (const p of Object.values(store.coll<{ employeeType: string }>('employees'))) p.employeeType = 'nobody_holds_this';
   const t = typeByCode(only.code);
   const r = await (await as('admin'))('DELETE', `${BASE}/${t.id}`, undefined, t.version);
   expect(r.status).toBe(409);

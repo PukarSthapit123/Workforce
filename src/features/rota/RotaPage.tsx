@@ -61,7 +61,7 @@ export function RotaPage() {
     </>);
 }
 
-type Box = { k: 'add' | 'shift'; person: string; day: number } | { k: 'gap'; day: number } | { k: 'clear' | 'repeat' | 'horizon' | 'adhoc' | 'sendBack' } | null;
+type Box = { k: 'add' | 'shift'; employee: string; day: number } | { k: 'gap'; day: number } | { k: 'clear' | 'repeat' | 'horizon' | 'adhoc' | 'sendBack' } | null;
 type Awaiting = NonNullable<RotaHome['awaiting']>;
 /* A V or S cell is written from the leave record (module 4 D7), never by hand: the note says so, and names
    the page that changes it for someone who may use it. */
@@ -85,7 +85,7 @@ function Board({ view, loading, thisWeek, initialPlan, onLocation, onWeek, await
   const planQ = useRotaPlan(view.location.code, view.weekStart, false);
   const ref = { location: view.location.code, weekStart: view.weekStart, version: view.version };
   const shifts = view.shifts, rows = filterRows(view.rows, filters), close = () => setBox(null);
-  const rowOf = (code: string) => view.rows.find(r => r.personCode === code);
+  const rowOf = (code: string) => view.rows.find(r => r.employeeCode === code);
   /* a suggestion, an open dialog and a picked-up shift belong to the week they were made on */
   const goWeek = (w: string) => { setPlan(null); setBox(null); setLifted(null); onWeek(w); };
 
@@ -104,9 +104,9 @@ function Board({ view, loading, thisWeek, initialPlan, onLocation, onWeek, await
     (r.advisories.length ? `Advisory only: ${r.advisories.map(a => a.k.toLowerCase()).join(', ')}. Hours warnings do not block publishing.` : undefined);
   /* One cell write per week at a time: a further place while one is saving is
      refused out loud, and a tapped or keyboard shift stays picked up to try again. */
-  const assign = (personCode: string, d: number, code: string, why: string, after?: () => void): boolean => {
-    const name = rowOf(personCode)?.name ?? personCode;
-    const sent = write.mutate({ ...ref, body: { personCode, day: d, code, why } }, { onSuccess: r => {
+  const assign = (employeeCode: string, d: number, code: string, why: string, after?: () => void): boolean => {
+    const name = rowOf(employeeCode)?.name ?? employeeCode;
+    const sent = write.mutate({ ...ref, body: { employeeCode, day: d, code, why } }, { onSuccess: r => {
       after?.();
       toastInfo(`${shiftName(shifts, code)} → ${name} · ${shortDay(view.weekStart, d)} · ${shiftTime(shifts, code)}`, advisory(r));
     } });
@@ -121,12 +121,12 @@ function Board({ view, loading, thisWeek, initialPlan, onLocation, onWeek, await
   };
   const onCell = (r: RotaRow, d: number, keyboard: boolean) => {
     if (lifted) {
-      if (assign(r.personCode, d, lifted, keyboard ? 'Assigned by keyboard' : 'Assigned by touch')) setLifted(null);
+      if (assign(r.employeeCode, d, lifted, keyboard ? 'Assigned by keyboard' : 'Assigned by touch')) setLifted(null);
       return;
     }
     const code = r.line[d] ?? '';
     if (isAbsence(code)) { const n = absenceNote(code, caps); toastInfo(n.message, n.next); return; }
-    setBox({ k: shiftBy(shifts, code) ? 'shift' : 'add', person: r.personCode, day: d });
+    setBox({ k: shiftBy(shifts, code) ? 'shift' : 'add', employee: r.employeeCode, day: d });
   };
 
   const suggestCover = () => {
@@ -139,7 +139,7 @@ function Board({ view, loading, thisWeek, initialPlan, onLocation, onWeek, await
   const acceptItems = (items: PlanItem[], after: () => void, said: (summary: string) => string) => {
     const good = items.filter(x => !x.none);
     if (!good.length) return;
-    accept.mutate({ ...ref, body: { items: good.map(x => ({ personCode: x.personCode, day: x.day, code: x.code })) } },
+    accept.mutate({ ...ref, body: { items: good.map(x => ({ employeeCode: x.employeeCode, day: x.day, code: x.code })) } },
       { onSuccess: r => { after(); toastInfo(said(r.summary), advisory(r)); } });
   };
 
@@ -149,8 +149,8 @@ function Board({ view, loading, thisWeek, initialPlan, onLocation, onWeek, await
   const doCopy = () => copy.mutate(ref, { onSuccess: r => toastInfo(r.summary) });
   const doSignOff = () => signOff.mutate({ ...ref, to: 'published' }, { onSuccess: r => toastInfo(r.summary) });
   const openClear = () => {
-    const p = clearProblem({ state: view.state, weekStart: view.weekStart, lines: Object.fromEntries(view.rows.map(r => [r.personCode, [...r.line]])) },
-      view.rows.map(r => r.personCode), view.location.name);
+    const p = clearProblem({ state: view.state, weekStart: view.weekStart, lines: Object.fromEntries(view.rows.map(r => [r.employeeCode, [...r.line]])) },
+      view.rows.map(r => r.employeeCode), view.location.name);
     if (p) { toastRefusal(p); return; }
     setBox({ k: 'clear' });
   };
@@ -165,7 +165,7 @@ function Board({ view, loading, thisWeek, initialPlan, onLocation, onWeek, await
   const gaps = view.gapDays, over = view.rows.find(overCap);
   const busy = move.anyPending || copy.anyPending;
   const roles = [...new Map(view.rows.map(r => [r.jobProfile, r.jobProfileName])).entries()];
-  const cur = box && 'person' in box ? rowOf(box.person) : undefined;
+  const cur = box && 'employee' in box ? rowOf(box.employee) : undefined;
   return (
     <>
       <WeekBar view={view} atCurrent={view.weekStart === thisWeek} busy={busy} actions={{
@@ -229,7 +229,7 @@ function Board({ view, loading, thisWeek, initialPlan, onLocation, onWeek, await
         <div aria-busy={loading || undefined} className={loading ? 'opacity-60' : undefined}>
           <RotaGrid view={view} rows={rows} handlers={{
             lifted, onCell, onFill: d => setBox({ k: 'gap', day: d }),
-            onDrop: (r, d, code) => { setLifted(null); assign(r.personCode, d, code, 'Assigned by drag'); },
+            onDrop: (r, d, code) => { setLifted(null); assign(r.employeeCode, d, code, 'Assigned by drag'); },
           }} />
           <DayView view={view} rows={rows} day={day} onDay={setDay} onFill={d => setBox({ k: 'gap', day: d })} />
         </div>
@@ -238,10 +238,10 @@ function Board({ view, loading, thisWeek, initialPlan, onLocation, onWeek, await
       {box?.k === 'add' && cur && <AddShiftDialog view={view} row={cur} day={box.day} busy={write.anyPending}
         onAssign={(p, code) => assign(p, box.day, code, 'Assigned', close)} onClose={close} />}
       {box?.k === 'shift' && cur && <ShiftDialog view={view} row={cur} day={box.day} busy={write.anyPending} onClose={close}
-        onChange={code => write.mutate({ ...ref, body: { personCode: cur.personCode, day: box.day, code, why: 'Changed' } }, { onSuccess: r => {
+        onChange={code => write.mutate({ ...ref, body: { employeeCode: cur.employeeCode, day: box.day, code, why: 'Changed' } }, { onSuccess: r => {
           close(); toastInfo(`Shift changed to ${shiftName(shifts, code)}. ${cur.name} notified.`, advisory(r));
         } })}
-        onRemove={() => write.mutate({ ...ref, body: { personCode: cur.personCode, day: box.day, code: '', why: 'Removed' } }, { onSuccess: r => {
+        onRemove={() => write.mutate({ ...ref, body: { employeeCode: cur.employeeCode, day: box.day, code: '', why: 'Removed' } }, { onSuccess: r => {
           close(); toastInfo(r.cover ? 'Shift removed. That day is now short, so a cover request has been opened.' : `Shift removed. ${cur.name} notified.`);
         } })} />}
       {box?.k === 'gap' && <GapDialog view={view} day={box.day} busy={write.anyPending}

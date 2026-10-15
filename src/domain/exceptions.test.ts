@@ -1,24 +1,24 @@
 import {
   EXC_STATES, MOVE_TO, NOTE_REQUIRED, REASON_REQUIRED, SELF_EXCEPTION_REFUSAL, SEVERITY, UNHANDLED, applyMove, changesText, deriveExceptions, exceptionId, exceptionKey,
-  filterCounts, inFilter, matches, moveAuditAct, moveProblem, movesFrom, needsAction, selfProblem, severityTone, type ExceptionFacts, type PersonFacts,
+  filterCounts, inFilter, matches, moveAuditAct, moveProblem, movesFrom, needsAction, selfProblem, severityTone, type ExceptionFacts, type EmployeeFacts,
 } from './exceptions';
 
-const person = (o: Partial<PersonFacts> = {}): PersonFacts => ({ code: 'CP-1042', name: 'Amara Okafor', location: 'WH', weekStart: '2026-08-10', flags: [], missing: [],
+const employee = (o: Partial<EmployeeFacts> = {}): EmployeeFacts => ({ code: 'CP-1042', name: 'Amara Okafor', location: 'WH', weekStart: '2026-08-10', flags: [], missing: [],
   cleared: true, dbsExpiry: '2027-03-31', qualifications: 'All valid', ...o });
-const facts = (o: Partial<ExceptionFacts> = {}): ExceptionFacts => ({ people: [], gaps: [], leave: [], postings: [], ...o });
-const ME = { personCode: 'CP-1001', name: 'Rachel Hussain' };
+const facts = (o: Partial<ExceptionFacts> = {}): ExceptionFacts => ({ employees: [], gaps: [], leave: [], postings: [], ...o });
+const ME = { employeeCode: 'CP-1001', name: 'Rachel Hussain' };
 
 describe('deriving exceptions from the data', () => {
   test('every kind P detects, with its severity, highest first and otherwise in the order found', () => {
     const xs = deriveExceptions(facts({
-      people: [
-        person({ flags: [{ k: 'Under contracted', c: 'info' }, { k: '2 nights', c: 'neu' }, { k: 'Over maximum', c: 'err' }], missing: ['2026-08-10', '2026-08-11'] }),
-        person({ code: 'CP-1153', name: 'Joseph Mensah', qualifications: 'First aid expires in 24 days' }),
-        person({ code: 'CP-1501', name: 'New Starter', cleared: false, dbsExpiry: '' }),
-        person({ code: 'CP-1502', name: 'Old Check', qualifications: 'DBS expired 30/06/2026', cleared: false, dbsExpiry: '2026-06-30' }),
+      employees: [
+        employee({ flags: [{ k: 'Under contracted', c: 'info' }, { k: '2 nights', c: 'neu' }, { k: 'Over maximum', c: 'err' }], missing: ['2026-08-10', '2026-08-11'] }),
+        employee({ code: 'CP-1153', name: 'Joseph Mensah', qualifications: 'First aid expires in 24 days' }),
+        employee({ code: 'CP-1501', name: 'New Starter', cleared: false, dbsExpiry: '' }),
+        employee({ code: 'CP-1502', name: 'Old Check', qualifications: 'DBS expired 30/06/2026', cleared: false, dbsExpiry: '2026-06-30' }),
       ],
       gaps: [{ location: 'WH', locationName: 'Willow House', date: '2026-08-15', onShift: 1, min: 2 }],
-      leave: [{ id: 'lr_1', personCode: 'CP-1201', name: 'Daniel Price', location: 'WH', escalateTo: 'Service manager' }],
+      leave: [{ id: 'lr_1', employeeCode: 'CP-1201', name: 'Daniel Price', location: 'WH', escalateTo: 'Service manager' }],
       postings: [{ id: 'int_a1f3', ref: 'Batch WK32 · generic API', attempt: 1, reason: 'Line 2: unknown cost centre CC-991', location: null }],
     }));
     expect(xs.map(x => [x.kind, x.severity, x.subject, x.text])).toEqual([
@@ -32,14 +32,14 @@ describe('deriving exceptions from the data', () => {
       ['Hours', 2, 'Amara Okafor', 'Under contracted'],
       ['Qualification', 2, 'Joseph Mensah', 'First aid expires in 24 days'],
     ]);
-    expect(xs.map(x => x.source)).toEqual(['tpeople', 'tpeople', 'trota', 'tleave', 'ibc', 'thours', 'tteam', 'thours', 'tpeople']);
+    expect(xs.map(x => x.source)).toEqual(['temployees', 'temployees', 'trota', 'tleave', 'ibc', 'thours', 'tteam', 'thours', 'temployees']);
     expect(xs.find(x => x.kind === 'Business Central')?.location).toBeNull();
     expect(xs.find(x => x.kind === 'Coverage')?.location).toBe('WH');
-    /* the person each is about, for the self rule; a location's coverage and a posting are about nobody */
-    expect(xs.map(x => x.personCode)).toEqual(['CP-1501', 'CP-1502', null, 'CP-1201', null, 'CP-1042', 'CP-1042', 'CP-1042', 'CP-1153']);
+    /* the employee each is about, for the self rule; a location's coverage and a posting are about nobody */
+    expect(xs.map(x => x.employeeCode)).toEqual(['CP-1501', 'CP-1502', null, 'CP-1201', null, 'CP-1042', 'CP-1042', 'CP-1042', 'CP-1153']);
   });
   test('a note flag (nights) and an already expired qualification raise nothing', () => {
-    expect(deriveExceptions(facts({ people: [person({ flags: [{ k: '1 night', c: 'neu' }], qualifications: 'First aid expired' })] }))).toEqual([]);
+    expect(deriveExceptions(facts({ employees: [employee({ flags: [{ k: '1 night', c: 'neu' }], qualifications: 'First aid expired' })] }))).toEqual([]);
   });
   test('the order is P\'s: coverage and clearance first, then hours and qualifications', () => {
     expect(Object.entries(SEVERITY).sort((a, b) => b[1] - a[1]).map(([k]) => k).slice(0, 2)).toEqual(['Clearance', 'Coverage']);
@@ -48,20 +48,20 @@ describe('deriving exceptions from the data', () => {
 });
 
 describe('stable keys', () => {
-  const one = facts({ people: [person({ missing: ['2026-08-10'] })], postings: [{ id: 'int_a', ref: 'R', attempt: 1, reason: 'x', location: null }] });
+  const one = facts({ employees: [employee({ missing: ['2026-08-10'] })], postings: [{ id: 'int_a', ref: 'R', attempt: 1, reason: 'x', location: null }] });
   test('a re-derive over the same facts gives the same ids', () => {
     expect(deriveExceptions(one).map(x => x.id)).toEqual(deriveExceptions(structuredClone(one)).map(x => x.id));
     expect(deriveExceptions(one)[0]?.id).toMatch(/^exc_[0-9a-f]{16}$/);
   });
   test('the key survives unrelated change, and a display change, but not a change to the fact', () => {
     const [post, ts] = deriveExceptions(one);
-    const more = deriveExceptions(facts({ ...one, people: [person({ missing: ['2026-08-10'] }), person({ code: 'CP-2', name: 'B', missing: ['2026-08-11'] })] }));
+    const more = deriveExceptions(facts({ ...one, employees: [employee({ missing: ['2026-08-10'] }), employee({ code: 'CP-2', name: 'B', missing: ['2026-08-11'] })] }));
     expect(more.map(x => x.id)).toEqual(expect.arrayContaining([post?.id, ts?.id]));
     /* the posting fails again: a new attempt is a new exception, so resolving the first cannot mask it */
     const again = deriveExceptions(facts({ ...one, postings: [{ id: 'int_a', ref: 'R', attempt: 2, reason: 'x', location: null }] }));
     expect(again.map(x => x.id)).not.toContain(post?.id);
     /* a further day goes missing */
-    const later = deriveExceptions(facts({ ...one, people: [person({ missing: ['2026-08-10', '2026-08-11'] })] }));
+    const later = deriveExceptions(facts({ ...one, employees: [employee({ missing: ['2026-08-10', '2026-08-11'] })] }));
     expect(later.map(x => x.id)).not.toContain(ts?.id);
   });
   test('the id is the key\'s', () => {
@@ -97,7 +97,7 @@ describe('the state machine', () => {
   test('take makes the caller the owner, back to open clears it, and every move is a step of history', () => {
     const taken = applyMove(UNHANDLED, 'take', ME, 't1', '');
     expect(taken).toEqual({ state: 'prog', owner: ME, resolution: '', history: [{ from: 'open', to: 'prog', by: ME, at: 't1', note: '' }] });
-    const other = { personCode: 'CP-2', name: 'Other' };
+    const other = { employeeCode: 'CP-2', name: 'Other' };
     const back = applyMove(taken, 'release', other, 't2', '');
     expect([back.state, back.owner, back.history.length]).toEqual(['open', null, 2]);
     const done = applyMove(taken, 'resolve', other, 't2', ' Hours corrected ');
@@ -126,10 +126,10 @@ describe('the screen\'s filters', () => {
 
 describe('the self rule', () => {
   test('nobody handles an exception about themselves; one about nobody, or someone else, is not refused for it', () => {
-    expect(selfProblem({ personCode: 'CP-1001' }, 'CP-1001')).toEqual(SELF_EXCEPTION_REFUSAL);
+    expect(selfProblem({ employeeCode: 'CP-1001' }, 'CP-1001')).toEqual(SELF_EXCEPTION_REFUSAL);
     expect(SELF_EXCEPTION_REFUSAL).toEqual({ status: 403, code: 'SELF_APPROVAL', message: 'You cannot handle an exception about yourself.',
       next: 'Ask another manager at your location.' });
-    expect(selfProblem({ personCode: 'CP-1042' }, 'CP-1001')).toBeNull();
-    expect(selfProblem({ personCode: null }, 'CP-1001')).toBeNull();
+    expect(selfProblem({ employeeCode: 'CP-1042' }, 'CP-1001')).toBeNull();
+    expect(selfProblem({ employeeCode: null }, 'CP-1001')).toBeNull();
   });
 });

@@ -66,13 +66,13 @@ test('ET A type is created, it appears in the type list, and it can be removed',
   expect(await screen.findByText(/Waking Night Support removed/)).toBeInTheDocument();
   expect(types().map(t => t.code)).not.toContain('waking_night_support');
 });
-test('ET Removing a type people hold is refused, and names them', async () => {
+test('ET Removing a type employees hold is refused, and names them', async () => {
   renderPage(<EmployeeTypesPage />);
   await userEvent.click(await screen.findByTestId(tid.types.chip('shift')));
-  const before = snapshot('employeeTypes', 'people');
+  const before = snapshot('employeeTypes', 'employees');
   await userEvent.click(await screen.findByTestId(tid.types.remove));
-  expect(await screen.findByTestId(tid.types.warn)).toHaveTextContent(/is used by \d+ (person|people)/);
-  expect(snapshot('employeeTypes', 'people')).toEqual(before);
+  expect(await screen.findByTestId(tid.types.warn)).toHaveTextContent(/is used by \d+ (employee|employees)/);
+  expect(snapshot('employeeTypes', 'employees')).toEqual(before);
 });
 test('a capability switched on is saved and reported', async () => {
   renderPage(<EmployeeTypesPage />);

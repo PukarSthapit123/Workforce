@@ -16,7 +16,7 @@ let token = '';
 beforeEach(async () => { resetTo('social'); token = await signInAs('manager'); });
 
 interface Cover { id: string; reason: string; open: boolean; stage: number }
-interface Filled { id: string; coverId: string; confirmed: boolean; itRequest: string; personCode: string }
+interface Filled { id: string; coverId: string; confirmed: boolean; itRequest: string; employeeCode: string }
 const covers = () => store.coll<Cover>('coverRequests');
 const filled = () => Object.values(store.coll<Filled>('filledShifts'));
 const acts = () => audits().filter(a => a.act !== 'Signed in').map(a => a.act);
@@ -75,7 +75,7 @@ describe('Cover requests', () => {
     expect(covers()[id]?.open).toBe(false);
     const f = filled().find(x => x.coverId === id);
     if (!f) throw new Error('no filled shift');
-    expect(store.coll<{ lines: Record<string, string[]> }>('rotaWeeks')['rw_WH_2026-08-10']?.lines[f.personCode]?.[4]).toBe('E');
+    expect(store.coll<{ lines: Record<string, string[]> }>('rotaWeeks')['rw_WH_2026-08-10']?.lines[f.employeeCode]?.[4]).toBe('E');
 
     /* a shift is confirmed as worked on or after its day (M2) */
     await userEvent.click(await screen.findByTestId(tid.tcover.confirm(f.id)));

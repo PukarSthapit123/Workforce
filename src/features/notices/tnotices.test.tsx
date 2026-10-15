@@ -52,7 +52,7 @@ test('posting a notice to her location tells her how many it reaches', async () 
   await userEvent.type(within(box).getByTestId(tid.tnotices.title), 'Hand hygiene audit next week');
   await userEvent.type(within(box).getByTestId(tid.tnotices.body), 'Every sink will be checked on Tuesday.');
   await userEvent.click(within(box).getByTestId(tid.tnotices.postNow));
-  expect(await screen.findByText('Posted. Hand hygiene audit next week. 11 people in Willow House.')).toBeInTheDocument();
+  expect(await screen.findByText('Posted. Hand hygiene audit next week. 11 employees in Willow House.')).toBeInTheDocument();
   await waitFor(() => expect(screen.queryByTestId(tid.modal.root)).toBeNull());
   expect(await screen.findByTestId(tid.tnotices.row('NTC-0005'))).toHaveTextContent('0 of 11');
   expect(ntc('NTC-0005')).toMatchObject({ state: 'live', textVersion: 1, scope: { kind: 'loc', code: 'WH', loc: 'WH' } });
@@ -67,12 +67,12 @@ test('editing the words of a live notice makes v2 and asks those who acknowledge
   await userEvent.click(within(box).getByTestId(tid.tnotices.trackEdit));
   box = await screen.findByTestId(tid.modal.root);
   await within(box).findByTestId(tid.tnotices.title);
-  expect(within(box).getByTestId(tid.tnotices.resetWarn)).toHaveTextContent('2 people have acknowledged v1');
+  expect(within(box).getByTestId(tid.tnotices.resetWarn)).toHaveTextContent('2 employees have acknowledged v1');
   expect(within(box).getByTestId(tid.tnotices.scope)).toBeDisabled();
   expectTestIdCoverage(document.body);
   fireEvent.change(within(box).getByTestId(tid.tnotices.body), { target: { value: 'Meet at the back car park instead.' } });
   await userEvent.click(within(box).getByTestId(tid.tnotices.save));
-  expect(await screen.findByText('Saved as v2. 11 people now need to acknowledge it.')).toBeInTheDocument();
+  expect(await screen.findByText('Saved as v2. 11 employees now need to acknowledge it.')).toBeInTheDocument();
   expect(ntc('NTC-0002')).toMatchObject({ textVersion: 2, history: [{ textVersion: 1 }] });
   await waitFor(() => expect(screen.getByTestId(tid.tnotices.acks('NTC-0002'))).toHaveTextContent('0 of 11'));
   box = await track('NTC-0002');

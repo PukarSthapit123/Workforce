@@ -7,8 +7,8 @@
    the clock and the case come in as arguments, so the server refuses with
    exactly what the screen says.
 
-   One case per person (brief D1), holding task states, file records, policy
-   acknowledgements by version, the step data, signature and consent. A person's
+   One case per employee (brief D1), holding task states, file records, policy
+   acknowledgements by version, the step data, signature and consent. An employee's
    own state stays the employee lifecycle; onboarding adds per-task states only.
    Uploads are simulated (D3): a file is its name, size, type, time and, for an
    image, a small preview. No money anywhere (D14).
@@ -74,7 +74,7 @@ export const STEP_NEEDS: Readonly<Partial<Record<OnbStepId, string>>> = {
 };
 export const STEP_UNAVAILABLE = 'Its features are switched off under Modules, so it cannot be shown.';
 export const ALWAYS_ASKED = 'Identity, contact and the final submission are always asked for. Without them there is nothing to onboard.';
-/* The steps a person is asked, in order: switched on (fixed ones always are) and available. */
+/* The steps an employee is asked, in order: switched on (fixed ones always are) and available. */
 export const stepsAsked = (config: OnboardingConfig, f: OnbFeatures): OnbStep[] =>
   config.steps.filter(s => (s.fixed || s.on) && stepAvailable(s.id, f));
 /* A document switched off is not asked for; the right-to-work document is collected only while ONB_RTW is on. */
@@ -106,13 +106,13 @@ export interface OnbData {
   documents: { rtwType: string };
 }
 export interface OnboardingCase {
-  personCode: string;
+  employeeCode: string;
   steps: Partial<Record<OnbStepId, TaskState>>;
   docs: Record<string, TaskState>;
   files: Record<string, OnbFile>;
   /* why a document was rejected, by document id, until it is replaced */
   rejections: Record<string, string>;
-  /* the version of each policy the person acknowledged, by policy id */
+  /* the version of each policy the employee acknowledged, by policy id */
   acks: Record<string, string>;
   read: Record<string, boolean>;
   data: OnbData;
@@ -136,12 +136,12 @@ export const emptyData = (): OnbData => ({
   additional: { conv: '', convDetail: '', wtd: '', quals: [] },
   documents: { rtwType: '' },
 });
-export const emptyCase = (personCode: string): OnboardingCase => ({
-  personCode, steps: {}, docs: {}, files: {}, rejections: {}, acks: {}, read: {}, data: emptyData(),
+export const emptyCase = (employeeCode: string): OnboardingCase => ({
+  employeeCode, steps: {}, docs: {}, files: {}, rejections: {}, acks: {}, read: {}, data: emptyData(),
   signature: '', consent: false, submittedAt: '', ref: '', invitedAt: '', startedAt: '',
 });
-export const caseId = (personCode: string) => `onb_${personCode}`;
-/* Who is onboarding: a candidate or preboarding person. */
+export const caseId = (employeeCode: string) => `onb_${employeeCode}`;
+/* Who is onboarding: a candidate or preboarding employee. */
 export const STARTER_STATES = ['candidate', 'preboard'] as const;
 export const isStarterState = (s: string) => (STARTER_STATES as readonly string[]).includes(s);
 
@@ -384,7 +384,7 @@ export const askedNow = (ctx: BlockerContext): OnbAsked => ({
   steps: stepsAsked(ctx.config, ctx.features).map(s => s.id),
   documents: docsAsked(ctx.config, ctx.features).map(({ id, req, blocks }) => ({ id, req, blocks })),
 });
-/* What a person is judged against. Before submission, today's config. After
+/* What an employee is judged against. Before submission, today's config. After
    it, what they were asked when they submitted, so a step switched on or a
    document made required (or made to block the start) later is never held
    against somebody who can no longer change their onboarding. A rule relaxed
@@ -403,7 +403,7 @@ export function askedOf(c: OnboardingCase, ctx: BlockerContext): { steps: OnbSte
     }),
   };
 }
-/* Two gates, easily confused: 'submit' is what the person must do before
+/* Two gates, easily confused: 'submit' is what the employee must do before
    sending it to HR; 'start' is that, plus the checks only HR can make. Review is
    the act of submitting, so it never counts against itself. */
 export function blockers(c: OnboardingCase, ctx: BlockerContext, stage: BlockerStage = 'start'): Blocker[] {
@@ -514,7 +514,7 @@ export function setPolicyAck(c: OnboardingCase, p: OnbPolicy, on: boolean): Onbo
 }
 export const markRead = (c: OnboardingCase, p: OnbPolicy): OnboardingCase => ({ ...c, read: { ...c.read, [p.id]: true } });
 export const acknowledgedText = (p: OnbPolicy) => `${p.label} ${p.ver} acknowledged.`;
-/* The setup count: people who acknowledged the current version only. */
+/* The setup count: employees who acknowledged the current version only. */
 export const ackCount = (p: OnbPolicy, cases: readonly OnboardingCase[]) => cases.filter(c => policyAcknowledged(c, p)).length;
 /* v2.3 becomes v2.4; anything unparseable starts again at v1.1 (nextPolVer). */
 export function nextPolVer(v: string): string {
@@ -523,20 +523,20 @@ export function nextPolVer(v: string): string {
 }
 /* D10: a new document raises the version and clears every acknowledgement of that
    policy, so everybody who agreed to the old one is asked again. The caller
-   passes only the cases of people still onboarding: somebody who has started
+   passes only the cases of employees still onboarding: somebody who has started
    is never asked again, and keeps what they agreed to as the record. */
 export function applyPolicyUpload(p: OnbPolicy, file: OnbFile, cases: readonly OnboardingCase[]): { policy: OnbPolicy; changed: OnboardingCase[]; asked: number } {
   return { policy: { ...p, file, ver: nextPolVer(p.ver) }, ...reaskPolicy(p.id, cases) };
 }
 /* Clears one policy's acknowledgements and read marks on the cases given, so
-   each person who had acknowledged it is asked again once (a new upload, or a
+   each employee who had acknowledged it is asked again once (a new upload, or a
    template that changes its wording). `asked` counts those who had. */
 export function reaskPolicy(id: string, cases: readonly OnboardingCase[]): { changed: OnboardingCase[]; asked: number } {
   const changed = cases.filter(c => id in c.acks || c.read[id]).map(c => ({ ...c, acks: without(c.acks, id), read: without(c.read, id) }));
   return { changed, asked: cases.filter(c => id in c.acks).length };
 }
 export const policyUploadedText = (label: string, ver: string, asked: number) =>
-  `${label} is now ${ver}. ${asked ? `${plural(asked, 'person', 'people')} will be asked again.` : 'It is ready to read.'}`;
+  `${label} is now ${ver}. ${asked ? `${plural(asked, 'employee', 'employees')} will be asked again.` : 'It is ready to read.'}`;
 export const POLICY_NAME_NEEDED = 'A policy needs a name.';
 export const POLICY_NAME_TAKEN = 'A policy with that name already exists.';
 export const DEFAULT_POLICY_VER = 'v1.0';
@@ -557,7 +557,7 @@ export function policyFromDraft(draft: PolicyDraft, order: number): OnbPolicy {
 export const policySavedText = (label: string) => `${label} saved. Upload the document to make it readable.`;
 /* Removing asks first; past acknowledgements stay in the audit trail. */
 export const removePolicyText = (acks: number) => (acks
-  ? `${plural(acks, 'person has', 'people have')} acknowledged this policy. Removing it does not remove that record from the audit trail, but new starters will no longer be asked.`
+  ? `${plural(acks, 'employee has', 'employees have')} acknowledged this policy. Removing it does not remove that record from the audit trail, but new starters will no longer be asked.`
   : 'New starters will no longer be asked to read it.');
 export const policyRemovedText = (label: string) => `${label} removed.`;
 
@@ -572,8 +572,8 @@ export function stepSwitchProblem(step: OnbStep, on: boolean, f: OnbFeatures): O
   return null;
 }
 export const stepSwitchText = (label: string, on: boolean) =>
-  `${label} ${on ? 'will be asked for' : 'will not be asked for'}. People part-way through keep what they have already given.`;
-export const REQUIRED_CHANGE_WARNING = 'Changing what is required affects people already part-way through. Somebody who has submitted will not be asked again for a document that becomes required after they finished.';
+  `${label} ${on ? 'will be asked for' : 'will not be asked for'}. Employees part-way through keep what they have already given.`;
+export const REQUIRED_CHANGE_WARNING = 'Changing what is required affects employees already part-way through. Somebody who has submitted will not be asked again for a document that becomes required after they finished.';
 /* The whole config on Save (D2): the same steps and documents in the same order,
    each switch allowed, each verifier one of the four. */
 export function configProblem(before: OnboardingConfig, next: OnboardingConfig, f: OnbFeatures): OnbRefusal | null {
@@ -640,7 +640,7 @@ export const newCustomDocument = (draft: DocumentDraft, docs: readonly OnbDocume
 /* Who has the document on their case: uploaded, checked, sent back, or asked for it at submission (D2). */
 export function documentUsers(id: string, cases: readonly OnboardingCase[]): string[] {
   return cases.filter(c => (c.docs[id] !== undefined && c.docs[id] !== 'todo') || Object.hasOwn(c.files, id)
-    || (c.asked?.documents ?? []).some(d => d.id === id)).map(c => c.personCode);
+    || (c.asked?.documents ?? []).some(d => d.id === id)).map(c => c.employeeCode);
 }
 export const documentAddedText = (label: string) => `${label} added. It is optional until you make it required and save.`;
 export const documentRenamedText = (label: string) => `${label} saved.`;

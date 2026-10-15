@@ -27,7 +27,7 @@ export interface SubDef { code: SubCode; name: string; kind: 'method' | 'capabil
 export interface FlagDef { code: string; label: string; mod: string; description: string; notBuilt?: true }
 
 export const MODULES: readonly ModuleDef[] = [
-  { code: 'CORE', name: 'Workforce core', icon: 'users', description: 'People, employee types, approvals, notifications and the Business Central hand-off.', locked: true },
+  { code: 'CORE', name: 'Workforce core', icon: 'users', description: 'Employees, employee types, approvals, notifications and the Business Central hand-off.', locked: true },
   { code: 'TS', name: 'Timesheet', icon: 'clock', description: 'How time is captured, checked and sent for approval.',
     subs: ['A', 'B', 'C'], liveBy: ['A', 'B'], master: true, setup: 'mts', setupLabel: 'Timesheet setup' },
   { code: 'R', name: 'Rota', icon: 'grid', description: 'Shift catalogue, working patterns, coverage and the shift fulfilment workflow.', setup: 'mrota', setupLabel: 'Rota setup' },
@@ -50,13 +50,13 @@ export const FLAGS: readonly FlagDef[] = [
   { code: 'SHIFT', label: 'Shift & rota fields', mod: 'TS', description: 'Rota line on the entry, and shift premium rules.' },
   { code: 'BREAKS', label: 'Break tracking', mod: 'TS', description: 'Employees record unpaid breaks; deducted from net hours.' },
   { code: 'ONB_RTW', label: 'Right to work', mod: 'ON', description: 'Collect proof of the right to work, with the document type declared.' },
-  { code: 'ONB_CONV', label: 'Convictions declaration', mod: 'ON', description: 'Ask whether the person has unspent convictions, with detail where they do.' },
-  { code: 'ONB_WTD', label: 'Working time opt-out', mod: 'ON', description: 'Record whether the person opts out of the 48-hour weekly limit.' },
+  { code: 'ONB_CONV', label: 'Convictions declaration', mod: 'ON', description: 'Ask whether the employee has unspent convictions, with detail where they do.' },
+  { code: 'ONB_WTD', label: 'Working time opt-out', mod: 'ON', description: 'Record whether the employee opts out of the 48-hour weekly limit.' },
   { code: 'ONB_QUAL', label: 'Qualifications', mod: 'ON', description: 'Collect qualifications and certificates, with expiry where relevant.' },
   { code: 'ONB_POL', label: 'Policy acknowledgement', mod: 'ON', description: 'Require each policy to be read and acknowledged before submission.' },
   { code: 'ONB_SIGN', label: 'Signature on sign-off', mod: 'ON', description: 'Capture a drawn signature rather than a tick alone.' },
-  { code: 'ONB_VERIFY', label: 'Document verification', mod: 'ON', description: 'A named person checks each uploaded document before it counts.' },
-  { code: 'ONB_PORTAL', label: 'Employee portal', mod: 'ON', description: 'Handbook, company information, vacancies and benefits for people already working.' },
+  { code: 'ONB_VERIFY', label: 'Document verification', mod: 'ON', description: 'A named employee checks each uploaded document before it counts.' },
+  { code: 'ONB_PORTAL', label: 'Employee portal', mod: 'ON', description: 'Handbook, company information, vacancies and benefits for employees already working.' },
   { code: 'DOCS', label: 'Document centre', mod: 'CORE', description: 'Shared documents in Employee Self-Service.' },
   { code: 'NOTICES', label: 'Notice board', mod: 'CORE', description: 'Managers post to their location, admins to everyone. Colleagues read, and acknowledge where asked.' },
   { code: 'SELF_EDIT', label: 'Self-service profile changes', mod: 'CORE', description: 'Colleagues propose changes to their own contact, emergency and bank details. Every change is approved before it takes effect.' },
@@ -68,7 +68,7 @@ export const FLAGS: readonly FlagDef[] = [
   { code: 'PATTERNS', label: 'Working patterns', mod: 'R', description: 'Generate the rota from repeating cycles up to the configured horizon.' },
   { code: 'MINSTAFF', label: 'Minimum staffing', mod: 'R', description: 'Coverage is checked against each location’s support level.' },
   { code: 'FULFIL', label: 'Shift fulfilment workflow', mod: 'R', description: 'Timed, staged cover requests with escalation.' },
-  { code: 'SAFEWORKER', label: 'Safe-worker filtering', mod: 'R', description: 'Only advertise work to people who are cleared and eligible.' },
+  { code: 'SAFEWORKER', label: 'Safe-worker filtering', mod: 'R', description: 'Only advertise work to employees who are cleared and eligible.' },
   { code: 'FLEXMON', label: 'Flexible worker monitoring', mod: 'R', description: 'Count bank weeks and notify HR at the configured milestones.' },
   { code: 'ITACCESS', label: 'IT access request on fulfilment', mod: 'R', description: 'Raise a site-access request when a shift is filled.' },
   { code: 'RESTRULE', label: 'Minimum rest checking', mod: 'R', description: 'Warn when two shifts leave less than the configured rest.' },
@@ -77,7 +77,7 @@ export const FLAGS: readonly FlagDef[] = [
   { code: 'LV_PRORATA', label: 'Pro-rata recalculation', mod: 'L', description: 'Recalculate entitlement when working arrangements change.' },
   { code: 'LV_LEAVER', label: 'Leaver reconciliation', mod: 'L', description: 'Settle over- or under-taken leave at the leaving date.' },
   { code: 'LV_SLA', label: 'Approval SLA & escalation', mod: 'L', description: 'Escalate a request that is not decided within the SLA.' },
-  { code: 'LV_ROTA', label: 'Leave affects rota availability', mod: 'L', description: 'Approved leave removes the person from rota allocation.' },
+  { code: 'LV_ROTA', label: 'Leave affects rota availability', mod: 'L', description: 'Approved leave removes the employee from rota allocation.' },
   { code: 'LV_TOIL', label: 'Time off in lieu', mod: 'L', description: 'Accrue and spend TOIL within the configured window.' },
 ];
 
@@ -263,7 +263,7 @@ export function setAsideShifts(weeks: Readonly<Record<string, WeekLines>>): { cl
     kept[id] = structuredClone(lines);
     let touched = false;
     const next: WeekLines = {};
-    for (const [person, line] of Object.entries(lines)) next[person] = line.map(c => {
+    for (const [employee, line] of Object.entries(lines)) next[employee] = line.map(c => {
       if (c && !isAbsence(c)) { count++; touched = true; return ''; }
       return c;
     });
@@ -271,9 +271,9 @@ export function setAsideShifts(weeks: Readonly<Record<string, WeekLines>>): { cl
   }
   return { cleared, kept, count };
 }
-export interface HeldShift { week: string; person: string; day: number; mark: string }
+export interface HeldShift { week: string; employee: string; day: number; mark: string }
 export function restoreShifts(weeks: Readonly<Record<string, WeekLines>>, kept: Readonly<Record<string, WeekLines>>,
-  absent: (week: string, person: string, day: number) => string = () => ''): { restored: Record<string, WeekLines>; count: number; held: HeldShift[] } {
+  absent: (week: string, employee: string, day: number) => string = () => ''): { restored: Record<string, WeekLines>; count: number; held: HeldShift[] } {
   const restored: Record<string, WeekLines> = {}, held: HeldShift[] = [];
   let count = 0;
   for (const [id, was] of Object.entries(kept)) {
@@ -281,13 +281,13 @@ export function restoreShifts(weeks: Readonly<Record<string, WeekLines>>, kept: 
     if (!now) continue;
     let touched = false;
     const next: WeekLines = structuredClone(now);
-    for (const [person, line] of Object.entries(was)) {
-      const cur = next[person];
+    for (const [employee, line] of Object.entries(was)) {
+      const cur = next[employee];
       if (!cur) continue;
       line.forEach((c, i) => {
         if (!c || isAbsence(c) || cur[i]) return;
-        const mark = absent(id, person, i);
-        if (mark) { held.push({ week: id, person, day: i, mark }); return; }
+        const mark = absent(id, employee, i);
+        if (mark) { held.push({ week: id, employee, day: i, mark }); return; }
         cur[i] = c; count++; touched = true;
       });
     }
@@ -300,9 +300,9 @@ export function restoreShifts(weeks: Readonly<Record<string, WeekLines>>, kept: 
 const shifts = (n: number) => `${n} scheduled ${n === 1 ? 'shift' : 'shifts'}`;
 const types = (n: number) => `${n} employee ${n === 1 ? 'type' : 'types'}`;
 export interface SwitchOutcome { cleared?: number; restored?: number; notRestored?: number; sitesRemovedFrom?: number; brought?: readonly string[] }
-/* How many kept shifts stayed off because the person is absent that day (I2). */
+/* How many kept shifts stayed off because the employee is absent that day (I2). */
 export const notRestoredText = (n: number) => (n
-  ? `${n} ${n === 1 ? 'shift was' : 'shifts were'} not put back because the person is on leave or off sick that day.` : '');
+  ? `${n} ${n === 1 ? 'shift was' : 'shifts were'} not put back because the employee is on leave or off sick that day.` : '');
 /* The toast after a module switch, as the prototype words it. */
 export function moduleSwitchText(code: string, on: boolean, o: SwitchOutcome = {}): string {
   const name = subName(code), live = 'It is live for everyone now.';

@@ -35,7 +35,7 @@ describe('the events become the day (D3)', () => {
     expect(clockEntry(events, undefined, 5)).toEqual({ start: '07:02', finish: '15:04', breaks: [{ start: '11:00', end: '11:30' }, { start: '12:00', end: '13:00' }], fields: {} });
     expect(clockEntry([ev('in', '07:02')], undefined, 5, null, '15:00').finish).toBe('15:00');
   });
-  test('once the clock has written the day, clock out writes only what it owns since: the start and breaks the person left stay, only new pairs are added (review I4)', () => {
+  test('once the clock has written the day, clock out writes only what it owns since: the start and breaks the employee left stay, only new pairs are added (review I4)', () => {
     const first = [ev('in', '07:10'), ev('breakStart', '10:00'), ev('breakEnd', '10:15'), ev('out', '12:00')];
     const written = clockWritten(first), all = [...first, ev('in', '13:00'), ev('out', '17:00')];
     expect(written).toEqual({ breaks: [{ start: '10:00', end: '10:15' }] });
@@ -126,7 +126,7 @@ test('a forgotten clock whose day can no longer be written closes without it: th
   expect(clockState([ev('in', '07:02', '2026-08-07')], true)).toBe('clockedOut');
 });
 
-test('a running clock holds its day: the refusal, for the person and a proxy, and the week\'s held reason (review I1)', () => {
+test('a running clock holds its day: the refusal, for the employee and a proxy, and the week\'s held reason (review I1)', () => {
   expect(clockRunning('2026-08-13')).toEqual({ code: 'CLOCK_RUNNING', message: 'The clock is still running on Thu 13 Aug.', next: 'Clock out first.' });
   expect(clockRunning('2026-08-13', true).next).toBe('Ask them to clock out first.');
   expect(clockHeldReason('2026-08-13')).toBe('Thu 13 Aug has a clock still running, so it was held back. Clock out first.');
@@ -159,7 +159,7 @@ test('a clock in after midnight inside a night line belongs to that line, and is
   expect(nightLineNote('Night', '2026-08-13', true)).toBe('This clock goes on your Night shift of Thu 13 Aug.');
 });
 
-test('clock out refused by a day rule offers a finish the person chooses, which must have come (review M3)', () => {
+test('clock out refused by a day rule offers a finish the employee chooses, which must have come (review M3)', () => {
   expect(CHOOSE_FINISH).toBe('Clock out at a time you choose');
   expect(CHOOSE_FINISH_NEXT).toBe('Use “Clock out at a time you choose” and enter the time you finished.');
   const now = { date: '2026-08-13', time: '22:30' };

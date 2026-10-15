@@ -58,7 +58,7 @@ export function DimensionForm({ kind, row, onClose }: { kind: DimensionKind; row
       const options = [...(f.optional ? [{ value: NONE, label: 'None' }] : []), ...(f.options?.(ctx) ?? [])];
       return <SelectBox testId={id} options={options} value={String(v[f.key] || NONE)} onValueChange={x => setV(y => ({ ...y, [f.key]: x === NONE ? '' : x }))} />;
     }
-    if (f.kind === 'number') return <UnitInput testId={id} unit="people" type="number" inputMode="numeric" step="1" min="0"
+    if (f.kind === 'number') return <UnitInput testId={id} unit="employees" type="number" inputMode="numeric" step="1" min="0"
       value={String(v[f.key] ?? '')} onChange={e => setV(x => ({ ...x, [f.key]: e.target.value }))} />;
     return <TextInput testId={id} type={f.kind === 'date' ? 'date' : 'text'} disabled={!!row && f.code}
       className={f.code ? 'tabular-nums uppercase' : undefined}

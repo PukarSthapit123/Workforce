@@ -7,7 +7,7 @@ import { useMyDocuments, type MyDocuments } from '@/api/home';
 import { formatDmy } from '@/domain/time';
 
 /* My documents: the prototype's essDocs (qnipay-workforce-v15.html:5673-5696).
-   The documents Workforce holds for this person, and the payroll ones, which
+   The documents Workforce holds for this employee, and the payroll ones, which
    are payroll's and read "Not yet connected" (D12). There is no Open action:
    opening documents is not built yet, and an Open that opened nothing would
    say otherwise. */
@@ -17,7 +17,7 @@ export function DocumentsPage() {
   const d = q.data;
   return (
     <Page testId={tid.page('docs')}>
-      <PageHead title="Documents" crumb={d ? `My work · Documents · ${d.person.name}` : 'My work · Documents'} actions={<GuideButton view="docs" />} />
+      <PageHead title="Documents" crumb={d ? `My work · Documents · ${d.employee.name}` : 'My work · Documents'} actions={<GuideButton view="docs" />} />
       {q.isError && <p data-testid={tid.docs.error} role="alert" className="text-err">
         {refused && refused.code !== 'network' ? `${refused.message} ${refused.next}` : 'Your documents could not be loaded. Reload the page to try again.'}</p>}
       {!d && !q.isError && <p data-testid={tid.docs.loading} className="text-text-secondary">Loading your documents&hellip;</p>}

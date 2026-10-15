@@ -1,12 +1,12 @@
 import meta from '@/mocks/seed/meta.json';
 import {
-  LIFECYCLE, PERSON_STATES, STARTING_STATES, canMove, describeStates, isHere, isPersonState,
-  nextStates, transitionProblem, type PersonState,
+  LIFECYCLE, EMPLOYEE_STATES, STARTING_STATES, canMove, describeStates, isHere, isEmployeeState,
+  nextStates, transitionProblem, type EmployeeState,
 } from './lifecycle';
 
 /* The guard table, written out in full so a change to the rules is a change to this test.
    Ported from the prototype's EMP_STATES (qnipay-workforce-v15.html, "IMP-013"). */
-const ALLOWED: Record<PersonState, PersonState[]> = {
+const ALLOWED: Record<EmployeeState, EmployeeState[]> = {
   candidate: ['preboard', 'archived'],
   preboard: ['active', 'archived'],
   active: ['suspended', 'onleave', 'leaver'],
@@ -17,8 +17,8 @@ const ALLOWED: Record<PersonState, PersonState[]> = {
 };
 
 describe('every from → to pair', () => {
-  for (const from of PERSON_STATES) {
-    for (const to of PERSON_STATES) {
+  for (const from of EMPLOYEE_STATES) {
+    for (const to of EMPLOYEE_STATES) {
       const allowed = ALLOWED[from].includes(to);
       test(`${from} → ${to} is ${allowed ? 'allowed' : 'refused'}`, () => {
         expect(canMove(from, to)).toBe(allowed);
@@ -29,12 +29,12 @@ describe('every from → to pair', () => {
 });
 
 test('the seven states are the prototype\'s, in its order', () => {
-  expect(PERSON_STATES).toEqual(Object.keys(meta.empStates));
+  expect(EMPLOYEE_STATES).toEqual(Object.keys(meta.empStates));
 });
 
 test('labels, tones and moves match the prototype table', () => {
   const proto = meta.empStates as Record<string, { label: string; pill: string; next: string[] }>;
-  for (const s of PERSON_STATES) {
+  for (const s of EMPLOYEE_STATES) {
     const p = proto[s];
     if (!p) throw new Error(`meta.empStates has no ${s}`);
     expect(LIFECYCLE[s].label, s).toBe(p.label);
@@ -44,11 +44,11 @@ test('labels, tones and moves match the prototype table', () => {
 });
 
 test('no state moves to itself', () => {
-  expect(PERSON_STATES.filter(s => canMove(s, s))).toEqual([]);
+  expect(EMPLOYEE_STATES.filter(s => canMove(s, s))).toEqual([]);
 });
 
 test('every state can move somewhere, so no record is stuck', () => {
-  expect(PERSON_STATES.filter(s => nextStates(s).length === 0)).toEqual([]);
+  expect(EMPLOYEE_STATES.filter(s => nextStates(s).length === 0)).toEqual([]);
 });
 
 test('a refused move says what the record can do instead', () => {
@@ -69,15 +69,15 @@ test('state lists read as a sentence', () => {
 });
 
 test('leavers and archived records are not "here"; everyone else is', () => {
-  expect(PERSON_STATES.filter(isHere)).toEqual(['candidate', 'preboard', 'active', 'suspended', 'onleave']);
+  expect(EMPLOYEE_STATES.filter(isHere)).toEqual(['candidate', 'preboard', 'active', 'suspended', 'onleave']);
 });
 
 test('a new record starts as a candidate, preboarding or active, and nothing else', () => {
   expect([...STARTING_STATES]).toEqual(['candidate', 'preboard', 'active']);
 });
 
-test('isPersonState accepts the seven keys only', () => {
-  expect(PERSON_STATES.every(isPersonState)).toBe(true);
-  expect(isPersonState('terminated')).toBe(false);
-  expect(isPersonState('Active')).toBe(false);
+test('isEmployeeState accepts the seven keys only', () => {
+  expect(EMPLOYEE_STATES.every(isEmployeeState)).toBe(true);
+  expect(isEmployeeState('terminated')).toBe(false);
+  expect(isEmployeeState('Active')).toBe(false);
 });

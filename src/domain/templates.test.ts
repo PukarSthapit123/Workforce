@@ -23,7 +23,7 @@ const DEFAULT_CHAINS = Object.fromEntries(CHAIN_MODULES.map(m => [m, defaultChai
 function socialState(over: Partial<TenantState> = {}): TenantState {
   const t = shipped('social');
   return {
-    name: 'Brightpath Support Services', people: 19, modules: { ...t.modules }, restore: {}, flags: { ...t.flags }, extras: { ...EXTRAS },
+    name: 'Brightpath Support Services', employees: 19, modules: { ...t.modules }, restore: {}, flags: { ...t.flags }, extras: { ...EXTRAS },
     labels: { ...DEFAULT_LABELS, ...t.labels }, employeeTypes: structuredClone(t.employeeTypes),
     roleNames: { employee: 'Employee', manager: 'Manager', admin: 'Admin' }, chains: DEFAULT_CHAINS,
     tenantSettings: structuredClone(TENANT_SETTINGS),
@@ -71,7 +71,7 @@ describe('the shipped templates', () => {
     expect([shipped('qcic').modules.R, shipped('qcic').labels.job_task]).toEqual([false, 'Project task']);
     expect([shipped('social').modules.R, shipped('social').labels.site, shipped('social').scope]).toEqual([true, 'Service', 'config']);
   });
-  test('two capture scopes and no "everything, including people" (D2)', () => {
+  test('two capture scopes and no "everything, including employees" (D2)', () => {
     expect(TEMPLATE_SCOPES.map(s => s.key)).toEqual(['config', 'structure']);
   });
 });
@@ -98,10 +98,10 @@ describe('capture by scope (D2)', () => {
     expect(t.approvalChain).toEqual(DEFAULT_CHAIN);
     expect(t.tenantSettings).toEqual(TENANT_SETTINGS);
     expect(t.structure).toBeUndefined();
-    expect(t).not.toHaveProperty('people');
+    expect(t).not.toHaveProperty('employees');
     noMoney(t);
   });
-  test('configuration and structure adds the five dimensions, never people', () => {
+  test('configuration and structure adds the five dimensions, never employees', () => {
     const t = captureTemplate('Mine', '', 'structure', src);
     expect(t.structure?.departments).toEqual(src.structure.departments);
     expect(t.structure?.contracts?.[0]?.code).toBe('J1');
@@ -123,7 +123,7 @@ describe('the apply plan (D1)', () => {
     expect(p.steps.labels).toMatchObject({ project: 'Contract', job_task: 'Cost code', site: 'Site', travel: 'Travel time' });
     expect(p.steps.typesAdded.map(x => x.code)).toEqual(['driver', 'hourly']);
   });
-  test('never deletes or overwrites: held structure codes and employee types the template lacks are left alone, with the people', () => {
+  test('never deletes or overwrites: held structure codes and employee types the template lacks are left alone, with the employees', () => {
     const p = planApply(shipped('mne'), socialState(), { mayRenameRoles: true, mayChangeChains: true, mayChangeTypes: true });
     expect(p.steps.structure.costCentres.map(c => c.code)).toEqual(['CC-110', 'CC-120', 'CC-900']);
     expect(p.steps.structure.jobProfiles.map(c => c.code)).toEqual(['ENG', 'SENG', 'CM', 'PAY']);
@@ -132,12 +132,12 @@ describe('the apply plan (D1)', () => {
     expect(alone).toEqual(expect.arrayContaining([
       'Cost centres already here stay exactly as they are: CC-100.', 'Job profiles already here stay exactly as they are: ADM.',
       'Employee types the template does not have stay, with everyone who holds them: Support Worker and Relief / Bank Worker.',
-      'Nobody’s record changes. 19 people keep their details and their employee type.',
+      'Nobody’s record changes. 19 employees keep their details and their employee type.',
       'Brightpath Support Services keeps its name, company details, compliance and pay periods.',
       'Approval chains the template does not have stay as they are: Rota.']));
     /* nothing in the steps can remove a record or a type */
     expect(Object.keys(p.steps)).not.toEqual(expect.arrayContaining(['typesRemoved']));
-    expect(keysOf(p.steps)).not.toContain('people');
+    expect(keysOf(p.steps)).not.toContain('employees');
   });
   test('a contract pointing at something not here is added without it, and says so', () => {
     const t: Template = { ...shipped('social'), scope: 'structure',
@@ -363,7 +363,7 @@ describe('the onboarding setup in a template (module 5, D12)', () => {
     expect(planSummary(p)).toBe('1 change, 1 added. Nothing was deleted.');
   });
 
-  test('new wording or a new summary asks again the people still onboarding who acknowledged it, and the plan says how many (review M2)', () => {
+  test('new wording or a new summary asks again the employees still onboarding who acknowledged it, and the plan says how many (review M2)', () => {
     const o = { config: config(), policies: policies(), acknowledged: { pol_conduct: 2, pol_privacy: 1 } };
     const reworded = withOnb({ steps: [], documents: [], policies: [
       { id: 'pol_conduct', label: 'Code of conduct', ver: 'v4.1', sum: 'Code of conduct in one line.', body: ['Different words.'] },
@@ -371,8 +371,8 @@ describe('the onboarding setup in a template (module 5, D12)', () => {
     const p = planApply(reworded, state(o), ALL);
     expect(p.steps.onboarding.policiesUpdated.map(u => [u.id, u.ver, u.reask])).toEqual([['pol_conduct', 'v4.2', true], ['pol_privacy', 'v2.1', true]]);
     expect(texts(p.changes)).toEqual([
-      'Policy Code of conduct, with the template\'s wording. It becomes v4.2. 2 people will be asked to read it again.',
-      'Policy Privacy notice, with the template\'s wording. It becomes v2.1. 1 person will be asked to read it again.']);
+      'Policy Code of conduct, with the template\'s wording. It becomes v4.2. 2 employees will be asked to read it again.',
+      'Policy Privacy notice, with the template\'s wording. It becomes v2.1. 1 employee will be asked to read it again.']);
     expect(texts(p.leftAlone)).toContain('Uploaded policy documents stay as they are. Everybody’s onboarding progress stays too, apart from the policies they are asked to read again.');
   });
   test('a new name alone keeps the version and the acknowledgements', () => {
@@ -437,19 +437,19 @@ describe('module 8: the documents a tenant added, and Rota setup, in a template'
     expect(p.leftAlone.map(l => l.text)).toContain('Onboarding document proof of address is not added. A document with that name already exists.');
   });
 
-  test('Rota setup: each level by code takes the template\'s people per shift, and the milestones and who is told; a bad value stays', () => {
+  test('Rota setup: each level by code takes the template\'s employees per shift, and the milestones and who is told; a bad value stays', () => {
     const have = { supportLevels: DEFAULT_SUPPORT_LEVELS.map(l => ({ ...l })), flexMilestones: [9, 12], flexNotifyTo: 'HR administrators' };
     const want = { supportLevels: [{ code: 'High', label: 'High support', min: 6 }, { code: 'Extra', label: 'Extra support', min: 8 }], flexMilestones: [6, 10], flexNotifyTo: 'Service Manager' };
     const p = planApply({ ...shipped('social'), rotaConfig: want }, socialState({ rotaConfig: have }), ALL);
     expect(p.steps.rotaConfig).toEqual({ supportLevels: have.supportLevels.map(l => (l.code === 'High' ? { ...l, min: 6 } : l)), flexMilestones: [6, 10], flexNotifyTo: 'Service Manager' });
-    expect(lines(p, 'rota')).toEqual(['High support: 6 people per shift, at every location at that level.',
+    expect(lines(p, 'rota')).toEqual(['High support: 6 employees per shift, at every location at that level.',
       'Flexible-worker milestones at 6 and 10 weeks, notified to Service Manager.']);
     expect(p.leftAlone.filter(l => l.area === 'rota').map(l => l.text)).toEqual(['Support levels this tenant does not have are not used: Extra support.']);
     const bad = planApply({ ...shipped('social'), rotaConfig: { ...want, supportLevels: [{ code: 'Low', label: 'Low support', min: 0 }], flexMilestones: [12, 9] } },
       socialState({ rotaConfig: have }), ALL);
     expect(bad.steps.rotaConfig).toBeUndefined();
     expect(bad.leftAlone.filter(l => l.area === 'rota').map(l => l.text)).toEqual([
-      'Support levels stay as they are. Low support needs a whole number of people per shift from 1 to 50.',
+      'Support levels stay as they are. Low support needs a whole number of employees per shift from 1 to 50.',
       'Flexible-worker milestones stay as they are. List the milestones from the earliest to the latest, each once.']);
     const same = planApply({ ...shipped('social'), rotaConfig: have }, socialState({ rotaConfig: have }), ALL);
     expect(same.steps.rotaConfig).toBeUndefined();

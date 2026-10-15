@@ -14,7 +14,7 @@ export const handle = <A extends unknown[]>(fn: (...a: A) => Promise<Response> |
     catch (e) { if (e instanceof Refused) return HttpResponse.json(e.body, { status: e.status }); throw e; }
   };
 
-/* camelCase and snake_case keys read as words: personCode -> "person code". */
+/* camelCase and snake_case keys read as words: employeeCode -> "employee code". */
 const words = (key: string) => key.replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ').toLowerCase();
 const EXPECTED: Record<string, string> = {
   string: 'text', number: 'a number', int: 'a whole number', boolean: 'true or false', array: 'a list', object: 'a set of fields',

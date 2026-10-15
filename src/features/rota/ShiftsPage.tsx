@@ -28,7 +28,7 @@ export function ShiftsPage() {
       {!q.data && !q.isError && <p data-testid={tid.tshifts.loading} className="text-text-secondary">Loading the shift catalogue&hellip;</p>}
       {q.data && <>
         <Palette shifts={q.data.items} lifted={null} canMake={caps.has('rota_shift')} onNew={() => setAdding(true)}
-          onLift={code => { const s = q.data.items.find(x => x.code === code); if (s) toastInfo(`${s.name} · ${formatTime(s.from)}–${formatTime(s.to)} · ${s.hours}h paid`, 'Place it on a person from Team rota.'); }}
+          onLift={code => { const s = q.data.items.find(x => x.code === code); if (s) toastInfo(`${s.name} · ${formatTime(s.from)}–${formatTime(s.to)} · ${s.hours}h paid`, 'Place it on an employee from Team rota.'); }}
           onDragStart={() => {}} onDragEnd={() => {}} />
         <AdminCard icon={<Clock />} title="Shift types" tipTestId={tid.tshifts.cardTip}
           tip="Times, breaks and paid hours. Paid hours, midnight crossing and the rota colour all follow from the times."

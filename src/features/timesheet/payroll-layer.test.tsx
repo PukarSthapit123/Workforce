@@ -32,7 +32,7 @@ beforeEach(() => {
   if (!d) throw new Error('no day');
   d.state = 'mgrok';
   d.version = 2;
-  d.history = [...d.history, { from: 'pend', to: 'mgrok', by: { personCode: 'EMP001', name: 'Pukar Sthapit' }, at: FROZEN, reason: '', layer: 'Line manager' }];
+  d.history = [...d.history, { from: 'pend', to: 'mgrok', by: { employeeCode: 'EMP001', name: 'Pukar Sthapit' }, at: FROZEN, reason: '', layer: 'Line manager' }];
 });
 
 test('mgrok reads "Approved by manager, waiting on payroll" on the pill and the day chip', () => {

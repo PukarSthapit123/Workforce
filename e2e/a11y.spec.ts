@@ -22,7 +22,7 @@ async function setTheme(page: Page, theme: 'light' | 'dark') {
    data (besides the page container itself) that means it is actually ready:
    the permissions matrix or the audit table. Running axe or the overflow
    check the instant after goto() risks catching the page mid-fetch (its
-   loading state, or nothing yet), rather than the page as a person would
+   loading state, or nothing yet), rather than the page as an employee would
    actually see it. */
 const READY: Record<string, string> = { '/setup/aperm': tid.access.table, '/setup/iaudit': tid.audit.table };
 
@@ -74,14 +74,14 @@ test('phone: no horizontal overflow on built pages at 390px', async ({ page, sig
 });
 
 /* Plan 1b's pages, each read once its own data is on screen, for the
-   persona that reaches it; the person form and the proposal dialog too. */
+   persona that reaches it; the employee form and the proposal dialog too. */
 const PAGES_1B: Record<'admin' | 'manager' | 'employee', [string, string][]> = {
-  admin: [['/setup/apeople', tid.people.table], ['/setup/aloc', tid.dims.card('locations')], ['/setup/aloc?d=locations', tid.dims.table],
+  admin: [['/setup/aemployees', tid.employees.table], ['/setup/aloc', tid.dims.card('locations')], ['/setup/aloc?d=locations', tid.dims.table],
     ['/setup/aloc?d=projects', tid.dims.table], ['/setup/acon', tid.contracts.table], ['/setup/atypes', tid.types.detail]],
-  manager: [['/team/tpeople', tid.people.table]],
+  manager: [['/team/temployees', tid.employees.table]],
   employee: [['/work/profile', tid.profile.state]],
 };
-const DIALOGS_1B: Record<string, [string, string]> = { '/setup/apeople': [tid.people.add, tid.personForm.root], '/work/profile': [tid.profile.propose, tid.profile.send] };
+const DIALOGS_1B: Record<string, [string, string]> = { '/setup/aemployees': [tid.employees.add, tid.employeeForm.root], '/work/profile': [tid.profile.propose, tid.profile.send] };
 for (const theme of ['light', 'dark'] as const) {
   for (const persona of ['admin', 'manager', 'employee'] as const) {
     test(`axe: plan 1b pages for the ${persona} have no serious issues (${theme})`, async ({ page, signInAs }) => {
@@ -138,7 +138,7 @@ const PAGES_2: [string, Step[]][] = [
     ['return dialog', click(tid.tteam.ret('tsd_EMP005_2026-08-11'), tid.tteam.returnReason)],
     ['bulk dialog', async page => { await escape(page); await click(tid.tteam.approveAll, tid.tteam.bulkAck)(page); }],
     ['/team/tteam week', async page => { await escape(page); await click(tid.tteam.view('week'), tid.tteam.matrix)(page); }],
-    ['proxy dialog day', async page => { await open('/team/tpeople', tid.people.table)(page); await page.getByTestId(tid.people.open('EMP005')).click();
+    ['proxy dialog day', async page => { await open('/team/temployees', tid.employees.table)(page); await page.getByTestId(tid.employees.open('EMP005')).click();
       await click(tid.proxy.open, tid.dayForm.field('start'))(page); }],
     ['proxy dialog week', click(tid.proxy.view('week'), tid.week.grid)],
   ]],
@@ -463,7 +463,7 @@ const pages5 = (api: Parameters<typeof completeMine>[1]): [string, Step[]][] => 
     ['/team/tonb', async page => { await open('/team/tonb', tid.tonb.queue)(page); await page.getByTestId(tid.tonb.table).waitFor(); }],
     ['check dialog', click(tid.tonb.check('EMP003', 'rtw'), tid.tonb.reason)],
     ['not-ready dialog', async page => { await escape(page); await click(tid.tonb.start('EMP003'), tid.tonb.notReady)(page); }],
-    ['add a new starter', async page => { await escape(page); await click(tid.tonb.add, tid.personForm.root)(page); }],
+    ['add a new starter', async page => { await escape(page); await click(tid.tonb.add, tid.employeeForm.root)(page); }],
   ]],
   [EDDIE, [
     ['/setup/monb', async page => { await open('/setup/monb', tid.monb.card('steps'))(page); await page.getByTestId(tid.monb.policies).waitFor(); }],

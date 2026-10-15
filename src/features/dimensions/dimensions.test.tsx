@@ -36,7 +36,7 @@ test('DM All five dimensions are here, including job profiles and projects, and 
 test('DF Dimensions are grouped by the question they answer, in a readable order, and card descriptions are behind hover', async () => {
   renderPage(<DimensionsPage />, '/setup/aloc');
   await screen.findByTestId(tid.dims.card('locations'));
-  expect(screen.getAllByRole('heading', { level: 2 }).map(h => h.firstChild?.textContent)).toEqual(['Where work happens', 'What people do', 'What work is charged to']);
+  expect(screen.getAllByRole('heading', { level: 2 }).map(h => h.firstChild?.textContent)).toEqual(['Where work happens', 'What employees do', 'What work is charged to']);
   expect(screen.getByTestId(tid.dims.cardDescription('locations'))).toHaveClass('sr-only');
 });
 test('DM Opening a dimension gives it its own page, with a way back, and full test id coverage', async () => {
@@ -94,7 +94,7 @@ test('DM An entry in use cannot be removed, and says what uses it', async () => 
   await openEdit('WH');
   const before = snapshot('locations');
   await userEvent.click(screen.getByTestId(tid.dims.remove));
-  expect(await screen.findByTestId(tid.dims.warn)).toHaveTextContent(/WH is used by \d+ people/);
+  expect(await screen.findByTestId(tid.dims.warn)).toHaveTextContent(/WH is used by \d+ employees/);
   expect(snapshot('locations')).toEqual(before);
 });
 test('DM An unused entry can be removed, and it is gone from the list', async () => {

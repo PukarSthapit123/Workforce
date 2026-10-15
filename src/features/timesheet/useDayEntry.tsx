@@ -10,10 +10,10 @@ import type { DayFieldsProps } from './DayForm';
 
 /* One day's entry: the form's values, its inline and on-attempt checks, and
    the save and submit writes, for whoever's day it is. My timesheet passes
-   the signed-in person; proxy entry passes the team member, so the form, the
+   the signed-in employee; proxy entry passes the team member, so the form, the
    checks and the write are theirs (D6). The caller says what the toast reads. */
-export function useDayEntry({ week, day, personId, onSaved, onSubmitted }: {
-  week: TimesheetWeek; day: WeekDay; personId: string;
+export function useDayEntry({ week, day, employeeId, onSaved, onSubmitted }: {
+  week: TimesheetWeek; day: WeekDay; employeeId: string;
   onSaved: (res: DaySaved) => void; onSubmitted: (res: DaySaved) => void;
 }) {
   const c = week.capture;
@@ -22,7 +22,7 @@ export function useDayEntry({ week, day, personId, onSaved, onSubmitted }: {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [checked, setChecked] = useState<LocalCheck | null>(null);
   const save = useSaveDay(), submit = useSubmitDay();
-  const busy = save.isPending(`${personId}/${day.date}`) || submit.isPending(`${personId}/${day.date}`);
+  const busy = save.isPending(`${employeeId}/${day.date}`) || submit.isPending(`${employeeId}/${day.date}`);
 
   /* the field's own error: the inline check first, then whatever the server named */
   const errorFor = (code: string) => errors[code] ?? [save, submit].map(m => m.fieldError(serverField(code))
@@ -39,7 +39,7 @@ export function useDayEntry({ week, day, personId, onSaved, onSubmitted }: {
     setErrors(Object.fromEntries(r.errors.map(e => [e.field, e.message])));
     setChecked(r);
     if (r.errors.length) return;
-    const vars = { personId, date: day.date, version: day.version, body: { ...dayInputFrom(values, c), ...(extra.workedAnyway ? { workedAnyway: true } : {}) } };
+    const vars = { employeeId, date: day.date, version: day.version, body: { ...dayInputFrom(values, c), ...(extra.workedAnyway ? { workedAnyway: true } : {}) } };
     if (kind === 'save') save.mutate(vars, { onSuccess: onSaved });
     else submit.mutate(vars, { onSuccess: onSubmitted });
   };

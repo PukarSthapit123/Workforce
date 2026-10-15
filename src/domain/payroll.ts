@@ -143,9 +143,9 @@ export function readinessItems(f: ReadinessFacts, run: RunState): { blockers: Re
   add(blockers, 'mgrok', 'Waiting on payroll', f.mgrok, `${n(f.mgrok, 'timesheet day')} approved by the manager and waiting on the payroll layer`, 'tteam');
   add(blockers, 'failed', 'Posting failures', f.failed, `${n(f.failed, 'posting')} failed and not yet re-queued successfully`, 'ibc');
   add(blockers, 'critical', 'Critical exceptions', f.critical, `${n(f.critical, 'unresolved exception')} at the highest severity`, 'texc');
-  add(blockers, 'compliance', 'Compliance', f.uncleared, `${n(f.uncleared, 'colleague')} recorded hours while not cleared to work`, 'tpeople');
+  add(blockers, 'compliance', 'Compliance', f.uncleared, `${n(f.uncleared, 'colleague')} recorded hours while not cleared to work`, 'temployees');
   add(blockers, 'resource', 'No resource number', f.noResource,
-    `${n(f.noResource, 'colleague')} with hours in this period ${f.noResource === 1 ? 'has' : 'have'} no Business Central resource number`, 'apeople');
+    `${n(f.noResource, 'colleague')} with hours in this period ${f.noResource === 1 ? 'has' : 'have'} no Business Central resource number`, 'aemployees');
   add(warnings, 'queued', 'Postings in flight', f.queued, `${n(f.queued, 'posting')} queued and not yet resolved`, 'ibc');
   if (run !== 'reconciled') add(warnings, 'unreconciled', 'Unreconciled', f.posted, `${n(f.posted, 'posted record')} not yet reconciled against Business Central`, 'ibc');
   add(warnings, 'exceptions', 'Open exceptions', f.lowerExceptions, `${n(f.lowerExceptions, 'open exception')} below critical`, 'texc');
@@ -207,9 +207,9 @@ export const runToast = (m: RunMove, rows = 0, fileName = '') =>
 /* P's columns, with the pay code beside the element: hours and codes only, no amount (P1). */
 export const PAYROLL_CSV_HEADER = ['Employee ID', 'Name', 'Resource no.', 'Date', 'Shift', 'Pay code', 'Pay elements', 'Allowances', 'Hours', 'State', 'Integration'];
 export interface ApprovedDay {
-  personCode: string; name: string; resource: string; date: string; shift: string; payCode: string; element: string;
+  employeeCode: string; name: string; resource: string; date: string; shift: string; payCode: string; element: string;
   allowances: readonly string[]; hours: number; state: string; posting: string;
 }
 export const payrollCsv = (days: readonly ApprovedDay[]): (string | number)[][] => [PAYROLL_CSV_HEADER,
-  ...days.map(d => [d.personCode, d.name, d.resource, formatDmy(d.date), d.shift, d.payCode, d.element, d.allowances.join(' '), d.hours, d.state, d.posting])];
+  ...days.map(d => [d.employeeCode, d.name, d.resource, formatDmy(d.date), d.shift, d.payCode, d.element, d.allowances.join(' '), d.hours, d.state, d.posting])];
 export const payrollFileName = (p: { start: string }) => `qnipay-payroll-${formatDmy(p.start, 'dd/mm/yyyy').replace(/\//g, '-')}.csv`;

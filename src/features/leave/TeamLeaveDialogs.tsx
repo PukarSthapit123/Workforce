@@ -33,9 +33,9 @@ export function DeclineDialog({ r, onClose }: { r: TeamRequestView; onClose: () 
 }
 
 /* A colleague's "How it was worked out" (entitlementModal, v15:7793): the
-   same dialog My leave opens, read for that person. With LV_PRORATA it
+   same dialog My leave opens, read for that employee. With LV_PRORATA it
    offers the hours simulation, which writes nothing (D3). */
-export function PersonEntitlement({ code, canSimulate, onClose }: { code: string; canSimulate: boolean; onClose: () => void }) {
+export function EmployeeEntitlement({ code, canSimulate, onClose }: { code: string; canSimulate: boolean; onClose: () => void }) {
   const q = useEntitlement(code);
   const [simulating, setSimulating] = useState(false);
   if (!q.data) return (
@@ -55,16 +55,16 @@ export function PersonEntitlement({ code, canSimulate, onClose }: { code: string
    writes one ledger adjustment for exactly those days (D10). */
 type OnLeaveDay = SicknessBoard['sickOnLeave'][number];
 export function GiveBackDialog({ days, onClose }: { days: readonly OnLeaveDay[]; onClose: () => void }) {
-  const people = [...new Map(days.map(d => [d.personCode, d.name])).entries()].map(([code, name]) => ({ value: code, label: name }));
-  const [who, setWho] = useState(people[0]?.value ?? '');
-  const theirs = days.filter(d => d.personCode === who);
+  const employees = [...new Map(days.map(d => [d.employeeCode, d.name])).entries()].map(([code, name]) => ({ value: code, label: name }));
+  const [who, setWho] = useState(employees[0]?.value ?? '');
+  const theirs = days.filter(d => d.employeeCode === who);
   const [picked, setPicked] = useState<readonly string[]>(() => theirs.map(d => d.date));
   const give = useGiveDaysBack();
   const total = theirs.filter(d => picked.includes(d.date)).reduce((n, d) => n + d.days, 0);
   const problem = give.refusal ? `${give.refusal.message} ${give.refusal.next}` : undefined;
-  const pick = (code: string) => { setWho(code); setPicked(days.filter(d => d.personCode === code).map(d => d.date)); give.clearFieldErrors(); };
+  const pick = (code: string) => { setWho(code); setPicked(days.filter(d => d.employeeCode === code).map(d => d.date)); give.clearFieldErrors(); };
   const toggle = (date: string, on: boolean) => { setPicked(p => on ? [...p, date] : p.filter(x => x !== date)); give.clearFieldErrors(); };
-  const send = () => give.mutate({ personCode: who, dates: [...picked] }, { onSuccess: x => { toastInfo(x.summary); onClose(); } });
+  const send = () => give.mutate({ employeeCode: who, dates: [...picked] }, { onSuccess: x => { toastInfo(x.summary); onClose(); } });
   return (
     <Modal open onOpenChange={o => { if (!o) onClose(); }} title="Give days back"
       description="Where sickness falls across annual leave, those days go back to the colleague’s balance. Pick the days the sickness covered."
@@ -74,7 +74,7 @@ export function GiveBackDialog({ days, onClose }: { days: readonly OnLeaveDay[];
           Give {total} day{total === 1 ? '' : 's'} back</Button>
       </>}>
       <Field label="Colleague">
-        <SelectBox testId={tid.tsick.gbPerson} value={who} options={people} onValueChange={pick} />
+        <SelectBox testId={tid.tsick.gbEmployee} value={who} options={employees} onValueChange={pick} />
       </Field>
       {theirs.map(d => (
         <CheckRow key={d.date} control={<CheckboxField testId={tid.tsick.gbDay(d.date)} checked={picked.includes(d.date)}

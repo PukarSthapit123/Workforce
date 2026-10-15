@@ -1,8 +1,8 @@
 /* Module 2b Clocking (timesheet capture method B). One clock record per
-   person per day (brief D1): the events the server stamped, never the
+   employee per day (brief D1): the events the server stamped, never the
    browser's times; the state and the time worked are derived from them on
    every read. Own only (Review Focus 1): every path is the caller's own
-   clock, so there is no person in any of them, and each needs own_ts. Every
+   clock, so there is no employee in any of them, and each needs own_ts. Every
    write carries If-Match: the clock record's version, 0 when there is none
    yet. Clock out, and closing a forgotten clock, write the day as a draft
    through module 2's day save (D3), so its lock, absence and capture rules
@@ -10,7 +10,7 @@
 import { z } from 'zod';
 import { defineEndpoint } from './endpoints';
 import { IsoDateTime, RecordMeta } from './common';
-import { IsoDate } from './people';
+import { IsoDate } from './employees';
 import { BreakInput, Clock, RotaDay, TimesheetDay } from './timesheets';
 
 export const ClockKind = z.enum(['in', 'breakStart', 'breakEnd', 'out']);
@@ -18,13 +18,13 @@ export const ClockEvent = z.object({ kind: ClockKind, at: IsoDateTime });
 export const ClockStateKey = z.enum(['idle', 'running', 'onBreak', 'clockedOut']);
 export type ClockStateKey = z.infer<typeof ClockStateKey>;
 export const ClockRecord = RecordMeta.extend({
-  personCode: z.string(), date: IsoDate, events: z.array(ClockEvent),
+  employeeCode: z.string(), date: IsoDate, events: z.array(ClockEvent),
   /* the first clock in came after the published rota line's start (D5) */
   late: z.boolean(),
-  /* a forgotten clock-out closed later with the finish the person gave (D6) */
+  /* a forgotten clock-out closed later with the finish the employee gave (D6) */
   closedLate: z.object({ finish: z.string(), at: IsoDateTime }).nullable(),
   /* the clocked break pairs the clock has written to the day so far: a later clock out adds only the rest, so a start
-     or break the person edited or deleted stays as they left it (review I4); null until the clock first writes the day */
+     or break the employee edited or deleted stays as they left it (review I4); null until the clock first writes the day */
   written: z.object({ breaks: z.array(BreakInput) }).nullable(),
   /* a forgotten clock whose day could no longer be written, closed without writing it (review I2) */
   closedNoDay: z.object({ finish: z.string(), at: IsoDateTime }).nullable(),
@@ -34,7 +34,7 @@ export const ClockRecord = RecordMeta.extend({
 });
 export type ClockRecord = z.infer<typeof ClockRecord>;
 const Blocked = z.object({ code: z.string(), message: z.string(), next: z.string() });
-/* D4: the card shows only while Clock in / out is live, the person's type
+/* D4: the card shows only while Clock in / out is live, the employee's type
    enters by clock and the day is not blocked (a closed period, a submitted
    or decided day, or an absence not marked worked anyway). */
 export const ClockGates = z.object({

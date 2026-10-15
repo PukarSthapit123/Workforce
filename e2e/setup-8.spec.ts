@@ -59,7 +59,7 @@ test('a payroll layer added on Approvals: the manager\'s approval leaves the day
 });
 
 /* Group 4B. Dee gives the administrator template the capability a later layer
-   needs, so there is a second person to decide it, then adds that layer on
+   needs, so there is a second employee to decide it, then adds that layer on
    Approvals. */
 test('Rota: publish waits for sign-off', async ({ page, api }) => {
   test.setTimeout(120_000);
@@ -192,7 +192,7 @@ test('Leave: a new policy gives the right entitlement, and carry-over appears', 
 });
 
 /* Group 5: the smaller setup gaps. */
-test('Rota setup: a support level\'s new people per shift is what Team rota measures its locations against', async ({ page }) => {
+test('Rota setup: a support level\'s new employees per shift is what Team rota measures its locations against', async ({ page }) => {
   test.setTimeout(90_000);
   await signInEmail(page, DEE);
   await page.goto('/setup/mrota');

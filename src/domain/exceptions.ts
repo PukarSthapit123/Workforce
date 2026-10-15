@@ -61,8 +61,8 @@ export const REASON_REQUIRED: ExceptionRefusal = { status: 422, code: 'invalid',
 export const SELF_EXCEPTION = 'You cannot handle an exception about yourself.';
 export const SELF_EXCEPTION_REFUSAL: ExceptionRefusal = { status: 403, code: 'SELF_APPROVAL', message: SELF_EXCEPTION,
   next: 'Ask another manager at your location.' };
-export const selfProblem = (x: Pick<DerivedException, 'personCode'>, self: string): ExceptionRefusal | null =>
-  (x.personCode !== null && x.personCode === self ? SELF_EXCEPTION_REFUSAL : null);
+export const selfProblem = (x: Pick<DerivedException, 'employeeCode'>, self: string): ExceptionRefusal | null =>
+  (x.employeeCode !== null && x.employeeCode === self ? SELF_EXCEPTION_REFUSAL : null);
 const list = (xs: readonly string[]) => (xs.length > 1 ? `${xs.slice(0, -1).join(', ')} or ${xs.at(-1) ?? ''}` : xs[0] ?? '');
 /* excTransition's refusal (v15:7764-7766): "An open exception cannot move to resolved". */
 export function illegalMove(from: ExceptionState, move: ExceptionMove): ExceptionRefusal {
@@ -79,7 +79,7 @@ export function moveProblem(from: ExceptionState, move: ExceptionMove, note: str
 }
 
 /* --------------------------------------------------------- the handling */
-export interface Who { personCode: string; name: string }
+export interface Who { employeeCode: string; name: string }
 export interface HandlingStep { from: ExceptionState; to: ExceptionState; by: Who; at: string; note: string }
 export interface Handling { state: ExceptionState; owner: Who | null; resolution: string; history: HandlingStep[] }
 export const UNHANDLED: Handling = Object.freeze({ state: 'open', owner: null, resolution: '', history: [] });
@@ -114,7 +114,7 @@ export const SEVERITY_TIP = 'Ranked by consequence: coverage and clearance first
 export const severityTone = (sev: number): ExceptionTone => (sev >= 4 ? 'err' : sev === 3 ? 'warn' : 'neu');
 /* The screen each kind is put right on (P's act). */
 export const SOURCE_VIEW: Readonly<Record<ExceptionKind, string>> = {
-  Clearance: 'tpeople', Coverage: 'trota', Leave: 'tleave', 'Business Central': 'ibc', Compliance: 'thours', Timesheet: 'tteam', Hours: 'thours', Qualification: 'tpeople',
+  Clearance: 'temployees', Coverage: 'trota', Leave: 'tleave', 'Business Central': 'ibc', Compliance: 'thours', Timesheet: 'tteam', Hours: 'thours', Qualification: 'temployees',
 };
 
 /* ------------------------------------------------------------ the key */
@@ -134,7 +134,7 @@ export const exceptionKey = (kind: ExceptionKind, subjectId: string, fact: strin
 export const exceptionId = (key: string) => `exc_${hash64(key)}`;
 
 /* ----------------------------------------------------------- derivation */
-export interface PersonFacts {
+export interface EmployeeFacts {
   code: string; name: string; location: string;
   /* the week at their location, its hours position flags, and the days before today scheduled with nothing recorded */
   weekStart: string;
@@ -142,9 +142,9 @@ export interface PersonFacts {
   cleared: boolean; dbsExpiry: string; qualifications: string;
 }
 export interface ExceptionFacts {
-  people: readonly PersonFacts[];
+  employees: readonly EmployeeFacts[];
   gaps: readonly { location: string; locationName: string; date: string; onShift: number; min: number }[];
-  leave: readonly { id: string; personCode: string; name: string; location: string; escalateTo: string }[];
+  leave: readonly { id: string; employeeCode: string; name: string; location: string; escalateTo: string }[];
   /* failed postings; location is the posted day's colleague's, or null for a batch, which is everyone's */
   postings: readonly { id: string; ref: string; attempt: number; reason: string; location: string | null }[];
 }
@@ -152,8 +152,8 @@ export interface DerivedException {
   id: string; key: string; kind: ExceptionKind; severity: number; subject: string; text: string;
   /* where it belongs, for location scope; null for one that is every location's */
   location: string | null; source: string;
-  /* the person it is about, for the self rule; null for a location's coverage or a posting */
-  personCode: string | null;
+  /* the employee it is about, for the self rule; null for a location's coverage or a posting */
+  employeeCode: string | null;
 }
 
 export const clearanceText = (dbsExpiry: string) =>
@@ -172,17 +172,17 @@ export function deriveExceptions(f: ExceptionFacts): DerivedException[] {
   const out: DerivedException[] = [];
   const add = (kind: ExceptionKind, subjectId: string, fact: string, subject: string, text: string, location: string | null) => {
     const key = exceptionKey(kind, subjectId, fact);
-    const personCode = kind === 'Coverage' || kind === 'Business Central' ? null : subjectId;
-    out.push({ id: exceptionId(key), key, kind, severity: SEVERITY[kind], subject, text, location, source: SOURCE_VIEW[kind], personCode });
+    const employeeCode = kind === 'Coverage' || kind === 'Business Central' ? null : subjectId;
+    out.push({ id: exceptionId(key), key, kind, severity: SEVERITY[kind], subject, text, location, source: SOURCE_VIEW[kind], employeeCode });
   };
-  for (const p of f.people) {
+  for (const p of f.employees) {
     for (const fl of p.flags) if (fl.c !== 'neu') add(fl.c === 'err' ? 'Compliance' : 'Hours', p.code, `${p.weekStart}|${fl.k}`, p.name, fl.k, p.location);
     if (!p.cleared) add('Clearance', p.code, `uncleared|${p.dbsExpiry}`, p.name, clearanceText(p.dbsExpiry), p.location);
     if (expiringSoon(p.qualifications)) add('Qualification', p.code, p.qualifications, p.name, p.qualifications, p.location);
     if (p.missing.length) add('Timesheet', p.code, p.missing.join(','), p.name, missingText(p.missing.length), p.location);
   }
   for (const g of f.gaps) add('Coverage', g.location, `${g.date}|${g.onShift}/${g.min}`, g.locationName, coverageText(g.date, g.onShift, g.min), g.location);
-  for (const l of f.leave) add('Leave', l.personCode, l.id, l.name, escalationText(l.escalateTo), l.location);
+  for (const l of f.leave) add('Leave', l.employeeCode, l.id, l.name, escalationText(l.escalateTo), l.location);
   for (const x of f.postings) add('Business Central', x.id, `${x.id}|${x.attempt}`, x.ref, postingText(x.reason, x.attempt), x.location);
   return out.map((x, i) => ({ x, i })).sort((a, b) => b.x.severity - a.x.severity || a.i - b.i).map(({ x }) => x);
 }

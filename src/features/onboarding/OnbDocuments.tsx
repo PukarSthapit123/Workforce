@@ -34,7 +34,7 @@ export function FileCell({ f, testId }: { f: OnbFileRecord | null; testId: strin
 export function DocumentsStep({ v, set, error, today, disabled, features, documents, filesNote, docError, onFile }: StepProps & {
   documents: readonly OnbDocumentView[]; filesNote: string;
   docError(id: string): string | undefined;
-  /* a file the person picked for a document; checked and read by the caller */
+  /* a file the employee picked for a document; checked and read by the caller */
   onFile(doc: OnbDocumentView, file: File): void;
 }) {
   const input = useRef<HTMLInputElement>(null);
