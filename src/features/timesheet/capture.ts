@@ -25,9 +25,9 @@ export const GROUPS: readonly FieldGroup[] = [
   { key: 'alloc', name: 'Allocation', open: true, tip: 'Where this time is charged.' },
   { key: 'vehicle', name: 'Vehicles & movements', open: false, tip: 'Add a vehicle only if you drove one.' },
   { key: 'driving', name: 'Driving detail', open: false, tip: 'Drive time, period of availability and double-manning.' },
+  { key: 'allow', name: 'Allowances', open: false, tip: 'Tick the allowances that apply to this shift.' },
   { key: 'breaks', name: 'Breaks', open: false, tip: 'Add a break only if you took one. It comes off net working hours.' },
   { key: 'extra', name: 'Additional details', open: false, tip: 'Mileage, equipment, checks and handovers.' },
-  { key: 'allow', name: 'Allowances', open: true, tip: 'Tick the allowances that apply to this shift.' },
 ];
 /* FIELD_HINTS: the `i` beside a field's label. */
 export const FIELD_HINTS: Readonly<Record<string, string>> = {

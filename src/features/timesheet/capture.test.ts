@@ -23,9 +23,9 @@ const day = (i: number) => { const d = week.days[i]; if (!d) throw new Error(`no
 const model = () => weekModel(c().fields, typeOf(c()), envOf(c()), c().weekGrid);
 
 describe('the day form', () => {
-  test('groups follow GROUPS: the open ones in order, breaks closed, allocation from the project capability', () => {
+  test('groups follow GROUPS: the open ones in order, allowances closed above breaks, allocation from the project capability', () => {
     const g = formGroups(c()).map(x => `${x.group.key}${x.group.open ? '' : ' (closed)'}`);
-    expect(g).toEqual(['core', 'alloc', 'breaks (closed)', 'extra (closed)', 'allow']);
+    expect(g).toEqual(['core', 'alloc', 'allow (closed)', 'breaks (closed)', 'extra (closed)']);
   });
   test('a saved day comes back as the form shows it, and goes out again as the same entry', () => {
     const v = valuesFromDay(day(2), c());
