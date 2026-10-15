@@ -60,7 +60,7 @@ test('Documents: my seven, no Open action, the payroll ones and salary history n
   expect(within(card).getAllByTestId(/^docs-row-/)).toHaveLength(7);
   expect(within(card).getByTestId(tid.docs.row('doc_CP-1042_3'))).toHaveTextContent('DBS certificate');
   expect(within(card).getByTestId(tid.docs.row('doc_CP-1042_3'))).toHaveTextContent('Compliance · 31/03/2024 · HRIS');
-  expect(screen.getByTestId(tid.docs.openNote)).toHaveTextContent('Opening documents is not built yet.');
+  expect(screen.getByTestId(tid.docs.openNote)).toHaveTextContent('Opening documents is a future enhancement.');
   expect(screen.queryByRole('button', { name: /^Open/ })).toBeNull();
   expect(screen.queryByRole('link', { name: /^Open/ })).toBeNull();
   const pay = screen.getByTestId(tid.docs.payroll);

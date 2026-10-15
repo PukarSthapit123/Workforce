@@ -111,7 +111,7 @@ describe('Team onboarding', () => {
     await signIn();
     await open();
     await userEvent.click(screen.getByTestId(tid.tonb.invite('EMP002')));
-    await expectToast('Priya Raman is invited. They sign in with priya.raman@dogmagroup.co.uk. No email is sent in this build.');
+    await expectToast('Priya Raman is invited. They sign in with priya.raman@dogmagroup.co.uk. Invitation emails are a future enhancement, so tell them yourself.');
     await waitFor(() => expect(screen.getByTestId(tid.tonb.state('EMP002'))).toHaveTextContent('Preboarding'));
     expect(screen.queryByTestId(tid.tonb.invite('EMP002'))).toBeNull();
     expect(acts()).toEqual(['Onboarding invited']);

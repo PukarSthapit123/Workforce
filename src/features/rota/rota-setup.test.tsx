@@ -169,8 +169,8 @@ describe('Rota setup', () => {
     }
 
     await userEvent.click(within(dialog).getByTestId(tid.patUpload.import));
-    await expectToast('Simulated · 244 rows validated and would import. No patterns have been created.');
-    expect(toasts()).toContain('Mass upload is simulated, not imported.');
+    await expectToast('244 rows validated. Importing patterns from a file is a future enhancement.');
+    expect(toasts()).toContain('No patterns have been created.');
     expect(screen.queryByTestId(tid.modal.root)).toBeNull();
     expect(snapshot('patterns', 'rotaWeeks', 'audit')).toEqual(before);
   });
@@ -178,7 +178,7 @@ describe('Rota setup', () => {
   test("module 8: a support level's people per shift and the flexible-worker milestones save together, and the level's locations follow", async () => {
     await open();
     expect(screen.getByTestId(tid.mrota.card('flex'))).toHaveTextContent('Milestones at 9 and 12 weeks · notified to HR administrators');
-    expect(screen.getByTestId(tid.mrota.flexNote)).toHaveTextContent('Counting bank weeks is not built yet');
+    expect(screen.getByTestId(tid.mrota.flexNote)).toHaveTextContent('Counting bank weeks is a future enhancement');
     expect(screen.getByTestId(tid.mrota.flag('FLEXMON'))).toBeDisabled();
     type(tid.mrota.levelMin('High'), '5');
     type(tid.mrota.milestones, '6, 10');

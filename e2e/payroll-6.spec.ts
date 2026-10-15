@@ -225,7 +225,7 @@ test('admin: a failed posting is retried from Business Central; the toast says r
   test.setTimeout(90_000);
   await signInEmail(page, DEE);
   await page.goto('/setup/ibc');
-  await expect(page.getByTestId(tid.ibc.banner)).toContainText('Simulated integration');
+  await expect(page.getByTestId(tid.ibc.banner)).toContainText('Business Central connection');
   await expect(page.getByTestId(tid.ibc.state(FAILED_POSTING))).toContainText('Failed');
   await expect(page.getByTestId(tid.ibc.tile('failed'))).toHaveText('1');
 

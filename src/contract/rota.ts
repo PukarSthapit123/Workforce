@@ -349,7 +349,7 @@ export const openCover = defineEndpoint({ method: 'POST', path: '/api/v1/rota/co
 export const setCoverReason = defineEndpoint({ method: 'POST', path: '/api/v1/rota/cover/:id/reason', params: ById, request: CoverReason, response: CoverSaved,
   capability: 'team_cover', versioned: true, errors: [404, 409], summary: 'Give the reason; the first one asks the location and then favourites (If-Match)' });
 export const askAllCover = defineEndpoint({ method: 'POST', path: '/api/v1/rota/cover/:id/ask-all', params: ById, response: CoverSaved,
-  capability: 'team_cover', versioned: true, errors: [404, 409], summary: 'Ask every cleared worker now (If-Match). Messaging is simulated.' });
+  capability: 'team_cover', versioned: true, errors: [404, 409], summary: 'Ask every cleared worker now (If-Match). Sending messages is a future enhancement, so nobody is messaged.' });
 export const escalateCover = defineEndpoint({ method: 'POST', path: '/api/v1/rota/cover/:id/escalate', params: ById, response: CoverSaved,
   capability: 'team_cover', versioned: true, errors: [404, 409], summary: 'Escalate to the last fulfilment stage (If-Match)' });
 export const assignCover = defineEndpoint({ method: 'POST', path: '/api/v1/rota/cover/:id/assign', params: ById, request: CoverAssign, response: CoverFilled,

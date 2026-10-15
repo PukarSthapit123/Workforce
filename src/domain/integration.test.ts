@@ -9,7 +9,7 @@ test('the integration id is P\'s INT- form of the record id', () => {
 
 test('no state claims a Business Central confirmation or acceptance', () => {
   for (const s of Object.values(POSTING_STATE)) expect(s.note).not.toMatch(/confirmed by|accepted/i);
-  expect(postingNote({ state: 'posted' })).toBe('Posted by the simulated dispatcher. Not a Business Central confirmation.');
+  expect(postingNote({ state: 'posted' })).toBe('Posted by the dispatcher. Business Central has not confirmed it yet.');
   expect(postingNote({ state: 'queued' })).toBe('Queued. No result yet.');
   expect(postingNote({ state: 'failed', reason: 'Line 2: unknown cost centre CC-991' })).toBe('Line 2: unknown cost centre CC-991');
   expect(postingNote({ state: 'failed' })).toBe('Failed');
@@ -27,10 +27,10 @@ test('newest first, then by id', () => {
   expect([...xs].sort(byNewest).map(x => x.id)).toEqual(['c', 'b', 'a']);
 });
 
-test('the resolution toast: posted is simulated, a failure says why and what next, queued says nothing', () => {
-  expect(resolutionToast({ state: 'posted', ref: 'Rosa Mendes · 10/08/2026' })).toEqual({ kind: 'info', message: 'Posted (simulated) · Rosa Mendes · 10/08/2026' });
+test('the resolution toast: posted is unconfirmed, a failure says why and what next, queued says nothing', () => {
+  expect(resolutionToast({ state: 'posted', ref: 'Rosa Mendes · 10/08/2026' })).toEqual({ kind: 'info', message: 'Posted · Rosa Mendes · 10/08/2026 · Business Central has not confirmed it yet' });
   expect(resolutionToast({ state: 'failed', ref: 'Batch WK32', reason: 'Line 2: unknown cost centre CC-991' }))
     .toEqual({ kind: 'error', message: 'Posting failed · Batch WK32 · Line 2: unknown cost centre CC-991', next: 'Fix the cause, then retry.' });
   expect(resolutionToast({ state: 'queued', ref: 'x' })).toBeNull();
-  expect(dispatchAuditText([{ state: 'posted' }, { state: 'failed' }])).toBe('2 resolved by the simulated dispatcher: 1 posted (simulated), 1 failed');
+  expect(dispatchAuditText([{ state: 'posted' }, { state: 'failed' }])).toBe('2 resolved by the dispatcher: 1 posted (unconfirmed), 1 failed');
 });

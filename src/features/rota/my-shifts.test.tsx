@@ -44,7 +44,7 @@ describe('My shifts', () => {
     expect(screen.getByTestId(tid.shifts.rest)).toHaveTextContent('Off');
     expectTestIdCoverage(document.body);
     await userEvent.click(screen.getByTestId(tid.shifts.outlook));
-    await expectToast('Calendar sync is not built yet. No Outlook integration exists in this build.', tid.toast.error);
+    await expectToast('Calendar sync with Outlook is a future enhancement.', tid.toast.error);
   });
 
   test('the open shift is offered with why, Urgent and Claim; who is on my next shift answers from the week', async () => {

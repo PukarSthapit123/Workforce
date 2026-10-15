@@ -227,7 +227,7 @@ function SavedDataCard() {
     try {
       const file = await exp.run();
       const name = `qnipay-state-${(tenant.data?.name ?? file.tenant).replace(/\W+/g, '-').toLowerCase()}.json`;
-      if (downloadText(name, JSON.stringify(file, null, 1), 'application/json')) toastInfo('Exported', 'Keep the file to restore this demonstration elsewhere.');
+      if (downloadText(name, JSON.stringify(file, null, 1), 'application/json')) toastInfo('Exported', 'Keep the file to restore this data elsewhere.');
       else toastRefusal({ message: 'This browser could not produce the file, so nothing was saved.', next: 'Try another browser.' });
     } catch (e) {
       if (e instanceof ApiError) toastRefusal(e.refusal);

@@ -214,7 +214,7 @@ test('Rota setup: new flexible-worker milestones and recipient show with the evi
   await signInEmail(page, DEE);
   await page.goto('/setup/mrota');
   await page.getByTestId(tid.mrota.card('flex')).waitFor();
-  await expect(page.getByTestId(tid.mrota.flexNote)).toContainText('Counting bank weeks is not built yet');
+  await expect(page.getByTestId(tid.mrota.flexNote)).toContainText('Counting bank weeks is a future enhancement');
   await page.getByTestId(tid.mrota.milestones).fill('6, 10');
   await page.getByTestId(tid.mrota.notifyTo).selectOption('Service Manager');
   await page.getByTestId(tid.mrota.save).click();

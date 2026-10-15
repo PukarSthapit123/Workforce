@@ -49,7 +49,7 @@ function Docs({ d }: { d: MyDocuments }) {
           ? d.items.map(x => <DocRow key={x.id} testId={tid.docs.row(x.id)} icon={<FileText />} name={x.name}
               line={`${x.category} · ${formatDmy(x.date)} · ${x.source}`} />)
           : <Empty testId={tid.docs.empty}>No documents are held for you yet.</Empty>}
-        <Small testId={tid.docs.openNote} className="mt-[10px]">Opening documents is not built yet. Each row names the system that holds it.</Small>
+        <Small testId={tid.docs.openNote} className="mt-[10px]">Opening documents is a future enhancement. Each row names the system that holds it.</Small>
       </Card>
       <Card testId={tid.docs.payroll}>
         <CardHead title="Pay information & payroll documents" actions={<Pill tone="neu" glyph="—">Payroll-owned</Pill>} />

@@ -277,7 +277,7 @@ describe('uploads (D3) and verification (D4)', () => {
     expect([hasPreview('image/jpeg'), hasPreview('application/pdf')]).toEqual([true, false]);
     expect(fileRecord({ name: 'a.pdf', size: 1, type: 'application/pdf', preview: 'data:x' }, AT)).toEqual({ name: 'a.pdf', size: 1, type: 'application/pdf', at: AT, kind: 'pdf' });
     expect(fileRecord({ name: 'a.jpg', size: 1, type: 'image/jpeg', preview: 'data:x' }, AT).preview).toBe('data:x');
-    expect(FILES_NOTE).toMatch(/not sent to a document store/);
+    expect(FILES_NOTE).toMatch(/Sending them to a document store is a future enhancement/);
   });
   test('an upload waits on a check; a "none" document or verification off is verified at once', () => {
     expect(uploadState(doc('rtw'), F)).toBe('done');

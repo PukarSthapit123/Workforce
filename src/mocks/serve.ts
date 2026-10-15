@@ -80,7 +80,7 @@ export function serve<const E extends Endpoint>(ep: E, fn: (ctx: Served<E>) => z
          refusal shape that names the endpoint, so the screen can still show it. */
       console.error(e);
       const detail = e instanceof Error ? e.message : String(e);
-      return refuse(500, { code: 'server-defect', message: detail.startsWith(name) ? detail : `${name} failed: ${detail}`, next: 'Report this. It is a fault in the fake server, not in what you did.' });
+      return refuse(500, { code: 'server-defect', message: detail.startsWith(name) ? detail : `${name} failed: ${detail}`, next: 'Report this. It is a fault in the app, not in what you did.' });
     }
   }));
   SERVED_HANDLERS.add(handler);

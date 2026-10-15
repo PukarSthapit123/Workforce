@@ -12230,7 +12230,7 @@
     },
     "/api/v1/integration/dispatch": {
       "post": {
-        "summary": "Run the simulated dispatcher, which stands in for the posting worker: every queued attempt resolves to posted (simulated) or, while its cause is unresolved, failed. Returns what it resolved. One audit row when anything resolved, none otherwise.",
+        "summary": "Run the dispatcher, which stands in for the posting worker: every queued attempt resolves to posted or, while its cause is unresolved, failed. Sending postings to Business Central is a future enhancement, so posted is not a Business Central confirmation. Returns what it resolved. One audit row when anything resolved, none otherwise.",
         "security": [
           {
             "bearer": []
@@ -25392,7 +25392,7 @@
     },
     "/api/v1/onboarding/me/documents/{doc}": {
       "post": {
-        "summary": "Upload or replace a document (If-Match: the case). Simulated: the name, size, type, time and an image preview are kept, nothing else.",
+        "summary": "Upload or replace a document (If-Match: the case). The name, size, type, time and an image preview are kept. Storing the file itself is a future enhancement.",
         "security": [
           {
             "bearer": []
@@ -31375,7 +31375,7 @@
     },
     "/api/v1/onboarding/team/{personCode}/invite": {
       "post": {
-        "summary": "Invite a candidate to complete onboarding (If-Match: the case): they move to preboarding. No email is sent in this build.",
+        "summary": "Invite a candidate to complete onboarding (If-Match: the case): they move to preboarding. Invitation emails are a future enhancement, so no email is sent.",
         "security": [
           {
             "bearer": []
@@ -41005,7 +41005,7 @@
     },
     "/api/v1/rota/cover/{id}/ask-all": {
       "post": {
-        "summary": "Ask every cleared worker now (If-Match). Messaging is simulated.",
+        "summary": "Ask every cleared worker now (If-Match). Sending messages is a future enhancement, so nobody is messaged.",
         "security": [
           {
             "bearer": []
@@ -55493,7 +55493,7 @@
         }
       },
       "post": {
-        "summary": "Sign in (simulated; Entra ID in production)",
+        "summary": "Sign in with an email address and password (signing in with Microsoft Entra ID is a future enhancement)",
         "security": [],
         "requestBody": {
           "required": true,

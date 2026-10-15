@@ -156,7 +156,7 @@ describe('Team rota', () => {
     expect(await screen.findByTestId(tid.modal.title)).toHaveTextContent(/^Rota horizon · \d+ months$/);
     expect(screen.getByTestId(tid.trota.horizonRow('2026-08'))).toHaveTextContent('August 2026');
     await userEvent.click(screen.getByTestId(tid.trota.horizonPublish));
-    await expectToast('Simulated · horizon publishing is represented, not performed.');
+    await expectToast('Publishing the whole horizon at once is a future enhancement.');
     await waitFor(() => expect(screen.queryByTestId(tid.modal.root)).toBeNull());
     expect(snapshot('rotaWeeks', 'audit', 'notifications')).toEqual(before);
   });

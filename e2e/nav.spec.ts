@@ -11,7 +11,7 @@ test('NV Every listed view is built: Business Central, the last to come, opens i
   /* module 6 group 5 built Business Central; src/domain/nav.test.ts checks every view with every capability, module and flag */
   await signInAs('admin');
   await page.goto('/setup/ibc');
-  await expect(page.getByTestId(tid.ibc.banner)).toContainText('Simulated integration');
+  await expect(page.getByTestId(tid.ibc.banner)).toContainText('Business Central connection');
   await expect(page.getByTestId(tid.page('ibc'))).toHaveCount(1);
   await expect(page.getByTestId(tid.notBuilt.subProject)).toHaveCount(0);
 });

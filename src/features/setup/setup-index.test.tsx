@@ -35,7 +35,7 @@ test('each setup card keeps what its section configures behind hover, and says i
   const caution = screen.getByTestId(tid.head.caution('asetup'));
   expect(caution).toHaveAttribute('tabindex', '0');
   expect(caution).toHaveAttribute('role', 'note');
-  expect(caution).toHaveTextContent(/no draft, no approval and no scheduled release/);
+  expect(caution).toHaveTextContent(/Drafts, approvals and scheduled releases are a future enhancement/);
   expect(caution.tagName).not.toBe('BUTTON');
   expect(screen.getByTestId(tid.page('asetup'))).not.toHaveTextContent(/Applies immediately/);
 });

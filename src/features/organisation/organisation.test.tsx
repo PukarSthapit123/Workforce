@@ -195,8 +195,8 @@ test('a saved template says who saved it and when, in London time', async () => 
 test('module 8: the minimum wage check says nothing reads it yet, the pay period settings (read by Payroll readiness) do not, and the country offers its own time zone, saved with one audit row', async () => {
   await open();
   const rowOf = (id: string) => screen.getByTestId(id).closest('[data-slot="setting-row"]');
-  expect(rowOf(tid.aorg.nmw)).toHaveTextContent('Nothing reads this setting yet. Payroll readiness does not check pay against the minimum wage.');
-  for (const id of [tid.aorg.payFrequency, tid.aorg.weekEnding, tid.aorg.firstPayDate]) expect(rowOf(id)).not.toHaveTextContent('not built yet');
+  expect(rowOf(tid.aorg.nmw)).toHaveTextContent('Checking pay against the minimum wage is a future enhancement.');
+  for (const id of [tid.aorg.payFrequency, tid.aorg.weekEnding, tid.aorg.firstPayDate]) expect(rowOf(id)).not.toHaveTextContent('future enhancement');
   expect(screen.getByTestId(tid.aorg.countryZone)).toHaveTextContent('Its time zone, Europe/London, is the one set under Date and time.');
   expect(screen.queryByTestId(tid.aorg.useCountryZone)).toBeNull();
   await userEvent.selectOptions(screen.getByTestId(tid.aorg.country), 'Nepal');

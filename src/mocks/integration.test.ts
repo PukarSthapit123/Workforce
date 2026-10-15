@@ -79,8 +79,8 @@ describe('retry from the log, then the dispatcher', () => {
     await retry('int_a1f3', 1);
     const d = await dispatch();
     expect(d.resolved.map(a => [a.integrationId, a.state, a.attempt, a.reason])).toEqual([['INT-a1f3', 'failed', 2, 'Line 2: unknown cost centre CC-991']]);
-    expect(audits().find(a => a.id === d.auditId)).toMatchObject({ act: 'Postings dispatched (simulated)', entity: 'integrationAttempt', entityId: 'int_a1f3',
-      after: { detail: '1 resolved by the simulated dispatcher: 0 posted (simulated), 1 failed' } });
+    expect(audits().find(a => a.id === d.auditId)).toMatchObject({ act: 'Postings dispatched', entity: 'integrationAttempt', entityId: 'int_a1f3',
+      after: { detail: '1 resolved by the dispatcher: 0 posted (unconfirmed), 1 failed' } });
     expect((await log()).tiles).toMatchObject({ queued: 0, failed: 1 });
     const count = attemptAudits().length;
     expect(await dispatch()).toEqual({ resolved: [], auditId: null });

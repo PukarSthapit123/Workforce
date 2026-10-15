@@ -702,7 +702,7 @@ describe('GET /api/v1/rota/it-requests (the IT service desk, admIT)', () => {
     store.coll('itRequests').itr_old = { ...raised, id: 'itr_old', ref: 'ITR-1000', raisedAt: '2026-08-01T09:00:00.000Z' };
     const list = ItRequestList.parse((await admin('GET', IT)).body);
     expect(list.items.map(i => i.ref)).toEqual(['ITR-1007', 'ITR-1000']);
-    expect(list.items[0]).toMatchObject({ personCode: 'CP-1310', worker: 'Bank', status: 'Raised', system: 'IT service desk (simulated)' });
+    expect(list.items[0]).toMatchObject({ personCode: 'CP-1310', worker: 'Bank', status: 'Raised', system: 'IT service desk' });
   });
 });
 

@@ -307,7 +307,7 @@ export const onboardingHandlers = [
     notifyEvent('ob_invited', 'subject', [p.code], { title: 'Onboarding invitation', body: `You are invited to complete your onboarding. Sign in with ${p.email} to start.` });
     const auditId = writeAudit({ who, act: 'Onboarding invited', entity: 'person', entityId: p.code, before: { state: p.state },
       after: { state: 'preboard', email: p.email, invitedAt: saved.invitedAt, emailSent: false, ...(madeAccount ? { account: email } : {}) }, reason: INVITE_REASON });
-    return { record: caseView(saved), person: personView(person), summary: `${p.name} is invited. They sign in with ${p.email}. No email is sent in this build.`, auditId };
+    return { record: caseView(saved), person: personView(person), summary: `${p.name} is invited. They sign in with ${p.email}. Invitation emails are a future enhancement, so tell them yourself.`, auditId };
   }),
 
   serve(startStarter, ({ session, params, checkVersion }) => {

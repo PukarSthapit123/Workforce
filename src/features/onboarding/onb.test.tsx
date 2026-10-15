@@ -120,7 +120,7 @@ describe('My onboarding', () => {
     await signIn();
     await open();
     await goTo('documents');
-    expect(screen.getByTestId(tid.onb.filesNote)).toHaveTextContent("Files are kept with this demo's saved data. They are not sent to a document store.");
+    expect(screen.getByTestId(tid.onb.filesNote)).toHaveTextContent("Files are kept with this app's saved data. Sending them to a document store is a future enhancement.");
     const read = vi.spyOn(FileReader.prototype, 'readAsDataURL');
     const big = new File(['x'], 'scan.png', { type: 'image/png' });
     Object.defineProperty(big, 'size', { value: 9 * 1024 * 1024 });

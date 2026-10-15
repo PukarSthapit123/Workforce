@@ -19,7 +19,7 @@ export const LIFECYCLE: Record<PersonState, StateInfo> = {
   onleave: { label: 'On long leave', tone: 'warn', glyph: '☀', next: ['active', 'leaver'],
     note: 'Away for an extended period, such as maternity, a sabbatical or long-term sickness.' },
   leaver: { label: 'Leaver', tone: 'warn', glyph: '→', next: ['archived', 'active'],
-    note: 'Leaving date set. Entitlement is reconciled and future shifts are released.' },
+    note: 'Leaving date set. Entitlement is reconciled.' },
   archived: { label: 'Archived', tone: 'neu', glyph: '—', next: ['active'],
     note: 'Kept for audit and payroll history. Hidden from every working list.' },
 };

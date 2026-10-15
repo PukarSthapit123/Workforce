@@ -91,7 +91,7 @@ test('Invite moves a candidate to preboarding and says no email is sent; Add a n
   await expect(page.getByTestId(tid.tonb.state('EMP002'))).toContainText('Candidate');
   await expect(page.getByTestId(tid.tonb.invite('EMP003'))).toHaveCount(0);
   await page.getByTestId(tid.tonb.invite('EMP002')).click();
-  await expect(info(page, `Priya Raman is invited. They sign in with ${PRIYA}. No email is sent in this build.`)).toBeVisible();
+  await expect(info(page, `Priya Raman is invited. They sign in with ${PRIYA}. Invitation emails are a future enhancement, so tell them yourself.`)).toBeVisible();
   await expect(page.getByTestId(tid.tonb.state('EMP002'))).toContainText('Preboarding');
   await expect(page.getByTestId(tid.tonb.invite('EMP002'))).toHaveCount(0);
   expect((await personByCode(api, 'EMP002')).state).toBe('preboard');

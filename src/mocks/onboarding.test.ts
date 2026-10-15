@@ -61,7 +61,7 @@ describe('my onboarding: the starter acts on their own case only (D5)', () => {
     expect(d.policies).toHaveLength(4);
     expect(d.progress.text).toBe('0 of 7 done');
     expect(d.toSubmit[0]?.why).toBe('Personal details not completed');
-    expect(d.filesNote).toContain('not sent to a document store');
+    expect(d.filesNote).toContain('Sending them to a document store is a future enhancement');
   });
   test('somebody who is not a candidate or preboarding is refused on every own endpoint, and nothing is written', async () => {
     const call = await asEmail(AMARA), before = snapshot(...WRITES);
@@ -385,7 +385,7 @@ describe('invite (D6)', () => {
     const r = StarterMoved.parse((await team(await as('manager'), 'CP-1501', 'invite', undefined, 1)).body);
     expect(r.person.state).toBe('preboard');
     expect(r.record.invitedAt).toBe('2026-08-13T14:30:00.000Z');
-    expect(r.summary).toBe('Priya Raman is invited. They sign in with priya.raman@brightpath.org. No email is sent in this build.');
+    expect(r.summary).toBe('Priya Raman is invited. They sign in with priya.raman@brightpath.org. Invitation emails are a future enhancement, so tell them yourself.');
     const n = notes('CP-1501');
     expect(n.map(x => x.event)).toEqual(['ob_invited']);
     expect(n[0]?.delivery).toMatchObject({ inApp: true, email: null });

@@ -12,7 +12,7 @@ export const integrationIdOf = (id: string) => `INT-${id.replace(/^int_/, '')}`;
 /* INT_STATES, with P's per-row tooltip in plain sentences. */
 export const POSTING_STATE: Record<AttemptState, { label: string; tone: 'warn' | 'ok' | 'err'; note: string }> = {
   queued: { label: 'Queued', tone: 'warn', note: 'Queued. No result yet.' },
-  posted: { label: 'Posted', tone: 'ok', note: 'Posted by the simulated dispatcher. Not a Business Central confirmation.' },
+  posted: { label: 'Posted', tone: 'ok', note: 'Posted by the dispatcher. Business Central has not confirmed it yet.' },
   failed: { label: 'Failed', tone: 'err', note: 'Failed' },
 };
 /* A failed row's tooltip is why it failed. */
@@ -38,14 +38,14 @@ export const byNewest = <T extends { at: string; id: string }>(a: T, b: T) => b.
    labelled simulated, and a failure says why and what to do. */
 export type Resolution = { kind: 'info'; message: string } | { kind: 'error'; message: string; next: string };
 export function resolutionToast(a: { state: AttemptState; ref: string; reason?: string }): Resolution | null {
-  if (a.state === 'posted') return { kind: 'info', message: `Posted (simulated) · ${a.ref}` };
+  if (a.state === 'posted') return { kind: 'info', message: `Posted · ${a.ref} · Business Central has not confirmed it yet` };
   if (a.state === 'failed') return { kind: 'error', message: `Posting failed · ${a.ref} · ${a.reason || 'No reason was given.'}`, next: 'Fix the cause, then retry.' };
   return null;
 }
 /* The one audit row a dispatch run writes. */
 export function dispatchAuditText(resolved: readonly { state: AttemptState }[]): string {
   const posted = resolved.filter(a => a.state === 'posted').length, failed = resolved.length - posted;
-  return `${resolved.length} resolved by the simulated dispatcher: ${posted} posted (simulated), ${failed} failed`;
+  return `${resolved.length} resolved by the dispatcher: ${posted} posted (unconfirmed), ${failed} failed`;
 }
 /* P's dispatcher delay (INT_DELAY): how long a queued record waits on screen before the dispatcher is asked to resolve it. */
 export const DISPATCH_DELAY_MS = 2200;

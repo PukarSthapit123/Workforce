@@ -213,7 +213,7 @@ export const saveOnboardingStep = defineEndpoint({ method: 'PUT', path: '/api/v1
   summary: 'Save a step of my onboarding (If-Match: the case). check judges it and marks it done; quiet saves without judging.' });
 export const uploadOnboardingDocument = defineEndpoint({ method: 'POST', path: '/api/v1/onboarding/me/documents/:doc', params: ByDoc, request: UploadFile,
   response: CaseChanged, capability: 'own_onb', versioned: true, allowedWhileOnboarding: true, errors: [404, 409],
-  summary: 'Upload or replace a document (If-Match: the case). Simulated: the name, size, type, time and an image preview are kept, nothing else.' });
+  summary: 'Upload or replace a document (If-Match: the case). The name, size, type, time and an image preview are kept. Storing the file itself is a future enhancement.' });
 export const readOnboardingPolicy = defineEndpoint({ method: 'POST', path: '/api/v1/onboarding/me/policies/:id/read', params: ByPolicy, response: CaseChanged,
   capability: 'own_onb', versioned: true, allowedWhileOnboarding: true, errors: [404, 409], summary: 'Record that I opened a policy (If-Match: the case)' });
 export const ackOnboardingPolicy = defineEndpoint({ method: 'POST', path: '/api/v1/onboarding/me/policies/:id/ack', params: ByPolicy, request: AckPolicy,
@@ -238,7 +238,7 @@ export const rejectOnboardingDocument = defineEndpoint({ method: 'POST', path: '
   summary: 'Reject an uploaded document with a reason the person sees (If-Match: the case). A rejected required document reopens the documents step.' });
 export const inviteStarter = defineEndpoint({ method: 'POST', path: '/api/v1/onboarding/team/:personCode/invite', params: ByPerson, response: StarterMoved,
   capability: 'onb_track', versioned: true, errors: [403, 404, 409],
-  summary: 'Invite a candidate to complete onboarding (If-Match: the case): they move to preboarding. No email is sent in this build.' });
+  summary: 'Invite a candidate to complete onboarding (If-Match: the case): they move to preboarding. Invitation emails are a future enhancement, so no email is sent.' });
 export const startStarter = defineEndpoint({ method: 'POST', path: '/api/v1/onboarding/team/:personCode/start', params: ByPerson, response: StarterMoved,
   capability: 'onb_track', versioned: true, errors: [403, 404, 409],
   summary: 'Make a new starter active (If-Match: the case). Refused while anything that blocks the start is outstanding.' });

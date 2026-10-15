@@ -144,7 +144,7 @@ function SetupDraftView({ setup, tenant, catalogue, onOpenPolicy }: { setup: Lea
           </SettingRow>
         </>}
         {/* D7: buying and selling leave settles in money, so it waits for Payroll */}
-        <SettingRow testId={tid.mleave.buySell} title="Buy and sell leave" desc="Not built yet. It belongs with Payroll and Business Central.">{null}</SettingRow>
+        <SettingRow testId={tid.mleave.buySell} title="Buy and sell leave" desc="Future enhancement. It belongs with Payroll and Business Central.">{null}</SettingRow>
         {numRow('absenceTrigger', 'Absence trigger score', 'Bradford factor threshold that starts the return-to-work steps', 'pts')}
       </AdminCard>
       <SicknessReasonsCard reasons={draft.sicknessReasons} onChange={sicknessReasons => set({ sicknessReasons })} />

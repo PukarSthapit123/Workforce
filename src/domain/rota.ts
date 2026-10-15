@@ -920,7 +920,7 @@ export function coverNext(c: Pick<CoverCore, 'reason' | 'stage' | 'open'>, stage
 export const REASON_BEFORE_CLOSE = 'Add a reason before closing the request.';
 export const NOBODY_ELIGIBLE = 'Nobody eligible is available. Escalate for agency cover instead.';
 export const askFirstText = (firstName: string, wait: number) =>
-  `Simulated · ${firstName} would be asked first, with ${wait} minutes to reply. No message is sent in this build.`;
+  `${firstName} would be asked first, with ${wait} minutes to reply. Sending messages is a future enhancement, so nobody has been messaged.`;
 
 /* A filled shift waits for the manager to confirm it was worked. */
 export interface FilledCore { coverId: string; location: string; date: string; shift: string; personCode: string; name: string; confirmed: boolean; itRequest: string }
@@ -939,7 +939,7 @@ export interface ItRequestCore { ref: string; personCode: string; name: string; 
 export const itRequestFor = (f: FilledCore, raisedSoFar: number, category: string, at: string, locName: string, shifts: readonly ShiftType[]): ItRequestCore => ({
   ref: `ITR-${1000 + raisedSoFar + 7}`, personCode: f.personCode, name: f.name, location: locName,
   shift: `${shiftName(shifts, f.shift)} · ${shiftTime(shifts, f.shift)}`, date: f.date, worker: category || 'Bank', status: 'Raised',
-  raisedAt: at, system: 'IT service desk (simulated)' });
+  raisedAt: at, system: 'IT service desk' });
 export const confirmSummary = (ref: string) => (ref ? `Confirmed. IT access request ${ref} raised.` : 'Confirmed as worked.');
 
 /* openShiftsFor: open requests with a reason at the person's location. With safe-worker filtering on, anyone ineligible is never offered it. */

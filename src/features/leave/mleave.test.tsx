@@ -68,7 +68,7 @@ describe('Leave setup', () => {
     expect(screen.getByTestId(tid.mleave.fullTimeHours)).toHaveTextContent('37.5 hours a week');
     expect(screen.getByTestId(tid.mleave.fullTimeLink)).toHaveAttribute('href', '/setup/acal');
     /* what is not built, and what went, say so plainly */
-    expect(screen.getByTestId(tid.mleave.buySell)).toHaveTextContent('Buy and sell leaveNot built yet. It belongs with Payroll and Business Central.');
+    expect(screen.getByTestId(tid.mleave.buySell)).toHaveTextContent('Buy and sell leaveFuture enhancement. It belongs with Payroll and Business Central.');
     expect(screen.getByTestId(tid.mleave.recordUnit)).toHaveTextContent('Leave is recorded in each policy’s unit.');
     expect(screen.getAllByTestId(/^mleave-policy-\d+$/)).toHaveLength(7);
     expect(screen.getAllByTestId(/^mleave-stage-\d+$/)).toHaveLength(4);

@@ -26,7 +26,7 @@ import { AdhocDialog } from './Dialogs';
    is simulated, as the prototype says. Giving the shift to someone writes the
    rota through the same path as an assignment (D15); confirming it was worked
    raises an IT access request while that is switched on. */
-const SIMULATED = 'Messaging is simulated in this build. No message is sent.';
+const SIMULATED = 'Sending messages is a future enhancement. Nobody has been messaged.';
 const STATUSES: readonly { value: CoverStatus; label: string }[] = [{ value: 'all', label: 'All' }, { value: 'urgent', label: 'Urgent' }, { value: 'filled', label: 'Filled' }];
 const longDate = (iso: string) => `${formatDay(iso)} ${parseIso(iso).getUTCFullYear()}`;
 

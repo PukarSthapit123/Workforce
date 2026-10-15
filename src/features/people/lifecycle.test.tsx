@@ -28,8 +28,8 @@ test('CR A lifecycle dialog offers only the legal next states, with full test id
 });
 test('CR It warns that some moves release future shifts, and says Rota has not released any', async () => {
   await openDialog();
-  expect(screen.getByTestId(tid.lifecycle.caution)).toHaveTextContent(/release future shifts/i);
-  expect(screen.getByTestId(tid.lifecycle.caution)).toHaveTextContent('Rota is not built in this build');
+  expect(screen.getByTestId(tid.lifecycle.caution)).toHaveTextContent(/affect future shifts/i);
+  expect(screen.getByTestId(tid.lifecycle.caution)).toHaveTextContent('is a future enhancement. Nothing is released now.');
 });
 test('CR A state must be chosen', async () => {
   await openDialog();

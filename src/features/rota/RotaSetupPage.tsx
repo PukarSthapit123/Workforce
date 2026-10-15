@@ -328,13 +328,13 @@ function SetupDraftView({ setup, flags }: { setup: RotaSetup; flags: Record<stri
               aria-invalid={fe('flexNotifyTo') ? true : undefined} onChange={e => set({ flexNotifyTo: e.target.value })}>
               {FLEX_NOTIFY_TO.map(o => <option key={o} value={o}>{o}</option>)}</SettingSelect></Control>
         </SettingRow>
-        <CardNote><span data-testid={tid.mrota.flexNote}>Counting bank weeks is not built yet, so no milestone notice is sent. The milestones are shown with the evidence on Notifications.</span></CardNote>
+        <CardNote><span data-testid={tid.mrota.flexNote}>Counting bank weeks is a future enhancement, so no milestone notice is sent. The milestones are shown with the evidence on Notifications.</span></CardNote>
       </AdminCard>
 
       <AdminCard testId={tid.mrota.card('it')} icon={<Link2 />} title="IT access and calendars" desc="What happens once a shift is fulfilled">
-        {flagRow('ITACCESS', 'Raise an IT access request when a shift is filled', 'Simulated in this build. There is no real service-desk integration.',
+        {flagRow('ITACCESS', 'Raise an IT access request when a shift is filled', 'Sending requests to your service desk is a future enhancement. Requests are kept on the IT service desk page.',
           <Tip testId={tid.mrota.tip('it')} text="Sends the employee ID, location and shift details so site access can be set up." />)}
-        {toggleRow('outlook', 'Put shifts and leave in Outlook calendars', 'Two-way with Microsoft 365. Calendar sync is not built yet, so this only offers Add to Outlook on My shifts.')}
+        {toggleRow('outlook', 'Put shifts and leave in Outlook calendars', 'Two-way with Microsoft 365. Calendar sync is a future enhancement, so this only offers Add to Outlook on My shifts.')}
         {toggleRow('bhEnhanced', 'Bank-holiday enhanced rate flagged', 'Flagged for payroll. The rate is resolved in Business Central.')}
         <SettingRow title="Rota horizon" desc="How far ahead the rota is generated from patterns">
           <Control error={fe('horizon')}>

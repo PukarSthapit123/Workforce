@@ -29,7 +29,7 @@ test('the page shows every card and explains weekly overtime is not built', asyn
   await open();
   for (const k of ['fields', 'rules', 'allowances', 'boundary']) expect(screen.getByTestId(tid.mts.card(k))).toBeInTheDocument();
   expect(screen.getByText('Modules · Timesheet · Timesheet setup')).toBeInTheDocument();
-  expect(screen.getByTestId(tid.mts.otDay)).toHaveTextContent('Not built yet. Weekly overtime thresholds and multipliers are not applied by the timesheet rules.');
+  expect(screen.getByTestId(tid.mts.otDay)).toHaveTextContent('Future enhancement. Weekly overtime thresholds and multipliers are not yet applied by the timesheet rules.');
   expect(screen.getByTestId(tid.mts.rule('minNet'))).toHaveValue(0.25);
   expect(screen.getByTestId(tid.mts.rule('nightFrom'))).toHaveValue('20:00');
   expect(screen.getByTestId(tid.mts.rule('nightTo'))).toHaveValue('06:00');

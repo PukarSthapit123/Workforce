@@ -35,7 +35,7 @@ import { TEMPLATE_SCOPES, scopeLabel, templateFileName, type TemplateScope } fro
    when the organisation keeps another, offers it. Pay frequency, week ending
    day and first pay date set the pay period Payroll readiness reads (module
    6 group 4); the minimum wage check says plainly that nothing reads it yet. */
-const PAYROLL_NOTE = 'Nothing reads this setting yet. Payroll readiness does not check pay against the minimum wage.';
+const PAYROLL_NOTE = 'Checking pay against the minimum wage is a future enhancement.';
 export function OrganisationPage() {
   const tenant = useTenant();
   return (

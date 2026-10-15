@@ -117,7 +117,7 @@ export function FileRecordView({ f, alt, title, imageTestId, noPreviewTestId }: 
         ? <img data-testid={imageTestId} src={f.preview} alt={alt}
             className="mb-md max-h-[52vh] w-full rounded-control border bg-surface-sunken object-contain" />
         : <Banner testId={noPreviewTestId} tone="info" title={title}>
-            Only images are previewed here. The file itself is not kept in this build, only its name and size.</Banner>}
+            Only images are previewed here. Its name and size are kept. Storing the file itself is a future enhancement.</Banner>}
       {f && <>
         <Fact label="File">{f.name}</Fact>
         <Fact label="Size">{fileSize(f.size)}</Fact>

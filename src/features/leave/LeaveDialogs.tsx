@@ -102,7 +102,7 @@ export function RequestDialog({ m, day, onClose }: { m: MyLeave; day?: string; o
       </Field>
       {t?.evidence && <Field label="Evidence">
         <TextInput testId={tid.leave.evidence} readOnly className={READ_ONLY}
-          value="Required for this leave type. Upload is not built yet, so give it to your approver." />
+          value="Required for this leave type. Uploading evidence is a future enhancement, so give it to your approver." />
       </Field>}
       <Banner testId={tid.leave.sla} tone="info"
         title={tenant?.modules.R ? 'Your manager sees the effect on cover' : 'Cover is not checked, as this organisation does not use Rota'}>

@@ -26,7 +26,7 @@ export const integrationHandlers = [
   serve(dispatchPostings, ({ session }) => {
     const resolved = dispatch().sort(byNewest).map(rowOf);
     if (!resolved.length) return { resolved, auditId: null };
-    const auditId = writeAudit({ who: actor(session), act: 'Postings dispatched (simulated)', entity: 'integrationAttempt',
+    const auditId = writeAudit({ who: actor(session), act: 'Postings dispatched', entity: 'integrationAttempt',
       entityId: resolved.map(a => a.id).join(', '),
       before: { state: 'queued' },
       after: { detail: dispatchAuditText(resolved), resolved: resolved.map(a => ({ id: a.integrationId, ref: a.ref, state: a.state, attempt: a.attempt, ...(a.reason ? { reason: a.reason } : {}) })) } });

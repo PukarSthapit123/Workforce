@@ -458,7 +458,7 @@ export const UPLOAD_MAX_BYTES = 8 * 1024 * 1024;
 export const PREVIEW_MAX_SIDE = 560;
 export const PREVIEW_QUALITY = 0.7;
 export const UPLOAD_ACCEPT = 'image/*,.pdf';
-export const FILES_NOTE = "Files are kept with this demo's saved data. They are not sent to a document store.";
+export const FILES_NOTE = "Files are kept with this app's saved data. Sending them to a document store is a future enhancement.";
 export const fileSize = (n: number) => (n >= 1048576 ? `${(n / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`);
 /* Only an image gets a preview; a PDF is named as one; anything else is a file. */
 export const fileKind = (type: string): FileKind => (type.startsWith('image/') ? 'image' : type === 'application/pdf' ? 'pdf' : 'file');

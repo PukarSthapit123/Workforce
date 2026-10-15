@@ -19,8 +19,8 @@ describe('IT service desk', () => {
     open();
     expect(await screen.findByTestId(tid.iit.empty)).toHaveTextContent('No access requests yet. Confirm a filled shift on Cover requests to raise one.');
     const banner = screen.getByTestId(tid.iit.banner);
-    expect(banner).toHaveTextContent('Simulated integration');
-    expect(banner).toHaveTextContent('does not send it to a service desk');
+    expect(banner).toHaveTextContent('Service desk connection');
+    expect(banner).toHaveTextContent('Sending it to your service desk is a future enhancement');
     expect(banner).toHaveTextContent('Qnipay setup → Modules → Rota → Rota setup');
     expect(screen.getByTestId(tid.head.tip('iit'))).toBeInTheDocument();
   });

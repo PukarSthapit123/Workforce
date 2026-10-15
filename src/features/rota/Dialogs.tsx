@@ -21,7 +21,7 @@ import { DAY_INDEXES, MONTH_NAMES, longDay, shortDay, weekRange } from './week';
 const ref = (v: RotaWeekView) => ({ location: v.location.code, weekStart: v.weekStart, version: v.version });
 const shiftOptions = (v: RotaWeekView) => v.shifts.map(s => ({ value: s.code, label: `${s.name} · ${formatTime(s.from)}–${formatTime(s.to)}` }));
 export const askFirst = (name: string) =>
-  toastInfo(`Simulated · ${name.split(' ')[0] ?? name} would be asked first.`, 'No message is sent in this build.');
+  toastInfo(`${name.split(' ')[0] ?? name} would be asked first.`, 'Sending messages is a future enhancement. Nobody has been messaged.');
 
 /* Advertising a shift opens a cover request and takes you to Cover requests. */
 function useAdvertise(view: RotaWeekView, onDone: () => void) {
@@ -244,7 +244,7 @@ export function HorizonDialog({ view, onJump, onClose }: { view: RotaWeekView; o
         <Button testId={tid.trota.cancel} kind="ghost" onClick={onClose}>Close</Button>
         <Button testId={tid.trota.horizonPublish} kind="primary" onClick={() => {
           onClose();
-          toastInfo('Simulated · horizon publishing is represented, not performed.', 'This build publishes one rota week at a time.');
+          toastInfo('Publishing the whole horizon at once is a future enhancement.', 'Nothing has been published. Publish one rota week at a time.');
         }}>Publish through {label(last)}</Button>
       </>}>
       <Small className="mb-[14px]">Rota entries are generated from working patterns up to the configured horizon. Open a month to see its first week.</Small>

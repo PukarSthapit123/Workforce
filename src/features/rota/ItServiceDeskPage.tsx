@@ -23,9 +23,9 @@ export function ItServiceDeskPage() {
     <Page testId={tid.page('iit')}>
       <PageHead title="IT service desk" crumb="Qnipay setup · IT service desk" tip={LEDE} tipTestId={tid.head.tip('iit')} />
 
-      <Banner testId={tid.iit.banner} tone="info" title="Simulated integration">
-        Confirming a filled shift raises a real access request with the details below. This build keeps it here and does not send it to a
-        service desk. To stop raising requests, switch off IT access requests in Qnipay setup → Modules → Rota → Rota setup.
+      <Banner testId={tid.iit.banner} tone="info" title="Service desk connection">
+        Confirming a filled shift raises an access request with the details below. Sending it to your service desk is a future enhancement,
+        so it is kept here. To stop raising requests, switch off IT access requests in Qnipay setup → Modules → Rota → Rota setup.
       </Banner>
 
       {list.isPending && <p data-testid={tid.iit.loading} className="text-text-secondary">Loading the access requests&hellip;</p>}

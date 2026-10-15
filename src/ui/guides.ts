@@ -27,7 +27,7 @@ export const GUIDES: Readonly<Record<string, Guide>> = {
     ['Why a row is flagged',
       'A day over the review threshold, a large variance against the rota line, short rest, or an entry made by a manager on somebody else’s behalf.'],
     ['The posting dot',
-      'Hollow means not sent yet. Amber means queued for Business Central. Filled means the dispatcher posted it. In this build that posting is simulated, not a Business Central confirmation.'],
+      'Hollow means not sent yet. Amber means queued for Business Central. Filled means the dispatcher posted it. Sending postings to Business Central is a future enhancement, so Business Central has not confirmed a posting yet.'],
     ['Approving in bulk',
       'Approve all is scoped to your location and asks you to confirm the record count, the hours and any exceptions first. Each approval queues its own posting.'],
   ] },

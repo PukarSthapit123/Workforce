@@ -24,8 +24,8 @@ import {
    tenant has been read again. The toast is the server's own words. */
 const ICON: Record<string, ReactNode> = { users: <Users />, clock: <Clock />, grid: <LayoutGrid />, calendar: <Calendar />, clipboard: <ClipboardList /> };
 const iconOf = (m: ModuleDef) => ICON[m.icon] ?? <Blocks />;
-const CAUTION = 'Switching a module or a feature takes effect for the whole tenant at once. There is no draft stage in this build.';
-const LICENCE = 'In this build these switches stand in for licence entitlements. In the product, what a tenant has is decided by their licence, not by an administrator.';
+const CAUTION = 'Switching a module or a feature takes effect for the whole tenant at once. Drafting a change first is a future enhancement.';
+const LICENCE = 'Linking these switches to the tenant’s licence is a future enhancement. For now an administrator sets them.';
 const FEATURES_TIP = 'Tenant-wide switches. Employee types then decide who actually sees the fields a feature unlocks.';
 const OFF_NOTE = 'These are shown rather than hidden so it is clear what switching the module on would bring back.';
 
@@ -163,7 +163,7 @@ function ModuleFeatures({ m, tenant }: { m: ModuleDef; tenant: Tenant }) {
   const featRow = (f: FlagDef, sub: boolean) => (
     <Nested key={f.code} sub={sub} testId={tid.amods.row(f.code)}>
       <SettingRow title={f.notBuilt
-        ? <span className="inline-flex flex-wrap items-center gap-sm">{f.label}<Pill testId={tid.clock.notBuilt(f.code)} tone="neu" glyph="—">Not built yet</Pill></span>
+        ? <span className="inline-flex flex-wrap items-center gap-sm">{f.label}<Pill testId={tid.clock.notBuilt(f.code)} tone="neu" glyph="—">Future enhancement</Pill></span>
         : f.label} desc={f.description}>
         {extra(f)}
         <SwitchField testId={tid.amods.flag(f.code)} aria-label={`Turn ${f.label} ${tenant.flags[f.code] ? 'off' : 'on'}`}

@@ -10,7 +10,7 @@ export function NotBuilt({ tab }: { tab: NavTab }) {
       <div data-testid={tid.notBuilt.root}>
         <PageHead title={tab.label} crumb={tab.section ? `Qnipay setup · ${tab.label}` : undefined} />
         <Card className="max-w-[520px]">
-          <p className="text-text-secondary">Not built in this build. It arrives with <b data-testid={tid.notBuilt.subProject} className="text-text-primary">{tab.subProject}</b>.</p>
+          <p className="text-text-secondary">A future enhancement. It arrives with <b data-testid={tid.notBuilt.subProject} className="text-text-primary">{tab.subProject}</b>.</p>
         </Card>
       </div>
     </Page>);

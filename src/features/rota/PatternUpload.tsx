@@ -30,8 +30,8 @@ export function PatternUploadDialog({ horizon, onClose }: { horizon: number; onC
   const [ahead, setAhead] = useState(String((HORIZONS as readonly number[]).includes(horizon) ? horizon : HORIZONS[0]));
   const importRows = () => {
     onClose();
-    toastInfo(`Simulated · ${U.valid} rows validated and would import. No patterns have been created.`,
-      `Mass upload is simulated, not imported. ${U.invalid} rows were rejected.`);
+    toastInfo(`${U.valid} rows validated. Importing patterns from a file is a future enhancement.`,
+      `No patterns have been created. ${U.invalid} rows were rejected.`);
   };
   const downloadErrors = () => {
     const rows = [['Row', 'Field', 'Reason'], ...U.errors.map(e => [e.row, e.field, e.msg]), ...U.warnings.map(w => [w.row, w.field, `WARNING: ${w.msg}`])];

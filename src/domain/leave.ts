@@ -530,7 +530,7 @@ export const approvedToast = (first: string, changed: boolean, gap: boolean) => 
 export const sicknessToast = (short: boolean) => (short ? 'Sickness recorded. Shift removed from the rota and a cover request opened.' : 'Sickness recorded. Shift removed from the rota.');
 export const RTW_TOAST = 'Return-to-work meeting requested. The colleague and HR have been notified.';
 export const daysReturnedToast = (n: number, name: string) => `${plural(n, 'day')} returned to ${name}’s annual leave balance`;
-export const tellManagerToast = (manager: string) => `Messaging is not built yet. Nothing has been sent to ${manager}.`;
+export const tellManagerToast = (manager: string) => `Sending messages is a future enhancement. Nothing has been sent to ${manager}.`;
 
 /* ------------------------------ the approval chain's layers (module 8 group 4B) */
 /* A request walks the Leave approval chain. It stays pending until the last

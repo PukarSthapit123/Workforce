@@ -115,7 +115,7 @@ test('export downloads everything held as one JSON file named after the organisa
   const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) { names.push(this.download); });
   try {
     await userEvent.click(screen.getByTestId(tid.acal.export));
-    expect(await screen.findByText('Keep the file to restore this demonstration elsewhere.')).toBeInTheDocument();
+    expect(await screen.findByText('Keep the file to restore this data elsewhere.')).toBeInTheDocument();
     expect(names).toEqual(['qnipay-state-brightpath-support-services.json']);
     const file = JSON.parse((await blobs[0]?.text()) ?? '{}') as { kind?: string; data?: Record<string, unknown> };
     expect(file.kind).toBe('qnipay.state');

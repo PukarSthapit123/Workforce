@@ -39,8 +39,8 @@ export function LifecycleDialog({ person, onClose }: { person: Person; onClose()
         : <Empty>This record cannot move any further.</Empty>}
       <Field label="Reason" required error={move.fieldError('reason')}>
         <TextInput testId={tid.lifecycle.reason} value={reason} placeholder="Recorded against the change" onChange={e => setReason(e.target.value)} /></Field>
-      <Banner testId={tid.lifecycle.caution} tone="warn" title="Some moves release future shifts">
-        Becoming a leaver, suspended or archived clears this person from unpublished rota weeks. Rota is not built in this build, so nothing is released now.
+      <Banner testId={tid.lifecycle.caution} tone="warn" title="Some moves affect future shifts">
+        Releasing this person from unpublished rota weeks when they become a leaver, suspended or archived is a future enhancement. Nothing is released now.
       </Banner>
       {warn && <FormWarn testId={tid.lifecycle.warn}>{warn}</FormWarn>}
     </Modal>);

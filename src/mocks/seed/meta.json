@@ -2,9 +2,9 @@
  "flags": [
   {
    "code": "AUTO_OT",
-   "label": "Weekly overtime split (not built yet)",
+   "label": "Weekly overtime split (future enhancement)",
    "mod": "TS",
-   "desc": "Not built yet. The timesheet rules do not split hours past a weekly threshold."
+   "desc": "Future enhancement. The timesheet rules do not yet split hours past a weekly threshold."
   },
   {
    "code": "LATE_FINISH",
@@ -363,7 +363,7 @@
     "archived",
     "active"
    ],
-   "note": "Leaving date set. Entitlement is reconciled and future shifts are released."
+   "note": "Leaving date set. Entitlement is reconciled."
   },
   "archived": {
    "label": "Archived",

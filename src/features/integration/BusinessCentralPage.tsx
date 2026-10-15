@@ -10,7 +10,7 @@ import { PAY_BASIS, retryToast } from '@/domain/timesheet';
 import { formatDateTime } from '@/lib/format';
 
 const TIP = 'The payroll boundary. The platform posts hours and pay codes and never resolves money.';
-const BANNER_TIP = 'The approval, the payload and the posting state are real and recorded. Only the outbound call is represented.';
+const BANNER_TIP = 'The approval, the payload and the posting state are real and recorded. Sending them to Business Central is a future enhancement.';
 const GLYPH = { queued: <Clock />, posted: <Check />, failed: <X /> } as const;
 
 /* Business Central: the prototype's admBC (qnipay-workforce-v15.html:
@@ -28,9 +28,9 @@ export function BusinessCentralPage({ dispatchDelay = DISPATCH_DELAY_MS }: { dis
   return (
     <Page testId={tid.page('ibc')}>
       <PageHead title="Business Central" crumb="Qnipay setup · Business Central" tip={TIP} tipTestId={tid.head.tip('ibc')} />
-      <Banner testId={tid.ibc.banner} tone="info" title={<>Simulated integration<Tip testId={tid.ibc.bannerTip} text={BANNER_TIP} /></>}>
-        The platform posts hours and pay codes and never resolves money. The call to Business Central is represented, not made.
-        Every result below is <strong>simulated</strong>, not a Business Central confirmation.
+      <Banner testId={tid.ibc.banner} tone="info" title={<>Business Central connection<Tip testId={tid.ibc.bannerTip} text={BANNER_TIP} /></>}>
+        The platform posts hours and pay codes and never resolves money. Sending postings to Business Central is a future enhancement.
+        Business Central has <strong>not confirmed</strong> any result here.
       </Banner>
       {q.data
         ? <LogView log={q.data} dispatchDelay={dispatchDelay} />
@@ -62,7 +62,7 @@ function LogView({ log, dispatchDelay }: { log: PostingLog; dispatchDelay: numbe
   return (
     <>
       <Stats>
-        <Stat testId={tid.ibc.tile('posted')} label="Posted this period" foot="simulated posting · not BC-confirmed">{t.posted}</Stat>
+        <Stat testId={tid.ibc.tile('posted')} label="Posted this period" foot="Business Central has not confirmed these">{t.posted}</Stat>
         <Stat testId={tid.ibc.tile('queued')} label="Queued" foot="awaiting a result">{t.queued}</Stat>
         <Stat testId={tid.ibc.tile('failed')} label="Failed" tone={t.failed ? 'bad' : 'good'} foot="needs the cause fixing, then a retry">{t.failed}</Stat>
         <Stat testId={tid.ibc.tile('mapped')} label="Pay codes mapped" foot={`of ${t.codes} codes · each to one BC pay element`}>{t.mapped}</Stat>
@@ -86,7 +86,7 @@ function LogView({ log, dispatchDelay }: { log: PostingLog; dispatchDelay: numbe
                 <TableCell label="Attempt" className="text-right tabular-nums" data-testid={tid.ibc.attempt(a.id)}>{a.attempt}</TableCell>
                 <TableCell label="State">
                   <Pill testId={tid.ibc.state(a.id)} tone={S.tone} glyph={GLYPH[a.state]} note={postingNote(a)}>
-                    {S.label}{a.state === 'posted' && a.simulated && <span className="text-xs font-normal"> (simulated)</span>}
+                    {S.label}{a.state === 'posted' && a.simulated && <span className="text-xs font-normal"> (unconfirmed)</span>}
                   </Pill></TableCell>
                 <TableCell kind="foot" className="text-right">
                   {a.state === 'failed' && (

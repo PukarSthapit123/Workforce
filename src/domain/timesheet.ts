@@ -561,7 +561,7 @@ export const APPROVAL_AUDIT_SUFFIX = 'queued for Business Central';
 /* The posting dot on the approver's queue: the prototype's four tooltips, verbatim. */
 export type PostingDot = AttemptState | 'none';
 export const POSTING_DOT: Record<PostingDot, { tone: 'success' | 'warning' | 'error' | 'hollow'; text: string }> = {
-  posted: { tone: 'success', text: 'Posted (simulated) · not a Business Central confirmation' },
+  posted: { tone: 'success', text: 'Posted · Business Central has not confirmed it yet' },
   queued: { tone: 'warning', text: 'Queued for Business Central · no result yet' },
   failed: { tone: 'error', text: 'Posting failed · see Integrations → Business Central' },
   none: { tone: 'hollow', text: 'Front-end estimate · not sent yet' },

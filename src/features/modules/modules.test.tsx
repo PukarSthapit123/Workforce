@@ -31,7 +31,7 @@ test('the index is a card per module with its state and counts, a caution, a sea
   expect(screen.getByTestId(tid.amods.cardState('CORE'))).toHaveTextContent('Always on');
   expect(screen.getByTestId(tid.amods.cardCounts('TS'))).toHaveTextContent('2 of 2 capture methods · 8 of 13 features · Timesheet setup');
   expect(screen.getByTestId(tid.amods.cardCounts('R'))).toHaveTextContent('8 of 8 features · Rota setup');
-  expect(screen.getByTestId(tid.head.caution('amods'))).toHaveTextContent('There is no draft stage in this build.');
+  expect(screen.getByTestId(tid.head.caution('amods'))).toHaveTextContent('Drafting a change first is a future enhancement.');
   expect(screen.queryByTestId(tid.amods.flag('AUTO_OT'))).toBeNull();
   expectTestIdCoverage(document.body);
   await userEvent.type(screen.getByTestId(tid.amods.search), 'overtime');
@@ -289,10 +289,10 @@ test('switching the weekly layout back restores classic, and from the list back 
 });
 
 /* module 2b D7: GPS and geofence have no behaviour yet; their rows say so and still switch */
-test('the GPS and geofence rows say Not built yet and still switch', async () => {
+test('the GPS and geofence rows say Future enhancement and still switch', async () => {
   await open('TS');
   for (const c of ['GPS', 'GEOFENCE']) {
-    expect(within(screen.getByTestId(tid.amods.row(c))).getByTestId(tid.clock.notBuilt(c))).toHaveTextContent('Not built yet');
+    expect(within(screen.getByTestId(tid.amods.row(c))).getByTestId(tid.clock.notBuilt(c))).toHaveTextContent('Future enhancement');
   }
   expect(screen.queryByTestId(tid.clock.notBuilt('BREAKS'))).toBeNull();
   await userEvent.click(screen.getByTestId(tid.amods.flag('GPS')));

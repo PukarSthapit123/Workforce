@@ -26,10 +26,10 @@ export const ViewAsPerson = z.object({ personCode: z.string(), name: z.string(),
 export type ViewAsPerson = z.infer<typeof ViewAsPerson>;
 export const DemoAccount = z.object({ email: z.string(), name: z.string(), userType: SessionAccount.shape.userType, personCode: z.string() });
 
-export const createSession = defineEndpoint({ method: 'POST', path: '/api/v1/session', request: SignInRequest, response: Session, public: true, errors: [401], summary: 'Sign in (simulated; Entra ID in production)' });
+export const createSession = defineEndpoint({ method: 'POST', path: '/api/v1/session', request: SignInRequest, response: Session, public: true, errors: [401], summary: 'Sign in with an email address and password (signing in with Microsoft Entra ID is a future enhancement)' });
 export const getSession = defineEndpoint({ method: 'GET', path: '/api/v1/session', response: Session, summary: 'The current session' });
 export const deleteSession = defineEndpoint({ method: 'DELETE', path: '/api/v1/session', response: z.null(), allowedWhileViewing: true, allowedWhileOnboarding: true, summary: 'Sign out' });
 export const startViewAs = defineEndpoint({ method: 'POST', path: '/api/v1/session/view-as', request: ViewAsRequest, response: Session, capability: 'perm_cfg', summary: 'Look at the app as another person, as a preview in which changes are off; audited' });
 export const listViewAsPeople = defineEndpoint({ method: 'GET', path: '/api/v1/session/view-as/people', response: z.array(ViewAsPerson), capability: 'perm_cfg', summary: 'Who the account menu offers to view as: at most five, one per role' });
 export const endViewAs = defineEndpoint({ method: 'DELETE', path: '/api/v1/session/view-as', response: Session, allowedWhileViewing: true, summary: 'Return to your own account' });
-export const listAccounts = defineEndpoint({ method: 'GET', path: '/api/v1/session/accounts', response: z.array(DemoAccount), public: true, devOnly: true, summary: 'Demo account shortcuts (development and tests only)' });
+export const listAccounts = defineEndpoint({ method: 'GET', path: '/api/v1/session/accounts', response: z.array(DemoAccount), public: true, devOnly: true, summary: 'Sample account shortcuts (development and tests only)' });

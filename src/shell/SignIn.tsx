@@ -50,7 +50,7 @@ export function SignIn() {
           <div className="w-[min(420px,100%)] rounded-card border bg-surface-card p-xl shadow-md max-md:border-0 max-md:px-0 max-md:py-md max-md:shadow-none">
             <div className="mb-lg flex rounded-sm bg-surface-inverse px-[14px] py-md"><Logo className="max-md:h-5" /></div>
             <h1 className="mb-[2px]">Sign in</h1>
-            <p className="mb-lg text-text-secondary">Simulated sign-in. Production uses your Microsoft work account.</p>
+            <p className="mb-lg text-text-secondary">Signing in with your Microsoft work account is a future enhancement. For now, use your email address and password.</p>
             <form data-testid={tid.signIn.form} onSubmit={submit} noValidate>
               <Field label="Email address"><TextInput testId={tid.signIn.email} type="email" inputMode="email" autoComplete="username" placeholder="you@company.com" value={email} onChange={e => setEmail(e.target.value)} /></Field>
               <Field label="Password"><TextInput testId={tid.signIn.password} type="password" autoComplete="current-password" placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} /></Field>
@@ -63,8 +63,8 @@ export function SignIn() {
                   {showAccounts ? 'Hide the accounts' : 'Which accounts exist?'}</Button>
               </div>
               {showAccounts && <>
-                <div className="mt-lg mb-sm border-b pb-xs text-xs font-[650] text-text-secondary">Accounts on this demonstration</div>
-                <ul className="mb-md flex max-h-[330px] flex-col gap-xs overflow-y-auto" aria-label="Demo accounts. A shortcut, not the whole list.">
+                <div className="mt-lg mb-sm border-b pb-xs text-xs font-[650] text-text-secondary">Sample accounts</div>
+                <ul className="mb-md flex max-h-[330px] flex-col gap-xs overflow-y-auto" aria-label="Sample accounts. A shortcut, not the whole list.">
                   {demoShortcut(accounts.data ?? []).map(a => <li key={a.email}>
                     <button type="button" data-testid={tid.signIn.account(a.email)}
                       className="block w-full rounded-control border bg-surface-card px-md py-sm text-left transition-colors hover:border-border-strong hover:bg-surface-tint focus-visible:border-brand"
@@ -79,8 +79,8 @@ export function SignIn() {
               {/* Ported from the prototype's login note (v15:5111-5114). Only true, and
                   so only shown, while the fake server holds the data in this browser. */}
               <p data-testid={tid.signIn.storageNote} className="mt-lg text-xs text-text-muted">
-                This demonstration keeps your work in this browser, on this device, and sends it nowhere else.
-                <Tip testId={tid.signIn.storageTip} text="Anything held in a browser can be read by whoever has the browser, so this is a demonstration, not a security boundary." /></p>
+                This app keeps your work in this browser, on this device, and sends it nowhere else.
+                <Tip testId={tid.signIn.storageTip} text="Anything held in a browser can be read by whoever has the browser, so this is not a security boundary." /></p>
             </>}
           </div>
         </div>

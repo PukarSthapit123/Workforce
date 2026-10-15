@@ -431,7 +431,7 @@ describe('notifications, audit and toasts (D12)', () => {
     expect([sicknessToast(true), sicknessToast(false)]).toEqual(['Sickness recorded. Shift removed from the rota and a cover request opened.', 'Sickness recorded. Shift removed from the rota.']);
     expect(RTW_TOAST).toBe('Return-to-work meeting requested. The colleague and HR have been notified.');
     expect(daysReturnedToast(2, 'Marcus Reilly')).toBe('2 days returned to Marcus Reilly’s annual leave balance');
-    expect(tellManagerToast('Rachel Hussain')).toBe('Messaging is not built yet. Nothing has been sent to Rachel Hussain.');
+    expect(tellManagerToast('Rachel Hussain')).toBe('Sending messages is a future enhancement. Nothing has been sent to Rachel Hussain.');
   });
 });
 

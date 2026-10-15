@@ -234,7 +234,7 @@ function SetupDraftView({ setup, types, env, picked, onPick }: {
           <PayRules code={code} rules={type.rules} payCodes={payCodes} draft={draft} fe={fe} onChange={rules => setType(t => ({ ...t, rules }))} />
 
           <SubHead>Weekly overtime</SubHead>
-          <Small testId={tid.mts.otDay}>Not built yet. Weekly overtime thresholds and multipliers are not applied by the timesheet rules.</Small>
+          <Small testId={tid.mts.otDay}>Future enhancement. Weekly overtime thresholds and multipliers are not yet applied by the timesheet rules.</Small>
         </>}
       </AdminCard>
 

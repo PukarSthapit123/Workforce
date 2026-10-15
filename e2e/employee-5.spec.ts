@@ -56,7 +56,7 @@ test('a new starter lands on the portal alone, completes every step, uploads, ac
   await expect(page.getByTestId(tid.onb.progress)).toHaveText('4 of 7 done');
 
   /* documents: what the build keeps is said plainly (D3) */
-  await expect(page.getByTestId(tid.onb.filesNote)).toContainText('They are not sent to a document store.');
+  await expect(page.getByTestId(tid.onb.filesNote)).toContainText('Sending them to a document store is a future enhancement.');
   await pick(page, tid.onb.field('rtwType'), 'passport');
   await uploadDoc(page, 'rtw', pdf('passport.pdf'));
   await expect(info(page, 'Right to work: passport.pdf is waiting to be checked.')).toBeVisible();

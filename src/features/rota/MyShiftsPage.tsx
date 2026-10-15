@@ -50,7 +50,7 @@ function Shifts({ m }: { m: MyShifts }) {
             <Tip testId={tid.shifts.publishedTip} text={`Shifts appear as soon as your manager publishes them, up to ${m.horizon} months ahead.`} /></div>
           <div className="ml-auto flex flex-wrap items-center gap-sm">
             {m.outlook && <Button testId={tid.shifts.outlook} kind="ghost" small
-              onClick={() => toastRefusal({ message: 'Calendar sync is not built yet. No Outlook integration exists in this build.', next: 'Your shifts are here on My shifts.' })}>
+              onClick={() => toastRefusal({ message: 'Calendar sync with Outlook is a future enhancement.', next: 'Your shifts are here on My shifts.' })}>
               Add to Outlook</Button>}
             <Button testId={tid.shifts.teamRota} kind="ghost" small onClick={() => {
               if (caps.has('team_rota')) navigate('/team/trota');

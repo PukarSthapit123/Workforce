@@ -33,7 +33,7 @@ export function TeamHomePage() {
 
 /* Each counted page asks its own read, so only the cards on screen read anything. */
 function TeamCard({ tab }: { tab: NavTab }) {
-  if (!tab.built) return <Card tab={tab} text="Not built yet" />;
+  if (!tab.built) return <Card tab={tab} text="Future enhancement" />;
   switch (tab.view) {
     case 'tteam': return <ApprovalsCard tab={tab} />;
     case 'tleave': return <RequestsCard tab={tab} />;

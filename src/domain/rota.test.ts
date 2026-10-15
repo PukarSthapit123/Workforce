@@ -497,7 +497,7 @@ describe('cover (D7)', () => {
     expect(confirmEarlyProblem(f, '2026-08-14')).toMatchObject({ code: 'NOT_WORKED_YET', message: 'This shift is on Sat 15 Aug, so it cannot be confirmed as worked yet.' });
     expect(confirmEarlyProblem(f, '2026-08-15')).toBeNull();
     expect(itRequestFor(f, 0, 'Bank', AT, 'Willow House', SHIFTS)).toEqual({ ref: 'ITR-1007', personCode: 'CP-1310', name: 'Ellie Warren', location: 'Willow House',
-      shift: 'Early · 07:00–15:00', date: '2026-08-15', worker: 'Bank', status: 'Raised', raisedAt: AT, system: 'IT service desk (simulated)' });
+      shift: 'Early · 07:00–15:00', date: '2026-08-15', worker: 'Bank', status: 'Raised', raisedAt: AT, system: 'IT service desk' });
     expect([confirmSummary('ITR-1007'), confirmSummary('')]).toEqual(['Confirmed. IT access request ITR-1007 raised.', 'Confirmed as worked.']);
   });
   test('open shifts: offered only where the person is eligible, with why', () => {

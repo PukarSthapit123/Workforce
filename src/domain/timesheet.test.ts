@@ -539,7 +539,7 @@ describe('integration attempts (D4)', () => {
   });
   test('the posting dot never claims a Business Central confirmation', () => {
     expect(Object.values(POSTING_DOT).map(d => d.text)).toEqual([
-      'Posted (simulated) · not a Business Central confirmation', 'Queued for Business Central · no result yet',
+      'Posted · Business Central has not confirmed it yet', 'Queued for Business Central · no result yet',
       'Posting failed · see Integrations → Business Central', 'Front-end estimate · not sent yet']);
     expect(APPROVAL_AUDIT_SUFFIX).toBe('queued for Business Central');
   });
