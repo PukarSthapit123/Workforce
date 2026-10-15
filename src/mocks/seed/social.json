@@ -947,7 +947,7 @@
     "id": "notice_post",
     "group": "team",
     "label": "Post and manage notices",
-    "gate": "My team → Notices — post, edit, pin, withdraw, and who has acknowledged",
+    "gate": "My team → Notices: post, edit, pin, withdraw, and who has acknowledged",
     "lockedFor": []
    },
    "proxy": {
@@ -983,7 +983,7 @@
     "id": "onb_track",
     "group": "team",
     "label": "Track onboarding",
-    "gate": "My team → Onboarding — who is onboarding and what is outstanding",
+    "gate": "My team → Onboarding: who is onboarding and what is outstanding",
     "lockedFor": []
    },
    "onb_verify": {
@@ -1001,7 +1001,7 @@
     "id": "onb_cfg",
     "group": "cfg",
     "label": "Configure onboarding",
-    "gate": "Qnipay setup → Onboarding — steps, documents, policies and who verifies",
+    "gate": "Qnipay setup → Onboarding: steps, documents, policies and who verifies",
     "lockedFor": []
    },
    "emp_crud": {
@@ -1120,7 +1120,7 @@
     "updatedAt": "2026-08-13T14:30:00.000Z",
     "id": "team",
     "label": "Their team",
-    "description": "Scoped by department and location — never organisation-wide unless master data is granted.",
+    "description": "Scoped by department and location. Never organisation-wide unless master data is granted.",
     "order": 1
    },
    "cfg": {
@@ -1836,7 +1836,7 @@
     "personId": "CP-1001",
     "area": "Rota",
     "title": "Coverage issue · Willow House",
-    "body": "Tue 11 Aug night is 3 of 4 — cover request open",
+    "body": "Tue 11 Aug night is 3 of 4. A cover request is open.",
     "at": "2026-08-11T14:30:00.000Z",
     "read": false
    },
@@ -3329,7 +3329,7 @@
     "basis": "multiplier",
     "value": "1.5",
     "element": "PE-OTWD",
-    "label": "Overtime — Mon–Fri",
+    "label": "Overtime: Mon–Fri",
     "workType": true
    },
    "pc_OT-SAT": {
@@ -3340,7 +3340,7 @@
     "basis": "multiplier",
     "value": "1.5",
     "element": "PE-OTSAT",
-    "label": "Overtime — Saturday",
+    "label": "Overtime: Saturday",
     "workType": true
    },
    "pc_OT-SUN": {
@@ -3351,7 +3351,7 @@
     "basis": "multiplier",
     "value": "2",
     "element": "PE-OTSUN",
-    "label": "Overtime — Sunday",
+    "label": "Overtime: Sunday",
     "workType": true
    },
    "pc_NIGHT": {

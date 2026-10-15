@@ -110,7 +110,7 @@ export type ExceptionKind = (typeof EXCEPTION_KINDS)[number];
 export const SEVERITY: Readonly<Record<ExceptionKind, number>> = {
   Clearance: 4, Coverage: 4, Leave: 4, 'Business Central': 4, Compliance: 3, Timesheet: 3, Hours: 2, Qualification: 2,
 };
-export const SEVERITY_TIP = 'Ranked by consequence: coverage and clearance first, then hours and qualifications. It is not a queue order — take whichever you can resolve.';
+export const SEVERITY_TIP = 'Ranked by consequence: coverage and clearance first, then hours and qualifications. It is not a queue order. Take whichever you can resolve.';
 export const severityTone = (sev: number): ExceptionTone => (sev >= 4 ? 'err' : sev === 3 ? 'warn' : 'neu');
 /* The screen each kind is put right on (P's act). */
 export const SOURCE_VIEW: Readonly<Record<ExceptionKind, string>> = {

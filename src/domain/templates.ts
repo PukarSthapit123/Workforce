@@ -147,7 +147,7 @@ export const SHIPPED_TEMPLATES: Readonly<Record<string, Template>> = {
      8 projects and 85 tasks are the tenant's own export and are seeded with
      the qnipay tenant rather than carried here. */
   qcic: {
-    name: 'Professional Services — Projects', scope: 'structure',
+    name: 'Professional Services: Projects', scope: 'structure',
     description: 'Consultants booking time to projects and project tasks, with resources mapped to Business Central. Weekly capture, no rota.',
     modules: switches({ A: 1, B: 0, C: 1, R: 0, L: 1, ON: 1 }),
     flags: bools({ ...ONB, AUTO_OT: 0, LATE_FINISH: 0, UNSOCIAL: 0, EMAIL_APPROVAL: 1, SHOW_PAY: 0, VEHICLE: 0, PROJECT: 1, SHIFT: 0,
@@ -161,7 +161,7 @@ export const SHIPPED_TEMPLATES: Readonly<Record<string, Template>> = {
         { code: 'MCR', name: 'Manchester', area: 'North West', department: 'DEL', costCentre: 'CC-100', level: 'Floating', minPerShift: 1, manager: 'Manish Nepal', address: '', active: true },
         { code: 'REM', name: 'Remote', area: '', department: 'DEL', costCentre: 'CC-100', level: 'Floating', minPerShift: 1, manager: 'Manish Nepal', address: '', active: true }],
       departments: [{ code: 'DEL', name: 'Delivery', manager: 'Manish Nepal' }, { code: 'ADM', name: 'Administration', manager: 'Manish Nepal' }],
-      costCentres: [{ code: 'CC-100', name: 'Delivery — Billable' }, { code: 'CC-900', name: 'Internal — Overhead' }],
+      costCentres: [{ code: 'CC-100', name: 'Delivery: Billable' }, { code: 'CC-900', name: 'Internal: Overhead' }],
       jobProfiles: [{ code: 'CONS', name: 'Consultant', night: false }, { code: 'SCONS', name: 'Senior Consultant', night: false },
         { code: 'PM', name: 'Project Manager', night: false }, { code: 'ADM', name: 'Administrator', night: false }],
     },
@@ -191,17 +191,17 @@ export const SHIPPED_TEMPLATES: Readonly<Record<string, Template>> = {
       { module: 'Profile', role: 'Line manager', scope: 'All departments', when: 'Every contact detail change', sla: '3 days', fixed: false },
       { module: 'Leave', role: 'Line manager', scope: 'All departments', when: 'Every leave request', sla: '5 days', fixed: false }],
     structure: {
-      costCentres: [{ code: 'CC-100', name: 'Contracting — Fit-out' }, { code: 'CC-110', name: 'Contracting — Plant & Mechanical' },
-        { code: 'CC-120', name: 'Reactive & Maintenance' }, { code: 'CC-900', name: 'Overhead — Internal' }],
+      costCentres: [{ code: 'CC-100', name: 'Contracting: Fit-out' }, { code: 'CC-110', name: 'Contracting: Plant & Mechanical' },
+        { code: 'CC-120', name: 'Reactive & Maintenance' }, { code: 'CC-900', name: 'Overhead: Internal' }],
       jobProfiles: [{ code: 'ENG', name: 'Site Engineer', night: true }, { code: 'SENG', name: 'Senior Engineer', night: true },
         { code: 'CM', name: 'Contracts Manager', night: false }, { code: 'PAY', name: 'Payroll', night: false }, { code: 'ADM', name: 'Administrator', night: false }],
       /* one task per contract, named as the income cost code: Business Central will not take a job journal line with a blank task */
       contracts: [
         contract('CON-2451', 'Spinnaker Court M&E Fit-out', 'Manchester Waterside Ltd', 'CC-100', 'Ben Lester', 'Active', '06/01/2026', '19/12/2026', true, { name: '4010 · Labour', group: 'Labour', billable: true }),
-        contract('CON-2478', 'Broadway Retail — Electrical 2nd Fix', 'Broadway Estates', 'CC-100', 'Ben Lester', 'Active', '02/03/2026', '30/10/2026', true, { name: '4010 · Labour', group: 'Labour', billable: true }),
+        contract('CON-2478', 'Broadway Retail: Electrical 2nd Fix', 'Broadway Estates', 'CC-100', 'Ben Lester', 'Active', '02/03/2026', '30/10/2026', true, { name: '4010 · Labour', group: 'Labour', billable: true }),
         contract('CON-2503', 'Salford Quays Plant Room Upgrade', 'Peel L&P', 'CC-110', 'Jack Manifold', 'Active', '11/05/2026', '26/02/2027', true, { name: '4010 · Labour', group: 'Labour', billable: true }),
         contract('CON-2199', 'Reactive / Call-out', 'Various', 'CC-120', 'Jack Manifold', 'Always open', '01/01/2026', '', true, { name: '4020 · Reactive labour', group: 'Labour', billable: true }),
-        contract('CON-0001', 'Internal — Training, Yard, Vehicle checks', '', 'CC-900', 'Jack Manifold', 'Always open', '01/01/2026', '', false, { name: '8010 · Internal time', group: 'Overhead', billable: false })],
+        contract('CON-0001', 'Internal: Training, Yard, Vehicle checks', '', 'CC-900', 'Jack Manifold', 'Always open', '01/01/2026', '', false, { name: '8010 · Internal time', group: 'Overhead', billable: false })],
     },
   },
   /* Brightpath Support Services: rota-based support work across services. */

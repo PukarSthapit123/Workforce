@@ -28,7 +28,7 @@
    "code": "SHOW_PAY",
    "label": "Show indicative pay to employees",
    "mod": "CORE",
-   "desc": "Off by default — rates stay in Business Central."
+   "desc": "Off by default. Rates stay in Business Central."
   },
   {
    "code": "VEHICLE",
@@ -295,7 +295,7 @@
   {
    "k": "team",
    "label": "Their team",
-   "desc": "Scoped by department and location — never organisation-wide unless master data is granted."
+   "desc": "Scoped by department and location. Never organisation-wide unless master data is granted."
   },
   {
    "k": "cfg",
@@ -322,7 +322,7 @@
     "active",
     "archived"
    ],
-   "note": "Being set up — compliance and access in progress. Not yet rota’d."
+   "note": "Being set up. Compliance and access in progress. Not yet rota’d."
   },
   "active": {
    "label": "Active",
@@ -353,7 +353,7 @@
     "active",
     "leaver"
    ],
-   "note": "Away for an extended period — maternity, sabbatical, long-term sick."
+   "note": "Away for an extended period: maternity, sabbatical, long-term sick."
   },
   "leaver": {
    "label": "Leaver",
@@ -509,7 +509,7 @@
    "label": "Bank account number",
    "type": "text",
    "sens": true,
-   "hint": "Verified by payroll before it takes effect — never used by Workforce itself"
+   "hint": "Verified by payroll before it takes effect. Never used by Workforce itself"
   },
   {
    "k": "bankSort",

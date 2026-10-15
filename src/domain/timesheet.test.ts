@@ -262,7 +262,7 @@ describe('restGap', () => {
 describe('deriveWorkType', () => {
   const codes: PayCode[] = [
     { code: 'STD', basis: 'multiplier', value: '1', element: 'PE-STD', label: 'Standard time', workType: true },
-    { code: 'OT-SAT', basis: 'multiplier', value: '1.5', element: 'PE-OTSAT', label: 'Overtime — Saturday', workType: true },
+    { code: 'OT-SAT', basis: 'multiplier', value: '1.5', element: 'PE-OTSAT', label: 'Overtime: Saturday', workType: true },
     { code: 'NIGHT', basis: 'multiplier', value: '1.5', element: 'PE-NIGHT', label: 'Night work', workType: true },
   ];
   const rule = (when: string, code: string, trigger = when): TypeRule => ({ trigger, when, code, value: '1×', how: 'Auto (BC)' });

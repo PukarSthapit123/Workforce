@@ -419,7 +419,7 @@ describe('My timesheet, time is captured as time', () => {
     expect(rate).toHaveAccessibleName(/^Rate type/);
     await userEvent.click(rate);
     const options = (await screen.findAllByRole('option')).map(o => o.textContent ?? '');
-    expect(options).toEqual(expect.arrayContaining(['Standard time', 'Overtime — Saturday', 'Overtime — Sunday', 'Night work', 'Travel time']));
+    expect(options).toEqual(expect.arrayContaining(['Standard time', 'Overtime: Saturday', 'Overtime: Sunday', 'Night work', 'Travel time']));
     expect(options).not.toContain('Day rate');
     expect(options).not.toContain('Statutory sick pay');
   });

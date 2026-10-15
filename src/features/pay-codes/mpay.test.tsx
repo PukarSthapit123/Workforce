@@ -28,7 +28,7 @@ const fill = async (user: ReturnType<typeof userEvent.setup>, id: string, text: 
 describe('Pay codes', () => {
   test('the base codes, then the allowance codes marked read only, with their basis, value, element and claimants, and no money', async () => {
     await open();
-    expect(screen.getByTestId(tid.mpay.row('OT-SAT'))).toHaveTextContent('Overtime — Saturday');
+    expect(screen.getByTestId(tid.mpay.row('OT-SAT'))).toHaveTextContent('Overtime: Saturday');
     expect(screen.getByTestId(tid.mpay.workType('OT-SAT'))).toHaveTextContent('Yes');
     expect(screen.getByTestId(tid.mpay.value('OT15'))).toHaveTextContent('1.5 ×');
     expect(screen.getByTestId(tid.mpay.claimed('STD'))).toHaveTextContent('Support Worker, Relief / Bank Worker');
