@@ -124,3 +124,15 @@ test('passes test id coverage with the panel open', async () => {
   await userEvent.click(screen.getByTestId('role-select'));
   expectTestIdCoverage();
 });
+
+test('scrolls the active option into view on open and when a query moves it', async () => {
+  const many = Array.from({ length: 40 }, (_, i) => ({ value: `c${i}`, label: `Company ${i}` }));
+  const seen: unknown[] = [];
+  Element.prototype.scrollIntoView = function scroll(this: Element) { seen.push(this); };
+  render(<Combobox testId="co-select" options={many} value="c35" />);
+  await userEvent.click(screen.getByTestId('co-select'));
+  expect(seen.at(-1)).toBe(screen.getByTestId('co-select-option-c35'));
+  seen.length = 0;
+  await userEvent.type(screen.getByTestId('co-select-search'), '3');
+  expect(seen.at(-1)).toBe(screen.getAllByRole('option')[0]);
+});

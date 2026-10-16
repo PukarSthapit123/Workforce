@@ -1,4 +1,4 @@
-import { useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { CheckIcon, ChevronDownIcon } from 'lucide-react';
 import { Popover } from 'radix-ui';
 import { cn } from '@/lib/utils';
@@ -26,6 +26,8 @@ export function Combobox({ testId, options, value, onValueChange, placeholder, d
   const [active, setActive] = useState(0);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  /* state, not a ref: the portal mounts a commit after open, and the scroll waits for it */
+  const [list, setList] = useState<HTMLDivElement | null>(null);
   const listId = useId();
   const optionId = (i: number) => `${listId}-option-${i}`;
 
@@ -42,20 +44,20 @@ export function Combobox({ testId, options, value, onValueChange, placeholder, d
     setQuery('');
     if (next) setActive(Math.max(0, options.slice(0, COMBOBOX_LIMIT).findIndex(o => o.value === value)));
   }
+  /* the active row stays on screen: on open, on a new query and on every key */
+  useEffect(() => {
+    list?.querySelector(`[id="${CSS.escape(`${listId}-option-${active}`)}"]`)?.scrollIntoView({ block: 'nearest' });
+  }, [list, active, query, listId]);
   function pick(v: string) {
     onValueChange?.(v);
     changeOpen(false);
   }
-  function move(to: number) {
-    setActive(to);
-    document.getElementById(optionId(to))?.scrollIntoView({ block: 'nearest' });
-  }
   function onKeyDown(e: KeyboardEvent<HTMLInputElement>) {
     const n = shown.length;
-    if (e.key === 'ArrowDown' && n) { e.preventDefault(); move((active + 1) % n); }
-    else if (e.key === 'ArrowUp' && n) { e.preventDefault(); move((active - 1 + n) % n); }
-    else if (e.key === 'Home' && n) { e.preventDefault(); move(0); }
-    else if (e.key === 'End' && n) { e.preventDefault(); move(n - 1); }
+    if (e.key === 'ArrowDown' && n) { e.preventDefault(); setActive((active + 1) % n); }
+    else if (e.key === 'ArrowUp' && n) { e.preventDefault(); setActive((active - 1 + n) % n); }
+    else if (e.key === 'Home' && n) { e.preventDefault(); setActive(0); }
+    else if (e.key === 'End' && n) { e.preventDefault(); setActive(n - 1); }
     else if (e.key === 'Enter') { e.preventDefault(); const o = shown[active]; if (o) pick(o.value); }
   }
 
@@ -87,7 +89,7 @@ export function Combobox({ testId, options, value, onValueChange, placeholder, d
               onChange={e => { setQuery(e.target.value); setActive(0); }}
               className="h-[34px] w-full rounded-sm border border-border-strong bg-surface-sunken px-[11px] text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-brand focus:shadow-focus max-md:text-base" />
           </div>
-          <div id={listId} role="listbox" aria-label={ariaLabel ?? searchLabel} className="max-h-[300px] overflow-y-auto p-1">
+          <div ref={setList} id={listId} role="listbox" aria-label={ariaLabel ?? searchLabel} className="max-h-[300px] overflow-y-auto p-1">
             {shown.map((o, i) => (
               <div key={o.value} id={optionId(i)} role="option" aria-selected={o.value === value}
                 data-testid={`${testId}-option-${o.value}`} data-active={i === active ? '' : undefined}
