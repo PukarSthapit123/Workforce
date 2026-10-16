@@ -4,7 +4,48 @@ Date: 2026-10-16. Branch: `main` (the only branch; commit straight to it, no Cla
 
 ## Where things stand
 
-The design is agreed in principle. **No code, spec or plan has been written yet.** The next step is the design for project A (below).
+**Project A (searchable combobox) is in progress.** It runs with superpowers:subagent-driven-development from a local plan.
+
+- The plan is `docs/plans/2026-10-16-searchable-combobox.md`. It is gitignored, so it exists only on this machine.
+- The plan's workspace is `.superpowers/sdd/2026-10-16-searchable-combobox/`, also gitignored. It holds:
+  - `progress.md`, the ledger: task status, rulings and deferred minor findings.
+  - The task briefs and implementer reports.
+  - `reviewer-instructions.md` and `re-reviewer-instructions.md`.
+  - `constraints.md`.
+- **Resume by reading `progress.md`.** Any task with a `Task N: complete` line is done; do not redo it. Trust the ledger and `git log`.
+
+| Task | What | State |
+|---|---|---|
+| 1 | `src/ui/Combobox.tsx` and its tests; `SelectFilter` gains `searchable` | **Complete.** Commits `7abdf2b` and `2c2817a`; review clean |
+| 2 | Employee form (type, job profile, location, department), manager chosen from employees, dimension form | **Complete.** Commit `4a28469`; review clean |
+| 3 | Sickness, team leave, capability, leave type, rota shift and timesheet capture pickers, plus searchable filters | **Built, not yet reviewed.** Commit `941dd17`. **Next step:** dispatch the task reviewer with `reviewer-instructions.md`, `task-3-brief.md`, `task-3-report.md` and the prepared `review-4a28469..941dd17.diff`. Searchable filters: thours, texc, tcover and trota location, employees location and type, tleave type, trota role |
+| 4 | Axe check with the combobox open, 390px overflow check, visual baselines, full `npm run verify` | Not started |
+
+After Task 4:
+
+- Dispatch the final whole-branch review on the most capable model. Use `bash <skill>/scripts/review-package docs/plans/2026-10-16-searchable-combobox.md 74cccbf HEAD`, and point the reviewer at the ledger's deferred minor findings.
+- Make one fix wave, then delete the workspace.
+- Tell the user the "Rulings I made" list from the ledger.
+
+Then start project B's design (below).
+
+### Decisions made on the user's behalf (from the ledger)
+
+- **Test 7 keystrokes.** In the Task 1 tests, picking the second option takes one ArrowDown, because the first option is active when the list opens.
+- **Manager picker scope.** The manager picker lists the employees the caller may see. A manager sees only their own location.
+
+### Deferred minor findings for the final review
+
+- Duplicate employee names give duplicate option keys in the manager picker.
+- The combobox trigger's class string is copied from `SelectTrigger`, so the two could drift apart.
+- `role="searchbox"` is set on the search input.
+- A test patches `Element.prototype.scrollIntoView` without restoring it.
+
+The full list is in `progress.md`.
+
+---
+
+Background from before project A started follows.
 
 Earlier, the user was told "onboarding templates based on employee type" had been built. They had not. What exists is a single tenant-wide onboarding setup, and Organisation templates that capture and apply that one setup. Do not repeat that claim.
 
