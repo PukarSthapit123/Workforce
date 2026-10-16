@@ -177,7 +177,7 @@ function Board({ view, loading, thisWeek, initialPlan, onLocation, onWeek, await
         <PageHead title="Team rota" crumb={`My team · Team rota · ${view.location.name}`} tipTestId={tid.trota.tip}
           tip={`${view.location.name} · ${view.location.level} support · needs ${view.min} per shift. Most shifts come from working patterns. Tap an empty cell to add one, or a shift to change it.`}
           actions={<>
-            <SelectFilter testId={tid.trota.location} label="Location" value={view.location.code}
+            <SelectFilter testId={tid.trota.location} label="Location" searchable value={view.location.code}
               options={view.locations.map(l => ({ value: l.code, label: l.name }))}
               onValueChange={l => { if (l !== view.location.code) { onLocation(l); toastInfo(`Now working in ${view.locations.find(x => x.code === l)?.name ?? l}`); } }} />
             <GuideButton view="trota" />
@@ -210,7 +210,7 @@ function Board({ view, loading, thisWeek, initialPlan, onLocation, onWeek, await
         <FilterBar>
           <SearchFilter testId={tid.trota.search} label="Search colleague" placeholder="Search colleague" value={filters.q}
             onChange={e => setFilters(f => ({ ...f, q: e.target.value }))} />
-          <SelectFilter testId={tid.trota.role} label="Job profile" value={filters.role} onValueChange={v => setFilters(f => ({ ...f, role: v }))}
+          <SelectFilter testId={tid.trota.role} label="Job profile" searchable value={filters.role} onValueChange={v => setFilters(f => ({ ...f, role: v }))}
             options={[{ value: 'all', label: 'All job profiles' }, ...roles.map(([code, name]) => ({ value: code, label: name }))]} />
           <SelectFilter testId={tid.trota.type} label="Worker category" value={filters.type} onValueChange={v => setFilters(f => ({ ...f, type: v }))}
             options={[{ value: 'all', label: 'Everyone' }, { value: 'Contracted', label: 'Contracted' }, { value: 'Bank', label: 'Bank' }]} />

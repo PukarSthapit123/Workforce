@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { tid } from '@/testids';
-import { Button, Field, TextInput, SelectBox, Modal } from '@/ui';
+import { Button, Field, TextInput, SelectBox, Combobox, Modal } from '@/ui';
 import { useExceptionWrite, type Capability, type Self, type UserAccess } from '@/api/access';
 
 /* One capability granted or revoked for one employee, listed together so both
@@ -68,7 +68,7 @@ export function UserExceptions({ user, capabilities, typeName, templateCapabilit
         </Field>
         <Field label="Capability" required error={write.fieldError('capability')}
           hint={mode === 'grant' ? 'Only capabilities their template does not already include.' : 'Only capabilities their template already includes.'}>
-          <SelectBox testId={tid.access.exceptionCap} value={capId} onValueChange={setCapId} placeholder="Choose a capability"
+          <Combobox testId={tid.access.exceptionCap} searchLabel="Search capabilities" value={capId} onValueChange={setCapId} placeholder="Choose a capability"
             options={capOptions.map(c => ({ value: c.id, label: c.label }))} />
         </Field>
         <Field label="Reason" required error={write.fieldError('reason')} hint="Exceptions are reviewed, so say why.">

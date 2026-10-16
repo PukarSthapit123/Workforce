@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { tid } from '@/testids';
-import { Banner, Button, Fact, Field, FieldGrid, FormWarn, GroupLabel, Modal, SelectBox, Small, TextInput, toastInfo } from '@/ui';
+import { Banner, Button, Fact, Field, FieldGrid, FormWarn, GroupLabel, Modal, Combobox, SelectBox, Small, TextInput, toastInfo } from '@/ui';
 import { useRequestLeave, type MyLeave } from '@/api/leave';
 import {
   BANK_HOLIDAY_HANDLING_LABEL, CHOOSE_TYPE, DEFAULT_FULL_TIME_WEEKLY_HOURS, LEAVE_METHOD_LABEL, LEAVE_PARTS, PART_LABEL, SIMULATION_NOTE, balanceCheck, isLeavePart, leaveShape, leaveWritesRota, overlapProblem, proRataSimulation,
@@ -67,7 +67,7 @@ export function RequestDialog({ m, day, onClose }: { m: MyLeave; day?: string; o
         <Button testId={tid.leave.send} kind="primary" disabled={r.bad} pending={send.anyPending} onClick={submit}>Send request</Button>
       </>}>
       <Field label="Type of leave" hint={t?.hint} error={send.fieldError('type')}>
-        <SelectBox testId={tid.leave.type} value={type} options={m.types.map(x => ({ value: x.code, label: x.name }))}
+        <Combobox testId={tid.leave.type} searchLabel="Search leave types" value={type} options={m.types.map(x => ({ value: x.code, label: x.name }))}
           onValueChange={v => { setType(v); edited(); }} />
       </Field>
       <FieldGrid>

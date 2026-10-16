@@ -55,7 +55,7 @@ export function CoverPage() {
       <PageHead title="Cover requests" crumb="My team · Cover requests" tipTestId={tid.tcover.tip}
         tip="Opens on its own when a shift drops below the minimum. Each stage is configurable and moves on when you act, escalating to the Service Manager."
         actions={<>
-          {locations.length > 1 && <SelectFilter testId={tid.tcover.location} label="Location" value={loc} onValueChange={setLoc}
+          {locations.length > 1 && <SelectFilter testId={tid.tcover.location} label="Location" searchable value={loc} onValueChange={setLoc}
             options={[{ value: 'all', label: 'All locations' }, ...locations.map(l => ({ value: l.code, label: l.name }))]} />}
           <Button testId={tid.tcover.adhoc} kind="ghost" small disabled={!home.data} onClick={() => setAdhoc(true)}>Add an extra shift</Button>
         </>} />

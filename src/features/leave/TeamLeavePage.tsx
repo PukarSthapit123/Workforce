@@ -49,7 +49,7 @@ export function TeamLeavePage() {
           Escalated to the {d.escalateTo} under the configured leave workflow. The escalation is recorded and reportable.</Banner>}
         <FilterBar>
           <SearchFilter testId={tid.tleave.search} label="Search colleague" placeholder="Search colleague" value={q} onChange={e => setQ(e.target.value)} />
-          <SelectFilter testId={tid.tleave.type} label="Type of leave" value={type} onValueChange={setType}
+          <SelectFilter testId={tid.tleave.type} label="Type of leave" searchable value={type} onValueChange={setType}
             options={[{ value: ALL, label: 'All types' }, ...d.types.map(t => ({ value: t.code, label: t.name }))]} />
           <ChipButton testId={tid.tleave.short} on={short} onClick={() => setShort(s => !s)}>Affects cover</ChipButton>
           <Count testId={tid.tleave.count}>{d.counts.pending} waiting on you{d.counts.escalated ? ` · ${d.counts.escalated} escalated` : ''}</Count>

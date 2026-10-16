@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { tid } from '@/testids';
 import { cn } from '@/lib/utils';
-import { AddLine, CheckboxField, CheckRow, Empty, Field, FieldGrid, FormExpander, FormGroupLabel, SelectBox, TextArea, TextInput, Tip } from '@/ui';
+import { AddLine, CheckboxField, CheckRow, Combobox, Empty, Field, FieldGrid, FormExpander, FormGroupLabel, TextArea, TextInput, Tip } from '@/ui';
 import type { CaptureSetup } from '@/contract/timesheets';
 import { useTenant } from '@/api/tenant';
 import { MAX_BREAKS, MAX_VEHICLES, breakIndex, fieldOptions, formGroups, hm, isAllowance, varianceText, type DayStats as Stats, type FormField, type FormValues } from './capture';
@@ -42,7 +42,7 @@ function Control({ f, p }: { f: FormField; p: DayFieldsProps }) {
   let control;
   if (def.input === 'calc') control = <TextInput testId={id} value={def.val ?? ''} readOnly />;
   else if (def.input === 'select')
-    control = <SelectBox testId={id} options={fieldOptions(def, p.capture, p.values)} value={text || undefined} placeholder="Choose" disabled={p.disabled}
+    control = <Combobox testId={id} searchLabel="Search the list" options={fieldOptions(def, p.capture, p.values)} value={text || undefined} placeholder="Choose" disabled={p.disabled}
       onValueChange={x => p.onChange(code, x)} />;
   else if (def.input === 'textarea')
     control = <TextArea testId={id} rows={2} value={text} disabled={p.disabled} onChange={e => p.onChange(code, e.target.value)} onBlur={() => p.onBlur(code)} />;

@@ -3,7 +3,7 @@ import { TriangleAlert } from 'lucide-react';
 import { tid } from '@/testids';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import {
-  Avatar, Banner, Button, Card, CardHead, ChipButton, Count, Empty, Field, FilterBar, FormWarn, Meter, Page, PageHead, Pill, Row, SearchFilter, SelectBox,
+  Avatar, Banner, Button, Card, CardHead, ChipButton, Count, Empty, Field, FilterBar, FormWarn, Meter, Page, PageHead, Pill, Row, SearchFilter, SelectBox, Combobox,
   Small, TextInput, Tip, toastInfo,
 } from '@/ui';
 import { useArrangeRtw, useRecordSickness, useSicknessBoard, type SicknessBoard, type SicknessRow } from '@/api/leave';
@@ -120,7 +120,7 @@ function RecordAbsence({ b }: { b: SicknessBoard }) {
       <CardHead title="Record an absence" />
       <div className="grid grid-cols-4 gap-md max-lg:grid-cols-2 max-md:grid-cols-1">
         <Field label="Colleague">
-          <SelectBox testId={tid.tsick.who} value={who} options={b.colleagues.map(c => ({ value: c.code, label: c.name }))}
+          <Combobox testId={tid.tsick.who} searchLabel="Search colleagues" value={who} options={b.colleagues.map(c => ({ value: c.code, label: c.name }))}
             onValueChange={v => { setWho(v); edited(); }} />
         </Field>
         <Field label="First day off" error={record.fieldError('from')}>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { tid } from '@/testids';
 import {
-  Banner, Button, Empty, Fact, Field, Modal, Row, RuledOutList, RuledOutRow, SelectBox, Small, SugCard, SwitchField, TextArea, Tip, toastInfo, toastRefusal,
+  Banner, Button, Empty, Fact, Field, Modal, Row, RuledOutList, RuledOutRow, SelectBox, Combobox, Small, SugCard, SwitchField, TextArea, Tip, toastInfo, toastRefusal,
 } from '@/ui';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import { useCellSuggestions, useClearWeek, useOpenCover, useRepeatWeek, useSignOffWeek, type RotaRow, type RotaWeekView } from '@/api/rota';
@@ -72,7 +72,7 @@ function Suggestions({ view, day, code, busy, onAssign }: {
 function ShiftPicker({ view, value, onChange, label = 'Which shift', hint }: {
   view: RotaWeekView; value: string; onChange: (c: string) => void; label?: string; hint?: string;
 }) {
-  return <Field label={label} hint={hint}><SelectBox testId={tid.trota.pick} options={shiftOptions(view)} value={value} onValueChange={onChange} /></Field>;
+  return <Field label={label} hint={hint}><Combobox testId={tid.trota.pick} searchLabel="Search shifts" options={shiftOptions(view)} value={value} onValueChange={onChange} /></Field>;
 }
 
 /* addShiftBox (v15:9834-9852): an empty cell. Pick the shift, then assign this
@@ -148,7 +148,7 @@ export function ShiftDialog({ view, row, day, busy, onChange, onRemove, onClose 
         {row.hours.rot}h rota’d of {row.contractedHours > 0 ? `${row.contractedHours}h contracted` : 'bank'} · {row.hours.wk}h worked</Fact>
       <div className="mt-lg">
         <Field label="Change the shift">
-          <SelectBox testId={tid.trota.changeShift} options={shiftOptions(view)} value={shiftBy(sh, code) ? code : undefined}
+          <Combobox testId={tid.trota.changeShift} searchLabel="Search shifts" options={shiftOptions(view)} value={shiftBy(sh, code) ? code : undefined}
             onValueChange={c => { if (c !== code) onChange(c); }} />
         </Field>
       </div>
@@ -293,7 +293,7 @@ export function AdhocDialog({ view, onPlan, onClose }: { view: RotaWeekView; onP
       <div className="grid grid-cols-2 gap-md max-md:grid-cols-1">
         <Field label="Day"><SelectBox testId={tid.trota.adhocDay} value={day} onValueChange={setDay}
           options={DAY_INDEXES.map(i => ({ value: String(i), label: formatDay(addDays(view.weekStart, i)) }))} /></Field>
-        <Field label="Which shift"><SelectBox testId={tid.trota.adhocCode} value={code} onValueChange={setCode} options={shiftOptions(view)} /></Field>
+        <Field label="Which shift"><Combobox testId={tid.trota.adhocCode} searchLabel="Search shifts" value={code} onValueChange={setCode} options={shiftOptions(view)} /></Field>
         <Field label="Why it is needed" tip="For cover above the minimum: one-to-one support, an appointment escort, a new admission.">
           <SelectBox testId={tid.trota.adhocWhy} value={why} onValueChange={setWhy} options={COVER_REASONS.map(r => ({ value: r, label: r }))} /></Field>
       </div>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { tid } from '@/testids';
-import { Button, CheckboxField, CheckRow, Field, FormWarn, Modal, SelectBox, Small, TextArea, toastInfo } from '@/ui';
+import { Button, CheckboxField, CheckRow, Field, FormWarn, Modal, Combobox, Small, TextArea, toastInfo } from '@/ui';
 import { useDeclineLeave, useEntitlement, useGiveDaysBack, type SicknessBoard, type TeamRequestView } from '@/api/leave';
 import { formatDay } from '@/domain/time';
 import { EntitlementDialog, SimulateDialog } from './LeaveDialogs';
@@ -74,7 +74,7 @@ export function GiveBackDialog({ days, onClose }: { days: readonly OnLeaveDay[];
           Give {total} day{total === 1 ? '' : 's'} back</Button>
       </>}>
       <Field label="Colleague">
-        <SelectBox testId={tid.tsick.gbEmployee} value={who} options={employees} onValueChange={pick} />
+        <Combobox testId={tid.tsick.gbEmployee} searchLabel="Search colleagues" value={who} options={employees} onValueChange={pick} />
       </Field>
       {theirs.map(d => (
         <CheckRow key={d.date} control={<CheckboxField testId={tid.tsick.gbDay(d.date)} checked={picked.includes(d.date)}

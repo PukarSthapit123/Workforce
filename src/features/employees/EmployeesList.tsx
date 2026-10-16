@@ -44,9 +44,9 @@ export function EmployeesList({ variant, total, onOpen, actions }: {
           ? <SelectFilter testId={tid.employees.categoryFilter} label="Worker category" value={category} onValueChange={setCategory}
               options={[{ value: ALL, label: 'Everyone' }, { value: 'Contracted', label: 'Contracted' }, { value: 'Bank', label: 'Bank' }]} />
           : <>
-            <SelectFilter testId={tid.employees.locationFilter} label="Location" value={loc} onValueChange={setLoc}
+            <SelectFilter testId={tid.employees.locationFilter} label="Location" searchable value={loc} onValueChange={setLoc}
               options={[{ value: ALL, label: 'All locations' }, ...(locations.data ?? []).map(l => ({ value: l.code, label: l.name }))]} />
-            <SelectFilter testId={tid.employees.typeFilter} label="Employee type" value={type} onValueChange={setType}
+            <SelectFilter testId={tid.employees.typeFilter} label="Employee type" searchable value={type} onValueChange={setType}
               options={[{ value: ALL, label: 'All employee types' }, ...(types.data ?? []).map(t => ({ value: t.code, label: t.name }))]} />
           </>}
         <SelectFilter testId={tid.employees.stateFilter} label="State" value={state} options={STATE_OPTIONS}

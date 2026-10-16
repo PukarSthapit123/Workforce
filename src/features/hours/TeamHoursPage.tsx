@@ -50,7 +50,7 @@ function TeamView({ t, onLocation }: { t: TeamHours; onLocation: (code: string) 
   return (
     <>
       <PageHead title="Hours position" crumb="My team · Hours position" actions={<>
-        <SelectFilter testId={tid.thours.location} label="Location" value={t.location.code} options={t.locations.map(l => ({ value: l.code, label: l.name }))}
+        <SelectFilter testId={tid.thours.location} label="Location" searchable value={t.location.code} options={t.locations.map(l => ({ value: l.code, label: l.name }))}
           onValueChange={code => { if (code !== t.location.code) { onLocation(code); toastInfo(`Now working in ${t.locations.find(l => l.code === code)?.name ?? code}`); } }} />
         <Button testId={tid.thours.export} kind="ghost" small pending={exp.anyPending} onClick={doExport}>Export</Button>
         <GuideButton view="thours" />

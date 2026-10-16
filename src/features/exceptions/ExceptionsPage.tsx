@@ -58,7 +58,7 @@ function ExceptionsView({ l, onLocation }: { l: ExceptionList; onLocation: (code
   return (
     <>
       <PageHead title="Exceptions" crumb="My team · Exceptions" actions={
-        <SelectFilter testId={tid.texc.location} label="Location" value={l.location.code} options={l.locations.map(x => ({ value: x.code, label: x.name }))}
+        <SelectFilter testId={tid.texc.location} label="Location" searchable value={l.location.code} options={l.locations.map(x => ({ value: x.code, label: x.name }))}
           onValueChange={code => { if (code !== l.location.code) { onLocation(code); toastInfo(`Now working in ${l.locations.find(x => x.code === code)?.name ?? code}`); } }} />} />
       <FilterBar>
         <span className="inline-flex items-center text-xs leading-[1.45] text-text-muted">Severity<Tip testId={tid.texc.severityTip} text={SEVERITY_TIP} /></span>
