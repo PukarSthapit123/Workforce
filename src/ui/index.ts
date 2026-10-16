@@ -3,6 +3,8 @@ export type { ButtonKind, ButtonProps } from './Button';
 export { Field, TextInput, TextArea } from './Field';
 export { SelectBox } from './Select';
 export type { SelectOption, SelectBoxProps } from './Select';
+export { Combobox, COMBOBOX_LIMIT } from './Combobox';
+export type { ComboboxProps } from './Combobox';
 export { CheckboxField } from './Checkbox';
 export { SwitchField } from './Switch';
 export { Modal, ConfirmModal } from './Modal';

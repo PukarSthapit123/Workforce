@@ -1,6 +1,7 @@
 import type { InputHTMLAttributes, ReactNode } from 'react';
 import { Input, filterControl } from '@/ui/shadcn/input';
 import { cn } from '@/lib/utils';
+import { Combobox } from './Combobox';
 import { SelectBox, type SelectOption } from './Select';
 
 /* The prototype's filter bar (qnipay-workforce-v15.html:536-549): a row of
@@ -24,8 +25,11 @@ export function ChipButton({ testId, on, onClick, children }: { testId: string; 
         : 'text-text-secondary hover:bg-surface-tint')}>{children}</button>;
 }
 /* select.flt: 32px pill, 0 10px, 12px */
-export function SelectFilter({ testId, label, options, value, onValueChange }: {
+export function SelectFilter({ testId, label, options, value, onValueChange, searchable }: {
   testId: string; label: string; options: SelectOption[]; value?: string; onValueChange?: (value: string) => void;
+  /* a long list gets a search box over it */
+  searchable?: boolean;
 }) {
-  return <SelectBox testId={testId} look="filter" aria-label={label} options={options} value={value} onValueChange={onValueChange} />;
+  const Control = searchable ? Combobox : SelectBox;
+  return <Control testId={testId} look="filter" aria-label={label} options={options} value={value} onValueChange={onValueChange} />;
 }
