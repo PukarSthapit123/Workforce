@@ -103,6 +103,31 @@ describe('editing someone', () => {
     expect(await screen.findByTestId(tid.toast.info)).toHaveTextContent('Amara Okafor updated · 1 field(s) changed');
     expect(employeeOf('CP-1042')).toMatchObject({ contractedHours: 30, version: v + 1 });
   });
+  test('the line manager is picked from the employees, and their name is what is saved', async () => {
+    await signInAs('admin');
+    await openEdit(AdminEmployeesPage);
+    const other = Object.values(store.coll<{ id: string; name: string; code: string }>('employees')).find(e => e.code !== 'CP-1042');
+    if (!other) throw new Error('no other employee');
+    await userEvent.click(f('manager'));
+    expect(screen.queryByTestId(`${tid.employeeForm.field('manager')}-option-Amara Okafor`)).toBeNull();
+    await userEvent.click(await screen.findByTestId(`${tid.employeeForm.field('manager')}-option-${other.name}`));
+    await save();
+    expect(await screen.findByTestId(tid.toast.info)).toHaveTextContent('updated');
+    expect(employeeOf('CP-1042').manager).toBe(other.name);
+  });
+  test('a line manager who is not in the list is kept on save', async () => {
+    await signInAs('admin');
+    const id = employeeOf('CP-1042').id;
+    const row = store.coll<{ manager: string }>('employees')[id];
+    if (!row) throw new Error('no employee');
+    row.manager = 'Former Colleague';
+    await openEdit(AdminEmployeesPage);
+    expect(f('manager')).toHaveTextContent('Former Colleague');
+    await type('contractedHours', '31');
+    await save();
+    expect(await screen.findByTestId(tid.toast.info)).toHaveTextContent('updated');
+    expect(employeeOf('CP-1042')).toMatchObject({ manager: 'Former Colleague', contractedHours: 31 });
+  });
   test('a failed save shows the refusal and leaves the record as it was', async () => {
     await signInAs('admin');
     const before = snapshot('employees');

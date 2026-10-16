@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { tid } from '@/testids';
 import { DIMENSIONS, type DimensionKind } from '@/contract/dimensions';
-import { Button, Field, FormWarn, Modal, ScopeBadge, SelectBox, Small, SwitchField, TextInput, UnitInput, toastInfo } from '@/ui';
+import { Button, Combobox, Field, FormWarn, Modal, ScopeBadge, Small, SwitchField, TextInput, UnitInput, toastInfo } from '@/ui';
 import { useDimension, useSupportLevels, type InUseRow } from '@/api/reference';
 import { useCreateDimension, useRemoveDimension, useUpdateDimension } from '@/api/dimensions';
 import { DIM_SPECS, type DimField } from './spec';
@@ -56,7 +56,7 @@ export function DimensionForm({ kind, row, onClose }: { kind: DimensionKind; row
     if (f.kind === 'bool') return <SwitchField testId={id} checked={Boolean(v[f.key])} onCheckedChange={c => setV(x => ({ ...x, [f.key]: c }))} />;
     if (f.kind === 'select') {
       const options = [...(f.optional ? [{ value: NONE, label: 'None' }] : []), ...(f.options?.(ctx) ?? [])];
-      return <SelectBox testId={id} options={options} value={String(v[f.key] || NONE)} onValueChange={x => setV(y => ({ ...y, [f.key]: x === NONE ? '' : x }))} />;
+      return <Combobox testId={id} searchLabel={`Search ${f.label.toLowerCase()}`} options={options} value={String(v[f.key] || NONE)} onValueChange={x => setV(y => ({ ...y, [f.key]: x === NONE ? '' : x }))} />;
     }
     if (f.kind === 'number') return <UnitInput testId={id} unit="employees" type="number" inputMode="numeric" step="1" min="0"
       value={String(v[f.key] ?? '')} onChange={e => setV(x => ({ ...x, [f.key]: e.target.value }))} />;

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { tid } from '@/testids';
 import type { Employee } from '@/contract/employees';
-import { Button, Field, FormSection, FormWarn, Modal, SelectBox, Small, SwitchField, TextInput, UnitInput, toastInfo } from '@/ui';
-import { useCreateEmployee, useNextCode, useUpdateEmployee } from '@/api/employees';
+import { Button, Combobox, Field, FormSection, FormWarn, Modal, SelectBox, Small, SwitchField, TextInput, UnitInput, toastInfo } from '@/ui';
+import { useCreateEmployee, useEmployees, useNextCode, useUpdateEmployee } from '@/api/employees';
 import { useDimension, useEmployeeTypes } from '@/api/reference';
 import { useCaps } from '@/shell/useCaps';
 import { LIFECYCLE, STARTING_STATES } from '@/domain/lifecycle';
@@ -59,8 +59,12 @@ function EmployeeFormBody({ employee, initial, onClose, onChangeState }: { emplo
   const opts = (rows: readonly { code: string; name: string }[] | undefined, optional: boolean) =>
     [...(optional ? [{ value: NONE, label: 'None' }] : []), ...(rows ?? []).map(r => ({ value: r.code, label: r.name }))];
   const err = (k: string) => write.fieldError(k);
+  /* the manager's name is what is saved, so the list offers names; the employee being edited cannot manage themselves */
+  const everyone = useEmployees('all', '').data;
+  const managers = [{ value: NONE, label: 'None' }, ...(everyone ?? []).filter(p => p.id !== employee?.id)
+    .map(p => ({ value: p.name, label: p.name })).sort((a, b) => a.label.localeCompare(b.label))];
 
-  const text = (k: 'name' | 'code' | 'email' | 'phone' | 'resource' | 'manager' | 'start', label: string,
+  const text = (k: 'name' | 'code' | 'email' | 'phone' | 'resource' | 'start', label: string,
     extra: { type?: string; disabled?: boolean; tip?: string; required?: boolean; placeholder?: string } = {}) => (
     <Field label={label} error={err(k)} tip={extra.tip} required={extra.required}>
       <TextInput testId={tid.employeeForm.field(k)} type={extra.type ?? 'text'} disabled={extra.disabled} value={v[k]}
@@ -70,15 +74,20 @@ function EmployeeFormBody({ employee, initial, onClose, onChangeState }: { emplo
       <UnitInput testId={tid.employeeForm.field(k)} unit="h / week" type="number" inputMode="decimal" step="0.5" min="0" max="80"
         value={v[k]} onChange={e => set(k, e.target.value)} /></Field>);
   const select = (k: 'employeeType' | 'jobProfile' | 'location' | 'department' | 'category', label: string,
-    options: { value: string; label: string }[], extra: { required?: boolean; tip?: string } = {}) => (
-    <Field label={label} error={err(k)} required={extra.required} tip={extra.tip}>
-      <SelectBox testId={tid.employeeForm.field(k)} options={options} value={v[k] || NONE}
-        onValueChange={x => {
-          const value = x === NONE ? '' : x;
-          /* a new employee takes their type's usual basis, as the prototype's form did */
-          if (k === 'employeeType' && !editing) { const t = types.data?.find(y => y.code === value); setV(d => ({ ...d, employeeType: value, category: t?.category ?? d.category })); }
-          else set(k, value);
-        }} /></Field>);
+    options: { value: string; label: string }[], extra: { required?: boolean; tip?: string; search?: string } = {}) => {
+    const props = {
+      testId: tid.employeeForm.field(k), options, value: v[k] || NONE,
+      onValueChange: (x: string) => {
+        const value = x === NONE ? '' : x;
+        /* a new employee takes their type's usual basis, as the prototype's form did */
+        if (k === 'employeeType' && !editing) { const t = types.data?.find(y => y.code === value); setV(d => ({ ...d, employeeType: value, category: t?.category ?? d.category })); }
+        else set(k, value);
+      },
+    };
+    return (
+      <Field label={label} error={err(k)} required={extra.required} tip={extra.tip}>
+        {extra.search ? <Combobox {...props} searchLabel={extra.search} /> : <SelectBox {...props} />}</Field>);
+  };
 
   function submit() {
     const fields = { name: v.name, email: v.email, phone: v.phone, jobProfile: v.jobProfile, employeeType: v.employeeType, category: v.category,
@@ -116,11 +125,13 @@ function EmployeeFormBody({ employee, initial, onClose, onChangeState }: { emplo
             <SwitchField testId={tid.employeeForm.field('cis')} checked={v.cis} onCheckedChange={c => set('cis', c)} /></Field>
         </FormSection>
         <FormSection title="Employment">
-          {select('employeeType', 'Employee type', opts(types.data, false), { required: true, tip: 'Decides which fields this employee captures, how they enter time, and what they may claim.' })}
-          {select('jobProfile', 'Job profile', opts(jobs.data, true))}
-          {select('location', 'Location', opts(locs.data, false), { required: true })}
-          {select('department', 'Department', opts(deps.data, true))}
-          {text('manager', 'Line manager')}
+          {select('employeeType', 'Employee type', opts(types.data, false), { search: 'Search employee types', required: true, tip: 'Decides which fields this employee captures, how they enter time, and what they may claim.' })}
+          {select('jobProfile', 'Job profile', opts(jobs.data, true), { search: 'Search job profiles' })}
+          {select('location', 'Location', opts(locs.data, false), { search: 'Search locations', required: true })}
+          {select('department', 'Department', opts(deps.data, true), { search: 'Search departments' })}
+          <Field label="Line manager" error={err('manager')}>
+            <Combobox testId={tid.employeeForm.field('manager')} options={managers} value={v.manager || NONE} searchLabel="Search employees"
+              onValueChange={x => set('manager', x === NONE ? '' : x)} /></Field>
           {text('start', 'Start date', { type: 'date' })}
         </FormSection>
         <FormSection title="Contract">
