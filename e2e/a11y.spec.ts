@@ -470,6 +470,10 @@ const pages5 = (api: Parameters<typeof completeMine>[1]): [string, Step[]][] => 
     ['add policy dialog', click(tid.monb.polAdd, tid.monb.polName)],
     ['remove policy confirm', async page => { await escape(page); await click(tid.monb.polRemove('pol_itsec'), tid.modal.root)(page); }],
     ['add document dialog', async page => { await escape(page); await click(tid.monb.docAdd, tid.monb.docName)(page); }],
+    ['named template', open('/setup/monb?template=onbt-senior-consultants', tid.monb.card('applies'))],
+    ['add job profile list', click(tid.monb.profileAdd, `${tid.monb.profileAdd}-search`)],
+    ['new template dialog', async page => { await escape(page); await click(tid.monb.templateNew, tid.monb.newName)(page); }],
+    ['delete template confirm', async page => { await escape(page); await click(tid.monb.templateDelete, tid.modal.root)(page); }],
   ]],
 ];
 test.describe('module 5 pages', () => {
