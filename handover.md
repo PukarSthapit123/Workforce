@@ -4,19 +4,26 @@ Date: 2026-10-18. Branch: `main` (the only branch; commit straight to it, no Cla
 
 ## Where things stand
 
-**Project A (searchable combobox) is complete** on `main` (commits `7abdf2b`..`f4ed4a8`). It was reviewed task by task, then as a whole, and the one fix wave was re-reviewed clean. Typecheck, lint, unit (153 files, 2393 tests), every e2e spec and build:check pass. No visual baseline moved.
+**Project A (searchable combobox) is complete** on `main` (`7abdf2b`..`f4ed4a8`). `src/ui/Combobox.tsx` is a searchable drop-in for `SelectBox`; `SelectFilter` takes `searchable`. The line manager is chosen from current employees.
 
-- `src/ui/Combobox.tsx` is a searchable drop-in for `SelectBox` (`searchLabel` names the search box). `SelectFilter` takes `searchable`.
-- The panel is a modal popover, so a click outside it inside a dialog closes only the list. It stays inside a phone screen and wraps long labels.
-- The line manager on the employee form is chosen from current employees (leavers and archived people are not offered). A saved manager who has since left still shows.
+**Project B (onboarding templates by job profile) is complete** on `main` (`4471d90`..`943c991`). It was reviewed task by task, then as a whole, and the fix wave was re-reviewed clean. Typecheck, lint, unit (156 files, 2494 tests), every e2e spec and build:check pass. Nothing is pushed.
 
-Decisions made on the user's behalf:
+- Setup › Onboarding setup has a template picker (`?template=<id>`), New template (copied from Default or another template), an Applies to card (job profiles, rename, delete), and per-template steps, documents (Asked, Required, Blocks start) and policies (Asked).
+- Today's setup is the Default template. A job profile belongs to at most one template; everyone else gets Default.
+- Until a starter submits, they follow their current template live (profile changes and template edits reach them). After submission the recorded `asked` holds.
+- Team onboarding shows each starter's template. A job profile a template lists cannot be removed from Dimensions. Organisation templates capture and apply onboarding templates.
+- Domain: `src/domain/onboarding-templates.ts`. Mock: `src/mocks/onboarding-templates.ts`, `resolvedFor` in `src/mocks/onboarding-cases.ts`. Design: `docs/specs/2026-10-18-onboarding-templates-design.md` (local only).
 
-- The manager picker lists the employees the caller may see. A manager sees only their own location, so a site manager cannot pick a head-office line manager. Admins can.
-- In the closed state, ArrowUp and ArrowDown open the list. There is no typeahead.
-- Left as known minor polish: the search input has `role="searchbox"`, and the panel and its list share one accessible name.
+Decisions made on the user's behalf for B:
 
-**Next: project B's design** (onboarding templates by job profile, below). Start with the open questions, one at a time.
+- New documents join every template switched off; new policies join only the Default.
+- Verified by, Expiry tracked, and adding, renaming or removing documents happen on Default only.
+- Applying an organisation template: a job profile missing in the target is skipped with a warning; one held by another template moves. The file's Default policy choices apply only to policies the file knows; held policies it lacks keep their Default status.
+- Policy Add and Remove wait while the setup page has unsaved changes.
+
+Known gaps left as they are: browser Back and Forward can drop an unsaved template draft; Team onboarding shows a Template column reading "Default" even with no templates.
+
+**Project C (custom field library and form builder) is PARKED** by the user (2026-10-18). Do not start it until they say so.
 
 ---
 
