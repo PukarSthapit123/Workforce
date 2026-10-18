@@ -1,7 +1,7 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
-import { Combobox, COMBOBOX_LIMIT, Field } from '@/ui';
+import { Combobox, COMBOBOX_LIMIT, Field, Modal } from '@/ui';
 import { expectTestIdCoverage } from '@/test/testid-coverage';
 
 const ROLES = [
@@ -9,11 +9,6 @@ const ROLES = [
   { value: 'senior', label: 'Senior Consultant' },
   { value: 'pm', label: 'Project Manager' },
 ];
-
-beforeAll(() => {
-  /* jsdom has no layout, so it lacks scrollIntoView */
-  Element.prototype.scrollIntoView = vi.fn();
-});
 
 test('shows the placeholder, then the selected label', () => {
   const { rerender } = render(<Combobox testId="role-select" options={ROLES} placeholder="Pick a role" />);
@@ -128,11 +123,57 @@ test('passes test id coverage with the panel open', async () => {
 test('scrolls the active option into view on open and when a query moves it', async () => {
   const many = Array.from({ length: 40 }, (_, i) => ({ value: `c${i}`, label: `Company ${i}` }));
   const seen: unknown[] = [];
-  Element.prototype.scrollIntoView = function scroll(this: Element) { seen.push(this); };
+  const spy = vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(function scroll(this: Element) { seen.push(this); });
   render(<Combobox testId="co-select" options={many} value="c35" />);
   await userEvent.click(screen.getByTestId('co-select'));
   expect(seen.at(-1)).toBe(screen.getByTestId('co-select-option-c35'));
   seen.length = 0;
   await userEvent.type(screen.getByTestId('co-select-search'), '3');
   expect(seen.at(-1)).toBe(screen.getAllByRole('option')[0]);
+  spy.mockRestore();
+});
+
+test('a click on the dialog overlay while the list is open does not close the dialog', async () => {
+  const onOpenChange = vi.fn();
+  render(<Modal open onOpenChange={onOpenChange} title="Edit"><Combobox testId="role-select" options={ROLES} /></Modal>);
+  await userEvent.click(screen.getByTestId('role-select'));
+  expect(screen.getByRole('listbox')).toBeInTheDocument();
+  const overlay = document.querySelector('[data-slot="dialog-overlay"]');
+  if (!overlay) throw new Error('no overlay');
+  await userEvent.pointer([{ target: overlay }, { keys: '[MouseLeft]', target: overlay }]);
+  expect(onOpenChange).not.toHaveBeenCalledWith(false);
+});
+
+test('ArrowDown and ArrowUp on the closed trigger open the panel', async () => {
+  render(<Combobox testId="role-select" options={ROLES} />);
+  screen.getByTestId('role-select').focus();
+  await userEvent.keyboard('{ArrowDown}');
+  expect(screen.getByRole('listbox')).toBeInTheDocument();
+  await userEvent.keyboard('{Escape}');
+  expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+  await userEvent.keyboard('{ArrowUp}');
+  expect(screen.getByRole('listbox')).toBeInTheDocument();
+});
+
+test('the active descendant stays on a shown row when the options shrink while open', async () => {
+  const { rerender } = render(<Combobox testId="role-select" options={ROLES} />);
+  await userEvent.click(screen.getByTestId('role-select'));
+  await userEvent.keyboard('{End}');
+  rerender(<Combobox testId="role-select" options={ROLES.slice(0, 1)} />);
+  const id = screen.getByTestId('role-select-search').getAttribute('aria-activedescendant');
+  expect(id).toBe(screen.getAllByRole('option')[0]?.id);
+});
+
+test('Enter during IME composition does not pick', async () => {
+  const onValueChange = vi.fn();
+  render(<Combobox testId="role-select" options={ROLES} onValueChange={onValueChange} />);
+  await userEvent.click(screen.getByTestId('role-select'));
+  fireEvent.keyDown(screen.getByTestId('role-select-search'), { key: 'Enter', isComposing: true });
+  expect(onValueChange).not.toHaveBeenCalled();
+  expect(screen.getByRole('listbox')).toBeInTheDocument();
+});
+
+test('the trigger carries the select-trigger slot', () => {
+  render(<Combobox testId="role-select" options={ROLES} />);
+  expect(screen.getByTestId('role-select')).toHaveAttribute('data-slot', 'select-trigger');
 });

@@ -642,16 +642,23 @@ test.describe('searchable combobox', () => {
       await signInAs('admin');
       await openJobProfile(page);
       await setTheme(page, theme);
+      await page.waitForFunction(() => document.getAnimations().every(a => a.playState !== 'running'));
       const r = await new AxeBuilder({ page }).analyze();
       expect(r.violations.map(v => `${v.id}: ${v.nodes.length}`)).toEqual([]);
     });
   }
-  test('phone: the open job profile combobox has no horizontal overflow at 390px', async ({ page, signInAs }) => {
+  test('phone: the open job profile combobox has no horizontal overflow at 390px, even with a long label', async ({ page, api, signInAs }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await signInAs('admin');
+    const long = 'Senior regional operations and compliance lead for the north west and the islands';
+    const made = await api.send('POST', '/api/v1/job-profiles', { code: 'LONGPROFILE', name: long, night: false });
+    expect(made.status).toBeLessThan(300);
     await openJobProfile(page);
+    await expect(page.getByTestId(`${tid.employeeForm.field('jobProfile')}-option-LONGPROFILE`)).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     const box = await page.getByRole('listbox').boundingBox();
     expect(box && box.x >= 0 && box.x + box.width <= 390, 'the panel within the screen').toBe(true);
+    const row = await page.getByTestId(`${tid.employeeForm.field('jobProfile')}-option-LONGPROFILE`).boundingBox();
+    expect(row && row.x >= 0 && row.x + row.width <= 390, 'the long row within the screen').toBe(true);
   });
 });
