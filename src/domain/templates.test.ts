@@ -499,7 +499,8 @@ describe('onboarding templates in a template', () => {
   test('the policies the file says the default asks are set, by name, and win over adding', () => {
     const t = tpl({ defaultPolicies: ['Privacy notice', 'Fire safety'], policies: [{ id: 'pol_safe', label: 'Safeguarding policy', ver: 'v1.0', sum: '', body: [] }] });
     const p = planApply(t, state({ config: { ...CFG(), policies: ['pol_conduct'] } }), ALL);
-    expect(p.steps.onboarding.defaultPolicies).toEqual(['pol_privacy']);
+    /* the file does not carry Code of conduct, which the default asks, so it stays asked */
+    expect(p.steps.onboarding.defaultPolicies).toEqual(['pol_privacy', 'pol_conduct']);
   });
   test('policies a file adds without saying what the default asks are appended to the default\'s list', () => {
     const t = tpl({ policies: [{ id: 'pol_safe', label: 'Safeguarding policy', ver: 'v1.0', sum: '', body: [] }] });

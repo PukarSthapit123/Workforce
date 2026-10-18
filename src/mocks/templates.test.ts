@@ -386,8 +386,7 @@ describe('the onboarding setup in a template (module 5, D12)', () => {
 
     const plan = TemplatePlan.parse((await admin('GET', PLAN(KEY))).body);
     expect(onbLines(plan.changes)).toEqual(['Onboarding step Emergency contacts on.', 'Onboarding document Proof of address: does not block the start.',
-      'Policy Privacy notice, with the template\'s wording. It becomes v2.1. 1 employee will be asked to read it again.',
-      'The Default onboarding template asks for Code of conduct, Privacy notice, Employee handbook and IT and data security.']);
+      'Policy Privacy notice, with the template\'s wording. It becomes v2.1. 1 employee will be asked to read it again.']);
     expect(onbLines(plan.leftAlone)).toEqual(['Policies the template does not have stay, with their acknowledgements: Fire safety.',
       'Uploaded policy documents stay as they are. Everybody’s onboarding progress stays too, apart from the policies they are asked to read again.']);
     const n = audits().length;
@@ -501,5 +500,14 @@ describe('onboarding templates in an organisation template', () => {
     expect((await admin('POST', APPLY(KEY), undefined, tenantVer())).status).toBe(200);
     expect(POL('pol_privacy')?.ver).toBe('v2.1');
     expect(caseOf('CP-1502')?.acks).toEqual({ pol_privacy: 'v2.0' });
+  });
+
+  test('a policy the tenant added after saving is still asked by the Default when the file is applied again, and the plan has no Default line', async () => {
+    expect((await save('Care onboarding')).status).toBe(200);
+    expect((await admin('POST', '/api/v1/onboarding/policies', { label: 'Fire safety' })).status).toBe(200);
+    const plan = TemplatePlan.parse((await admin('GET', PLAN(KEY))).body);
+    expect(onbLines(plan.changes).filter(t => t.includes('Default onboarding template'))).toEqual([]);
+    expect((await admin('POST', APPLY(KEY), undefined, tenantVer())).status).toBe(200);
+    expect(cfgPolicies()).toContain('pol_fire_safety');
   });
 });
