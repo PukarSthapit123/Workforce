@@ -133,3 +133,13 @@ test('a location\'s refusal names both the employees and the projects at it', as
   const r = await (await as('admin'))('DELETE', `/api/v1/locations/${row.id}`, undefined, row.version);
   expect(Refusal.parse(r.body).usedBy?.map(u => u.kind)).toEqual(['employees', 'projects']);
 });
+
+test('a job profile an onboarding template lists cannot be removed, and the refusal names the template', async () => {
+  resetTo('qnipay');
+  const call = await as('admin'), row = rowByCode('job-profiles', 'SCONS'), before = snapshot('jobProfiles', 'onboardingTemplates', 'audit');
+  const r = await call('DELETE', `/api/v1/job-profiles/${row.id}`, undefined, row.version);
+  expect(r.status).toBe(409);
+  expect(Refusal.parse(r.body)).toMatchObject({ code: 'in-use', message: 'SCONS is used by the onboarding template Senior consultants.',
+    usedBy: [{ kind: 'onboarding templates', count: 1, examples: ['Senior consultants'] }] });
+  expect(snapshot('jobProfiles', 'onboardingTemplates', 'audit')).toEqual(before);
+});

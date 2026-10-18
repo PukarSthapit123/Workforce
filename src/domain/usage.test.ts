@@ -45,3 +45,10 @@ test('the refusal names what uses it and what to do', () => {
   expect(inUseRefusal('SSW', usageOf('job-profiles', 'SSW', world)).message).toBe('SSW is used by 1 employee.');
   expect(inUseRefusal('CARE', usageOf('departments', 'CARE', world)).message).toBe('CARE is used by 2 locations and 5 employees.');
 });
+
+test('a job profile an onboarding template lists is in use, named by the template', () => {
+  const w = { employees: [], locations: [], projects: [], onboardingTemplates: [{ name: 'Senior consultants', jobProfiles: ['SCONS'] }] };
+  expect(usageOf('job-profiles', 'SCONS', w)).toEqual([{ kind: 'onboarding templates', count: 1, examples: ['Senior consultants'] }]);
+  expect(inUseRefusal('SCONS', usageOf('job-profiles', 'SCONS', w)).message).toBe('SCONS is used by the onboarding template Senior consultants.');
+  expect(inUseRefusal('X', [{ kind: 'onboarding templates', count: 2, examples: ['A', 'B'] }]).message).toBe('X is used by 2 onboarding templates.');
+});

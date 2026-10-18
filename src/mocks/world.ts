@@ -40,6 +40,7 @@ export const usageWorld = (): UsageWorld => ({
   employees: Object.values(employees()),
   locations: Object.values(store.coll<UsageWorld['locations'][number]>('locations')),
   projects: Object.values(store.coll<UsageWorld['projects'][number]>('projects')),
+  onboardingTemplates: Object.values(store.coll<NonNullable<UsageWorld['onboardingTemplates']>[number]>('onboardingTemplates')),
 });
 
 /* Ids are a zero-padded counter, one past the highest stored, as audit ids
