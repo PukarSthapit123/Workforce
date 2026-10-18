@@ -10,13 +10,14 @@ import { useRecordMutation } from './mutation';
 import { notificationKeys } from './notifications';
 import { employeesKeys } from './employees';
 import {
-  ackOnboardingPolicy, addOnboardingDocument, addOnboardingPolicy, removeOnboardingDocument, renameOnboardingDocument, chaseStarter, editOnboardingPolicy, getMyOnboarding, getOnboardingSetup, getStarterOnboarding,
+  ackOnboardingPolicy, addOnboardingDocument, addOnboardingPolicy, createOnboardingTemplate, deleteOnboardingTemplate, getOnboardingTemplate, removeOnboardingDocument, renameOnboardingDocument, chaseStarter, editOnboardingPolicy, getMyOnboarding, getOnboardingSetup, getStarterOnboarding,
   getTeamOnboarding, inviteStarter, readOnboardingPolicy, rejectOnboardingDocument, removeOnboardingPolicy, saveOnboardingStep, startStarter,
-  submitOnboarding, updateOnboardingConfig, uploadOnboardingDocument, uploadOnboardingPolicy, verifyOnboardingDocument,
+  submitOnboarding, updateOnboardingConfig, updateOnboardingTemplate, uploadOnboardingDocument, uploadOnboardingPolicy, verifyOnboardingDocument,
   type Blocker, type CaseChanged, type CaseSubmitted, type OnbDocumentRecord, type OnbDocumentView, type OnbFeatures, type OnbFileRecord,
   type OnboardingCaseRecord, type OnboardingConfigRecord, type OnboardingConfigSaved, type OnboardingDetail, type OnboardingSetup, type OnbEmployee,
   type OnbPolicySetupView, type OnbPolicyView, type OnbProgress, type OnbQueueRow, type OnbStepRecord, type OnbStepView, type PolicyDraft,
   type PolicyRemoved, type PolicySaved, type PolicyUploaded, type SaveStep, type StarterChased, type StarterMoved, type StarterOnboarding, type SubmitOnboarding,
+  type CreateOnbTemplate, type OnbTemplateDeleted, type OnbTemplateRecord, type OnbTemplateSaved, type OnbTemplateSummary, type UpdateOnbTemplate,
   type TeamOnboarding, type TrackerRow, type UpdateOnboardingConfig, type UploadFile, type DocumentDraft,
 } from '@/contract/onboarding';
 
@@ -26,6 +27,7 @@ export const onboardingKeys = {
   team: ['onboarding', 'team'] as const,
   starter: (employeeCode: string) => ['onboarding', 'team', employeeCode] as const,
   setup: ['onboarding', 'setup'] as const,
+  template: (id: string) => ['onboarding', 'setup', 'template', id] as const,
 };
 
 /* ---------------------------------------------------------------- reads */
@@ -37,6 +39,10 @@ export const useStarterOnboarding = (employeeCode: string, enabled = true) => us
   queryKey: onboardingKeys.starter(employeeCode), queryFn: () => api(getStarterOnboarding, { params: { employeeCode } }), enabled: enabled && !!employeeCode,
 });
 export const useOnboardingSetup = (enabled = true) => useQuery({ queryKey: onboardingKeys.setup, queryFn: () => api(getOnboardingSetup), enabled });
+/* One template whole, for its draft. */
+export const useOnboardingTemplate = (id: string, enabled = true) => useQuery({
+  queryKey: onboardingKeys.template(id), queryFn: () => api(getOnboardingTemplate, { params: { id } }), enabled: enabled && !!id,
+});
 
 /* --------------------------------------------------------------- writes */
 type CaseRef = Pick<OnboardingCaseRecord, 'id' | 'version'>;
@@ -128,9 +134,23 @@ export const useRemoveOnboardingPolicy = () => useRecordMutation({
   recordKey: v => `onboarding/policy/${v.policy.id}`, invalidates: MINE,
 });
 
+/* Onboarding templates: each is a row of its own with its own version, written whole. */
+type TemplateRef = Pick<OnbTemplateRecord, 'id' | 'version'>;
+export const useCreateOnboardingTemplate = () => useRecordMutation({
+  mutationFn: (body: CreateOnbTemplate) => api(createOnboardingTemplate, { body }), recordKey: () => 'onboarding/template/new', invalidates: MINE,
+});
+export const useSaveOnboardingTemplate = () => useRecordMutation({
+  mutationFn: (v: { template: TemplateRef; body: UpdateOnbTemplate }) => api(updateOnboardingTemplate, { params: { id: v.template.id }, body: v.body, ifMatch: v.template.version }),
+  recordKey: v => `onboarding/template/${v.template.id}`, invalidates: MINE,
+});
+export const useDeleteOnboardingTemplate = () => useRecordMutation({
+  mutationFn: (v: { template: TemplateRef }) => api(deleteOnboardingTemplate, { params: { id: v.template.id }, ifMatch: v.template.version }),
+  recordKey: v => `onboarding/template/${v.template.id}`, invalidates: MINE,
+});
+
 export type {
   Blocker, CaseChanged, CaseSubmitted, OnbDocumentRecord, OnbDocumentView, OnbFeatures, OnbFileRecord, OnboardingCaseRecord, OnboardingConfigRecord,
   OnboardingConfigSaved, OnboardingDetail, OnboardingSetup, OnbEmployee, OnbPolicySetupView, OnbPolicyView, OnbProgress, OnbQueueRow, OnbStepRecord,
   OnbStepView, PolicyDraft, PolicyRemoved, PolicySaved, PolicyUploaded, SaveStep, StarterChased, StarterMoved, StarterOnboarding, SubmitOnboarding, TeamOnboarding,
-  TrackerRow, UpdateOnboardingConfig, UploadFile, DocumentDraft,
+  TrackerRow, UpdateOnboardingConfig, UploadFile, DocumentDraft, CreateOnbTemplate, OnbTemplateDeleted, OnbTemplateRecord, OnbTemplateSaved, OnbTemplateSummary, UpdateOnbTemplate,
 };

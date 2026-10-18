@@ -598,6 +598,9 @@ export const tid = {
     docOn: (id: string) => k('monb-doc-on', id), docCustom: (id: string) => k('monb-doc-custom', id),
     docRename: (id: string) => k('monb-doc-rename', id), docRemove: (id: string) => k('monb-doc-remove', id), docAdd: 'monb-doc-add', docLocked: 'monb-doc-locked',
     docName: 'monb-doc-name', docHint: 'monb-doc-hint', docWarn: 'monb-doc-warn', docCancel: 'monb-doc-cancel', docSave: 'monb-doc-save',
+    /* templates by job profile: the bar, the New template dialog and a template while it loads */
+    templateBar: 'monb-template-bar', template: 'monb-template', templateNew: 'monb-template-new', templateLoading: 'monb-template-loading',
+    newName: 'monb-new-name', newFrom: 'monb-new-from', newWarn: 'monb-new-warn', newCancel: 'monb-new-cancel', newCreate: 'monb-new-create',
   },
   /* module 3: Qnipay setup → Integrations → IT service desk (admIT, v15:9689) */
   iit: {

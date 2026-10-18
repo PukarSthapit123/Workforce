@@ -1,16 +1,20 @@
-import { useState } from 'react';
-import { ClipboardList } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { tid } from '@/testids';
 import {
-  ActionBar, AdminCard, Button, Card, CardNote, Caution, Empty, FormWarn, Page, PageHead, Pill, ScopeBadge, SettingRow, SwitchField, toastInfo,
+  ActionBar, Button, Card, Caution, Empty, FormWarn, Page, PageHead, toastInfo,
 } from '@/ui';
 import { ApiError } from '@/api/client';
 import { useOnboardingSetup, useSaveOnboardingConfig, type OnboardingSetup, type UpdateOnboardingConfig } from '@/api/onboarding';
 import { useTenant } from '@/shell/shellData';
 import { versionKey } from '@/lib/latest';
-import { ALWAYS_ASKED, REQUIRED_CHANGE_WARNING, STEP_UNAVAILABLE } from '@/domain/onboarding';
+import { REQUIRED_CHANGE_WARNING } from '@/domain/onboarding';
+import { DEFAULT_KEY, DEFAULT_TEMPLATE } from '@/domain/onboarding-templates';
 import { PoliciesCard } from './OnbSetupPolicies';
 import { DocumentsCard } from './OnbSetupDocuments';
+import { StepsCard } from './OnbSetupSteps';
+import { TemplateBar } from './OnbSetupTemplateBar';
+import { TemplateDraftView } from './OnbSetupTemplate';
 
 /* Qnipay setup → Modules → Onboarding → Onboarding setup: the prototype's
    admOnboarding (qnipay-workforce-v15.html:4672-4728) with its step switch,
@@ -22,7 +26,9 @@ import { DocumentsCard } from './OnbSetupDocuments';
    fixed ones are always asked, and a step whose features are off under
    Modules and features cannot be switched and says why. Each policy is its own
    row with its own actions (OnbSetupPolicies.tsx). There is no guide: the
-   prototype has none for this page. */
+   prototype has none for this page. A template bar sits above the cards: the
+   Default template is the page below it, and each named template has a draft
+   of its own (OnbSetupTemplate.tsx). The open template is ?template=<id>. */
 const CRUMB = 'Modules · Onboarding · Onboarding setup';
 const OFF = 'The Onboarding module is off for this tenant. Turn it on under Modules & features.';
 
@@ -31,15 +37,26 @@ export function OnboardingSetupPage() {
   const on = tenant.data?.modules.ON === true;
   const setup = useOnboardingSetup(on);
   const refused = setup.error instanceof ApiError ? setup.error.refusal : null;
+  const [params, setParams] = useSearchParams();
+  const [dirty, setDirty] = useState(false);
+  /* an id nobody holds any more (deleted, or typed) opens Default */
+  const asked = params.get('template');
+  const named = setup.data?.templates.find(t => t.id === asked);
+  const selected = named?.id ?? DEFAULT_KEY;
+  const select = useCallback((key: string) => setParams(key === DEFAULT_KEY ? {} : { template: key }), [setParams]);
+  const toDefault = useCallback(() => setParams({}), [setParams]);
   return (
     <Page testId={tid.page('monb')}>
       <PageHead title="Onboarding setup" crumb={CRUMB} tipTestId={tid.head.tip('monb')}
         tip="What a new starter completes, what they must prove, and who checks it"
         actions={tenant.data && !on ? undefined : <Caution testId={tid.head.caution('monb')} text={REQUIRED_CHANGE_WARNING} />} />
       {tenant.data && !on && <Card><Empty testId={tid.monb.off}>{OFF}</Empty></Card>}
+      {on && setup.data && <TemplateBar setup={setup.data} selected={selected} dirty={dirty} dirtyName={named?.name ?? DEFAULT_TEMPLATE} onSelect={select} />}
       {on && (setup.data
         /* the draft starts again from what the server holds whenever the config gets a new version: after a save, or after a 412 */
-        ? <SetupDraftView key={versionKey(setup.data.config)} setup={setup.data} />
+        ? (named
+          ? <TemplateDraftView key={named.id} setup={setup.data} id={named.id} onDirtyChange={setDirty} onDeleted={toDefault} />
+          : <SetupDraftView key={versionKey(setup.data.config)} setup={setup.data} onDirtyChange={setDirty} />)
         : !setup.isError && <p data-testid={tid.monb.loading} className="text-text-secondary">Loading Onboarding setup&hellip;</p>)}
       {(setup.isError || tenant.isError) && <p data-testid={tid.monb.error} role="alert" className="text-err">
         {refused && refused.code !== 'network' ? `${refused.message} ${refused.next}` : 'Onboarding setup could not be loaded. Reload the page.'}</p>}
@@ -49,11 +66,13 @@ export function OnboardingSetupPage() {
 const draftOf = (c: OnboardingSetup['config']): UpdateOnboardingConfig =>
   ({ steps: c.steps.map(s => ({ ...s })), documents: c.documents.map(d => ({ ...d })) });
 
-function SetupDraftView({ setup }: { setup: OnboardingSetup }) {
+function SetupDraftView({ setup, onDirtyChange }: { setup: OnboardingSetup; onDirtyChange(dirty: boolean): void }) {
   const { config } = setup;
   const [draft, setDraft] = useState<UpdateOnboardingConfig>(() => draftOf(config));
   const save = useSaveOnboardingConfig();
   const dirty = JSON.stringify(draft) !== JSON.stringify(draftOf(config));
+  useEffect(() => { onDirtyChange(dirty); }, [dirty, onDirtyChange]);
+  useEffect(() => () => onDirtyChange(false), [onDirtyChange]);
   const fe = save.fieldError;
   const setStep = (id: string, on: boolean) => setDraft(d => ({ ...d, steps: d.steps.map(s => (s.id === id ? { ...s, on } : s)) }));
   const setDoc = (id: string, patch: Partial<UpdateOnboardingConfig['documents'][number]>) =>
@@ -64,28 +83,7 @@ function SetupDraftView({ setup }: { setup: OnboardingSetup }) {
 
   return (
     <>
-      <AdminCard testId={tid.monb.card('steps')} icon={<ClipboardList />} title="Steps" tipTestId={tid.monb.tip('steps')}
-        tip="The order a new starter works through. A step you switch off is not asked for at all.">
-        {draft.steps.map(s => {
-          const at = setup.steps.find(x => x.id === s.id);
-          const available = at?.available !== false;
-          const err = fe(`steps.${s.id}`);
-          return (
-            <SettingRow key={s.id} testId={tid.monb.step(s.id)}
-              title={<>{s.label}{s.fixed && <span className="ml-[6px]"><ScopeBadge>Always asked</ScopeBadge></span>}</>}
-              desc={<>{s.desc}
-                {!available && <span data-testid={tid.monb.stepNeeds(s.id)} className="mt-px block text-warn">
-                  {STEP_UNAVAILABLE}{at?.needs ? ` It needs ${at.needs}.` : ''}</span>}
-                {err && <span data-testid={tid.monb.stepError(s.id)} role="alert" className="mt-px block text-err">{err}</span>}</>}>
-              {s.fixed
-                ? <Pill testId={tid.monb.stepOn(s.id)} tone="ok" glyph="✓">On</Pill>
-                /* as the prototype, a step whose features are off cannot be switched either way */
-                : <SwitchField testId={tid.monb.stepSwitch(s.id)} aria-label={`Ask for ${s.label}`} checked={s.on} disabled={!available}
-                    onCheckedChange={v => setStep(s.id, v)} />}
-            </SettingRow>);
-        })}
-        <CardNote>{ALWAYS_ASKED} Everything else is your choice.</CardNote>
-      </AdminCard>
+      <StepsCard setup={setup} steps={draft.steps} fe={fe} onChange={setStep} />
 
       <DocumentsCard setup={setup} docs={draft.documents} locked={dirty} fe={fe} onChange={setDoc} />
 
