@@ -1,6 +1,7 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/ui/shadcn/select';
 
-export interface SelectOption { value: string; label: string; }
+/* disabled: shown, but cannot be chosen (a job profile another template already holds). */
+export interface SelectOption { value: string; label: string; disabled?: boolean; }
 
 export interface SelectBoxProps {
   testId: string;
@@ -35,7 +36,7 @@ export function SelectBox({ testId, options, value, onValueChange, placeholder, 
       </SelectTrigger>
       <SelectContent>
         {options.map(o => (
-          <SelectItem key={o.value} value={o.value} data-testid={`${testId}-option-${o.value}`}>{o.label}</SelectItem>
+          <SelectItem key={o.value} value={o.value} data-testid={`${testId}-option-${o.value}`} disabled={o.disabled}>{o.label}</SelectItem>
         ))}
       </SelectContent>
     </Select>

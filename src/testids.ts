@@ -601,6 +601,11 @@ export const tid = {
     /* templates by job profile: the bar, the New template dialog and a template while it loads */
     templateBar: 'monb-template-bar', template: 'monb-template', templateNew: 'monb-template-new', templateLoading: 'monb-template-loading',
     newName: 'monb-new-name', newFrom: 'monb-new-from', newWarn: 'monb-new-warn', newCancel: 'monb-new-cancel', newCreate: 'monb-new-create',
+    /* the Applies to card: job profile chips, the add picker, Rename and Delete */
+    profile: (code: string) => k('monb-profile', code), profileRemove: (code: string) => k('monb-profile-remove', code),
+    profilesEmpty: 'monb-profiles-empty', profileAdd: 'monb-profile-add', profileError: 'monb-profile-error', nameError: 'monb-name-error',
+    templateRename: 'monb-template-rename', templateDelete: 'monb-template-delete',
+    renameName: 'monb-rename-name', renameWarn: 'monb-rename-warn', renameCancel: 'monb-rename-cancel', renameSave: 'monb-rename-save',
   },
   /* module 3: Qnipay setup → Integrations → IT service desk (admIT, v15:9689) */
   iit: {

@@ -177,3 +177,31 @@ test('the trigger carries the select-trigger slot', () => {
   render(<Combobox testId="role-select" options={ROLES} />);
   expect(screen.getByTestId('role-select')).toHaveAttribute('data-slot', 'select-trigger');
 });
+
+test('a disabled option is shown, announced as unavailable and cannot be picked', async () => {
+  const onValueChange = vi.fn();
+  render(<Combobox testId="t-pick" aria-label="Pick" options={[{ value: 'A', label: 'A' }, { value: 'B', label: 'B, in X', disabled: true }]} onValueChange={onValueChange} />);
+  await userEvent.click(screen.getByTestId('t-pick'));
+  const b = screen.getByTestId('t-pick-option-B');
+  expect(b).toHaveAttribute('aria-disabled', 'true');
+  await userEvent.click(b);
+  await userEvent.keyboard('{Enter}');
+  expect(onValueChange).not.toHaveBeenCalled();
+});
+
+test('the arrow keys still reach a disabled option, and Enter on it picks nothing', async () => {
+  const onValueChange = vi.fn();
+  render(<Combobox testId="t-pick" aria-label="Pick" options={[{ value: 'A', label: 'A' }, { value: 'B', label: 'B, in X', disabled: true }]} onValueChange={onValueChange} />);
+  await userEvent.click(screen.getByTestId('t-pick'));
+  await userEvent.keyboard('{ArrowDown}');
+  expect(screen.getByTestId('t-pick-search')).toHaveAttribute('aria-activedescendant', screen.getByTestId('t-pick-option-B').id);
+  await userEvent.keyboard('{Enter}');
+  expect(onValueChange).not.toHaveBeenCalled();
+  expect(screen.getByRole('listbox')).toBeInTheDocument();
+});
+
+test('options without the flag are not announced as unavailable', async () => {
+  render(<Combobox testId="t-pick" aria-label="Pick" options={ROLES} />);
+  await userEvent.click(screen.getByTestId('t-pick'));
+  for (const o of screen.getAllByRole('option')) expect(o).not.toHaveAttribute('aria-disabled');
+});

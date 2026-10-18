@@ -61,7 +61,7 @@ export function Combobox({ testId, options, value, onValueChange, placeholder, d
     else if (e.key === 'ArrowUp' && n) { e.preventDefault(); setActive((current - 1 + n) % n); }
     else if (e.key === 'Home' && n) { e.preventDefault(); setActive(0); }
     else if (e.key === 'End' && n) { e.preventDefault(); setActive(n - 1); }
-    else if (e.key === 'Enter') { e.preventDefault(); const o = shown[current]; if (o) pick(o.value); }
+    else if (e.key === 'Enter') { e.preventDefault(); const o = shown[current]; if (o && !o.disabled) pick(o.value); }
   }
 
   return (
@@ -95,11 +95,11 @@ export function Combobox({ testId, options, value, onValueChange, placeholder, d
           </div>
           <div ref={setList} id={listId} role="listbox" aria-label={ariaLabel ?? searchLabel} className="max-h-[min(300px,calc(var(--radix-popover-content-available-height)-56px))] overflow-y-auto p-1">
             {shown.map((o, i) => (
-              <div key={o.value} id={optionId(i)} role="option" aria-selected={o.value === value}
+              <div key={o.value} id={optionId(i)} role="option" aria-selected={o.value === value} aria-disabled={o.disabled ? true : undefined}
                 data-testid={`${testId}-option-${o.value}`} data-active={i === current ? '' : undefined}
                 onMouseDown={e => e.preventDefault()} onMouseMove={() => { if (i !== current) setActive(i); }}
-                onClick={() => pick(o.value)}
-                className="relative flex w-full cursor-default items-center gap-2 rounded-sm py-[9px] pr-8 pl-[11px] text-sm select-none data-[active]:bg-surface-tint aria-selected:font-semibold">
+                onClick={() => { if (!o.disabled) pick(o.value); }}
+                className="relative flex w-full cursor-default items-center gap-2 rounded-sm py-[9px] pr-8 pl-[11px] text-sm select-none data-[active]:bg-surface-tint aria-selected:font-semibold aria-disabled:text-text-muted">
                 {o.label}
                 {o.value === value && <span className="absolute right-2 flex size-3.5 items-center justify-center"><CheckIcon className="size-4 text-muted-foreground" /></span>}
               </div>
