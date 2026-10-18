@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Lock } from 'lucide-react';
 import { tid } from '@/testids';
-import { AdminCard, Button, CardNote, ConfirmModal, Empty, Field, FieldGrid, FormWarn, Modal, Row, Small, TextInput, Wide, toastInfo, toastRefusal } from '@/ui';
+import { AdminCard, Button, CardNote, ConfirmModal, Empty, Field, FieldGrid, FormWarn, Modal, Row, Small, SwitchField, TextInput, Wide, toastInfo, toastRefusal } from '@/ui';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/ui/shadcn/table';
 import {
   useAddOnboardingPolicy, useEditOnboardingPolicy, useRemoveOnboardingPolicy, useUploadOnboardingPolicy, type OnbPolicySetupView,
@@ -23,7 +23,10 @@ export const DENSE_TEXT = 'md:[&_td]:text-sm md:[&_th]:text-sm';
 
 type Box = { k: 'add' } | { k: 'edit' | 'remove'; id: string } | null;
 
-export function PoliciesCard({ policies }: { policies: readonly OnbPolicySetupView[] }) {
+/* Which policies the selected template asks for is part of the page's draft; adding or removing a policy is a write of its own, so both wait while the page has unsaved changes. */
+export function PoliciesCard({ policies, asked, onAsk, locked }: {
+  policies: readonly OnbPolicySetupView[]; asked: readonly string[]; onAsk(id: string, on: boolean): void; locked: boolean;
+}) {
   const [box, setBox] = useState<Box>(null);
   const [target, setTarget] = useState<OnbPolicySetupView | null>(null);
   const input = useRef<HTMLInputElement>(null);
@@ -46,12 +49,14 @@ export function PoliciesCard({ policies }: { policies: readonly OnbPolicySetupVi
       {n
         ? <Table data-testid={tid.monb.policies} variant="records" dense className={DENSE_TEXT}>
             <TableHeader><TableRow>
-              <TableHead>Policy</TableHead><TableHead>Version</TableHead><TableHead>Document</TableHead>
+              <TableHead>Policy</TableHead><TableHead>Asked</TableHead><TableHead>Version</TableHead><TableHead>Document</TableHead>
               <TableHead className="text-right">Acknowledged</TableHead><TableHead><span className="sr-only">Actions</span></TableHead>
             </TableRow></TableHeader>
             <TableBody>{policies.map(p => (
               <Row key={p.id} testId={tid.monb.pol(p.id)}>
                 <TableCell kind="title"><strong>{p.label}</strong>{p.sum && <span className="block text-xs font-normal text-text-muted">{p.sum}</span>}</TableCell>
+                <TableCell label="Asked">
+                  <SwitchField testId={tid.monb.polAsked(p.id)} aria-label={`Ask for ${p.label}`} checked={asked.includes(p.id)} onCheckedChange={v => onAsk(p.id, v)} /></TableCell>
                 <TableCell label="Version" data-testid={tid.monb.polVer(p.id)} className="font-mono">{p.ver}</TableCell>
                 <TableCell label="Document">{p.file
                   ? <FileCell f={p.file} testId={tid.monb.polFile(p.id)} />
@@ -65,15 +70,16 @@ export function PoliciesCard({ policies }: { policies: readonly OnbPolicySetupVi
                     <Button testId={tid.monb.polUpload(p.id)} kind="ghost" small pending={upload.isPending(`onboarding/policy/${p.id}`)}
                       onClick={() => pick(p)}>{p.file ? 'Replace' : 'Upload'}</Button>
                     <Button testId={tid.monb.polEdit(p.id)} kind="ghost" small onClick={() => setBox({ k: 'edit', id: p.id })}>Edit</Button>
-                    <Button testId={tid.monb.polRemove(p.id)} kind="ghost" small onClick={() => setBox({ k: 'remove', id: p.id })}>Remove</Button>
+                    <Button testId={tid.monb.polRemove(p.id)} kind="ghost" small disabled={locked} onClick={() => setBox({ k: 'remove', id: p.id })}>Remove</Button>
                   </span>
                 </TableCell>
               </Row>))}</TableBody>
           </Table>
         : <Empty testId={tid.monb.polsEmpty}>No policies yet. New starters are not asked to read anything.</Empty>}
       <div className="mt-lg flex flex-wrap gap-sm">
-        <Button testId={tid.monb.polAdd} kind="primary" small onClick={() => setBox({ k: 'add' })}>Add a policy</Button>
+        <Button testId={tid.monb.polAdd} kind="primary" small disabled={locked} onClick={() => setBox({ k: 'add' })}>Add a policy</Button>
       </div>
+      {locked && <p data-testid={tid.monb.polLocked} className="mt-xs text-xs text-text-muted">Save or cancel the changes on this page before adding or removing a policy.</p>}
       <CardNote>Uploading a new document raises the version. Anybody who acknowledged an earlier version is asked again, because they agreed to something different.</CardNote>
       <input ref={input} type="file" accept={UPLOAD_ACCEPT} data-testid={tid.monb.filePick} aria-label="Choose a policy document to upload" className="hidden"
         onChange={e => { const file = e.target.files?.[0]; if (file && target) onFile(target, file); }} />

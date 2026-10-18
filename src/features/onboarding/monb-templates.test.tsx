@@ -212,3 +212,59 @@ describe('Onboarding setup: Applies to', () => {
     expect(screen.queryByTestId(tid.monb.templateLoading)).toBeNull();
   });
 });
+
+describe('Onboarding setup: documents and policies per template', () => {
+  const checked = (testId: string) => screen.getByTestId(testId).getAttribute('aria-checked');
+  test('on a named template the documents show its switches, with the shared settings read-only and no add, rename or remove', async () => {
+    await open(`/setup/monb?template=${SENIOR}`);
+    expect(await screen.findByTestId(tid.monb.docVerifyText('rtw'))).toHaveTextContent('HR');
+    expect(screen.getByTestId(tid.monb.docExpiryText('rtw'))).toHaveTextContent('Yes');
+    expect(screen.getByTestId(tid.monb.docShared)).toHaveTextContent('Verified by and Expiry tracked are set on the Default template and shared by every template.');
+    expect(screen.queryByTestId(tid.monb.docAdd)).toBeNull();
+    expect(screen.queryByTestId(tid.monb.docVerify('rtw'))).toBeNull();
+    expect(screen.queryByTestId(tid.monb.docRename('rtw'))).toBeNull();
+    expect(screen.queryByTestId(tid.monb.docRemove('rtw'))).toBeNull();
+    expectTestIdCoverage(document.body);
+  });
+
+  test('switching a document off on a named template saves on the template, not on the default', async () => {
+    await open(`/setup/monb?template=${SENIOR}`);
+    await userEvent.click(await screen.findByTestId(tid.monb.docOn('addr')));
+    await userEvent.click(screen.getByTestId(tid.monb.save));
+    await waitFor(() => expect(templates()[SENIOR]?.documents.find(d => d.id === 'addr')?.on).toBe(false));
+    const config = store.coll<{ documents: { id: string; on: boolean }[] }>('onboardingConfig').onboardingConfig;
+    expect(config?.documents.find(d => d.id === 'addr')?.on).toBe(true);
+  });
+
+  test('each policy has an Asked switch for the selected template; on Default it saves with the config', async () => {
+    await open();
+    const itsec = await screen.findByTestId(tid.monb.polAsked('pol_itsec'));
+    expect(itsec).toHaveAttribute('aria-checked', 'true');
+    await userEvent.click(itsec);
+    await userEvent.click(screen.getByTestId(tid.monb.save));
+    await waitFor(() => expect(toasts()).toContain('Policy choices saved.'));
+    const config = store.coll<{ policies: string[] }>('onboardingConfig').onboardingConfig;
+    expect(config?.policies).not.toContain('pol_itsec');
+    cleanup();
+    await open(`/setup/monb?template=${SENIOR}`);
+    const handbook = await screen.findByTestId(tid.monb.polAsked('pol_handbook'));
+    expect(handbook).toHaveAttribute('aria-checked', 'false');
+    await userEvent.click(handbook);
+    await userEvent.click(screen.getByTestId(tid.monb.save));
+    await waitFor(() => expect(templates()[SENIOR]?.policies).toContain('pol_handbook'));
+    expect(checked(tid.monb.polAsked('pol_handbook'))).toBe('true');
+  });
+
+  test('adding or removing a policy waits while the page has unsaved changes; upload and edit do not', async () => {
+    await open();
+    expect(await screen.findByTestId(tid.monb.polAdd)).toBeEnabled();
+    expect(screen.queryByTestId(tid.monb.polLocked)).toBeNull();
+    await userEvent.click(screen.getByTestId(tid.monb.stepSwitch('emergency')));
+    expect(screen.getByTestId(tid.monb.polAdd)).toBeDisabled();
+    expect(screen.getByTestId(tid.monb.polRemove('pol_itsec'))).toBeDisabled();
+    expect(screen.getByTestId(tid.monb.polLocked)).toHaveTextContent('Save or cancel the changes on this page before adding or removing a policy.');
+    expect(screen.getByTestId(tid.monb.polUpload('pol_itsec'))).toBeEnabled();
+    expect(screen.getByTestId(tid.monb.polEdit('pol_itsec'))).toBeEnabled();
+    expectTestIdCoverage(document.body);
+  });
+});

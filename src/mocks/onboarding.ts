@@ -495,7 +495,7 @@ export const onboardingHandlers = [
     Reflect.deleteProperty(policiesColl(), p.id);
     /* a policy re-added under the same name gets the same id, so no template may keep asking for the old one */
     const base = onbConfig(), holders = templatesNow().filter(t => t.policies.includes(p.id));
-    store.coll<StoredConfig>('onboardingConfig')[base.id] = bump(base, { policies: base.policies.filter(id => id !== p.id) });
+    if (base.policies.includes(p.id)) store.coll<StoredConfig>('onboardingConfig')[base.id] = bump(base, { policies: base.policies.filter(id => id !== p.id) });
     for (const t of holders) templatesColl()[t.id] = bump(t, { policies: t.policies.filter(id => id !== p.id) });
     /* past acknowledgements stay on the cases and in the audit trail */
     const auditId = writeAudit({ who: actor(session), act: 'Policy removed', entity: 'onboardingPolicy', entityId: p.id,

@@ -64,7 +64,7 @@ export function OnboardingSetupPage() {
 }
 
 const draftOf = (c: OnboardingSetup['config']): UpdateOnboardingConfig =>
-  ({ steps: c.steps.map(s => ({ ...s })), documents: c.documents.map(d => ({ ...d })) });
+  ({ steps: c.steps.map(s => ({ ...s })), documents: c.documents.map(d => ({ ...d })), policies: [...c.policies] });
 
 function SetupDraftView({ setup, onDirtyChange }: { setup: OnboardingSetup; onDirtyChange(dirty: boolean): void }) {
   const { config } = setup;
@@ -77,6 +77,8 @@ function SetupDraftView({ setup, onDirtyChange }: { setup: OnboardingSetup; onDi
   const setStep = (id: string, on: boolean) => setDraft(d => ({ ...d, steps: d.steps.map(s => (s.id === id ? { ...s, on } : s)) }));
   const setDoc = (id: string, patch: Partial<UpdateOnboardingConfig['documents'][number]>) =>
     setDraft(d => ({ ...d, documents: d.documents.map(x => (x.id === id ? { ...x, ...patch } : x)) }));
+  const askPolicy = (id: string, on: boolean) =>
+    setDraft(d => ({ ...d, policies: [...(d.policies ?? []).filter(x => x !== id), ...(on ? [id] : [])] }));
   /* the server's summary is the toast: a switched step says employees part-way through keep what they gave */
   const submit = () => save.mutate({ config, body: draft }, { onSuccess: d => toastInfo(d.summary) });
   const cancel = () => { setDraft(draftOf(config)); save.clearFieldErrors(); };
@@ -88,7 +90,7 @@ function SetupDraftView({ setup, onDirtyChange }: { setup: OnboardingSetup; onDi
       <DocumentsCard setup={setup} docs={draft.documents} locked={dirty} fe={fe} onChange={setDoc} />
 
       {save.refusal && <FormWarn testId={tid.monb.warn}>{save.refusal.message} {save.refusal.next}</FormWarn>}
-      <PoliciesCard policies={setup.policies} />
+      <PoliciesCard policies={setup.policies} asked={draft.policies ?? []} onAsk={askPolicy} locked={dirty} />
       {/* Save and Cancel stay in reach while a change waits to be saved */}
       <ActionBar stuck={dirty}>
         {dirty && <span data-testid={tid.monb.dirty} className="mr-auto text-xs text-text-muted">Unsaved changes</span>}

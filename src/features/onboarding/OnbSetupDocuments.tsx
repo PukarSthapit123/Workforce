@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import {
   useAddOnboardingDocument, useRemoveOnboardingDocument, useRenameOnboardingDocument, type OnbDocumentRecord, type OnboardingSetup,
 } from '@/api/onboarding';
-import { documentProblem, isVerifier } from '@/domain/onboarding';
+import { documentProblem, isVerifier, verifierLabel } from '@/domain/onboarding';
 import { DENSE_TEXT } from './OnbSetupPolicies';
 
 /* The Documents card of Onboarding setup (admOnboarding, v15:4690-4704). The
@@ -21,8 +21,8 @@ import { DENSE_TEXT } from './OnbSetupPolicies';
 type DocKey = 'req' | 'blocks' | 'expiry' | 'on';
 type Box = { k: 'add' } | { k: 'rename' | 'remove'; id: string } | null;
 
-export function DocumentsCard({ setup, docs, locked, fe, onChange }: {
-  setup: OnboardingSetup; docs: readonly OnbDocumentRecord[]; locked: boolean;
+export function DocumentsCard({ setup, docs, locked, shared, fe, onChange }: {
+  setup: OnboardingSetup; docs: readonly OnbDocumentRecord[]; locked: boolean; shared?: boolean;
   fe(field: string): string | undefined; onChange(id: string, patch: Partial<OnbDocumentRecord>): void;
 }) {
   const [box, setBox] = useState<Box>(null);
@@ -50,16 +50,20 @@ export function DocumentsCard({ setup, docs, locked, fe, onChange }: {
                 <span className="block text-xs font-normal text-text-muted">{d.hint}</span></TableCell>
               {sw('on', 'asked for', tid.monb.docOn(d.id), 'Asked')}
               {sw('req', 'required', tid.monb.docReq(d.id), 'Required')}
-              <TableCell label="Verified by">
+              {shared
+                ? <TableCell label="Verified by"><span data-testid={tid.monb.docVerifyText(d.id)}>{verifierLabel(d.verify)}</span></TableCell>
+                : <TableCell label="Verified by">
                 <SettingSelect testId={tid.monb.docVerify(d.id)} small aria-label={`${d.label} verified by`} value={d.verify}
                   aria-invalid={err ? true : undefined} onChange={e => { const v = e.target.value; if (isVerifier(v)) onChange(d.id, { verify: v }); }}>
                   {setup.verifiers.map(v => <option key={v.value} value={v.value}>{v.label}</option>)}</SettingSelect>
                 {err && <p role="alert" className="mt-xs text-xs text-err">{err}</p>}
-              </TableCell>
+              </TableCell>}
               {sw('blocks', 'blocks start', tid.monb.docBlocks(d.id), 'Blocks start')}
-              {sw('expiry', 'expiry tracked', tid.monb.docExpiry(d.id), 'Expiry tracked')}
-              <TableCell kind="foot" empty={!d.custom} className="text-right whitespace-nowrap">
-                {d.custom && <span className="inline-flex gap-[6px] max-md:grid max-md:w-full max-md:grid-cols-2">
+              {shared
+                ? <TableCell label="Expiry tracked"><span data-testid={tid.monb.docExpiryText(d.id)}>{d.expiry ? 'Yes' : 'No'}</span></TableCell>
+                : sw('expiry', 'expiry tracked', tid.monb.docExpiry(d.id), 'Expiry tracked')}
+              <TableCell kind="foot" empty={shared || !d.custom} className="text-right whitespace-nowrap">
+                {!shared && d.custom && <span className="inline-flex gap-[6px] max-md:grid max-md:w-full max-md:grid-cols-2">
                   <Button testId={tid.monb.docRename(d.id)} kind="ghost" small disabled={locked} onClick={() => setBox({ k: 'rename', id: d.id })}>Rename</Button>
                   <Button testId={tid.monb.docRemove(d.id)} kind="ghost" small disabled={locked} onClick={() => setBox({ k: 'remove', id: d.id })}>Remove</Button>
                 </span>}
@@ -67,11 +71,13 @@ export function DocumentsCard({ setup, docs, locked, fe, onChange }: {
             </Row>);
         })}</TableBody>
       </Table>
-      <div className="mt-lg flex flex-wrap gap-sm">
+      {!shared && <div className="mt-lg flex flex-wrap gap-sm">
         <Button testId={tid.monb.docAdd} kind="ghost" small disabled={locked} onClick={() => setBox({ k: 'add' })}>Add a document</Button>
-      </div>
-      {locked && <p data-testid={tid.monb.docLocked} className="mt-xs text-xs text-text-muted">Save or cancel the changes on this page before adding, renaming or removing a document.</p>}
-      <CardNote>A document switched off is not asked for. Built-in documents can be switched off, not removed. A document you added can be renamed, or removed while nobody is onboarding with it.</CardNote>
+      </div>}
+      {!shared && locked && <p data-testid={tid.monb.docLocked} className="mt-xs text-xs text-text-muted">Save or cancel the changes on this page before adding, renaming or removing a document.</p>}
+      {shared
+        ? <CardNote><span data-testid={tid.monb.docShared}>Verified by and Expiry tracked are set on the Default template and shared by every template.</span></CardNote>
+        : <CardNote>A document switched off is not asked for. Built-in documents can be switched off, not removed. A document you added can be renamed, or removed while nobody is onboarding with it.</CardNote>}
       {box?.k === 'add' && <DocumentDialog setup={setup} onClose={close} />}
       {box?.k === 'rename' && cur && <DocumentDialog setup={setup} doc={cur} onClose={close} />}
       {box?.k === 'remove' && cur && <ConfirmModal open onOpenChange={o => { if (!o) close(); }} title={`Remove ${cur.label}?`}

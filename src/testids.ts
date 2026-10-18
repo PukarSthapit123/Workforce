@@ -588,10 +588,11 @@ export const tid = {
     stepNeeds: (id: string) => k('monb-step-needs', id), stepError: (id: string) => k('monb-step-error', id),
     docs: 'monb-docs', doc: (id: string) => k('monb-doc', id), docReq: (id: string) => k('monb-doc-req', id), docVerify: (id: string) => k('monb-doc-verify', id),
     docBlocks: (id: string) => k('monb-doc-blocks', id), docExpiry: (id: string) => k('monb-doc-expiry', id),
+    docVerifyText: (id: string) => k('monb-doc-verify-text', id), docExpiryText: (id: string) => k('monb-doc-expiry-text', id), docShared: 'monb-doc-shared',
     policies: 'monb-policies', polCount: 'monb-pol-count', polsEmpty: 'monb-pols-empty', pol: (id: string) => k('monb-pol', id),
     polVer: (id: string) => k('monb-pol-ver', id), polFile: (id: string) => k('monb-pol-file', id), polAcks: (id: string) => k('monb-pol-acks', id),
     polUpload: (id: string) => k('monb-pol-upload', id), polEdit: (id: string) => k('monb-pol-edit', id), polRemove: (id: string) => k('monb-pol-remove', id),
-    polAdd: 'monb-pol-add', filePick: 'monb-file-pick',
+    polAdd: 'monb-pol-add', polAsked: (id: string) => k('monb-pol-asked', id), polLocked: 'monb-pol-locked', filePick: 'monb-file-pick',
     /* the add and edit dialog (pol-add, pol-edit) */
     polName: 'monb-pol-name', polVersion: 'monb-pol-version', polSum: 'monb-pol-sum', polWarn: 'monb-pol-warn', polCancel: 'monb-pol-cancel', polSave: 'monb-pol-save',
     /* module 8: a document switched off, and the documents this tenant adds, renames and removes */

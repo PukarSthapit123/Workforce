@@ -3,11 +3,13 @@ import { tid } from '@/testids';
 import { ActionBar, Button, FormWarn, toastInfo } from '@/ui';
 import { ApiError } from '@/api/client';
 import {
-  useDeleteOnboardingTemplate, useOnboardingTemplate, useSaveOnboardingTemplate, type OnbStepRecord, type OnbTemplateRecord, type OnboardingSetup, type UpdateOnbTemplate,
+  useDeleteOnboardingTemplate, useOnboardingTemplate, useSaveOnboardingTemplate, type OnbDocumentRecord, type OnbStepRecord, type OnbTemplateRecord, type OnboardingSetup, type UpdateOnbTemplate,
 } from '@/api/onboarding';
 import { versionKey } from '@/lib/latest';
 import { StepsCard } from './OnbSetupSteps';
 import { AppliesToCard } from './OnbSetupApplies';
+import { DocumentsCard } from './OnbSetupDocuments';
+import { PoliciesCard } from './OnbSetupPolicies';
 
 /* A named template: its own draft, saved whole with If-Match. The labels,
    descriptions and checks of steps and documents stay on the shared config. */
@@ -42,6 +44,18 @@ function TemplateDraft({ setup, record, onDirtyChange, onDeleted }: {
   const fe = save.fieldError;
   const steps: OnbStepRecord[] = setup.config.steps.map(s => ({ ...s, on: s.fixed || (draft.steps.find(x => x.id === s.id)?.on ?? false) }));
   const setStep = (stepId: string, on: boolean) => setDraft(d => ({ ...d, steps: d.steps.map(s => (s.id === stepId ? { ...s, on } : s)) }));
+  /* the rows come from the shared list; a document the draft lacks (added after it was loaded) shows switched off */
+  const docs: OnbDocumentRecord[] = setup.config.documents.map(d => {
+    const own = draft.documents.find(x => x.id === d.id);
+    return { ...d, on: own?.on ?? false, req: own?.req ?? false, blocks: own?.blocks ?? false };
+  });
+  const setDoc = (docId: string, p: Partial<OnbDocumentRecord>) => setDraft(d => {
+    const base = { id: docId, on: false, req: false, blocks: false };
+    const next = (x: UpdateOnbTemplate['documents'][number]) => ({ ...x, ...(p.on !== undefined && { on: p.on }), ...(p.req !== undefined && { req: p.req }), ...(p.blocks !== undefined && { blocks: p.blocks }) });
+    return { ...d, documents: d.documents.some(x => x.id === docId) ? d.documents.map(x => (x.id === docId ? next(x) : x)) : [...d.documents, next(base)] };
+  });
+  const askPolicy = (policyId: string, on: boolean) =>
+    setDraft(d => ({ ...d, policies: [...d.policies.filter(x => x !== policyId), ...(on ? [policyId] : [])] }));
   const patch = (p: Partial<UpdateOnbTemplate>) => setDraft(d => ({ ...d, ...p }));
   const submit = () => save.mutate({ template: record, body: draft }, { onSuccess: d => toastInfo(d.summary) });
   const del = () => remove.mutate({ template: record }, { onSuccess: r => { onDeleted(); toastInfo(r.summary); } });
@@ -51,7 +65,9 @@ function TemplateDraft({ setup, record, onDirtyChange, onDeleted }: {
     <>
       <AppliesToCard setup={setup} templateId={record.id} draft={draft} fe={fe} onChange={patch} onDelete={del} deleting={remove.anyPending} />
       <StepsCard setup={setup} steps={steps} fe={fe} onChange={setStep} />
+      <DocumentsCard setup={setup} docs={docs} locked={dirty} shared fe={fe} onChange={setDoc} />
       {save.refusal && <FormWarn testId={tid.monb.warn}>{save.refusal.message} {save.refusal.next}</FormWarn>}
+      <PoliciesCard policies={setup.policies} asked={draft.policies} onAsk={askPolicy} locked={dirty} />
       <ActionBar stuck={dirty}>
         {dirty && <span data-testid={tid.monb.dirty} className="mr-auto text-xs text-text-muted">Unsaved changes</span>}
         <Button testId={tid.monb.cancel} kind="ghost" disabled={!dirty || save.anyPending} onClick={cancel}>Cancel</Button>

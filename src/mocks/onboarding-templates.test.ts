@@ -178,6 +178,20 @@ describe('onboarding templates: writes', () => {
     expect(refusal(bad).field).toBe('policies');
     expect(snapshot(...WRITES)).toEqual(before);
   });
+  test('removing a policy only a named template asked for leaves the default config alone but strips the template', async () => {
+    const call = await as('admin'), s = OnboardingSetup.parse((await call('GET', '/api/v1/onboarding/config')).body);
+    const three = ['pol_conduct', 'pol_privacy', 'pol_itsec'];
+    const saved = OnboardingConfigSaved.parse((await call('PUT', '/api/v1/onboarding/config', { steps: s.config.steps, documents: s.config.documents, policies: three }, s.config.version)).body);
+    const senior = await read(call, SENIOR);
+    expect((await call('PUT', `${URL}/${SENIOR}`, { ...draft(senior), policies: [...senior.policies, 'pol_handbook'] }, senior.version)).status).toBe(200);
+    const rows = onbAudits().length;
+    expect((await call('DELETE', '/api/v1/onboarding/policies/pol_handbook', undefined, s.policies.find(p => p.id === 'pol_handbook')?.version)).status).toBe(200);
+    expect(configRow()?.version).toBe(saved.record.version);
+    expect((await read(call, SENIOR)).policies).not.toContain('pol_handbook');
+    expect(onbAudits().length - rows).toBe(1);
+    expect((await call('DELETE', '/api/v1/onboarding/policies/pol_itsec', undefined, s.policies.find(p => p.id === 'pol_itsec')?.version)).status).toBe(200);
+    expect(configRow()?.version).toBe(saved.record.version + 1);
+  });
 });
 
 /* ------------------------------------------------- each case, its own template */
