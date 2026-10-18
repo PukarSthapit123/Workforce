@@ -18,7 +18,7 @@ import { writeAudit } from './audit';
 import { notifyEvent } from './notify';
 import { accountOfEmployee, accounts, effectiveCode, nameOf, employees, employeeByCode, employeeView, recordAt, today, writeHistory, type Signed, type StoredEmployee } from './world';
 import {
-  blockerContext, caseOf, casesColl, featuresNow, onbConfig, onbModuleOn, policiesColl, policiesNow, putCase, stillOnboarding, type StoredCase, type StoredConfig, type StoredPolicy,
+  blockerContext, caseOf, casesColl, featuresNow, onbConfig, policiesColl, policiesNow, putCase, refuseOnb, requireOnboarding, stillOnboarding, templatesNow, type StoredCase, type StoredConfig, type StoredPolicy,
 } from './onboarding-cases';
 import {
   ackOnboardingPolicy, addOnboardingDocument, addOnboardingPolicy, removeOnboardingDocument, renameOnboardingDocument, chaseStarter, editOnboardingPolicy, getMyOnboarding, getOnboardingSetup, getStarterOnboarding,
@@ -33,8 +33,9 @@ import {
   policyUploadedText, progress, progressText, removePolicyText, saveStep, setPolicyAck, startProblem, stepAvailable, stepNotAsked, stepOpen,
   stepSavedText, stepSwitchText, stepsAsked, submitCase, submittedText, taskState, configProblem, uploadedText, uploadProblem, verifierLabel,
   BUILT_IN_DOC, documentAddedText, documentProblem, documentRemovedText, documentRenamedText, documentUsers, newCustomDocument,
-  isStarterState, type OnbDocument, type OnboardingCase, type OnboardingConfig, type OnbFeatures, type OnbRefusal, type StepContext, type Decision,
+  isStarterState, type OnbDocument, type OnboardingCase, type OnboardingConfig, type OnbFeatures, type StepContext, type Decision,
 } from '@/domain/onboarding';
+import { templateFor } from '@/domain/onboarding-templates';
 import { LIFECYCLE, isEmployeeState, transitionProblem } from '@/domain/lifecycle';
 
 /* ------------------------------------------------------------- the world */
@@ -45,20 +46,12 @@ const firstName = (name: string) => name.split(/\s/)[0] ?? name;
 const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 const NOT_FOUND = (message: string, next = 'Reload the page.'): never => refuse(404, { code: 'not-found', message, next });
 
-/* With the Onboarding module off the whole module is hidden, and so refused here. */
-function requireOnboarding() {
-  if (!onbModuleOn()) refuse(403, { code: 'module-off', message: 'Onboarding is switched off for this organisation.', next: 'An administrator can switch the Onboarding module on in Qnipay setup.' });
-}
 /* A document the tenant added: a built-in one is switched off, never renamed or removed. */
 function customDoc(c: StoredConfig, id: string): OnbDocument {
   const d = c.documents.find(x => x.id === id) ?? NOT_FOUND(`There is no document "${id}".`, 'Reload the page to see the documents.');
   if (!d.custom) refuse(409, { code: 'built-in', field: `documents.${d.id}`, message: BUILT_IN_DOC, next: 'Switch it off and save if new starters should not be asked for it.' });
   return d;
 }
-/* A domain refusal, with the status its code carries. */
-const STATUS: Record<string, number> = { NOT_FOUND: 404, SUBMITTED: 409, OUTSTANDING: 409, STALE: 409, FIXED: 409, FLAG_OFF: 409, NOT_READY: 409 };
-const refuseOnb = (p: OnbRefusal): never => refuse(STATUS[p.code] ?? 422, { ...p, code: p.code === 'VALIDATION' ? 'invalid' : p.code });
-
 /* ----------------------------------------------------------- scope (D5) */
 const seesAll = (s: Signed) => s.caps.includes('onb_cfg');
 const myLocation = (s: Signed) => employeeByCode(effectiveCode(s))?.location ?? '';
@@ -342,12 +335,16 @@ export const onboardingHandlers = [
   /* ---------------------------------------------------------------- setup */
   serve(getOnboardingSetup, () => {
     requireOnboarding();
-    const cfg = onbConfig(), f = featuresNow();
+    const cfg = onbConfig(), f = featuresNow(), templates = templatesNow();
+    const profiles = Object.values(store.coll<{ code: string; name: string }>('jobProfiles')).sort((a, b) => a.name.localeCompare(b.name) || a.code.localeCompare(b.code));
     return {
       config: cfg, policies: policiesNow().map(policySetupView), features: f,
       steps: cfg.steps.map(s => ({ id: s.id, available: stepAvailable(s.id, f), needs: STEP_NEEDS[s.id] ?? '' })),
       verifiers: VERIFIERS.map(([value, label]) => ({ value, label })),
       inProgress: starters().filter(p => recordAt(casesColl(), `onb_${p.code}`)).length,
+      templates: templates.map(t => ({ id: t.id, name: t.name, version: t.version, jobProfiles: t.jobProfiles.flatMap(code => { const j = profiles.find(x => x.code === code); return j ? [{ code, name: j.name }] : []; }),
+        starters: starters().filter(p => templateFor(p.jobProfile, templates)?.id === t.id).length })),
+      jobProfiles: profiles.map(j => ({ code: j.code, name: j.name })),
     };
   }),
 
@@ -355,7 +352,7 @@ export const onboardingHandlers = [
     requireOnboarding();
     const c = onbConfig();
     checkVersion(c);
-    const problem = configProblem(c, body, featuresNow());
+    const problem = configProblem(c, body, featuresNow(), policiesNow().map(pol => pol.id));
     if (problem) return refuseOnb(problem);
     /* only the switches and the settings are taken from what was sent: names and descriptions stay the stored ones */
     const steps = c.steps.map((s, i) => ({ ...s, on: s.fixed ? true : body.steps[i]?.on ?? s.on }));
@@ -363,16 +360,19 @@ export const onboardingHandlers = [
       const n = body.documents[i];
       return n ? { ...d, req: n.req, verify: n.verify, blocks: n.blocks, expiry: n.expiry, on: n.on } : d;
     });
+    const policies = body.policies ?? c.policies;
     const switched = steps.filter((s, i) => s.on !== c.steps[i]?.on);
     const docsChanged = documents.filter((d, i) => !sameJson(d, c.documents[i]));
-    if (!switched.length && !docsChanged.length) return { record: c, summary: 'Nothing has changed.', auditId: null };
-    const saved: StoredConfig = bump(c, { steps, documents });
+    const policiesChanged = !sameJson(policies, c.policies);
+    if (!switched.length && !docsChanged.length && !policiesChanged) return { record: c, summary: 'Nothing has changed.', auditId: null };
+    const saved = bump(c, { steps, documents, policies });
     store.coll<StoredConfig>('onboardingConfig')[c.id] = saved;
     const byId = <T extends { id: string }>(list: readonly T[], pick: (x: T) => unknown) => Object.fromEntries(list.map(x => [x.id, pick(x)]));
     const before = { ...(switched.length ? { steps: byId(switched, s => c.steps.find(x => x.id === s.id)?.on) } : {}),
-      ...(docsChanged.length ? { documents: byId(docsChanged, d => c.documents.find(x => x.id === d.id)) } : {}) };
-    const after = { ...(switched.length ? { steps: byId(switched, s => s.on) } : {}), ...(docsChanged.length ? { documents: byId(docsChanged, d => d) } : {}) };
-    const summary = [...switched.map(s => stepSwitchText(s.label, s.on)), ...(docsChanged.length ? ['Document settings saved.'] : [])].join(' ');
+      ...(docsChanged.length ? { documents: byId(docsChanged, d => c.documents.find(x => x.id === d.id)) } : {}),
+      ...(policiesChanged ? { policies: c.policies } : {}) };
+    const after = { ...(switched.length ? { steps: byId(switched, s => s.on) } : {}), ...(docsChanged.length ? { documents: byId(docsChanged, d => d) } : {}), ...(policiesChanged ? { policies } : {}) };
+    const summary = [...switched.map(s => stepSwitchText(s.label, s.on)), ...(docsChanged.length ? ['Document settings saved.'] : []), ...(policiesChanged ? ['Policy choices saved.'] : [])].join(' ');
     const auditId = writeAudit({ who: actor(session), act: 'Onboarding setup saved', entity: 'onboardingConfig', entityId: c.id, before, after: { ...after, detail: summary } });
     return { record: saved, summary, auditId };
   }),
@@ -386,7 +386,7 @@ export const onboardingHandlers = [
     if (bad) return refuseOnb(bad);
     if (c.documents.length >= 20) return refuseOnb({ code: 'VALIDATION', field: 'label', message: 'There can be at most 20 documents.', next: 'Remove one you added, or switch one off.' });
     const doc = newCustomDocument(body, c.documents);
-    const saved: StoredConfig = bump(c, { documents: [...c.documents, doc] });
+    const saved = bump(c, { documents: [...c.documents, doc] });
     store.coll<StoredConfig>('onboardingConfig')[c.id] = saved;
     const summary = documentAddedText(doc.label);
     const auditId = writeAudit({ who: actor(session), act: 'Onboarding document added', entity: 'onboardingConfig', entityId: c.id, before: null,
@@ -403,7 +403,7 @@ export const onboardingHandlers = [
     if (bad) return refuseOnb(bad);
     const label = body.label.trim(), hint = (body.hint ?? '').trim(), summary = documentRenamedText(label);
     if (label === d.label && hint === d.hint) return { record: c, summary, auditId: null };
-    const saved: StoredConfig = bump(c, { documents: c.documents.map(x => (x.id === d.id ? { ...x, label, hint } : x)) });
+    const saved = bump(c, { documents: c.documents.map(x => (x.id === d.id ? { ...x, label, hint } : x)) });
     store.coll<StoredConfig>('onboardingConfig')[c.id] = saved;
     const auditId = writeAudit({ who: actor(session), act: 'Onboarding document renamed', entity: 'onboardingConfig', entityId: c.id,
       before: { document: d.id, label: d.label, hint: d.hint }, after: { document: d.id, label, hint } });
@@ -424,7 +424,7 @@ export const onboardingHandlers = [
         next: 'Switch it off instead, so new starters are no longer asked for it.',
         usedBy: [{ kind: 'onboarding', count: users.length, examples: names.slice(0, 3) }] });
     }
-    const saved: StoredConfig = bump(c, { documents: c.documents.filter(x => x.id !== d.id) });
+    const saved = bump(c, { documents: c.documents.filter(x => x.id !== d.id) });
     store.coll<StoredConfig>('onboardingConfig')[c.id] = saved;
     const summary = documentRemovedText(d.label);
     const auditId = writeAudit({ who: actor(session), act: 'Onboarding document removed', entity: 'onboardingConfig', entityId: c.id,

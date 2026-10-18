@@ -25726,6 +25726,14 @@
                             ],
                             "additionalProperties": false
                           }
+                        },
+                        "policies": {
+                          "maxItems": 40,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "maxLength": 80
+                          }
                         }
                       },
                       "required": [
@@ -25733,7 +25741,8 @@
                         "version",
                         "updatedAt",
                         "steps",
-                        "documents"
+                        "documents",
+                        "policies"
                       ],
                       "additionalProperties": false
                     },
@@ -25936,6 +25945,76 @@
                       "type": "integer",
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
+                    },
+                    "templates": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "version": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "jobProfiles": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "code": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "code",
+                                "name"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "starters": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "version",
+                          "jobProfiles",
+                          "starters"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "jobProfiles": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "code",
+                          "name"
+                        ],
+                        "additionalProperties": false
+                      }
                     }
                   },
                   "required": [
@@ -25944,7 +26023,9 @@
                     "features",
                     "steps",
                     "verifiers",
-                    "inProgress"
+                    "inProgress",
+                    "templates",
+                    "jobProfiles"
                   ],
                   "additionalProperties": false
                 }
@@ -26108,6 +26189,14 @@
                         "custom"
                       ]
                     }
+                  },
+                  "policies": {
+                    "maxItems": 40,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "maxLength": 80
+                    }
                   }
                 },
                 "required": [
@@ -26241,6 +26330,14 @@
                             ],
                             "additionalProperties": false
                           }
+                        },
+                        "policies": {
+                          "maxItems": 40,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "maxLength": 80
+                          }
                         }
                       },
                       "required": [
@@ -26248,7 +26345,8 @@
                         "version",
                         "updatedAt",
                         "steps",
-                        "documents"
+                        "documents",
+                        "policies"
                       ],
                       "additionalProperties": false
                     },
@@ -26488,6 +26586,14 @@
                             ],
                             "additionalProperties": false
                           }
+                        },
+                        "policies": {
+                          "maxItems": 40,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "maxLength": 80
+                          }
                         }
                       },
                       "required": [
@@ -26495,7 +26601,8 @@
                         "version",
                         "updatedAt",
                         "steps",
-                        "documents"
+                        "documents",
+                        "policies"
                       ],
                       "additionalProperties": false
                     },
@@ -26777,6 +26884,14 @@
                             ],
                             "additionalProperties": false
                           }
+                        },
+                        "policies": {
+                          "maxItems": 40,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "maxLength": 80
+                          }
                         }
                       },
                       "required": [
@@ -26784,7 +26899,8 @@
                         "version",
                         "updatedAt",
                         "steps",
-                        "documents"
+                        "documents",
+                        "policies"
                       ],
                       "additionalProperties": false
                     },
@@ -27058,6 +27174,14 @@
                             ],
                             "additionalProperties": false
                           }
+                        },
+                        "policies": {
+                          "maxItems": 40,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "maxLength": 80
+                          }
                         }
                       },
                       "required": [
@@ -27065,7 +27189,8 @@
                         "version",
                         "updatedAt",
                         "steps",
-                        "documents"
+                        "documents",
+                        "policies"
                       ],
                       "additionalProperties": false
                     },
@@ -35525,6 +35650,905 @@
           },
           "403": {
             "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any other refusal or failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/onboarding/templates/{id}": {
+      "delete": {
+        "summary": "Delete an onboarding template (If-Match). Its job profiles use the Default template from now on. One audit row.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-capability": "onb_cfg",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "description": "The version of the record the change is based on, as a bare whole number such as 3 (no quotes, no W/ prefix)",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]+$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "summary": {
+                      "type": "string"
+                    },
+                    "auditId": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "summary",
+                    "auditId"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Signed out, or the credentials do not match",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The record does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "The record changed since it was read (If-Match is stale)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid; field names the part to correct",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "If-Match is missing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any other refusal or failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "One onboarding template whole: its name, job profiles, step switches, document switches and policies. Every document in the shared list has a row.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-capability": "onb_cfg",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "name": {
+                      "type": "string",
+                      "maxLength": 60
+                    },
+                    "jobProfiles": {
+                      "maxItems": 1000,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "maxLength": 20
+                      }
+                    },
+                    "steps": {
+                      "maxItems": 10,
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "enum": [
+                              "personal",
+                              "contact",
+                              "emergency",
+                              "additional",
+                              "documents",
+                              "policies",
+                              "review"
+                            ]
+                          },
+                          "on": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "on"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "documents": {
+                      "maxItems": 20,
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "maxLength": 20
+                          },
+                          "on": {
+                            "type": "boolean"
+                          },
+                          "req": {
+                            "type": "boolean"
+                          },
+                          "blocks": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "on",
+                          "req",
+                          "blocks"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "policies": {
+                      "maxItems": 40,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "maxLength": 80
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "version",
+                    "updatedAt",
+                    "name",
+                    "jobProfiles",
+                    "steps",
+                    "documents",
+                    "policies"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Signed out, or the credentials do not match",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The record does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid; field names the part to correct",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any other refusal or failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Save an onboarding template whole (If-Match): its name, job profiles, step switches, document switches and policies. A job profile another template holds is refused. One audit row.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-capability": "onb_cfg",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "description": "The version of the record the change is based on, as a bare whole number such as 3 (no quotes, no W/ prefix)",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 80
+                  },
+                  "jobProfiles": {
+                    "maxItems": 1000,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "maxLength": 20
+                    }
+                  },
+                  "steps": {
+                    "maxItems": 10,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "enum": [
+                            "personal",
+                            "contact",
+                            "emergency",
+                            "additional",
+                            "documents",
+                            "policies",
+                            "review"
+                          ]
+                        },
+                        "on": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "on"
+                      ]
+                    }
+                  },
+                  "documents": {
+                    "maxItems": 20,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "maxLength": 20
+                        },
+                        "on": {
+                          "type": "boolean"
+                        },
+                        "req": {
+                          "type": "boolean"
+                        },
+                        "blocks": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "on",
+                        "req",
+                        "blocks"
+                      ]
+                    }
+                  },
+                  "policies": {
+                    "maxItems": 40,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "maxLength": 80
+                    }
+                  }
+                },
+                "required": [
+                  "name",
+                  "jobProfiles",
+                  "steps",
+                  "documents",
+                  "policies"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "record": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "version": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "name": {
+                          "type": "string",
+                          "maxLength": 60
+                        },
+                        "jobProfiles": {
+                          "maxItems": 1000,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "maxLength": 20
+                          }
+                        },
+                        "steps": {
+                          "maxItems": 10,
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "enum": [
+                                  "personal",
+                                  "contact",
+                                  "emergency",
+                                  "additional",
+                                  "documents",
+                                  "policies",
+                                  "review"
+                                ]
+                              },
+                              "on": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "on"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "documents": {
+                          "maxItems": 20,
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "maxLength": 20
+                              },
+                              "on": {
+                                "type": "boolean"
+                              },
+                              "req": {
+                                "type": "boolean"
+                              },
+                              "blocks": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "on",
+                              "req",
+                              "blocks"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "policies": {
+                          "maxItems": 40,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "maxLength": 80
+                          }
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "version",
+                        "updatedAt",
+                        "name",
+                        "jobProfiles",
+                        "steps",
+                        "documents",
+                        "policies"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "summary": {
+                      "type": "string"
+                    },
+                    "auditId": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "record",
+                    "summary",
+                    "auditId"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Signed out, or the credentials do not match",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The record does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The change is refused because of the state of the data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "The record changed since it was read (If-Match is stale)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid; field names the part to correct",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "If-Match is missing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Any other refusal or failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/onboarding/templates": {
+      "post": {
+        "summary": "Create an onboarding template as a copy of the Default one, or of another template with copyFrom. It has no job profiles until it is saved with some. A name is needed and no two share one. One audit row.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "x-capability": "onb_cfg",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 80
+                  },
+                  "copyFrom": {
+                    "type": "string",
+                    "maxLength": 80
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "type": "object",
+                  "properties": {
+                    "record": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "version": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "name": {
+                          "type": "string",
+                          "maxLength": 60
+                        },
+                        "jobProfiles": {
+                          "maxItems": 1000,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "maxLength": 20
+                          }
+                        },
+                        "steps": {
+                          "maxItems": 10,
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "enum": [
+                                  "personal",
+                                  "contact",
+                                  "emergency",
+                                  "additional",
+                                  "documents",
+                                  "policies",
+                                  "review"
+                                ]
+                              },
+                              "on": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "on"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "documents": {
+                          "maxItems": 20,
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "maxLength": 20
+                              },
+                              "on": {
+                                "type": "boolean"
+                              },
+                              "req": {
+                                "type": "boolean"
+                              },
+                              "blocks": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "on",
+                              "req",
+                              "blocks"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "policies": {
+                          "maxItems": 40,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "maxLength": 80
+                          }
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "version",
+                        "updatedAt",
+                        "name",
+                        "jobProfiles",
+                        "steps",
+                        "documents",
+                        "policies"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "summary": {
+                      "type": "string"
+                    },
+                    "auditId": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "record",
+                    "summary",
+                    "auditId"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Signed out, or the credentials do not match",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The session lacks the capability, is viewing as someone else and so cannot make changes, or belongs to a new starter who has not started yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The record does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The change is refused because of the state of the data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refusal"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid; field names the part to correct",
             "content": {
               "application/json": {
                 "schema": {

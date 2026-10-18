@@ -6309,6 +6309,12 @@
       "on": true,
       "custom": false
      }
+    ],
+    "policies": [
+     "pol_conduct",
+     "pol_privacy",
+     "pol_handbook",
+     "pol_itsec"
     ]
    }
   },
@@ -6475,6 +6481,7 @@
     "invitedAt": "",
     "startedAt": ""
    }
-  }
+  },
+  "onboardingTemplates": {}
  }
 }

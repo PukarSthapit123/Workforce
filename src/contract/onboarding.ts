@@ -35,13 +35,27 @@ export const OnbDocumentRecord = z.object({
 });
 export type OnbDocumentRecord = z.infer<typeof OnbDocumentRecord>;
 /* The config record (D2): step switches and document settings. */
-export const OnboardingConfigRecord = RecordMeta.extend({ steps: z.array(OnbStepRecord), documents: z.array(OnbDocumentRecord) });
+export const OnboardingConfigRecord = RecordMeta.extend({
+  steps: z.array(OnbStepRecord), documents: z.array(OnbDocumentRecord),
+  /* the default template's policies: the ids of the policies a starter on no template is asked to acknowledge */
+  policies: z.array(z.string().max(80)).max(40),
+});
 export type OnboardingConfigRecord = z.infer<typeof OnboardingConfigRecord>;
 /* A policy row. `ver` is the document's own version ("v4.1"); `version` is the record's concurrency counter. */
 export const OnbPolicyRecord = RecordMeta.extend({
   label: z.string(), ver: z.string(), sum: z.string(), body: z.array(z.string()), order: z.number().int(), file: OnbFileRecord.optional(),
 });
 export type OnbPolicyRecord = z.infer<typeof OnbPolicyRecord>;
+
+/* An onboarding template: the switches a starter on one of its job profiles is asked by. Labels and checks stay on the shared config. */
+const TemplateJobProfiles = z.array(z.string().max(20)).max(1000);
+const TemplateSteps = z.array(z.object({ id: OnbStepId, on: z.boolean() })).max(10);
+const TemplateDocuments = z.array(z.object({ id: z.string().max(20), on: z.boolean(), req: z.boolean(), blocks: z.boolean() })).max(20);
+const TemplatePolicies = z.array(z.string().max(80)).max(40);
+export const OnbTemplateRecord = RecordMeta.extend({
+  name: z.string().max(60), jobProfiles: TemplateJobProfiles, steps: TemplateSteps, documents: TemplateDocuments, policies: TemplatePolicies,
+});
+export type OnbTemplateRecord = z.infer<typeof OnbTemplateRecord>;
 
 const Contact = z.object({ nm: z.string(), rel: z.string(), ph: z.string() });
 const Qual = z.object({ nm: z.string(), by: z.string(), exp: z.string() });
@@ -174,15 +188,24 @@ export const OnbPolicySetupView = OnbPolicyRecord.extend({ ackCount: z.number().
 export type OnbPolicySetupView = z.infer<typeof OnbPolicySetupView>;
 /* available: its features exist; needs names them as Modules and features does. */
 export const OnbStepSetup = z.object({ id: OnbStepId, available: z.boolean(), needs: z.string() });
+/* starters: candidates and preboarders a template asks. */
+export const OnbTemplateSummary = z.object({
+  id: z.string(), name: z.string(), version: z.number().int().nonnegative(), jobProfiles: z.array(z.object({ code: z.string(), name: z.string() })), starters: z.number().int(),
+});
+export type OnbTemplateSummary = z.infer<typeof OnbTemplateSummary>;
 export const OnboardingSetup = z.object({
   config: OnboardingConfigRecord, policies: z.array(OnbPolicySetupView), features: OnbFeatures, steps: z.array(OnbStepSetup),
   verifiers: z.array(z.object({ value: Verifier, label: z.string() })),
   /* employees part-way through: candidates and preboarders with a case */
   inProgress: z.number().int(),
+  /* by name */
+  templates: z.array(OnbTemplateSummary), jobProfiles: z.array(z.object({ code: z.string(), name: z.string() })),
 });
 export type OnboardingSetup = z.infer<typeof OnboardingSetup>;
 /* The whole config on Save (D2): the same steps and documents in the same order, only switches and settings changed. */
-export const UpdateOnboardingConfig = z.strictObject({ steps: z.array(OnbStepRecord).max(10), documents: z.array(OnbDocumentRecord).max(20) });
+export const UpdateOnboardingConfig = z.strictObject({
+  steps: z.array(OnbStepRecord).max(10), documents: z.array(OnbDocumentRecord).max(20), policies: z.array(z.string().max(80)).max(40).optional(),
+});
 export type UpdateOnboardingConfig = z.infer<typeof UpdateOnboardingConfig>;
 export const OnboardingConfigSaved = z.object({ record: OnboardingConfigRecord, summary: z.string(), auditId: z.string().nullable() });
 export type OnboardingConfigSaved = z.infer<typeof OnboardingConfigSaved>;
@@ -199,10 +222,23 @@ export type PolicyUploaded = z.infer<typeof PolicyUploaded>;
 export const PolicyRemoved = z.object({ id: z.string(), summary: z.string(), auditId: z.string() });
 export type PolicyRemoved = z.infer<typeof PolicyRemoved>;
 
+/* 80 on the wire so surrounding spaces reach the domain rule, which refuses more than 60 after trimming with its own sentence. */
+export const CreateOnbTemplate = z.strictObject({ name: z.string().max(80), copyFrom: z.string().max(80).optional() });
+export type CreateOnbTemplate = z.infer<typeof CreateOnbTemplate>;
+export const UpdateOnbTemplate = z.strictObject({
+  name: z.string().max(80), jobProfiles: TemplateJobProfiles, steps: TemplateSteps, documents: TemplateDocuments, policies: TemplatePolicies,
+});
+export type UpdateOnbTemplate = z.infer<typeof UpdateOnbTemplate>;
+export const OnbTemplateSaved = z.object({ record: OnbTemplateRecord, summary: z.string(), auditId: z.string().nullable() });
+export type OnbTemplateSaved = z.infer<typeof OnbTemplateSaved>;
+export const OnbTemplateDeleted = z.object({ id: z.string(), summary: z.string(), auditId: z.string() });
+export type OnbTemplateDeleted = z.infer<typeof OnbTemplateDeleted>;
+
 /* ------------------------------------------------------------- endpoints */
 const ByStep = z.object({ step: z.string().min(1) });
 const ByDoc = z.object({ doc: z.string().min(1) });
 const ByPolicy = z.object({ id: z.string().min(1) });
+const ByTemplate = z.object({ id: z.string().min(1) });
 const ByEmployee = z.object({ employeeCode: z.string().min(1) });
 const ByEmployeeDoc = z.object({ employeeCode: z.string().min(1), doc: z.string().min(1) });
 
@@ -269,3 +305,16 @@ export const uploadOnboardingPolicy = defineEndpoint({ method: 'POST', path: '/a
 export const removeOnboardingPolicy = defineEndpoint({ method: 'DELETE', path: '/api/v1/onboarding/policies/:id', params: ByPolicy, response: PolicyRemoved,
   capability: 'onb_cfg', versioned: true, errors: [404],
   summary: 'Remove a policy (If-Match: the policy). New starters are no longer asked; past acknowledgements stay in the audit trail.' });
+
+export const getOnboardingTemplate = defineEndpoint({ method: 'GET', path: '/api/v1/onboarding/templates/:id', params: ByTemplate, response: OnbTemplateRecord,
+  capability: 'onb_cfg', errors: [404],
+  summary: 'One onboarding template whole: its name, job profiles, step switches, document switches and policies. Every document in the shared list has a row.' });
+export const createOnboardingTemplate = defineEndpoint({ method: 'POST', path: '/api/v1/onboarding/templates', request: CreateOnbTemplate, response: OnbTemplateSaved,
+  capability: 'onb_cfg', errors: [404, 409],
+  summary: 'Create an onboarding template as a copy of the Default one, or of another template with copyFrom. It has no job profiles until it is saved with some. A name is needed and no two share one. One audit row.' });
+export const updateOnboardingTemplate = defineEndpoint({ method: 'PUT', path: '/api/v1/onboarding/templates/:id', params: ByTemplate, request: UpdateOnbTemplate, response: OnbTemplateSaved,
+  capability: 'onb_cfg', versioned: true, errors: [404, 409],
+  summary: 'Save an onboarding template whole (If-Match): its name, job profiles, step switches, document switches and policies. A job profile another template holds is refused. One audit row.' });
+export const deleteOnboardingTemplate = defineEndpoint({ method: 'DELETE', path: '/api/v1/onboarding/templates/:id', params: ByTemplate, response: OnbTemplateDeleted,
+  capability: 'onb_cfg', versioned: true, errors: [404],
+  summary: 'Delete an onboarding template (If-Match). Its job profiles use the Default template from now on. One audit row.' });

@@ -3,18 +3,23 @@
    transitions.ts can import it without an import cycle. Every rule is the
    domain's (src/domain/onboarding.ts). */
 import { store } from './store';
-import { bump } from './http';
+import { bump, refuse } from './http';
 import { employees, employeeByCode, recordAt } from './world';
 import {
   caseId, emptyCase, isStarterState, onbFeatures, startProblem,
   type BlockerContext, type OnboardingCase, type OnboardingConfig, type OnbPolicy, type OnbRefusal,
 } from '@/domain/onboarding';
+import { withPolicies, type BaseConfig, type OnbTemplate } from '@/domain/onboarding-templates';
 
 interface Meta { id: string; version: number; updatedAt: string }
 export type StoredCase = Meta & OnboardingCase;
 export type StoredConfig = Meta & OnboardingConfig;
 interface Tenant { modules: Record<string, boolean>; flags: Record<string, unknown> }
 
+/* Each template is a row of its own, listed by name. */
+export type StoredTemplate = Meta & OnbTemplate;
+export const templatesColl = () => store.coll<StoredTemplate>('onboardingTemplates');
+export const templatesNow = () => Object.values(templatesColl()).sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id));
 export const casesColl = () => store.coll<StoredCase>('onboardingCases');
 /* Each policy is a row of its own (D2), listed in its order. */
 export type StoredPolicy = Meta & OnbPolicy;
@@ -27,11 +32,19 @@ export function onbTenant(): Tenant {
 }
 export const onbModuleOn = () => Boolean(onbTenant().modules.ON);
 export const featuresNow = () => { const t = onbTenant(); return onbFeatures(t.modules, t.flags); };
-export function onbConfig(): StoredConfig {
+/* With the Onboarding module off the whole module is hidden, and so refused here. */
+export function requireOnboarding(): void {
+  if (!onbModuleOn()) refuse(403, { code: 'module-off', message: 'Onboarding is switched off for this organisation.', next: 'An administrator can switch the Onboarding module on in Qnipay setup.' });
+}
+/* A domain refusal, with the status its code carries. */
+export const STATUS: Record<string, number> = { NOT_FOUND: 404, SUBMITTED: 409, OUTSTANDING: 409, STALE: 409, FIXED: 409, FLAG_OFF: 409, NOT_READY: 409, PROFILE_TAKEN: 409 };
+export const refuseOnb = (p: OnbRefusal): never => refuse(STATUS[p.code] ?? 422, { ...p, code: p.code === 'VALIDATION' ? 'invalid' : p.code });
+export function onbConfig(): StoredConfig & BaseConfig {
   const c = recordAt(store.coll<StoredConfig>('onboardingConfig'), 'onboardingConfig');
   if (!c) throw new Error('the store has no onboarding config');
   /* a config stored before module 8 asks for every document, each built in */
-  return { ...c, documents: c.documents.map(d => ({ ...d, on: d.on ?? true, custom: d.custom ?? false })) };
+  const withDocs = { ...c, documents: c.documents.map(d => ({ ...d, on: d.on ?? true, custom: d.custom ?? false })) };
+  return { ...withDocs, ...withPolicies(withDocs, policiesNow().map(pol => pol.id)) };
 }
 export const blockerContext = (): BlockerContext => ({ config: onbConfig(), features: featuresNow() });
 

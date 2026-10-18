@@ -5402,6 +5402,12 @@
       "on": true,
       "custom": false
      }
+    ],
+    "policies": [
+     "pol_conduct",
+     "pol_privacy",
+     "pol_handbook",
+     "pol_itsec"
     ]
    }
   },
@@ -5567,6 +5573,84 @@
     "ref": "",
     "invitedAt": "",
     "startedAt": ""
+   }
+  },
+  "onboardingTemplates": {
+   "onbt-senior-consultants": {
+    "version": 1,
+    "updatedAt": "2026-08-13T14:30:00.000Z",
+    "id": "onbt-senior-consultants",
+    "name": "Senior consultants",
+    "jobProfiles": [
+     "SCONS"
+    ],
+    "steps": [
+     {
+      "id": "personal",
+      "on": true
+     },
+     {
+      "id": "contact",
+      "on": true
+     },
+     {
+      "id": "emergency",
+      "on": true
+     },
+     {
+      "id": "additional",
+      "on": false
+     },
+     {
+      "id": "documents",
+      "on": true
+     },
+     {
+      "id": "policies",
+      "on": true
+     },
+     {
+      "id": "review",
+      "on": true
+     }
+    ],
+    "documents": [
+     {
+      "id": "rtw",
+      "on": true,
+      "req": true,
+      "blocks": true
+     },
+     {
+      "id": "addr",
+      "on": true,
+      "req": true,
+      "blocks": false
+     },
+     {
+      "id": "photo",
+      "on": true,
+      "req": true,
+      "blocks": false
+     },
+     {
+      "id": "licence",
+      "on": true,
+      "req": false,
+      "blocks": false
+     },
+     {
+      "id": "cert",
+      "on": true,
+      "req": false,
+      "blocks": false
+     }
+    ],
+    "policies": [
+     "pol_conduct",
+     "pol_privacy",
+     "pol_itsec"
+    ]
    }
   }
  }

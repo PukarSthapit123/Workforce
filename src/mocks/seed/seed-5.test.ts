@@ -1,5 +1,6 @@
 import social from './social.json';
 import qnipay from './qnipay.json';
+import { type OnbTemplate } from '@/domain/onboarding-templates';
 import {
   STEP_IDS, blockers, caseId, emptyCase, isStarterState, isStepId, isVerifier, nextPolVer, onbFeatures, progress, progressText,
   type OnboardingCase, type OnboardingConfig, type OnbPolicy,
@@ -10,7 +11,7 @@ interface SeedFile { data: Record<string, Record<string, Rec>> }
 interface Employee extends Rec { code: string; state: string }
 interface Tenant extends Rec { modules: Record<string, boolean>; flags: Record<string, boolean> }
 const vals = <T = Rec>(s: SeedFile, c: string) => Object.values(s.data[c] ?? {}) as T[];
-const ONBOARDING = ['onboardingConfig', 'onboardingPolicies', 'onboardingCases'];
+const ONBOARDING = ['onboardingConfig', 'onboardingPolicies', 'onboardingCases', 'onboardingTemplates'];
 /* The keys a money field would carry, anywhere in the onboarding collections. */
 const MONEY_KEY = /"(rate|amount|cost|pay|salary|wage|value|price|offer|bank\w*)"\s*:/i;
 const STARTERS: Record<string, [string, string][]> = {
@@ -28,6 +29,11 @@ for (const [name, raw] of Object.entries({ social, qnipay })) {
   const features = onbFeatures(tenant.modules, tenant.flags);
 
   describe(`seed ${name} for module 5`, () => {
+    test('the default template asks every policy, and only qnipay ships an onboarding template', () => {
+      expect(cfg.policies).toEqual(['pol_conduct', 'pol_privacy', 'pol_handbook', 'pol_itsec']);
+      const tpl = vals<Rec & OnbTemplate>(seed, 'onboardingTemplates');
+      expect(tpl.map(t => [t.id, t.name, t.jobProfiles])).toEqual(name === 'qnipay' ? [['onbt-senior-consultants', 'Senior consultants', ['SCONS']]] : []);
+    });
     test('the config is one versioned record with the prototype\'s seven steps and five documents, and no icons', () => {
       expect([cfg.id, cfg.version]).toEqual(['onboardingConfig', 1]);
       expect(Object.keys(seed.data.onboardingConfig ?? {})).toEqual(['onboardingConfig']);
