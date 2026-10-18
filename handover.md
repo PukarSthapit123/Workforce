@@ -1,47 +1,22 @@
 # Handover: onboarding templates by job profile
 
-Date: 2026-10-16. Branch: `main` (the only branch; commit straight to it, no Claude co-author line).
+Date: 2026-10-18. Branch: `main` (the only branch; commit straight to it, no Claude co-author line).
 
 ## Where things stand
 
-**Project A (searchable combobox) is in progress.** It runs with superpowers:subagent-driven-development from a local plan.
+**Project A (searchable combobox) is complete** on `main` (commits `7abdf2b`..`f4ed4a8`). It was reviewed task by task, then as a whole, and the one fix wave was re-reviewed clean. Typecheck, lint, unit (153 files, 2393 tests), every e2e spec and build:check pass. No visual baseline moved.
 
-- The plan is `docs/plans/2026-10-16-searchable-combobox.md`. It is gitignored, so it exists only on this machine.
-- The plan's workspace is `.superpowers/sdd/2026-10-16-searchable-combobox/`, also gitignored. It holds:
-  - `progress.md`, the ledger: task status, rulings and deferred minor findings.
-  - The task briefs and implementer reports.
-  - `reviewer-instructions.md` and `re-reviewer-instructions.md`.
-  - `constraints.md`.
-- **Resume by reading `progress.md`.** Any task with a `Task N: complete` line is done; do not redo it. Trust the ledger and `git log`.
+- `src/ui/Combobox.tsx` is a searchable drop-in for `SelectBox` (`searchLabel` names the search box). `SelectFilter` takes `searchable`.
+- The panel is a modal popover, so a click outside it inside a dialog closes only the list. It stays inside a phone screen and wraps long labels.
+- The line manager on the employee form is chosen from current employees (leavers and archived people are not offered). A saved manager who has since left still shows.
 
-| Task | What | State |
-|---|---|---|
-| 1 | `src/ui/Combobox.tsx` and its tests; `SelectFilter` gains `searchable` | **Complete.** Commits `7abdf2b` and `2c2817a`; review clean |
-| 2 | Employee form (type, job profile, location, department), manager chosen from employees, dimension form | **Complete.** Commit `4a28469`; review clean |
-| 3 | Sickness, team leave, capability, leave type, rota shift and timesheet capture pickers, plus searchable filters | **Built, not yet reviewed.** Commit `941dd17`. **Next step:** dispatch the task reviewer with `reviewer-instructions.md`, `task-3-brief.md`, `task-3-report.md` and the prepared `review-4a28469..941dd17.diff`. Searchable filters: thours, texc, tcover and trota location, employees location and type, tleave type, trota role |
-| 4 | Axe check with the combobox open, 390px overflow check, visual baselines, full `npm run verify` | Not started |
+Decisions made on the user's behalf:
 
-After Task 4:
+- The manager picker lists the employees the caller may see. A manager sees only their own location, so a site manager cannot pick a head-office line manager. Admins can.
+- In the closed state, ArrowUp and ArrowDown open the list. There is no typeahead.
+- Left as known minor polish: the search input has `role="searchbox"`, and the panel and its list share one accessible name.
 
-- Dispatch the final whole-branch review on the most capable model. Use `bash <skill>/scripts/review-package docs/plans/2026-10-16-searchable-combobox.md 74cccbf HEAD`, and point the reviewer at the ledger's deferred minor findings.
-- Make one fix wave, then delete the workspace.
-- Tell the user the "Rulings I made" list from the ledger.
-
-Then start project B's design (below).
-
-### Decisions made on the user's behalf (from the ledger)
-
-- **Test 7 keystrokes.** In the Task 1 tests, picking the second option takes one ArrowDown, because the first option is active when the list opens.
-- **Manager picker scope.** The manager picker lists the employees the caller may see. A manager sees only their own location.
-
-### Deferred minor findings for the final review
-
-- Duplicate employee names give duplicate option keys in the manager picker.
-- The combobox trigger's class string is copied from `SelectTrigger`, so the two could drift apart.
-- `role="searchbox"` is set on the search input.
-- A test patches `Element.prototype.scrollIntoView` without restoring it.
-
-The full list is in `progress.md`.
+**Next: project B's design** (onboarding templates by job profile, below). Start with the open questions, one at a time.
 
 ---
 
