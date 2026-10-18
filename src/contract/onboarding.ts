@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { defineEndpoint } from './endpoints';
 import { IsoDateTime, RecordMeta } from './common';
 import { DateOrBlank, IsoDate, Employee, EmployeeState } from './employees';
+import { POLICY_ID_MAX, POLICY_LIST_MAX } from '@/domain/onboarding';
 
 const Tone = z.enum(['neu', 'info', 'warn', 'ok', 'err']);
 /* the domain's STEP_IDS and TASK_STATES (src/domain/onboarding.ts) */
@@ -38,7 +39,7 @@ export type OnbDocumentRecord = z.infer<typeof OnbDocumentRecord>;
 export const OnboardingConfigRecord = RecordMeta.extend({
   steps: z.array(OnbStepRecord), documents: z.array(OnbDocumentRecord),
   /* the default template's policies: the ids of the policies a starter on no template is asked to acknowledge */
-  policies: z.array(z.string().max(80)).max(40),
+  policies: z.array(z.string().max(POLICY_ID_MAX)).max(POLICY_LIST_MAX),
 });
 export type OnboardingConfigRecord = z.infer<typeof OnboardingConfigRecord>;
 /* A policy row. `ver` is the document's own version ("v4.1"); `version` is the record's concurrency counter. */
@@ -51,7 +52,7 @@ export type OnbPolicyRecord = z.infer<typeof OnbPolicyRecord>;
 const TemplateJobProfiles = z.array(z.string().max(20)).max(1000);
 const TemplateSteps = z.array(z.object({ id: OnbStepId, on: z.boolean() })).max(10);
 const TemplateDocuments = z.array(z.object({ id: z.string().max(20), on: z.boolean(), req: z.boolean(), blocks: z.boolean() })).max(20);
-const TemplatePolicies = z.array(z.string().max(80)).max(40);
+const TemplatePolicies = z.array(z.string().max(POLICY_ID_MAX)).max(POLICY_LIST_MAX);
 export const OnbTemplateRecord = RecordMeta.extend({
   name: z.string().max(60), jobProfiles: TemplateJobProfiles, steps: TemplateSteps, documents: TemplateDocuments, policies: TemplatePolicies,
 });
@@ -207,7 +208,7 @@ export const OnboardingSetup = z.object({
 export type OnboardingSetup = z.infer<typeof OnboardingSetup>;
 /* The whole config on Save (D2): the same steps and documents in the same order, only switches and settings changed. */
 export const UpdateOnboardingConfig = z.strictObject({
-  steps: z.array(OnbStepRecord).max(10), documents: z.array(OnbDocumentRecord).max(20), policies: z.array(z.string().max(80)).max(40).optional(),
+  steps: z.array(OnbStepRecord).max(10), documents: z.array(OnbDocumentRecord).max(20), policies: TemplatePolicies.optional(),
 });
 export type UpdateOnboardingConfig = z.infer<typeof UpdateOnboardingConfig>;
 export const OnboardingConfigSaved = z.object({ record: OnboardingConfigRecord, summary: z.string(), auditId: z.string().nullable() });

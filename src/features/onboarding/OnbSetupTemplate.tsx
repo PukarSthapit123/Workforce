@@ -6,6 +6,7 @@ import {
   useDeleteOnboardingTemplate, useOnboardingTemplate, useSaveOnboardingTemplate, type OnbDocumentRecord, type OnbStepRecord, type OnbTemplateRecord, type OnboardingSetup, type UpdateOnbTemplate,
 } from '@/api/onboarding';
 import { versionKey } from '@/lib/latest';
+import { inListOrder } from '@/domain/onboarding-templates';
 import { StepsCard } from './OnbSetupSteps';
 import { AppliesToCard } from './OnbSetupApplies';
 import { DocumentsCard } from './OnbSetupDocuments';
@@ -15,6 +16,15 @@ import { PoliciesCard } from './OnbSetupPolicies';
    descriptions and checks of steps and documents stay on the shared config. */
 const draftOf = (t: OnbTemplateRecord): UpdateOnbTemplate => ({
   name: t.name, jobProfiles: [...t.jobProfiles], steps: t.steps.map(s => ({ ...s })), documents: t.documents.map(d => ({ ...d })), policies: [...t.policies],
+});
+
+/* What a draft means once read against the shared lists: a document it lacks is off, policies follow the shared order and job profiles are a set.
+   A draft and the saved row are compared in this form, so reordering or a row the draft has not met yet is no change. */
+const normal = (t: UpdateOnbTemplate, setup: OnboardingSetup) => JSON.stringify({
+  name: t.name, jobProfiles: [...new Set(t.jobProfiles)].sort(),
+  steps: setup.config.steps.map(s => [s.id, s.fixed || (t.steps.find(x => x.id === s.id)?.on ?? false)]),
+  documents: setup.config.documents.map(d => { const r = t.documents.find(x => x.id === d.id); return [d.id, r?.on ?? false, r?.req ?? false, r?.blocks ?? false]; }),
+  policies: inListOrder(t.policies, setup.policies.map(p => p.id)),
 });
 
 export function TemplateDraftView({ setup, id, onDirtyChange, onDeleted }: {
@@ -38,7 +48,7 @@ function TemplateDraft({ setup, record, onDirtyChange, onDeleted }: {
   const [draft, setDraft] = useState<UpdateOnbTemplate>(() => draftOf(record));
   const save = useSaveOnboardingTemplate();
   const remove = useDeleteOnboardingTemplate();
-  const dirty = JSON.stringify(draft) !== JSON.stringify(draftOf(record));
+  const dirty = normal(draft, setup) !== normal(draftOf(record), setup);
   useEffect(() => { onDirtyChange(dirty); }, [dirty, onDirtyChange]);
   useEffect(() => () => onDirtyChange(false), [onDirtyChange]);
   const fe = save.fieldError;
@@ -55,7 +65,7 @@ function TemplateDraft({ setup, record, onDirtyChange, onDeleted }: {
     return { ...d, documents: d.documents.some(x => x.id === docId) ? d.documents.map(x => (x.id === docId ? next(x) : x)) : [...d.documents, next(base)] };
   });
   const askPolicy = (policyId: string, on: boolean) =>
-    setDraft(d => ({ ...d, policies: [...d.policies.filter(x => x !== policyId), ...(on ? [policyId] : [])] }));
+    setDraft(d => ({ ...d, policies: setup.policies.map(p => p.id).filter(x => (x === policyId ? on : d.policies.includes(x))) }));
   const patch = (p: Partial<UpdateOnbTemplate>) => setDraft(d => ({ ...d, ...p }));
   const submit = () => save.mutate({ template: record, body: draft }, { onSuccess: d => toastInfo(d.summary) });
   const del = () => remove.mutate({ template: record }, { onSuccess: r => { onDeleted(); toastInfo(r.summary); } });

@@ -541,6 +541,10 @@ export const policyUploadedText = (label: string, ver: string, asked: number) =>
 export const POLICY_NAME_NEEDED = 'A policy needs a name.';
 export const POLICY_NAME_TAKEN = 'A policy with that name already exists.';
 export const DEFAULT_POLICY_VER = 'v1.0';
+/* a policy name is at most 80 characters, and its id adds the pol_ prefix to that */
+export const POLICY_ID_MAX = 'pol_'.length + 80;
+/* generous: the policy list has no count limit of its own, so no list of ids may be capped below it */
+export const POLICY_LIST_MAX = 500;
 export const policyKey = (name: string) => `pol_${name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')}`;
 export interface PolicyDraft { label: string; ver?: string; sum?: string }
 /* Add or edit (pol-save): a name is needed, and no two policies share one (by key, so case and punctuation do not count). */

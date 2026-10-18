@@ -25728,11 +25728,11 @@
                           }
                         },
                         "policies": {
-                          "maxItems": 40,
+                          "maxItems": 500,
                           "type": "array",
                           "items": {
                             "type": "string",
-                            "maxLength": 80
+                            "maxLength": 84
                           }
                         }
                       },
@@ -26191,11 +26191,11 @@
                     }
                   },
                   "policies": {
-                    "maxItems": 40,
+                    "maxItems": 500,
                     "type": "array",
                     "items": {
                       "type": "string",
-                      "maxLength": 80
+                      "maxLength": 84
                     }
                   }
                 },
@@ -26332,11 +26332,11 @@
                           }
                         },
                         "policies": {
-                          "maxItems": 40,
+                          "maxItems": 500,
                           "type": "array",
                           "items": {
                             "type": "string",
-                            "maxLength": 80
+                            "maxLength": 84
                           }
                         }
                       },
@@ -26588,11 +26588,11 @@
                           }
                         },
                         "policies": {
-                          "maxItems": 40,
+                          "maxItems": 500,
                           "type": "array",
                           "items": {
                             "type": "string",
-                            "maxLength": 80
+                            "maxLength": 84
                           }
                         }
                       },
@@ -26886,11 +26886,11 @@
                           }
                         },
                         "policies": {
-                          "maxItems": 40,
+                          "maxItems": 500,
                           "type": "array",
                           "items": {
                             "type": "string",
-                            "maxLength": 80
+                            "maxLength": 84
                           }
                         }
                       },
@@ -27176,11 +27176,11 @@
                           }
                         },
                         "policies": {
-                          "maxItems": 40,
+                          "maxItems": 500,
                           "type": "array",
                           "items": {
                             "type": "string",
-                            "maxLength": 80
+                            "maxLength": 84
                           }
                         }
                       },
@@ -35976,11 +35976,11 @@
                       }
                     },
                     "policies": {
-                      "maxItems": 40,
+                      "maxItems": 500,
                       "type": "array",
                       "items": {
                         "type": "string",
-                        "maxLength": 80
+                        "maxLength": 84
                       }
                     }
                   },
@@ -36158,11 +36158,11 @@
                     }
                   },
                   "policies": {
-                    "maxItems": 40,
+                    "maxItems": 500,
                     "type": "array",
                     "items": {
                       "type": "string",
-                      "maxLength": 80
+                      "maxLength": 84
                     }
                   }
                 },
@@ -36274,11 +36274,11 @@
                           }
                         },
                         "policies": {
-                          "maxItems": 40,
+                          "maxItems": 500,
                           "type": "array",
                           "items": {
                             "type": "string",
-                            "maxLength": 80
+                            "maxLength": 84
                           }
                         }
                       },
@@ -36527,11 +36527,11 @@
                           }
                         },
                         "policies": {
-                          "maxItems": 40,
+                          "maxItems": 500,
                           "type": "array",
                           "items": {
                             "type": "string",
-                            "maxLength": 80
+                            "maxLength": 84
                           }
                         }
                       },
@@ -57862,14 +57862,15 @@
                               }
                             },
                             "policies": {
-                              "maxItems": 40,
+                              "maxItems": 500,
                               "type": "array",
                               "items": {
                                 "type": "object",
                                 "properties": {
                                   "id": {
                                     "type": "string",
-                                    "pattern": "^[a-z0-9_]{1,80}$"
+                                    "maxLength": 84,
+                                    "pattern": "^[a-z0-9_]+$"
                                   },
                                   "label": {
                                     "type": "string",
@@ -57981,7 +57982,7 @@
                                     }
                                   },
                                   "policies": {
-                                    "maxItems": 40,
+                                    "maxItems": 500,
                                     "type": "array",
                                     "items": {
                                       "type": "string",
@@ -58000,7 +58001,7 @@
                               }
                             },
                             "defaultPolicies": {
-                              "maxItems": 40,
+                              "maxItems": 500,
                               "type": "array",
                               "items": {
                                 "type": "string",

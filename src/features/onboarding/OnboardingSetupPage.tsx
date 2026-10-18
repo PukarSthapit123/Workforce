@@ -9,7 +9,7 @@ import { useOnboardingSetup, useSaveOnboardingConfig, type OnboardingSetup, type
 import { useTenant } from '@/shell/shellData';
 import { versionKey } from '@/lib/latest';
 import { REQUIRED_CHANGE_WARNING } from '@/domain/onboarding';
-import { DEFAULT_KEY, DEFAULT_TEMPLATE } from '@/domain/onboarding-templates';
+import { DEFAULT_KEY, DEFAULT_TEMPLATE, inListOrder } from '@/domain/onboarding-templates';
 import { PoliciesCard } from './OnbSetupPolicies';
 import { DocumentsCard } from './OnbSetupDocuments';
 import { StepsCard } from './OnbSetupSteps';
@@ -65,12 +65,15 @@ export function OnboardingSetupPage() {
 
 const draftOf = (c: OnboardingSetup['config']): UpdateOnboardingConfig =>
   ({ steps: c.steps.map(s => ({ ...s })), documents: c.documents.map(d => ({ ...d })), policies: [...c.policies] });
+/* a draft is compared with the saved config with its policies in the shared list's order, so switching one off and on again is no change */
+const normal = (d: UpdateOnboardingConfig, shared: readonly string[]) => JSON.stringify({ ...d, policies: inListOrder(d.policies ?? [], shared) });
 
 function SetupDraftView({ setup, onDirtyChange }: { setup: OnboardingSetup; onDirtyChange(dirty: boolean): void }) {
   const { config } = setup;
   const [draft, setDraft] = useState<UpdateOnboardingConfig>(() => draftOf(config));
   const save = useSaveOnboardingConfig();
-  const dirty = JSON.stringify(draft) !== JSON.stringify(draftOf(config));
+  const shared = setup.policies.map(p => p.id);
+  const dirty = normal(draft, shared) !== normal(draftOf(config), shared);
   useEffect(() => { onDirtyChange(dirty); }, [dirty, onDirtyChange]);
   useEffect(() => () => onDirtyChange(false), [onDirtyChange]);
   const fe = save.fieldError;
@@ -78,7 +81,7 @@ function SetupDraftView({ setup, onDirtyChange }: { setup: OnboardingSetup; onDi
   const setDoc = (id: string, patch: Partial<UpdateOnboardingConfig['documents'][number]>) =>
     setDraft(d => ({ ...d, documents: d.documents.map(x => (x.id === id ? { ...x, ...patch } : x)) }));
   const askPolicy = (id: string, on: boolean) =>
-    setDraft(d => ({ ...d, policies: [...(d.policies ?? []).filter(x => x !== id), ...(on ? [id] : [])] }));
+    setDraft(d => ({ ...d, policies: shared.filter(x => (x === id ? on : (d.policies ?? []).includes(x))) }));
   /* the server's summary is the toast: a switched step says employees part-way through keep what they gave */
   const submit = () => save.mutate({ config, body: draft }, { onSuccess: d => toastInfo(d.summary) });
   const cancel = () => { setDraft(draftOf(config)); save.clearFieldErrors(); };

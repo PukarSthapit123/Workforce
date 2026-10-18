@@ -14,7 +14,7 @@ import {
   featuresNow, onbConfig, policiesNow, refuseOnb, requireOnboarding, templatesColl, templatesNow, type StoredTemplate,
 } from './onboarding-cases';
 import {
-  newTemplateFrom, normaliseTemplate, onbTemplateId, onbTemplateNameProblem, onbTemplateProblem,
+  newTemplateFrom, normaliseTemplate, onbTemplateId, sameSet, onbTemplateNameProblem, onbTemplateProblem,
   templateCreatedText, templateDeletedText, templateSavedText, type OnbTemplateDraft,
 } from '@/domain/onboarding-templates';
 
@@ -62,7 +62,7 @@ export const onboardingTemplateHandlers = [
     const summary = templateSavedText(draft.name);
     const steps = next.steps.filter(s => was.steps.find(x => x.id === s.id)?.on !== s.on);
     const documents = next.documents.filter(d => !sameJson(d, was.documents.find(x => x.id === d.id)));
-    const changed = { name: next.name !== was.name, jobProfiles: !sameJson(next.jobProfiles, was.jobProfiles), policies: !sameJson(next.policies, was.policies) };
+    const changed = { name: next.name !== was.name, jobProfiles: !sameSet(next.jobProfiles, was.jobProfiles), policies: !sameSet(next.policies, was.policies) };
     if (!changed.name && !changed.jobProfiles && !changed.policies && !steps.length && !documents.length)
       return { record: was, summary: 'Nothing has changed.', auditId: null };
     const saved: StoredTemplate = bump(row, next);

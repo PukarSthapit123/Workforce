@@ -36,7 +36,7 @@ import {
   BUILT_IN_DOC, documentAddedText, documentProblem, documentRemovedText, documentRenamedText, documentUsers, newCustomDocument,
   isStarterState, type OnbDocument, type OnboardingCase, type OnboardingConfig, type OnbFeatures, type StepContext, type Decision,
 } from '@/domain/onboarding';
-import { templateFor } from '@/domain/onboarding-templates';
+import { sameSet, templateFor } from '@/domain/onboarding-templates';
 import { LIFECYCLE, isEmployeeState, transitionProblem } from '@/domain/lifecycle';
 
 /* ------------------------------------------------------------- the world */
@@ -361,10 +361,10 @@ export const onboardingHandlers = [
       const n = body.documents[i];
       return n ? { ...d, req: n.req, verify: n.verify, blocks: n.blocks, expiry: n.expiry, on: n.on } : d;
     });
-    const policies = body.policies ?? c.policies;
+    const policies = body.policies && !sameSet(body.policies, c.policies) ? body.policies : c.policies;
     const switched = steps.filter((s, i) => s.on !== c.steps[i]?.on);
     const docsChanged = documents.filter((d, i) => !sameJson(d, c.documents[i]));
-    const policiesChanged = !sameJson(policies, c.policies);
+    const policiesChanged = !sameSet(policies, c.policies);
     if (!switched.length && !docsChanged.length && !policiesChanged) return { record: c, summary: 'Nothing has changed.', auditId: null };
     const saved = bump(c, { steps, documents, policies });
     store.coll<StoredConfig>('onboardingConfig')[c.id] = saved;
@@ -441,9 +441,10 @@ export const onboardingHandlers = [
     if (bad) return refuseOnb(bad);
     const pol = policyFromDraft(body, all.reduce((m, p) => Math.max(m, p.order + 1), 0));
     const rec: StoredPolicy = { ...pol, version: 1, updatedAt: store.now() };
+    /* read before the new row exists: a config with no stored list reads as every policy, which must not include it yet */
+    const base = onbConfig();
     policiesColl()[rec.id] = rec;
     /* a new policy is asked by the default template only; every other template opts in */
-    const base = onbConfig();
     store.coll<StoredConfig>('onboardingConfig')[base.id] = bump(base, { policies: [...base.policies, rec.id] });
     const auditId = writeAudit({ who: actor(session), act: 'Policy added', entity: 'onboardingPolicy', entityId: rec.id, before: null,
       after: { label: rec.label, ver: rec.ver, sum: rec.sum } });

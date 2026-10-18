@@ -133,3 +133,11 @@ export function onbTemplateProblem(next: OnbTemplateDraft, ctx: TemplateRuleCont
     return { code: 'VALIDATION', field: 'policies', message: 'That policy no longer exists.', next: 'Reload the page.' };
   return null;
 }
+
+/* Two lists hold the same entries whatever their order: a reordered list is not a change. */
+export const sameSet = (a: readonly string[], b: readonly string[]) => {
+  const left = new Set(a), right = new Set(b);
+  return left.size === right.size && [...left].every(x => right.has(x));
+};
+/* The ids of `ids` in the order of the shared `list`; an id the list lacks is dropped. */
+export const inListOrder = (ids: readonly string[], list: readonly string[]) => list.filter(x => ids.includes(x));

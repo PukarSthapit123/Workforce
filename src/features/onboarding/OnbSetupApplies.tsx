@@ -33,7 +33,7 @@ export function AppliesToCard({ setup, templateId, draft, fe, onChange, onDelete
           {draft.jobProfiles.map(code => (
             <Pill key={code} testId={tid.monb.profile(code)} tone="neu" className="gap-xs pr-[3px]">
               {nameOf(code)}
-              <Button testId={tid.monb.profileRemove(code)} kind="ghost" small className="size-5 min-h-0 p-0" aria-label={`Remove ${nameOf(code)}`}
+              <Button testId={tid.monb.profileRemove(code)} kind="ghost" small className="size-6 min-h-0 p-0" aria-label={`Remove ${nameOf(code)}`}
                 onClick={() => onChange({ jobProfiles: draft.jobProfiles.filter(c => c !== code) })}><XIcon /></Button>
             </Pill>))}
         </div>}

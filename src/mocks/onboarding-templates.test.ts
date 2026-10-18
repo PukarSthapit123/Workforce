@@ -347,3 +347,60 @@ describe('shared-list changes keep the templates in step', () => {
     expect(again.documents.find(d => d.id === 'dbs-check')?.on).toBe(false);
   });
 });
+
+describe('long policy ids and large policy lists', () => {
+  const setupOf = async (call: Call) => OnboardingSetup.parse((await call('GET', '/api/v1/onboarding/config')).body);
+  test('an 80-character policy name is added and the setup still loads, saves on the default and on a template', async () => {
+    const call = await as('admin'), label = 'a'.repeat(80), id = `pol_${label}`;
+    expect((await call('POST', '/api/v1/onboarding/policies', { label })).status).toBe(200);
+    const s = await setupOf(call);
+    expect(s.config.policies).toContain(id);
+    const put = await call('PUT', '/api/v1/onboarding/config', { steps: s.config.steps, documents: s.config.documents, policies: s.config.policies.slice(1) }, s.config.version);
+    expect(put.status).toBe(200);
+    const senior = await read(call, SENIOR);
+    const r = await call('PUT', `${URL}/${SENIOR}`, { ...draft(senior), policies: [...senior.policies, id] }, senior.version);
+    expect(r.status).toBe(200);
+    expect((await read(call, SENIOR)).policies).toContain(id);
+  });
+  test('more than 40 policies: the setup still loads and the default saves', async () => {
+    const call = await as('admin');
+    for (let n = 0; n < 40; n++) expect((await call('POST', '/api/v1/onboarding/policies', { label: `Extra policy ${n}` })).status).toBe(200);
+    const s = await setupOf(call);
+    expect(s.policies.length).toBeGreaterThan(40);
+    expect(s.config.policies.length).toBeGreaterThan(40);
+    const put = await call('PUT', '/api/v1/onboarding/config', { steps: s.config.steps, documents: s.config.documents, policies: s.config.policies.slice(1) }, s.config.version);
+    expect(put.status).toBe(200);
+    const senior = await read(call, SENIOR);
+    expect((await call('PUT', `${URL}/${SENIOR}`, { ...draft(senior), policies: s.config.policies }, senior.version)).status).toBe(200);
+  });
+  test('a stored config without a policy list gains a new policy once', async () => {
+    const call = await as('admin'), row = store.coll<Record<string, unknown>>('onboardingConfig').onboardingConfig;
+    if (!row) throw new Error('no config');
+    delete row.policies;
+    await call('POST', '/api/v1/onboarding/policies', { label: 'Fire safety' });
+    const list = (await setupOf(call)).config.policies;
+    expect(list.filter(p => p === 'pol_fire_safety')).toHaveLength(1);
+    expect(list).toEqual([...POLICIES, 'pol_fire_safety']);
+  });
+});
+
+describe('a save that only reorders changes nothing', () => {
+  test('the default config with its policies in another order is "Nothing has changed", no version, no audit row', async () => {
+    const call = await as('admin'), s = OnboardingSetup.parse((await call('GET', '/api/v1/onboarding/config')).body), rows = onbAudits().length;
+    const r = await call('PUT', '/api/v1/onboarding/config', { steps: s.config.steps, documents: s.config.documents, policies: [...s.config.policies].reverse() }, s.config.version);
+    expect(r.status).toBe(200);
+    expect(OnboardingConfigSaved.parse(r.body)).toMatchObject({ summary: 'Nothing has changed.', auditId: null, record: { version: s.config.version } });
+    expect(onbAudits()).toHaveLength(rows);
+  });
+  test('a template with its job profiles and policies in another order is "Nothing has changed"', async () => {
+    const call = await as('admin'), jp = store.coll<Record<string, unknown>>('jobProfiles');
+    jp.CONS2 = { id: 'CONS2', code: 'CONS2', name: 'Consultant Two', version: 1, updatedAt: '2026-08-13T14:30:00.000Z' };
+    const made = OnbTemplateSaved.parse((await call('POST', URL, { name: 'Consultants' })).body).record;
+    const first = OnbTemplateSaved.parse((await call('PUT', `${URL}/${made.id}`, { ...draft(made), jobProfiles: ['CONS', 'CONS2'] }, 1)).body).record;
+    const rows = onbAudits().length;
+    const r = await call('PUT', `${URL}/${made.id}`, { ...draft(first), jobProfiles: ['CONS2', 'CONS'], policies: [...first.policies].reverse() }, first.version);
+    expect(r.status).toBe(200);
+    expect(OnbTemplateSaved.parse(r.body)).toMatchObject({ summary: 'Nothing has changed.', auditId: null, record: { version: first.version } });
+    expect(onbAudits()).toHaveLength(rows);
+  });
+});

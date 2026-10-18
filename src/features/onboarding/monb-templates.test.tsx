@@ -268,3 +268,71 @@ describe('Onboarding setup: documents and policies per template', () => {
     expectTestIdCoverage(document.body);
   });
 });
+
+describe('Onboarding setup: no false unsaved changes', () => {
+  const noDirty = () => {
+    expect(screen.queryByTestId(tid.monb.dirty)).toBeNull();
+    expect(screen.getByTestId(tid.monb.save)).toBeDisabled();
+  };
+  test('a policy switched off and on again on Default is not a change', async () => {
+    await open();
+    const sw = await screen.findByTestId(tid.monb.polAsked('pol_conduct'));
+    await userEvent.click(sw);
+    expect(screen.getByTestId(tid.monb.dirty)).toBeInTheDocument();
+    await userEvent.click(sw);
+    noDirty();
+  });
+  test('a policy switched off and on again on a template is not a change', async () => {
+    await open(`/setup/monb?template=${SENIOR}`);
+    const sw = await screen.findByTestId(tid.monb.polAsked('pol_conduct'));
+    await userEvent.click(sw);
+    expect(screen.getByTestId(tid.monb.dirty)).toBeInTheDocument();
+    await userEvent.click(sw);
+    noDirty();
+  });
+  test('a job profile removed and added back is not a change', async () => {
+    const senior = templates()[SENIOR];
+    if (!senior) throw new Error('seed has no Senior consultants');
+    senior.jobProfiles = ['SCONS', 'CONS'];
+    await open(`/setup/monb?template=${SENIOR}`);
+    await userEvent.click(await screen.findByTestId(tid.monb.profileRemove('SCONS')));
+    expect(screen.getByTestId(tid.monb.dirty)).toBeInTheDocument();
+    await userEvent.click(screen.getByTestId(tid.monb.profileAdd));
+    await userEvent.click(await screen.findByTestId(`${tid.monb.profileAdd}-option-SCONS`));
+    noDirty();
+  });
+  test('a template reopened after a document was added on Default is not a change', async () => {
+    await open(`/setup/monb?template=${SENIOR}`);
+    await screen.findByTestId(tid.monb.docOn('rtw'));
+    await pick('default');
+    await userEvent.click(await screen.findByTestId(tid.monb.docAdd));
+    await userEvent.type(screen.getByTestId(tid.monb.docName), 'DBS check');
+    await userEvent.click(screen.getByTestId(tid.monb.docSave));
+    await screen.findByTestId(tid.monb.doc('dbs-check'));
+    await pick(SENIOR);
+    await screen.findByTestId(tid.monb.docOn('dbs-check'));
+    await new Promise(r => setTimeout(r, 100));
+    noDirty();
+  });
+});
+
+describe('Onboarding setup: a named template\'s Required and Blocks start switches', () => {
+  test('they save on the template and leave the Default document alone', async () => {
+    await open(`/setup/monb?template=${SENIOR}`);
+    const req = await screen.findByTestId(tid.monb.docReq('addr'));
+    const blocks = screen.getByTestId(tid.monb.docBlocks('addr'));
+    expect(req).toHaveAttribute('aria-checked', 'true');
+    expect(blocks).toHaveAttribute('aria-checked', 'false');
+    await userEvent.click(req);
+    await userEvent.click(blocks);
+    expect(screen.getByTestId(tid.monb.dirty)).toBeInTheDocument();
+    await userEvent.click(screen.getByTestId(tid.monb.save));
+    await waitFor(() => expect(templates()[SENIOR]?.documents.find(d => d.id === 'addr')).toMatchObject({ on: true, req: false, blocks: true }));
+    const config = store.coll<{ documents: { id: string; req: boolean; blocks: boolean }[] }>('onboardingConfig').onboardingConfig;
+    expect(config?.documents.find(d => d.id === 'addr')).toMatchObject({ req: true, blocks: false });
+  });
+  test('the profile chip remove buttons are at least 24px', async () => {
+    await open(`/setup/monb?template=${SENIOR}`);
+    expect((await screen.findByTestId(tid.monb.profileRemove('SCONS'))).className).toMatch(/\bsize-6\b/);
+  });
+});
