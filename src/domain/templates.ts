@@ -39,9 +39,10 @@ import {
 } from './modules';
 import { CHAIN_MODULES, POSTING_ROLE, POSTING_STEP, chainProblem, chainText, isChainModule, type ChainModule, type ChainStep } from './approvals';
 import {
-  STEP_UNAVAILABLE, documentProblem, isVerifier, nextPolVer, onbFeatures, policyProblem, stepSwitchProblem, verifierLabel,
+  STEP_UNAVAILABLE, documentProblem, isVerifier, nextPolVer, onbFeatures, policyKey, policyProblem, stepSwitchProblem, verifierLabel,
   type OnboardingConfig, type OnbPolicy, type OnbStepId, type Verifier,
 } from './onboarding';
+import { DEFAULT_TEMPLATE, type OnbTemplate } from './onboarding-templates';
 import { DEFAULT_ROTA_CONFIG, FLEX_NOTIFY_TO, milestonesText, rotaConfigProblem, type SupportLevel } from './rota';
 import type { ClockStyle, DateFormat, WeekStart } from './time';
 import { formatDmy } from './time';
@@ -88,7 +89,16 @@ export interface TemplateOnbStep { id: OnbStepId; on: boolean }
 /* Module 8: whether it is asked for, and a document the tenant added with its name and hint, which a template can add. */
 export interface TemplateOnbDocument { id: string; req: boolean; verify: Verifier; blocks: boolean; expiry: boolean; on?: boolean; custom?: boolean; label?: string; hint?: string }
 export interface TemplateOnbPolicy { id: string; label: string; ver: string; sum: string; body: string[] }
-export interface TemplateOnboarding { steps: TemplateOnbStep[]; documents: TemplateOnbDocument[]; policies: TemplateOnbPolicy[] }
+/* An onboarding template as a file keeps it: job profiles by code, policies by name. */
+export interface TemplateOnbTemplate {
+  name: string; jobProfiles: string[]; steps: TemplateOnbStep[]; documents: { id: string; on: boolean; req: boolean; blocks: boolean }[]; policies: string[];
+}
+export interface TemplateOnboarding {
+  steps: TemplateOnbStep[]; documents: TemplateOnbDocument[]; policies: TemplateOnbPolicy[];
+  templates?: TemplateOnbTemplate[];
+  /* the names of the policies the Default template asks */
+  defaultPolicies?: string[];
+}
 export interface TemplateTenantSettings {
   timezone: string; dateFormat: DateFormat; clock: ClockStyle; weekStart: WeekStart;
   fullTimeWeeklyHours: number;
@@ -280,14 +290,20 @@ export interface CaptureSource {
   chain: readonly ChainStep[];
   structure: TemplateStructure;
   /* the onboarding setup and its policies, when this tenant has them */
-  onboarding?: { config: OnboardingConfig; policies: readonly OnbPolicy[] };
+  onboarding?: { config: OnboardingConfig; policies: readonly OnbPolicy[]; templates?: readonly OnbTemplate[] };
   tenantSettings?: TemplateTenantSettings;
   leaveConfig?: TemplateLeaveConfig;
   rotaConfig?: TemplateRotaConfig;
 }
-/* The onboarding part (D12): the prototype's onbDocs and onbPolicies, with the step switches. */
-export function captureOnboarding(o: { config: OnboardingConfig; policies: readonly OnbPolicy[] }): TemplateOnboarding {
+/* The onboarding part (D12): the prototype's onbDocs and onbPolicies, with the step switches. Each onboarding
+   template keeps its job profiles by code and its policies by name, and the Default's policies are kept by name
+   when the tenant chose them. */
+export function captureOnboarding(o: { config: OnboardingConfig; policies: readonly OnbPolicy[]; templates?: readonly OnbTemplate[] }): TemplateOnboarding {
+  const names = (ids: readonly string[]) => ids.flatMap(id => o.policies.find(p => p.id === id)?.label ?? []);
   return {
+    ...(o.templates?.length ? { templates: o.templates.map(t => ({ name: t.name, jobProfiles: [...t.jobProfiles], steps: t.steps.map(x => ({ id: x.id, on: x.on })),
+      documents: t.documents.map(d => ({ id: d.id, on: d.on, req: d.req, blocks: d.blocks })), policies: names(t.policies) })) } : {}),
+    ...(o.config.policies ? { defaultPolicies: names(o.config.policies) } : {}),
     steps: o.config.steps.map(x => ({ id: x.id, on: x.on })),
     documents: o.config.documents.map(d => ({ id: d.id, req: d.req, verify: d.verify, blocks: d.blocks, expiry: d.expiry, on: d.on,
       ...(d.custom ? { custom: true, label: d.label, hint: d.hint } : {}) })),
@@ -334,6 +350,7 @@ const ROW_KEYS: Record<string, readonly string[]> = {
   contracts: ['code', 'name', 'client', 'costCentre', 'manager', 'status', 'start', 'end', 'billable', 'location', 'tasks'],
   tasks: ['name', 'group', 'billable'],
   onbSteps: ['id', 'on'], onbDocuments: ['id', 'req', 'verify', 'blocks', 'expiry', 'on', 'custom', 'label', 'hint'], onbPolicies: ['id', 'label', 'ver', 'sum', 'body'],
+  onbTemplates: ['name', 'jobProfiles', 'steps', 'documents', 'policies'], onbTemplateSteps: ['id', 'on'], onbTemplateDocuments: ['id', 'on', 'req', 'blocks'],
 };
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 
@@ -369,10 +386,18 @@ export function readTemplateFile(text: string): FileRead {
   if ('approvalChain' in t) t.approvalChain = rows(t.approvalChain, 'approvalChain', 'approvalChain');
   /* a policy's file is never part of a template: it is left out and listed */
   if (isObj(t.onboarding)) {
-    const o = keep(t.onboarding, ['steps', 'documents', 'policies'], 'onboarding');
+    const o = keep(t.onboarding, ['steps', 'documents', 'policies', 'templates', 'defaultPolicies'], 'onboarding');
     if ('steps' in o) o.steps = rows(o.steps, 'onbSteps', 'onboarding.steps');
     if ('documents' in o) o.documents = rows(o.documents, 'onbDocuments', 'onboarding.documents');
     if ('policies' in o) o.policies = rows(o.policies, 'onbPolicies', 'onboarding.policies');
+    if (Array.isArray(o.templates)) {
+      o.templates = (rows(o.templates, 'onbTemplates', 'onboarding.templates') as unknown[]).map(r => {
+        if (!isObj(r)) return r;
+        if ('steps' in r) r.steps = rows(r.steps, 'onbTemplateSteps', 'onboarding.templates.steps');
+        if ('documents' in r) r.documents = rows(r.documents, 'onbTemplateDocuments', 'onboarding.templates.documents');
+        return r;
+      });
+    }
     t.onboarding = o;
   }
   if (isObj(t.tenantSettings)) t.tenantSettings = keep(t.tenantSettings, ['timezone', 'dateFormat', 'clock', 'weekStart', 'fullTimeWeeklyHours', 'financialYear'], 'tenantSettings');
@@ -416,7 +441,7 @@ export interface TenantState {
   structure: Readonly<Record<StructureKind, readonly string[]>>;
   /* the onboarding setup and its policies now, when this tenant has them; acknowledged counts, by policy id,
      the employees still onboarding who hold an acknowledgement of it (those a new wording asks again) */
-  onboarding?: { config: OnboardingConfig; policies: readonly OnbPolicy[]; acknowledged?: Readonly<Record<string, number>> };
+  onboarding?: { config: OnboardingConfig; policies: readonly OnbPolicy[]; acknowledged?: Readonly<Record<string, number>>; templates?: readonly OnbTemplate[] };
   tenantSettings?: TemplateTenantSettings;
   leaveConfig?: TemplateLeaveConfig;
   rotaConfig?: TemplateRotaConfig;
@@ -439,10 +464,18 @@ export interface ApplySteps {
   onboarding: {
     steps: Record<string, boolean>; documents: Record<string, Omit<TemplateOnbDocument, 'id'>>; documentsAdded: TemplateOnbDocument[];
     policiesUpdated: (Pick<TemplateOnbPolicy, 'id' | 'label' | 'ver' | 'sum' | 'body'> & { reask: boolean })[]; policiesAdded: TemplateOnbPolicy[];
+    /* the onboarding templates to create (id null) or set, and the policy ids the Default template asks when that changes */
+    templates: OnbTemplatePlan[]; defaultPolicies?: string[];
   };
   tenantSettings: Partial<TemplateTenantSettings>;
   leaveConfig?: TemplateLeaveConfig;
   rotaConfig?: Partial<TemplateRotaConfig>;
+}
+/* One onboarding template to write: its job profiles and policies are this tenant's codes and ids, and a job profile
+   another template holds comes off that template. */
+export interface OnbTemplatePlan {
+  id: string | null; name: string; jobProfiles: string[]; steps: TemplateOnbStep[];
+  documents: { id: string; on: boolean; req: boolean; blocks: boolean }[]; policies: string[]; takeFrom: { id: string; code: string }[];
 }
 export interface ApplyPlan { changes: PlanLine[]; added: PlanLine[]; leftAlone: PlanLine[]; steps: ApplySteps }
 
@@ -497,7 +530,7 @@ export function planApply(t: Template, s: TenantState,
   const changes: PlanLine[] = [], added: PlanLine[] = [], leftAlone: PlanLine[] = [];
   const steps: ApplySteps = { modules: [], finalModules: {}, finalRestore: {}, flags: [], labels: {}, typesAdded: [], typesUpdated: [], roleNames: {}, chains: [],
     structure: { departments: [], costCentres: [], locations: [], jobProfiles: [], contracts: [] },
-    onboarding: { steps: {}, documents: {}, documentsAdded: [], policiesUpdated: [], policiesAdded: [] }, tenantSettings: {} };
+    onboarding: { steps: {}, documents: {}, documentsAdded: [], policiesUpdated: [], policiesAdded: [], templates: [] }, tenantSettings: {} };
 
   /* modules */
   const mods = moduleSteps(t, s);
@@ -593,7 +626,8 @@ export function planApply(t: Template, s: TenantState,
   planChains(t, s, opts.mayChangeChains, changes, leftAlone, steps, opts.chainBlocked);
 
   /* onboarding setup (D12): against the modules and features the template leaves the tenant with */
-  planOnboarding(t, s, opts.mayChangeOnboarding === true, onbFeatures(mods.modules, flags), { changes, added, leftAlone }, steps);
+  const profileCodes = [...s.structure.jobProfiles, ...(t.structure?.jobProfiles ?? []).map(j => j.code)];
+  planOnboarding(t, s, opts.mayChangeOnboarding === true, onbFeatures(mods.modules, flags), profileCodes, { changes, added, leftAlone }, steps);
 
   if (t.tenantSettings && s.tenantSettings) {
     const wanted = t.tenantSettings, held = s.tenantSettings, settings: ApplySteps['tenantSettings'] = {}, lines: PlanLine[] = [];
@@ -697,12 +731,12 @@ const docWords = (d: DocSettings, was: DocSettings) => [
   d.expiry !== was.expiry ? (d.expiry ? 'expiry tracked' : 'expiry not tracked') : '',
 ].filter(Boolean);
 const sameText = (a: readonly string[], b: readonly string[]) => a.length === b.length && a.every((x, i) => x === b[i]);
-function planOnboarding(t: Template, s: TenantState, may: boolean, f: ReturnType<typeof onbFeatures>,
+function planOnboarding(t: Template, s: TenantState, may: boolean, f: ReturnType<typeof onbFeatures>, profileCodes: readonly string[],
   out: { changes: PlanLine[]; added: PlanLine[]; leftAlone: PlanLine[] }, steps: ApplySteps) {
   const want = t.onboarding, have = s.onboarding;
   if (!want || !have) return;
   const changes: PlanLine[] = [], added: PlanLine[] = [], leftAlone: PlanLine[] = [];
-  const next: ApplySteps['onboarding'] = { steps: {}, documents: {}, documentsAdded: [], policiesUpdated: [], policiesAdded: [] };
+  const next: ApplySteps['onboarding'] = { steps: {}, documents: {}, documentsAdded: [], policiesUpdated: [], policiesAdded: [], templates: [] };
   const line = (text: string): PlanLine => ({ area: 'onboarding', text });
 
   const unknownSteps: string[] = [];
@@ -781,6 +815,22 @@ function planOnboarding(t: Template, s: TenantState, may: boolean, f: ReturnType
   }
   const kept = have.policies.filter(p => !want.policies.some(w => w.id === p.id)).map(p => p.label);
 
+  /* the policies the Default asks: the file's names win; otherwise what this apply adds is asked too, since the
+     list is explicit and a policy nobody asks is no use */
+  const policyIdOf = (label: string) => names.find(x => x.id === policyKey(label) || policyKey(x.label) === policyKey(label))?.id;
+  const heldDefault = have.config.policies;
+  if (want.defaultPolicies) {
+    const ids = [...new Set(want.defaultPolicies.flatMap(l => policyIdOf(l) ?? []))];
+    for (const l of want.defaultPolicies) if (!policyIdOf(l)) leftAlone.push(line(`Policy ${l} is not here, so the Default onboarding template does not ask for it.`));
+    const now = heldDefault ?? have.policies.map(p => p.id);
+    if (!sameSet(ids, now)) {
+      next.defaultPolicies = ids;
+      changes.push(line(`The Default onboarding template asks for ${list(ids.map(id => names.find(x => x.id === id)?.label ?? id)) || 'no policies'}.`));
+    }
+  } else if (heldDefault && next.policiesAdded.length) next.defaultPolicies = [...heldDefault, ...next.policiesAdded.map(p => p.id)];
+
+  planOnbTemplates(want.templates ?? [], have, profileCodes, names, next, { changes, added, leftAlone });
+
   if ((changes.length || added.length) && !may) { out.leftAlone.push(line(ONB_LEFT_ALONE)); return; }
   steps.onboarding = next;
   out.changes.push(...changes); out.added.push(...added); out.leftAlone.push(...leftAlone);
@@ -788,6 +838,68 @@ function planOnboarding(t: Template, s: TenantState, may: boolean, f: ReturnType
   out.leftAlone.push(line(reasked
     ? 'Uploaded policy documents stay as they are. Everybody’s onboarding progress stays too, apart from the policies they are asked to read again.'
     : 'Uploaded policy documents and everybody’s onboarding progress stay as they are.'));
+}
+
+/* The file's onboarding templates, matched by name (trimmed, ignoring case) to this tenant's. A job profile is
+   known when this tenant holds it or the template's structure adds it; one another template holds moves to this
+   one. A policy is matched by name against this tenant's policies and those this apply adds, a document by id
+   against the shared list and the documents this apply adds. A row the tenant already holds as the file has it
+   makes no line, so applying the same file again plans nothing here. */
+function planOnbTemplates(wanted: readonly TemplateOnbTemplate[], have: NonNullable<TenantState['onboarding']>, profileCodes: readonly string[],
+  policies: readonly OnbPolicy[], next: ApplySteps['onboarding'], out: { changes: PlanLine[]; added: PlanLine[]; leftAlone: PlanLine[] }) {
+  const line = (text: string): PlanLine => ({ area: 'onboarding', text });
+  const held = have.templates ?? [];
+  const known = new Map(profileCodes.map(c => [c.toUpperCase(), c]));
+  const docIds = [...have.config.documents.map(d => d.id), ...next.documentsAdded.map(d => d.id)];
+  const nameKey = (n: string) => n.trim().toLowerCase();
+  const sameIds = (a: readonly string[], b: readonly string[]) => a.length === b.length && a.every(x => b.includes(x));
+  const claimed = new Map<string, string>(), done = new Set<string>();
+  for (const w of wanted) {
+    const name = w.name.trim();
+    if (nameKey(name) === nameKey(DEFAULT_TEMPLATE)) {
+      out.leftAlone.push(line('An onboarding template named Default is not used. Default is the template every other job profile uses.'));
+      continue;
+    }
+    if (done.has(nameKey(name))) continue;
+    done.add(nameKey(name));
+    const mine = held.find(h => nameKey(h.name) === nameKey(name));
+    const jobProfiles: string[] = [], takeFrom: { id: string; code: string }[] = [];
+    for (const raw of w.jobProfiles) {
+      const code = known.get(raw.toUpperCase());
+      if (!code) { out.leftAlone.push(line(`Job profile ${raw} is not here, so onboarding template ${name} does not use it.`)); continue; }
+      if (jobProfiles.includes(code)) continue;
+      const first = claimed.get(code);
+      if (first) { out.leftAlone.push(line(`Job profile ${code} stays with onboarding template ${first}, so onboarding template ${name} does not use it.`)); continue; }
+      claimed.set(code, name);
+      jobProfiles.push(code);
+      const holder = held.find(h => h.id !== mine?.id && h.jobProfiles.includes(code));
+      if (holder) {
+        takeFrom.push({ id: holder.id, code });
+        out.changes.push(line(`Job profile ${code} moves from onboarding template ${holder.name} to ${name}.`));
+      }
+    }
+    const askedIds: string[] = [];
+    for (const label of w.policies) {
+      const id = policies.find(p => p.id === policyKey(label) || policyKey(p.label) === policyKey(label))?.id;
+      if (!id) out.leftAlone.push(line(`Policy ${label} is not here, so onboarding template ${name} does not ask for it.`));
+      else if (!askedIds.includes(id)) askedIds.push(id);
+    }
+    const steps = have.config.steps.map(s => ({ id: s.id, on: s.fixed || (w.steps.find(r => r.id === s.id)?.on ?? false) }));
+    const documents = docIds.map(id => w.documents.find(r => r.id === id) ?? { id, on: false, req: false, blocks: false });
+    const row = { name, jobProfiles, steps, documents, policies: askedIds, takeFrom };
+    if (!mine) {
+      next.templates.push({ id: null, ...row });
+      out.added.push(line(jobProfiles.length ? `Onboarding template ${name}, for ${list(jobProfiles)}.` : `Onboarding template ${name}, for no job profiles yet.`));
+      continue;
+    }
+    const was = { steps: have.config.steps.map(s => ({ id: s.id, on: s.fixed || (mine.steps.find(r => r.id === s.id)?.on ?? false) })),
+      documents: docIds.map(id => mine.documents.find(r => r.id === id) ?? { id, on: false, req: false, blocks: false }) };
+    const same = mine.name === name && sameIds(mine.jobProfiles, jobProfiles) && sameIds(mine.policies, askedIds)
+      && JSON.stringify(was.steps) === JSON.stringify(steps) && JSON.stringify(was.documents) === JSON.stringify(documents);
+    if (same) continue;
+    next.templates.push({ id: mine.id, ...row });
+    out.changes.push(line(`Onboarding template ${name} takes the template's settings, for ${list(jobProfiles) || 'no job profiles'}.`));
+  }
 }
 
 /* Module 8: Rota setup's support levels, matched by code, each taking the

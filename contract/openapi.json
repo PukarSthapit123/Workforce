@@ -57902,6 +57902,110 @@
                                 ],
                                 "additionalProperties": false
                               }
+                            },
+                            "templates": {
+                              "maxItems": 200,
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "name": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 60
+                                  },
+                                  "jobProfiles": {
+                                    "maxItems": 1000,
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string",
+                                      "maxLength": 20
+                                    }
+                                  },
+                                  "steps": {
+                                    "maxItems": 10,
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string",
+                                          "enum": [
+                                            "personal",
+                                            "contact",
+                                            "emergency",
+                                            "additional",
+                                            "documents",
+                                            "policies",
+                                            "review"
+                                          ]
+                                        },
+                                        "on": {
+                                          "type": "boolean"
+                                        }
+                                      },
+                                      "required": [
+                                        "id",
+                                        "on"
+                                      ],
+                                      "additionalProperties": false
+                                    }
+                                  },
+                                  "documents": {
+                                    "maxItems": 20,
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string",
+                                          "maxLength": 20
+                                        },
+                                        "on": {
+                                          "type": "boolean"
+                                        },
+                                        "req": {
+                                          "type": "boolean"
+                                        },
+                                        "blocks": {
+                                          "type": "boolean"
+                                        }
+                                      },
+                                      "required": [
+                                        "id",
+                                        "on",
+                                        "req",
+                                        "blocks"
+                                      ],
+                                      "additionalProperties": false
+                                    }
+                                  },
+                                  "policies": {
+                                    "maxItems": 40,
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string",
+                                      "maxLength": 80
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "name",
+                                  "jobProfiles",
+                                  "steps",
+                                  "documents",
+                                  "policies"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "defaultPolicies": {
+                              "maxItems": 40,
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "maxLength": 80
+                              }
                             }
                           },
                           "required": [

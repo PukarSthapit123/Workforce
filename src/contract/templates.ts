@@ -43,6 +43,11 @@ const Onboarding = z.object({
     on: z.boolean().optional(), custom: z.boolean().optional(), label: Text(60).optional(), hint: Text(200).optional() })).max(20),
   policies: z.array(z.object({ id: z.string().regex(/^[a-z0-9_]{1,80}$/, 'A policy id is lower-case letters, digits or an underscore.'), label: Text(80).min(1),
     ver: Text(20), sum: Text(300), body: z.array(Text(2000)).max(40) })).max(40),
+  /* onboarding templates by job profile code, and the policies each asks by name; the default's policies by name */
+  templates: z.array(z.object({ name: Text(60).min(1), jobProfiles: z.array(Text(20)).max(1000), steps: z.array(z.object({ id: OnbStepId, on: z.boolean() })).max(10),
+    documents: z.array(z.object({ id: z.string().max(20), on: z.boolean(), req: z.boolean(), blocks: z.boolean() })).max(20),
+    policies: z.array(Text(80)).max(40) })).max(200).optional(),
+  defaultPolicies: z.array(Text(80)).max(40).optional(),
 });
 const RoleNames = z.object({ employee: Text(24).min(1), manager: Text(24).min(1), admin: Text(24).min(1) });
 const TenantSettings = z.object({

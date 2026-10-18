@@ -17,8 +17,9 @@ import { codesOf, employees, recordAt, type Signed } from './world';
 import { requireWeekStartChangeAllowed, rotaActor, rotaOff, rotaOn, saveTenant, sitesOff, tenantRec, tsConfig, view, type StoredTenant } from './tenant';
 import meta from './seed/meta.json';
 import { chainRecord, chainStrands, chainsNow, writeChain } from './approvals';
-import { casesColl, policiesColl, policiesNow, putCase, stillOnboarding, type StoredConfig } from './onboarding-cases';
+import { casesColl, policiesColl, policiesNow, putCase, resolvedFor, stillOnboarding, templatesColl, templatesNow, type StoredConfig } from './onboarding-cases';
 import { caseId, reaskPolicy } from '@/domain/onboarding';
+import { onbTemplateId } from '@/domain/onboarding-templates';
 import { CHAIN_MODULES, type ChainModule, type ChainStep } from '@/domain/approvals';
 import {
   Template as TemplateSchema, applyTemplate, exportTemplate, getTemplatePlan, importTemplate, listTemplates, removeTemplate, saveTemplate,
@@ -107,7 +108,9 @@ function onboardingNow(): TenantState['onboarding'] {
   const config = recordAt(store.coll<StoredConfig>('onboardingConfig'), 'onboardingConfig');
   if (!config) return undefined;
   const policies = policiesNow(), onboarding = Object.values(casesColl()).filter(stillOnboarding);
-  return { config, policies, acknowledged: Object.fromEntries(policies.map(p => [p.id, onboarding.filter(c => p.id in c.acks).length])) };
+  /* the employees a new wording asks again are those still onboarding whose template asks the policy */
+  const asks = (c: (typeof onboarding)[number], id: string) => id in c.acks && resolvedFor(c.employeeCode).policies.includes(id);
+  return { config, policies, templates: templatesNow(), acknowledged: Object.fromEntries(policies.map(p => [p.id, onboarding.filter(c => asks(c, p.id)).length])) };
 }
 const codes = (kind: StructureKind) => Object.values(store.coll<Row>(HOME[kind].coll)).map(r => r.code);
 function stateOf(t: StoredTenant): TenantState {
@@ -213,13 +216,28 @@ function carryOut(t: StoredTenant, plan: ApplyPlan, key: string, by: RotaActor):
     const have = recordAt(pols, u.id);
     if (!have) continue;
     pols[u.id] = bump(have, { label: u.label, ver: u.ver, sum: u.sum, body: u.body });
-    if (u.reask) for (const c of reaskPolicy(u.id, Object.values(casesColl()).filter(stillOnboarding)).changed) {
+    if (u.reask) for (const c of reaskPolicy(u.id, Object.values(casesColl()).filter(c => stillOnboarding(c) && resolvedFor(c.employeeCode).policies.includes(u.id))).changed) {
       const was = recordAt(casesColl(), caseId(c.employeeCode));
       if (was) putCase(was, c);
     }
   }
   let order = policiesNow().reduce((m, x) => Math.max(m, x.order + 1), 0);
   for (const a of o.policiesAdded) pols[a.id] = { ...a, order: order++, id: a.id, version: 1, updatedAt: store.now() };
+  /* the Default's policies, then the onboarding templates: each created row at version 1, each set row bumped, and a job profile another template held comes off it */
+  const base = recordAt(store.coll<StoredConfig>('onboardingConfig'), 'onboardingConfig');
+  if (base && o.defaultPolicies) store.coll<StoredConfig>('onboardingConfig')[base.id] = bump(base, { policies: o.defaultPolicies });
+  const tcoll = templatesColl();
+  const set = new Set(o.templates.flatMap(x => x.id ?? []));
+  for (const x of o.templates) {
+    const { id, name, jobProfiles, steps, documents, policies } = x, row = { name, jobProfiles, steps, documents, policies };
+    const have = id ? tcoll[id] : undefined;
+    if (have) tcoll[have.id] = bump(have, row);
+    else { const nid = onbTemplateId(row.name, Object.keys(tcoll)); tcoll[nid] = { ...row, id: nid, version: 1, updatedAt: store.now() }; }
+  }
+  for (const id of new Set(o.templates.flatMap(x => x.takeFrom.map(t => t.id)))) {
+    const have = tcoll[id], taken = o.templates.flatMap(x => x.takeFrom).filter(t => t.id === id).map(t => t.code);
+    if (have && !set.has(id)) tcoll[id] = bump(have, { jobProfiles: have.jobProfiles.filter(c => !taken.includes(c)) });
+  }
   const fy = s.tenantSettings.financialYear;
   const financialYear = fy
     ? { ...fy, label: `${fy.start.slice(0, 4)}/${fy.end.slice(2, 4)}` }

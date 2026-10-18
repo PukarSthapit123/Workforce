@@ -386,7 +386,8 @@ describe('the onboarding setup in a template (module 5, D12)', () => {
 
     const plan = TemplatePlan.parse((await admin('GET', PLAN(KEY))).body);
     expect(onbLines(plan.changes)).toEqual(['Onboarding step Emergency contacts on.', 'Onboarding document Proof of address: does not block the start.',
-      'Policy Privacy notice, with the template\'s wording. It becomes v2.1. 1 employee will be asked to read it again.']);
+      'Policy Privacy notice, with the template\'s wording. It becomes v2.1. 1 employee will be asked to read it again.',
+      'The Default onboarding template asks for Code of conduct, Privacy notice, Employee handbook and IT and data security.']);
     expect(onbLines(plan.leftAlone)).toEqual(['Policies the template does not have stay, with their acknowledgements: Fire safety.',
       'Uploaded policy documents stay as they are. Everybody’s onboarding progress stays too, apart from the policies they are asked to read again.']);
     const n = audits().length;
@@ -418,5 +419,87 @@ describe('the onboarding setup in a template (module 5, D12)', () => {
     expect(onbLines(yes.plan.added)).toEqual(['Policy IT and data security v3.2, without a document. Upload one in Onboarding setup.']);
     expect(pol('pol_itsec')).toMatchObject({ label: 'IT and data security', ver: 'v3.2', version: 1, body: expect.arrayContaining([expect.stringMatching(/^Use a different password/)]) });
     expect(pol('pol_itsec')?.file).toBeUndefined();
+  });
+});
+
+describe('onboarding templates in an organisation template', () => {
+  interface OnbT { id: string; name: string; jobProfiles: string[]; version: number }
+  const rows = () => Object.values(store.coll<OnbT>('onboardingTemplates'));
+  const onbLines = (lines: readonly { area: string; text: string }[]) => lines.filter(l => l.area === 'onboarding').map(l => l.text);
+  const POL = (id: string) => store.coll<{ ver: string }>('onboardingPolicies')[id];
+  const cfgPolicies = () => store.coll<{ policies?: string[] }>('onboardingConfig').onboardingConfig?.policies;
+  const caseOf = (code: string) => store.coll<{ acks: Record<string, string> }>('onboardingCases')[`onb_${code}`];
+  const KEY = 'tpl_care_onboarding';
+  /* qnipay's setup carries the Senior consultants onboarding template; social has no template and no SCONS job profile */
+  const carriedToSocial = async () => {
+    resetTo('qnipay');
+    admin = await as('admin');
+    expect((await save('Care onboarding')).status).toBe(200);
+    /* the file travels without qnipay's Leave setup, which names employee types social does not have */
+    const file = TemplateFile.parse((await admin('GET', EXPORT(KEY))).body);
+    const text = JSON.stringify({ ...file, template: { ...file.template, leaveConfig: undefined } });
+    resetTo('social');
+    admin = await as('admin');
+    expect((await admin('POST', `${T}/import`, { text })).status).toBe(200);
+  };
+
+  test('a saved template keeps the onboarding templates, and applying it elsewhere creates them in the one audit row', async () => {
+    await carriedToSocial();
+    const kept = store.coll<{ template: Template }>('templates')[KEY]?.template.onboarding as { templates?: { name: string; jobProfiles: string[]; policies: string[] }[] } | undefined;
+    expect(kept?.templates?.map(t => [t.name, t.jobProfiles, t.policies])).toEqual([['Senior consultants', ['SCONS'], ['Code of conduct', 'Privacy notice', 'IT and data security']]]);
+    const plan = TemplatePlan.parse((await admin('GET', PLAN(KEY))).body);
+    expect(onbLines(plan.leftAlone)).toContain('Job profile SCONS is not here, so onboarding template Senior consultants does not use it.');
+    const n = audits().length;
+    expect((await admin('POST', APPLY(KEY), undefined, tenantVer())).status).toBe(200);
+    expect(rows().map(r => [r.id, r.name, r.jobProfiles, r.version])).toEqual([['onbt-senior-consultants', 'Senior consultants', [], 1]]);
+    expect(audits().slice(n).map(a => a.act)).toEqual(['Template applied']);
+  });
+
+  test('applying the same template twice creates no second onboarding template and plans no change the second time', async () => {
+    await carriedToSocial();
+    expect((await admin('POST', APPLY(KEY), undefined, tenantVer())).status).toBe(200);
+    const second = TemplatePlan.parse((await admin('GET', PLAN(KEY))).body);
+    expect([...second.changes, ...second.added].map(l => l.text).filter(t => t.startsWith('Onboarding template'))).toEqual([]);
+    expect((await admin('POST', APPLY(KEY), undefined, tenantVer())).status).toBe(200);
+    expect(rows().map(r => [r.name, r.version])).toEqual([['Senior consultants', 1]]);
+  });
+
+  test('a job profile the tenant holds moves to the applied template from the one that held it', async () => {
+    await carriedToSocial();
+    store.coll<unknown>('onboardingTemplates')['onbt-seniors'] = { id: 'onbt-seniors', name: 'Seniors', jobProfiles: ['SW'], steps: [], documents: [], policies: [], version: 1, updatedAt: FROZEN };
+    const t = store.coll<{ template: { onboarding: { templates: { jobProfiles: string[] }[] } } }>('templates')[KEY];
+    if (!t) throw new Error('no template');
+    t.template.onboarding.templates.forEach(x => { x.jobProfiles = ['SW']; });
+    expect(onbLines(TemplatePlan.parse((await admin('GET', PLAN(KEY))).body).changes)).toContain('Job profile SW moves from onboarding template Seniors to Senior consultants.');
+    expect((await admin('POST', APPLY(KEY), undefined, tenantVer())).status).toBe(200);
+    expect(rows().map(r => [r.name, r.jobProfiles, r.version]).sort()).toEqual([['Senior consultants', ['SW'], 1], ['Seniors', [], 2]]);
+  });
+
+  test('policies the file adds without saying what the Default asks are asked by the Default', async () => {
+    expect((await save('Care onboarding')).status).toBe(200);
+    const kept = store.coll<{ template: { onboarding?: { defaultPolicies?: string[] } } }>('templates')[KEY]?.template.onboarding;
+    expect(kept?.defaultPolicies).toContain('IT and data security');
+    delete kept?.defaultPolicies;
+    expect((await admin('DELETE', '/api/v1/onboarding/policies/pol_itsec', undefined, 1)).status).toBe(200);
+    expect(cfgPolicies()).not.toContain('pol_itsec');
+    expect((await admin('POST', APPLY(KEY), undefined, tenantVer())).status).toBe(200);
+    expect(cfgPolicies()).toContain('pol_itsec');
+  });
+
+  test('a reworded policy asks again only the starters whose template asks it', async () => {
+    expect((await save('Care onboarding')).status).toBe(200);
+    Object.assign(caseOf('CP-1502') ?? {}, { acks: { pol_privacy: 'v2.0' } });
+    expect((await admin('PATCH', '/api/v1/onboarding/policies/pol_privacy', { label: 'Privacy notice', ver: 'v2.0', sum: 'Shorter.' }, 1)).status).toBe(200);
+    const asks = TemplatePlan.parse((await admin('GET', PLAN(KEY))).body);
+    expect(onbLines(asks.changes).at(-1)).toContain('1 employee will be asked to read it again.');
+    /* the starter's template does not ask for the policy: nobody is asked again, and the acknowledgement stays */
+    const profile = Object.values(store.coll<{ code: string; jobProfile: string }>('employees')).find(e => e.code === 'CP-1502')?.jobProfile ?? '';
+    store.coll<unknown>('onboardingTemplates')['onbt-conduct-only'] = { id: 'onbt-conduct-only', name: 'Conduct only', jobProfiles: [profile], steps: [], documents: [],
+      policies: ['pol_conduct'], version: 1, updatedAt: FROZEN };
+    const none = TemplatePlan.parse((await admin('GET', PLAN(KEY))).body);
+    expect(onbLines(none.changes).at(-1)).toContain('Nobody still onboarding has acknowledged it, so nobody is asked again.');
+    expect((await admin('POST', APPLY(KEY), undefined, tenantVer())).status).toBe(200);
+    expect(POL('pol_privacy')?.ver).toBe('v2.1');
+    expect(caseOf('CP-1502')?.acks).toEqual({ pol_privacy: 'v2.0' });
   });
 });

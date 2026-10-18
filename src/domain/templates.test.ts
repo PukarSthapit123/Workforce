@@ -8,6 +8,7 @@ import {
 import { CHAIN_MODULES, DEFAULT_CHAIN, defaultChainFor, type ChainModule, type ChainStep } from './approvals';
 import { DEFAULT_SUPPORT_LEVELS } from './rota';
 import { ALWAYS_ASKED, POLICY_NAME_TAKEN, STEP_UNAVAILABLE, type OnbPolicy, type OnbStep, type OnboardingConfig } from './onboarding';
+import type { OnbTemplate } from './onboarding-templates';
 
 const must = <T,>(v: T | undefined, what = 'value'): T => { if (v === undefined) throw new Error(`missing ${what}`); return v; };
 const shipped = (k: string) => must(SHIPPED_TEMPLATES[k], k);
@@ -396,7 +397,7 @@ describe('the onboarding setup in a template (module 5, D12)', () => {
   test('without Configure onboarding the onboarding setup stays and says so; a matching one is no change', () => {
     const changed = withOnb({ steps: [{ id: 'emergency', on: false }], documents: [], policies: [] });
     const no = planApply(changed, state(), { ...ALL, mayChangeOnboarding: false });
-    expect(no.steps.onboarding).toEqual({ steps: {}, documents: {}, documentsAdded: [], policiesUpdated: [], policiesAdded: [] });
+    expect(no.steps.onboarding).toEqual({ steps: {}, documents: {}, documentsAdded: [], policiesUpdated: [], policiesAdded: [], templates: [] });
     expect(texts(no.leftAlone)).toEqual([ONB_LEFT_ALONE]);
     const same = planApply(withOnb(captureOnboarding({ config: config(), policies: policies() })), state(), ALL);
     expect([texts(same.changes), texts(same.added)]).toEqual([[], []]);
@@ -409,6 +410,110 @@ describe('the onboarding setup in a template (module 5, D12)', () => {
     if (!r.ok) throw new Error('refused');
     expect(r.ignored).toEqual(['onboarding.policies.file', 'onboarding.progress']);
     expect(r.template.onboarding).toEqual({ steps: [], documents: [], policies: [{ id: 'pol_x', label: 'X', ver: 'v1.0', sum: '', body: [] }] });
+  });
+});
+
+describe('onboarding templates in a template', () => {
+  const step = (id: OnbStep['id'], label: string, on: boolean, fixed = false): OnbStep => ({ id, label, on, fixed, desc: '' });
+  const CFG = (): OnboardingConfig => ({
+    steps: [step('personal', 'Personal details', true, true), step('emergency', 'Emergency contacts', true), step('policies', 'Policies and sign-off', true)],
+    documents: [{ id: 'addr', label: 'Proof of address', req: true, verify: 'hr', blocks: false, expiry: false, hint: '', on: true, custom: false },
+      { id: 'photo', label: 'Photograph', req: false, verify: 'either', blocks: false, expiry: false, hint: '', on: true, custom: false }],
+  });
+  const POLS: OnbPolicy[] = [
+    { id: 'pol_conduct', label: 'Code of conduct', ver: 'v4.1', sum: 'Conduct.', body: ['Conduct.'], order: 0 },
+    { id: 'pol_privacy', label: 'Privacy notice', ver: 'v2.0', sum: 'Privacy.', body: ['Privacy.'], order: 1 }];
+  const SENIOR: OnbTemplate = {
+    id: 'onbt-senior-consultants', name: 'Senior consultants', jobProfiles: ['SCONS'],
+    steps: [{ id: 'personal', on: true }, { id: 'emergency', on: false }, { id: 'policies', on: true }],
+    documents: [{ id: 'addr', on: true, req: false, blocks: true }, { id: 'photo', on: false, req: false, blocks: false }], policies: ['pol_conduct'],
+  };
+  const FILE_ROW = { name: 'Senior consultants', jobProfiles: ['SCONS'], steps: SENIOR.steps, documents: SENIOR.documents, policies: ['Code of conduct'] };
+  const ALL = { mayRenameRoles: true, mayChangeChains: true, mayChangeTypes: true, mayChangeOnboarding: true };
+  const withJobProfile = (code: string): Partial<TenantState> => ({ structure: { departments: [], costCentres: [], locations: [], jobProfiles: ['SW', code], contracts: [] } });
+  const state = (over: Partial<NonNullable<TenantState['onboarding']>> = {}, extra: Partial<TenantState> = {}) =>
+    socialState({ onboarding: { config: CFG(), policies: POLS, ...over }, ...extra });
+  const tpl = (o: Partial<NonNullable<Template['onboarding']>>): Template => ({ ...shipped('social'), onboarding: { steps: [], documents: [], policies: [], ...o } });
+  const texts = (lines: readonly { area: string; text: string }[]) => lines.filter(l => l.area === 'onboarding').map(l => l.text);
+
+  test('capture keeps each onboarding template with its job profile codes and switches, its policies by name, and the default\'s policies', () => {
+    const o = captureOnboarding({ config: { ...CFG(), policies: ['pol_conduct'] }, policies: POLS, templates: [SENIOR] });
+    expect(o.templates).toEqual([FILE_ROW]);
+    expect(o.defaultPolicies).toEqual(['Code of conduct']);
+  });
+  test('apply creates a template by name, or updates the one with that name, and sets its job profiles', () => {
+    const t = tpl({ templates: [FILE_ROW] });
+    const made = planApply(t, state({}, withJobProfile('SCONS')), ALL);
+    expect(made.steps.onboarding.templates).toEqual([{ id: null, name: 'Senior consultants', jobProfiles: ['SCONS'], steps: SENIOR.steps, documents: SENIOR.documents,
+      policies: ['pol_conduct'], takeFrom: [] }]);
+    expect(texts(made.added)).toEqual(['Onboarding template Senior consultants, for SCONS.']);
+    const held: OnbTemplate = { ...SENIOR, name: 'senior CONSULTANTS', jobProfiles: [], policies: [] };
+    const upd = planApply(t, state({ templates: [held] }, withJobProfile('SCONS')), ALL);
+    expect(upd.steps.onboarding.templates.map(x => [x.id, x.name, x.jobProfiles])).toEqual([['onbt-senior-consultants', 'Senior consultants', ['SCONS']]]);
+    expect(texts(upd.changes)).toEqual(['Onboarding template Senior consultants takes the template\'s settings, for SCONS.']);
+    const none = planApply(tpl({ templates: [{ ...FILE_ROW, jobProfiles: [] }] }), state(), ALL);
+    expect(texts(none.added)).toEqual(['Onboarding template Senior consultants, for no job profiles yet.']);
+  });
+  test('a job profile the template\'s structure adds counts as known', () => {
+    const t = { ...tpl({ templates: [FILE_ROW] }), scope: 'structure' as const, structure: { jobProfiles: [{ code: 'SCONS', name: 'Senior', night: false }] } };
+    expect(planApply(t, state(), ALL).steps.onboarding.templates[0]?.jobProfiles).toEqual(['SCONS']);
+  });
+  test('a job profile code the tenant does not have is skipped, and the plan says so', () => {
+    const p = planApply(tpl({ templates: [{ ...FILE_ROW, jobProfiles: ['XYZ'] }] }), state(), ALL);
+    expect(texts(p.leftAlone)).toContain('Job profile XYZ is not here, so onboarding template Senior consultants does not use it.');
+    expect(p.steps.onboarding.templates[0]?.jobProfiles).toEqual([]);
+  });
+  test('a job profile another template holds moves to the template being applied, and the plan says so', () => {
+    const seniors: OnbTemplate = { ...SENIOR, id: 'onbt-seniors', name: 'Seniors' };
+    const p = planApply(tpl({ templates: [FILE_ROW] }), state({ templates: [seniors] }, withJobProfile('SCONS')), ALL);
+    expect(texts(p.changes)).toEqual(['Job profile SCONS moves from onboarding template Seniors to Senior consultants.']);
+    expect(p.steps.onboarding.templates[0]?.takeFrom).toEqual([{ id: 'onbt-seniors', code: 'SCONS' }]);
+  });
+  test('a policy name the tenant does not have is not asked, and the plan says so', () => {
+    const p = planApply(tpl({ templates: [{ ...FILE_ROW, policies: ['Fire safety'] }] }), state(), ALL);
+    expect(texts(p.leftAlone)).toContain('Policy Fire safety is not here, so onboarding template Senior consultants does not ask for it.');
+    expect(p.steps.onboarding.templates[0]?.policies).toEqual([]);
+  });
+  test('a policy the same apply adds can be asked by a template', () => {
+    const t = tpl({ policies: [{ id: 'pol_safe', label: 'Safeguarding policy', ver: 'v1.0', sum: '', body: [] }], templates: [{ ...FILE_ROW, policies: ['safeguarding POLICY'] }] });
+    expect(planApply(t, state(), ALL).steps.onboarding.templates[0]?.policies).toEqual(['pol_safe']);
+  });
+  test('a row identical to the one held makes no line, and a template called Default is not used', () => {
+    const same = planApply(tpl({ templates: [FILE_ROW] }), state({ templates: [SENIOR] }, withJobProfile('SCONS')), ALL);
+    expect(same.steps.onboarding.templates).toEqual([]);
+    expect(texts([...same.changes, ...same.added])).toEqual([]);
+    const def = planApply(tpl({ templates: [{ ...FILE_ROW, name: 'default' }] }), state(), ALL);
+    expect(def.steps.onboarding.templates).toEqual([]);
+    expect(texts(def.leftAlone)).toContain('An onboarding template named Default is not used. Default is the template every other job profile uses.');
+  });
+  test('without Configure onboarding the templates stay and the setup line says so', () => {
+    const p = planApply(tpl({ templates: [FILE_ROW] }), state(), { ...ALL, mayChangeOnboarding: false });
+    expect(p.steps.onboarding.templates).toEqual([]);
+    expect(texts(p.leftAlone)).toEqual([ONB_LEFT_ALONE]);
+  });
+  test('a file without onboarding templates applies as today', () => {
+    const p = planApply(tpl({}), state({ templates: [SENIOR] }), ALL);
+    expect(p.steps.onboarding.templates).toEqual([]);
+    expect([...p.changes, ...p.added, ...p.leftAlone].filter(l => l.text.includes('Onboarding template'))).toEqual([]);
+  });
+  test('the policies the file says the default asks are set, by name, and win over adding', () => {
+    const t = tpl({ defaultPolicies: ['Privacy notice', 'Fire safety'], policies: [{ id: 'pol_safe', label: 'Safeguarding policy', ver: 'v1.0', sum: '', body: [] }] });
+    const p = planApply(t, state({ config: { ...CFG(), policies: ['pol_conduct'] } }), ALL);
+    expect(p.steps.onboarding.defaultPolicies).toEqual(['pol_privacy']);
+  });
+  test('policies a file adds without saying what the default asks are appended to the default\'s list', () => {
+    const t = tpl({ policies: [{ id: 'pol_safe', label: 'Safeguarding policy', ver: 'v1.0', sum: '', body: [] }] });
+    expect(planApply(t, state({ config: { ...CFG(), policies: ['pol_conduct'] } }), ALL).steps.onboarding.defaultPolicies).toEqual(['pol_conduct', 'pol_safe']);
+    expect(planApply(t, state(), ALL).steps.onboarding.defaultPolicies).toBeUndefined();
+  });
+  test('an imported file keeps the onboarding templates and lists unknown keys in them as ignored', () => {
+    const t = tpl({ templates: [{ ...FILE_ROW, colour: 'red' } as never], defaultPolicies: ['Code of conduct'] });
+    const r = readTemplateFile(JSON.stringify(templateFile('tpl_x', t)));
+    if (!r.ok) throw new Error('refused');
+    expect(r.ignored).toEqual(['onboarding.templates.colour']);
+    const o = r.template.onboarding as { templates: unknown[]; defaultPolicies: string[] };
+    expect(o.templates).toEqual([FILE_ROW]);
+    expect(o.defaultPolicies).toEqual(['Code of conduct']);
   });
 });
 
