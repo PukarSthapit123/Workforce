@@ -625,3 +625,33 @@ test.describe('module 6 pages', () => {
     }
   });
 });
+
+/* The employee form's job profile combobox with its panel open: the search box
+   and the list sit in a portal over the dialog. */
+test.describe('searchable combobox', () => {
+  const openJobProfile = async (page: Page) => {
+    await page.goto('/setup/aemployees');
+    await page.getByTestId(tid.employees.table).waitFor();
+    await page.getByTestId(tid.employees.add).click();
+    await page.getByTestId(tid.employeeForm.root).waitFor();
+    await page.getByTestId(tid.employeeForm.field('jobProfile')).click();
+    await page.getByTestId(`${tid.employeeForm.field('jobProfile')}-search`).waitFor();
+  };
+  for (const theme of ['light', 'dark'] as const) {
+    test(`axe: the open job profile combobox has no violations (${theme})`, async ({ page, signInAs }) => {
+      await signInAs('admin');
+      await openJobProfile(page);
+      await setTheme(page, theme);
+      const r = await new AxeBuilder({ page }).analyze();
+      expect(r.violations.map(v => `${v.id}: ${v.nodes.length}`)).toEqual([]);
+    });
+  }
+  test('phone: the open job profile combobox has no horizontal overflow at 390px', async ({ page, signInAs }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await signInAs('admin');
+    await openJobProfile(page);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    const box = await page.getByRole('listbox').boundingBox();
+    expect(box && box.x >= 0 && box.x + box.width <= 390, 'the panel within the screen').toBe(true);
+  });
+});

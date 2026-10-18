@@ -78,7 +78,7 @@ export function Combobox({ testId, options, value, onValueChange, placeholder, d
       </Popover.Trigger>
       {name && <input type="hidden" name={name} value={value ?? ''} />}
       <Popover.Portal>
-        <Popover.Content align="start" sideOffset={4}
+        <Popover.Content align="start" sideOffset={4} aria-label={ariaLabel ?? searchLabel}
           onOpenAutoFocus={e => { e.preventDefault(); inputRef.current?.focus(); }}
           className="z-[120] min-w-(--radix-popover-trigger-width) origin-(--radix-popover-content-transform-origin) overflow-hidden rounded-control border bg-popover text-popover-foreground shadow-md outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95">
           <div className="p-1 pb-0">
