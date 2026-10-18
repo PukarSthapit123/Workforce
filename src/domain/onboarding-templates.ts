@@ -38,7 +38,7 @@ export const withPolicies = (base: OnboardingConfig, allPolicyIds: readonly stri
   ({ ...base, policies: base.policies ?? [...allPolicyIds] });
 
 /* The template listing the starter's job profile, or null for the default. */
-export const templateFor = (jobProfile: string, templates: readonly OnbTemplate[]): OnbTemplate | null =>
+export const templateFor = <T extends OnbTemplate>(jobProfile: string, templates: readonly T[]): T | null =>
   (jobProfile ? templates.find(t => t.jobProfiles.includes(jobProfile)) : undefined) ?? null;
 
 export function configFor(template: OnbTemplate | null, base: BaseConfig): ResolvedOnboarding {

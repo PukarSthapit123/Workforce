@@ -18,7 +18,8 @@ import { writeAudit } from './audit';
 import { notifyEvent } from './notify';
 import { accountOfEmployee, accounts, effectiveCode, nameOf, employees, employeeByCode, employeeView, recordAt, today, writeHistory, type Signed, type StoredEmployee } from './world';
 import {
-  blockerContext, caseOf, casesColl, featuresNow, onbConfig, policiesColl, policiesNow, putCase, refuseOnb, requireOnboarding, stillOnboarding, templatesNow, type StoredCase, type StoredConfig, type StoredPolicy,
+  caseContext, caseOf, casesColl, featuresNow, onbConfig, policiesColl, policiesNow, putCase, refuseOnb, requireOnboarding, resolvedFor, stillOnboarding, templateRef, templatesColl, templatesNow,
+  type StoredCase, type StoredConfig, type StoredPolicy,
 } from './onboarding-cases';
 import {
   ackOnboardingPolicy, addOnboardingDocument, addOnboardingPolicy, removeOnboardingDocument, renameOnboardingDocument, chaseStarter, editOnboardingPolicy, getMyOnboarding, getOnboardingSetup, getStarterOnboarding,
@@ -39,8 +40,8 @@ import { templateFor } from '@/domain/onboarding-templates';
 import { LIFECYCLE, isEmployeeState, transitionProblem } from '@/domain/lifecycle';
 
 /* ------------------------------------------------------------- the world */
-/* Policies are asked only while Policy acknowledgement is on. */
-const policiesAsked = (f: OnbFeatures) => (f.pol ? policiesNow() : []);
+/* Policies are asked only while Policy acknowledgement is on, and only those the starter's template lists. */
+const policiesAsked = (f: OnbFeatures, ids: readonly string[]) => (f.pol ? policiesNow().filter(p => ids.includes(p.id)) : []);
 const locName = (code: string) => nameOf('locations', code);
 const firstName = (name: string) => name.split(/\s/)[0] ?? name;
 const sameJson = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
@@ -100,15 +101,15 @@ function docViews(c: OnboardingCase, cfg: OnboardingConfig, f: OnbFeatures): Onb
   });
 }
 function progressOf(c: OnboardingCase) {
-  const pr = progress(c, blockerContext());
+  const pr = progress(c, caseContext(c.employeeCode));
   return { done: pr.done, total: pr.total, pc: pr.total ? Math.round((pr.done / pr.total) * 100) : 0, text: progressText(pr) };
 }
 const caseView = (c: StoredCase) => ({ ...c });
 function detailOf(p: StoredEmployee): OnboardingDetail {
-  const c = caseOf(p.code), cfg = onbConfig(), f = featuresNow(), ctx = blockerContext();
+  const c = caseOf(p.code), r = resolvedFor(p.code), cfg = r.config, f = featuresNow(), ctx = { config: cfg, features: f };
   return {
-    employee: employeeOf(p), case: caseView(c), features: f, steps: stepViews(c, cfg, f), documents: docViews(c, cfg, f),
-    policies: policiesAsked(f).map(pol => ({ ...pol, acknowledged: policyAcknowledged(c, pol), read: Boolean(c.read[pol.id]) })),
+    employee: employeeOf(p), template: templateRef(r.template), case: caseView(c), features: f, steps: stepViews(c, cfg, f), documents: docViews(c, cfg, f),
+    policies: policiesAsked(f, r.policies).map(pol => ({ ...pol, acknowledged: policyAcknowledged(c, pol), read: Boolean(c.read[pol.id]) })),
     progress: progressOf(c), toSubmit: blockers(c, ctx, 'submit'), toStart: blockers(c, ctx, 'start'),
     open: !c.submittedAt || Object.values(c.steps).includes('prog'), submitted: c.submittedAt ? submittedText(c.ref) : '', filesNote: FILES_NOTE, today: today(),
   };
@@ -116,17 +117,17 @@ function detailOf(p: StoredEmployee): OnboardingDetail {
 /* A step sent back after submission is judged against the documents they were asked then (askedOf). */
 /* The tracker's view of one starter (review I3): states, files and blockers, never their answers. */
 function starterViewOf(p: StoredEmployee): StarterOnboarding {
-  const c = caseOf(p.code), cfg = onbConfig(), f = featuresNow();
-  return { employee: employeeOf(p), caseRef: { id: c.id, version: c.version }, steps: stepViews(c, cfg, f), documents: docViews(c, cfg, f),
-    progress: progressOf(c), toStart: blockers(c, blockerContext(), 'start'), submittedAt: c.submittedAt, ref: c.ref };
+  const c = caseOf(p.code), r = resolvedFor(p.code), cfg = r.config, f = featuresNow();
+  return { employee: employeeOf(p), template: templateRef(r.template), caseRef: { id: c.id, version: c.version }, steps: stepViews(c, cfg, f), documents: docViews(c, cfg, f),
+    progress: progressOf(c), toStart: blockers(c, { config: cfg, features: f }, 'start'), submittedAt: c.submittedAt, ref: c.ref };
 }
-const stepContext =(c: OnboardingCase, cfg: OnboardingConfig, f: OnbFeatures): StepContext =>
-  ({ features: f, documents: askedOf(c, { config: cfg, features: f }).documents, policies: policiesAsked(f), today: today() });
-function docAsked(id: string): OnbDocument {
-  return docsAsked(onbConfig(), featuresNow()).find(d => d.id === id) ?? NOT_FOUND(`There is no document "${id}" to upload or check.`, 'Reload the page to see the documents asked for.');
+const stepContext = (c: OnboardingCase, cfg: OnboardingConfig, f: OnbFeatures, policyIds: readonly string[]): StepContext =>
+  ({ features: f, documents: askedOf(c, { config: cfg, features: f }).documents, policies: policiesAsked(f, policyIds), today: today() });
+function docAsked(id: string, cfg: OnboardingConfig): OnbDocument {
+  return docsAsked(cfg, featuresNow()).find(d => d.id === id) ?? NOT_FOUND(`There is no document "${id}" to upload or check.`, 'Reload the page to see the documents asked for.');
 }
-function policyAsked(id: string): StoredPolicy {
-  const p = featuresNow().pol ? recordAt(policiesColl(), id) : undefined;
+function policyAsked(id: string, ids: readonly string[]): StoredPolicy {
+  const p = featuresNow().pol && ids.includes(id) ? recordAt(policiesColl(), id) : undefined;
   return p ?? NOT_FOUND('That policy is no longer asked for.', 'Reload the page to see the policies to read.');
 }
 function policyRow(id: string): StoredPolicy {
@@ -158,7 +159,7 @@ function decide(session: Signed, params: { employeeCode: string; doc: string }, 
   const p = starterAt(session, params.employeeCode);
   if (p.code === effectiveCode(session))
     refuse(403, { code: 'SELF_CHECK', message: 'You cannot check your own documents.', next: 'Ask another manager or HR to check them.' });
-  const doc = docAsked(params.doc), c = caseOf(p.code);
+  const doc = docAsked(params.doc, resolvedFor(p.code).config), c = caseOf(p.code);
   checkVersion(c);
   const r = decideDocument(c, doc, decision);
   if (!r.ok) return refuseOnb(r.refusal);
@@ -182,13 +183,13 @@ export const onboardingHandlers = [
 
   serve(saveOnboardingStep, ({ session, params, body, checkVersion }) => {
     requireOnboarding();
-    const p = me(session), cfg = onbConfig(), f = featuresNow();
+    const p = me(session), res = resolvedFor(p.code), cfg = res.config, f = featuresNow();
     const step = isStepId(params.step) ? stepsAsked(cfg, f).find(s => s.id === params.step) : undefined;
     if (!step) return refuseOnb(stepNotAsked(params.step));
     const c = caseOf(p.code);
     checkVersion(c);
     const { mode, ...patch } = body;
-    const r = saveStep(c, step.id, patch, stepContext(c, cfg, f), mode);
+    const r = saveStep(c, step.id, patch, stepContext(c, cfg, f, res.policies), mode);
     if (!r.ok) return refuseOnb(r.refusal);
     const summary = mode === 'check' ? stepSavedText(step.label) : 'All changes saved.';
     if (sameJson({ ...c, ...r.value }, c)) return { record: caseView(c), summary, auditId: null };
@@ -200,7 +201,7 @@ export const onboardingHandlers = [
 
   serve(uploadOnboardingDocument, ({ session, params, body, checkVersion }) => {
     requireOnboarding();
-    const p = me(session), doc = docAsked(params.doc), c = caseOf(p.code);
+    const p = me(session), doc = docAsked(params.doc, resolvedFor(p.code).config), c = caseOf(p.code);
     checkVersion(c);
     const bad = uploadProblem(body);
     if (bad) return refuseOnb(bad);
@@ -215,7 +216,7 @@ export const onboardingHandlers = [
 
   serve(readOnboardingPolicy, ({ session, params, checkVersion }) => {
     requireOnboarding();
-    const p = me(session), pol = policyAsked(params.id), c = caseOf(p.code);
+    const p = me(session), pol = policyAsked(params.id, resolvedFor(p.code).policies), c = caseOf(p.code);
     checkVersion(c);
     if (c.read[pol.id]) return { record: caseView(c), summary: `${pol.label} opened.`, auditId: null };
     const saved = putCase(c, markRead(c, pol));
@@ -225,7 +226,7 @@ export const onboardingHandlers = [
 
   serve(ackOnboardingPolicy, ({ session, params, body, checkVersion }) => {
     requireOnboarding();
-    const p = me(session), pol = policyAsked(params.id), c = caseOf(p.code);
+    const p = me(session), pol = policyAsked(params.id, resolvedFor(p.code).policies), c = caseOf(p.code);
     checkVersion(c);
     /* a tick can always be given (a new version asks again, even after submission); taking one back only while the step is open */
     if (!body.on && !stepOpen(c, 'policies')) return refuseOnb(ALREADY_SUBMITTED);
@@ -243,7 +244,7 @@ export const onboardingHandlers = [
     const p = me(session), c = caseOf(p.code);
     checkVersion(c);
     const ref = nextRef(Object.values(casesColl()).map(x => x.ref).filter(Boolean));
-    const r = submitCase(c, { consent: body.consent, ...(body.signature !== undefined ? { signature: body.signature } : {}), ref, at: store.now() }, blockerContext());
+    const r = submitCase(c, { consent: body.consent, ...(body.signature !== undefined ? { signature: body.signature } : {}), ref, at: store.now() }, caseContext(p.code));
     if (!r.ok) return refuseOnb(r.refusal);
     const saved = putCase(c, r.value);
     const m = lineManager(p);
@@ -258,13 +259,13 @@ export const onboardingHandlers = [
   serve(getTeamOnboarding, ({ session }) => {
     requireTracker(session);
     requireOnboarding();
-    const cfg = onbConfig(), f = featuresNow(), ctx = blockerContext();
+    const f = featuresNow();
     const list = starters().filter(inOnbScope(session)).sort((a, b) => a.name.localeCompare(b.name) || a.code.localeCompare(b.code));
     const rows: TrackerRow[] = [], queue: OnbQueueRow[] = [];
     for (const p of list) {
-      const c = caseOf(p.code), employee = employeeOf(p), caseRef = { id: c.id, version: c.version };
-      rows.push({ employee, caseRef, progress: progressOf(c), blockers: blockers(c, ctx, 'start'), canInvite: p.state === 'candidate', submittedAt: c.submittedAt, ref: c.ref });
-      for (const d of docsAsked(cfg, f)) {
+      const c = caseOf(p.code), r = resolvedFor(p.code), employee = employeeOf(p), caseRef = { id: c.id, version: c.version };
+      rows.push({ employee, template: templateRef(r.template), caseRef, progress: progressOf(c), blockers: blockers(c, { config: r.config, features: f }, 'start'), canInvite: p.state === 'candidate', submittedAt: c.submittedAt, ref: c.ref });
+      for (const d of docsAsked(r.config, f)) {
         const file = c.files[d.id];
         if (c.docs[d.id] === 'done' && file) queue.push({ employee, caseRef, document: d, file, sizeText: fileSize(file.size) });
       }
@@ -310,7 +311,7 @@ export const onboardingHandlers = [
     /* the lifecycle first, as the transition handler checks it: a candidate is invited before they can start */
     const t = isEmployeeState(p.state) ? transitionProblem(p.state, 'active') : null;
     if (t) refuse(409, { code: 'transition', ...t });
-    const bl = startProblem(p.name, c, blockerContext());
+    const bl = startProblem(p.name, c, caseContext(p.code));
     if (bl) return refuseOnb(bl);
     const employee = bump(p, { state: 'active' });
     employees()[p.id] = employee;
@@ -324,7 +325,7 @@ export const onboardingHandlers = [
   serve(chaseStarter, ({ session, params }) => {
     requireOnboarding();
     const p = starterAt(session, params.employeeCode), c = caseOf(p.code);
-    const bl = blockers(c, blockerContext(), 'start');
+    const bl = blockers(c, caseContext(p.code), 'start');
     if (!bl.length) refuse(409, { code: 'NOTHING_OUTSTANDING', message: `${p.name} has nothing outstanding.`, next: 'Start them instead.' });
     notifyEvent('ob_chased', 'subject', [p.code], { title: 'Onboarding outstanding', body: outstandingText(bl) });
     const auditId = writeAudit({ who: actor(session), act: 'Onboarding chased', entity: 'onboardingCase', entityId: c.id, before: null,
@@ -426,6 +427,8 @@ export const onboardingHandlers = [
     }
     const saved = bump(c, { documents: c.documents.filter(x => x.id !== d.id) });
     store.coll<StoredConfig>('onboardingConfig')[c.id] = saved;
+    /* a document re-added under the same name gets the same id, so no template may keep a row for the old one */
+    for (const t of templatesNow().filter(x => x.documents.some(r => r.id === d.id))) templatesColl()[t.id] = bump(t, { documents: t.documents.filter(r => r.id !== d.id) });
     const summary = documentRemovedText(d.label);
     const auditId = writeAudit({ who: actor(session), act: 'Onboarding document removed', entity: 'onboardingConfig', entityId: c.id,
       before: { document: d.id, label: d.label, hint: d.hint }, after: null });
@@ -439,6 +442,9 @@ export const onboardingHandlers = [
     const pol = policyFromDraft(body, all.reduce((m, p) => Math.max(m, p.order + 1), 0));
     const rec: StoredPolicy = { ...pol, version: 1, updatedAt: store.now() };
     policiesColl()[rec.id] = rec;
+    /* a new policy is asked by the default template only; every other template opts in */
+    const base = onbConfig();
+    store.coll<StoredConfig>('onboardingConfig')[base.id] = bump(base, { policies: [...base.policies, rec.id] });
     const auditId = writeAudit({ who: actor(session), act: 'Policy added', entity: 'onboardingPolicy', entityId: rec.id, before: null,
       after: { label: rec.label, ver: rec.ver, sum: rec.sum } });
     return { record: policySetupView(rec), summary: policySavedText(rec.label), auditId };
@@ -469,7 +475,7 @@ export const onboardingHandlers = [
     if (bad) return refuseOnb(bad);
     const file = fileRecord(body, store.now());
     /* only employees still onboarding are asked again; somebody who has started keeps what they agreed to as the record */
-    const r = applyPolicyUpload(p, file, Object.values(casesColl()).filter(stillOnboarding));
+    const r = applyPolicyUpload(p, file, Object.values(casesColl()).filter(c => stillOnboarding(c) && resolvedFor(c.employeeCode).policies.includes(p.id)));
     const saved = bump(p, r.policy);
     policiesColl()[p.id] = saved;
     /* D10: everyone who acknowledged it is asked again, once */
@@ -487,9 +493,13 @@ export const onboardingHandlers = [
     const p = policyRow(params.id);
     checkVersion(p);
     Reflect.deleteProperty(policiesColl(), p.id);
+    /* a policy re-added under the same name gets the same id, so no template may keep asking for the old one */
+    const base = onbConfig(), holders = templatesNow().filter(t => t.policies.includes(p.id));
+    store.coll<StoredConfig>('onboardingConfig')[base.id] = bump(base, { policies: base.policies.filter(id => id !== p.id) });
+    for (const t of holders) templatesColl()[t.id] = bump(t, { policies: t.policies.filter(id => id !== p.id) });
     /* past acknowledgements stay on the cases and in the audit trail */
     const auditId = writeAudit({ who: actor(session), act: 'Policy removed', entity: 'onboardingPolicy', entityId: p.id,
-      before: { label: p.label, ver: p.ver, acknowledgedBy: anyAck(p.id) }, after: null });
+      before: { label: p.label, ver: p.ver, acknowledgedBy: anyAck(p.id), ...(holders.length ? { templates: holders.map(t => t.name) } : {}) }, after: null });
     return { id: p.id, summary: policyRemovedText(p.label), auditId };
   }),
 ];

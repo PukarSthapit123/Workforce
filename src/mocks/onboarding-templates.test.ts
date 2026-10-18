@@ -1,11 +1,13 @@
 import { server } from './node';
 import { store } from './store';
 import { Refusal } from '@/contract/common';
-import { OnbTemplateDeleted, OnbTemplateRecord, OnbTemplateSaved, OnboardingConfigSaved, OnboardingSetup } from '@/contract/onboarding';
+import {
+  OnbTemplateDeleted, OnbTemplateRecord, OnbTemplateSaved, OnboardingConfigSaved, OnboardingDetail, OnboardingSetup, StarterOnboarding, TeamOnboarding,
+} from '@/contract/onboarding';
 import {
   TEMPLATE_NAME_LONG, TEMPLATE_NAME_NEEDED, TEMPLATE_NAME_RESERVED, TEMPLATE_NAME_TAKEN, templateCreatedText, templateDeletedText, templateSavedText,
 } from '@/domain/onboarding-templates';
-import { audits, caller, resetTo, snapshot, tokenFor, type Persona } from '@/test/api-helpers';
+import { audits, caller, employeeOf, resetTo, snapshot, tokenFor, type Persona } from '@/test/api-helpers';
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' })); afterAll(() => server.close());
 beforeEach(() => resetTo('qnipay'));
@@ -175,5 +177,159 @@ describe('onboarding templates: writes', () => {
     expect(bad.status).toBe(422);
     expect(refusal(bad).field).toBe('policies');
     expect(snapshot(...WRITES)).toEqual(before);
+  });
+});
+
+/* ------------------------------------------------- each case, its own template */
+const TOM = 'tom.achterberg@brightpath.org';
+async function asEmail(email: string): Promise<Call> {
+  const r = await fetch('/api/v1/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password: 'Qnipay@123' }) });
+  const { token } = (await r.json()) as { token: string };
+  return caller(token);
+}
+const setEmployee = (code: string, patch: Record<string, unknown>) => { const p = employeeOf(code); store.coll('employees')[p.id] = { ...p, ...patch }; };
+interface Case { id: string; version: number; acks: Record<string, string>; read: Record<string, boolean> }
+const caseOf = (code: string) => store.coll<Case>('onboardingCases')[`onb_${code}`];
+const putCase = (code: string, patch: Record<string, unknown>) => { const c = caseOf(code); if (c) store.coll('onboardingCases')[c.id] = { ...c, ...patch }; };
+const configRow = () => store.coll<{ version: number; policies: string[] }>('onboardingConfig').onboardingConfig;
+/* Every step done and the photo and right to work verified: only what the template asks can still block. */
+const finished = (code: string) => putCase(code, { steps: { personal: 'done', contact: 'done', emergency: 'done', additional: 'done', documents: 'done', policies: 'done' }, docs: { rtw: 'verified', photo: 'verified' } });
+async function supportTemplate(patch: Record<string, unknown> = {}) {
+  const call = await as('admin');
+  const made = OnbTemplateSaved.parse((await call('POST', URL, { name: 'Support workers' })).body).record, row = draft(made);
+  const body = { ...row, jobProfiles: ['SW'], steps: row.steps.map(s => (s.id === 'additional' ? { ...s, on: false } : s)),
+    documents: row.documents.map(d => (d.id === 'addr' ? { ...d, on: false } : d)), policies: row.policies.filter(p => p !== 'pol_itsec'), ...patch };
+  const r = await call('PUT', `${URL}/${made.id}`, body, 1);
+  expect(r.status).toBe(200);
+  return OnbTemplateSaved.parse(r.body).record;
+}
+const SUPPORT = 'onbt-support-workers';
+const detailOf = async (email: string) => OnboardingDetail.parse((await (await asEmail(email))('GET', '/api/v1/onboarding/me')).body);
+
+describe('each case is judged against its own template', () => {
+  beforeEach(() => resetTo('social'));
+  test('a starter whose job profile a template lists is asked what it asks, and the case view names the template', async () => {
+    await supportTemplate();
+    const d = await detailOf(TOM);
+    expect(d.template).toEqual({ id: SUPPORT, name: 'Support workers' });
+    expect(d.documents.map(x => x.id)).toEqual(['rtw', 'photo', 'licence', 'cert']);
+    expect(d.steps.map(s => s.id)).not.toContain('additional');
+    expect(d.policies.map(p => p.id)).toEqual(['pol_conduct', 'pol_privacy', 'pol_handbook']);
+  });
+  test('a starter on a profile no template lists gets the default, and the tracker says Default', async () => {
+    await supportTemplate(); setEmployee('CP-1501', { jobProfile: 'SSW' });
+    const s = StarterOnboarding.parse((await (await as('manager'))('GET', '/api/v1/onboarding/team/CP-1501')).body);
+    expect(s.template).toEqual({ id: null, name: 'Default' });
+    expect(s.documents.map(x => x.id)).toContain('addr');
+  });
+  test('a job profile change before submission switches what is asked', async () => {
+    await supportTemplate();
+    expect((await detailOf(TOM)).documents.map(x => x.id)).not.toContain('addr');
+    setEmployee('CP-1502', { jobProfile: 'SSW' });
+    const d = await detailOf(TOM);
+    expect(d.template).toEqual({ id: null, name: 'Default' });
+    expect(d.documents.map(x => x.id)).toContain('addr');
+    expect(d.steps.map(s => s.id)).toContain('additional');
+  });
+  test('after submission a profile change never adds a requirement: what was asked holds', async () => {
+    await supportTemplate(); finished('CP-1502');
+    const call = await asEmail(TOM);
+    const sub = await call('POST', '/api/v1/onboarding/me/submit', { consent: true, signature: 'Tom Achterberg' }, caseOf('CP-1502')?.version);
+    expect(sub.status).toBe(200);
+    setEmployee('CP-1502', { jobProfile: 'SSW' });
+    const t = TeamOnboarding.parse((await (await as('manager'))('GET', '/api/v1/onboarding/team')).body);
+    const row = t.rows.find(r => r.employee.code === 'CP-1502');
+    expect(row?.blockers.map(b => b.why)).not.toContain('Proof of address not uploaded');
+    const s = StarterOnboarding.parse((await (await as('manager'))('GET', '/api/v1/onboarding/team/CP-1502')).body);
+    expect(s.toStart.map(b => b.why)).not.toContain('Proof of address not uploaded');
+  });
+  test('uploads, step saves, acknowledgements and the start gate read the case\'s template', async () => {
+    await supportTemplate();
+    const call = await asEmail(TOM), v = () => caseOf('CP-1502')?.version;
+    const up = await call('POST', '/api/v1/onboarding/me/documents/addr', { name: 'bill.jpg', size: 1000, type: 'image/jpeg', preview: 'data:image/jpeg;base64,AAAA' }, v());
+    expect(up.status).toBe(404);
+    const step = await call('PUT', '/api/v1/onboarding/me/steps/additional', { mode: 'quiet', additional: { conv: 'no' } }, v());
+    expect(step.status).toBe(404);
+    const ack = await call('POST', '/api/v1/onboarding/me/policies/pol_itsec/ack', { on: true }, v());
+    expect(ack.status).toBe(404);
+    expect(refusal(ack).message).toBe('That policy is no longer asked for.');
+    finished('CP-1502');
+    const manager = await as('manager');
+    expect((await manager('POST', '/api/v1/onboarding/team/CP-1502/start', undefined, v())).status).toBe(200);
+    resetTo('social'); await supportTemplate(); finished('CP-1502');
+    const p = employeeOf('CP-1502');
+    const r = await (await as('admin'))('POST', `/api/v1/employees/${p.id}/transitions`, { to: 'active', reason: 'First day' }, p.version);
+    expect(r.status).toBe(200);
+  });
+  test('the team list names each starter\'s template', async () => {
+    await supportTemplate(); setEmployee('CP-1501', { jobProfile: 'SSW' });
+    const t = TeamOnboarding.parse((await (await as('manager'))('GET', '/api/v1/onboarding/team')).body);
+    expect(t.rows.map(r => [r.employee.code, r.template.name])).toEqual(expect.arrayContaining([['CP-1501', 'Default'], ['CP-1502', 'Support workers']]));
+  });
+  test('a new policy version asks again only those whose template asks for it', async () => {
+    putCase('CP-1501', { acks: { pol_itsec: 'v3.2' }, read: { pol_itsec: true } });
+    putCase('CP-1502', { acks: { pol_itsec: 'v3.2' }, read: { pol_itsec: true } });
+    await supportTemplate(); setEmployee('CP-1501', { jobProfile: 'SSW' });
+    const pol = store.coll<{ version: number }>('onboardingPolicies').pol_itsec;
+    const r = await (await as('admin'))('POST', '/api/v1/onboarding/policies/pol_itsec/file', { name: 'it.pdf', size: 1000, type: 'application/pdf' }, pol?.version);
+    expect(r.status).toBe(200);
+    expect((r.body as { asked: number }).asked).toBe(1);
+    expect(caseOf('CP-1502')?.acks.pol_itsec).toBe('v3.2');
+    expect(caseOf('CP-1501')?.acks.pol_itsec).toBeUndefined();
+  });
+  test('deleting the template falls back to the default for starters part-way through', async () => {
+    await supportTemplate();
+    const r = await (await as('admin'))('DELETE', `${URL}/${SUPPORT}`, undefined, 2);
+    expect(r.status).toBe(200);
+    const d = await detailOf(TOM);
+    expect(d.template).toEqual({ id: null, name: 'Default' });
+    expect(d.documents.map(x => x.id)).toContain('addr');
+  });
+});
+
+describe('shared-list changes keep the templates in step', () => {
+  beforeEach(() => resetTo('social'));
+  const stored = () => store.coll<{ documents: { id: string }[]; policies: string[] }>('onboardingTemplates')[SUPPORT];
+  test('a new policy joins the default template only', async () => {
+    const admin = await as('admin');
+    await supportTemplate();
+    const r = await admin('POST', '/api/v1/onboarding/policies', { label: 'Fire safety' });
+    expect(r.status).toBe(200);
+    expect(configRow()?.policies).toContain('pol_fire_safety');
+    expect((await read(admin, SUPPORT)).policies).not.toContain('pol_fire_safety');
+    expect((await detailOf(TOM)).policies.map(p => p.id)).not.toContain('pol_fire_safety');
+    resetTo('social');
+    await (await as('admin'))('POST', '/api/v1/onboarding/policies', { label: 'Fire safety' });
+    expect((await detailOf(TOM)).policies.map(p => p.id)).toContain('pol_fire_safety');
+  });
+  test('a document added to the shared list joins every template switched off', async () => {
+    const admin = await as('admin');
+    await supportTemplate();
+    const r = await admin('POST', '/api/v1/onboarding/documents', { label: 'DBS check' }, configRow()?.version);
+    expect(r.status).toBe(200);
+    expect((await read(admin, SUPPORT)).documents.find(d => d.id === 'dbs-check')).toEqual({ id: 'dbs-check', on: false, req: false, blocks: false });
+    expect((await detailOf(TOM)).documents.map(d => d.id)).not.toContain('dbs-check');
+  });
+  test('removing a policy or a document takes it off every template, so one re-added under the same name is not asked there', async () => {
+    const admin = await as('admin');
+    await admin('POST', '/api/v1/onboarding/policies', { label: 'Fire safety' });
+    await admin('POST', '/api/v1/onboarding/documents', { label: 'DBS check' }, configRow()?.version);
+    const made = await supportTemplate({ policies: ['pol_conduct', 'pol_fire_safety'] });
+    const both = await admin('PUT', `${URL}/${SUPPORT}`, { ...draft(made), documents: made.documents.map(d => (d.id === 'dbs-check' ? { ...d, on: true } : d)) }, made.version);
+    expect(both.status).toBe(200);
+    expect(stored()?.policies).toContain('pol_fire_safety');
+    const rows = onbAudits().length;
+    const pol = store.coll<{ version: number }>('onboardingPolicies').pol_fire_safety;
+    expect((await admin('DELETE', '/api/v1/onboarding/policies/pol_fire_safety', undefined, pol?.version)).status).toBe(200);
+    expect((await admin('DELETE', '/api/v1/onboarding/documents/dbs-check', undefined, configRow()?.version)).status).toBe(200);
+    expect(stored()?.policies).not.toContain('pol_fire_safety');
+    expect(stored()?.documents.map(d => d.id)).not.toContain('dbs-check');
+    expect(configRow()?.policies).not.toContain('pol_fire_safety');
+    expect(onbAudits().slice(rows).map(a => a.act)).toEqual(['Policy removed', 'Onboarding document removed']);
+    await admin('POST', '/api/v1/onboarding/policies', { label: 'Fire safety' });
+    await admin('POST', '/api/v1/onboarding/documents', { label: 'DBS check' }, configRow()?.version);
+    const again = await read(admin, SUPPORT);
+    expect(again.policies).not.toContain('pol_fire_safety');
+    expect(again.documents.find(d => d.id === 'dbs-check')?.on).toBe(false);
   });
 });

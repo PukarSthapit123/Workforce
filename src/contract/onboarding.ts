@@ -105,8 +105,11 @@ export type OnbEmployee = z.infer<typeof OnbEmployee>;
 /* One starter's onboarding, as the portal and the tracker read it. toSubmit is
    what the employee still has to do; toStart adds the checks only HR can make.
    open: the employee can still change it (not submitted, or a step sent back). */
+/* The template a starter is judged against: id null is the Default. */
+export const OnbTemplateRef = z.object({ id: z.string().nullable(), name: z.string() });
+export type OnbTemplateRef = z.infer<typeof OnbTemplateRef>;
 export const OnboardingDetail = z.object({
-  employee: OnbEmployee, case: OnboardingCaseRecord, features: OnbFeatures, steps: z.array(OnbStepView), documents: z.array(OnbDocumentView),
+  employee: OnbEmployee, template: OnbTemplateRef, case: OnboardingCaseRecord, features: OnbFeatures, steps: z.array(OnbStepView), documents: z.array(OnbDocumentView),
   policies: z.array(OnbPolicyView), progress: OnbProgress, toSubmit: z.array(Blocker), toStart: z.array(Blocker), open: z.boolean(),
   /* "Submitted with reference ONB-1001. HR has been told.", or '' */
   submitted: z.string(),
@@ -120,7 +123,7 @@ export type OnboardingDetail = z.infer<typeof OnboardingDetail>;
    convictions), no signature, no consent. Strict, so a field added to the
    handler by mistake fails the response check instead of reaching the browser. */
 export const StarterOnboarding = z.strictObject({
-  employee: OnbEmployee, caseRef: z.object({ id: z.string(), version: z.number().int().nonnegative() }), steps: z.array(OnbStepView),
+  employee: OnbEmployee, template: OnbTemplateRef, caseRef: z.object({ id: z.string(), version: z.number().int().nonnegative() }), steps: z.array(OnbStepView),
   documents: z.array(OnbDocumentView), progress: OnbProgress, toStart: z.array(Blocker), submittedAt: AtOrBlank, ref: z.string(),
 });
 export type StarterOnboarding = z.infer<typeof StarterOnboarding>;
@@ -157,7 +160,7 @@ export type CaseSubmitted = z.infer<typeof CaseSubmitted>;
 
 /* ----------------------------------------------------------------- team */
 export const TrackerRow = z.object({
-  employee: OnbEmployee, caseRef: z.object({ id: z.string(), version: z.number().int().nonnegative() }), progress: OnbProgress,
+  employee: OnbEmployee, template: OnbTemplateRef, caseRef: z.object({ id: z.string(), version: z.number().int().nonnegative() }), progress: OnbProgress,
   /* start-stage blockers: what stops them becoming active */
   blockers: z.array(Blocker), canInvite: z.boolean(), submittedAt: AtOrBlank, ref: z.string(),
 });

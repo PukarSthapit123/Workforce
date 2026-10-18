@@ -9,7 +9,8 @@ import {
   caseId, emptyCase, isStarterState, onbFeatures, startProblem,
   type BlockerContext, type OnboardingCase, type OnboardingConfig, type OnbPolicy, type OnbRefusal,
 } from '@/domain/onboarding';
-import { withPolicies, type BaseConfig, type OnbTemplate } from '@/domain/onboarding-templates';
+import { DEFAULT_TEMPLATE, configFor, templateFor, withPolicies, type BaseConfig, type OnbTemplate, type ResolvedOnboarding } from '@/domain/onboarding-templates';
+import type { OnbTemplateRef } from '@/contract/onboarding';
 
 interface Meta { id: string; version: number; updatedAt: string }
 export type StoredCase = Meta & OnboardingCase;
@@ -46,7 +47,15 @@ export function onbConfig(): StoredConfig & BaseConfig {
   const withDocs = { ...c, documents: c.documents.map(d => ({ ...d, on: d.on ?? true, custom: d.custom ?? false })) };
   return { ...withDocs, ...withPolicies(withDocs, policiesNow().map(pol => pol.id)) };
 }
-export const blockerContext = (): BlockerContext => ({ config: onbConfig(), features: featuresNow() });
+
+/* What an employee is asked: their job profile's template, or the default when
+   none lists it (or the employee is unknown). */
+export function resolvedFor(employeeCode: string): ResolvedOnboarding & { template: StoredTemplate | null } {
+  const template = templateFor(employeeByCode(employeeCode)?.jobProfile ?? '', templatesNow());
+  return { ...configFor(template, onbConfig()), template };
+}
+export const caseContext = (employeeCode: string): BlockerContext => ({ config: resolvedFor(employeeCode).config, features: featuresNow() });
+export const templateRef = (t: StoredTemplate | null): OnbTemplateRef => ({ id: t?.id ?? null, name: t?.name ?? DEFAULT_TEMPLATE });
 
 /* The stored case, or an empty one at version 0 when none was ever written
    (a starter from before cases existed): the first write stores it at 1. */
@@ -92,7 +101,7 @@ const unstartedCase = (employeeCode: string) => {
 export function activationProblem(p: { code: string; name: string; state: string }, to: string): OnbRefusal | null {
   if (to !== 'active' || !onbModuleOn()) return null;
   if (!isStarterState(p.state) && !unstartedCase(p.code)) return null;
-  return startProblem(p.name, caseOf(p.code), blockerContext());
+  return startProblem(p.name, caseOf(p.code), caseContext(p.code));
 }
 /* Once they are active the case records when they started (once only). */
 export function markStarted(employeeCode: string): void {

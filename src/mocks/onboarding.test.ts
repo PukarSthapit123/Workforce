@@ -246,7 +246,7 @@ describe('the tracker and its scope: own location, or every location with Config
     const r = await (await as('manager'))('GET', '/api/v1/onboarding/team/CP-1502');
     const view = StarterOnboarding.parse(r.body), text = JSON.stringify(r.body);
     expect(view.documents.find(d => d.id === 'photo')?.file).toMatchObject({ name: 'face.jpg', preview: PHOTO.preview });
-    expect(Object.keys(r.body as object).sort()).toEqual(['caseRef', 'documents', 'employee', 'progress', 'ref', 'steps', 'submittedAt', 'toStart']);
+    expect(Object.keys(r.body as object).sort()).toEqual(['caseRef', 'documents', 'employee', 'progress', 'ref', 'steps', 'submittedAt', 'template', 'toStart']);
     for (const secret of ['QQ 12 34 56 C', '1990-04-02', '14 Larkspur Road', 'LS6 2AB', '07700 900123', 'Anke Achterberg', 'Speeding fine', 'T Achterberg', '"signature"', '"consent"', '"data"'])
       expect(text, secret).not.toContain(secret);
   });

@@ -30269,6 +30269,25 @@
                       ],
                       "additionalProperties": false
                     },
+                    "template": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name"
+                      ],
+                      "additionalProperties": false
+                    },
                     "case": {
                       "type": "object",
                       "properties": {
@@ -31108,6 +31127,7 @@
                   },
                   "required": [
                     "employee",
+                    "template",
                     "case",
                     "features",
                     "steps",
@@ -34777,6 +34797,25 @@
                       ],
                       "additionalProperties": false
                     },
+                    "template": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name"
+                      ],
+                      "additionalProperties": false
+                    },
                     "caseRef": {
                       "type": "object",
                       "properties": {
@@ -35083,6 +35122,7 @@
                   },
                   "required": [
                     "employee",
+                    "template",
                     "caseRef",
                     "steps",
                     "documents",
@@ -35275,6 +35315,25 @@
                             ],
                             "additionalProperties": false
                           },
+                          "template": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "name"
+                            ],
+                            "additionalProperties": false
+                          },
                           "caseRef": {
                             "type": "object",
                             "properties": {
@@ -35372,6 +35431,7 @@
                         },
                         "required": [
                           "employee",
+                          "template",
                           "caseRef",
                           "progress",
                           "blockers",
