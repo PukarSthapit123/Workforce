@@ -60,9 +60,9 @@ function EmployeeFormBody({ employee, initial, onClose, onChangeState }: { emplo
     [...(optional ? [{ value: NONE, label: 'None' }] : []), ...(rows ?? []).map(r => ({ value: r.code, label: r.name }))];
   const err = (k: string) => write.fieldError(k);
   /* the manager's name is what is saved, so the list offers names; the employee being edited cannot manage themselves */
-  const everyone = useEmployees('all', '').data;
-  const managers = [{ value: NONE, label: 'None' }, ...(everyone ?? []).filter(p => p.id !== employee?.id)
-    .map(p => ({ value: p.name, label: p.name })).sort((a, b) => a.label.localeCompare(b.label))];
+  const everyone = useEmployees('here', '').data;
+  const names = [...new Set((everyone ?? []).filter(p => p.id !== employee?.id).map(p => p.name))].sort((a, b) => a.localeCompare(b));
+  const managers = [{ value: NONE, label: 'None' }, ...names.map(n => ({ value: n, label: n }))];
 
   const text = (k: 'name' | 'code' | 'email' | 'phone' | 'resource' | 'start', label: string,
     extra: { type?: string; disabled?: boolean; tip?: string; required?: boolean; placeholder?: string } = {}) => (
@@ -76,7 +76,7 @@ function EmployeeFormBody({ employee, initial, onClose, onChangeState }: { emplo
   const select = (k: 'employeeType' | 'jobProfile' | 'location' | 'department' | 'category', label: string,
     options: { value: string; label: string }[], extra: { required?: boolean; tip?: string; search?: string } = {}) => {
     const props = {
-      testId: tid.employeeForm.field(k), options, value: v[k] || NONE,
+      testId: tid.employeeForm.field(k), options, value: v[k] || (options.some(o => o.value === NONE) ? NONE : ''),
       onValueChange: (x: string) => {
         const value = x === NONE ? '' : x;
         /* a new employee takes their type's usual basis, as the prototype's form did */

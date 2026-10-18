@@ -4,6 +4,7 @@ import { store } from '@/mocks/store';
 import { tid } from '@/testids';
 import { nextEmployeeCode } from '@/domain/codes';
 import { todayIso } from '@/lib/format';
+import { isHere } from '@/domain/lifecycle';
 import { expectTestIdCoverage } from '@/test/testid-coverage';
 import { renderPage, withFakeServer } from '@/test/render-page';
 import { audits, fault, employeeOf, resetTo, signInAs, snapshot } from '@/test/api-helpers';
@@ -25,6 +26,15 @@ const openAdd = async () => {
   renderPage(<AdminEmployeesPage />);
   await userEvent.click(await screen.findByTestId(tid.employees.add));
   await screen.findByTestId(tid.employeeForm.root);
+};
+/* a named current employee other than the one being edited */
+/* (not already their manager, so picking them is a change) */
+const currentOther = () => {
+  const rows = Object.values(store.coll<{ name: string; code: string; state: string }>('employees'))
+    .filter(e => e.code !== 'CP-1042' && e.name !== employeeOf('CP-1042').manager && isHere(e.state as never)).sort((a, b) => a.code.localeCompare(b.code));
+  const first = rows[0];
+  if (!first) throw new Error('no other current employee');
+  return first;
 };
 const openEdit = async (Page: () => React.JSX.Element, code = 'CP-1042') => {
   renderPage(<Page />);
@@ -106,14 +116,42 @@ describe('editing someone', () => {
   test('the line manager is picked from the employees, and their name is what is saved', async () => {
     await signInAs('admin');
     await openEdit(AdminEmployeesPage);
-    const other = Object.values(store.coll<{ id: string; name: string; code: string }>('employees')).find(e => e.code !== 'CP-1042');
-    if (!other) throw new Error('no other employee');
+    const other = currentOther();
     await userEvent.click(f('manager'));
+    const option = await screen.findByTestId(`${tid.employeeForm.field('manager')}-option-${other.name}`);
     expect(screen.queryByTestId(`${tid.employeeForm.field('manager')}-option-Amara Okafor`)).toBeNull();
-    await userEvent.click(await screen.findByTestId(`${tid.employeeForm.field('manager')}-option-${other.name}`));
+    await userEvent.click(option);
     await save();
     expect(await screen.findByTestId(tid.toast.info)).toHaveTextContent('updated');
     expect(employeeOf('CP-1042').manager).toBe(other.name);
+  });
+  test('leavers and archived people are not offered as line manager', async () => {
+    await signInAs('admin');
+    const rows = Object.values(store.coll<{ name: string; code: string; state: string }>('employees'));
+    const other = currentOther();
+    const gone = rows.find(e => e.code !== 'CP-1042' && e.name !== other.name && isHere(e.state as never));
+    if (!gone) throw new Error('no second employee');
+    gone.state = 'leaver';
+    await openEdit(AdminEmployeesPage);
+    await userEvent.click(f('manager'));
+    await screen.findByTestId(`${tid.employeeForm.field('manager')}-option-${other.name}`);
+    expect(screen.queryByTestId(`${tid.employeeForm.field('manager')}-option-${gone.name}`)).toBeNull();
+  });
+  test('two people with the same name are one manager option', async () => {
+    await signInAs('admin');
+    const rows = Object.values(store.coll<{ name: string; code: string; state: string }>('employees'));
+    const other = currentOther();
+    const twin = rows.find(e => e.code !== 'CP-1042' && e.name !== other.name && isHere(e.state as never));
+    if (!twin) throw new Error('no second employee');
+    twin.name = other.name;
+    await openEdit(AdminEmployeesPage);
+    await userEvent.click(f('manager'));
+    expect(await screen.findAllByTestId(`${tid.employeeForm.field('manager')}-option-${other.name}`)).toHaveLength(1);
+  });
+  test('a required field with no value shows its placeholder, not None', async () => {
+    await signInAs('admin');
+    await openAdd();
+    expect(f('location')).not.toHaveTextContent('None');
   });
   test('a line manager who is not in the list is kept on save', async () => {
     await signInAs('admin');
