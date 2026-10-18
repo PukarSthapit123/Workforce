@@ -502,6 +502,10 @@ describe('onboarding templates in a template', () => {
     /* the file does not carry Code of conduct, which the default asks, so it stays asked */
     expect(p.steps.onboarding.defaultPolicies).toEqual(['pol_privacy', 'pol_conduct']);
   });
+  test('with no explicit list the default asks every held policy, so one the file does not carry stays asked', () => {
+    const t = tpl({ defaultPolicies: [], policies: [{ id: 'pol_conduct', label: 'Code of conduct', ver: 'v4.1', sum: 'Conduct.', body: ['Conduct.'] }] });
+    expect(planApply(t, state(), ALL).steps.onboarding.defaultPolicies).toEqual(['pol_privacy']);
+  });
   test('policies a file adds without saying what the default asks are appended to the default\'s list', () => {
     const t = tpl({ policies: [{ id: 'pol_safe', label: 'Safeguarding policy', ver: 'v1.0', sum: '', body: [] }] });
     expect(planApply(t, state({ config: { ...CFG(), policies: ['pol_conduct'] } }), ALL).steps.onboarding.defaultPolicies).toEqual(['pol_conduct', 'pol_safe']);

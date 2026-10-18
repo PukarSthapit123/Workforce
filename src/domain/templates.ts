@@ -821,10 +821,11 @@ function planOnboarding(t: Template, s: TenantState, may: boolean, f: ReturnType
   const heldDefault = have.config.policies;
   if (want.defaultPolicies) {
     /* the file decides only for the policies it carries; a held policy it does not have keeps being asked if the Default asked it */
-    const stays = have.policies.filter(p => !want.policies.some(w => w.id === p.id)).map(p => p.id).filter(id => heldDefault?.includes(id));
+    const heldIds = heldDefault ?? have.policies.map(p => p.id);
+    const stays = have.policies.filter(p => !want.policies.some(w => w.id === p.id)).map(p => p.id).filter(id => heldIds.includes(id));
     const ids = [...new Set([...want.defaultPolicies.flatMap(l => policyIdOf(l) ?? []), ...stays])];
     for (const l of want.defaultPolicies) if (!policyIdOf(l)) leftAlone.push(line(`Policy ${l} is not here, so the Default onboarding template does not ask for it.`));
-    const now = heldDefault ?? have.policies.map(p => p.id);
+    const now = heldIds;
     if (!sameSet(ids, now)) {
       next.defaultPolicies = ids;
       changes.push(line(`The Default onboarding template asks for ${list(ids.map(id => names.find(x => x.id === id)?.label ?? id)) || 'no policies'}.`));
