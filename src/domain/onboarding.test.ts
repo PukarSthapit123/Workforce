@@ -367,6 +367,9 @@ describe('step switches and config (D11, D2)', () => {
     const bad = { ...CONFIG, documents: CONFIG.documents.map(d => (d.id === 'cert' ? { ...d, verify: 'anyone' } : d)) } as unknown as OnboardingConfig;
     expect(configProblem(CONFIG, bad, F)?.field).toBe('documents.cert.verify');
   });
+  test('the config Save refuses a policy id that does not exist', () => {
+    expect(configProblem(CONFIG, { ...CONFIG, policies: ['pol_nope'] }, F, ['pol_conduct'])).toMatchObject({ code: 'VALIDATION', field: 'policies' });
+  });
 });
 
 describe('activation (D6)', () => {

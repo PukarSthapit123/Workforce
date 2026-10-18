@@ -46,8 +46,9 @@ export type FileKind = 'image' | 'pdf' | 'file';
 export interface OnbFile { name: string; size: number; type: string; at: string; kind: FileKind; preview?: string }
 /* `ver` is the document's own version ("v4.1"); a record's `version` is its concurrency counter. */
 export interface OnbPolicy { id: string; label: string; ver: string; sum: string; body: string[]; order: number; file?: OnbFile }
-/* The versioned config record (D2): step switches and document settings. Policies are rows of their own. */
-export interface OnboardingConfig { steps: OnbStep[]; documents: OnbDocument[] }
+/* The versioned config record (D2): step switches and document settings. Policies are rows of their own;
+   `policies` lists the ids the default template asks (absent means every policy). */
+export interface OnboardingConfig { steps: OnbStep[]; documents: OnbDocument[]; policies?: string[] }
 
 /* ------------------------------------------------------------- features */
 export interface OnbFeatures { rtw: boolean; conv: boolean; wtd: boolean; qual: boolean; pol: boolean; sign: boolean; verify: boolean }
@@ -576,7 +577,7 @@ export const stepSwitchText = (label: string, on: boolean) =>
 export const REQUIRED_CHANGE_WARNING = 'Changing what is required affects employees already part-way through. Somebody who has submitted will not be asked again for a document that becomes required after they finished.';
 /* The whole config on Save (D2): the same steps and documents in the same order,
    each switch allowed, each verifier one of the four. */
-export function configProblem(before: OnboardingConfig, next: OnboardingConfig, f: OnbFeatures): OnbRefusal | null {
+export function configProblem(before: OnboardingConfig, next: OnboardingConfig, f: OnbFeatures, policyIds: readonly string[] = []): OnbRefusal | null {
   if (next.steps.map(s => s.id).join() !== before.steps.map(s => s.id).join())
     return { code: 'VALIDATION', field: 'steps', message: 'Steps can be switched on or off, not added, removed or reordered.', next: 'Reload the page and switch the steps you need.' };
   for (const s of next.steps) {
@@ -593,6 +594,8 @@ export function configProblem(before: OnboardingConfig, next: OnboardingConfig, 
   if (renamed) return { code: 'VALIDATION', field: `documents.${renamed.id}`, message: 'Only a document\'s settings can be changed here.', next: 'Rename a document you added from its row, then save the settings.' };
   const bad = next.documents.find(d => !isVerifier(d.verify));
   if (bad) return { code: 'VALIDATION', field: `documents.${bad.id}.verify`, message: `${bad.label} needs somebody to check it, or No check needed.`, next: 'Choose who verifies it from the list.' };
+  if ((next.policies ?? []).some(id => !policyIds.includes(id)))
+    return { code: 'VALIDATION', field: 'policies', message: 'That policy no longer exists.', next: 'Reload the page.' };
   return null;
 }
 
