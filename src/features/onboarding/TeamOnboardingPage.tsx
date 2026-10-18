@@ -117,7 +117,7 @@ function InProgress({ d, canTrack, addLink, refresh }: { d: TeamOnboarding; canT
       {n
         ? <Table data-testid={tid.tonb.table} variant="records" dense className={DENSE_TEXT}>
             <TableHeader><TableRow>
-              <TableHead>Employee</TableHead><TableHead>Starts</TableHead><TableHead>Employee type</TableHead><TableHead>Progress</TableHead>
+              <TableHead>Employee</TableHead><TableHead>Starts</TableHead><TableHead>Employee type</TableHead><TableHead>Template</TableHead><TableHead>Progress</TableHead>
               <TableHead>State</TableHead><TableHead>Blocking</TableHead><TableHead><span className="sr-only">Actions</span></TableHead>
             </TableRow></TableHeader>
             <TableBody>
@@ -129,6 +129,7 @@ function InProgress({ d, canTrack, addLink, refresh }: { d: TeamOnboarding; canT
                       <span className="block text-xs font-normal text-text-muted">{r.employee.email || r.employee.id}</span></TableCell>
                     <TableCell label="Starts">{r.employee.start ? formatDmy(r.employee.start) : '—'}</TableCell>
                     <TableCell label="Employee type">{r.employee.employeeTypeName}</TableCell>
+                    <TableCell label="Template"><span data-testid={tid.tonb.template(code)}>{r.template.name}</span></TableCell>
                     <TableCell label="Progress">
                       <span data-testid={tid.tonb.progress(code)} className="whitespace-nowrap tabular-nums">
                         <span aria-hidden="true" className="mr-[6px] inline-block h-[6px] w-[56px] overflow-hidden rounded-pill bg-surface-tint align-middle">

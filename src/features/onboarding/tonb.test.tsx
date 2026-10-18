@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { store } from '@/mocks/store';
 import { setToken } from '@/api/session-token';
@@ -7,7 +7,7 @@ import type { OnboardingCaseRecord } from '@/contract/onboarding';
 import { REASON_NEEDED, START_REASON, noEmailText } from '@/domain/onboarding';
 import { expectTestIdCoverage } from '@/test/testid-coverage';
 import { renderPage, withFakeServer } from '@/test/render-page';
-import { audits, employeeOf, resetTo } from '@/test/api-helpers';
+import { audits, employeeOf, resetTo, signInAs } from '@/test/api-helpers';
 import { TeamOnboardingPage } from './TeamOnboardingPage';
 
 /* The qnipay seed at the frozen clock (13/08/2026): Pukar Sthapit (EMP001),
@@ -219,5 +219,35 @@ describe('Team onboarding: starting, adding and who sees which action', () => {
     expect(screen.getByTestId(tid.tonb.queueRow('EMP003', 'photo'))).toBeInTheDocument();
     expect(screen.queryByTestId(tid.tonb.check('EMP003', 'photo'))).toBeNull();
     expect(screen.getByTestId(tid.tonb.start('EMP003'))).toBeInTheDocument();
+  });
+});
+
+describe('Team onboarding: the template each starter is judged against', () => {
+  beforeEach(() => resetTo('social'));
+  /* a Support workers template for the SW job profile, asking the shared list as it stands */
+  const supportTemplate = () => {
+    const cfg = Object.values(store.coll<{ steps: { id: string; on: boolean }[]; documents: { id: string; on: boolean; req: boolean; blocks: boolean }[]; policies: string[] }>('onboardingConfig'))[0];
+    if (!cfg) throw new Error('no onboarding config');
+    store.coll('onboardingTemplates')['onbt-support-workers'] = {
+      id: 'onbt-support-workers', version: 1, updatedAt: AT, name: 'Support workers', jobProfiles: ['SW'],
+      steps: cfg.steps.map(x => ({ id: x.id, on: x.on })), documents: cfg.documents.map(x => ({ id: x.id, on: x.on, req: x.req, blocks: x.blocks })), policies: cfg.policies,
+    };
+  };
+  const openAs = async () => { await signInAs('manager'); return open(); };
+
+  test('each starter\'s row names their onboarding template, Default when none lists their job profile', async () => {
+    await openAs();
+    expect(await screen.findByTestId(tid.tonb.template('CP-1502'))).toHaveTextContent('Default');
+    cleanup();
+    supportTemplate();
+    await open();
+    expect(await screen.findByTestId(tid.tonb.template('CP-1502'))).toHaveTextContent('Support workers');
+  });
+
+  test('the not-ready dialog names the template the starter is judged against', async () => {
+    supportTemplate();
+    await openAs();
+    await userEvent.click(await screen.findByTestId(tid.tonb.start('CP-1502')));
+    expect(await screen.findByTestId(tid.tonb.notReadyTemplate)).toHaveTextContent('Onboarding template: Support workers');
   });
 });

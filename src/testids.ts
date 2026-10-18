@@ -574,11 +574,13 @@ export const tid = {
     list: 'tonb-list', listTip: 'tonb-list-tip', table: 'tonb-table', empty: 'tonb-empty', row: (code: string) => k('tonb-row', code),
     progress: (code: string) => k('tonb-progress', code), state: (code: string) => k('tonb-state', code), blocking: (code: string) => k('tonb-blocking', code),
     invite: (code: string) => k('tonb-invite', code), start: (code: string) => k('tonb-start', code),
+    template: (code: string) => k('tonb-template', code),
     /* the check dialog (onb-review) */
     checkImage: 'tonb-check-image', checkNoPreview: 'tonb-check-no-preview', reason: 'tonb-reason', checkWarn: 'tonb-check-warn',
     notNow: 'tonb-not-now', reject: 'tonb-reject', verify: 'tonb-verify',
     /* the not-ready dialog (onb-activate) */
     notReady: 'tonb-not-ready', blocker: (i: number) => k('tonb-blocker', i), notReadyClose: 'tonb-not-ready-close', chase: 'tonb-chase',
+    notReadyTemplate: 'tonb-not-ready-template',
   },
   /* module 5: Qnipay setup → Modules → Onboarding → Onboarding setup (admOnboarding, v15:4672) */
   monb: {

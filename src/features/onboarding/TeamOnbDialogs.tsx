@@ -59,6 +59,7 @@ export function NotReadyDialog({ r, canChase, onClose }: { r: TrackerRow; canCha
           onClick={() => chase.mutate({ employeeCode: r.employee.code }, { onSuccess: x => { toastInfo(x.summary); onClose(); } })}>Chase them</Button>}
       </>}>
       <div data-testid={tid.tonb.notReady}>
+        <Small testId={tid.tonb.notReadyTemplate} className="mb-sm">Onboarding template: {(fresh.data?.template ?? r.template).name}</Small>
         <Small className="mb-sm">{n} thing{n === 1 ? '' : 's'} outstanding. Somebody who has not completed these cannot be scheduled or paid,
           so they cannot be made active.</Small>
         {bl.map((b, i) => (
