@@ -19,7 +19,7 @@ async function setProfile(page: Page, api: Api, id: string, jobProfile: string) 
   expect((await sendVersioned(page, 'PATCH', `/api/v1/employees/${id}`, emp.version, { jobProfile })).status).toBe(200);
 }
 /* A template for CONS with proof of address off, written straight to the server as the signed-in administrator. */
-async function consultantsWithoutAddress(page: Page, api: Api) {
+async function consultantsWithoutAddress(page: Page) {
   const made = await sendVersioned(page, 'POST', '/api/v1/onboarding/templates', 0, { name: 'Consultants' });
   expect(made.status).toBe(200);
   const row = (made.body as { record: { id: string; version: number; steps: unknown; documents: { id: string; on: boolean }[]; policies: unknown } }).record;
@@ -71,7 +71,7 @@ test('OT an admin makes a template for a job profile and switches a document off
 test('OT a job profile change before submission switches what is asked, and deleting the template falls back to the default', async ({ page, api }) => {
   test.setTimeout(120_000);
   await signInEmail(page, EDDIE);
-  await consultantsWithoutAddress(page, api);
+  await consultantsWithoutAddress(page);
 
   await signInEmail(page, TOM);
   await portalDocs(page);
