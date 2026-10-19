@@ -58,3 +58,18 @@ test('an employee saves a day, submits it, submits the rest of the week in one r
   await signInEmail(page, EDDIE);
   expect((await auditOf(api, 'timesheetDay')).map(a => a.act)).toHaveLength(3);
 });
+
+test('the day view scrolls as one page: the totals beside the form move with it', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 700 });
+  await signInEmail(page, BIGYAN);
+  await page.goto('/work/ts');
+  await page.getByTestId(tid.ts.view('day')).click();
+  const form = page.getByTestId(tid.dayForm.submit), totals = page.getByTestId(tid.dayForm.stat('net'));
+  await expect(totals).toBeVisible();
+  const top = async () => [(await form.boundingBox())?.y ?? 0, (await totals.boundingBox())?.y ?? 0] as const;
+  const [formBefore, totalsBefore] = await top();
+  await page.mouse.wheel(0, 300);
+  await expect.poll(async () => (await top())[0]).toBeLessThan(formBefore - 100);
+  const [formAfter, totalsAfter] = await top();
+  expect(totalsBefore - totalsAfter).toBeCloseTo(formBefore - formAfter, 0);
+});

@@ -181,7 +181,7 @@ function DayPanel({ week, day, today, onDate, employeeId, clock }: {
             </div>
           </Card>
         </div>
-        <div className="lg:sticky lg:top-[150px]">
+        <div>
           <DayStatsCard capture={c} stats={stats} scheduled={line?.hours} />
           {side && <Card>
             <CardHead title="Shift details" actions={<span className="text-xs text-text-muted">Add only what applies</span>} />
